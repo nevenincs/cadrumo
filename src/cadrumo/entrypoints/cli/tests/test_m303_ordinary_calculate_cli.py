@@ -1,4 +1,4 @@
-"""Real CLI roundtrip for ordinary 2025 Modelo 303 evidence authoring."""
+"""Real CLI roundtrip for ordinary Modelo 303 evidence authoring."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -24,14 +25,17 @@ from ....application.aggregation.tests.ledger_transaction_support import iva_tra
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.invoices.service import link_transaction
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue
-from ....tests.cli_envelope import unwrap_schema_envelope
+from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
 from ._m303_ordinary_cli_support import OrdinaryM303SecureEvidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
@@ -46,54 +50,69 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_WALLET_DECIDED_AT = datetime(2025, 4, 1, 10, tzinfo=UTC)
+# The newest exercise the registry authors a closed Modelo 303 design for: every
+# quarter of it has an authored window, so both its first and its terminal quarter
+# can be authored here.
+_EXERCISE = max(revision.valid_from.year for revision in authored_revisions("303") if revision.valid_to is not None)
+_PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
+_WALLET_DECIDED_AT = datetime(_EXERCISE, 4, 1, 10, tzinfo=UTC)
 
 
 def _ordinary_m303_profile_facts() -> dict[str, str]:
-    """Reuse the application readiness baseline with the CLI's 2025 activity fact."""
+    """Reuse the application readiness baseline with the CLI's activity fact for the exercise."""
     facts = {
         fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
         for fact in MODELO_READY_PROFILE_FACTS
     }
-    facts.update(operator_profile_facts(activity_start_date="2025-01-01"))
+    facts.update(operator_profile_facts(activity_start_date=f"{_EXERCISE}-01-01"))
     return facts
 
 
-def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
-    """Persist the minimum linked IVA evidence and the canonical zero wallet decision."""
+def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str = "domestic_current") -> str:
+    """Persist the minimum linked IVA evidence and the canonical zero wallet decision.
+
+    ``purchase_deduction_fact_kind`` exists so one case can declare a deduction
+    the purchase cannot bear while every other seeded fact stays identical to the
+    passing calculation above it. A separately built fixture would have let the
+    two drift, and the assertion is precisely that this one field decides the
+    outcome.
+
+    Returns the purchase's ledger id, so a refusal can be attributed to the row
+    that caused it rather than to any row.
+    """
     purchase_invoice = build_catalogue_invoice(
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Proveedor de prueba SL",
         counterparty_tax_id="A58818501",
         counterparty_country="ES",
-        invoice_number="REC-2025-1T",
-        issued_at=date(2025, 2, 15),
+        invoice_number=f"REC-{_EXERCISE}-1T",
+        issued_at=date(_EXERCISE, 2, 15),
         taxable_base=Decimal("50.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
         rate_provider=recorded_ecb_rate_provider(),
     )
     sale = iva_transaction(
-        "ordinary-2025-sale",
+        f"ordinary-{_EXERCISE}-sale",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
-        booked_date=date(2025, 2, 15),
+        booked_date=date(_EXERCISE, 2, 15),
     )
     purchase = iva_transaction(
-        "ordinary-2025-purchase",
+        f"ordinary-{_EXERCISE}-purchase",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
-        booked_date=date(2025, 2, 15),
+        booked_date=date(_EXERCISE, 2, 15),
     ).model_copy(
         update={
             "purchase_invoice_evidence_id": purchase_invoice.invoice_id,
             "invoice_id": purchase_invoice.invoice_id,
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry(purchase_deduction_fact_kind),
         }
     )
     invoice_catalogue = link_transaction(
@@ -101,7 +120,7 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
         purchase_invoice.invoice_id,
         purchase.transaction_id,
     )
-    snapshot_ref = published_snapshot("303", filing_year=2025, period="1T").snapshot_ref
+    snapshot_ref = published_snapshot("303", filing_year=_EXERCISE, period="1T").snapshot_ref
 
     with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
@@ -111,7 +130,7 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
                 taxpayer_nif="12345678Z",
-                target_year=2025,
+                target_year=_EXERCISE,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,
                 source_registry_snapshot_refs=(),
@@ -128,11 +147,25 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
                 decided_at=_WALLET_DECIDED_AT,
             )
         )
+    return purchase.transaction_id
 
 
-def _create_2025_m303_work_unit(period: str) -> str:
+def _create_m303_work_unit(period: str) -> str:
     created = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", period]
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            str(_EXERCISE),
+            "--period",
+            period,
+        ]
     )
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
@@ -144,7 +177,7 @@ def _calculate(work_unit_id: str, *options: str) -> Result:
     return invoke_cached_cli(["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *options])
 
 
-def test_work_calculate_persists_ordinary_2025_1t_evidence_from_the_joint_return_answer_alone(
+def test_work_calculate_persists_ordinary_first_quarter_evidence_from_the_joint_return_answer_alone(
     request: pytest.FixtureRequest,
 ) -> None:
     """1T asks only the joint-return election, so the CLI persists evidence without any attestation."""
@@ -153,8 +186,8 @@ def test_work_calculate_persists_ordinary_2025_1t_evidence_from_the_joint_return
     seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    _seed_2025_ledger_and_wallet(bucket_id)
-    work_unit_id = _create_2025_m303_work_unit("1T")
+    _seed_ledger_and_wallet(bucket_id)
+    work_unit_id = _create_m303_work_unit("1T")
 
     decrypts.clear()
     calculated = _calculate(work_unit_id, *joint_return_options(joint_return_elected=True))
@@ -178,11 +211,43 @@ def test_work_calculate_persists_ordinary_2025_1t_evidence_from_the_joint_return
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
 
 
+def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissible(
+    request: pytest.FixtureRequest,
+) -> None:
+    """The same 1T calculation, with the purchase declaring a deduction it cannot bear.
+
+    ``domestic_investment`` names a bien de inversión and requires a reciprocal
+    register asset identity the row does not carry, so the deduction has no
+    authority. The refusal must name the ledger row and the typed reason: before
+    the readiness gate existed this reached the operator as an internal outbound
+    payload-boundary defect naming a model class, which says nothing about which
+    field to correct.
+    """
+    seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
+    seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    purchase_id = _seed_ledger_and_wallet(bucket_id, purchase_deduction_fact_kind="domestic_investment")
+    work_unit_id = _create_m303_work_unit("1T")
+
+    refused = _calculate(work_unit_id, *joint_return_options(joint_return_elected=True))
+
+    assert refused.exit_code == 1, refused.output
+    error = require_error_document(refused.output)["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "ERROR_MODELO_AGGREGATION_BINDING"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["reason"] == "inadmissible_deduction_classification"
+    assert context["transaction_id"] == purchase_id
+    assert "investment_asset_id" in context["detail"]
+
+
 def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(request: pytest.FixtureRequest) -> None:
     """A 1T calculation that supplies attestation identifiers is refused before custody, not silently ignored."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
     seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
-    work_unit_id = _create_2025_m303_work_unit("1T")
+    work_unit_id = _create_m303_work_unit("1T")
 
     refused = _calculate(
         work_unit_id,
@@ -197,7 +262,7 @@ def test_work_calculate_refuses_the_last_quarter_without_an_attestation(request:
     """4T asks the Modelo 390 exemption, so the joint-return answer alone is refused."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
     seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
-    work_unit_id = _create_2025_m303_work_unit("4T")
+    work_unit_id = _create_m303_work_unit("4T")
 
     refused = _calculate(work_unit_id, *joint_return_options(joint_return_elected=False))
 

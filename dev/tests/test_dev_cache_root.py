@@ -44,8 +44,14 @@ def test_resolving_a_cache_creates_nothing(tmp_path: Path) -> None:
     assert not (tmp_path / "untouched").exists()
 
 
-@pytest.mark.parametrize("name", ["", "   ", " padded", "nested/name", "..", ".", "a\\b"])
+@pytest.mark.parametrize("name", ["", "   ", " padded", "nested/name", "trailing/", "..", ".", "a\\b", "c:"])
 def test_a_name_that_is_not_one_segment_is_refused(name: str) -> None:
+    """A name that is not one segment on EVERY supported platform is refused on all of them.
+
+    A backslash is an ordinary filename character on POSIX but a separator on
+    Windows, and ``c:`` is a drive there, so both would split or escape the
+    root on one supported platform; the refusal cannot depend on the host.
+    """
     with pytest.raises(ValueError, match="cache name must be"):
         dev_cache_dir(name)
 

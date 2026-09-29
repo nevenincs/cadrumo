@@ -31,7 +31,7 @@ modelo:
             label: Amount of the operations [01]
           reagp-porcentaje-compensacion:
             label: Compensation percentage [04]
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Settlement period to which the self-assessment relates
       construct:
         modelo-341-autoliquidacion:

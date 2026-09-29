@@ -59,8 +59,19 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_led
 from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import legal_text_match
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# RD-ley 4/2024 and the late split design flip the transitional rungs at the 10/4T
+# boundary of the exercise its second rate tranche takes effect in.
+_TRANSITIONAL_FLIP_EXERCISE = int(
+    legal_text_match(
+        "real-decreto-ley-4-2024:art-1", r"dos\. con efectos desde el \d{1,2} de octubre de (\d{4})"
+    ).group(1)
+)
 
 _CASILLA_154: CasillaId = validated_casilla_id("154", surface="_CASILLA_154")
 _CASILLA_166: CasillaId = validated_casilla_id("166", surface="_CASILLA_166")
@@ -124,10 +135,10 @@ def test_transitional_rate_constant_follows_the_design_window(
         assert str(result.values[_CASILLA_166]) == expected_166
 
 
-def test_the_flip_lands_exactly_on_the_09_3t_to_10_4t_2024_boundary() -> None:
+def test_the_flip_lands_exactly_on_the_09_3t_to_10_4t_boundary() -> None:
     """Adjacent quarters straddling the flip must disagree, not just differ from a third value."""
-    before = _calculate(filing_year=2024, period="3T")
-    after = _calculate(filing_year=2024, period="4T")
+    before = _calculate(filing_year=_TRANSITIONAL_FLIP_EXERCISE, period="3T")
+    after = _calculate(filing_year=_TRANSITIONAL_FLIP_EXERCISE, period="4T")
 
     assert before.values[_CASILLA_154] != after.values[_CASILLA_154]
     assert before.values[_CASILLA_166] != after.values[_CASILLA_166]

@@ -28,12 +28,12 @@ records a gesture that did not actually work.
 
 | command | effect |
 | --- | --- |
-| `open SURFACE [--size WxH] [--theme dark\|light] [--locale es\|en\|ca\|hu]` | start a fresh walk |
+| `open SURFACE [--size WxH] [--theme dark\|light] [--locale es\|en\|ca\|hu] [--shot PATH]` | start a fresh walk; `--shot` also writes its opening frame as SVG |
 | `press KEY...` | send key chords |
 | `type TEXT` | send text one keystroke at a time |
 | `fill SELECTOR VALUE` | set a value in one assignment, skipping the key pipeline |
 | `click SELECTOR` | click a control |
-| `show` | reprint, changing nothing |
+| `view` | reprint, changing nothing |
 | `undo` | drop the last gesture |
 | `journal` | print the walk so far |
 | `size WxH` / `theme ...` / `locale ...` | re-render the same walk elsewhere |
@@ -68,12 +68,10 @@ the same bucket and active-profile pointer. Without it everyone shares
 
 ## Surfaces
 
-`registration`, `login`, `manager`, `status`, `modelo-work-wizard`, `form`.
-
-Each uses the canonical public profile and presentation contracts. The manager
-surface exercises authenticated profile editing and logout. The Modelo wizard
-surface provisions a real Modelo 130 work unit and renders the exact
-application-owned flow definition over it.
+`surfaces` lists every drivable surface: `registration`, `login` and `manager`,
+plus one per declared workbench fixture state. Each uses the canonical public
+profile and presentation contracts. The manager surface exercises
+authenticated profile editing and logout.
 
 ## The frame
 

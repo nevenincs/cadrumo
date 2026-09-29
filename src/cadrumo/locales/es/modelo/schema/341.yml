@@ -31,7 +31,7 @@ modelo:
             label: Importe de las operaciones [01]
           reagp-porcentaje-compensacion:
             label: Porcentaje de compensación [04]
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Periodo de liquidación al que se refiere la autoliquidación
       construct:
         modelo-341-autoliquidacion:

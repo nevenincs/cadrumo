@@ -55,6 +55,7 @@ from .....domain.calculations.registry.tests.registry_observations import (
 )
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculation_observations import CalculationObservationRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
@@ -128,6 +129,7 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -164,6 +166,7 @@ def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_p
                 observation_repository=obs_repo,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+                bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
             )
 
 
@@ -193,6 +196,7 @@ def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: 
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -222,6 +226,7 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()
@@ -247,6 +252,7 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()
@@ -279,6 +285,7 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert len(diagnostics) == 1
@@ -311,6 +318,7 @@ def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
         )
 
     assert diagnostics == ()

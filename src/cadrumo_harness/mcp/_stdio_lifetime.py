@@ -1009,13 +1009,19 @@ def _posix_watchdog(
 
 def _arm_posix_watchdog(
     *,
+    client_pid: int | None,
     parent_pid: int | None,
     rearm_seconds: float,
     orphan_confirmations: int,
     stop: threading.Event,
 ) -> bool:
-    """Start the POSIX reparent-plus-ancestor poll thread."""
-    extra = (parent_pid,) if parent_pid is not None else ()
+    """Start the POSIX reparent-plus-ancestor poll thread.
+
+    POSIX cannot RESOLVE a client, but a caller that names one gets it watched
+    exactly like the explicit parent override, as on Windows; dropping it would
+    leave an explicitly named anchor silently unwatched on this platform only.
+    """
+    extra = tuple(dict.fromkeys(pid for pid in (parent_pid, client_pid) if pid is not None))
     # The POSIX poll cadence is derived from the same knobs the Windows path
     # takes, so a test can compress both platforms through the real
     # parameters instead of patching either.
@@ -1057,16 +1063,17 @@ def arm_stdio_lifetime_watchdog(
     skips arming entirely.
 
     Args:
-        client_pid: Explicit client PID for the primary anchor. Defaults to the
-            stdin pipe creator.
+        client_pid: Explicit client PID for the primary anchor, watched on every
+            platform. Defaults to the stdin pipe creator, which only Windows can
+            resolve.
         parent_pid: Additional process to watch ahead of discovery. Defaults to
             ``CADRUMO_MCP_PARENT_PID``.
         grace_seconds: Fallback grace window before discovered ancestors count as
             termination intent.
-        rearm_seconds: Windows only; interval between anchor re-acquisition
-            attempts while no anchor is held.
-        orphan_confirmations: Windows only; consecutive unanchored polls required
-            before the process reaps itself as an orphan.
+        rearm_seconds: Interval between anchor re-acquisition attempts while no
+            anchor is held on Windows; on POSIX it also caps the poll interval.
+        orphan_confirmations: Consecutive unanchored polls required before the
+            process reaps itself as an orphan.
 
     Returns:
         ``True`` when a watchdog thread armed, ``False`` when arming was disabled
@@ -1095,6 +1102,7 @@ def arm_stdio_lifetime_watchdog(
                 stop=stop,
             )
         return _arm_posix_watchdog(
+            client_pid=client_pid,
             parent_pid=parent_pid,
             rearm_seconds=rearm_seconds,
             orphan_confirmations=orphan_confirmations,

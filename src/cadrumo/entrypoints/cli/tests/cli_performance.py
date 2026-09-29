@@ -885,6 +885,11 @@ def _capture_module_state(name: str, module: types.ModuleType) -> _RetainedModul
         if isinstance(value, dict | list | set) and type(value) in {dict, list, set}:
             containers.append((value, value.copy()))
             continue
+        # A class that declares ``cache_clear`` -- a protocol naming the cache
+        # shape, or a cache type -- is not itself a filled cache, and its
+        # method is unbound on the class.
+        if isinstance(value, type):
+            continue
         cache_clear = getattr(value, "cache_clear", None)
         if callable(cache_clear) and getattr(value, "__module__", None) == name:
             caches.append(cache_clear)

@@ -119,6 +119,7 @@ from dev.audit.unreachable_code import (
     reachable_closure,
     relative_to_repo,
     resolved_symbol_uses,
+    shared_scan_memo,
     shipped_modules,
     string_reference_names,
 )
@@ -252,28 +253,27 @@ class WritePathResult:
 type _Symbol = tuple[str, str]
 
 
-def _symbol_imports(module: ShippedModule, known: frozenset[str]) -> dict[str, _Symbol]:
-    """Map each local binding that names a shipped module's symbol to that symbol.
+@dataclass(frozen=True)
+class _ModuleBindings:
+    """The names one module binds, derived once and shared by all its classes.
 
-    Only ``from M import N`` binds a class name into another module's
-    namespace in this tree; a module alias reaches the class through an
-    attribute, which :func:`_base_symbols` resolves separately.
+    Args:
+        symbols: Each local binding that names a shipped module's symbol. Only
+            ``from M import N`` binds a class name into another module's
+            namespace in this tree; a module alias reaches the class through an
+            attribute instead.
+        aliases: Each local binding that names a shipped MODULE.
+        local: The module's own top-level class names.
     """
-    bindings: dict[str, _Symbol] = {}
-    for node in ast.walk(module.tree):
-        if not isinstance(node, ast.ImportFrom):
-            continue
-        base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
-        if base is None or base not in known:
-            continue
-        for alias in node.names:
-            if f"{base}.{alias.name}" not in known:
-                bindings[alias.asname or alias.name] = (base, alias.name)
-    return bindings
+
+    symbols: dict[str, _Symbol]
+    aliases: dict[str, str]
+    local: frozenset[str]
 
 
-def _module_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, str]:
-    """Map each local binding that names a shipped MODULE to that module."""
+def _module_bindings(module: ShippedModule, known: frozenset[str]) -> _ModuleBindings:
+    """Collect ``module``'s symbol and module bindings in one pass over its tree."""
+    symbols: dict[str, _Symbol] = {}
     aliases: dict[str, str] = {}
     for node in ast.walk(module.tree):
         if isinstance(node, ast.Import):
@@ -288,29 +288,29 @@ def _module_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, s
                 target = f"{base}.{alias.name}"
                 if target in known:
                     aliases[alias.asname or alias.name] = target
-    return aliases
+                elif base in known:
+                    symbols[alias.asname or alias.name] = (base, alias.name)
+    local = frozenset(child.name for child in module.tree.body if isinstance(child, ast.ClassDef))
+    return _ModuleBindings(symbols=symbols, aliases=aliases, local=local)
 
 
-def _base_symbols(node: ast.ClassDef, module: ShippedModule, known: frozenset[str]) -> frozenset[_Symbol]:
+def _base_symbols(node: ast.ClassDef, module: ShippedModule, bindings: _ModuleBindings) -> frozenset[_Symbol]:
     """Resolve every base of ``node`` to the ``(module, name)`` it denotes.
 
     Generic bases (``Base[TPayload, TCapture]``) are unwrapped; a base the
     module neither imports nor defines resolves to nothing, which simply keeps
     it out of the closure.
     """
-    symbols: dict[str, _Symbol] = _symbol_imports(module, known)
-    aliases = _module_aliases(module, known)
-    local = {child.name for child in module.tree.body if isinstance(child, ast.ClassDef)}
     resolved: set[_Symbol] = set()
     for base in node.bases:
         target = base.value if isinstance(base, ast.Subscript) else base
         if isinstance(target, ast.Name):
-            if target.id in symbols:
-                resolved.add(symbols[target.id])
-            elif target.id in local:
+            if target.id in bindings.symbols:
+                resolved.add(bindings.symbols[target.id])
+            elif target.id in bindings.local:
                 resolved.add((module.name, target.id))
         elif isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
-            owner = aliases.get(target.value.id)
+            owner = bindings.aliases.get(target.value.id)
             if owner is not None:
                 resolved.add((owner, target.attr))
     return frozenset(resolved)
@@ -328,10 +328,13 @@ def _class_index(modules: dict[str, ShippedModule], known: frozenset[str]) -> di
     """Every top-level class in the shipped tree, keyed by ``(module, name)``."""
     index: dict[_Symbol, _SurfaceClass] = {}
     for module in modules.values():
+        bindings: _ModuleBindings | None = None
         for node in module.tree.body:
             if isinstance(node, ast.ClassDef):
+                if bindings is None:
+                    bindings = _module_bindings(module, known)
                 symbol = (module.name, node.name)
-                index[symbol] = _SurfaceClass(symbol, node, _base_symbols(node, module, known), module)
+                index[symbol] = _SurfaceClass(symbol, node, _base_symbols(node, module, bindings), module)
     return index
 
 
@@ -523,12 +526,39 @@ def _binds_surface(resolved: set[_Symbol], module: str, service: str) -> bool:
     return (module, service) in resolved
 
 
+class _CallerFacts:
+    """Per-module caller facts, derived at most once per scan.
+
+    Every leaf surface asks the same two questions of every shipped module, and
+    neither answer depends on the surface, so each is computed on first use and
+    reused for the remaining surfaces.
+    """
+
+    def __init__(self, modules: dict[str, ShippedModule], known: frozenset[str]) -> None:
+        self._modules = modules
+        self._known = known
+        self._resolved: dict[str, set[_Symbol]] = {}
+        self._spelled: dict[str, frozenset[str]] = {}
+
+    def resolved(self, name: str) -> set[_Symbol]:
+        """The ``(module, symbol)`` pairs module ``name`` reaches."""
+        if name not in self._resolved:
+            self._resolved[name] = resolved_symbol_uses(self._modules[name], self._known)
+        return self._resolved[name]
+
+    def spelled(self, name: str) -> frozenset[str]:
+        """The attribute names and string identifiers module ``name`` spells."""
+        if name not in self._spelled:
+            self._spelled[name] = _spelled_attributes(self._modules[name].tree)
+        return self._spelled[name]
+
+
 def _callers(
     surface: _SurfaceClass,
     verbs: _SurfaceVerbs,
     delegates: tuple[frozenset[str], frozenset[str]],
     modules: dict[str, ShippedModule],
-    known: frozenset[str],
+    facts: _CallerFacts,
 ) -> tuple[frozenset[str], frozenset[str]]:
     """Return ``(reader modules, writer modules)`` among shipped production code.
 
@@ -541,17 +571,17 @@ def _callers(
     write_delegates, read_delegates = delegates
     readers: set[str] = set()
     writers: set[str] = set()
-    for name, module in modules.items():
+    for name in modules:
         if name == surface.module.name:
             continue
-        resolved = resolved_symbol_uses(module, known)
-        spelled = _spelled_attributes(module.tree)
+        resolved = facts.resolved(name)
         if any((surface.module.name, delegate) in resolved for delegate in write_delegates):
             writers.add(name)
         if any((surface.module.name, delegate) in resolved for delegate in read_delegates):
             readers.add(name)
         if not _binds_surface(resolved, surface.module.name, surface.node.name):
             continue
+        spelled = facts.spelled(name)
         if spelled & frozenset(verbs.write):
             writers.add(name)
         if spelled & frozenset(verbs.read):
@@ -605,7 +635,7 @@ def _surface_findings(
     closure: frozenset[_Symbol],
     script_reach: frozenset[str],
 ) -> tuple[tuple[str, ...], tuple[WritePathFinding, ...]]:
-    known = frozenset(modules)
+    facts = _CallerFacts(modules, frozenset(modules))
     examined: list[str] = []
     findings: list[WritePathFinding] = []
     for leaf in _leaf_surfaces(index, closure):
@@ -616,7 +646,7 @@ def _surface_findings(
             continue
         examined.append(f"{leaf.module.name}:{leaf.node.name}")
         delegates = _module_level_delegates(leaf.module, verbs)
-        readers, writers = _callers(leaf, verbs, delegates, modules, known)
+        readers, writers = _callers(leaf, verbs, delegates, modules, facts)
         live_readers = tuple(sorted(readers & script_reach))
         if writers or not live_readers:
             continue
@@ -637,6 +667,11 @@ def _surface_findings(
 
 def scan_write_path_coverage(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:
     """Scan the tree ``spec`` describes for readable surfaces with no writer."""
+    with shared_scan_memo():
+        return _scan_with_memo(spec, surface)
+
+
+def _scan_with_memo(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:
     try:
         modules = shipped_modules(spec)
     except SyntaxError as exc:

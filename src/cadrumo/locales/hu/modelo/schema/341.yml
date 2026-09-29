@@ -31,7 +31,7 @@ modelo:
             label: Az ügyletek összege [01]
           reagp-porcentaje-compensacion:
             label: Kompenzációs százalék [04]
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Az önadózás elszámolási időszaka
       construct:
         modelo-341-autoliquidacion:

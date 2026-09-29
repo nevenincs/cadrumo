@@ -363,6 +363,15 @@ def _binding_origins(
     )
 
 
+def _observation_is_absent_by_design(
+    revision: CalculationRevision | None,
+    casilla_id: CasillaId,
+) -> bool:
+    """Return whether the persisted observation marks the casilla absent by design."""
+    observation = _casilla_observation(revision, casilla_id)
+    return observation is not None and observation.absent_by_design
+
+
 def _review_casilla(
     casilla: CasillaDefinition,
     context: _ReviewRowContext,
@@ -384,6 +393,7 @@ def _review_casilla(
         official_reference=context.official_references[casilla.id],
         section_path=casilla.section,
         label=casilla.label,
+        semantic_role=casilla.semantic_role,
         data_type=casilla.data_type,
         constraints=casilla.constraints,
         declared_input_kind=casilla.input_kind,
@@ -396,6 +406,7 @@ def _review_casilla(
         ),
         realised_kind=realised_kind,
         value=value,
+        absent_by_design=_observation_is_absent_by_design(context.revision, casilla.id),
         origin_anomaly=anomaly,
         estado_casilla_oficial=context.estados_casillas_oficiales[casilla.id],
         legal_refs=tuple(casilla.legal_refs),
@@ -449,13 +460,17 @@ def _review_row_context(
     )
 
 
-def _review_casillas(
+def assemble_modelo_work_review_casillas(
     *,
     snapshot: RegistrySnapshot,
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
     operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloWorkReviewCasilla, ...]:
+    """Project every casilla the :class:`RegistrySnapshot` declares onto its review row.
+
+    Each row is realised from the :class:`CalculationRevision` when one is given.
+    """
     context = _review_row_context(
         snapshot=snapshot,
         revision=revision,
@@ -540,7 +555,7 @@ def assemble_modelo_work_review(
         finding for finding in findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     )
     blockers = tuple(_blocker_ref(finding) for finding in blocking_findings)
-    rows = _review_casillas(
+    rows = assemble_modelo_work_review_casillas(
         snapshot=snapshot,
         revision=revision,
         blocking_findings=blocking_findings,

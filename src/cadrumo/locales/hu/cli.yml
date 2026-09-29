@@ -730,11 +730,10 @@ cli:
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
-        received_invoice_retencion_help: JSON InvoiceRetencionRouteRequest objektum,
-          amely egy beérkezett számla bejelentett levonását a perceptoronkénti tárolóba
-          irányítja (invoice_id, scheme). A scheme a perceptor tevékenységére vonatkozó
-          jogi tény, amelyet a rendszer sosem következtet ki a számlából. Több számlához
-          ismételje meg.
+        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+          egy beérkezett számla egy levonás-felosztása, a fizetési vagy esedékességi
+          bizonyítékával. Parancsonként egy felosztás; a scheme a perceptor tevékenységére
+          vonatkozó jogi tény, amelyet a rendszer sosem következtet ki a számlából.'
         retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. A 111-es nyomtatvány munka esetén a rendimientos_trabajo
@@ -880,6 +879,8 @@ cli:
           használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy
           a CSV cotejo bizonyítékot.
         output_help: A fichero-BOE artefakt írásának elérési útja.
+        replace_help: Lecseréli a --output helyén már meglévő fájlt. Enélkül a meglévő
+          exportfájlt a program elutasítja, hogy egy korábbi export ne vesszen el.
         revision_help: 'Az exportálandó számítási revízió azonosítója; alapértelmezés:
           a munkaegység legújabb hitelesített-teljes vagy benyújtott revíziója.'
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
@@ -1264,6 +1265,11 @@ cli:
           refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
             metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
             exportálja újra, majd töltse vissza újra.'
+        export:
+          output_help: Az .xlsx munkafüzet célútvonala; a meglévő fájlt elutasítja,
+            hacsak nincs megadva a --replace
+        export_help: Egy modell és időszak nyilvántartási számítási felületének exportálása
+          helyi .xlsx munkafüzetbe élő képletekkel (a push offline megfelelője)
         modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
         period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
         pull:
@@ -1447,6 +1453,12 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        document_format_help: 'A számítási jelentés dokumentumformátuma: csv, vagy
+          pdf az aláírt számítási összesítőhöz (a nem kötelező pdf kiegészítő szükséges
+          hozzá).'
+        document_only_help: Csak a dokumentum ellenőrzése, az aktív profil tárolójának
+          megnyitása nélkül; --trusted-key nélkül az érvényes eredmény kulcshoz nem
+          rögzített marad.
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -1566,6 +1578,8 @@ cli:
         observed_at_help: A nyilatkozat megerősítésének időpontja ISO 8601 formátumban,
           UTC-eltolással (például 2025-03-31T12:00:00+00:00); nem lehet a negyedév
           zárása előtt és nem lehet jövőbeli.
+        output_help: Az útvonal, ahová a számítási jelentés kerül; a szülőkönyvtárnak
+          léteznie kell.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
           `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
@@ -1631,6 +1645,34 @@ cli:
           rovat 03 relation csatornákat használd, és kézi érték megadásakor a nem
           használt modalitást állítsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
+        report:
+          development_software_identity: Ennek a modellnek a benyújtási fájlja a Cadrumo
+            csupa nullából álló fejlesztői szoftverazonosítóját hordozná; az AEAT
+            ezt a fájlt nem fogadja el benyújtásra.
+          errors:
+            calculation_required: A {modelo} modell {work_unit_id} munkaegységének
+              nincs jelenthető számítása; először számítsa ki és ellenőrizze.
+        report_help: A munkaegység ellenőrzött vagy benyújtott számítását helyi számítási
+          jelentésként írja ki; ez nem az AEAT hivatalos bizonylata.
+        report_verify:
+          errors:
+            file_not_found: 'Nem található számítási összesítő itt: {path}.'
+            trusted_key_invalid: A --trusted-key értékének 64 hexadecimális karakterből
+              álló Ed25519 nyilvános kulcsnak kell lennie.
+          later_changes: Az összesítő egyezik a tároló exportáláskori állapotával;
+            a számítási változat azóta továbblépett az életciklusában (például benyújtották
+            vagy felváltották).
+          refused: A számítási összesítőt nem sikerült ellenőrizni; az ellenőrzések
+            megnevezik az okot.
+          unpinned: 'Az összesítő következetes és az aláírása érvényes, de egyetlen
+            kulcs sincs rögzítve: adja meg a --trusted-key kapcsolóval a más csatornán
+            kapott kulcsot, vagy ellenőrizze az aláíró profil tárolójával szemben.'
+        report_verify_help: 'Számítási összesítő PDF ellenőrzése: a sértetlenségi
+          aláírás, a beágyazott adatok és az oldalak, valamint – ha nincs megadva
+          a --document-only – hogy az aktív profil titkosított tárolója még mindig
+          ugyanezt állítja elő; ez nem az AEAT hivatalos bizonylata.'
+        report_verify_path_help: Az ellenőrizendő számítási összesítő PDF elérési
+          útja.
         rescate_contingencia_year_help: 'Az az év, amikor a nyugdíjpénztári esemény
           (nyugdíjazás, rokkantság, halál) bekövetkezett. Meghatározza a LIRPF DT
           12a 4. bekezdés szerinti időablakot (26/2014 törvény): ha az ablak zárva
@@ -1743,6 +1785,8 @@ cli:
         status_discarded_summary: Ez a munkaegység el van vetve, ezért a számítás
           nem érhető el.
         status_help: Egy munkaegység metaadatainak megjelenítése.
+        trusted_key_help: Megbízható Ed25519 nyilvános kulcs (64 hexadecimális karakter),
+          amelyet más csatornán kapott; az összesítőt ezzel kell aláírni.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -2975,6 +3019,10 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
+      investment_asset_id_help: Annak a beruházási javak nyilvántartási bejegyzésnek
+        az azonosítója, amellyel szemben ez a beszerzés levonásra kerül, a bejegyzésben
+        szereplő alakban. Beruházási levonási típusnál kötelező, minden más típusnál
+        elutasított.
       irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
         nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
         A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,

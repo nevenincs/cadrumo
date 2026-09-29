@@ -19,11 +19,11 @@ from ...application.modelo.export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
-    ModeloExportOutputPathError,
     ModeloExportResult,
     export_modelo_revision,
 )
 from ...application.modelo.export_ports import ModeloExportPorts
+from ...application.modelo.export_sink import ModeloExportOutputPathError
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.workflow.persistence import workflow_state_repository
@@ -34,6 +34,7 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -73,8 +74,27 @@ def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.development_software_identity",
+        message=(
+            "The file header carries Cadrumo's all-zero development software identity; "
+            "AEAT will not accept this file for presentation."
+        ),
+        context={
+            "software_identity_grade": str(result.software_identity_grade),
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
 def _export_notices(result: ModeloExportResult) -> list[Notice]:
     notices = [_local_export_evidence_notice(result)]
+    if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
+        notices.append(_development_software_identity_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
     return notices
@@ -95,6 +115,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
         f"format\t{result.format}",
         f"bucket_event_id\t{result.bucket_event_id}",
         f"evidence_status\t{result.local_evidence_status}",
+        f"software_identity_grade\t{result.software_identity_grade or 'none'}",
         f"evidence_notice\t{result.official_evidence_message}",
     ]
 
@@ -107,6 +128,7 @@ def export_modelo_revision_for_cli(
     refund_election: RefundElection,
     payment_election: PaymentElection,
     prior_domiciliation_election: PriorDomiciliationElection,
+    replace_existing: bool,
     operation: PinnedAuthorityOperation,
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
@@ -128,6 +150,7 @@ def export_modelo_revision_for_cli(
                 refund_election=refund_election,
                 payment_election=payment_election,
                 prior_domiciliation_election=prior_domiciliation_election,
+                replace_existing=replace_existing,
             ),
             workflow_profile=workflow_profile,
             export_ports=export_ports,
@@ -193,6 +216,7 @@ def modelo_export_verb(
         refund_election=operator_input.refund_election,
         payment_election=operator_input.payment_election,
         prior_domiciliation_election=operator_input.prior_domiciliation_election,
+        replace_existing=operator_input.replace_existing,
         operation=authority_operation(ctx),
         workflow_profile=workflow_profile,
         export_ports=modelo_export_ports_factory(ctx)(

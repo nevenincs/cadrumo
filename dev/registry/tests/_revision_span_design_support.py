@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from dev.registry.compiler.record_design_schema import RecordDesignSheet
 
 from ..compiler.authority import compile_validated_authority
-from ..compiler.record_design import extract_record_design
+from ..compiler.record_design import extract_record_design, warm_record_design_cache
 from ..compiler.record_design_pdf_rows import clean_pdf_line
 from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 
@@ -543,6 +543,23 @@ def _design_sources(modelo_id: str) -> list[Path]:
 
 
 @cache
+def _warm_design_corpus() -> int:
+    """Extract every bundled design the extraction cache lacks, in parallel, once per process.
+
+    The designs are read one at a time below, and against a cold cache that serial
+    walk was most of this module's runtime: every CI checkout starts cold. Warming
+    first changes only when each source is parsed, never what is read, because the
+    warm-up goes through the same extraction and the same per-source cache entries.
+    """
+    root = bundled_path(*_DESIGN_ROOT_PARTS)
+    return warm_record_design_cache(
+        path
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix.lower() in _DESIGN_SUFFIXES
+    )
+
+
+@cache
 def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Parse one design SOURCE, dispatching on its suffix.
 
@@ -560,6 +577,7 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     """
     if path.suffix.lower() not in _DESIGN_SUFFIXES:
         return ()
+    _warm_design_corpus()
     try:
         # ACCEPTS a partial read deliberately. This module compares designs against
         # each other, and a design read in part still carries real evidence about

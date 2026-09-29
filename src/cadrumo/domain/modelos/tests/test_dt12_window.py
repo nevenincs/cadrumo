@@ -21,6 +21,7 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.tests.legal_text import legal_text_match
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..dt12_reduccion import (
     Dt12WindowBranch,
@@ -34,6 +35,18 @@ _CONTEXT = ModeloFactResolutionContext(
     authority=PublishedGovernedFactSource(),
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
+)
+# DT 12ª apartado 4 (added by Ley 26/2014), read from the published provision:
+# contingencias in the span it names keep the eighth-following-ejercicio window, and
+# earlier ones are eligible only through the cliff date it prints.
+_TRANSITIONAL_FIRST_CONTINGENCIA, _TRANSITIONAL_LAST_CONTINGENCIA = (
+    int(year)
+    for year in legal_text_match(
+        "ley-35-2006:dt-12", r"contingencias acaecidas en los ejercicios (\d{4}) a (\d{4})"
+    ).groups()
+)
+_CLIFF_LAST_ELIGIBLE_YEAR = int(
+    legal_text_match("ley-35-2006:dt-12", r"\d{4} o anteriores.*?hasta el 31 de diciembre de (\d{4})").group(1)
 )
 
 
@@ -58,15 +71,17 @@ class TestDt12WindowGeneralBranch:
             assert verdict.eligible_through_year == expected_through_year
 
 
-class TestDt12WindowTransitional2011To2014Branch:
-    """Contingencia 2011–2014: eligible through the eighth following ejercicio."""
+class TestDt12WindowTransitionalBranch:
+    """Contingencia in the transitional span: eligible through the eighth following ejercicio."""
 
-    def test_transitional_2011_2014_branch_window(self) -> None:
+    def test_transitional_branch_window(self) -> None:
+        last = _TRANSITIONAL_LAST_CONTINGENCIA
+        first = _TRANSITIONAL_FIRST_CONTINGENCIA
         cases = (
-            (2014, 2022, True, 2022),
-            (2014, 2023, False, 2022),
-            (2011, 2019, True, 2019),
-            (2011, 2020, False, 2019),
+            (last, last + 8, True, last + 8),
+            (last, last + 9, False, last + 8),
+            (first, first + 8, True, first + 8),
+            (first, first + 9, False, first + 8),
         )
         for contingencia_year, rescate_year, expected_eligible, expected_through_year in cases:
             verdict = dt12_regime_window_eligibility(
@@ -79,17 +94,19 @@ class TestDt12WindowTransitional2011To2014Branch:
             assert verdict.eligible_through_year == expected_through_year
 
 
-class TestDt12WindowCliff2010OrEarlierBranch:
-    """Contingencia <= 2010: the hard 31-12-2018 cliff."""
+class TestDt12WindowCliffBranch:
+    """Contingencia before the transitional span: the hard 31 December cliff."""
 
-    def test_cliff_2010_or_earlier_branch_window(self) -> None:
+    def test_cliff_branch_window(self) -> None:
+        before_span = _TRANSITIONAL_FIRST_CONTINGENCIA - 1
+        cliff = _CLIFF_LAST_ELIGIBLE_YEAR
         cases = (
-            (2008, 2018, True),
-            (2010, 2019, False),
-            (2005, 2019, False),
-            (2005, 2022, False),
-            (2005, 2024, False),
-            (2005, 2026, False),
+            (before_span - 2, cliff, True),
+            (before_span, cliff + 1, False),
+            (before_span - 5, cliff + 1, False),
+            (before_span - 5, cliff + 4, False),
+            (before_span - 5, cliff + 6, False),
+            (before_span - 5, cliff + 8, False),
         )
         for contingencia_year, rescate_year, expected_eligible in cases:
             verdict = dt12_regime_window_eligibility(
@@ -99,7 +116,7 @@ class TestDt12WindowCliff2010OrEarlierBranch:
             )
             assert verdict.branch is Dt12WindowBranch.CLIFF_2010_OR_EARLIER
             assert verdict.eligible is expected_eligible, (contingencia_year, rescate_year)
-            assert verdict.eligible_through_year == 2018
+            assert verdict.eligible_through_year == cliff
 
 
 class TestDt12WindowInputGuards:

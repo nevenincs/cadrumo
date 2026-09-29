@@ -109,10 +109,6 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
-    "service:provider_for_modelo:2": _contract(
-        AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-        (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
-    ),
     "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (

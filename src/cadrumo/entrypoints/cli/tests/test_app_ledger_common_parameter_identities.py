@@ -114,6 +114,7 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             "iva_amount",
             "iva_category",
             "deduction_fact_kind",
+            "investment_asset_id",
             "counterparty_country",
             "counterparty_identification_state",
             "recargo_amount",
@@ -158,11 +159,11 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
     )
     restore, stash, status = (specs[key] for key in ("app_ledger_restore", "app_ledger_stash", "app_ledger_status"))
     assert add.parameters[9] is allocate.parameters[2] is _LEDGER_ADD_CATEGORY_ID_OPTION
-    assert add.parameters[19] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
+    assert add.parameters[20] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
     assert all(
         parameter is _LEDGER_ACTOR_OPTION
         for parameter in (
-            add.parameters[27],
+            add.parameters[28],
             allocate.parameters[5],
             archive.parameters[3],
             attach.parameters[3],

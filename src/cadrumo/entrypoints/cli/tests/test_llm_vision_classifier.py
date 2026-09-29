@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import base64
 import json
+from dataclasses import replace
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....adapters.outbound.llm.client import LLMClient
+from ....adapters.outbound.llm.tests.load_headroom_support import (
+    admitting_text_classify_client,
+    admitting_vision_classify_client,
+)
+from ....adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -36,7 +42,7 @@ from ....tests.llm_vision_evidence_support import (
     png_image,
     run_against_loopback_ollama,
 )
-from ..ledger_llm_composition import VisionReader, compose_ledger_llm
+from ..ledger_llm_composition import TextReader, VisionReader, compose_ledger_llm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,8 +52,37 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _llm_ports(settings: Settings) -> LLMClassificationPorts:
-    """Compose the canonical reader ports against the encrypted test bucket."""
-    return compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
+    """Compose the canonical reader ports against the encrypted test bucket.
+
+    Both readers are rebuilt on their own constructor seams with clients whose
+    measured readings admit the model each dispatches. The dispatch point refuses
+    a catalogued local model without measured headroom and fails closed where it
+    cannot read the accelerator, so without this the refusal these cases assert
+    would be the contention one raised before the transport was ever reached,
+    on a host whose GPU happens not to be readable.
+
+    The ports still do the resolving: only the client each reader carries
+    differs from what the composition root builds.
+    """
+    ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
+    return replace(
+        ports,
+        make_text_classifier=lambda spec: TextReader(
+            LocalTextLLMClassifier(
+                spec=spec,
+                settings=settings,
+                client=admitting_text_classify_client(settings=settings),
+            )
+        ),
+        make_vision_classifier=lambda spec, model: VisionReader(
+            LocalVisionLLMClassifier(
+                spec=spec,
+                settings=settings,
+                model=model,
+                client=admitting_vision_classify_client(settings=settings, model=model),
+            )
+        ),
+    )
 
 
 def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
@@ -160,7 +195,14 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
         ports = _llm_ports(unreachable_settings)
         classifier = ports.make_vision_classifier(spec, None)
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        # The local adapter reads its endpoint from the process settings when it
+        # sends, not from the settings a client was built with, so the refused
+        # port must be set there too or a runtime serving the default port
+        # answers and the connection failure under test never happens.
+        with (
+            override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"),
+            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+        ):
             classify_with_evidence(
                 vision_transaction("ev-1"),
                 evidence,

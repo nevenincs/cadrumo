@@ -16,8 +16,13 @@ from ._gate_support import (
     assert_edition_opens_at_filing_year,
     assert_sole_current_edition,
 )
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+# The sole current edition this grounding test reviews: the newest one the registry
+# authors, whose ordenes are asserted below.
+_CURRENT_EDITION = newest_authored_edition("189")
 
 _M189_LEGAL_REFS = {
     "orden-eha-3481-2008:art-1",
@@ -35,18 +40,18 @@ _M189_SOURCE_REFS = {
 }
 
 
-def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation() -> None:
+def test_modelo_189_current_registry_uses_current_edition_sources_without_fake_calculation() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("189")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(_CURRENT_EDITION)]
 
-    assert_sole_current_edition(modelo, "2025")
+    assert_sole_current_edition(modelo, str(_CURRENT_EDITION))
     assert modelo.calculation_class == "informative"
     assert set(modelo.legal_refs) == _M189_LEGAL_REFS
     assert set(modelo.source_refs) == _M189_SOURCE_REFS
 
-    assert revision.valid_from == date(2025, 1, 1)
-    assert_edition_opens_at_filing_year(revision, 2025)
+    assert revision.valid_from == date(_CURRENT_EDITION, 1, 1)
+    assert_edition_opens_at_filing_year(revision, _CURRENT_EDITION)
     assert set(revision.period_selector.periods) == {"0A"}
     assert set(revision.orden_aplicabilidad) == {
         "orden-eha-3481-2008:art-1",
@@ -70,7 +75,7 @@ def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation(
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
-    assert_deadline_window_for_filing_year(revision, 2025, "modelo-189-2025-0a")
+    assert_deadline_window_for_filing_year(revision, _CURRENT_EDITION, f"modelo-189-{_CURRENT_EDITION}-0a")
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {
         "boe-modelo-189-2023-amendment-hfp-1284",
     }

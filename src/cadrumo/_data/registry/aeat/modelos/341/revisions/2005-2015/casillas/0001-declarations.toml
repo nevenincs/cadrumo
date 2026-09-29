@@ -98,13 +98,18 @@ input_kind = "informational"
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
+# The design's "Tipo de declaracion" is the clave of the solicitud's result:
+# Nota 1 of aeat-dr-341-2016 (campo 6 @13+1) admits only "D (Devolucion)", and
+# the fichero writes that clave as a literal. It is not the kind of declaration
+# in its period's chain, so the role keeps the filing-context projection of
+# that kind away from it.
 [[revisions."2005-2015".casillas]]
 id = "decl.periodo"
-continuidad_id = "tipo-declaracion"
+continuidad_id = "tipo-declaracion-resultado"
 number = "periodo"
 section = ["declarante"]
 data_type = "text"
-semantic_role = "tipo_declaracion"
+semantic_role = "tipo_declaracion_resultado"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]

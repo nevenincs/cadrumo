@@ -8,7 +8,6 @@ the calculation response and the persisted public observation surface.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib
 import json
 import os
@@ -47,11 +46,10 @@ REGISTRY_REVISION = "2024"
 TARGET_CASILLA = "DP200014:00562"
 EXPECTED_VALUE = Decimal("23000.00")
 EXPECTED_FORMULA = "modelo-200-cuota-integra"
-# Public observations retain the provision locator but pseudonymize the
-# authority-document identity. Derive the expected public token from the legal
-# source identity instead of copying a compiler-produced digest literal.
-_EXPECTED_LEGAL_DOCUMENT = "ley-27-2014"
-EXPECTED_LEGAL_REF = f"sha256:{hashlib.sha256(_EXPECTED_LEGAL_DOCUMENT.encode('utf-8')).hexdigest()[:8]}:art-29"
+# The cuota integra applies the general rate of the Ley del Impuesto sobre
+# Sociedades, so its public observation cites that article by its registry
+# legal reference.
+EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
 EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
 #: The one warning this oracle's own execution posture guarantees.
@@ -61,9 +59,15 @@ EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview
 #: a real one. That posture cannot persist a login session, so every command
 #: authenticating over the bounded stdin channel truthfully reports that it
 #: authenticated only its own process. The notice describes the oracle's own
-#: isolation, not the installed build's tax behaviour, and it is the only code
-#: excused anywhere here; every other diagnostic still fails the oracle.
+#: isolation, not the installed build's tax behaviour; beside the creation
+#: notice below it is the only code excused, and every other diagnostic still
+#: fails the oracle.
 ISOLATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"config.login.session_not_persisted"})
+#: The warning profile creation always ends with. Creation closes the session it
+#: opened, so the next process starts signed out and the product says so; the
+#: oracle authenticates every later command over the stdin channel, which is the
+#: state the notice describes. It is excused on the creation command alone.
+PROFILE_CREATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"PROFILE_LOGIN_REQUIRED"})
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 
 CASILLAS = (
@@ -236,6 +240,27 @@ def profile_create_arguments() -> tuple[str, ...]:
     )
 
 
+#: Profile-creation option that reads the new profile's passphrase from stdin.
+PROFILE_CREATION_SECRETS_OPTION: Final[str] = "--secrets-stdin"
+#: Global option that reads the active profile's passphrase from stdin.
+PROFILE_AUTHENTICATION_SECRETS_OPTION: Final[str] = "--profile-secrets-stdin"
+
+
+def profile_creation_secrets(passphrase: str) -> str:
+    """Return the stdin payload that creates a passphrase-only profile."""
+    return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase}, separators=(",", ":"))
+
+
+def profile_authentication_secrets(passphrase: str) -> str:
+    """Return the stdin payload that authenticates one profile-scoped command."""
+    return json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
+
+
+def complete_setup_arguments() -> tuple[str, ...]:
+    """Return the verb that declares a created profile ready for modelo work."""
+    return ("config", "profile", "complete-setup")
+
+
 def work_create_arguments() -> tuple[str, ...]:
     """Return the public work-unit creation argument sequence."""
     return (
@@ -396,14 +421,11 @@ def create_installed_profile(
     raised, never carried forward.
     """
     return _run(
-        (str(cli), *_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
+        (str(cli), *_JSON_FORMAT, *profile_create_arguments(), PROFILE_CREATION_SECRETS_OPTION),
         cwd=cwd,
         env=environment,
         timeout_seconds=timeout_seconds,
-        input_text=json.dumps(
-            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-            separators=(",", ":"),
-        ),
+        input_text=profile_creation_secrets(passphrase),
     )
 
 
@@ -476,9 +498,9 @@ def run_installed_tax_oracle(
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
     base = (str(resolved_cli), *_JSON_FORMAT)
-    authenticated_base = (*base, "--profile-secrets-stdin")
+    authenticated_base = (*base, PROFILE_AUTHENTICATION_SECRETS_OPTION)
     passphrase = secrets.token_urlsafe(32)
-    profile_authentication = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
+    profile_authentication = profile_authentication_secrets(passphrase)
     commands: list[CommandResult] = []
 
     version = _run(
@@ -498,13 +520,18 @@ def run_installed_tax_oracle(
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
-    _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
+    assert_no_diagnostic_notices(
+        profile_document,
+        command="config.profile.create",
+        error=InstalledTaxOracleError,
+        excused_codes=PROFILE_CREATION_NOTICE_CODES,
+    )
 
     # A profile is born incomplete on purpose, and modelo work refuses one that
     # has never been declared ready to file. The declaration is its own verb, so
     # the oracle makes it rather than assuming creation implied it.
     complete_setup = _run(
-        (*authenticated_base, "config", "profile", "complete-setup"),
+        (*authenticated_base, *complete_setup_arguments()),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,

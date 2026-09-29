@@ -20,8 +20,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
-from .schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
+from .schema_scalars import validate_registry_text_scalar
 from .schema_surfaces import CasillaDefinition
 from .tax_id_format import runtime_tax_id_format
 
@@ -80,11 +81,7 @@ def validate_text_input_targets(
     :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` map so callers
     cannot supply unknown casillas or route text into numeric registry targets.
     """
-    text_casilla_ids = {
-        casilla_id
-        for casilla_id, casilla in casillas_by_id.items()
-        if registry_scalar_value_type(casilla.data_type) == "str"
-    }
+    text_casilla_ids = text_family_casilla_ids(casillas_by_id.values())
     unknown_text_inputs = sorted(set(text_inputs).difference(casillas_by_id))
     if unknown_text_inputs:
         raise RegistryValidationError(

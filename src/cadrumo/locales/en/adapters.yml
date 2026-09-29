@@ -125,6 +125,11 @@ adapters:
       sancion_incomplete: The sanción document could not be read completely. Open
         it in the sede and check it by hand.
   outbound:
+    calculation_summary_pdf:
+      errors:
+        tag_plan_mismatch: The drawn calculation summary pages do not match their
+          tagging plan on page {page} ({detail}); the summary is refused rather than
+          tagged approximately.
     storage:
       _factory:
         errors:

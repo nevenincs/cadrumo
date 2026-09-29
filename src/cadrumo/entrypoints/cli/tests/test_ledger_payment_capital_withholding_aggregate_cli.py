@@ -24,6 +24,7 @@ from ....adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NIF,
     CAPITAL_IRPF,
+    CAPITAL_YEAR,
     capital_payment,
     capital_request,
 )
@@ -45,8 +46,8 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000454"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-# The coupon became exigible on 30 June 2025, so it belongs to the second quarter
+_T0 = datetime(CAPITAL_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
+# The coupon became exigible on 30 June of its year, so it belongs to the second quarter
 # even though the bank paid it on 2 July.
 _Q2 = "2T"
 
@@ -116,7 +117,7 @@ def _aggregate(modelo: str, period: str, *capture_options: str) -> tuple[int, st
             "--modelo",
             modelo,
             "--year",
-            "2025",
+            f"{CAPITAL_YEAR}",
             "--period",
             period,
             *capture_options,
@@ -127,7 +128,7 @@ def _aggregate(modelo: str, period: str, *capture_options: str) -> tuple[int, st
 
 def _stored(modelo: str, period: str) -> tuple[RetencionObservation, ...]:
     return build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
-        modelo, Period.from_year_and_code(2025, period)
+        modelo, Period.from_year_and_code(CAPITAL_YEAR, period)
     )
 
 
@@ -143,7 +144,7 @@ def _work(verb: str, *extra: str) -> tuple[int, str]:
             "--modelo",
             "123",
             "--year",
-            "2025",
+            f"{CAPITAL_YEAR}",
             "--period",
             _Q2,
             *extra,

@@ -55,12 +55,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_income_transaction
@@ -324,31 +327,32 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
     assert "<work_unit_id>" not in result.output
 
 
-def test_modelo_project_2025_uses_revision_declared_default_bindings(
+def test_modelo_project_uses_revision_declared_default_bindings(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """The projection default bindings are scoped to the selected M100 revision.
 
-    Persona regression: a mixed employee/autonomo user projected 2025 after
-    calculating M130 and hit ``unknown registry binding ids`` for profile
-    defaults that exist in 2024 but not in the 2025 M100 registry. This drives
-    the real CLI calculate/project path and proves generated defaults are not
-    passed to the 2025 engine when that revision does not declare them.
+    Persona regression: a mixed employee/autonomo user projected the reviewed
+    M100 edition after calculating M130 and hit ``unknown registry binding ids``
+    for profile defaults that exist in the prior edition but not in the reviewed
+    one. This drives the real CLI calculate/project path and proves generated
+    defaults are not passed to the engine when that revision does not declare them.
     """
 
-    filing_year = 2025
+    # The newest Modelo 100 edition the registry authors.
+    filing_year = newest_authored_edition("100")
     _seed_autónomo_profile(runtime_profile)
     seed_m130_income_transaction(
         amount=_Q_INGRESOS,
         filing_year=filing_year,
-        source_key="projection-2025-1T",
+        source_key=f"projection-{filing_year}-1T",
         value_date=date(filing_year, 2, 15),
     )
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
         filing_year=filing_year,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(revision_covering("130", filing_year).id),
     )
     calc_result = invoke_cached_cli(
         [

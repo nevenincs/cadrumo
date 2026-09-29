@@ -40,6 +40,14 @@ from ...application.calculations.observations_repository import (
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
 )
+from ...application.modelo.calculation_report_export import ModeloCalculationReportResult
+from ...application.modelo.calculation_report_verification import (
+    CalculationSummaryCheckName,
+    CalculationSummaryVerification,
+    CalculationSummaryVerificationLayer,
+    CalculationSummaryVerificationOutcome,
+    CalculationSummaryVerificationReason,
+)
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
@@ -48,8 +56,10 @@ from ...application.modelo.work_review import (
     ModeloWorkReview,
 )
 from ...core.aggregation import BindingSourceKind
+from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
@@ -84,6 +94,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
@@ -777,6 +788,120 @@ class WorkReviewPayload(OutputSchema):
         )
 
 
+class WorkReportResult(OutputSchema):
+    """JSON envelope for ``aeat app modelo work report``.
+
+    Projects :class:`~cadrumo.application.modelo.calculation_report_export.ModeloCalculationReportResult`.
+    The exported rows are in the file the operator chose; this payload carries the
+    facts that identify it -- where it landed, how large it is, the digest of its
+    bytes, and the digest of the report content those bytes render -- plus the
+    traceability coordinates a reader joins back to the stored revision.
+
+    ``report_sha256`` is the report's own canonical digest and is therefore equal
+    for two documents rendering the same report, while ``file_sha256`` differs per
+    serialisation.
+    """
+
+    operation: Literal["modelo.work.report"] = "modelo.work.report"
+    modelo: str
+    filing_year: int
+    period: Period
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
+    verification_report_id: VerificationReportId | None = None
+    filing_record_id: FilingRecordId | None = None
+    document_format: CalculationReportDocumentFormat
+    report_language: OutputLanguage
+    output_path: str
+    byte_size: NonNegativeInt
+    file_sha256: str
+    report_sha256: str
+    row_count: NonNegativeInt
+    software_identity_grade: AeatSoftwareIdentityGrade | None = None
+    local_calculation_notice: str
+    #: Fingerprint of the profile key a summary PDF is certified with; ``None``
+    #: for a document format that carries no signature.
+    signing_key_fingerprint: str | None = None
+
+    @classmethod
+    def from_result(cls, result: ModeloCalculationReportResult) -> WorkReportResult:
+        """Project the application receipt onto the JSON transport shape."""
+        return cls(
+            modelo=str(result.modelo),
+            filing_year=int(result.filing_year),
+            period=result.period,
+            calculation_revision_id=result.calculation_revision_id,
+            work_unit_id=result.work_unit_id,
+            verification_report_id=result.verification_report_id,
+            filing_record_id=result.filing_record_id,
+            document_format=result.document_format,
+            report_language=result.report_language,
+            output_path=str(result.output_path),
+            byte_size=result.byte_size,
+            file_sha256=result.file_sha256,
+            report_sha256=result.report_sha256,
+            row_count=result.row_count,
+            software_identity_grade=result.software_identity_grade,
+            local_calculation_notice=result.local_calculation_notice,
+            signing_key_fingerprint=result.signing_key_fingerprint,
+        )
+
+
+class WorkReportVerifyCheck(OutputSchema):
+    """One check ``work report-verify`` ran, and the reason it reported, if any."""
+
+    check: CalculationSummaryCheckName
+    layer: CalculationSummaryVerificationLayer
+    reason: CalculationSummaryVerificationReason | None = None
+    detail: str | None = None
+    refuses: bool
+
+
+class WorkReportVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat app modelo work report-verify``.
+
+    Projects :class:`~cadrumo.application.modelo.calculation_report_verification.CalculationSummaryVerification`.
+    Carries the verdict, every check that ran and the identifiers the summary's
+    signed statement names -- never a taxpayer figure or identity, which stay in
+    the file being verified.
+    """
+
+    operation: Literal["modelo.work.report_verify"] = "modelo.work.report_verify"
+    path: str
+    outcome: CalculationSummaryVerificationOutcome
+    store_checked: bool
+    reasons: list[CalculationSummaryVerificationReason]
+    checks: list[WorkReportVerifyCheck]
+    calculation_revision_id: CalculationRevisionId | None = None
+    report_sha256: str | None = None
+    statement_sha256: str | None = None
+    signing_key_fingerprint: str | None = None
+
+    @classmethod
+    def from_verification(cls, verification: CalculationSummaryVerification, *, path: object) -> WorkReportVerifyResult:
+        """Project the application verdict onto the JSON transport shape."""
+        return cls(
+            path=str(path),
+            outcome=verification.outcome,
+            store_checked=verification.store_checked,
+            reasons=list(verification.reasons),
+            checks=[
+                WorkReportVerifyCheck(
+                    check=check.check,
+                    layer=check.layer,
+                    reason=check.reason,
+                    detail=check.detail,
+                    refuses=check.refuses,
+                )
+                for check in verification.checks
+            ],
+            calculation_revision_id=verification.calculation_revision_id,
+            report_sha256=verification.report_sha256,
+            statement_sha256=verification.statement_sha256,
+            signing_key_fingerprint=verification.signing_key_fingerprint,
+        )
+
+
 class WorkReviewResult(OutputSchema):
     """Envelope payload carrying the canonical application review record.
 
@@ -1186,6 +1311,7 @@ class ModeloExportPayload(OutputSchema):
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection
+    software_identity_grade: AeatSoftwareIdentityGrade | None = None
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
@@ -1213,6 +1339,7 @@ class ModeloExportPayload(OutputSchema):
             payment_election=result.payment_election,
             refund_election=result.refund_election,
             prior_domiciliation_election=result.prior_domiciliation_election,
+            software_identity_grade=result.software_identity_grade,
         )
 
 

@@ -62,6 +62,7 @@ _LANE_SELECTORS: tuple[tuple[str, Callable[[frozenset[str]], bool]], ...] = (
     ),
     ("just test-os-keychain", lambda m: "os_keychain" in m),
     ("just test-registry-live", lambda m: "aeat_live" in m),
+    ("just test-powershell-literal", lambda m: "external_tool" in m),
 )
 
 #: A module that would never run: architectural markers only.

@@ -35,6 +35,7 @@ from ...domain.calculations.registry.ids import BindingId, RelationId
 from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetCalculateCasillaPayload,
     ModeloSpreadsheetCalculateResult,
+    ModeloSpreadsheetExportResult,
     ModeloSpreadsheetPullRelationEditPayload,
     ModeloSpreadsheetPullResult,
     ModeloSpreadsheetPushResult,
@@ -232,6 +233,62 @@ def modelo_spreadsheet_push(
         result=export_result,
         lines=lines,
     )
+
+
+def modelo_spreadsheet_export(
+    ctx: typer.Context,
+    modelo: str,
+    period: str,
+    year: int,
+    output: Path,
+    replace_existing: bool = False,
+    prefill_relations: bool = False,
+) -> None:
+    """Export the registry calculation surface for a modelo + period to a local ``.xlsx`` workbook."""
+    from ...adapters.outbound.workbook.calc_sheets_xlsx import materialize_export_plan
+    from ...application.modelo.export_sink import LocalFileExportSink, ModeloExportOutputPathError
+    from ...application.storage.calc_sheets.workbook_export import export_modelo_workbook
+    from ._modelo_cli_support import bad_parameter_from_error
+
+    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
+    sink = LocalFileExportSink(path=output, replace_existing=replace_existing)
+    try:
+        sink.require_writable()
+        workbook = export_modelo_workbook(
+            modelo=modelo,
+            period=filing_period,
+            materializer=materialize_export_plan,
+            prefill_relations=prefill_relations,
+            snapshot_resolver=lambda selected, selected_period: load_snapshot(selected, selected_period),
+        )
+        receipt = sink.write(workbook.payload)
+    except ModeloExportOutputPathError as exc:
+        raise bad_parameter_from_error(exc) from exc
+
+    export_result = ModeloSpreadsheetExportResult(
+        modelo=str(workbook.modelo),
+        revision=str(workbook.revision),
+        period=workbook.period,
+        year=int(workbook.filing_year),
+        output_path=str(receipt.path),
+        byte_size=receipt.byte_size,
+        sha256=receipt.sha256,
+        tab_names=list(workbook.tab_names),
+        casilla_count=workbook.casilla_count,
+        prefill_relations=prefill_relations,
+    )
+    lines = (
+        "operation\tmodelo.spreadsheet.export",
+        f"modelo\t{export_result.modelo}",
+        f"revision\t{export_result.revision}",
+        f"period\t{export_result.period}",
+        f"year\t{export_result.year}",
+        f"output_path\t{export_result.output_path}",
+        f"byte_size\t{export_result.byte_size}",
+        f"sha256\t{export_result.sha256}",
+        f"casilla_count\t{export_result.casilla_count}",
+    )
+    emit_envelope(ctx, command="modelo.spreadsheet.export", result=export_result, lines=lines)
 
 
 def google_operation_error(code: str, *, diagnostic_ref: str | None) -> Exception:
@@ -906,6 +963,7 @@ __all__ = [
     "execute_google_sheets_export",
     "google_operation_error",
     "modelo_spreadsheet_calculate",
+    "modelo_spreadsheet_export",
     "modelo_spreadsheet_pull",
     "modelo_spreadsheet_push",
     "modelo_spreadsheet_verify",

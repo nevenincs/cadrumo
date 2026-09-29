@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import functools
 import sys
-import sysconfig
 import threading
 import traceback
 from collections.abc import Mapping
@@ -40,8 +39,8 @@ from cadrumo.core.json_contract import (
     validate_registered_envelope_document,
 )
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
+from ._cli_executable import sibling_cli_executable
 from ._meta_tools import ToolRunOutcome
 from ._settings import load_mcp_settings
 from .call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
@@ -203,11 +202,7 @@ def _installed_cli_executable() -> str:
     checkout shim. Missing installation state fails closed instead of falling
     back to an unrelated executable.
     """
-    scripts_dir = Path(sysconfig.get_path("scripts")).resolve()
-    executable_name = PRODUCT_IDENTITY.cli_executable
-    if sys.platform == "win32":
-        executable_name = f"{executable_name}.exe"
-    executable = (scripts_dir / executable_name).resolve()
+    executable = sibling_cli_executable()
     if not executable.is_file():
         message = f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
         raise FileNotFoundError(message)

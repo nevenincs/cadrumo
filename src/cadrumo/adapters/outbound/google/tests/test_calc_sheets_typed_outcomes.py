@@ -21,12 +21,14 @@ from .....application.storage.calc_sheets.records import SheetExportPlan
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.tax_domain import TaxDomain
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..calc_sheets_pull import (
     _coerce_edit_value_to_decimal,
     _collect_input_casilla_values,
+    _collect_text_casilla_values,
     _merge_developer_metadata_entries,
     _parse_relation_metadata,
     _read_developer_metadata,
@@ -333,6 +335,28 @@ def test_pull_refuses_undeclared_or_non_input_workbook_edits_with_an_operator_de
         raised.value,
         condition_id=condition_id,
         facts=facts,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+@pytest.mark.parametrize(("value", "rendered_value"), ((True, "True"), (Decimal("1.5"), "1.5")))
+def test_pull_refuses_a_text_casilla_cell_that_holds_no_text(value: Decimal | bool, rendered_value: str) -> None:
+    """A truth value or a fractional number is not text the operator wrote."""
+    snapshot = published_snapshot("190", filing_year=2022, period="0A")
+    edit = OperatorEdit(
+        casilla_id="decl.persona-contacto-telefono",
+        display_number="59-67",
+        label="test",
+        value=value,
+    )
+
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        _collect_text_casilla_values(snapshot=snapshot, edits=(edit,))
+
+    _assert_closed_outcome(
+        raised.value,
+        condition_id="google.calc_sheets.pull.edit_value_text",
+        facts={"edit_value": rendered_value, "input_key": "decl.persona-contacto-telefono", "string_edit": False},
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 

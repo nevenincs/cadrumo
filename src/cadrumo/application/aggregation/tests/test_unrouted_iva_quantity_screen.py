@@ -197,6 +197,29 @@ def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevisio
     return revision.model_copy(update={"bindings": tuple(kept)})
 
 
+def _revision_without_import_base(revision: ModeloRevision) -> ModeloRevision:
+    """Return ``revision`` without the ``base_amount_sum`` bindings that reach an import row.
+
+    Models the second shape the screen catches: the fact IS declared -- the
+    domestic, intra-community and export base bindings stay -- but the bindings
+    declaring it reach only SOME rows. Both committed modelos now bind the
+    import base (Modelo 303 box [32], Modelo 390 box [52]), so the shape is
+    planted in a copy rather than read off a live gap.
+    """
+    import_third_country = IvaCategory("import_third_country")
+    kept = [
+        binding
+        for binding in revision.bindings
+        if not (
+            binding.source.value == "ledger_iva_aggregation"
+            and getattr(binding.provider, "fact", None) == "base_amount_sum"
+            and import_third_country in getattr(binding.provider, "categories", ())
+        )
+    ]
+    assert len(kept) < len(revision.bindings), "the revision declares no import base binding to strip"
+    return revision.model_copy(update={"bindings": tuple(kept)})
+
+
 def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
     """The real Modelo 303 revision routes base, cuota and recargo -- no advisory."""
     rows = _observations(_sale("s-1", base="1000.00", iva="210.00", recargo="52.00"))
@@ -342,13 +365,9 @@ def _third_country_import() -> Transaction:
     """A third-country import: cuota self-assessed at customs, base imponible carried.
 
     Mirrors :func:`_reverse_charge_purchase`'s shape exactly, differing only in
-    the classified category. Kept as the residue fixture for the tests below
-    because ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`` and
-    ``INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE`` stopped being residue
-    once M390's AIC box layer (d3c2438371) and M303's box 10 base binding
-    (717af32acc) landed -- both now declare a ``base_amount_sum`` binding for
-    those two categories, so a fixture of either would no longer prove the
-    partitioned-gap shape these tests exist to pin.
+    the classified category. The partitioned-gap tests below strip the import
+    base bindings from a copy of the committed revision, so this row's base is
+    the quantity the copy leaves undrawn while its cuota is still drawn.
     """
     raw = RawTransaction(
         provider_transaction_id="import-1",
@@ -393,24 +412,27 @@ def _third_country_import() -> Transaction:
 
 
 def test_a_partitioned_fact_is_screened_per_row_not_per_revision() -> None:
-    """The live Modelo 303 gap a flat coverage set cannot see.
+    """The gap a flat coverage set cannot see.
 
-    Modelo 303 declares ``base_amount_sum`` bindings, so "is this fact drawn"
-    answers yes for every row. But those bindings select the domestic tiers,
-    intra-community supplies/exports and (since 717af32acc) the intra-community
+    The stripped Modelo 303 still declares ``base_amount_sum`` bindings, so "is
+    this fact drawn" answers yes for every row. But those bindings select the
+    domestic tiers, intra-community supplies/exports and the intra-community
     reverse-charge categories, while the cuota bindings ALSO reach the import
     category. A third-country import's base imponible is therefore reached by
-    no base binding at all, on the COMMITTED revision, with no fact stripped by
-    this test.
+    no base binding at all.
 
     A flat drawn-set is silent here, which is the same defect the quantity
     screen exists to catch, one level in: coverage must be asked per row and per
     fact, never per fact alone.
     """
+    revision = _revision_without_import_base(_revision("303"))
     rows = _observations(_third_country_import())
 
-    unrouted = unrouted_ledger_iva_quantities(_revision("303"), rows)
+    unrouted = unrouted_ledger_iva_quantities(revision, rows)
 
+    assert any(getattr(binding.provider, "fact", None) == "base_amount_sum" for binding in revision.bindings), (
+        "the stripped revision must still declare the fact, or this is the no-binding shape"
+    )
     assert [entry.fact for entry in unrouted] == ["base_amount_sum"]
     assert unrouted[0].total == Decimal("1000.00")
     # The cuota IS reached, by a binding selecting this row's category. Asserted
@@ -425,10 +447,11 @@ def test_the_row_screen_is_silent_on_the_partitioned_gap() -> None:
     category -- so the row-keyed screen sees nothing wrong while its base
     imponible reaches no binding.
     """
+    revision = _revision_without_import_base(_revision("303"))
     rows = _observations(_third_country_import())
 
-    assert unsupported_ledger_iva_observations(_revision("303"), rows) == ()
-    assert unrouted_ledger_iva_quantities(_revision("303"), rows) != ()
+    assert unsupported_ledger_iva_observations(revision, rows) == ()
+    assert unrouted_ledger_iva_quantities(revision, rows) != ()
 
 
 def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> None:
@@ -444,45 +467,43 @@ def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> No
 
 
 @pytest.mark.parametrize("modelo_id", ["303", "390"])
-def test_the_import_base_residue_is_reported_on_both_modelos(modelo_id: str) -> None:
-    """The residue that survives a modelo declaring the fact, pinned on both.
+def test_the_import_base_is_routed_on_both_modelos_and_its_loss_is_reported(modelo_id: str) -> None:
+    """The import base reaches a box on both modelos; losing it is reported on both.
 
-    Modelo 390 declared no ``base_amount_sum`` binding at all until the
-    annual-form campaign added its base boxes. Closing that gap is exactly what
-    would have BLINDED a screen keyed on the fact alone: ``base_amount_sum``
-    became "drawn" for M390, and the import row whose base is still reached by
-    nothing would have gone quiet.
+    Modelo 303 box [32] ("importaciones de bienes corrientes", base) and Modelo
+    390 box [52] (its annual total) read the base of the import rows whose cuota
+    [33] and [53] read, so a committed revision leaves no import base undrawn.
+    Removing that binding is exactly the partitioned shape: the fact stays
+    declared for other categories while the import rows reach none of them, and
+    the screen reports it on either modelo.
 
-    ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`` and
-    ``INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE`` were part of this
-    residue too until M390's AIC box layer (d3c2438371) and M303's box 10 base
-    binding (717af32acc) each declared a ``base_amount_sum`` binding for them;
-    asserted silent below rather than dropped, so a regression reopening either
-    gap reddens here rather than by omission.
-
-    Both modelos are asserted together because the residue is the same
-    category on each, and pinning only the modelo that happened to be broken
-    first is how this test would rot the next time a campaign lands.
+    Both modelos are asserted together because the screen is the same on each,
+    and pinning only the modelo that happened to be broken first is how this test
+    would rot the next time a campaign lands.
     """
     revision = _revision(modelo_id)
+    stripped = _revision_without_import_base(revision)
+    import_row = _row(IvaCategory("import_third_country"))
 
+    assert unrouted_ledger_iva_quantities(revision, [import_row]) == ()
     reported = {
-        category: [entry.fact for entry in unrouted_ledger_iva_quantities(revision, [_row(category)])]
+        category: [entry.fact for entry in unrouted_ledger_iva_quantities(stripped, [_row(category)])]
         for category in (IvaCategory("import_third_country"),)
     }
 
     assert all(facts == ["base_amount_sum"] for facts in reported.values()), reported
-    # The domestic tiers and the (now closed) reverse-charge pair ARE covered
-    # on both modelos, so the screen must be silent there. Without this the
-    # test would pass on a screen that reports every row of every category.
-    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory("domestic_general"))]) == ()
+    # The domestic tiers and the intra-community reverse-charge pair stay
+    # covered on the stripped copy, so the screen must be silent there. Without
+    # this the test would pass on a screen that reports every row of every
+    # category.
+    assert unrouted_ledger_iva_quantities(stripped, [_row(IvaCategory("domestic_general"))]) == ()
     assert (
-        unrouted_ledger_iva_quantities(revision, [_row(IvaCategory("intra_community_acquisition_reverse_charge"))])
+        unrouted_ledger_iva_quantities(stripped, [_row(IvaCategory("intra_community_acquisition_reverse_charge"))])
         == ()
     )
     assert (
         unrouted_ledger_iva_quantities(
-            revision, [_row(IvaCategory("intra_community_service_acquisition_reverse_charge"))]
+            stripped, [_row(IvaCategory("intra_community_service_acquisition_reverse_charge"))]
         )
         == ()
     )

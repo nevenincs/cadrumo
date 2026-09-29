@@ -109,7 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
-from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
+from .producer_capture import ProducerCapture, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -214,7 +214,7 @@ class ProjectionObligation(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Typed :class:`~cadrumo.core.Period` for the obligation window.
+        period: Typed :class:`~cadrumo.core.period.Period` for the obligation window.
         opens_on: First day the filing window accepts submissions.
         closes_on: Last day the filing window accepts submissions.
         status: The engine :class:`ObligationStatus`.
@@ -378,7 +378,7 @@ class ModeloReadinessRequest(BaseModel):
     pass.
 
     Attributes:
-        period: Typed :class:`~cadrumo.core.Period` scoping the readiness
+        period: Typed :class:`~cadrumo.core.period.Period` scoping the readiness
             check, or ``None`` when the caller omits the period (the
             projection uses the annual ``0A`` period for registry and
             ledger preflight resolution).
@@ -531,6 +531,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         ),
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: OperatorActionAxis.RESOLVE_IDENTITY,
         LedgerPreflightIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (OperatorActionAxis.RESOLVE_IDENTITY),
+        LedgerPreflightIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION: (OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE),
         LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
         LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.UNSUPPORTED_PERIOD: OperatorActionAxis.IMPORT_LEDGER_DATA,
@@ -619,13 +620,13 @@ class ProjectionModeloReadiness(BaseModel):
             supplied by the current profile or ledger state.
         missing_bindings: Missing :class:`ProjectionModeloBindingRequirement`
             records for unresolved calculation inputs.
-        period: Typed :class:`~cadrumo.core.Period` the readiness check was
+        period: Typed :class:`~cadrumo.core.period.Period` the readiness check was
             scoped to.
         ledger_preflight_required: Whether the registry declares any
             ledger aggregation binding requiring ledger preflight.
         ledger_ready: Ledger-preflight verdict, or ``None`` when no
             ledger preflight was required.
-        ledger_period: The :class:`~cadrumo.core.Period` the ledger preflight
+        ledger_period: The :class:`~cadrumo.core.period.Period` the ledger preflight
             was scoped to, or ``None`` when no ledger preflight was run.
         ledger_issues: Blocking :class:`LedgerPreflightIssue` rows.
         per_operation_requirements_assessed: Whether the per-modelo
@@ -1144,7 +1145,7 @@ def _build_missing_binding_requirements(
 def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
     """Return the typed ledger period for the ledger preflight.
 
-    Returns the typed :class:`~cadrumo.core.Period` on the request directly.
+    Returns the typed :class:`~cadrumo.core.period.Period` on the request directly.
     When the request carries no period the annual ``0A`` fallback is returned.
     """
     if request.period is None:
@@ -1397,19 +1398,6 @@ _READINESS_CAPTURE_SCOPE = ProducerCaptureScope(
     owner="application.state_projection",
     namespace="modelo.readiness",
 )
-
-
-def read_modelo_readiness_current_coordinate(
-    requests: tuple[ModeloReadinessRequest, ...],
-    *,
-    active_profile_id: str,
-    operation: PinnedAuthorityOperation,
-) -> ProducerCaptureCoordinate:
-    """Return the typed current coordinate for same-domain readiness validation."""
-    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
-        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
-        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
-    )
 
 
 def capture_modelo_readiness(

@@ -56,7 +56,11 @@ from ...core.prorrata_register import (
 )
 from ...core.prose_elision import IssueDetail
 from ...core.time.clock import today_madrid
-from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
+from ...domain.bienes_inversion.register import (
+    BienesInversionIvaRegister,
+    InvestmentAssetAcquisitionLink,
+    validate_investment_asset_reciprocity,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -106,6 +110,7 @@ from ...domain.iva.schema import (
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
+from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -207,6 +212,25 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
     MISSING_DEDUCTION_CLASSIFICATION = "missing_deduction_classification"
+    # The sibling of the reason above, one step further along. There the
+    # deduction taxonomy is ABSENT; here it is PRESENT and the combination it
+    # names has no legal authority -- an exempt purchase classified as an
+    # ordinary domestic deduction, an investment kind with no reciprocal asset
+    # identity, a kind whose required evidence authority is not the one
+    # attached, or deduction authority carried on an output row.
+    #
+    # Both are operator data errors, and the distinction matters because the
+    # remedies differ: an absent classification is supplied, an inadmissible one
+    # is CORRECTED. Collapsing them would tell a taxpayer to classify a row they
+    # already classified.
+    #
+    # Separate from the screens above it because admissibility is not derivable
+    # from any single declared field: it is the closed pairing table in fact
+    # 0085, resolved by the domain validator. Until this reason existed that
+    # validator ran only inside the observation's own model validator, AFTER
+    # every typed gate, so the operator's data error surfaced as an internal
+    # payload-boundary defect with no row, no field and no remedy named.
+    INADMISSIBLE_DEDUCTION_CLASSIFICATION = "inadmissible_deduction_classification"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -487,6 +511,12 @@ def aggregate_iva_ledger_observations_from_repositories(
             ledger_profile_id=bucket_id,
             investment_asset_register=investment_asset_register,
             investment_asset_profile_id=investment_asset_profile_id,
+            investment_acquisition_rows=_register_acquisition_rows_outside_window(
+                partition.in_window,
+                filing_year=period.filing_year,
+                investment_asset_register=investment_asset_register,
+                repository=repository,
+            ),
             operation=operation,
         )
         out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
@@ -495,16 +525,34 @@ def aggregate_iva_ledger_observations_from_repositories(
         result = result.model_copy(
             update={"out_of_window_summary": out_of_window_summary},
         )
-    _validate_investment_asset_authority(
-        result.observations,
-        period=period,
-        ledger_profile_id=bucket_id,
-        investment_asset_register=investment_asset_register,
-        investment_asset_profile_id=investment_asset_profile_id,
-        operation=operation,
-    )
     _validate_rectifications_consumed_once(result.observations, operation=operation)
     return result
+
+
+def _register_acquisition_rows_outside_window(
+    catalogue: TransactionCatalogue,
+    *,
+    filing_year: int,
+    investment_asset_register: BienesInversionIvaRegister | None,
+    repository: TransactionCatalogueRepositoryProtocol,
+) -> TransactionCatalogue:
+    """Read the filing year's register-named acquisition rows a period window left out.
+
+    Only the rows a register record acquired in ``filing_year`` names are read,
+    by id, so a quarter decrypts its own window plus at most one row per capital
+    good the year acquired elsewhere. A named id the ledger does not hold is
+    simply absent from the result, and the reciprocity contract refuses it.
+    """
+    if investment_asset_register is None:
+        return TransactionCatalogue.from_transactions(())
+    outside_ids = {
+        record.acquisition_ledger_id
+        for record in investment_asset_register.records
+        if record.acquisition_year == filing_year and catalogue.get(record.acquisition_ledger_id) is None
+    }
+    if not outside_ids:
+        return TransactionCatalogue.from_transactions(())
+    return repository.load_by_ids(outside_ids)
 
 
 def _validate_investment_asset_authority(
@@ -514,9 +562,17 @@ def _validate_investment_asset_authority(
     ledger_profile_id: str | None,
     investment_asset_register: BienesInversionIvaRegister | None,
     investment_asset_profile_id: str | None,
+    acquisition_rows: Sequence[TransactionCatalogue],
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Require explicit owner inputs before an investment fact can aggregate."""
+    """Require explicit owner inputs before an investment fact can aggregate.
+
+    The reciprocity contract is one of the filing YEAR: every record acquired in
+    it pairs with exactly one acquisition row of that year. A period observes
+    only its own rows, so the acquisitions the register places in the year's
+    other periods join the evidence from ``acquisition_rows``; without them a
+    declared bien de inversión would refuse every period but the one holding it.
+    """
     has_investment_observation = any(
         observation.deduction_fact_kind is not None
         and is_iva_deduction_kind(
@@ -539,11 +595,70 @@ def _validate_investment_asset_authority(
             },
         )
     validate_investment_asset_reciprocity(
-        observations=observations,
+        observations=(
+            *observations,
+            *_acquisitions_outside_period(
+                observations,
+                period=period,
+                investment_asset_register=investment_asset_register,
+                acquisition_rows=acquisition_rows,
+            ),
+        ),
         register=investment_asset_register,
         ledger_profile_id=ledger_profile_id,
         asset_profile_id=investment_asset_profile_id,
         filing_year=period.filing_year,
+    )
+
+
+def _acquisitions_outside_period(
+    observations: Sequence[IvaLedgerObservation],
+    *,
+    period: Period,
+    investment_asset_register: BienesInversionIvaRegister,
+    acquisition_rows: Sequence[TransactionCatalogue],
+) -> tuple[InvestmentAssetAcquisitionLink, ...]:
+    """Return the acquisition links of the filing year's records whose row lies in another period.
+
+    Only a record this period did not observe is looked up, and only a row whose
+    devengo date falls outside ``period`` is linked: a row dated inside it that
+    produced no observation here stays unproven, because this period's own
+    classification of that row is the authority for it. A record naming a row
+    no catalogue holds, or one the ledger has retired, contributes no link and
+    so remains a refusal in every period of its acquisition year.
+    """
+    observed_ledger_ids = {observation.ledger_id for observation in observations}
+    links: list[InvestmentAssetAcquisitionLink] = []
+    for record in investment_asset_register.records:
+        if record.acquisition_year != period.filing_year or record.acquisition_ledger_id in observed_ledger_ids:
+            continue
+        transaction = next(
+            (row for catalogue in acquisition_rows if (row := catalogue.get(record.acquisition_ledger_id)) is not None),
+            None,
+        )
+        if transaction is None:
+            continue
+        link = _investment_acquisition_link(transaction)
+        if link is not None and not period.contains(link.transaction_date):
+            links.append(link)
+    return tuple(links)
+
+
+def _investment_acquisition_link(transaction: Transaction) -> InvestmentAssetAcquisitionLink | None:
+    """Project one live ledger row onto the reciprocal edge it claims, if it claims one."""
+    if (
+        transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE
+        or transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        or transaction.deduction_fact_kind is None
+        or transaction.investment_asset_id is None
+    ):
+        return None
+    return InvestmentAssetAcquisitionLink(
+        ledger_id=transaction.transaction_id,
+        transaction_date=transaction.operation_date or transaction_filing_date(transaction),
+        deduction_fact_kind=transaction.deduction_fact_kind,
+        investment_asset_id=transaction.investment_asset_id,
+        prorrata_sector_id=transaction.prorrata_sector_id,
     )
 
 
@@ -578,6 +693,7 @@ def aggregate_iva_ledger_observations(
     investment_asset_register: BienesInversionIvaRegister | None = None,
     investment_asset_profile_id: str | None = None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
+    investment_acquisition_rows: TransactionCatalogue | None = None,
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
@@ -590,6 +706,12 @@ def aggregate_iva_ledger_observations(
         investment_asset_profile_id: Profile that owns the Bienes register.
         prorrata_apportionment: Optional active general-prorrata percentage to
             apply later to deducible IVA cuota binding values.
+        investment_acquisition_rows: Acquisition rows the register names that
+            ``transactions`` does not hold, as a period-scoped catalogue leaves
+            out the rows of the year's other periods. They are never
+            aggregated; they only prove, against the register, an acquisition
+            dated outside ``period``. Omitted, ``transactions`` is taken to hold
+            every row the register names.
         operation: Existing generation-pinned authority operation owned by the
             enclosing workflow.
     """
@@ -639,6 +761,9 @@ def aggregate_iva_ledger_observations(
         ledger_profile_id=ledger_profile_id,
         investment_asset_register=investment_asset_register,
         investment_asset_profile_id=investment_asset_profile_id,
+        acquisition_rows=(transactions,)
+        if investment_acquisition_rows is None
+        else (transactions, investment_acquisition_rows),
         operation=operation,
     )
     _validate_rectifications_consumed_once(result.observations, operation=operation)
@@ -1226,6 +1351,8 @@ def compute_annual_deducible_totals_by_regime(
     revision: ModeloRevision,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    investment_asset_register: BienesInversionIvaRegister,
+    investment_asset_profile_id: str,
     operation: PinnedAuthorityOperation,
 ) -> AnnualDeducibleTotalsByRegime | None:
     """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
@@ -1259,6 +1386,10 @@ def compute_annual_deducible_totals_by_regime(
         transaction_repository: Required bucket-bound catalogue capability.
         prorrata_register_repository: Canonical register repository for the
             same bucket as the transaction catalogue.
+        investment_asset_register: Bienes-inversion authority the year's
+            investment acquisitions are reciprocal to; a year that acquired a
+            bien de inversión cannot aggregate without it.
+        investment_asset_profile_id: Profile that owns that register.
         operation: Caller-owned pinned authority operation retained through the
             annual aggregation.
 
@@ -1273,6 +1404,8 @@ def compute_annual_deducible_totals_by_regime(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=transaction_repository,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
         operation=operation,
         prorrata_register_repository=prorrata_register_repository,
     )
@@ -1506,6 +1639,38 @@ def validate_iva_ledger_counterparty_category(
     )
 
 
+def validate_iva_ledger_deduction_classification(
+    transaction: Transaction,
+    *,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Return the deduction-admissibility gate issue for a ledger row, or ``None``.
+
+    The readiness layer's entry into the per-transaction IVA pipeline. It runs
+    the real pre-observation gates in their real order and reports only the
+    deduction verdict, so a readiness finding cannot contradict what calculation
+    will do with the row: a row an earlier gate excludes yields nothing here,
+    exactly as it contributes nothing there. Deriving the same facts a second
+    time in this layer would have produced the opposite failure -- a readiness
+    report blocking a filing over a row the projection path had already
+    excluded for an unrelated reason.
+
+    Scoped to rows that actually carry deduction authority. A row with neither a
+    kind nor a provenance cannot be inadmissible on this axis, and skipping it
+    keeps the readiness pass off the classification pipeline for the ordinary
+    majority of a ledger.
+    """
+    if transaction.deduction_fact_kind is None and transaction.deduction_provenance is None:
+        return None
+    from ._iva_transaction import iva_transaction_gate_issue
+
+    issue = iva_transaction_gate_issue(transaction, resolved_period=period, operation=operation)
+    if issue is None or issue.reason not in IVA_LEDGER_DEDUCTION_GATE_REASONS:
+        return None
+    return issue
+
+
 def business_proportionality_for(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
 
@@ -1552,6 +1717,16 @@ IVA_LEDGER_COUNTERPARTY_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueR
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
     },
+)
+
+#: Every reason :func:`validate_iva_ledger_deduction_classification` can emit.
+#:
+#: One member, and still declared as a set for the same reason its two siblings
+#: are: the readiness layer derives its own mapped domain from the union of the
+#: screens it runs, so a screen that gains a second reason has to move this set
+#: rather than arrive at a bare subscript with no entry.
+IVA_LEDGER_DEDUCTION_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueReason]] = frozenset(
+    {IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION},
 )
 
 
@@ -1632,4 +1807,5 @@ __all__ = [
     "iva_ledger_missing_fact_reasons",
     "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",
+    "validate_iva_ledger_deduction_classification",
 ]

@@ -415,8 +415,8 @@ class CalculationSourceIssue(BaseModel):
     binding, without misrepresenting it as source provenance for a computed
     output.
 
-    Three conditions qualify, and all must survive to the persisted revision
-    because each describes a condition the filing cannot treat as complete.
+    Every reason below must survive to the persisted revision, because each
+    describes a condition the filing cannot treat as complete.
     ``unrouted_observation`` is a row no binding consumes at all.
     ``unrouted_declarable_quantity`` is an independent quantity that consumed
     rows carry and no binding drawing that quantity reaches â€” the row-keyed
@@ -426,8 +426,10 @@ class CalculationSourceIssue(BaseModel):
     filing scope cannot be completed from its recorded tax evidence.
     ``iva_compensation_annual_source_evidence_failure`` is a required Modelo
     390 annual partition whose filed Modelo 303 source set is incomplete or
-    stale. A contradictory source is refused during calculation before a
-    revision can be persisted.
+    stale. ``withholding_detail_absent`` is an annual withholding summary whose
+    per-perceptor-clave detail store held no observation for the year, so its
+    percepciones count rests on a zero the store cannot support. A contradictory
+    source is refused during calculation before a revision can be persisted.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -437,6 +439,7 @@ class CalculationSourceIssue(BaseModel):
         "unrouted_declarable_quantity",
         "iva_selected_scope_evidence_failure",
         "iva_compensation_annual_source_evidence_failure",
+        "withholding_detail_absent",
     ]
     binding_source: BindingSourceKind
     message: str = Field(min_length=1, max_length=512)

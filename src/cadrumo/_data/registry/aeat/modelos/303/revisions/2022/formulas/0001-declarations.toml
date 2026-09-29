@@ -61,20 +61,37 @@ additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
+# The diseño de registro of every supported year states box [45] as
+# [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] + [44]; the
+# total is read off those boxes so no deducible row is counted in two of
+# them. [42] stays operator input: the ledger books a REAGP purchase with a
+# cuota of zero by law and does not carry the compensación a tanto alzado.
 [revisions.2022.formulas.expression]
 op = "add"
 
 [[revisions.2022.formulas.expression.args]]
-casilla_id = "iva.soportado.interiores"
+casilla_id = "29"
 
 [[revisions.2022.formulas.expression.args]]
-casilla_id = "iva.soportado.importaciones"
+casilla_id = "31"
 
 [[revisions.2022.formulas.expression.args]]
-casilla_id = "iva.autorepercutido.intracomunitaria"
+casilla_id = "33"
 
 [[revisions.2022.formulas.expression.args]]
-casilla_id = "iva.autorepercutido.interior.deducible"
+casilla_id = "35"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "37"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "39"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "41"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "42"
 
 [[revisions.2022.formulas.expression.args]]
 casilla_id = "43"
@@ -313,3 +330,160 @@ op = "negate"
 
 [[revisions.2022.formulas.expression.args.args]]
 casilla_id = "iva.resultado"
+
+# Box [71] "Resultado de la liquidacion ( [69] - [70] )", as the 2022 diseno de
+# registro prints it (corpus/aeat_official/disenos_registro/modelo_303/files/
+# 02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx,
+# pagina 3, campo 26). [69] is iva.resultado and [70] the amount an earlier
+# autoliquidacion of the same period already paid. Left as operator input, a
+# 2022 period with a result filed [71] as zero and its disposition as "N", which
+# the compensation carry then refused to read.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-resultado-final"
+target_casilla_id = "71"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.resultado"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "70"
+
+# Operaciones interiores rows: the soportado part and the deducible half of
+# the domestic inversión del sujeto pasivo, by what was acquired.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-corrientes-base"
+target_casilla_id = "28"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.base" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-29-projection"
+target_casilla_id = "29"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores" },
+    { casilla_id = "iva.autorepercutido.interior.deducible" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-bienes-inversion-base"
+target_casilla_id = "30"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.bienes-inversion.base" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-108", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-bienes-inversion-cuota"
+target_casilla_id = "31"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.bienes-inversion" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-108", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-33-projection"
+target_casilla_id = "33"
+expression = { casilla_id = "iva.soportado.importaciones" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-37-projection"
+target_casilla_id = "37"
+expression = { casilla_id = "iva.autorepercutido.intracomunitaria.deducible" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-rectificacion-deducciones-base"
+target_casilla_id = "40"
+expression = { op = "add", args = [
+    { casilla_id = "iva.rectificacion-deducciones.interiores.base" },
+    { casilla_id = "iva.rectificacion-deducciones.importaciones.base" },
+    { casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-rectificacion-deducciones-cuota"
+target_casilla_id = "41"
+expression = { op = "add", args = [
+    { casilla_id = "iva.rectificacion-deducciones.interiores" },
+    { casilla_id = "iva.rectificacion-deducciones.importaciones" },
+    { casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-45-projection"
+target_casilla_id = "45"
+expression = { casilla_id = "iva.cuota-deducible-total" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]

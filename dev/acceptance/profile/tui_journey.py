@@ -23,6 +23,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
     run_installed_tui_child_process,
 )
 from dev.acceptance.installed_cli import CommandEvidence
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .cli_journey import (
     ProfileArchiveConsumerEvidence,
@@ -211,7 +212,7 @@ def run_profile_installed_acceptance(
         raise ProfileInstalledAcceptanceError(stage=exc.stage, diagnostic_code=exc.diagnostic_code) from exc
 
     cli = cli_executable.resolve(strict=True)
-    python = tui_python.resolve(strict=True)
+    python = environment_interpreter(tui_python)
     no_op_observed = _tui_no_op_observed(journeys)
     if not no_op_observed:
         raise ProfileInstalledAcceptanceError(

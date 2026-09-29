@@ -120,46 +120,53 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 @pytest.fixture(scope="session")
 def source_tree_ast() -> Mapping[Path, ast.AST]:
-    """Return a session-cached mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.
+    """Return a session mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.
 
-    Walks ``src/cadrumo/`` once per pytest session via ``rglob("*.py")``, skips
-    ``__pycache__`` directories, ``.venv`` parents, and the ``_data/``
-    payload tree, reads each file as UTF-8 with ``errors='replace'`` (so
-    a stray encoding cookie cannot raise), and parses it with the
-    standard library ``ast`` module. Files that fail to parse with
-    ``SyntaxError`` are silently skipped — the fixture is a best-effort
-    cache, not a syntax gate; ratchets that need to surface unparseable
-    files should fall back to their own per-test scan.
+    Covers the package files outside ``__pycache__`` and the ``_data/`` payload
+    tree, each read as UTF-8 with ``errors='replace'`` (so a stray encoding
+    cookie cannot raise). Files that fail to parse with ``SyntaxError`` are not
+    members -- the fixture is a cache, not a syntax gate; ratchets that need to
+    surface unparseable files should fall back to their own per-test scan.
+
+    Each module is parsed on first access, through the same process-level
+    cache :func:`~cadrumo.tests.inventory.ast_for_path` reads, so a ratchet
+    that never threads this fixture through its helpers still shares the parse.
+    Parsing lazily is what lets a package-scoped gate run without first paying
+    for every other module in the tree.
 
     Consumers retain their own filter predicates (e.g. ``test_*.py``
     only, or exclude certain subdirs). The fixture is the AST cache;
     the policy is per-test.
-
-    Also primes the shared process-level AST cache
-    (``tests._inventory.prime_ast_cache``) so a ratchet that calls
-    ``ast_for_path(path)`` WITHOUT threading this fixture through its own
-    helpers (the historical bypass pattern -- a ratchet imports only
-    ``ast_for_path`` and re-parses independently) still reuses this parse
-    instead of re-reading and re-parsing the file from disk.
     """
     # Imported here, not at module scope: this module's imports must stay below the
     # storage-root env assignment above, and a function-local import keeps that
     # ordering constraint off the module surface entirely.
-    from .core.external_constants import UTF_8_ENCODING
-    from .tests.inventory import package_python_files, prime_ast_cache
+    from .tests.inventory import LazySourceTreeAst, package_python_files
 
-    cache: dict[Path, ast.AST] = {}
-    for path in package_python_files():
-        try:
-            source = path.read_text(encoding=UTF_8_ENCODING, errors="replace")
-        except OSError:
-            continue
-        try:
-            cache[path] = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            continue
-    prime_ast_cache(cache)
-    return cache
+    return LazySourceTreeAst(package_python_files())
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _release_the_source_scan_caches_with_their_module() -> Iterator[None]:
+    """Free the shared source-parse caches once the module that filled them ends.
+
+    One parse per file, shared across a gate's own tests, is what keeps a
+    tree-wide structural ratchet fast. Held for the whole process it also never
+    shrank. Sampled per worker over this suite at eight workers: every worker
+    settled at about 1.0 GB after collection and then climbed monotonically to
+    between 2.1 and 3.5 GB, 23.1 GB in total, and the eleven steepest rises were
+    each one tree-walking gate module -- up to 1.33 GB apiece, none of it ever
+    returned. A host that has to hold all of it at once is the one that kills a
+    worker mid-run, which reads as an unattributable crash in an unrelated test.
+
+    The module boundary is the natural lifetime: file-grouped distribution runs
+    every test of a gate consecutively, so the cache is hot exactly while its
+    owner needs it and the next module starts from the files it reads itself.
+    """
+    yield
+    from .tests.inventory import release_parsed_sources
+
+    release_parsed_sources()
 
 
 @pytest.fixture(scope="package", autouse=True)
@@ -311,36 +318,59 @@ def _evict_test_bound_bucket_session() -> Iterator[None]:
     roughly fifty tests. Comparing session IDENTITY across the test separates
     the two cases: a module-scoped session is the same object before and after
     and is left alone, while a session the test bound itself is a different
-    object and is the one that leaks. The re-bind is required because
+    object and is the one that leaks. Restoring is required because
     ``close_active_bucket_session`` clears the binding outright rather than
     restoring the previous value, so a test that logs in underneath a
     module-scoped runtime would otherwise leave that runtime unbound.
+
+    Restoring is per LAYER. A module-scoped runtime is usually visible only
+    through a scoped override, and a plain re-bind of what the test saw
+    published it process-wide, where it outlived its module and reached every
+    later module in the worker as an "inherited" session nothing evicted.
 
     The boundary is per-TEST, not per-invocation: a persisted session
     legitimately survives across CLI invocations within one scenario, so
     evicting per invocation would break real login-then-act flows.
 
-    Cost is nil for tests that never touch storage -- the ``sys.modules`` check
-    returns before importing anything, so the AST ratchets pay nothing.
+    Cost is nil for tests that never touch storage: the helper sits behind inert
+    packages and reads the binding only once the active-session module is
+    already loaded, so the AST ratchets import no storage code.
     """
-    if "cadrumo.adapters.persistence.storage" not in sys.modules:
-        yield
-        return
-    from .adapters.persistence.storage.master_key.active_session import current_active_bucket_session
-
-    inherited = current_active_bucket_session()
-    yield
-    bound = current_active_bucket_session()
-    if bound is None or bound is inherited:
-        return
-    from .adapters.persistence.storage.master_key.active_session import (
-        bind_active_bucket_session,
-        close_active_bucket_session,
+    from .adapters.persistence.storage.master_key.tests.bucket_session_isolation import (
+        evict_bucket_sessions_bound_since,
+        observe_bucket_session_binding,
     )
 
-    close_active_bucket_session()
-    if inherited is not None:
-        bind_active_bucket_session(inherited)
+    inherited = observe_bucket_session_binding()
+    yield
+    evict_bucket_sessions_bound_since(inherited)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _refuse_a_bucket_session_leaked_past_its_module() -> Iterator[None]:
+    """Fail the module whose wider-scoped fixture left a bucket session bound.
+
+    The per-test boundary above cannot see such a session: a module-scoped
+    fixture binds it before any test's own observation, so every test reads it
+    as inherited and leaves it alone. Unreported, it stayed bound for the rest
+    of the xdist worker and surfaced only in a later, unrelated module that
+    asserts no session is active. Checking at the module boundary names the
+    fixture's own module instead, and the eviction keeps the next module clean.
+    """
+    from .adapters.persistence.storage.master_key.tests.bucket_session_isolation import (
+        evict_bucket_sessions_bound_since,
+        observe_bucket_session_binding,
+    )
+
+    before = observe_bucket_session_binding()
+    yield
+    leaked = evict_bucket_sessions_bound_since(before)
+    if leaked:
+        pytest.fail(
+            f"{len(leaked)} bucket session(s) bound during this module outlived it; the module- or "
+            "class-scoped fixture that opened them must close them in its teardown",
+            pytrace=False,
+        )
 
 
 @pytest.fixture(autouse=True)

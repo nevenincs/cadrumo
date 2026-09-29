@@ -175,16 +175,21 @@ async def _run_process(
 async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
     """Kill a timed-out command together with the processes it started.
 
-    A launcher such as LibreOffice's ``soffice`` hands the work to a child that
-    inherits the captured pipes. Killing only the launcher leaves that child
-    running and holding the pipes open, so draining them would wait for the
-    child to exit on its own. Windows walks the tree with ``taskkill /T``.
-    POSIX runs each command in the caller's process group so an interrupt still
-    reaches it, which leaves no group to signal here; there the bounded drain is
-    what ends the wait.
+    A launcher such as LibreOffice's ``soffice`` or ``uvx`` hands the work to a
+    child that inherits the captured pipes. Killing only the launcher leaves
+    that child running and holding the pipes open, so draining them would wait
+    for the child to exit on its own -- and the child keeps its CPU for as long
+    as it runs, which on a shared runner is what pushes unrelated tests over
+    their own deadlines. Windows walks the tree with ``taskkill /T``. POSIX runs
+    each command in the caller's process group so an interrupt still reaches
+    it, which leaves no group to signal here, so the tree is read before the
+    launcher dies: once it is gone its children are reparented and nothing
+    ties them to this command any more.
     """
     if process.returncode is not None:
         return
+    if sys.platform != "win32":
+        _kill_posix_descendants(process.pid)
     taskkill = shutil.which("taskkill") if sys.platform == "win32" else None
     if taskkill is not None:
         killer = await asyncio.create_subprocess_exec(
@@ -202,6 +207,19 @@ async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
     if returncode is None:
         with suppress(ProcessLookupError):
             process.kill()
+
+
+def _kill_posix_descendants(pid: int) -> None:
+    """Kill every process ``pid`` started, directly or through its children."""
+    import psutil
+
+    try:
+        descendants = psutil.Process(pid).children(recursive=True)
+    except psutil.NoSuchProcess:
+        return
+    for descendant in descendants:
+        with suppress(psutil.NoSuchProcess):
+            descendant.kill()
 
 
 def _decode_output(payload: bytes, *, errors: Literal["strict", "replace"]) -> str:

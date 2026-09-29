@@ -287,6 +287,26 @@ def test_the_specimen_confirms_the_enumerator_really_excludes_the_planted_direct
     assert "env/.env" in ignored
 
 
+def test_a_repository_nested_inside_the_tree_is_not_swept_as_its_content(specimen_repository: Path) -> None:
+    """A worktree parked inside the checkout is another repository, in neither tier.
+
+    The control directory differs only by the missing ``.git`` entry, so the
+    specimen proves the nested-repository rule rather than an ignore rule.
+    """
+    (specimen_repository / ".gitignore").write_text("parked/\n", encoding="utf-8")
+    for name, nested in (("worktree", True), ("plain", False)):
+        directory = specimen_repository / "parked" / name
+        directory.mkdir(parents=True)
+        if nested:
+            (directory / ".git").write_text("gitdir: ../../elsewhere\n", encoding="utf-8")
+        (directory / ".env").write_text(f"CADRUMO_CLAVE_MOVIL_DNI_NIE={_PLANTED_NIF}\n", encoding="utf-8")
+
+    swept = {candidate.relative for candidate in repository_files(specimen_repository, suffixes=DATA_SUFFIXES)}
+
+    assert "parked/plain/.env" in swept
+    assert "parked/worktree/.env" not in swept
+
+
 @pytest.mark.parametrize(
     ("planted", "kind"),
     [

@@ -226,6 +226,20 @@ modelo:
               intracomunitarias.
             label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
               (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
+          iva-base-imponible-autorepercutida-interior-deducible:
+            label: Base imponible deducible autorepercutida por inversión del sujeto
+              pasivo en operaciones interiores corrientes (LIVA art 84.Uno.2; parte
+              de la casilla oficial 28)
+          iva-base-imponible-autorepercutida-interior-deducible-bienes-inversion:
+            label: Base imponible deducible autorepercutida por inversión del sujeto
+              pasivo en bienes de inversión interiores (LIVA art 84.Uno.2; parte de
+              la casilla oficial 30)
+          iva-base-imponible-soportada-interiores:
+            label: Base imponible IVA soportado en operaciones interiores corrientes
+              (parte de la casilla oficial 28)
+          iva-base-imponible-soportada-interiores-bienes-inversion:
+            label: Base imponible IVA soportado en operaciones interiores con bienes
+              de inversión (parte de la casilla oficial 30)
           iva-compensacion-aplicada-periodo:
             label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
           iva-compensacion-disponible-fin-periodo:
@@ -238,9 +252,13 @@ modelo:
             label: Cuotas a compensar de periodos previos pendientes para periodos
               posteriores
           iva-cuota-autorepercutida-interior-deducible:
-            label: Cuota IVA deducible autorepercutida en operaciones interiores con
-              inversión del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial casilla
-              37)
+            label: Cuota IVA deducible autorepercutida por inversión del sujeto pasivo
+              en operaciones interiores corrientes (LIVA art 84.Uno.2 + art 92; parte
+              de la casilla oficial 29)
+          iva-cuota-autorepercutida-interior-deducible-bienes-inversion:
+            label: Cuota IVA deducible autorepercutida por inversión del sujeto pasivo
+              en bienes de inversión interiores (LIVA art 84.Uno.2 + art 92; parte
+              de la casilla oficial 31)
           iva-cuota-autorepercutida-interior-devengado:
             label: Cuota IVA autorepercutida en operaciones interiores con inversión
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
@@ -279,6 +297,9 @@ modelo:
               (LIVA art 17 + art 92; oficial casilla 33)
           iva-cuota-soportada-interiores:
             label: Cuota IVA soportado en operaciones interiores corrientes
+          iva-cuota-soportada-interiores-bienes-inversion:
+            label: Cuota IVA soportado en operaciones interiores con bienes de inversión
+              (parte de la casilla oficial 31)
           iva-prorrata-porcentaje:
             label: Prorrata general - porcentaje (volumen con derecho / volumen total
               × 100)
@@ -286,6 +307,26 @@ modelo:
             label: Volumen anual de operaciones que originan derecho a deducción
           iva-prorrata-volumen-total:
             label: Volumen anual total de operaciones
+          iva-rectificacion-deducciones-importaciones-base:
+            label: Rectificación de deducciones en importaciones - Base (parte de
+              la casilla oficial 40)
+          iva-rectificacion-deducciones-importaciones-cuota:
+            label: Rectificación de deducciones en importaciones - Cuota (parte de
+              la casilla oficial 41)
+          iva-rectificacion-deducciones-interiores-base:
+            label: Rectificación de deducciones en operaciones interiores - Base (parte
+              de la casilla oficial 40)
+          iva-rectificacion-deducciones-interiores-cuota:
+            label: Rectificación de deducciones en operaciones interiores - Cuota
+              (parte de la casilla oficial 41)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-base:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Base (parte de la casilla oficial
+              40)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Cuota (parte de la casilla
+              oficial 41)
           iva-regularizacion-inversiones:
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:

@@ -63,11 +63,19 @@ Submodules
    cadrumo.application.modelo.calculation_action_ports
    cadrumo.application.modelo.calculation_actions
    cadrumo.application.modelo.calculation_diagnostics
+   cadrumo.application.modelo.calculation_report
+   cadrumo.application.modelo.calculation_report_certification
+   cadrumo.application.modelo.calculation_report_document
+   cadrumo.application.modelo.calculation_report_export
+   cadrumo.application.modelo.calculation_report_provenance_key
+   cadrumo.application.modelo.calculation_report_verification
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_resolution
    cadrumo.application.modelo.calculation_revision_gate
    cadrumo.application.modelo.calculation_route
    cadrumo.application.modelo.calculation_source_policy
+   cadrumo.application.modelo.calculation_summary_pdf_ports
+   cadrumo.application.modelo.calculation_summary_presentation
    cadrumo.application.modelo.data_inventory
    cadrumo.application.modelo.declarations_calendar
    cadrumo.application.modelo.declarations_workspace
@@ -81,6 +89,7 @@ Submodules
    cadrumo.application.modelo.export
    cadrumo.application.modelo.export_amendment_evidence
    cadrumo.application.modelo.export_ports
+   cadrumo.application.modelo.export_sink
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filed_revision_observation
    cadrumo.application.modelo.filing_action_ports
@@ -158,6 +167,7 @@ Submodules
    cadrumo.application.modelo.verification_predicates
    cadrumo.application.modelo.verification_repository_ports
    cadrumo.application.modelo.verify_selector
+   cadrumo.application.modelo.withholding_detail_gate
    cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_create_policy
    cadrumo.application.modelo.work_lifecycle

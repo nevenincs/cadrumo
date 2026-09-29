@@ -50,18 +50,32 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "calculation_action_ports_factory": lambda **_: None,
     "attachment_store_factory": lambda _bucket_id: None,
     "receipt_repository_factory": lambda **_: None,
+    "signing_keypair_capability_factory": lambda **_: None,
+    "calculation_summary_pdf_writer": lambda _request, /, **_: b"",
 }
 
-_KNOWN_AUTHORITIES = {
-    "rename_work_unit",
-    "discard_work_unit",
-    "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-    "verify_modelo_revision",
-    "file_modelo_revision",
-    "export_modelo_revision",
-    "amend_modelo_revision",
-    "apply_modelo_edit",
+#: The application authority each enrolment is allowed to supervise, by factory.
+#:
+#: Named per enrolment rather than as one flat set so the table says WHICH
+#: authority each supervisor reaches, not merely that it reaches some authority.
+#: An enrolment whose request carries an artefact choice reaches one authority per
+#: artefact: the export enrolment publishes the AEAT-compatible filing file
+#: through one and the local calculation report through another, and both must be
+#: named here for it to pass.
+_ENROLMENT_AUTHORITIES: dict[str, frozenset[str]] = {
+    "build_modelo_edit_apply_definition": frozenset({"apply_modelo_edit"}),
+    "build_modelo_export_definition": frozenset({"export_modelo_revision", "export_modelo_calculation_report"}),
+    "build_modelo_work_amend_definition": frozenset({"amend_modelo_revision"}),
+    "build_modelo_work_calculate_definition": frozenset(
+        {"calculate_modelo_revision_from_bucket_aggregation_with_diagnostics"},
+    ),
+    "build_modelo_work_discard_definition": frozenset({"discard_work_unit"}),
+    "build_modelo_work_file_definition": frozenset({"file_modelo_revision"}),
+    "build_modelo_work_rename_definition": frozenset({"rename_work_unit"}),
+    "build_modelo_work_verify_definition": frozenset({"verify_modelo_revision"}),
 }
+
+_KNOWN_AUTHORITIES = frozenset().union(*_ENROLMENT_AUTHORITIES.values())
 
 _M303_CLOCK = datetime(2025, 4, 1, 10, tzinfo=UTC)
 
@@ -353,8 +367,8 @@ def test_each_enrolment_admits_an_uncertain_outcome(factory_name: str) -> None:
 
 
 @pytest.mark.parametrize("factory_name", sorted(_definition_factories()))
-def test_each_executor_delegates_to_exactly_one_known_writer(factory_name: str) -> None:
-    """Every enrolment supervises one authority and invents no second path."""
+def test_each_executor_delegates_to_the_authorities_declared_for_it(factory_name: str) -> None:
+    """Every enrolment supervises the authorities named for it and no others."""
     definition = _build(_definition_factories()[factory_name])
     source = inspect.getsource(definition.executor_factory.executor_type)
     tree = ast.parse(textwrap.dedent(source))
@@ -367,9 +381,12 @@ def test_each_executor_delegates_to_exactly_one_known_writer(factory_name: str) 
         for target in (node.func, *node.args)
         if isinstance(target, ast.Name)
     }
-    writers = called & _KNOWN_AUTHORITIES
+    expected = _ENROLMENT_AUTHORITIES.get(factory_name)
 
-    assert len(writers) == 1, f"{factory_name} delegates to {writers or 'no known writer'}"
+    assert expected is not None, f"{factory_name} declares no supervised authority in this table"
+    assert called & _KNOWN_AUTHORITIES == expected, (
+        f"{factory_name} delegates to {called & _KNOWN_AUTHORITIES or 'no known writer'}"
+    )
 
 
 @pytest.mark.parametrize("factory_name", sorted(_definition_factories()))

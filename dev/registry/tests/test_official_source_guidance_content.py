@@ -176,7 +176,7 @@ def test_entry_into_force_alone_does_not_satisfy_the_suppression_claim(tmp_path:
 # --------------------------------------------------------------------------
 
 
-def test_the_deadline_anchor_cites_the_reviewed_2026_calendar_pdf_with_its_deadline_content() -> None:
+def test_the_deadline_anchor_cites_the_reviewed_calendar_pdf_with_its_deadline_content() -> None:
     """The repaired anchor is a verified, in-scope AEAT calendar PDF.
 
     The source verifier owns byte-size, SHA-256, and manual-PDF structure
@@ -205,7 +205,7 @@ def test_the_deadline_anchor_cites_the_reviewed_2026_calendar_pdf_with_its_deadl
     text = evidence.source_text(source)
     assert text is not None, "the verified calendar PDF must have readable evidence text"
     assert "hasta el 20 de abril" in text
-    assert "primer trimestre 2026: 111, 115" in text
+    assert f"primer trimestre {source.applies_from.year}: 111, 115" in text
     assert (
         deadline_window_content_failures(
             f"modelo {_DEADLINE_ANCHOR_MODELO_ID} revision {_DEADLINE_ANCHOR_REVISION_ID}",

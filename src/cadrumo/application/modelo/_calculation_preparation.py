@@ -303,6 +303,12 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "missing_eur_tax_substrate",
         "anomaly_non_declarable_iva_category",
         "anomaly_non_declarable_recargo_equivalencia",
+        # The IVA deduction taxonomy is read by no Renta binding: the first-slice
+        # expense aggregation consumes the base and the business share, not which
+        # input-IVA deduction the row's cuota qualifies as. A wrong deduction kind
+        # therefore blocks 303/390 and leaves the annual Renta return computable
+        # from the same row.
+        "inadmissible_deduction_classification",
     },
 )
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"

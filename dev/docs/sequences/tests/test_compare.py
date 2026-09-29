@@ -311,6 +311,13 @@ class TestTextFrameComparison:
             == unrelated
         )
 
+    def test_a_storage_root_without_a_parent_directory_contributes_no_sandbox_root_needle(self) -> None:
+        """A root with no parent of its own must not tokenise every full stop or separator."""
+
+        text = "open C:\\Users\\someone\\Documents\\report.pdf and /var/log/cadrumo.log\n"
+        for storage_root in ("cadrumo-storage", "/cadrumo-storage", "C:\\cadrumo-storage"):
+            assert normalise_text_output(text, storage_root=storage_root, workdir="workdir") == text
+
 
 class TestEnvelopePathNormalisation:
     """Value-anchored sandbox/checkout-path tokenisation inside JSON envelopes.

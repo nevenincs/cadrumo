@@ -40,6 +40,9 @@ aggregation:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
+      deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
+        cuota cannot carry a deduction classification; IVA category %{category} settles
+        as %{flow_direction}. Remove the declared deduction kind, or correct the category.
       differentiated_sector_inactive_for_filing_year: A differentiated sector is inactive
         for the filing year.
       differentiated_sector_without_filing_year_entry: A differentiated sector has
@@ -50,6 +53,9 @@ aggregation:
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
+      inadmissible_deduction_classification: 'The declared IVA deduction kind %{deduction_fact_kind}
+        is not admissible for a row in IVA category %{iva_category}: %{refusal}. Correct
+        the declared deduction kind, the IVA category, or the linked evidence.'
       investment_observations_missing_bienes_inversion_authority: Investment IVA observations
         require the explicit bienes de inversión register and a matching profile authority.
       missing_counterparty_establishment_on_export: An export is exempt because the
@@ -144,9 +150,6 @@ aggregation:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported
         range %{min_year}-%{max_year}.
-      invoice_retencion_collision: Retención observation(s) for invoice(s) %{source_object_ids}
-        were declared both manually and by --received-invoice-retencion; remove the
-        duplicate before aggregating.
       m111_no_retenciones_attestation_missing: 'No per-perceptor retention observations
         exist for modelo 111 %{filing_year} %{period}. Do not file an all-blank Modelo
         111: declare the quarter as a no-retenciones period with `aeat config profile
@@ -1945,6 +1948,11 @@ tui:
       legal: Legal reference
       source: Source reference
     export:
+      artefact:
+        calculation_report_csv: Calculation report (CSV), a local record only
+        calculation_report_pdf: Signed calculation summary (PDF), a local record only
+        fichero_boe: Fichero BOE for presentation at AEAT
+        label: Artefact to export
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
         domiciliacion: Direct debit (domiciliación)
@@ -1958,6 +1966,50 @@ tui:
         compensar: Carry forward to later periods (compensar)
         devolver: Request a refund (devolver)
         label: 'Negative result: carry it forward or request a refund'
+      replace_existing:
+        label: Replace a file already at this path
+      result:
+        close: Close
+        completeness:
+          not_assessed: 'Not assessed: a calculation report is not a filing file'
+          not_flagged: No completeness warning raised by the export
+          unverified: 'Not verified: the revision declares no completeness manifest'
+        evidence_status:
+          local_calculation_report_not_official_aeat_filing_evidence: Local calculation
+            report; not official AEAT filing evidence
+          local_export_not_official_aeat_filing_evidence: Local export; not official
+            AEAT filing evidence
+        label:
+          artefact: Exported artefact
+          byte_size: Size (bytes)
+          calculation_revision_id: Calculation revision
+          completeness: Completeness
+          evidence_status: Evidence status
+          export_format: Format
+          file_sha256: SHA-256 of the file
+          output_path: File
+          software_identity_grade: Software identity in the file header
+        software_identity_grade:
+          development_mock: Development identity (all zeros); not accepted by AEAT
+          none: 'None: this file''s layout has no software identity slot'
+          reviewed: Reviewed software registration
+        title: Export result
+        unavailable: The export finished, but its result could not be read, so its
+          evidence status, completeness and software identity are unknown. Check the
+          file before relying on it.
+        warning:
+          completeness_unverified: 'This filing file was not completeness-verified:
+            its revision declares no completeness manifest, so the structural-parity
+            check could not confirm that every required box reached the file. Review
+            the exported boxes against the official Diseño de Registros before filing.'
+          development_software_identity: The file header carries the all-zero development
+            software identity; AEAT will not accept this file for presentation.
+          development_software_identity_of_filing_file: The filing file for this modelo
+            would carry the all-zero development software identity; AEAT will not
+            accept that file for presentation.
+          not_official: 'This file is not official AEAT filing evidence. Official
+            evidence comes from AEAT after filing: justificante; consulta de declaraciones
+            presentadas; or CSV cotejo.'
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
 from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector, ScalarFactPayload
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
@@ -24,21 +26,27 @@ from ..compiler.modelo_projections import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _parameter(parameter_id: str, value: str, *, valid_from: date, valid_to: date | None = None) -> ParameterDefinition:
+def _parameter(
+    parameter_id: str,
+    value: str,
+    *,
+    valid_from: date,
+    valid_to: date | None = None,
+    source_ref: str = "aeat-renta-2025-manual-parte1",
+    date_axis: str = "filing_period",
+) -> ParameterDefinition:
     return ParameterDefinition.model_validate(
         {
             "id": parameter_id,
             "data_type": "money",
             "unit": "EUR",
             "legal_refs": ("ley-35-2006:art-81",),
-            "source_refs": ("aeat-renta-2025-manual-parte1",),
-            "source_citations": (
-                {"source_ref": "aeat-renta-2025-manual-parte1", "required_text": ("deducción por maternidad",)},
-            ),
+            "source_refs": (source_ref,),
+            "source_citations": ({"source_ref": source_ref, "required_text": ("deducción por maternidad",)},),
             "values": (
                 {
                     "value": value,
-                    "date_axis": "filing_period",
+                    "date_axis": date_axis,
                     "valid_from": valid_from,
                     "valid_to": valid_to,
                 },
@@ -97,6 +105,77 @@ def test_identical_parameter_copies_across_revisions_project_once() -> None:
     assert len(threshold.variants) == 1
     assert isinstance(threshold.variants[0].payload, ScalarFactPayload)
     assert threshold.variants[0].payload.value == Decimal("3005.06")
+
+
+def test_an_unchanged_row_restated_with_per_edition_evidence_splits_at_edition_boundaries() -> None:
+    """Each edition keeps its own evidence, and the slices cover exactly the row's window.
+
+    A value the law leaves unchanged is authored once, open from its first
+    year, and each later edition restates it with that edition's own manual.
+    Projecting those statements as one variant per statement would give two
+    variants one identity; the projection instead slices the row at each
+    edition whose provenance differs.
+    """
+    row_start = date(2020, 1, 1)
+    editions = {
+        f"{year}-{year}": _revision(
+            f"{year}-{year}",
+            (
+                _parameter(
+                    "renta-maternidad-mensual",
+                    "100",
+                    valid_from=row_start,
+                    source_ref=f"aeat-renta-{year}-manual-parte1",
+                ),
+            ),
+        )
+        for year in range(row_start.year, row_start.year + 3)
+    }
+    newest = _revision("2025", _modelo_100_parameters(exclude="renta-maternidad-mensual"))
+    modelo_100 = _modelo("100", {**editions, "2025": newest})
+
+    facts = {fact.fact_id: fact for fact in compile_modelo_parameter_projection_facts((modelo_100, _modelo_347()))}
+    variants = facts[ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION].variants
+
+    assert [variant.source_refs for variant in variants] == [
+        (f"aeat-renta-{year}-manual-parte1",) for year in range(row_start.year, row_start.year + 3)
+    ]
+    assert variants[0].valid_from == row_start
+    for earlier, later in pairwise(variants):
+        assert earlier.valid_to is not None
+        assert later.valid_from is not None
+        assert (later.valid_from - earlier.valid_to).days == 1
+    assert variants[-1].valid_to is None
+    assert len({variant.variant_id for variant in variants}) == len(variants)
+
+
+def test_a_non_filing_period_row_restated_with_different_evidence_is_refused() -> None:
+    """Only filing-period rows share the edition window's coordinates, so only they may be sliced."""
+    editions = {
+        revision_id: _revision(
+            revision_id,
+            (
+                _parameter(
+                    "renta-maternidad-mensual",
+                    "100",
+                    valid_from=date(2020, 1, 1),
+                    source_ref=f"aeat-renta-{revision_id}-manual-parte1",
+                    date_axis="devengo_date",
+                ),
+            ),
+        )
+        for revision_id in ("2020-2020", "2021-2021")
+    }
+    modelo_100 = _modelo(
+        "100", {**editions, "2025": _revision("2025", _modelo_100_parameters(exclude="renta-maternidad-mensual"))}
+    )
+
+    with pytest.raises(RegistryValidationError, match="only a filing-period row can be split"):
+        compile_modelo_parameter_projection_facts((modelo_100, _modelo_347()))
+
+
+def _modelo_100_parameters(*, exclude: str = "") -> tuple[ParameterDefinition, ...]:
+    return tuple(parameter for parameter in _modelo_100().revisions["2025"].parameters if parameter.id != exclude)
 
 
 def _modelo_100() -> ModeloDefinition:

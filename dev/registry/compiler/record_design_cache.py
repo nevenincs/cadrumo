@@ -113,6 +113,11 @@ def _refusal_path(key: str) -> Path:
     return record_design_cache_dir() / f"record_design_refusal_{key}.json"
 
 
+def record_design_outcome_is_cached(key: str) -> bool:
+    """Whether ``key`` already has a persisted reading or refusal to serve."""
+    return _cache_path(key).is_file() or _refusal_path(key).is_file()
+
+
 def load_cached_record_design(key: str) -> RecordDesignExtraction | None:
     """Return the persisted extraction for ``key``, or ``None`` to re-extract."""
     path = _cache_path(key)
@@ -185,6 +190,7 @@ __all__ = [
     "load_cached_record_design_refusal",
     "record_design_cache_dir",
     "record_design_cache_key",
+    "record_design_outcome_is_cached",
     "store_cached_record_design",
     "store_cached_record_design_refusal",
 ]

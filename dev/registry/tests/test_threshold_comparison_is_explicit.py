@@ -148,8 +148,9 @@ def test_the_threshold_agrees_across_every_revision(
         )
         value = parameter.values[0]
         assert value.date_axis == "filing_period"
-        assert value.valid_from == revision.valid_from
-        assert value.valid_to == revision.valid_to
+        # An unchanged threshold runs open across editions; it must still cover this whole revision.
+        assert value.valid_from <= revision.valid_from
+        assert value.valid_to is None or (revision.valid_to is not None and value.valid_to >= revision.valid_to)
         seen[revision_id] = (value.value, value.comparison)
 
     first, *rest = _M303_REVISIONS

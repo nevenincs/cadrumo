@@ -208,7 +208,7 @@ async def test_overview_admits_new_evidence_then_calculates_the_same_work_unit_i
 @pytest.mark.parametrize(
     ("receipt_kind", "receipt_ref", "explained"),
     [
-        ("refusal", "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE", True),
+        ("refusal", "REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED", True),
         ("refusal", "REFUSED_PROFILE_LIFO_FORBIDDEN", False),
     ],
 )
@@ -231,7 +231,7 @@ def test_overview_keeps_a_public_refusal_explanation_after_the_modal_settles(
     overview._on_lifecycle_operation_settled(outcome)
 
     refused = tr("operation.modal.terminal.refused")
-    explanation = tr("errors.refused.refused_modelo_export_product_identity_unavailable")
+    explanation = tr("errors.refused.refused_modelo_export_prior_domiciliation_election_required")
     assert notices == [f"{refused}: {explanation}" if explained else refused]
 
 

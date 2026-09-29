@@ -45,6 +45,7 @@ from .binding_value_contract import BindingValueChannel
 from .bindings import CasillaObservation
 from .casilla_membership import casillas_by_id as _casillas_by_id
 from .casilla_membership import duplicate_casilla_ids
+from .casilla_membership import text_family_casilla_ids as _text_family_casilla_ids
 from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
@@ -162,7 +163,9 @@ class RegistryCalculationResult(BaseModel):
     :class:`~domain.calculations.registry.bindings.CasillaObservation` covering
     every casilla on the
     :class:`~domain.calculations.registry.schema.RegistrySnapshot` revision
-    (inputs, bound, and formula-computed). Each observation carries
+    (inputs, bound, and formula-computed), except a text casilla with no
+    text value: it is absent and carries no observation, never a numeric
+    placeholder. Each observation carries
     its final scalar ``value`` plus the legal / source provenance for
     that casilla pulled from the registry. Formula-computed
     observations additionally carry ``formula_id``, ``op``,
@@ -349,6 +352,7 @@ class _CalculationState:
     formulas: Mapping[CasillaId, FormulaDefinition]
     parameters: Mapping[str, ParameterDefinition]
     casillas_by_id: Mapping[CasillaId, CasillaDefinition]
+    text_casilla_ids: frozenset[CasillaId]
     resolved_text_inputs: Mapping[CasillaId, str]
     computed_provenance: dict[CasillaId, CasillaObservation]
     unresolved_outcomes: list[RegistryCalculationUnresolvedOutcome]
@@ -533,6 +537,7 @@ def _prepare_calculation_state(
         formulas=formulas,
         parameters=parameters,
         casillas_by_id=casillas_by_id,
+        text_casilla_ids=_text_family_casilla_ids(casillas_by_id.values()),
         resolved_text_inputs=resolved_text_inputs,
         computed_provenance={},
         unresolved_outcomes=[],
@@ -680,6 +685,7 @@ def _evaluate_formula_target(
             boolean_binding_values=resolved.resolved_boolean_bindings,
             filing_year=snapshot.filing_year,
             text_values=state.resolved_text_inputs,
+            text_casilla_ids=state.text_casilla_ids,
         )
     except _UnresolvedFormulaOutcomeError as exc:
         state.unresolved_casilla_ids.add(target)
@@ -851,6 +857,7 @@ def evaluate_expression(
     boolean_binding_values: Mapping[BindingId, bool] | None = None,
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
+    text_casilla_ids: frozenset[CasillaId] = frozenset(),
 ) -> Decimal:
     """Build the shared :class:`EvalContext` for one formula tree and evaluate it.
 
@@ -883,6 +890,7 @@ def evaluate_expression(
         boolean_binding_values=resolved_boolean_bindings,
         filing_year=filing_year,
         text_values=resolved_text_values,
+        text_casilla_ids=text_casilla_ids,
     )
     return evaluate_with_context(expression, ctx)
 
@@ -917,6 +925,11 @@ class EvalContext:
     boolean_binding_values: Mapping[BindingId, bool] = field(default_factory=lambda: dict[BindingId, bool]())
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
+    #: Every casilla the revision declares as text, populated or not. A text
+    #: casilla absent from ``text_values`` is absent: it has no numeric value to
+    #: fall back to, so an operand reader must consult this set rather than infer
+    #: text-ness from the value it happens to find.
+    text_casilla_ids: frozenset[CasillaId] = frozenset()
 
 
 def evaluate_with_context(expression: FormulaExpression, ctx: EvalContext) -> Decimal:

@@ -39,15 +39,22 @@ shape rather than an internal of this package.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority_state import compiler_generation
 
 from ..terminology_handbook.enums import ConceptDomain, TermStatus
-from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
+from ..terminology_handbook.loader import (
+    TerminologyHandbook,
+    concepts_tree_fingerprint,
+    load_bundled_terminology_handbook,
+    terminology_concepts_dir,
+)
 from ..terminology_handbook.schema import ConceptRecord
 from ..terminology_handbook.validators import default_handbook_validators
 from .search_record import SearchRecordBase, SearchRecordKind
@@ -168,10 +175,15 @@ def project_concept_cards(
 ) -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
     """Project every Handbook concept into a search card.
 
+    With both inputs defaulted this is a pure function of two read-only
+    authoring trees, so the result is memoised per process against their own
+    identities (see :func:`_bundled_projection`); an injected handbook or
+    catalogue is projected afresh.
+
     Args:
-        handbook: The compiled Handbook to project; defaults to a fresh
-            validated load of the bundled authoring tree (the loader's full
-            gate inventory runs, so a malformed Handbook fails here rather
+        handbook: The compiled Handbook to project; defaults to a validated
+            load of the bundled authoring tree (the loader's full gate
+            inventory runs, so a malformed Handbook fails here rather
             than shipping a half-mapped card set). Injectable so a test can
             drive a narrowed handbook deterministically.
         legal_catalogue: A mapping of legal-ref id to a catalogue entry
@@ -185,9 +197,46 @@ def project_concept_cards(
         projection counts (approved / draft split, legal-link coverage, and
         any legal_ref that failed to resolve).
     """
-    resolved_handbook = handbook if handbook is not None else _load_validated_handbook()
-    catalogue = legal_catalogue if legal_catalogue is not None else _bundled_legal_catalogue()
+    if handbook is not None or legal_catalogue is not None:
+        return _project(
+            handbook if handbook is not None else _load_validated_handbook(),
+            legal_catalogue if legal_catalogue is not None else _bundled_legal_catalogue(),
+        )
+    # Compile first, then read the generation: compiling is what advances it, so
+    # reading it first would file this projection under the previous generation.
+    compiled_bundled_authority()
+    return _bundled_projection(concepts_tree_fingerprint(terminology_concepts_dir()), compiler_generation())
 
+
+@lru_cache(maxsize=2)
+def _bundled_projection(
+    concepts_fingerprint: str,
+    registry_generation: int,
+) -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
+    """Project the bundled Handbook once per authoring state in this process.
+
+    The projection is a pure function of its two read-only inputs, so what those
+    inputs already publish to mean "I changed" is the whole cache key: the
+    complete concepts-tree fingerprint, and the development compiler's generation
+    counter for the legal catalogue read through the authority. An edit to either
+    tree yields a different key and recompiles. Callers that drive a narrowed or
+    synthetic handbook or catalogue pass it explicitly and never reach this.
+
+    Args:
+        concepts_fingerprint: :func:`concepts_tree_fingerprint` of the bundled
+            concepts directory.
+        registry_generation: :func:`~dev.registry.compiler.authority_state.compiler_generation`
+            observed after the bundled authority was compiled.
+    """
+    del concepts_fingerprint, registry_generation
+    return _project(_load_validated_handbook(), _bundled_legal_catalogue())
+
+
+def _project(
+    resolved_handbook: TerminologyHandbook,
+    catalogue: object,
+) -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
+    """Build every card and the projection counts from resolved inputs."""
     cards: list[ConceptCardRecord] = []
     approved = 0
     draft = 0
@@ -304,7 +353,18 @@ def _attr_str(entry: object, name: str) -> str:
 
 
 def _load_validated_handbook() -> TerminologyHandbook:
-    return load_terminology_handbook(validators=default_handbook_validators())
+    """Load the bundled Handbook through its cache and run the full gate inventory.
+
+    The loader's ``validators`` seam would recompile every fragment, because that
+    path is the uncached one by contract; the validators only ever read the
+    assembled handbook, so running them over the fingerprint-cached load is the
+    same verdict without a second compile. Two siblings already run the inventory
+    this way over a handbook they hold (``curation``, ``_seed_import``).
+    """
+    handbook = load_bundled_terminology_handbook()
+    for validate in default_handbook_validators():
+        validate(handbook)
+    return handbook
 
 
 def _bundled_legal_catalogue() -> object:

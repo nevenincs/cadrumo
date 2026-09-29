@@ -60,6 +60,11 @@ from typing import Any, Final
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
+from ....application.storage.calc_sheets.export_tables import (
+    IDENTITY_STAMP_KEYS,
+    RELATION_STAMP_PREFIX,
+    export_identity_stamps,
+)
 from ....application.storage.calc_sheets.records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
 from ....core.json_shapes import str_keyed_mapping, str_keyed_rows
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -162,18 +167,11 @@ def _vault_folder_name() -> str:
 
 
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
-_RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
-_MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "cadrumo_engine_version",
-        "cadrumo_registry_sha",
-        "cadrumo_modelo_id",
-        "cadrumo_revision_id",
-        "cadrumo_filing_year",
-        "cadrumo_period",
-        "cadrumo_exported_at",
-    },
-)
+#: The stamp vocabulary is the plan's, so the cleanup pass below recognises
+#: exactly the keys the shared stamp builder emits rather than a second list of
+#: them that could outlive a rename.
+_RELATION_METADATA_PREFIX: Final[str] = RELATION_STAMP_PREFIX
+_MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(IDENTITY_STAMP_KEYS)
 
 
 class CalcSheetsApplyResult(BaseModel):
@@ -398,38 +396,8 @@ def _create_spreadsheet(
 
 
 def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
-    metadata = plan.metadata
-    pairs: list[tuple[str, str]] = [
-        ("cadrumo_engine_version", metadata.engine_version),
-        ("cadrumo_registry_sha", metadata.registry_sha),
-        ("cadrumo_modelo_id", metadata.modelo_id),
-        ("cadrumo_revision_id", metadata.revision_id),
-        ("cadrumo_filing_year", str(metadata.filing_year)),
-        ("cadrumo_period", metadata.period.registry_token),
-        ("cadrumo_exported_at", metadata.exported_at.isoformat()),
-    ]
-    if plan.relation_provenance is not None:
-        for relation in plan.relation_provenance.values:
-            payload = {
-                "value": str(relation.value) if relation.value is not None else "",
-                "provenance": relation.provenance,
-                "source_modelo": relation.source_modelo or "",
-                "source_filing_year": str(relation.source_filing_year)
-                if relation.source_filing_year is not None
-                else "",
-                "source_periods": "+".join(relation.source_periods),
-                "source_casilla_ids": "+".join(relation.source_casilla_ids),
-                "legal_refs": "+".join(relation.legal_refs),
-                "source_refs": "+".join(relation.source_refs),
-                "resolved_at": relation.resolved_at.isoformat() if relation.resolved_at is not None else "",
-            }
-            pairs.append(
-                (
-                    f"cadrumo_relation:{relation.relation}",
-                    "; ".join(f"{k}={v}" for k, v in payload.items() if v),
-                ),
-            )
-    return pairs
+    """Return the shared export identity stamps this transport carries as developer metadata."""
+    return list(export_identity_stamps(plan))
 
 
 def _build_developer_metadata_requests(

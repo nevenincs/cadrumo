@@ -89,6 +89,22 @@ modelo:
           iva-aic-servicios-tipo-7-5-cuota:
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               7,5% - quota
+          iva-anual-autorepercutido-interior-deducible-base:
+            label: IVA deduïble per inversió del subjecte passiu en operacions interiors
+              corrents - base imposable (LIVA art. 84.Uno.2; part de la casella oficial
+              48)
+          iva-anual-autorepercutido-interior-deducible-cuota:
+            label: IVA deduïble per inversió del subjecte passiu en operacions interiors
+              corrents - quota deduïble (LIVA art. 84.Uno.2; part de la casella oficial
+              49)
+          iva-anual-autorepercutido-interior-deducible-inversion-base:
+            label: IVA deduïble per inversió del subjecte passiu en béns d'inversió
+              interiors - base imposable (LIVA art. 84.Uno.2; part de la casella oficial
+              50)
+          iva-anual-autorepercutido-interior-deducible-inversion-cuota:
+            label: IVA deduïble per inversió del subjecte passiu en béns d'inversió
+              interiors - quota deduïble (LIVA art. 84.Uno.2; part de la casella oficial
+              51)
           iva-anual-compensacion-generada-ejercicio:
             label: Saldo a compensar generat en l'exercici
           iva-anual-compensacion-ultimo-periodo:
@@ -97,6 +113,56 @@ modelo:
             label: Total quota d'IVA deduïble de l'exercici
           iva-anual-cuota-devengada-total:
             label: Total quota d'IVA meritada de l'exercici
+          iva-anual-deducible-aic-corrientes-todos-tipos-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents, tots els tipus - base imposable (casella oficial 56)
+          iva-anual-deducible-aic-corrientes-todos-tipos-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents, tots els tipus - quota deduïble (casella oficial 57)
+          iva-anual-deducible-aic-inversion-todos-tipos-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió, tots els tipus - base imposable (casella oficial 58)
+          iva-anual-deducible-aic-inversion-todos-tipos-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió, tots els tipus - quota deduïble (casella oficial 59)
+          iva-anual-deducible-aic-servicios-todos-tipos-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis,
+              tots els tipus - base imposable (casella oficial 597)
+          iva-anual-deducible-aic-servicios-todos-tipos-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis,
+              tots els tipus - quota deduïble (casella oficial 598)
+          iva-anual-deducible-interiores-corrientes-soportado-base:
+            label: IVA suportat deduïble en operacions interiors corrents - base imposable
+              (part de la casella oficial 48)
+          iva-anual-deducible-interiores-corrientes-soportado-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents - quota
+              deduïble (part de la casella oficial 49)
+          iva-anual-deducible-interiores-inversion-soportado-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              - base imposable (part de la casella oficial 50)
+          iva-anual-deducible-interiores-inversion-soportado-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              - quota deduïble (part de la casella oficial 51)
+          iva-anual-deducible-rectificacion-importaciones-base:
+            label: Rectificació de deduccions en importacions - base imposable (part
+              de la casella oficial 639)
+          iva-anual-deducible-rectificacion-importaciones-cuota:
+            label: Rectificació de deduccions en importacions - quota deduïble (part
+              de la casella oficial 62)
+          iva-anual-deducible-rectificacion-interiores-base:
+            label: Rectificació de deduccions en operacions interiors - base imposable
+              (part de la casella oficial 639)
+          iva-anual-deducible-rectificacion-interiores-cuota:
+            label: Rectificació de deduccions en operacions interiors - quota deduïble
+              (part de la casella oficial 62)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-base:
+            label: Rectificació de deduccions en operacions amb inversió del subjecte
+              passiu, interiors i intracomunitàries - base imposable (part de la casella
+              oficial 639)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota:
+            label: Rectificació de deduccions en operacions amb inversió del subjecte
+              passiu, interiors i intracomunitàries - quota deduïble (part de la casella
+              oficial 62)
           iva-anual-reconciliacion-deducible-303:
             label: Reconciliació anual - quota deduïble declarada en els models 303
           iva-anual-reconciliacion-devengada-303:
@@ -106,6 +172,9 @@ modelo:
               en els models 303
           iva-anual-reconciliacion-resultado-303:
             label: Reconciliació anual - resultat declarat en els models 303
+          iva-anual-reconciliacion-resultados-liquidaciones:
+            label: Reconciliació anual - resultats de les liquidacions de l'exercici
+              ([95] - [97] - [98] - [662])
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             label: IVA meritat en adquisicions intracomunitàries
           iva-anual-regimen-simplificado-cuota-resultante-agricola:

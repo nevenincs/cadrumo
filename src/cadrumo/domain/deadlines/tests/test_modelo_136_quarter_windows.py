@@ -15,6 +15,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ...calculations.registry.irpf_income_categories import require_irpf_income_category
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...contribuyente.entity_type import require_entity_type
 from ..engine import DeadlineEngine
 from ..models import IVARegime, TaxpayerProfile
@@ -97,13 +98,14 @@ def test_an_unanswered_profile_is_incomplete_and_opens_no_row() -> None:
     assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.INCOMPLETE
 
 
-def test_the_2026_edition_windows_follow_the_same_quarter_rule() -> None:
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_every_supported_edition_follows_the_same_quarter_rule(year: int) -> None:
     profile = _profile(
         premio_loteria_gravamen_especial_sin_retencion=True,
-        premio_loteria_gravamen_especial_trimestres=frozenset({"2026-3T", "2026-4T"}),
+        premio_loteria_gravamen_especial_trimestres=frozenset({f"{year}-3T", f"{year}-4T"}),
     )
 
-    assert _m136_periods(profile, 2026) == [
-        Period.from_year_and_code(2026, "3T"),
-        Period.from_year_and_code(2026, "4T"),
+    assert _m136_periods(profile, year) == [
+        Period.from_year_and_code(year, "3T"),
+        Period.from_year_and_code(year, "4T"),
     ]

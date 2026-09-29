@@ -71,6 +71,7 @@ from ....core.period import Period, PeriodError
 from ....core.type_guards import is_object_list, is_str_keyed_dict
 from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
+    text_family_casilla_ids,
     undeclared_casilla_ids,
 )
 from ....domain.calculations.registry.formula_runtime import (
@@ -158,6 +159,7 @@ class CalcSheetsPullPreconditionCondition(StrEnum):
     RELATION_LEGAL_REFS_VALID = "google.calc_sheets.pull.relation_legal_refs_valid"
     RELATION_SOURCE_REFS_VALID = "google.calc_sheets.pull.relation_source_refs_valid"
     EDIT_VALUE_FINITE = "google.calc_sheets.pull.edit_value_finite"
+    EDIT_VALUE_TEXT = "google.calc_sheets.pull.edit_value_text"
     EDIT_CASILLA_DECLARED = "google.calc_sheets.pull.edit_casilla_declared"
     EDIT_CASILLA_INPUT = "google.calc_sheets.pull.edit_casilla_input"
 
@@ -640,6 +642,26 @@ def _batch_get_values(
     return [_as_value_range(entry) for entry in response.get("valueRanges", [])]
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
+# object; no precise static type is available in google-api-python-client.
+def _coerce_text_cell(raw: Any) -> Decimal | str | bool | None:
+    """Type one worksheet cell that belongs to a text casilla, keeping its text.
+
+    A text casilla holds what the operator wrote, so a numeric-looking entry
+    such as a telephone number or a zero-led code is not read as an amount:
+    an unformatted integer cell becomes its digits and a string stays as
+    written. An empty cell is absent. Any other shape keeps its numeric or
+    boolean reading so the collector can refuse it as text.
+    """
+    if raw is None or raw == "":
+        return None
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, int) and not isinstance(raw, bool):
+        return str(raw)
+    return _coerce_value(raw)
+
+
 def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
     """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
     vr: _ValueRange = value_ranges[cursor] if cursor < len(value_ranges) else {}
@@ -656,10 +678,11 @@ def _decode_operator_edits(
     """Map the per-casilla slice of the batchGet response into typed OperatorEdits."""
     cells_read = 0
     edits: list[_OperatorEdit] = []
+    text_casilla_ids = text_family_casilla_ids(casilla_by_id.values())
     for casilla_id in operator_input_ids:
         raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        coerced = _coerce_value(raw)
+        coerced = _coerce_text_cell(raw) if casilla_id in text_casilla_ids else _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
         casilla = casilla_by_id[casilla_id]
@@ -991,9 +1014,10 @@ def compute_from_pull(
     Maps each edit family back to the runtime contract:
 
     - :attr:`~adapters.outbound.google.calc_sheets_pull_records.OperatorEdit.value`
-      flows into runtime ``inputs``, with ``Decimal("0")`` substituted for
-      ``None`` so the runtime's "every non-computed casilla has a value"
-      precondition holds.
+      flows into runtime ``inputs`` for a numeric casilla, with ``Decimal("0")``
+      substituted for ``None`` so the runtime's "every non-computed casilla has
+      a value" precondition holds; a text casilla's written text flows into
+      ``text_inputs`` and an empty text cell leaves the casilla absent.
     - :attr:`~adapters.outbound.google.calc_sheets_pull_records.BindingEdit.value`
       is routed by the binding's ``typed_enum`` declaration: numeric bindings
       flow into ``binding_values`` as Decimals; enum bindings flow into
@@ -1027,6 +1051,7 @@ def compute_from_pull(
     """
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
+    text_inputs = _collect_text_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
     binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)
     relation_values = _collect_relation_values(snapshot=snapshot, edits=pull.relation_edits)
     return calculate_registry_snapshot(
@@ -1042,6 +1067,7 @@ def compute_from_pull(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
+        text_inputs=text_inputs or None,
         # The worksheet pull carries operator cell edits, not filing-instance
     )
 
@@ -1142,8 +1168,9 @@ def _collect_input_casilla_values(
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
     inputs: dict[CasillaId, Decimal] = {}
+    text_casilla_ids = text_family_casilla_ids(snapshot.revision.casillas)
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind in {InputKind.COMPUTED, InputKind.INFORMATIONAL}:
+        if casilla.input_kind in {InputKind.COMPUTED, InputKind.INFORMATIONAL} or casilla.id in text_casilla_ids:
             continue
         edit = edits_by_casilla.get(casilla.id)
         inputs[casilla.id] = _coerce_edit_value_to_decimal(
@@ -1151,6 +1178,39 @@ def _collect_input_casilla_values(
             input_key=casilla.id,
         )
     return inputs
+
+
+def _collect_text_casilla_values(
+    *,
+    snapshot: RegistrySnapshot,
+    edits: tuple[_OperatorEdit, ...],
+) -> dict[CasillaId, str]:
+    """Route the operator's text-casilla cells to the calculation's text channel.
+
+    A text casilla is never part of the numeric input lattice: an empty cell
+    leaves it absent rather than zero, and written text travels as text for
+    the registry's own validator to judge. A cell that holds a truth value or a
+    fractional number is not text the operator wrote and is refused.
+    """
+    text_casilla_ids = text_family_casilla_ids(snapshot.revision.casillas)
+    text_values: dict[CasillaId, str] = {}
+    for edit in edits:
+        if edit.casilla_id not in text_casilla_ids or edit.value is None:
+            continue
+        if not isinstance(edit.value, str):
+            error = OutboundStorageValidationError(
+                f"text spreadsheet edit {edit.casilla_id!r} must be text",
+                context={"input_key": edit.casilla_id, "value": str(edit.value)},
+            )
+            raise _calc_sheets_pull_terminal_refusal(
+                error,
+                CalcSheetsPullPreconditionCondition.EDIT_VALUE_TEXT,
+                facts={"edit_value": str(edit.value), "input_key": edit.casilla_id, "string_edit": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
+        if edit.value.strip():
+            text_values[edit.casilla_id] = edit.value
+    return text_values
 
 
 def _collect_binding_values(

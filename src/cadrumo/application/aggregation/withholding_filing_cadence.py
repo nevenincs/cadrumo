@@ -42,7 +42,12 @@ if TYPE_CHECKING:
 #: The periodic withholding modelos captured withholding is placed in.
 PERIODIC_WITHHOLDING_MODELOS: Final[tuple[Modelo, ...]] = (Modelo("111"), Modelo("115"), Modelo("123"))
 
-_QUARTERS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
+#: The quarterly windows captured withholding is placed in and annual summaries total.
+#:
+#: Public because a filing-grade gate downstream has to ask about the same four
+#: windows this module refuses an annual source for; a second literal there
+#: would be free to disagree with the set the totals were actually built from.
+QUARTERLY_WITHHOLDING_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
 
 
 class WithholdingFilingCadenceRefusal(StrEnum):
@@ -102,7 +107,7 @@ class WithholdingModeloSchedule(BaseModel):
     @property
     def unscheduled_quarters(self) -> tuple[str, ...]:
         """Return the quarters the schedule does not assign."""
-        return tuple(quarter for quarter in _QUARTERS if quarter not in self.quarterly_periods)
+        return tuple(quarter for quarter in QUARTERLY_WITHHOLDING_PERIODS if quarter not in self.quarterly_periods)
 
 
 class WithholdingFilerCadence(BaseModel):
@@ -132,7 +137,7 @@ def _modelo_schedule(
     directory = operation.modelo_directory(modelo)
     scheduled: list[str] = []
     quarterly: list[str] = []
-    for quarter in _QUARTERS:
+    for quarter in QUARTERLY_WITHHOLDING_PERIODS:
         revision = select_revision_metadata(directory, filing_year=filing_year, period=quarter)
         if not revision.filing_schedules:
             quarterly.append(quarter)
@@ -281,6 +286,7 @@ def require_quarterly_withholding_source(
 
 __all__ = [
     "PERIODIC_WITHHOLDING_MODELOS",
+    "QUARTERLY_WITHHOLDING_PERIODS",
     "WithholdingFilerCadence",
     "WithholdingFilingCadenceError",
     "WithholdingFilingCadenceRefusal",

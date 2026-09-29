@@ -42,11 +42,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.invoice_retencion import route_invoice_retenciones
-from cadrumo.application.aggregation.retencion_observations_repository import (
-    RetencionObservationPorts,
-    persist_retencion_observations,
-)
+from cadrumo.application.aggregation.invoice_retencion import project_received_invoice_retencion
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
@@ -105,10 +101,10 @@ def _received_invoice() -> Invoice:
 
 def _routed_observation():
     """The one observation the invoice projects, before any persistence."""
-    routing = route_invoice_retenciones(((_received_invoice(), _SCHEME),))
-    assert routing.excluded == (), "the fixture invoice must route; a defect here would empty the test"
-    assert len(routing.observations) == 1
-    return routing.observations[0]
+    projection = project_received_invoice_retencion(_received_invoice(), scheme=_SCHEME)
+    assert projection.defects == (), "the fixture invoice must route; a defect here would empty the test"
+    assert projection.observation is not None
+    return projection.observation
 
 
 def test_the_projected_observation_carries_its_defaultable_field_non_default() -> None:
@@ -140,12 +136,12 @@ def test_an_invoice_sourced_observation_survives_the_encrypted_boundary_intact(t
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        persist_retencion_observations(
-            ports=RetencionObservationPorts(repository=repository),
+        repository.replace_observations(
             modelo=_MODELO,
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,
             observations=(original,),
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         loaded = repository.load_observations(_MODELO, _PERIOD)
 

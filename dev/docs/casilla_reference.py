@@ -63,6 +63,7 @@ from typing import TYPE_CHECKING, Final
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority_state import compiler_generation
 
 from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
@@ -1247,14 +1248,15 @@ def generate_casilla_reference(docs_root: Path, *, repo_root: Path | None = None
         A :class:`CasillaReferenceResult` summarising the render.
     """
     repo_root = (repo_root if repo_root is not None else _repo_root()).resolve()
-    records = project_casilla_search_records()[0]
     language = _display_language()
-    schema = compile_schema(records, language)
-    result = render_casilla_reference(repo_root, records=records, language=language, schema=schema)
+    # Compile first, then read the generation: compiling is what advances it, so
+    # reading it first would file this render under the previous generation.
+    compiled_bundled_authority()
+    result, index_rst = _bundled_reference(repo_root, language, compiler_generation())
     out_dir = docs_root / CASILLA_REFERENCE_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     index_path = out_dir / "index.rst"
-    _write_if_changed(index_path, _render_index(result.pages, schema, language))
+    _write_if_changed(index_path, index_rst)
     for page in result.pages:
         _write_if_changed(docs_root / page.output_relpath, page.rst)
     _remove_generated_rst(
@@ -1262,6 +1264,37 @@ def generate_casilla_reference(docs_root: Path, *, repo_root: Path | None = None
         keep=frozenset({index_path, *(docs_root / page.output_relpath for page in result.pages)}),
     )
     return result
+
+
+@lru_cache(maxsize=4)
+def _bundled_reference(
+    repo_root: Path,
+    language: OutputLanguage,
+    registry_generation: int,
+) -> tuple[CasillaReferenceResult, str]:
+    """Render the whole bundled reference once per (root, language, registry).
+
+    The render is a pure function of the bundled registry, the legal catalogue
+    under ``repo_root`` and the build language, and every page it returns is
+    frozen, so the rendered bytes are memoised and only the write and prune below
+    repeat. That is what the pruning contract is about -- which files a render
+    owns, and which residue it removes -- and those still run on every call; what
+    no longer repeats is recompiling fifty-nine pages to produce identical bytes.
+
+    Args:
+        repo_root: Repository root for the legal-catalogue read.
+        language: The one language the pages render in.
+        registry_generation: :func:`~dev.registry.compiler.authority_state.compiler_generation`
+            observed after the bundled authority was compiled, so an edit to any
+            registry source, or a compiler reset, rerenders.
+
+    Returns:
+        The render result and the rendered toctree index page.
+    """
+    records = project_casilla_search_records()[0]
+    schema = compile_schema(records, language)
+    result = render_casilla_reference(repo_root, records=records, language=language, schema=schema)
+    return result, _render_index(result.pages, schema, language)
 
 
 def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
