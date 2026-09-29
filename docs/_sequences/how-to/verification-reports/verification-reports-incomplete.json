@@ -516,7 +516,7 @@
               "casilla_id": "40",
               "help_text": "Box 40: base of the correction of deductions.",
               "input_kind": "computed",
-              "label": "Correction of deductions - Tax base",
+              "label": "Adjustment of deductions - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -536,7 +536,7 @@
               "casilla_id": "41",
               "help_text": "Box 41: amount of the correction of deductions.",
               "input_kind": "computed",
-              "label": "Correction of deductions - Tax amount",
+              "label": "Adjustment of deductions - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -1834,7 +1834,7 @@
               "casilla_id": "714",
               "help_text": "Box 714 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Differentiated deduction regimes - 1 - Correction of deductions - Taxable base",
+              "label": "13. Differentiated deduction regimes - 1 - Adjustment of deductions - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1851,7 +1851,7 @@
               "casilla_id": "715",
               "help_text": "Box 715 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Differentiated deduction regimes - 1 - Correction of deductions - Deductible amount",
+              "label": "13. Differentiated deduction regimes - 1 - Adjustment of deductions - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2140,7 +2140,7 @@
               "casilla_id": "732",
               "help_text": "Box 732 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Differentiated deduction regimes - 2 - Correction of deductions - Taxable base",
+              "label": "13. Differentiated deduction regimes - 2 - Adjustment of deductions - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2157,7 +2157,7 @@
               "casilla_id": "733",
               "help_text": "Box 733 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Differentiated deduction regimes - 2 - Correction of deductions - Deductible amount",
+              "label": "13. Differentiated deduction regimes - 2 - Adjustment of deductions - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2852,7 +2852,7 @@
               "casilla_id": "iva.rectificacion-deducciones.interiores.base",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on domestic transactions - Base (part of official box 40)",
+              "label": "Adjustment of deductions on domestic transactions - Base (part of official box 40)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -2870,7 +2870,7 @@
               "casilla_id": "iva.rectificacion-deducciones.interiores",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on domestic transactions - Tax amount (part of official box 41)",
+              "label": "Adjustment of deductions on domestic transactions - Tax amount (part of official box 41)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -2888,7 +2888,7 @@
               "casilla_id": "iva.rectificacion-deducciones.importaciones.base",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on imports - Base (part of official box 40)",
+              "label": "Adjustment of deductions on imports - Base (part of official box 40)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -2906,7 +2906,7 @@
               "casilla_id": "iva.rectificacion-deducciones.importaciones",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on imports - Tax amount (part of official box 41)",
+              "label": "Adjustment of deductions on imports - Tax amount (part of official box 41)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -2924,7 +2924,7 @@
               "casilla_id": "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on reverse-charge transactions, domestic and intra-Community - Base (part of official box 40)",
+              "label": "Adjustment of deductions on reverse-charge transactions, domestic and intra-Community - Base (part of official box 40)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
@@ -2942,7 +2942,7 @@
               "casilla_id": "iva.rectificacion-deducciones.inversion-sujeto-pasivo",
               "help_text": null,
               "input_kind": "bound",
-              "label": "Correction of deductions on reverse-charge transactions, domestic and intra-Community - Tax amount (part of official box 41)",
+              "label": "Adjustment of deductions on reverse-charge transactions, domestic and intra-Community - Tax amount (part of official box 41)",
               "legal_refs": [
                 "ley-37-1992:art-80",
                 "ley-37-1992:art-92",
