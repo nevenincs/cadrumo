@@ -819,6 +819,8 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
+    canonical_invoice_withholding_defects: L'evidència de la factura no permet registrar
+      la retenció fins que es corregeixin a la factura tots els defectes indicats.
     canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
       la retenció.
     canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet

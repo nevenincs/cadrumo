@@ -89,11 +89,6 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _required_whole_number_option("year", ("--year",), "cli.app.modelo.work.year_help"),
             _required_text_option("period", ("--period",), "cli.app.modelo.aggregate.period_help"),
             _repeatable_text_option(
-                "retencion_observation",
-                ("--retencion-observation",),
-                "cli.app.modelo.aggregate.retencion_observation_help",
-            ),
-            _repeatable_text_option(
                 "counterpart_observation",
                 ("--counterpart-observation",),
                 "cli.app.modelo.aggregate.counterpart_observation_help",

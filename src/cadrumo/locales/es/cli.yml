@@ -721,7 +721,7 @@ cli:
         json_validation_error: 'El valor de {flag} no es un objeto de observación
           válido: {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding no puede
-          combinarse con --received-invoice-retencion ni --retencion-observation.
+          combinarse con --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           una asignación de nómina (Modelo 111) o de rendimientos del capital mobiliario
           (Modelo 123) pagada por un movimiento del libro.'
@@ -734,8 +734,7 @@ cli:
           en el Modelo 123; no se admite el modelo %{modelo}.
         m123_ledger_payment_only: El Modelo 123 solo admite retenciones acreditadas
           por su movimiento de pago del libro mediante --ledger-payment-withholding;
-          se rechazan las retenciones de facturas o introducidas a mano y no se ha
-          registrado nada.
+          se rechazan las retenciones de facturas y no se ha registrado nada.
         modelo_help: Código de modelo soportado por el servicio backend de agregación
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
@@ -744,9 +743,6 @@ cli:
           una asignación de retención de una factura recibida, con su prueba de pago
           o de exigibilidad. Una asignación por comando; el scheme es un hecho legal
           sobre la actividad del perceptor y nunca se infiere de la factura.'
-        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
-          debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
-          o collectible_invoice. Repetible para varias observaciones.
         withholding_observation_help: Observación de retención por perceptor y clave
           (JSON) para el recuento de percepciones del Modelo 190; repetible.
       aggregate_help: Ejecuta el servicio backend de agregación por modelo con observaciones

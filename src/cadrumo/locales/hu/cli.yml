@@ -712,7 +712,7 @@ cli:
         json_validation_error: 'A(z) {flag} értéke nem érvényes megfigyelési objektum:
           {details}.'
         ledger_payment_withholding_exclusive: A --ledger-payment-withholding nem kombinálható
-          a --received-invoice-retencion vagy a --retencion-observation kapcsolóval.
+          a --received-invoice-retencion kapcsolóval.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           egy főkönyvi tétellel kifizetett bér- (111-es nyomtatvány) vagy ingó tőkejövedelem-felosztás
           (123-as nyomtatvány).'
@@ -725,8 +725,7 @@ cli:
           tőkejövedelmet rögzít; a(z) %{modelo} nyomtatvány nem elfogadott.
         m123_ledger_payment_only: A 123-as nyomtatvány forrásadó-adatot csak a kifizető
           főkönyvi tételből fogad el a --ledger-payment-withholding kapcsolóval; a
-          számlából vagy kézzel megadott levonásokat elutasítja, és semmi sem lett
-          rögzítve.
+          számlából származó levonásokat elutasítja, és semmi sem lett rögzítve.
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
@@ -734,13 +733,6 @@ cli:
           egy beérkezett számla egy levonás-felosztása, a fizetési vagy esedékességi
           bizonyítékával. Parancsonként egy felosztás; a scheme a perceptor tevékenységére
           vonatkozó jogi tény, amelyet a rendszer sosem következtet ki a számlából.'
-        retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
-          értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
-          collectible_invoice lehet. A 111-es nyomtatvány munka esetén a rendimientos_trabajo
-          scheme az alkalmazotti progresszív kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador
-          pedig a rögzített igazgatói/tanácstagi kulcs (LIRPF 101.2. cikk: 35 százalék,
-          vagy 19 százalék, ha a szervezet nettó árbevétele 100.000 EUR alatt van).
-          Több megfigyeléshez ismételje meg.'
         withholding_observation_help: Kifizetőnkénti-kulcsonkénti visszatartási megfigyelés
           (JSON) a 190-es modell juttatásszámlálásához; ismételhető.
       aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása

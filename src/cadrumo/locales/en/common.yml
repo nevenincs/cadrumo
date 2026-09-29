@@ -4,6 +4,19 @@ aggregation:
       unsupported_modelo: No aggregation contract is registered for the requested
         modelo.
   invoice_retencion:
+    defects:
+      fx_unresolved: The invoice is in a foreign currency and carries no euro conversion
+        rate.
+      iva_treatment_undeclared: No IVA treatment is declared, so the direction of
+        the retención cannot be read.
+      missing_counterparty_tax_id: The invoice names no tax ID for the perceptor,
+        which the withholding declaration requires.
+      no_retencion_declared: The invoice declares no withheld amount.
+      non_resident_supplier: The supplier is not resident in Spain; withholding on
+        payments to non-residents is declared under non-resident income tax.
+      not_a_retenedor_liability: For this IVA treatment and invoice kind, the retención
+        is not a liability the taxpayer owes as retenedor; the retención on an issued
+        invoice is a credit.
     errors:
       euro_figures_unavailable_after_defect_sweep: Euro figures are unavailable on
         an invoice that passed the defect sweep.
@@ -155,7 +168,9 @@ aggregation:
         111: declare the quarter as a no-retenciones period with `aeat config profile
         edit --modelo-111-no-retenciones-periods %{attestation_period}` (the option
         replaces the stored list, so also list, comma-separated, any periods already
-        declared), or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
+        declared), or capture the withheld payments with `aeat app modelo aggregate`,
+        using --received-invoice-retencion for a received invoice or --ledger-payment-withholding
+        for payroll.'
       m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: allocation(s)
         %{source_allocations} are declared manually and also come from captured capital
         withholding. Remove the manual row.'

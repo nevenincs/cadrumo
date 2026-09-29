@@ -747,6 +747,8 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
+    canonical_invoice_withholding_defects: The invoice evidence cannot support a withholding
+      capture until every listed defect is corrected on the invoice.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
     canonical_ledger_payment_withholding_evidence: The ledger payment cannot support

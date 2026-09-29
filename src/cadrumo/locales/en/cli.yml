@@ -662,7 +662,7 @@ cli:
         json_validation_error: 'The value of {flag} is not a valid observation object:
           {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding cannot
-          be combined with --received-invoice-retencion or --retencion-observation.
+          be combined with --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           one payroll (Modelo 111) or movable-capital income (Modelo 123) allocation
           paid by a ledger transaction.'
@@ -675,7 +675,7 @@ cli:
           modelo %{modelo} is not accepted.
         m123_ledger_payment_only: Modelo 123 accepts withholding evidence only from
           its paying ledger transaction through --ledger-payment-withholding; invoice
-          and hand-typed retenciones are refused, and nothing was written.
+          evidence is refused, and nothing was written.
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
@@ -683,13 +683,6 @@ cli:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
           fact about the perceptor''s activity and is never inferred from the invoice.'
-        retencion_observation_help: 'JSON RetencionObservation object. The source_kind
-          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
-          or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo
-          is the empleado progressive rate (LIRPF art. 101.1) and rendimientos_trabajo_administrador
-          is the fixed administrador/consejero rate (LIRPF art. 101.2: 35 percent,
-          or 19 percent when the entity''s net turnover is below 100,000 EUR). Repeat
-          for multiple observations.'
         withholding_observation_help: Per-perceptor-clave withholding observation
           (JSON) for the Modelo 190 percepciones count; repeatable.
       aggregate_help: Run the backend per-modelo aggregation service from explicit

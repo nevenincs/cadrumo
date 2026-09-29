@@ -765,6 +765,8 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
+    canonical_invoice_withholding_defects: A számla bizonyítékai alapján a forrásadó-levonás
+      nem rögzíthető, amíg a számlán minden felsorolt hibát ki nem javítasz.
     canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
       nem rögzíthető.
     canonical_ledger_payment_withholding_evidence: A főkönyvi kifizetés alapján a

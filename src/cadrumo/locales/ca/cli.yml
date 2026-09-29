@@ -714,7 +714,7 @@ cli:
         json_validation_error: 'El valor de {flag} no és un objecte d''observació
           vàlid: {details}.'
         ledger_payment_withholding_exclusive: --ledger-payment-withholding no es pot
-          combinar amb --received-invoice-retencion ni --retencion-observation.
+          combinar amb --received-invoice-retencion.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
           una assignació de nòmina (Model 111) o de rendiments del capital mobiliari
           (Model 123) pagada per un moviment del llibre.'
@@ -728,8 +728,7 @@ cli:
           Model 123; no s'admet el model %{modelo}.
         m123_ledger_payment_only: El Model 123 només admet retencions acreditades
           pel seu moviment de pagament del llibre mitjançant --ledger-payment-withholding;
-          es rebutgen les retencions de factures o introduïdes a mà i no s'ha registrat
-          res.
+          es rebutgen les retencions de factures i no s'ha registrat res.
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
@@ -738,8 +737,6 @@ cli:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
           o d''exigibilitat. Una assignació per ordre; l''scheme és un fet legal sobre
           l''activitat del perceptor i mai s''infereix de la factura.'
-        retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
-          per a diverses observacions
         withholding_observation_help: Observació de retenció per perceptor i clau
           (JSON) per al recompte de percepcions del Model 190; repetible.
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites

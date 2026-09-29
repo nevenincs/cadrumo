@@ -810,6 +810,8 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_withholding_defects: La evidencia de la factura no permite registrar
+      la retención hasta que se corrijan en la factura todos los defectos indicados.
     canonical_invoice_withholding_evidence: La evidencia de la factura no permite
       registrar la retención.
     canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar
