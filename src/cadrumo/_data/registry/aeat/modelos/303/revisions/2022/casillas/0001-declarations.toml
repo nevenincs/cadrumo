@@ -33,12 +33,19 @@ semantic_role = "dr303_26"
 continuidad_id = "dr303-26"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints box [27] as "Total cuota devengada ( [03] +
+# [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] + [26]) [27]"
+# (aeat-dr-303-2022, campo 51), the same total every later design prints with
+# only the rungs added in its own year, so the box projects the devengado total
+# from this revision on.
 [[revisions.2022.casillas]]
 id = "27"
 number = "27"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_27"
 continuidad_id = "dr303-27"
+input_kind = "computed"
+formula = "modelo-303-dr303-27-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -465,13 +472,21 @@ semantic_role = "dr303_76"
 continuidad_id = "dr303-76"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints "Suma de resultados ( [46] + [58] + [76] )
+# [64]", "% Atribuible a la Administracion del Estado [65]" and "Atribuible a la
+# Administracion del Estado [66]" (aeat-dr-303-2022, resultado campos 16-18)
+# exactly as every later design does, so the three boxes are computed and bound
+# from this revision on rather than left to operator input.
 [[revisions.2022.casillas]]
 id = "64"
 continuidad_id = "dr303-64"
 number = "64"
 section = ["iva", "resultado"]
 semantic_role = "dr303_64"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-suma-resultados"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "65"
@@ -480,6 +495,8 @@ section = ["iva", "resultado"]
 data_type = "ratio"
 semantic_role = "dr303_65"
 continuidad_id = "dr303-65"
+input_kind = "bound"
+binding = "modelo-303-profile-state-attribution-ratio"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -488,7 +505,10 @@ continuidad_id = "dr303-66"
 number = "66"
 section = ["iva", "resultado"]
 semantic_role = "dr303_66"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-atribuible-estado"
+legal_refs = ["rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "77"

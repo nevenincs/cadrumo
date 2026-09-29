@@ -3937,22 +3937,25 @@
                 "66",
                 "77",
                 "68",
+                "108",
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_refs": [
                 "66",
                 "77",
                 "68",
+                "108",
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
                 "105.00",
                 "0",
                 "0",
+                "0",
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2024-early",
+                "aeat-dr-303-2024-late",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
