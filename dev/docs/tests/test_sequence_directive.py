@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import re
+from html import unescape
 from io import StringIO
 from pathlib import Path
 
@@ -221,6 +222,40 @@ def test_payload_shape_and_render_exclude_authoring_metadata() -> None:
     assert match is not None
     inline = json.loads(match.group(1).replace("<\\/", "</"))
     assert inline == payload
+
+
+@pytest.mark.parametrize("stream", ["stdout", "stderr"])
+def test_large_provenance_renders_in_full_without_token_markup(stream: str) -> None:
+    from pygments import highlight
+    from pygments.formatters.html import HtmlFormatter
+    from pygments.lexers.data import JsonLexer
+
+    observations = [
+        {"casilla_id": str(index), "value": "0.00", "legal_refs": ["ley:á"], "detail": '</script><b>"&' * 12}
+        for index in range(128)
+    ]
+    golden = _golden()
+    frames = list(golden.frames)
+    frames[2] = frames[2].model_copy(
+        update={"envelope": {"observations": observations}, "envelope_source": stream},
+    )
+    payload = build_sequence_payload(_parsed_sequence(), golden.model_copy(update={"frames": tuple(frames)}))
+    body = payload["frames"][1]["output"]["body"]
+    rendered = render_sequence_html(payload)
+    outputs = re.findall(r'<pre class="cadrumo-frame-output" data-format="json">(.*?)</pre>', rendered, re.DOTALL)
+    large_output = next(output for output in outputs if "observations" in output)
+    assert "<span" not in large_output
+    assert unescape(large_output) == body
+    assert json.loads(unescape(large_output)) == {"observations": observations}
+    assert "</script><b>" not in rendered
+    highlighted = highlight(body, JsonLexer(), HtmlFormatter(nowrap=True))
+    assert len(large_output.encode("utf-8")) < len(highlighted.encode("utf-8")) * 0.6
+
+    match = re.search(
+        r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>', rendered, re.DOTALL
+    )
+    assert match is not None
+    assert json.loads(match.group(1).replace(r"<\/", "</")) == payload
 
 
 def test_stale_golden_frame_count_is_refused() -> None:
