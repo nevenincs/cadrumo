@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:302affe4f3c565472375bb20ae8f8009f7897fc91570c5078b82ed916c7b257c'
+body_hash: 'sha256:2f4ffac46dadbda7dbfc7b97596e92fe29d78b3a282de220efe045c0d68fd5dc'
 related:
   - "[[2026-09-29-file-size-optimisation-research]]"
   - "[[2026-07-13-docs-cli-sequences-adr]]"
@@ -13,7 +13,9 @@ related:
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
 ---
 
-# `file-size-optimisation` adr: `Sequence goldens commit a fingerprint, not the output` | (**status:** `proposed`)
+# `file-size-optimisation` adr: `Sequence goldens commit a fingerprint, not the output` | (**status:** `accepted`)
+
+Operator approval recorded 2026-09-29: the operator chose this option ("execute option 1") after reviewing the measured alternatives.
 
 ## Problem Statement
 
