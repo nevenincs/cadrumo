@@ -63,7 +63,7 @@ modelo:
                 ki; egyébként üresen marad.
               label: Kiegészítő oldal jelölése
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+              label: 'Bevallás típusa: az eredmény kódja (I befizetés)'
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
                 összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
