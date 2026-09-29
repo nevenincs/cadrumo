@@ -11,19 +11,6 @@ required_text = ["Modelo 303. IVA. Autoliquidación."]
 
 [revisions.2023.bindings.aggregation]
 op = "copy"
-
-[[revisions.2023.bindings]]
-id = "modelo-303-profile-state-attribution-ratio"
-provider = { kind = "profile", profile_key = "tax_residence.state_attribution_ratio" }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-115", "ley-12-2002:art-29", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2023.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["Modelo 303. IVA. Autoliquidación."]
-
-[revisions.2023.bindings.aggregation]
-op = "copy"
 # Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2).
 # The recipient self-assesses BOTH an IVA devengado entry (official box 13,
 # "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota") and a

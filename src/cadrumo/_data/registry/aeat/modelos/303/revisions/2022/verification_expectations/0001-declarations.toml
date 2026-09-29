@@ -16,12 +16,13 @@ source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-303-iva-chain-verification).
 # The deducible boxes [28]-[41] are situational: a filer without that kind of
-# purchase leaves them blank. [45] and [71] are printed on every return, but
-# this revision's coverage-gated contract already reconciles what they are
-# computed from ([45] restates iva.cuota-deducible-total, [71] is iva.resultado
-# less [70]), so they are reconciled here without widening the 2022 coverage
-# denominator. From 2023 the gated contract names [45] and [71] itself and the
-# delta takes them out of this list.
+# purchase leaves them blank. [27], [45], [64], [66] and [71] are printed on
+# every return, but this revision's coverage-gated contract already reconciles
+# what they are computed from ([27] restates iva.cuota-devengada-total, [45]
+# restates iva.cuota-deducible-total, [64] and [66] feed iva.resultado, and
+# [71] is iva.resultado less [70]), and this revision's extraction profile reads
+# [27] and [45] only, so they are reconciled here without widening the 2022
+# coverage denominator. From 2023 the gated contract names them itself.
 [[revisions."2022".verification_expectations]]
 id = "modelo-303-reconcile-when-present"
 computed_casilla_ids = []
@@ -35,7 +36,10 @@ reconcile_when_present_casilla_ids = [
     "37",
     "40",
     "41",
+    "27",
     "45",
+    "64",
+    "66",
     "71",
 ]
 tolerance = "0.01"

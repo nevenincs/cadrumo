@@ -641,3 +641,20 @@ required_text = ["modelo 303"]
 
 [revisions.2022.bindings.aggregation]
 op = "sum"
+
+# Box [65], the percentage of the result attributable to the Administracion del
+# Estado, is the taxpayer's own state attribution ratio. The concierto and
+# convenio apportionment it records is not year-specific: the 2022 diseno de
+# registro prints the box as every later design does.
+[[revisions.2022.bindings]]
+id = "modelo-303-profile-state-attribution-ratio"
+provider = { kind = "profile", profile_key = "tax_residence.state_attribution_ratio" }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-115", "ley-12-2002:art-29", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303. IVA. Autoliquidación."]
+
+[revisions.2022.bindings.aggregation]
+op = "copy"
