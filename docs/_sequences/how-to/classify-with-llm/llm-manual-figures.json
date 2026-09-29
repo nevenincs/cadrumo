@@ -26,60 +26,8 @@
           "value": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "8178f315fbeaed697e591b90d4d8f1135a69e011e6e88704f99727bb09a9a955"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-10",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-10",
-            "description": "Compra tipo reducido",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -167,6 +115,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "llm-manual-figures"
 }

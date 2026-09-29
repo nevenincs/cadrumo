@@ -170,6 +170,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "invoices-record-intracommunity"
 }

@@ -35,62 +35,8 @@
           "value": "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.add",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b",
-          "invoice_number": "EU-CAT-099",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-CAT-099",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -171,6 +117,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "invoices-catalogue-remove"
 }

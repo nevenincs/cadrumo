@@ -6,7 +6,9 @@ the stream that carried it, and ``text`` / ``stderr_text`` hold the normalised
 content of whichever stream did NOT carry it. Three coherence rules keep those
 fields from describing two different runs -- an envelope without its source, a
 source without its envelope, and a stream credited with the envelope while also
-storing raw content.
+storing raw content. A fourth rule keeps setup frames output-free: they are
+build scaffolding the page never shows, so their golden records only argv, exit
+code and captures.
 
 Every rule is a refusal on a PERSISTED record, so a golden that violates one is
 committed, replayed, and diffed against forever; the incoherent half simply
@@ -21,6 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..golden_store import GoldenFrame
+from ..runner import CapturedValue
 from ..schema import FrameKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -74,3 +77,37 @@ def test_an_envelope_on_one_stream_with_content_on_the_other_is_accepted() -> No
 
     assert frame.envelope_source == "stdout"
     assert frame.stderr_text == "a warning"
+
+
+@pytest.mark.parametrize(
+    "streams",
+    [
+        {"envelope": {"status": "ok"}, "envelope_source": "stdout"},
+        {"envelope": {"status": "error"}, "envelope_source": "stderr"},
+        {"text": "Imported 3 transactions."},
+        {"stderr_text": "a warning"},
+        {"text": ""},
+    ],
+    ids=["stdout-envelope", "stderr-envelope", "text", "stderr-text", "empty-text"],
+)
+def test_a_setup_frame_that_stores_output_is_refused(streams: dict[str, object]) -> None:
+    """Setup output is never rendered or compared, so storing any of it is refused.
+
+    The empty string is included on purpose: an empty stream is stored as
+    ``None``, so even an empty stored value is a layout the writer never emits.
+    """
+    with pytest.raises(ValidationError, match="a setup frame records only its argv, exit code and captures"):
+        _frame(kind=FrameKind.SETUP, **streams)
+
+
+def test_a_setup_frame_with_argv_exit_code_and_captures_is_accepted() -> None:
+    """Anti-vacuity: the setup rule refuses output, not the frame."""
+    frame = _frame(
+        kind=FrameKind.SETUP,
+        exit_code=0,
+        captures=(CapturedValue(name="run_status", json_path="status", value="success"),),
+    )
+
+    assert frame.kind is FrameKind.SETUP
+    assert [capture.value for capture in frame.captures] == ["success"]
+    assert (frame.envelope, frame.envelope_source, frame.text, frame.stderr_text) == (None, None, None, None)

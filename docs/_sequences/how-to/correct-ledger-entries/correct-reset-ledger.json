@@ -20,60 +20,8 @@
         "correct-reset"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "153d4816b5a4152deba9632db75a5eb7fa1c5131e250728a042e6677f6b195e5"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "10",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "To be cleared",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "c631b77031f47fc2db4f956ba472928ad3f981f332265a28b29feb05baa614b3",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "c631b77031f47fc2db4f956ba472928ad3f981f332265a28b29feb05baa614b3"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -148,6 +96,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "correct-reset-ledger"
 }

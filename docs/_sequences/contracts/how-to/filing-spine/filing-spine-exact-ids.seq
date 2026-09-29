@@ -8,9 +8,9 @@
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @capture revision_id result.calculation_revision_id
 @step Verify a specific calculation by its reference number.
-aeat --format json app modelo work verify {revision_id}
+aeat app modelo work verify {revision_id}
 @step File a specific calculation by its reference number.
-aeat --format json app modelo work file {revision_id}
+aeat app modelo work file {revision_id}
 @step Address an export by reference numbers; the envelope carries Cadrumo's all-zero development software identity.
 @result aeat --format json app modelo export {work_unit_id} --revision {revision_id} --output ./modelo-303-revision.boe
 @expect exit_code == 0

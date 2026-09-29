@@ -23,12 +23,14 @@ import json
 import re
 from io import StringIO
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sphinx.application import Sphinx
 
 from ..sequence_directive import (
     build_sequence_payload,
+    inline_sequence_payload,
     parse_shells,
     render_sequence_html,
     wrap_token_lines,
@@ -75,7 +77,6 @@ def _golden() -> SequenceGolden:
                 kind=FrameKind.SETUP,
                 argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
                 exit_code=0,
-                text="Imported 3 transactions.",
             ),
             GoldenFrame(
                 kind=FrameKind.COMMAND,
@@ -196,7 +197,6 @@ def test_payload_shape_and_render_exclude_authoring_metadata() -> None:
     assert "cadrumo-setup" not in html
     assert "<details" not in html
     assert 'data-frame-kind="setup"' not in html
-    assert "Imported 3 transactions." not in html
     assert "Confirm result.status reads verified_complete." not in html
     # Every visible frame carries a per-step header.
     assert html.count('class="cadrumo-frame-header"') == 3
@@ -212,15 +212,80 @@ def test_payload_shape_and_render_exclude_authoring_metadata() -> None:
     assert "&quot;{" not in html, "JSON output must never render double-encoded"
     assert "Verify the calculation before exporting." in html
 
-    # The inline payload is present, well-formed, and equal to the computed payload.
+    # The inline payload is present, well-formed, and equal to the computed
+    # payload's inline projection.
+    assert _inline_payload(html) == inline_sequence_payload(payload)
+
+
+def _inline_payload(html: str) -> dict[str, Any]:
+    """Extract and parse the one inline sequence payload from rendered HTML."""
     match = re.search(
         r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>',
         html,
         re.DOTALL,
     )
     assert match is not None
-    inline = json.loads(match.group(1).replace("<\\/", "</"))
-    assert inline == payload
+    parsed = json.loads(match.group(1).replace("<\\/", "</"))
+    assert isinstance(parsed, dict)
+    return parsed
+
+
+def test_output_bodies_ship_once_in_static_html_not_in_inline_payload() -> None:
+    """Output and stderr bodies render in the static HTML and are absent from the inline JSON.
+
+    The inline payload keeps each frame's output format, so the widget still
+    knows what each frame showed, while the body text itself ships only once.
+    """
+    sequence = parse_sequence(
+        sequence_id="body-once",
+        options={"verify": "Confirm the calculation."},
+        body=(
+            "aeat app modelo work calculate wu\n"
+            "@result aeat app modelo work verify wu\n"
+            '@expect result.status == "verified_complete"'
+        ),
+    )
+    golden = SequenceGolden(
+        sequence_id="body-once",
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.COMMAND,
+                argv=("aeat", "app", "modelo", "work", "calculate", "wu"),
+                exit_code=0,
+                text="Calculated casilla 01 as distinctive-stdout-marker.",
+                stderr_text="distinctive-stderr-marker: advisory notice",
+            ),
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "modelo", "work", "verify", "wu"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.verify",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"status": "verified_complete", "note": "distinctive-json-marker"},
+                },
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    payload = build_sequence_payload(sequence, golden)
+    html = render_sequence_html(payload)
+    static_html, _, script = html.partition('<script type="application/json" class="cadrumo-sequence-payload">')
+
+    for marker in ("distinctive-stdout-marker", "distinctive-stderr-marker", "distinctive-json-marker"):
+        assert marker in static_html, f"{marker} must render in the static transcript"
+        assert marker not in script, f"{marker} must not be repeated in the inline payload"
+
+    frames = _inline_payload(html)["frames"]
+    assert [frame["output"] for frame in frames] == [{"format": "text"}, {"format": "json"}]
+    assert [frame["stderr"] for frame in frames] == [{"format": "text"}, None]
+    # Everything but the bodies survives the projection unchanged.
+    for inline_frame, computed_frame in zip(frames, payload["frames"], strict=True):
+        assert {k: v for k, v in inline_frame.items() if k not in {"output", "stderr"}} == {
+            k: v for k, v in computed_frame.items() if k not in {"output", "stderr"}
+        }
 
 
 def test_stale_golden_frame_count_is_refused() -> None:
@@ -338,7 +403,6 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     # No-JS degradation: the full linear transcript is present in the static HTML.
     assert "aeat" in html
     assert 'data-command-path="aeat app modelo work verify"' in html
-    assert "Imported 3 transactions." not in html
     assert "Verify the calculation before exporting." in html
     # One inline JSON payload, well-formed and containing only reader-facing frames.
     match = re.search(
@@ -357,6 +421,9 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     assert 'class="cadrumo-cmd-variant" data-shell="pwsh"' in html
     assert payload["shells"] == ["bash", "pwsh"]
     assert "wrapped" in payload["frames"][0]
+    # The built payload carries output formats only; the bodies are in the static frames.
+    assert [frame["output"] for frame in payload["frames"]] == [{"format": "json"}] * 3
+    assert "verified_complete" in html.partition('class="cadrumo-sequence-payload"')[0]
 
 
 def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_sequence_storage: None) -> None:
@@ -671,7 +738,6 @@ def test_setup_frames_are_not_published() -> None:
     payload = build_sequence_payload(sequence, _golden())
     html = render_sequence_html(payload)
     assert 'data-frame-kind="setup"' not in html
-    assert "Imported 3 transactions." not in html
     assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
     assert '<span class="cadrumo-frame-step">1</span>' in html
 
