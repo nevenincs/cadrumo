@@ -4,9 +4,10 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-13'
 modified: '2026-09-29'
-body_hash: 'sha256:f3eae64a255379e03b3a64498c4b9cb85315965117fc24f88ce3ed0b98d5cf77'
+body_hash: 'sha256:b082d2302a5a510df7603df1d602f9ba10a8bac906b7a5cd2cb1f94501e3bd15'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
+  - '[[2026-09-29-file-size-optimisation-sequence-golden-storage-adr]]'
 ---
 
 # `docs-cli-sequences` adr: `interactive executed CLI sequence docs` | (**status:** `accepted`)
@@ -64,6 +65,33 @@ It keeps every byte on the pages, adds an indirection to every review diff, and
 git packs already delta-compress identical content. Also rejected: truncating
 displayed output in the renderer, which would show readers something other than
 what the command prints.
+
+## Golden storage amendment (2026-09-29)
+
+Operator decision 2026-09-29, recorded in
+`2026-09-29-file-size-optimisation-sequence-golden-storage-adr` with its
+evidence in `2026-09-29-file-size-optimisation-research`. It amends D2 and the
+diagnostics part of D3.
+
+- A committed golden (schema version 3) is a fingerprint. Each executed frame
+  keeps its kind, argv, exit code, captures and envelope stream. Each
+  reader-facing frame also records the SHA-256 and byte size of the form D3
+  compares. The output itself is not committed.
+- The full output is a record in the development cache. Refresh writes it, and
+  a clean check caches it as verified. A page renders only a record whose
+  fingerprint is the committed golden. A build that skipped the check but finds
+  a record missing runs the check once before it reads any page, rather than
+  render unverified output. D2's rejection of "fully
+  regenerated goldens with no committed expectation" stands: the build still
+  fails on any drift, at D3's strictness.
+- A changed frame's report shows the differing paths or text diff against the
+  last verified record when one is cached. Otherwise it names the frame and both
+  digests, and it always says where the live output was recorded.
+- A record that captures a crash, an error outcome its frame never declared, or
+  a hardcoded version is refused at refresh and check. These were corpus scans
+  over committed bodies.
+- The deploy runs the check once before it builds any site root, and every root
+  renders the records that check verified.
 
 ## Problem Statement
 

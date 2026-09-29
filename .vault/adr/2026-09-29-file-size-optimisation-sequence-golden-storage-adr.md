@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f4ffac46dadbda7dbfc7b97596e92fe29d78b3a282de220efe045c0d68fd5dc'
+body_hash: 'sha256:a2816706f6460ba65506f23244b9e2cb0a0d37c8126619a914903d2ce1ebb0b4'
 related:
   - "[[2026-09-29-file-size-optimisation-research]]"
   - "[[2026-07-13-docs-cli-sequences-adr]]"
@@ -62,7 +62,7 @@ The golden schema version advances, and a golden in the earlier format is refuse
 
 Refresh executes each sequence and writes the fingerprint golden. It also writes the full transcript into the rendered-output cache. Check executes, recomputes digests and compares. On a mismatch it names the page, sequence, frame and argv. It shows differing paths when a locally cached earlier transcript exists, and otherwise points to the live output it wrote to the cache.
 
-The docs build renders every cli-sequence directive from the transcripts produced by the check in the same build, or from the verdict cache entry that recorded them. The deploy root that runs the check populates the cache the other roots render from. The crash-marker gate scans transcripts instead of committed bodies. The enrolment floor and the mask-honesty gate are unchanged, since both already execute sequences.
+The docs build renders every cli-sequence directive from the verified records its own check produced, or that a reused clean verdict still has cached. An HTML build that skipped the check and finds any record missing runs the check once, before it reads any page; the directive itself only ever renders a verified record. Builders that write no HTML render no sequence output. The deploy runs the check once before it builds any site root, because the roots build concurrently, and every root renders the records that check verified. The crash-marker and version-literal scans, and the undeclared-failure scan, become rules every refresh and check applies to each record. The enrolment floor and the mask-honesty gate are unchanged, since both already execute sequences.
 
 One refresh rewrites all 205 goldens to the new form in the same change.
 

@@ -8,7 +8,7 @@ related:
   - '[[2026-09-29-file-size-optimisation-sequence-golden-storage-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:a8e4fb35775350c53b98a95a8293eae555b0c9daa72254d743dc9cb4357994ec'
+body_hash: 'sha256:61b74ad4704908a1a1c0fa00839dd8daacd81041fafd39620361144553f32d28'
 ---
 
 # `file-size-optimisation` plan
@@ -26,7 +26,7 @@ The committed `docs/_sequences/**/*.json` goldens change from full recorded outp
 - [x] `S01` - Store each golden as a per-frame fingerprint (schema 3) and keep the full transcript as a gitignored record verified against it; compare, check and refresh work on records; `dev/docs/sequences/golden_store.py, record_store.py, compare.py, checks.py, cli.py, tests/`.
 - [x] `S02` - Render cli-sequence directives only from verified records, and make the build gate, verdict cache and deploy produce or require them; `dev/docs/sequence_directive.py, sequence_build_gate.py, sequences/verdict_cache.py, dev/deploy/docs_static_site.py, dev/docs/tests/`.
 - [x] `S03` - Regenerate all goldens through the refresh CLI and pass the sequence check and the owning tests; `docs/_sequences/`.
-- [ ] `S04` - Record the golden storage amendment on the governing docs sequences decision and link it; `.vault/adr/2026-07-13-docs-cli-sequences-adr.md`.
+- [x] `S04` - Record the golden storage amendment on the governing docs sequences decision and link it; `.vault/adr/2026-07-13-docs-cli-sequences-adr.md`.
 
 ## Parallelization
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:59194097bebb378483c6a547670e3b5b74f4d6d517a5c6534230a41792aed707'
+body_hash: 'sha256:0a2320695bade1f6598d989a0c1c7ee2ff630dc69330623114764b67b29e0b96'
 related:
   - "[[2026-09-29-file-size-optimisation-plan]]"
 ---
@@ -263,6 +263,9 @@ related:
 - `S03` `verify:` `python -m dev.docs.sequences check (clean, 4m05s)` -> `pass`
 - `S03` `verify:` `second refresh into a scratch root is byte-identical for 205/205 goldens` -> `pass`
 - `S03` `verify:` `pytest dev/docs/tests dev/docs/sequences/tests dev/deploy/tests -m 'docs or unit or (integration and not serial)' (764 passed; failures identical to the baseline set)` -> `pass`
+- `S04` `M` `.vault/adr/2026-07-13-docs-cli-sequences-adr.md`
+- `S04` `M` `.vault/adr/2026-09-29-file-size-optimisation-sequence-golden-storage-adr.md`
+- `S04` `verify:` `vaultspec-core vault check all (no findings for either record)` -> `pass`
 
 ## Notes
 
