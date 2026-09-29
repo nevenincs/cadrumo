@@ -1,8 +1,8 @@
 """Setup frames: executed and checked, but their output is never stored.
 
 A setup frame is build scaffolding. The rendered page never shows it and later
-frames consume only its captures, so its golden records the argv, exit code and
-captures alone. These tests execute a REAL sequence whose first frame is a JSON
+frames consume only its captures, so its golden and its record keep the argv,
+exit code and captures alone. These tests execute a REAL sequence whose first frame is a JSON
 setup frame with a capture and prove the contract from both sides: the golden
 carries no setup output and still compares clean against a fresh run, while a
 setup frame's exit code, captures and ``@expect`` assertions keep biting.
@@ -25,8 +25,9 @@ from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
 from ..compare import check_transcript, compare_transcript_to_golden, evaluate_expectations
 from ..errors import SequenceGoldenError
-from ..golden_store import SequenceGolden, build_golden, golden_path, read_golden, write_golden
+from ..golden_store import SequenceGolden, golden_path, read_golden, write_golden
 from ..parser import parse_sequence
+from ..record_store import build_record, golden_from_record
 from ..runner import FrameExecution, SequenceTranscript, execute_sequence
 from ..schema import FrameKind, ParsedSequence
 
@@ -55,6 +56,14 @@ def _sequence(body: str = _BODY) -> ParsedSequence:
         options={"verify": "Verify the profile listing succeeds."},
         body=body,
     )
+
+
+def _golden(transcript: SequenceTranscript) -> SequenceGolden:
+    return golden_from_record(build_record(transcript))
+
+
+def _write(transcript: SequenceTranscript, root: Path) -> Path:
+    return write_golden(_golden(transcript), page=_PAGE, goldens_root=root)
 
 
 def _mutated(golden: SequenceGolden, mutate: Callable[[dict[str, object]], None]) -> SequenceGolden:
@@ -89,46 +98,52 @@ class TestSetupGoldenStorage:
         setup_run: SequenceTranscript,
         tmp_path: Path,
     ) -> None:
-        target = write_golden(setup_run, page=_PAGE, goldens_root=tmp_path)
+        target = _write(setup_run, tmp_path)
         stored = json.loads(target.read_text(encoding="utf-8"))
-        assert stored["golden_schema_version"] == 2
+        assert stored["golden_schema_version"] == 3
 
         setup, result = stored["frames"]
         assert setup["kind"] == "setup"
         assert setup["argv"] == ["aeat", "--format", "json", "config", "profile", "list"]
         assert setup["exit_code"] == 0
         assert [capture["name"] for capture in setup["captures"]] == ["setup_status"]
-        for stream in ("envelope", "envelope_source", "text", "stderr_text"):
-            assert setup[stream] is None, stream
+        for field in ("envelope_source", "output_sha256", "output_bytes"):
+            assert setup[field] is None, field
 
-        # The reader-facing frame keeps its full recorded output.
+        # The reader-facing frame keeps its output fingerprint.
         assert result["kind"] == "result"
-        assert result["envelope"] is not None and result["envelope_source"] == "stdout"
+        assert result["envelope_source"] == "stdout" and result["output_sha256"] and result["output_bytes"]
+
+    def test_setup_frame_record_stores_no_output(self, setup_run: SequenceTranscript) -> None:
+        setup, result = build_record(setup_run).frames
+        assert (setup.envelope, setup.envelope_source, setup.text, setup.stderr_text) == (None, None, None, None)
+        assert result.envelope is not None
 
     def test_output_free_setup_golden_roundtrips_and_a_fresh_run_checks_clean(
         self,
         setup_run: SequenceTranscript,
         tmp_path: Path,
     ) -> None:
-        write_golden(setup_run, page=_PAGE, goldens_root=tmp_path)
+        _write(setup_run, tmp_path)
         golden = read_golden(_PAGE, _SEQUENCE_ID, goldens_root=tmp_path)
-        assert golden == build_golden(setup_run)
+        assert golden == _golden(setup_run)
 
         rerun = execute_sequence(_sequence(), sandbox_root=tmp_path / "setup-run-b")
         assert check_transcript(_sequence(), rerun, golden, page=_PAGE) == ()
 
 
 class TestOutdatedGoldensAreRefused:
-    def test_a_golden_carrying_setup_output_is_refused_with_the_refresh_hint(
+    def test_a_golden_fingerprinting_setup_output_is_refused_with_the_refresh_hint(
         self,
         setup_run: SequenceTranscript,
         tmp_path: Path,
     ) -> None:
-        """The shape every version-1 golden has: the setup frame's full output."""
-        target = write_golden(setup_run, page=_PAGE, goldens_root=tmp_path)
+        """A setup frame is not reader-facing, so a digest on it is refused."""
+        target = _write(setup_run, tmp_path)
         document = json.loads(target.read_text(encoding="utf-8"))
         setup = document["frames"][0]
-        setup["envelope"] = setup_run.frames[0].envelope
+        setup["output_sha256"] = document["frames"][1]["output_sha256"]
+        setup["output_bytes"] = 10
         setup["envelope_source"] = "stdout"
         target.write_text(json.dumps(document), encoding="utf-8")
 
@@ -138,15 +153,17 @@ class TestOutdatedGoldensAreRefused:
         assert "a setup frame records only its argv, exit code and captures" in message
         assert _REFRESH_HINT in message
 
-    def test_a_version_one_golden_is_refused_with_the_refresh_hint(
+    @pytest.mark.parametrize("version", [1, 2])
+    def test_an_earlier_version_golden_is_refused_with_the_refresh_hint(
         self,
         setup_run: SequenceTranscript,
         tmp_path: Path,
+        version: int,
     ) -> None:
         """An earlier layout is refused, never read, even when its frames happen to fit."""
-        target = write_golden(setup_run, page=_PAGE, goldens_root=tmp_path)
+        target = _write(setup_run, tmp_path)
         document = json.loads(target.read_text(encoding="utf-8"))
-        document["golden_schema_version"] = 1
+        document["golden_schema_version"] = version
         target.write_text(json.dumps(document), encoding="utf-8")
 
         with pytest.raises(SequenceGoldenError) as excinfo:
@@ -162,7 +179,7 @@ class TestSetupFramesStillBite:
         def _drift(document: dict[str, object]) -> None:
             _setup_frame(document)["exit_code"] = 3
 
-        problems = compare_transcript_to_golden(setup_run, _mutated(build_golden(setup_run), _drift), page=_PAGE)
+        problems = compare_transcript_to_golden(setup_run, _mutated(_golden(setup_run), _drift), page=_PAGE)
         assert len(problems) == 1
         assert "frame 0" in problems[0]
         assert "exit code 0, golden expects 3" in problems[0]
@@ -172,7 +189,7 @@ class TestSetupFramesStillBite:
             captures = cast("list[dict[str, object]]", _setup_frame(document)["captures"])
             captures[0]["value"] = "warning"
 
-        problems = compare_transcript_to_golden(setup_run, _mutated(build_golden(setup_run), _drift), page=_PAGE)
+        problems = compare_transcript_to_golden(setup_run, _mutated(_golden(setup_run), _drift), page=_PAGE)
         assert len(problems) == 1
         assert "frame 0" in problems[0]
         assert "captured values diverged" in problems[0]
@@ -181,7 +198,7 @@ class TestSetupFramesStillBite:
         def _drift(document: dict[str, object]) -> None:
             _setup_frame(document)["argv"] = ["aeat", "config", "profile", "list"]
 
-        problems = compare_transcript_to_golden(setup_run, _mutated(build_golden(setup_run), _drift), page=_PAGE)
+        problems = compare_transcript_to_golden(setup_run, _mutated(_golden(setup_run), _drift), page=_PAGE)
         assert len(problems) == 1
         assert "frame 0" in problems[0]
         assert "argv diverged" in problems[0]
@@ -208,7 +225,7 @@ class TestSetupFramesStillBite:
         setup["stderr"] = "a warning nobody reads\n"
         changed = SequenceTranscript.model_validate_json(json.dumps(document))
 
-        assert compare_transcript_to_golden(changed, build_golden(setup_run), page=_PAGE) == ()
+        assert compare_transcript_to_golden(changed, _golden(setup_run), page=_PAGE) == ()
 
 
 def test_ids_minted_by_a_setup_frame_stay_masked_in_later_text() -> None:
@@ -245,6 +262,6 @@ def test_ids_minted_by_a_setup_frame_stay_masked_in_later_text() -> None:
         frames=frames,
     )
 
-    golden = build_golden(transcript)
-    assert golden.frames[0].envelope is None
-    assert golden.frames[1].text == f"latest run {MASK_SENTINEL}\n"
+    record = build_record(transcript)
+    assert record.frames[0].envelope is None
+    assert record.frames[1].text == f"latest run {MASK_SENTINEL}\n"

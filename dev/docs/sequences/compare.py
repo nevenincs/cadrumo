@@ -1,35 +1,30 @@
 """Golden comparison and semantic expectation evaluation.
 
-One comparison policy per frame kind, applied to an executed
-:class:`~dev.docs.sequences.runner.SequenceTranscript` against its committed
-:class:`~dev.docs.sequences.golden_store.SequenceGolden`:
+An executed :class:`~dev.docs.sequences.runner.SequenceTranscript` is projected
+into its run-independent record
+(:func:`~dev.docs.sequences.record_store.build_record`) and fingerprinted
+(:func:`~dev.docs.sequences.record_store.golden_from_record`); the fingerprint
+is compared with the committed
+:class:`~dev.docs.sequences.golden_store.SequenceGolden`, field by field:
 
-- **JSON frames** compare via the shared observability substrate —
-  ``canonicalise`` + ``mask_document`` with exactly the central
-  ``GOLDEN_MASK_FIELDS`` — over the FULL envelope (shared spine plus result),
-  reporting the post-mask ``differing_paths`` on failure. The live envelope is
-  first path-normalised (``normalise_document_paths``) with THIS run's sandbox
-  and checkout paths, matching the tokens the golden baked at build time, so a
-  path leaking into a string value (``config check``'s storage-root / corpus-path
-  ``detail``) does not diverge every run; this is a value-anchored replacement of
-  the known roots, orthogonal to and preceding the central field mask. This
-  module exposes NO mask parameter and never overrides ``mask_document``'s central default:
-  the executor never declares its own mask set and a sequence cannot carry a
-  per-sequence mask extension (the one dishonesty lever the substrate would
-  otherwise allow). Both properties are pinned — a signature gate and an AST gate over
-  this module's ``mask_document`` calls in ``tests/test_compare.py``, plus the
-  executor-level double-run proof in ``dev/docs/tests/test_sequence_goldens.py``
-  — so a newly nondeterministic field is enrolled in the one central set with
-  its anti-tautology proof, never masked locally.
-- **Text frames** compare by exact string equality after the declared narrow
-  normalisation (:func:`~dev.docs.sequences.golden_store.normalise_text_output`
-  — sandbox paths to stable tokens, centrally-masked ids to the sentinel),
-  reporting a unified diff on failure. No wildcards, no fuzzy matching, no
-  "contains".
-- **Exit codes** are asserted on every frame.
-- **Setup frames** compare kind, argv, exit code and captures only. Their
-  golden stores no output, so the envelope and text tiers do not apply; their
-  ``@expect`` assertions still evaluate against the live run.
+- **Kind, argv, exit code and captures** are asserted on every frame, setup
+  frames included.
+- **The envelope stream** must match: a success envelope moving to a stderr
+  error document, or JSON output turning into text, is a behavioural change.
+- **The output digest and size** cover the compared form
+  (:func:`~dev.docs.sequences.record_store.compared_form`): the envelope under
+  ``mask_document`` with exactly the central ``GOLDEN_MASK_FIELDS`` plus the
+  host-conditional carve-out, and the normalised text streams. This module
+  exposes NO mask parameter and never overrides ``mask_document``'s central
+  default: the executor never declares its own mask set and a sequence cannot
+  carry a per-sequence mask extension (the one dishonesty lever the substrate
+  would otherwise allow). Both properties are pinned — a signature gate and an
+  AST gate over the ``mask_document`` calls in ``tests/test_compare.py``, plus
+  the executor-level double-run proof in ``dev/docs/tests/test_sequence_goldens.py``.
+
+A digest names THAT an output changed, not how. When the last verified record
+of the sequence is cached, a changed frame is diffed against it: the post-mask
+``differing_paths`` of a JSON envelope, or a unified diff of normalised text.
 
 ``@expect`` assertions are evaluated against the LIVE output
 (:func:`evaluate_expectations`), never against the golden: golden equality
@@ -50,14 +45,8 @@ from collections.abc import Mapping
 from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_document
 
 from .errors import SequenceGoldenMismatchError
-from .golden_store import (
-    SequenceGolden,
-    mask_host_conditional_details,
-    masked_envelope_values,
-    normalise_document_paths,
-    normalise_text_output,
-    refresh_invocation,
-)
+from .golden_store import SequenceGolden, mask_host_conditional_details, refresh_invocation
+from .record_store import RecordFrame, SequenceRecord, build_record, golden_from_record
 from .runner import FrameExecution, SequenceTranscript, _resolve_json_path
 from .schema import FrameKind, ParsedSequence
 
@@ -89,16 +78,41 @@ def _unified_diff(expected: str, actual: str) -> str:
     return "\n".join(lines)
 
 
+def _output_differences(expected: RecordFrame, actual: RecordFrame) -> tuple[str, ...]:
+    """Describe how ``actual``'s output differs from the verified ``expected`` frame."""
+    differences: list[str] = []
+    if expected.envelope is not None and actual.envelope is not None:
+        masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
+        masked_actual = mask_host_conditional_details(mask_document(actual.envelope))
+        if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
+            differences.append("masking returned a non-document, so the envelopes cannot be compared")
+        elif canonicalise(masked_expected) != canonicalise(masked_actual):
+            diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
+            differences.append(f"envelope diverged at post-mask paths: {diff or '<whole-document>'}")
+    for label, before, after in (
+        ("stdout", expected.text, actual.text),
+        ("stderr", expected.stderr_text, actual.stderr_text),
+    ):
+        if (before or "") != (after or ""):
+            differences.append(f"{label} text diverged:\n{_unified_diff(before or '', after or '')}")
+    return tuple(differences)
+
+
 def compare_transcript_to_golden(
     transcript: SequenceTranscript,
     golden: SequenceGolden,
     *,
     page: str,
+    baseline: SequenceRecord | None = None,
 ) -> tuple[str, ...]:
-    """Compare an executed transcript against its committed golden.
+    """Compare an executed transcript against its committed golden fingerprint.
 
     Accumulating: every frame divergence is collected in one pass so a check
     run reports the whole worklist. An empty tuple is a clean pass.
+
+    ``baseline`` is the last verified record of the sequence, if the caller has
+    one; its fingerprint must equal ``golden``. It only enriches the report of a
+    changed output with what changed, and never decides the verdict.
     """
     problems: list[str] = []
     if transcript.sequence_id != golden.sequence_id:
@@ -116,10 +130,12 @@ def compare_transcript_to_golden(
         )
         return tuple(problems)
 
-    live_masked_values = masked_envelope_values(transcript)
+    record = build_record(transcript)
+    live = golden_from_record(record)
+    baseline_frames = baseline.frames if baseline is not None and len(baseline.frames) == len(golden.frames) else None
 
-    for index, (expected, actual) in enumerate(zip(golden.frames, transcript.frames, strict=True)):
-        at = _frame_locator(page, golden.sequence_id, index, actual)
+    for index, (expected, actual) in enumerate(zip(golden.frames, live.frames, strict=True)):
+        at = _frame_locator(page, golden.sequence_id, index, transcript.frames[index])
 
         if expected.kind is not actual.kind:
             problems.append(f"{at}: frame kind changed from {expected.kind.value!r} to {actual.kind.value!r}")
@@ -132,83 +148,40 @@ def compare_transcript_to_golden(
         if expected.exit_code != actual.exit_code:
             problems.append(f"{at}: exit code {actual.exit_code}, golden expects {expected.exit_code}")
 
-        if expected.captures != actual.captured:
+        if expected.captures != actual.captures:
             golden_view = {item.name: item.value for item in expected.captures}
-            live_view = {item.name: item.value for item in actual.captured}
+            live_view = {item.name: item.value for item in actual.captures}
             problems.append(f"{at}: captured values diverged — golden {golden_view!r}, live {live_view!r}")
 
-        # A setup golden stores no output to compare. When a frame changed to or
-        # from setup, the kind problem above already names it; an output diff
-        # against the other side's absent streams would only bury it.
+        # A setup frame records no output. When a frame changed to or from
+        # setup, the kind problem above already names it; an output comparison
+        # against the other side's absent fingerprint would only bury it.
         if FrameKind.SETUP in (expected.kind, actual.kind):
             continue
 
-        # Envelope tier: golden and live must agree on whether a JSON envelope
-        # exists and on which stream carried it (a success envelope moving to
-        # a stderr error document — or vice versa — is a behavioural change).
-        if expected.envelope is not None:
-            if actual.envelope is None:
-                problems.append(
-                    f"{at}: the golden expects a JSON envelope (on {expected.envelope_source}) "
-                    f"but the live output carries none "
-                    f"(stdout starts: {actual.output[:120]!r})",
-                )
-            else:
-                if expected.envelope_source != actual.envelope_source:
-                    problems.append(
-                        f"{at}: the envelope moved streams — golden on "
-                        f"{expected.envelope_source}, live on {actual.envelope_source}",
-                    )
-                # The golden's envelope was path-normalised at build time; the
-                # live envelope carries THIS run's raw sandbox/checkout paths, so
-                # tokenise it the same value-anchored way before the central field
-                # mask — otherwise a path leaking into a string value (config
-                # check's storage-root / corpus-path detail) diverges every run.
-                live_envelope = normalise_document_paths(
-                    actual.envelope,
-                    storage_root=transcript.storage_root,
-                    workdir=transcript.workdir,
-                )
-                # Same platform-conditional carve-out the text tier applies, at
-                # the structural tier: each side's own detail is masked, so the
-                # row's id and verdict stay under exact comparison while the
-                # sentence describing the HOST drops out of both.
-                masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
-                masked_actual = mask_host_conditional_details(mask_document(live_envelope))
-                if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
-                    problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
-                elif canonicalise(masked_expected) != canonicalise(masked_actual):
-                    diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
-                    problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
-        elif actual.envelope is not None:
+        if expected.envelope_source != actual.envelope_source:
             problems.append(
-                f"{at}: the golden expects no JSON envelope but the live output now carries "
-                f"one on {actual.envelope_source}",
+                f"{at}: the JSON envelope stream changed from {expected.envelope_source or 'none'} "
+                f"to {actual.envelope_source or 'none'}",
             )
+            continue
 
-        # Text tier: each stream that did not carry the envelope compares by
-        # exact equality after the declared narrow normalisation (the golden
-        # stores normalised text; the live side normalises with THIS run's
-        # sandbox paths and masked ids). ``None`` reads as the empty stream.
-        def _normalised_live(raw: str) -> str:
-            return normalise_text_output(
-                raw,
-                storage_root=transcript.storage_root,
-                workdir=transcript.workdir,
-                masked_values=live_masked_values,
+        if expected.output_sha256 != actual.output_sha256:
+            detail: tuple[str, ...] = ()
+            if baseline_frames is not None:
+                detail = _output_differences(baseline_frames[index], record.frames[index])
+            if detail:
+                problems.extend(f"{at}: {item}" for item in detail)
+            else:
+                problems.append(
+                    f"{at}: output changed (golden sha256 {expected.output_sha256}, live "
+                    f"{actual.output_sha256}); no verified earlier record is cached to show the difference",
+                )
+        elif expected.output_bytes != actual.output_bytes:
+            # Equal digests always carry equal sizes, so this is a golden edited by hand.
+            problems.append(
+                f"{at}: recorded output size {actual.output_bytes}, golden records {expected.output_bytes}",
             )
-
-        if actual.envelope_source != "stdout" and expected.envelope_source != "stdout":
-            live_text = _normalised_live(actual.output)
-            expected_text = expected.text if expected.text is not None else ""
-            if live_text != expected_text:
-                problems.append(f"{at}: stdout text diverged:\n{_unified_diff(expected_text, live_text)}")
-
-        if actual.envelope_source != "stderr" and expected.envelope_source != "stderr":
-            live_stderr = _normalised_live(actual.stderr)
-            expected_stderr = expected.stderr_text if expected.stderr_text is not None else ""
-            if live_stderr != expected_stderr:
-                problems.append(f"{at}: stderr text diverged:\n{_unified_diff(expected_stderr, live_stderr)}")
 
     return tuple(problems)
 
@@ -282,6 +255,7 @@ def check_transcript(
     golden: SequenceGolden,
     *,
     page: str,
+    baseline: SequenceRecord | None = None,
 ) -> tuple[str, ...]:
     """Run the full check tier over one executed sequence.
 
@@ -290,7 +264,7 @@ def check_transcript(
     both check surfaces — the Sphinx build hook and the pytest gate — call, so
     neither re-implements comparison.
     """
-    return compare_transcript_to_golden(transcript, golden, page=page) + evaluate_expectations(
+    return compare_transcript_to_golden(transcript, golden, page=page, baseline=baseline) + evaluate_expectations(
         sequence,
         transcript,
         page=page,

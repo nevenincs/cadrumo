@@ -23,6 +23,8 @@ from ..checks import (
     refresh_sequences,
 )
 from ..cli import main
+from ..golden_store import write_golden
+from ..record_store import SequenceRecord, golden_from_record, read_verified_record, write_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -226,23 +228,55 @@ class TestCheckMode:
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        """Inject the drift a CLI behaviour change would produce and assert the
-        check names the page, sequence, frame, differing path, and remedy."""
-        drifted_root = tmp_path / "goldens"
-        source = _golden_file(refreshed_goldens)
-        target = drifted_root / _PAGE / f"{_SEQUENCE_ID}.json"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        document = json.loads(source.read_text(encoding="utf-8"))
+        """Inject the drift a CLI behaviour change would produce: a committed
+        golden fingerprinted from an earlier output, with that output cached as
+        the last verified record. The check names the page, sequence, frame,
+        differing path, where the live output went, and the remedy."""
+        drifted_goldens = tmp_path / "goldens"
+        drifted_records = tmp_path / "records"
+        check_sequences(docs_root=docs_tree, goldens_root=refreshed_goldens, records_root=drifted_records)
+        record_file = drifted_records / _PAGE / f"{_SEQUENCE_ID}.json"
+        document = json.loads(record_file.read_text(encoding="utf-8"))
         document["frames"][0]["envelope"]["status"] = "warning"
-        target.write_text(json.dumps(document, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        earlier = SequenceRecord.model_validate_json(json.dumps(document))
+        write_record(earlier, target=record_file)
+        write_golden(golden_from_record(earlier), page=_PAGE, goldens_root=drifted_goldens)
 
-        exit_code = main(["check", "--docs-root", str(docs_tree), "--goldens-root", str(drifted_root)])
+        exit_code = main(
+            [
+                "check",
+                "--docs-root",
+                str(docs_tree),
+                "--goldens-root",
+                str(drifted_goldens),
+                "--records-root",
+                str(drifted_records),
+            ],
+        )
         captured = capsys.readouterr()
         assert exit_code == 1
         assert _PAGE in captured.err and _SEQUENCE_ID in captured.err
         assert "frame 0" in captured.err
-        assert "status" in captured.err
+        assert "envelope diverged at post-mask paths: status" in captured.err
+        diverged = drifted_records / "_diverged" / _PAGE / f"{_SEQUENCE_ID}.json"
+        assert f"the live output is recorded at {diverged}" in captured.err
+        assert diverged.is_file()
+        # The verified baseline survives, so the next divergence is diffed against it too.
+        assert SequenceRecord.model_validate_json(record_file.read_text(encoding="utf-8")) == earlier
         assert "python -m dev.docs.sequences refresh" in captured.err
+
+    def test_a_clean_check_caches_its_records_as_verified(
+        self,
+        docs_tree: Path,
+        refreshed_goldens: Path,
+        tmp_path: Path,
+    ) -> None:
+        records = tmp_path / "records"
+        problems, _ = check_sequences(docs_root=docs_tree, goldens_root=refreshed_goldens, records_root=records)
+        assert problems == ()
+        record = read_verified_record(_PAGE, _SEQUENCE_ID, goldens_root=refreshed_goldens, records_root=records)
+        assert record.sequence_id == _SEQUENCE_ID
+        assert not (records / "_diverged").exists()
 
     def test_missing_golden_fails_with_the_refresh_invocation(
         self,

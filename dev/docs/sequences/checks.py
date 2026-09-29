@@ -21,21 +21,23 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
 from .compare import check_transcript, evaluate_expectations
 from .contracts import read_sequence_contract
 from .errors import SequenceEngineError, SequenceParseError
-from .golden_store import (
-    GoldenFrame,
-    SequenceGolden,
-    build_golden,
-    read_golden,
-    write_golden,
-)
+from .golden_store import SequenceGolden, read_golden, write_golden
 from .parser import parse_sequence
+from .record_store import (
+    build_record,
+    default_records_root,
+    diverged_record_path,
+    golden_from_record,
+    record_path,
+    verified_baseline,
+    write_record,
+)
 from .runner import (
     _PROGRESS_JOURNAL_ENV,
     SequenceTranscript,
@@ -55,7 +57,6 @@ __all__ = [
     "default_docs_root",
     "discover_sequences",
     "oversized_frame_advisories",
-    "recorded_output_bytes",
     "refresh_sequences",
     "unused_capture_advisories",
 ]
@@ -335,23 +336,13 @@ def unused_capture_advisories(item: DiscoveredSequence) -> tuple[str, ...]:
     )
 
 
-def recorded_output_bytes(frame: GoldenFrame) -> int:
-    """Measure a golden frame's recorded output in UTF-8 bytes.
-
-    The recorded output is the frame's stored golden content: the canonical
-    JSON of its envelope plus its stdout text plus its stderr text. Absent
-    streams count as empty.
-    """
-    envelope = canonicalise(frame.envelope) if frame.envelope is not None else ""
-    return sum(len(part.encode(_UTF_8)) for part in (envelope, frame.text or "", frame.stderr_text or ""))
-
-
 def oversized_frame_advisories(page: str, golden: SequenceGolden) -> tuple[str, ...]:
     """Report reader-facing frames whose recorded output exceeds the advisory limit.
 
     A named advisory, never a failure. Setup frames are not reader-facing and
-    record no output, so only the other executed frames are measured; the frame
-    index is the golden's, the same index a check failure names.
+    record no output, so only the other executed frames are measured, by the
+    output size each golden frame records; the frame index is the golden's, the
+    same index a check failure names.
     """
     return tuple(
         f"page {page!r} sequence {golden.sequence_id!r} frame {index} (argv: {' '.join(frame.argv)}): "
@@ -359,8 +350,7 @@ def oversized_frame_advisories(page: str, golden: SequenceGolden) -> tuple[str, 
         "reader-facing limit; print the text output instead of JSON, or narrow the command to what "
         "the page needs to show"
         for index, frame in enumerate(golden.frames)
-        if frame.kind is not FrameKind.SETUP
-        and (size := recorded_output_bytes(frame)) > READER_FRAME_OUTPUT_ADVISORY_BYTES
+        if frame.kind is not FrameKind.SETUP and (size := frame.output_bytes or 0) > READER_FRAME_OUTPUT_ADVISORY_BYTES
     )
 
 
@@ -368,10 +358,14 @@ def refresh_sequences(
     *,
     docs_root: Path | None = None,
     goldens_root: Path | None = None,
+    records_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
 ) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]]:
     """Re-execute the addressed sequences and rewrite their golden files.
+
+    Each run's record is written beside the golden it fingerprints, so the
+    refreshed pages render without a further execution.
 
     Returns:
         ``(written, problems, advisories)``: the golden paths written, the
@@ -392,8 +386,11 @@ def refresh_sequences(
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
-        advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
+        record = build_record(transcript)
+        golden = golden_from_record(record)
+        written.append(write_golden(golden, page=item.page, goldens_root=goldens_root))
+        write_record(record, target=record_path(item.page, item.sequence_id, records_root=records_root))
+        advisories.extend(oversized_frame_advisories(item.page, golden))
     return tuple(written), tuple(all_problems), tuple(advisories)
 
 
@@ -401,10 +398,16 @@ def check_sequences(
     *,
     docs_root: Path | None = None,
     goldens_root: Path | None = None,
+    records_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Execute the addressed sequences and compare against committed goldens.
+
+    A sequence that passes has its record written as verified, which is what
+    its page renders. One that diverges leaves its live record under the
+    records root's diverged directory, named in the report, and keeps the last
+    verified record as the baseline its report is diffed against.
 
     This is THE engine check function: the ``check`` CLI mode, the Sphinx
     ``builder-inited`` hook, and the pytest gate all call it, so a divergence
@@ -437,7 +440,21 @@ def check_sequences(
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
+        baseline = verified_baseline(item.page, golden, records_root=records_root)
+        sequence_problems = check_transcript(item.sequence, transcript, golden, page=item.page, baseline=baseline)
+        record = build_record(transcript)
+        if sequence_problems:
+            diverged = write_record(
+                record,
+                target=diverged_record_path(item.page, item.sequence_id, records_root=records_root),
+            )
+            all_problems.extend(sequence_problems)
+            all_problems.append(
+                f"page {item.page!r} sequence {item.sequence_id!r}: the live output is recorded at {diverged}",
+            )
+        else:
+            write_record(record, target=record_path(item.page, item.sequence_id, records_root=records_root))
+            diverged_record_path(item.page, item.sequence_id, records_root=records_root).unlink(missing_ok=True)
     return tuple(all_problems), tuple(advisories)
 
 
@@ -525,6 +542,7 @@ def _scoped_check_command(
     page: str,
     docs_root: Path | None,
     goldens_root: Path | None,
+    records_root: Path | None,
     coherence: bool,
 ) -> list[str]:
     """Build one page-scoped ``check`` child command line."""
@@ -535,6 +553,8 @@ def _scoped_check_command(
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None and not coherence:
         command.extend(("--goldens-root", str(goldens_root)))
+    if records_root is not None and not coherence:
+        command.extend(("--records-root", str(records_root)))
     return command
 
 
@@ -544,6 +564,7 @@ def _check_pages_in_subprocesses(
     goldens_root: Path | None,
     jobs: int,
     timeout: float,
+    records_root: Path | None = None,
     coherence: bool = False,
 ) -> tuple[str, ...]:
     """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
@@ -576,7 +597,13 @@ def _check_pages_in_subprocesses(
         reports.append("\n".join(f"FAIL: {problem}" for problem in discovery_problems))
     if pages:
         commands = [
-            _scoped_check_command(page=page, docs_root=docs_root, goldens_root=goldens_root, coherence=coherence)
+            _scoped_check_command(
+                page=page,
+                docs_root=docs_root,
+                goldens_root=goldens_root,
+                records_root=records_root,
+                coherence=coherence,
+            )
             for page in pages
         ]
         with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
@@ -589,6 +616,7 @@ def check_sequences_in_subprocess(
     *,
     docs_root: Path | None = None,
     goldens_root: Path | None = None,
+    records_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
     timeout: float = 3600,
@@ -615,10 +643,14 @@ def check_sequences_in_subprocess(
     Raises:
         SequenceEngineError: When a child cannot run the check surface.
     """
+    # A child scrubs ``CADRUMO_*`` variables, so it cannot resolve a relocated
+    # records root itself: the parent resolves it once and passes it on.
+    records_root = records_root if records_root is not None else default_records_root()
     if jobs > 1 and page is None and sequence_id is None:
         return _check_pages_in_subprocesses(
             docs_root=docs_root,
             goldens_root=goldens_root,
+            records_root=records_root,
             jobs=jobs,
             timeout=timeout,
         )
@@ -627,6 +659,7 @@ def check_sequences_in_subprocess(
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None:
         command.extend(("--goldens-root", str(goldens_root)))
+    command.extend(("--records-root", str(records_root)))
     if page is not None:
         command.extend(("--page", page))
     if sequence_id is not None:
@@ -660,6 +693,7 @@ def check_page_coherence_in_subprocess(
             page=page,
             docs_root=docs_root,
             goldens_root=None,
+            records_root=None,
             coherence=True,
         )
         return _run_check_child(command, timeout=timeout)
@@ -749,6 +783,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         scope.add_argument("--sequence", help="one sequence id")
         sub.add_argument("--docs-root", type=Path, default=None, help=argparse.SUPPRESS)
         sub.add_argument("--goldens-root", type=Path, default=None, help=argparse.SUPPRESS)
+        sub.add_argument("--records-root", type=Path, default=None, help=argparse.SUPPRESS)
         if mode == "check":
             sub.add_argument(
                 "--coherence",

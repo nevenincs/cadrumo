@@ -20,7 +20,20 @@ from collections.abc import Iterator
 
 import pytest
 
-from cadrumo.tests.env_scope import scoped_product_storage_environment
+from cadrumo.tests.env_scope import scoped_env_var, scoped_product_storage_environment
+from dev.docs.sequences.record_store import RECORDS_DIR_ENV
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _isolate_sequence_records(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Keep the sequence records a test run writes out of the checkout's cache.
+
+    A check or refresh caches the records it produces. Under test those are
+    fixture sequences, and a docs build in a later real run must never find them
+    beside, or instead of, the records of the committed pages.
+    """
+    with scoped_env_var(RECORDS_DIR_ENV, str(tmp_path_factory.mktemp("sequence-records"))):
+        yield
 
 
 @pytest.fixture(autouse=True, scope="module")

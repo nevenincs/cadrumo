@@ -6,8 +6,9 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:68330371ee01254fd6842b84da74c32f25c4cc3e2377d314a6750eda1f0d7279'
+body_hash: 'sha256:b7e952df9495f40fb9bf7377381197a04bdd05659e21760748798d364a606d07'
 related:
+  - '[[2026-09-29-file-size-optimisation-ledger]]'
   - '[[2026-09-29-file-size-optimisation-plan]]'
   - '[[2026-09-29-file-size-optimisation-research]]'
   - '[[2026-09-29-file-size-optimisation-sequence-golden-storage-adr]]'
@@ -22,6 +23,10 @@ Auto-generated index of all documents tagged with `#file-size-optimisation`.
 ### adr
 
 - `2026-09-29-file-size-optimisation-sequence-golden-storage-adr` - `file-size-optimisation` adr: `Sequence goldens commit a fingerprint, not the output` | (**status:** `accepted`)
+
+### exec
+
+- `2026-09-29-file-size-optimisation-ledger` - `file-size-optimisation` ledger
 
 ### plan
 

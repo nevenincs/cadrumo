@@ -1,47 +1,39 @@
-"""Committed light per-sequence golden store for ``cli-sequence`` runs.
+"""Committed per-sequence golden fingerprints for ``cli-sequence`` runs.
 
 One golden file per sequence at ``docs/_sequences/<page-path>/<sequence-id>.json``,
-carrying per frame: the argv as executed, the exit code, the capture bindings,
-and — for reader-facing frames only — the verbatim pre-mask
-:class:`~cadrumo.core.json_contract.SchemaEnvelope` document for JSON frames or
-the normalised verbatim text for text frames. These are light, review-diffable
-data — the Pagefind commit boundary: commit the light expectation, regenerate
-every heavy rendered surface.
+carrying per executed frame: the argv as executed, the exit code, the capture
+bindings and, for reader-facing frames, the stream that carried the JSON
+envelope and the SHA-256 and byte size of the frame's compared output. The
+output itself is not committed. It is regenerated on every check and refresh
+into a record (:mod:`~dev.docs.sequences.record_store`), which is what a page
+renders, and the golden is that record's fingerprint. The check therefore fails
+on exactly the output changes a full stored copy would catch, while an intended
+change moves one digest line per frame in review.
 
-Goldens are CLI-owned and never hand-edited: the ``refresh`` mode
-re-executes the sequence in its sandbox and rewrites the file
-through :func:`write_golden`; the author reviews the git diff — which IS the
-behaviour-change review — and commits the golden with the CLI change that
-legitimately moved it. A missing or hand-corrupted golden reads as an
+Goldens are CLI-owned and never hand-edited: the ``refresh`` mode re-executes
+the sequence in its sandbox and rewrites the file through :func:`write_golden`.
+A missing golden, a hand-corrupted one, or one written under an earlier
+``golden_schema_version`` (version 2 stored the output itself) reads as an
 instructive :class:`~dev.docs.sequences.errors.SequenceGoldenError` naming the
 exact refresh invocation.
 
-Storage policy per frame kind:
+This module also owns the normalisation that makes a record run-independent,
+because a golden digest is only stable across runs and machines once it is:
 
-- **Setup frames** store their argv, exit code and captures, and no output.
-  They are build scaffolding: the rendered page never shows them, and later
-  frames consume only their captures. They still execute, and the check still
-  asserts their kind, argv, exit code, captures and any ``@expect`` against the
-  live run; only their envelope and text are neither stored nor compared. A
-  golden that stores setup output is refused, as is one written under an
-  earlier ``golden_schema_version`` (version 1 stored it), and both refusals
-  name the refresh invocation.
-- **JSON frames** store the parsed envelope document PRE field-mask —
-  capture raw ids, mask at compare — so the committed artifact never bakes the
-  central ``GOLDEN_MASK_FIELDS`` set in and that set can evolve centrally. Path
-  normalisation is the one thing baked at write time (:func:`normalise_document_paths`):
-  a per-run sandbox path or the machine's checkout path can surface inside an
-  envelope STRING VALUE (``config check``'s ``preflight[...].detail``), where the
-  field-level mask never looks, and — like the text frames below — the writer
-  run's paths are unknowable to a later reader, so they must already be tokenised
-  in the stored artifact. Field masking (deferred) and path normalisation (baked)
-  are orthogonal axes.
-- **Text frames** store the verbatim text AFTER the declared narrow
-  normalisation (:func:`normalise_text_output`): the per-run sandbox paths and the
-  checkout root are replaced by stable tokens and the centrally-masked surrogate
-  ids by the mask sentinel. Like the JSON path normalisation, this cannot be
-  deferred to compare time — the writer run's paths are unknowable to a later
-  reader, so the stored text must already be run-independent.
+- **JSON envelopes** are stored pre field-mask, so the central
+  ``GOLDEN_MASK_FIELDS`` set and the host-conditional carve-out apply when the
+  output is compared or rendered, never baked into a record. Path
+  normalisation (:func:`normalise_document_paths`) is baked at record time: a
+  per-run sandbox path or the checkout path can surface inside an envelope
+  STRING VALUE (``config check``'s ``preflight[...].detail``), where the
+  field-level mask never looks.
+- **Text** is stored after the declared narrow normalisation
+  (:func:`normalise_text_output`): per-run sandbox paths and the checkout root
+  become stable tokens and centrally masked surrogate ids become the mask
+  sentinel.
+- **Setup frames** record their argv, exit code and captures only. They still
+  execute, and the check asserts their kind, argv, exit code, captures and any
+  ``@expect`` against the live run.
 """
 
 from __future__ import annotations
@@ -54,6 +46,7 @@ from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
+from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 from dev._paths import REPO_ROOT, UTF_8
@@ -70,7 +63,6 @@ __all__ = [
     "SANDBOX_WORKDIR_PLACEHOLDER",
     "GoldenFrame",
     "SequenceGolden",
-    "build_golden",
     "default_goldens_root",
     "golden_path",
     "mask_host_conditional_details",
@@ -224,22 +216,18 @@ _PAGE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*(/[a-z0-9][a-z0-9._-]*)*$")
 
 
 class GoldenFrame(BaseModel):
-    """One committed frame expectation.
+    """One committed frame fingerprint.
 
-    The two process streams are covered independently. ``envelope`` is the
-    verbatim pre-mask JSON document with ``envelope_source`` naming the stream
-    that carried it — ``stdout`` for a success envelope, ``stderr`` for a
-    refusal's error document (both share the envelope spine). ``text`` is the
-    normalised stdout when stdout did NOT carry the envelope; ``stderr_text``
-    the normalised stderr when stderr did not. An empty stream stores ``None``
-    (compared as equal to the empty string), so a frame whose only output is
-    an exit code is a legitimate all-``None`` golden. ``captures`` are the
-    values the frame bound at capture time, so an id drift is named directly
-    in review diffs and check failures.
+    ``output_sha256`` is the digest of the frame's compared output form and
+    ``output_bytes`` the size of its recorded output (the reader-facing output
+    advisory reads it without executing anything). ``envelope_source`` names the
+    stream that carried the JSON envelope, or ``None`` when the output is text
+    only. ``captures`` are the values the frame bound, so an id drift is named
+    directly in check failures.
 
-    A setup frame stores no output at all: every stream field is ``None``.
-    Readers never see setup output and later frames consume only its captures,
-    so storing it would be weight nobody reads and a diff nobody reviews.
+    A setup frame is never shown to a reader and carries no output fingerprint:
+    its stream fields are all ``None``. Every other executed frame carries both
+    the digest and the size.
     """
 
     model_config = _STRICT_FROZEN
@@ -247,43 +235,33 @@ class GoldenFrame(BaseModel):
     kind: FrameKind
     argv: tuple[str, ...] = Field(min_length=1)
     exit_code: int
-    envelope: dict[str, JsonValue] | None = None
-    envelope_source: EnvelopeSource | None = None
-    text: str | None = None
-    stderr_text: str | None = None
     captures: tuple[CapturedValue, ...] = Field(default=())
+    envelope_source: EnvelopeSource | None = None
+    output_sha256: Hex64Str | None = None
+    output_bytes: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
-    def _streams_are_coherent(self) -> GoldenFrame:
-        if self.kind is FrameKind.SETUP and (
-            self.envelope is not None
-            or self.envelope_source is not None
-            or self.text is not None
-            or self.stderr_text is not None
-        ):
-            raise ValueError(
-                "a setup frame records only its argv, exit code and captures; this golden stores "
-                "setup output, so it predates the current golden layout",
-            )
-        if (self.envelope is None) != (self.envelope_source is None):
-            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
-        if self.envelope_source == "stdout" and self.text is not None:
-            raise ValueError("stdout carried the envelope; 'text' must be None")
-        if self.envelope_source == "stderr" and self.stderr_text is not None:
-            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
+    def _fingerprint_matches_kind(self) -> GoldenFrame:
+        fingerprint = (self.envelope_source, self.output_sha256, self.output_bytes)
+        if self.kind is FrameKind.SETUP:
+            if fingerprint != (None, None, None):
+                raise ValueError("a setup frame records only its argv, exit code and captures")
+        elif self.output_sha256 is None or self.output_bytes is None:
+            raise ValueError("a reader-facing frame records its output digest and size")
         return self
 
 
 class SequenceGolden(BaseModel):
-    """The committed golden expectation of one sequence, in frame order.
+    """The committed golden fingerprint of one sequence, in executed-frame order.
 
-    ``golden_schema_version`` 2 is the layout whose setup frames carry no
-    output. Version 1 is refused, never read: it is regenerated by refresh.
+    ``golden_schema_version`` 3 is the fingerprint layout. Versions 1 and 2
+    stored the output itself; they are refused, never read, and regenerated by
+    refresh.
     """
 
     model_config = _STRICT_FROZEN
 
-    golden_schema_version: Literal[2] = 2
+    golden_schema_version: Literal[3] = 3
     sequence_id: SequenceId
     frames: tuple[GoldenFrame, ...] = Field(min_length=1)
 
@@ -583,80 +561,17 @@ def normalise_document_paths(
     return cast("dict[str, JsonValue]", _norm(document))
 
 
-def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
-    """Project an executed transcript into its committed golden expectation.
+def write_golden(golden: SequenceGolden, *, page: str, goldens_root: Path | None = None) -> Path:
+    """Write ``golden`` to its committed location.
 
-    The envelope (from whichever stream carried it) is stored pre field-mask but
-    path-normalised (:func:`normalise_document_paths`) so a per-run sandbox or
-    checkout path leaking into a string value is baked out to a stable token; the
-    non-envelope streams store their normalised text so the artifact is
-    run-independent, with empty streams collapsing to ``None``. A setup frame
-    keeps only its argv, exit code and captures.
+    This is the ONLY sanctioned writer (the refresh CLI mode drives it). The
+    file is canonical JSON — key-sorted, two-space indent, UTF-8, trailing
+    newline — so review diffs are stable and minimal.
     """
-    masked_values = masked_envelope_values(transcript)
-
-    def _normalised(raw: str) -> str | None:
-        if not raw:
-            return None
-        return normalise_text_output(
-            raw,
-            storage_root=transcript.storage_root,
-            workdir=transcript.workdir,
-            masked_values=masked_values,
-        )
-
-    def _path_normalised_envelope(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
-        if envelope is None:
-            return None
-        return normalise_document_paths(
-            envelope,
-            storage_root=transcript.storage_root,
-            workdir=transcript.workdir,
-        )
-
-    frames: list[GoldenFrame] = []
-    for frame in transcript.frames:
-        if frame.kind is FrameKind.SETUP:
-            frames.append(
-                GoldenFrame(kind=frame.kind, argv=frame.argv, exit_code=frame.exit_code, captures=frame.captured),
-            )
-            continue
-        text = _normalised(frame.output) if frame.envelope_source != "stdout" else None
-        stderr_text = _normalised(frame.stderr) if frame.envelope_source != "stderr" else None
-        frames.append(
-            GoldenFrame(
-                kind=frame.kind,
-                argv=frame.argv,
-                exit_code=frame.exit_code,
-                envelope=_path_normalised_envelope(frame.envelope),
-                envelope_source=frame.envelope_source,
-                text=text,
-                stderr_text=stderr_text,
-                captures=frame.captured,
-            ),
-        )
-    return SequenceGolden(sequence_id=transcript.sequence_id, frames=tuple(frames))
-
-
-def write_golden(
-    transcript: SequenceTranscript,
-    *,
-    page: str,
-    goldens_root: Path | None = None,
-) -> Path:
-    """Write the transcript's golden expectation to its committed location.
-
-    This is the ONLY sanctioned writer (the refresh CLI mode drives it); a
-    hand-edited golden drifts from the executed truth and is overwritten by the
-    next refresh. The file is canonical JSON — key-sorted, two-space indent,
-    UTF-8, trailing newline — so review diffs are stable and minimal.
-    """
-    target = golden_path(page, transcript.sequence_id, goldens_root=goldens_root)
-    golden = build_golden(transcript)
-    document = golden.model_dump(mode="json")
+    target = golden_path(page, golden.sequence_id, goldens_root=goldens_root)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
-        json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        json.dumps(golden.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         encoding=_UTF_8,
         newline="\n",
     )

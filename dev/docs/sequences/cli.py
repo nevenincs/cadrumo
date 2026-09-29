@@ -3,15 +3,19 @@
 Two modes over one engine:
 
 - ``refresh [--page PAGE | --sequence ID]`` re-executes the addressed
-  sequences in fresh hermetic sandboxes and rewrites their committed golden
-  files. The author reviews the git diff — which IS the behaviour-change
-  review — and commits the goldens with the CLI change that legitimately
-  moved them. This is the ONLY sanctioned way a golden changes.
+  sequences in fresh hermetic sandboxes, rewrites their committed golden
+  fingerprints, and caches the full output as records the docs render. The
+  golden diff names every frame whose output changed; the author reviews the
+  change itself on the rendered page or in the record, and commits the goldens
+  with the CLI change that legitimately moved them. This is the ONLY sanctioned
+  way a golden changes.
 - ``check [--page PAGE | --sequence ID]`` re-executes the addressed sequences
   and compares against the committed goldens, failing (exit 1) with every
-  divergence: the page, the sequence id, the frame index and argv, the
-  post-mask differing paths or unified text diff, and the exact ``refresh``
-  invocation that updates the golden.
+  divergence: the page, the sequence id, the frame index and argv, what changed
+  (the post-mask differing paths or unified text diff against the last verified
+  record, when one is cached), where the live output was recorded, and the
+  exact ``refresh`` invocation that updates the golden. A clean check caches
+  its records as verified.
 
 Both the Sphinx ``builder-inited`` hook and the ``dev/docs/tests`` pytest gate
 call the same :func:`check_sequences` engine function this module's
@@ -61,6 +65,7 @@ def main(argv: list[str] | None = None) -> int:
         written, problems, advisories = refresh_sequences(
             docs_root=args.docs_root,
             goldens_root=args.goldens_root,
+            records_root=args.records_root,
             page=args.page,
             sequence_id=args.sequence,
         )
@@ -73,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
         if not written and not problems:
             print("no enrolled cli-sequence directives matched; nothing to refresh")
         if written and not problems:
-            print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
+            print(f"{len(written)} golden(s) rewritten; review the changed frames and commit them")
         return 1 if problems else 0
 
     if args.coherence:
@@ -113,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
             problems, advisories = check_sequences(
                 docs_root=args.docs_root,
                 goldens_root=args.goldens_root,
+                records_root=args.records_root,
                 page=args.page,
                 sequence_id=args.sequence,
             )
@@ -120,6 +126,7 @@ def main(argv: list[str] | None = None) -> int:
             problems = check_sequences_in_subprocess(
                 docs_root=args.docs_root,
                 goldens_root=args.goldens_root,
+                records_root=args.records_root,
                 page=args.page,
                 sequence_id=args.sequence,
                 timeout=args.timeout,

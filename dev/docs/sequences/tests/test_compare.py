@@ -1,13 +1,14 @@
 """Real-behaviour tests for the golden store and comparison tier.
 
 Every golden in these tests is produced by executing a REAL sequence against the
-real CLI in a fresh hermetic sandbox and projecting the typed transcript through
-the real store — never hand-shaped fixtures. Divergence cases then mutate the
-COMMITTED artifact (the exact drift a CLI behaviour change would produce) and
-assert the comparison names the frame, the differing paths or unified diff, and
-the refresh remedy. The mutation tests double as the store's anti-tautology
-proof: a golden whose payload is corrupted on disk MUST be detected, so a clean
-pass can never be vacuous.
+real CLI in a fresh hermetic sandbox and fingerprinting its record through the
+real store — never hand-shaped fixtures. Divergence cases mutate the RECORD a
+golden was fingerprinted from (the exact drift a CLI behaviour change would
+produce between the committed golden and a later run) and assert the comparison
+names the frame and, when the earlier record is cached as a baseline, the
+differing paths or unified diff. The mutation tests double as the fingerprint's
+anti-tautology proof: an output change the digest failed to detect would void
+every clean pass in the suite.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from types import ModuleType
 from typing import cast
 
 import pytest
@@ -25,7 +27,7 @@ from pydantic import JsonValue
 
 from cadrumo.tests.golden_comparison import MASK_SENTINEL
 
-from .. import compare
+from .. import compare, record_store
 from ..compare import (
     assert_transcript_matches_golden,
     check_transcript,
@@ -39,7 +41,6 @@ from ..golden_store import (
     SANDBOX_WORKDIR_PLACEHOLDER,
     SequenceGolden,
     _repo_root,
-    build_golden,
     golden_path,
     normalise_document_paths,
     normalise_text_output,
@@ -47,6 +48,7 @@ from ..golden_store import (
     write_golden,
 )
 from ..parser import parse_sequence
+from ..record_store import SequenceRecord, build_record, golden_from_record
 from ..runner import FrameExecution, SequenceTranscript, execute_sequence
 from ..schema import FrameKind, ParsedSequence
 
@@ -92,13 +94,30 @@ def _text_sequence() -> ParsedSequence:
     )
 
 
-def _mutated(golden: SequenceGolden, mutate: Callable[[dict[str, object]], None]) -> SequenceGolden:
-    """Return a strictly re-validated copy of ``golden`` after ``mutate(document)``."""
-    document = golden.model_dump(mode="json")
+def _golden(transcript: SequenceTranscript) -> SequenceGolden:
+    """Return the golden fingerprint refresh would commit for ``transcript``."""
+    return golden_from_record(build_record(transcript))
+
+
+def _drifted(
+    transcript: SequenceTranscript,
+    mutate: Callable[[dict[str, object]], None],
+) -> tuple[SequenceGolden, SequenceRecord]:
+    """Return the golden and record of an earlier run whose output ``mutate`` changed.
+
+    The record is re-validated strictly in JSON mode, exactly as the store's
+    reader does, and the golden is fingerprinted from it, so the pair is what a
+    refresh of that earlier output would have left behind.
+    """
+    document = build_record(transcript).model_dump(mode="json")
     mutate(document)
-    # JSON-mode re-validation, exactly as the store's reader does (strict
-    # python-mode would refuse the JSON document's lists for tuple fields).
-    return SequenceGolden.model_validate_json(json.dumps(document))
+    record = SequenceRecord.model_validate_json(json.dumps(document))
+    return golden_from_record(record), record
+
+
+def _write(transcript: SequenceTranscript, root: Path) -> Path:
+    """Commit ``transcript``'s golden under ``root`` the way refresh does."""
+    return write_golden(_golden(transcript), page=_PAGE, goldens_root=root)
 
 
 @pytest.fixture(scope="module")
@@ -115,16 +134,42 @@ def text_run(tmp_path_factory: pytest.TempPathFactory) -> SequenceTranscript:
 
 class TestGoldenStoreRoundtrip:
     def test_write_read_roundtrip_is_strictly_equal(self, json_run: SequenceTranscript, tmp_path: Path) -> None:
-        target = write_golden(json_run, page=_PAGE, goldens_root=tmp_path)
+        target = _write(json_run, tmp_path)
         assert target == golden_path(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
         assert target.is_file()
 
         loaded = read_golden(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
-        assert loaded == build_golden(json_run)
+        assert loaded == _golden(json_run)
         # The committed artifact is canonical review-diffable JSON.
         raw = target.read_text(encoding="utf-8")
         assert raw.endswith("\n")
         assert json.loads(raw)["sequence_id"] == json_run.sequence_id
+
+    def test_the_committed_golden_stores_no_output(self, json_run: SequenceTranscript, tmp_path: Path) -> None:
+        """Only the fingerprint is committed: no envelope or text body reaches the file."""
+        document = json.loads(_write(json_run, tmp_path).read_text(encoding="utf-8"))
+        for frame in document["frames"]:
+            assert set(frame) == {
+                "kind",
+                "argv",
+                "exit_code",
+                "captures",
+                "envelope_source",
+                "output_sha256",
+                "output_bytes",
+            }
+            assert len(frame["output_sha256"]) == 64
+
+    def test_a_golden_that_stores_output_is_refused(self, json_run: SequenceTranscript, tmp_path: Path) -> None:
+        """A schema-2 golden carrying its envelope is refused with the refresh remedy."""
+        target = _write(json_run, tmp_path)
+        document = json.loads(target.read_text(encoding="utf-8"))
+        document["golden_schema_version"] = 2
+        document["frames"][0]["envelope"] = json_run.frames[0].envelope
+        target.write_text(json.dumps(document), encoding="utf-8")
+
+        with pytest.raises(SequenceGoldenError, match="refresh --sequence compare-json-case"):
+            read_golden(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
 
     def test_missing_golden_names_the_refresh_invocation(self, tmp_path: Path) -> None:
         with pytest.raises(SequenceGoldenError, match="refresh --sequence compare-json-case"):
@@ -137,7 +182,7 @@ class TestGoldenStoreRoundtrip:
     ) -> None:
         """The strict schema is the structural guard against hand-edits — in
         particular a smuggled per-sequence mask extension key is refused."""
-        target = write_golden(json_run, page=_PAGE, goldens_root=tmp_path)
+        target = _write(json_run, tmp_path)
         document = json.loads(target.read_text(encoding="utf-8"))
         document["mask_fields"] = ["created_at"]
         target.write_text(json.dumps(document), encoding="utf-8")
@@ -154,90 +199,123 @@ class TestJsonFrameComparison:
     ) -> None:
         """The full check tier over two REAL runs: golden written from run A,
         run B executed in a fresh sandbox, zero problems end to end."""
-        write_golden(json_run, page=_PAGE, goldens_root=tmp_path)
+        _write(json_run, tmp_path)
         golden = read_golden(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
 
         rerun = execute_sequence(_json_sequence(), sandbox_root=tmp_path / "json-run-b")
         problems = check_transcript(_json_sequence(), rerun, golden, page=_PAGE)
         assert problems == ()
 
+    @staticmethod
+    def _status_drift(document: dict[str, object]) -> None:
+        frames = cast("list[dict[str, object]]", document["frames"])
+        envelope = cast("dict[str, object]", frames[0]["envelope"])
+        envelope["status"] = "warning"
+
     def test_envelope_drift_names_frame_and_differing_paths(self, json_run: SequenceTranscript) -> None:
-        golden = build_golden(json_run)
-
-        def _drift(document: dict[str, object]) -> None:
-            frames = cast("list[dict[str, object]]", document["frames"])
-            envelope = cast("dict[str, object]", frames[0]["envelope"])
-            envelope["status"] = "warning"
-
-        drifted = _mutated(golden, _drift)
-        problems = compare_transcript_to_golden(json_run, drifted, page=_PAGE)
+        golden, baseline = _drifted(json_run, self._status_drift)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "frame 0" in problems[0]
         assert "status" in problems[0]
         assert _PAGE in problems[0] and json_run.sequence_id in problems[0]
 
+    def test_envelope_drift_is_detected_without_a_cached_baseline(self, json_run: SequenceTranscript) -> None:
+        """The digest alone decides the verdict: with no earlier record to diff
+        against, the changed frame is still named, with both digests."""
+        golden, _ = _drifted(json_run, self._status_drift)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE)
+        assert len(problems) == 1
+        assert "frame 0" in problems[0]
+        assert "output changed" in problems[0] and str(golden.frames[0].output_sha256) in problems[0]
+
     def test_deleted_envelope_field_is_detected(self, json_run: SequenceTranscript) -> None:
-        """Anti-tautology proof: corrupt the stored payload by deleting a field
-        and assert the comparison refuses — a pass here would void every clean
-        pass in the suite."""
-        golden = build_golden(json_run)
+        """Anti-tautology proof: an earlier output that lacked a field must not
+        fingerprint like the live one — a pass here would void every clean pass
+        in the suite."""
 
         def _drop(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             envelope = cast("dict[str, object]", frames[1]["envelope"])
             del envelope["active_profile"]
 
-        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drop), page=_PAGE)
+        golden, baseline = _drifted(json_run, _drop)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "frame 1" in problems[0]
         assert "active_profile" in problems[0]
 
-    def test_exit_code_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
-        golden = build_golden(json_run)
+    def test_a_masked_value_difference_fingerprints_identically(self, json_run: SequenceTranscript) -> None:
+        """The digest covers the compared form, so a centrally masked leaf that
+        differs between runs cannot move it, while the same change on any other
+        key does (the deleted-field and status cases above)."""
 
+        def _reidentify(document: dict[str, object]) -> None:
+            frames = cast("list[dict[str, object]]", document["frames"])
+            envelope = cast("dict[str, object]", frames[0]["envelope"])
+            envelope["run_id"] = "a-surrogate-id-only-this-run-minted"
+
+        golden, _ = _drifted(json_run, _reidentify)
+        live = _golden(json_run)
+        live_envelope = json_run.frames[0].envelope
+        assert live_envelope is not None and "run_id" not in live_envelope
+        # Adding the masked key is still a structural change the digest sees...
+        assert golden.frames[0].output_sha256 != live.frames[0].output_sha256
+
+        def _both(value: str) -> Callable[[dict[str, object]], None]:
+            def _set(document: dict[str, object]) -> None:
+                frames = cast("list[dict[str, object]]", document["frames"])
+                cast("dict[str, object]", frames[0]["envelope"])["run_id"] = value
+
+            return _set
+
+        # ...but two runs that differ ONLY in the masked value fingerprint the same.
+        first, _ = _drifted(json_run, _both("minted-on-run-a"))
+        second, _ = _drifted(json_run, _both("minted-on-run-b"))
+        assert first == second
+
+    def test_exit_code_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             frames[-1]["exit_code"] = 3
 
-        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drift), page=_PAGE)
+        golden, _ = _drifted(json_run, _drift)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE)
         assert any("exit code 0, golden expects 3" in problem for problem in problems)
 
     def test_frame_count_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
-        golden = build_golden(json_run)
-
         def _drop_frame(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             del frames[0]
 
-        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drop_frame), page=_PAGE)
+        golden, _ = _drifted(json_run, _drop_frame)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE)
         assert len(problems) == 1
         assert "frame count changed" in problems[0]
 
     def test_capture_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
-        golden = build_golden(json_run)
-
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             captures = cast("list[dict[str, object]]", frames[0]["captures"])
             captures[0]["value"] = "warning"
 
-        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drift), page=_PAGE)
+        golden, _ = _drifted(json_run, _drift)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE)
         assert any("captured values diverged" in problem for problem in problems)
 
     def test_mismatch_assertion_carries_every_problem_and_the_remedy(
         self,
         json_run: SequenceTranscript,
     ) -> None:
-        golden = build_golden(json_run)
-
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             envelope = cast("dict[str, object]", frames[0]["envelope"])
             envelope["status"] = "warning"
             frames[-1]["exit_code"] = 3
 
+        golden, _ = _drifted(json_run, _drift)
         with pytest.raises(SequenceGoldenMismatchError) as excinfo:
-            assert_transcript_matches_golden(_json_sequence(), json_run, _mutated(golden, _drift), page=_PAGE)
+            assert_transcript_matches_golden(_json_sequence(), json_run, golden, page=_PAGE)
 
         message = str(excinfo.value)
         assert "refresh --sequence compare-json-case" in message
@@ -246,12 +324,13 @@ class TestJsonFrameComparison:
 
 class TestTextFrameComparison:
     def test_text_frames_roundtrip_and_compare_cleanly(self, text_run: SequenceTranscript, tmp_path: Path) -> None:
-        write_golden(text_run, page=_PAGE, goldens_root=tmp_path)
+        _write(text_run, tmp_path)
         golden = read_golden(_PAGE, text_run.sequence_id, goldens_root=tmp_path)
+        assert golden.frames[0].envelope_source is None
 
-        first = golden.frames[0]
+        first = build_record(text_run).frames[0]
         assert first.text is not None and first.envelope is None
-        # The committed artifact is run-independent: no sandbox path survives.
+        # The record is run-independent: no sandbox path survives.
         assert text_run.storage_root not in first.text
         assert text_run.workdir not in first.text
 
@@ -259,13 +338,12 @@ class TestTextFrameComparison:
         assert problems == ()
 
     def test_text_drift_reports_a_unified_diff(self, text_run: SequenceTranscript) -> None:
-        golden = build_golden(text_run)
-
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             frames[0]["text"] = str(frames[0]["text"]) + "a line the CLI no longer prints\n"
 
-        problems = compare_transcript_to_golden(text_run, _mutated(golden, _drift), page=_PAGE)
+        golden, baseline = _drifted(text_run, _drift)
+        problems = compare_transcript_to_golden(text_run, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "stdout text diverged" in problems[0]
         assert "--- golden" in problems[0] and "+++ live" in problems[0]
@@ -362,8 +440,8 @@ class TestEnvelopePathNormalisation:
         )
 
     @staticmethod
-    def _first_detail(golden: SequenceGolden) -> str:
-        envelope = golden.frames[0].envelope
+    def _first_detail(record: SequenceRecord) -> str:
+        envelope = record.frames[0].envelope
         assert envelope is not None
         result = cast("dict[str, JsonValue]", envelope["result"])
         preflight = cast("list[JsonValue]", result["preflight"])
@@ -373,14 +451,14 @@ class TestEnvelopePathNormalisation:
     def test_build_bakes_stable_tokens_for_sandbox_and_checkout_paths(self) -> None:
         storage = r"C:\Temp\cli-sequence-AAA\cadrumo-storage"
         workdir = r"C:\Temp\cli-sequence-AAA\workdir"
-        golden = build_golden(self._run(storage_root=storage, workdir=workdir))
-        detail = self._first_detail(golden)
+        record = build_record(self._run(storage_root=storage, workdir=workdir))
+        detail = self._first_detail(record)
         assert storage not in detail
         assert self._REPO_ROOT not in detail and self._REPO_ROOT.replace("\\", "/") not in detail
         assert SANDBOX_STORAGE_ROOT_PLACEHOLDER in detail and REPO_ROOT_PLACEHOLDER in detail
 
     def test_two_runs_with_different_sandbox_paths_compare_clean(self) -> None:
-        golden = build_golden(
+        golden = _golden(
             self._run(
                 storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
                 workdir=r"C:\Temp\cli-sequence-AAA\workdir",
@@ -395,7 +473,7 @@ class TestEnvelopePathNormalisation:
     def test_windows_writer_and_posix_reader_compare_token_suffixes_cleanly(self) -> None:
         """Known-root suffix separators are canonical across operating systems."""
 
-        golden = build_golden(
+        golden = _golden(
             self._run(
                 storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
                 workdir=r"C:\Temp\cli-sequence-AAA\workdir",
@@ -411,7 +489,7 @@ class TestEnvelopePathNormalisation:
         """Anti-tautology proof: the only legitimate difference between the two
         runs is the tokenised sandbox path, yet a real ``status`` flap is still
         caught — path normalisation cannot void the compare (over-mask)."""
-        golden = build_golden(
+        golden = _golden(
             self._run(
                 storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
                 workdir=r"C:\Temp\cli-sequence-AAA\workdir",
@@ -423,7 +501,14 @@ class TestEnvelopePathNormalisation:
             workdir=r"C:\Temp\cli-sequence-BBB\workdir",
             status="warning",
         )
-        problems = compare_transcript_to_golden(live, golden, page=_PAGE)
+        baseline = build_record(
+            self._run(
+                storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
+                workdir=r"C:\Temp\cli-sequence-AAA\workdir",
+                status="success",
+            ),
+        )
+        problems = compare_transcript_to_golden(live, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "status" in problems[0]
 
@@ -465,36 +550,34 @@ class TestStderrErrorDocumentGoldens:
         error_run: SequenceTranscript,
         tmp_path: Path,
     ) -> None:
-        write_golden(error_run, page=_PAGE, goldens_root=tmp_path)
+        _write(error_run, tmp_path)
         golden = read_golden(_PAGE, error_run.sequence_id, goldens_root=tmp_path)
+        assert golden.frames[0].envelope_source == "stderr"
+        assert golden.frames[0].exit_code == 2
 
-        refusal = golden.frames[0]
+        refusal = build_record(error_run).frames[0]
         assert refusal.envelope is not None
-        assert refusal.envelope_source == "stderr"
         assert refusal.stderr_text is None  # stderr IS the envelope, never duplicated
-        assert refusal.exit_code == 2
 
         assert compare_transcript_to_golden(error_run, golden, page=_PAGE) == ()
 
     def test_envelope_moving_streams_is_a_named_failure(self, error_run: SequenceTranscript) -> None:
-        golden = build_golden(error_run)
-
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             frames[0]["envelope_source"] = "stdout"
             frames[0]["stderr_text"] = None
 
-        problems = compare_transcript_to_golden(error_run, _mutated(golden, _drift), page=_PAGE)
-        assert any("moved streams" in problem for problem in problems)
+        golden, _ = _drifted(error_run, _drift)
+        problems = compare_transcript_to_golden(error_run, golden, page=_PAGE)
+        assert any("envelope stream changed from stdout to stderr" in problem for problem in problems)
 
     def test_stderr_text_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
-        golden = build_golden(json_run)
-
         def _drift(document: dict[str, object]) -> None:
             frames = cast("list[dict[str, object]]", document["frames"])
             frames[0]["stderr_text"] = "a warning the CLI no longer prints\n"
 
-        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drift), page=_PAGE)
+        golden, baseline = _drifted(json_run, _drift)
+        problems = compare_transcript_to_golden(json_run, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "stderr text diverged" in problems[0]
 
@@ -623,12 +706,14 @@ class TestMaskAuthorityIsCentral:
             offending = {name for name in parameters if "mask" in name or "field" in name}
             assert not offending, f"{function.__name__} exposes mask-shaped parameter(s): {sorted(offending)}"
 
-    def test_compare_module_never_overrides_the_central_mask_default(self) -> None:
-        """AST gate: every ``mask_document`` call inside the compare module is
+    @pytest.mark.parametrize("module", [compare, record_store], ids=["compare", "record_store"])
+    def test_comparison_modules_never_override_the_central_mask_default(self, module: ModuleType) -> None:
+        """AST gate: every ``mask_document`` call inside the compare module and
+        the record store (whose compared form the digest covers) is
         argument-free beyond the document — no ``fields=`` keyword, no extra
         positional — so the central ``GOLDEN_MASK_FIELDS`` default is the only
         mask that can ever apply."""
-        module_ast = ast.parse(inspect.getsource(compare))
+        module_ast = ast.parse(inspect.getsource(module))
         calls = [
             node
             for node in ast.walk(module_ast)
@@ -638,7 +723,7 @@ class TestMaskAuthorityIsCentral:
                 or (isinstance(node.func, ast.Attribute) and node.func.attr == "mask_document")
             )
         ]
-        assert calls, "the compare module must route JSON comparison through mask_document"
+        assert calls, "JSON comparison must route through mask_document"
         for call in calls:
             assert len(call.args) == 1 and not call.keywords, (
                 f"mask_document call at line {call.lineno} overrides the central mask default"
@@ -655,7 +740,7 @@ class TestStepDescriptionGoldenImmunity:
         from the description-free body compares clean against a REAL fresh run
         of the same body with @step lines added — authoring or editing
         narration can never force a golden refresh."""
-        write_golden(json_run, page=_PAGE, goldens_root=tmp_path)
+        _write(json_run, tmp_path)
         golden = read_golden(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
 
         annotated = parse_sequence(
