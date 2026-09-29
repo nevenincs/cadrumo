@@ -65,6 +65,27 @@ class ModeloSpreadsheetPushResult(OutputSchema):
     formula_cells_to_write: int | None = None
 
 
+class ModeloSpreadsheetExportResult(OutputSchema):
+    """JSON envelope for ``aeat app modelo spreadsheet export``.
+
+    The offline counterpart of ``push``: the same export plan, materialized as
+    an ``.xlsx`` workbook and published to the operator's ``--output`` file.
+    ``byte_size`` and ``sha256`` describe the file that landed there.
+    """
+
+    operation: str = "modelo.spreadsheet.export"
+    modelo: str
+    revision: str
+    period: str
+    year: int
+    output_path: str
+    byte_size: int
+    sha256: str
+    tab_names: list[str]
+    casilla_count: int
+    prefill_relations: bool
+
+
 class ModeloSpreadsheetVerifyDivergencePayload(OutputSchema):
     """One divergent casilla row in a calc verify report.
 

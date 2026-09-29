@@ -547,13 +547,19 @@ input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
+# The design's "Tipo de declaracion" is the clave of the pago fraccionado's
+# result -- Nota 1 of aeat-dr-222-2023-2024 (campo 6 @13+1): I (ingreso),
+# U (domiciliacion), G (ingreso en C.C.T.), N (negativa) -- not the kind of
+# declaration in its period's chain, and the fichero writes it from the
+# filing's result disposition. The role says so, so the filing-context
+# projection of the declaration kind never lands here.
 [[revisions."2023".casillas]]
 id = "decl.tipo-declaracion"
-continuidad_id = "tipo-declaracion"
+continuidad_id = "tipo-declaracion-resultado"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
-semantic_role = "tipo_declaracion"
+semantic_role = "tipo_declaracion_resultado"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]

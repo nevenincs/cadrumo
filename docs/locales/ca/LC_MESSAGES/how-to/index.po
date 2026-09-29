@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-27 12:44+0000\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -432,10 +432,22 @@ msgstr ""
 "allò que bloqueja l'exportació."
 
 #: ../../how-to/index.md:281
+msgid "Share a calculation summary"
+msgstr "Comparteix un resum del càlcul"
+
+#: ../../how-to/index.md:285
+msgid ""
+"Write a signed PDF of a verified calculation, and check a copy against "
+"your data."
+msgstr ""
+"Escriu un PDF signat d'un càlcul verificat i comprova'n una còpia amb les"
+" teves dades."
+
+#: ../../how-to/index.md:288
 msgid "File at AEAT"
 msgstr "Presenta a l'AEAT"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:292
 msgid ""
 "Export the file, upload it at the AEAT portal yourself, record, and "
 "reconcile."
@@ -443,11 +455,11 @@ msgstr ""
 "Exporta el fitxer, puja'l tu mateix al portal de l'AEAT, registres i "
 "reconcilies."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:295
 msgid "Reconcile a filing"
 msgstr "Reconcilia una presentació"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:299
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
@@ -455,15 +467,15 @@ msgstr ""
 "Descarrega i desa el justificante de l'AEAT, i després compara'l amb el "
 "teu registre de presentació local."
 
-#: ../../how-to/index.md:297
+#: ../../how-to/index.md:304
 msgid "Tools and help"
 msgstr "Eines i ajuda"
 
-#: ../../how-to/index.md:303
+#: ../../how-to/index.md:310
 msgid "Connect an agent (MCP)"
 msgstr "Connecta un agent (MCP)"
 
-#: ../../how-to/index.md:307
+#: ../../how-to/index.md:314
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -471,21 +483,21 @@ msgstr ""
 "Exposa el conjunt d'eines a Claude o a qualsevol client MCP, mantenint "
 "intacte el límit de seguretat."
 
-#: ../../how-to/index.md:310
+#: ../../how-to/index.md:317
 msgid "Troubleshooting"
 msgstr "Resolució de problemes"
 
-#: ../../how-to/index.md:314
+#: ../../how-to/index.md:321
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Corregeix problemes de perfil actiu, emmagatzematge, registre i "
 "autenticació."
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:324
 msgid "Publish runtime authority"
 msgstr "Publica l'autoritat d'execució"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:328
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
 "Publica i verifica una autoritat de registre signada com a operador de "

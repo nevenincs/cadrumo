@@ -175,6 +175,7 @@ Modelo 390 (IVA summary) <how-to/modelo-390>
 Calculation inputs <how-to/review-calculation-values>
 Google Sheets review <how-to/review-with-google-sheets>
 Verify a filing <how-to/verification-reports>
+Calculation summary PDF <how-to/calculation-summary>
 File at AEAT <how-to/file-at-aeat>
 Reconcile a filing <how-to/reconcile>
 ```

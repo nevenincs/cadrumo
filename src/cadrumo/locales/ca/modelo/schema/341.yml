@@ -31,7 +31,7 @@ modelo:
             label: Import de les operacions [01]
           reagp-porcentaje-compensacion:
             label: Percentatge de compensació [04]
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Període de liquidació a què es refereix l'autoliquidació
       construct:
         modelo-341-autoliquidacion:

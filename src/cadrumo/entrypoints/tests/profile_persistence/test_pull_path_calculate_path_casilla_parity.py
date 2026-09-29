@@ -122,11 +122,13 @@ from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from cadrumo.domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -537,9 +539,16 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     retenciones_resolution = RetencionesAggregationSourceResolver(ports=retencion_ports).resolve(context)
 
     relay_binding_values = {**relay_resolution.binding_values, **retenciones_resolution.binding_values}
+    # The relay seeds the numeric manual lattice only: a text casilla the
+    # operator left empty is absent, and the engine refuses a number for it.
+    text_casilla_ids = text_family_casilla_ids(snap_180.revision.casillas)
     relay_inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snap_180.revision, relay_binding_values),
-        **{c.id: Decimal("0") for c in snap_180.revision.casillas if c.input_kind is InputKind.MANUAL},
+        **{
+            c.id: Decimal("0")
+            for c in snap_180.revision.casillas
+            if c.input_kind is InputKind.MANUAL and c.id not in text_casilla_ids
+        },
     }
     relay_engine_result = calculate_registry_snapshot(
         snap_180,
@@ -697,6 +706,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             snapshot.revision,
             filing_year=_PRORRATA_YEAR,
             period=_PRORRATA_PERIOD,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         ).casilla_inputs,
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, pull_binding_values),
     }

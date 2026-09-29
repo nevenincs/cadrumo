@@ -30,6 +30,9 @@ _M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = validated_casilla_id
     "iva.anual.autorepercutido.intracomunitaria"
 )
 _M390_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.anual.soportado.interiores")
+_M390_SOPORTADO_INTERIORES_SOPORTADO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+)
 _M390_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
     _M390_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
@@ -55,22 +58,30 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     authority, so the closures below prove the formula DAG sums its own
     operands correctly, not that the totals match AEAT.
 
-    Formula DAG:
+    Formula DAG, as far as the specimens print it:
       iva.anual.cuota-devengada-total =
           iva.anual.repercutido.general (box 06, 21% regimen ordinario)
           + iva.anual.repercutido.reducido (box 04, 10% regimen ordinario)
           + iva.anual.repercutido.super-reducido (box 02, 4% regimen ordinario)
           + iva.anual.autorepercutido.intracomunitaria (box 26, adq.intracom 21%)
+          + the boxes the specimens leave out (recargo, inversion sujeto pasivo)
 
       iva.anual.cuota-deducible-total =
           iva.anual.soportado.interiores (box 49, total cuotas ded. corrientes)
-          + iva.anual.autorepercutido.intracomunitaria (box 26, same binding)
+          + the deducible boxes the specimens leave out ([51] to [62], [63], [522])
+
+      iva.anual.soportado.interiores (box 49) =
+          its soportado part + the deducible half of a domestic inversion del
+          sujeto pasivo
 
       iva.anual.resultado-regimen-general =
           iva.anual.cuota-devengada-total - iva.anual.cuota-deducible-total
 
-    The leaf casillas (boxes 02/04/06/26/49) are extracted via bbox_anchored
-    targets in the declaracion_pdf profile and supplied as engine inputs.
+    The leaf casillas (boxes 02/04/06/26) are extracted via bbox_anchored
+    targets in the declaracion_pdf profile and supplied as engine inputs. Box
+    49 is extracted the same way but is itself computed; the specimens carry no
+    inversion del sujeto pasivo, so its printed value is its soportado part and
+    is supplied as that component.
 
     Verdict per casilla (both 2022-0A and 2023-0A specimens):
       iva.anual.cuota-devengada-total  (box 47): VERIFIED
@@ -86,6 +97,9 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         )
 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M390)
+    printed_49 = extracted.get(_M390_SOPORTADO_INTERIORES_CASILLA)
+    if isinstance(printed_49, Decimal):
+        inputs[_M390_SOPORTADO_INTERIORES_SOPORTADO_CASILLA] = printed_49
 
     _extracted_comp_97 = extracted.get(_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, Decimal("0"))
     _comp_97 = _extracted_comp_97 if isinstance(_extracted_comp_97, Decimal) else Decimal("0")
@@ -131,7 +145,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     assert engine_deducible == extracted_deducible, (
         f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed cuota-deducible-total as "
         f"{engine_deducible!r} but corpus printed form shows {extracted_deducible!r}.\n"
-        f"  leaf inputs: soportado.interiores={inputs.get(_M390_SOPORTADO_INTERIORES_CASILLA, Decimal('0'))!r} "
+        f"  leaf inputs: soportado.interiores={inputs.get(_M390_SOPORTADO_INTERIORES_SOPORTADO_CASILLA, Decimal('0'))!r} "
         f"autorepercutido={inputs.get(_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA, Decimal('0'))!r}"
     )
 

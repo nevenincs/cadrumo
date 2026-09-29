@@ -46,12 +46,14 @@ from .binding_provider_registration import registration_for, validator_for
 from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids as _bound_casilla_binding_ids
 from .bindings_previous_filing import PreviousFilingProvider
+from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, SourceRefId
 from .invoice_bindings import (
     InvoiceProviderBase as InvoiceProviderBase,
 )
 from .iva_compensation_annual_partition_bindings import (
+    IvaCompensationAnnualPartition,
     IvaCompensationAnnualPartitionProvider,
 )
 from .m303_regimen_simplificado_annual_summary_bindings import (
@@ -331,6 +333,10 @@ def resolve_available_bound_inputs_by_casilla_id(
     rather than treated as registry errors, which lets calculate paths combine
     partial source mesh output with caller overrides before the engine runs.
 
+    This is the numeric input projection: a bound casilla the registry declares
+    as text is not a number, whatever channel carried its binding value, so it
+    is left to the caller's text channel rather than projected here.
+
     Args:
         revision: The :class:`ModeloRevision`
             whose bound casillas are inspected.
@@ -348,8 +354,9 @@ def resolve_available_bound_inputs_by_casilla_id(
             refusal of disagreeing equivalent alternate bindings.
     """
     resolved: dict[CasillaId, Decimal] = {}
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
     for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None or casilla.id in text_casilla_ids:
             continue
         value, _binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
         if value is not None:
@@ -381,6 +388,7 @@ class IvaCompensationAnnualPartitionRequirement(BaseModel):
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     last_period_amount_binding_id: BindingId | None = None
     generated_not_in_last_amount_binding_id: BindingId | None = None
+    prior_year_applied_amount_binding_id: BindingId | None = None
     dependency_treatment: str = ""
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
@@ -403,8 +411,8 @@ def iva_compensation_annual_partition_requirement(
     """Project the revision's annual compensation-partition bindings once.
 
     Returns ``None`` when the revision declares no partition bindings. When it
-    does, every binding must name the same typed source selector and each of
-    the two partition outputs may be targeted at most once. The source's
+    does, every binding must name the same typed source selector and each
+    partition output may be targeted at most once. The source's
     dependency treatment comes directly from the revision classification and
     stays empty only when that classification is absent; consumers must not
     reconstruct or default it.
@@ -417,19 +425,17 @@ def iva_compensation_annual_partition_requirement(
         return None
 
     first_selector = _iva_compensation_annual_partition_selector(bindings[0])
-    (
-        last_period_amount_binding_id,
-        generated_not_in_last_amount_binding_id,
-        legal_refs,
-        source_refs,
-    ) = _collect_iva_compensation_partition_bindings(bindings, first_selector)
+    targets, legal_refs, source_refs = _collect_iva_compensation_partition_bindings(bindings, first_selector)
     return IvaCompensationAnnualPartitionRequirement(
         source_modelo=first_selector.source_modelo,
         source_periods=first_selector.source_periods,
         source_casilla_ids=first_selector.source_casilla_ids,
         binding_ids=tuple(sorted(binding.id for binding in bindings)),
-        last_period_amount_binding_id=last_period_amount_binding_id,
-        generated_not_in_last_amount_binding_id=generated_not_in_last_amount_binding_id,
+        last_period_amount_binding_id=targets.get(IvaCompensationAnnualPartition.LAST_PERIOD_AMOUNT),
+        generated_not_in_last_amount_binding_id=targets.get(
+            IvaCompensationAnnualPartition.GENERATED_NOT_IN_LAST_AMOUNT,
+        ),
+        prior_year_applied_amount_binding_id=targets.get(IvaCompensationAnnualPartition.PRIOR_YEAR_APPLIED_AMOUNT),
         dependency_treatment=_iva_compensation_dependency_treatment(revision, first_selector.source_modelo),
         legal_refs=tuple(sorted(legal_refs)),
         source_refs=tuple(sorted(source_refs)),
@@ -451,34 +457,22 @@ def _collect_iva_compensation_partition_bindings(
     bindings: tuple[BindingDefinition, ...],
     first_selector: IvaCompensationAnnualPartitionProvider,
 ) -> tuple[
-    BindingId | None,
-    BindingId | None,
+    dict[IvaCompensationAnnualPartition, BindingId],
     set[LegalRefId],
     set[SourceRefId],
 ]:
     """Validate shared selectors and collect target ids plus provenance refs."""
-    last_period_amount_binding_id: BindingId | None = None
-    generated_not_in_last_amount_binding_id: BindingId | None = None
+    targets: dict[IvaCompensationAnnualPartition, BindingId] = {}
     legal_refs: set[LegalRefId] = set()
     source_refs: set[SourceRefId] = set()
     for binding in bindings:
         selector = _iva_compensation_annual_partition_selector(binding)
         _require_shared_iva_compensation_selector(selector, first_selector)
-        if selector.partition_output == "last_period_amount":
-            last_period_amount_binding_id = _unique_partition_binding_id(
-                last_period_amount_binding_id,
-                binding.id,
-                "last_period_amount",
-            )
-        else:
-            generated_not_in_last_amount_binding_id = _unique_partition_binding_id(
-                generated_not_in_last_amount_binding_id,
-                binding.id,
-                "generated_not_in_last_amount",
-            )
+        output = IvaCompensationAnnualPartition(selector.partition_output)
+        targets[output] = _unique_partition_binding_id(targets.get(output), binding.id, output)
         legal_refs.update(binding.legal_refs)
         source_refs.update(binding.source_refs)
-    return last_period_amount_binding_id, generated_not_in_last_amount_binding_id, legal_refs, source_refs
+    return targets, legal_refs, source_refs
 
 
 def _require_shared_iva_compensation_selector(
@@ -499,12 +493,12 @@ def _require_shared_iva_compensation_selector(
 def _unique_partition_binding_id(
     existing: BindingId | None,
     binding_id: BindingId,
-    output: Literal["last_period_amount", "generated_not_in_last_amount"],
+    output: IvaCompensationAnnualPartition,
 ) -> BindingId:
     """Return one partition target id, refusing duplicate target declarations."""
     if existing is not None:
         raise RegistryValidationError(
-            f"iva_compensation_annual_partition declares multiple {output} bindings",
+            f"iva_compensation_annual_partition declares multiple {output.value} bindings",
         )
     return binding_id
 

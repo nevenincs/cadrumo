@@ -791,6 +791,76 @@ application:
           listájához futtassa a `aeat app live borrador 100 list` parancsot.
         unsupported_modelo: A tervezetkötés nem támogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjének deklarálnia kell a tervezet képességét.
+    calculation_report:
+      local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem az AEAT hivatalos
+        benyújtási bizonylata. A hivatalos bizonylatot az AEAT adja ki a benyújtás
+        után: justificante; benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
+    calculation_summary:
+      column_amount: Összeg
+      column_casilla: Mező
+      column_concept: Megnevezés
+      fact_exported_at: Exportálva
+      fact_filing: Benyújtás
+      fact_revision_state: Számítási változat állapota
+      fact_taxpayer: Adózó
+      fact_verification: Ellenőrzés
+      filing_none: Nincs benyújtva
+      filing_recorded: A benyújtás rögzítve a Cadrumóban; a hivatalos bizonyíték az
+        AEAT bizonylata
+      footer_notice: 'Cadrumo helyi számítás: nem hivatalos AEAT-bizonyíték'
+      grade_development_mock: fejlesztői (nem benyújtható)
+      grade_reviewed: ellenőrzött
+      identity_development_mock: 'Fejlesztői szoftverazonosító (program: {program},
+        fejlesztői NIF: {developer_tax_id}): ennek a nyomtatványnak a benyújtási fájlja
+        nem nyújtható be az AEAT-hoz.'
+      identity_none: A nyomtatvány rekordterve nem tartalmaz helyet szoftverazonosítónak.
+      identity_reviewed: 'Ellenőrzött szoftverazonosító: a nyomtatvány benyújtási
+        fájlja regisztrált szoftverazonosítót tartalmaz.'
+      legend: 'Értékek: a szám – a nullát is beleértve – számított érték; a „nincs
+        adat” azt jelenti, hogy a számítási változat nem rögzített értéket a mezőhöz;
+        az „n/a · nem alkalmazandó” azt jelenti, hogy a nyilvántartás igazolja: a
+        mező erre az időszakra nem vonatkozik.'
+      notice_title: 'Helyi számítás: nem AEAT-bizonylat'
+      page_counter: '{page}. oldal / {pages}'
+      section_unnamed: Mezők
+      signature_meaning: 'A PDF-be ágyazott Cadrumo sértetlenségi aláírás azt igazolja,
+        hogy ennek a profilnak a kulcsa kijelentette: az exportálás pillanatában,
+        e telepítés órája szerint, a megnevezett számítási változat, ellenőrzési jelentés,
+        nyilvántartási pillanatkép és hatósági generáció pontosan ezt a jelentést,
+        ezt a CSV-t és ezeket az oldalakat eredményezte. Nem igazolja az AEAT általi
+        elfogadást vagy a benyújtást, a jogi helyességet, a bemenő adatok valódiságát,
+        az adózó személyazonosságát vagy hozzájárulását, megbízható időpontot, sem
+        azt, hogy a kulcs egy megnevezett személyé. Mielőtt megbízna a kulcsban, vesse
+        össze az ujjlenyomatát egy más csatornán kapott ujjlenyomattal.'
+      state_borrador: Tervezet
+      state_descartado: Elvetett
+      state_presentado: Benyújtott
+      state_presentado_supersedido: Benyújtott, felváltott
+      state_verificado_completo: Teljeskörűen ellenőrzött
+      subtitle: '{year}. adóév · {period} időszak · Nyilvántartási változat: {registry_revision}'
+      title: Számítási összesítő · {modelo} nyomtatvány
+      trace_authority_generation: A nyilvántartási hatóság logikai generációja
+      trace_calculation_revision: Számítási változat
+      trace_csv_sha256: A beágyazott CSV SHA-256 értéke
+      trace_filing_record: Benyújtási nyilvántartás
+      trace_heading: Nyomonkövethetőség és sértetlenség
+      trace_ledger_snapshot: Főkönyvi pillanatkép ujjlenyomata
+      trace_none: nincs
+      trace_registry_snapshot: Nyilvántartási pillanatkép (nyomtatvány · változat
+        · év · időszak)
+      trace_report_sha256: A jelentés SHA-256 értéke (beágyazott JSON)
+      trace_signing_key: Az aláírókulcs ujjlenyomata (SHA-256)
+      trace_software_identity: Szoftverazonosító besorolása
+      trace_verification_report: Ellenőrzési jelentés
+      trace_work_unit: Munkaegység
+      value_absent: nincs adat
+      value_false: Nem
+      value_not_applicable: n/a · nem alkalmazandó
+      value_true: Igen
+      verification_blocked: Blokkolt
+      verification_complete: Teljes
+      verification_incomplete: Hiányos
+      verification_none: Nincs rögzített ellenőrzés
     errors:
       amendment_complementaria_liability_decrease: A(z) {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
@@ -866,6 +936,12 @@ application:
         hiányzik; a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
+      calculation_report_notice_unavailable: A(z) {report_language} jelentésnyelvhez
+        nincs helyi számítási nyilatkozat ({translation_key} katalóguskulcs); a rendszer
+        elutasítja a számítási jelentést ahelyett hogy e nélkül állítaná elő.
+      calculation_report_taxpayer_unknown: Az aktív profil nem ad meg adóazonosítót
+        és nevet. Töltse ki a profil azonosító adatait a számítási jelentés elkészítése
+        előtt; a jelentésnek meg kell mondania kinek a bevallását rögzíti.
       calculation_revision_id_is_discarded_work_unit: A(z) %{calculation_revision_id}
         azonosító selejtezett munkaegység, nem számítási revízió.
       calculation_revision_id_is_work_unit: A(z) %{calculation_revision_id} azonosító
@@ -875,6 +951,14 @@ application:
         azonosítóval.
       calculation_revision_parent_work_unit_discarded: A(z) %{calculation_revision_id}
         számítási revízió a selejtezett %{work_unit_id} munkaegységhez tartozik.
+      calculation_summary_chrome_unavailable: A számítási összesítő {translation_key}
+        szövege hiányzik a(z) {report_language} nyelven; az összesítő elkészítése
+        ezért elutasítva.
+      calculation_summary_pdf_unavailable: A számítási összesítő PDF-hez a nem kötelező
+        „{extra}” kiegészítő szükséges, amely ebben a telepítésben nincs meg. Telepítse
+        a pip install cadrumo[{extra}] paranccsal, majd próbálja újra; az összesítő
+        ellenőrzéséhez nincs rá szükség.
+      calculation_summary_pdf_unreadable: A fájl nem olvasható PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'A hívó rovat bemenetek nem írhatják
         felül a bucket-ből származtatott forráshoz kötött rovatokat (forráshoz kötött
         rovatok): %{casillas}.'
@@ -1221,6 +1305,27 @@ application:
         ok: %{diagnostic_reason_code}).'
       transaction_evidence_missing_output: 'Egy fizetendő tranzakcióhoz nincs alátámasztó
         bizonyíték (kötés: %{binding_id}, forrás: %{source_kind_code}, ok: %{diagnostic_reason_code}).'
+      withholding_detail_absent_against_ledger_evidence: 'A %{modelo} modell %{filing_year}
+        egyetlen kedvezményezettre sem jelent be kifizetést, a könyvelés viszont adólevonás
+        alá eső, ebben az évben kifizetett jövedelmeket rögzít: %{contradicting_invoice_count}
+        olyan bejövő számlát, amely az adózó által levonásra kötelezettként tartozott
+        adót tünteti fel, és %{contradicting_ledger_row_count} kimenő könyvelési sort
+        levonásos IRPF-kategóriában. A %{source_modelo} modell %{source_family} tételei
+        üresek, így semmi sem vallja be őket. Ellenőrzés előtt rögzítse őket a modell
+        összesítő felületén.'
+      withholding_detail_absent_attested: 'A %{modelo} modell %{filing_year} egyetlen
+        kedvezményezettre sem jelent be kifizetést, és a %{attested_periods} időszakról
+        a %{attestation_profile_path} profiladat azt tanúsítja, hogy nem fizettek
+        ki adólevonás alá eső jövedelmet. Nem kell éves összesítőt benyújtani olyan
+        évről, amelyben az általa bevallott jövedelmek egyikét sem fizették ki. Tekintse
+        át az évet, ha adómentes vagy a levonási küszöb alatti jövedelmet fizettek
+        ki: ezeket levonás nélkül is be kell vallani. Ez a helyi előkészítés nem AEAT-benyújtás.'
+      withholding_detail_absent_unproven: 'A %{modelo} modell %{filing_year} egyetlen
+        kedvezményezettre sem jelent be kifizetést, és semmi sem bizonyítja ezt a
+        hiányt: a %{source_modelo} modell %{source_family} tételei üresek, a %{unattested_periods}
+        időszakra pedig nincs levonásmentességi nyilatkozat. Rögzítse a kedvezményezettenkénti
+        tételeket a modell összesítő felületén, vagy nyilatkozzon minden időszakról
+        a %{attestation_profile_path} profiladat útján.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás

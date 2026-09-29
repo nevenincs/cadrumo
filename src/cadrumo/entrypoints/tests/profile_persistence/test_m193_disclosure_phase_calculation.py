@@ -101,6 +101,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -348,7 +349,8 @@ def test_an_empty_withholding_store_keeps_its_advisory_on_the_calculate_result(
     empty_store = [
         diagnostic
         for diagnostic in result.source_diagnostics
-        if diagnostic.binding_source is BindingSourceKind.WITHHOLDING and diagnostic.reason == "source_issue"
+        if diagnostic.binding_source is BindingSourceKind.WITHHOLDING
+        and diagnostic.reason == "withholding_detail_absent"
     ]
     assert len(empty_store) == 1
     assert "materialised as zero" in empty_store[0].message
@@ -430,9 +432,13 @@ def test_the_source_resolved_directly_and_the_live_calculation_agree(
             )
         )
 
+    # Only the numeric manual lattice is seeded: an empty text casilla is absent.
+    text_casilla_ids = text_family_casilla_ids(snapshot.revision.casillas)
     relay_inputs = {
         **{
-            casilla.id: Decimal("0") for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.MANUAL
+            casilla.id: Decimal("0")
+            for casilla in snapshot.revision.casillas
+            if casilla.input_kind is InputKind.MANUAL and casilla.id not in text_casilla_ids
         },
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolution.binding_values),
     }

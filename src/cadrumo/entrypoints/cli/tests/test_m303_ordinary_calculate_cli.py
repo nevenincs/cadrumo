@@ -25,6 +25,7 @@ from ....application.aggregation.tests.ledger_transaction_support import iva_tra
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
@@ -34,7 +35,7 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue
-from ....tests.cli_envelope import unwrap_schema_envelope
+from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
 from ._m303_ordinary_cli_support import OrdinaryM303SecureEvidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
@@ -67,8 +68,18 @@ def _ordinary_m303_profile_facts() -> dict[str, str]:
     return facts
 
 
-def _seed_ledger_and_wallet(bucket_id: str) -> None:
-    """Persist the minimum linked IVA evidence and the canonical zero wallet decision."""
+def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str = "domestic_current") -> str:
+    """Persist the minimum linked IVA evidence and the canonical zero wallet decision.
+
+    ``purchase_deduction_fact_kind`` exists so one case can declare a deduction
+    the purchase cannot bear while every other seeded fact stays identical to the
+    passing calculation above it. A separately built fixture would have let the
+    two drift, and the assertion is precisely that this one field decides the
+    outcome.
+
+    Returns the purchase's ledger id, so a refusal can be attributed to the row
+    that caused it rather than to any row.
+    """
     purchase_invoice = build_catalogue_invoice(
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
@@ -101,6 +112,7 @@ def _seed_ledger_and_wallet(bucket_id: str) -> None:
         update={
             "purchase_invoice_evidence_id": purchase_invoice.invoice_id,
             "invoice_id": purchase_invoice.invoice_id,
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry(purchase_deduction_fact_kind),
         }
     )
     invoice_catalogue = link_transaction(
@@ -135,6 +147,7 @@ def _seed_ledger_and_wallet(bucket_id: str) -> None:
                 decided_at=_WALLET_DECIDED_AT,
             )
         )
+    return purchase.transaction_id
 
 
 def _create_m303_work_unit(period: str) -> str:
@@ -196,6 +209,38 @@ def test_work_calculate_persists_ordinary_first_quarter_evidence_from_the_joint_
     assert evidence.m303.regimen_simplificado.scope_decision.is_not_claimed is True
     assert evidence.m303.regimen_simplificado.rows.activities == ()
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
+
+
+def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissible(
+    request: pytest.FixtureRequest,
+) -> None:
+    """The same 1T calculation, with the purchase declaring a deduction it cannot bear.
+
+    ``domestic_investment`` names a bien de inversión and requires a reciprocal
+    register asset identity the row does not carry, so the deduction has no
+    authority. The refusal must name the ledger row and the typed reason: before
+    the readiness gate existed this reached the operator as an internal outbound
+    payload-boundary defect naming a model class, which says nothing about which
+    field to correct.
+    """
+    seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
+    seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    purchase_id = _seed_ledger_and_wallet(bucket_id, purchase_deduction_fact_kind="domestic_investment")
+    work_unit_id = _create_m303_work_unit("1T")
+
+    refused = _calculate(work_unit_id, *joint_return_options(joint_return_elected=True))
+
+    assert refused.exit_code == 1, refused.output
+    error = require_error_document(refused.output)["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "ERROR_MODELO_AGGREGATION_BINDING"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["reason"] == "inadmissible_deduction_classification"
+    assert context["transaction_id"] == purchase_id
+    assert "investment_asset_id" in context["detail"]
 
 
 def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(request: pytest.FixtureRequest) -> None:

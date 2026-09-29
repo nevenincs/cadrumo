@@ -139,6 +139,11 @@ adapters:
       sancion_incomplete: El documento de sanción no se pudo leer por completo. Ábralo
         en la sede y compruébelo a mano.
   outbound:
+    calculation_summary_pdf:
+      errors:
+        tag_plan_mismatch: Las páginas dibujadas del resumen del cálculo no se corresponden
+          con su plan de etiquetado en la página {page} ({detail}); el resumen se
+          rechaza en lugar de etiquetarse de forma aproximada.
     storage:
       _factory:
         errors:

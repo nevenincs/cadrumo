@@ -888,6 +888,9 @@ cli:
           Use el justificante AEAT, la consulta de declaraciones presentadas o el
           cotejo CSV tras presentar.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
+        replace_help: Sustituye un archivo ya existente en --output. Sin esta opción
+          se rechaza un archivo de exportación existente para no destruir una exportación
+          anterior.
         revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
           la revisión verificada o presentada más reciente de la unidad de trabajo.
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
@@ -1279,6 +1282,12 @@ cli:
           refused_stale: rechazó a calcular contra un libro cuyas marcas de metadatos
             no coinciden con el snapshot suministrado (metadata_match={metadata_match});
             reexporte y vuelva a recuperar
+        export:
+          output_help: Ruta en la que escribir el libro .xlsx; un archivo existente
+            se rechaza salvo que se indique --replace
+        export_help: Exporta la superficie de cálculo del registro de un modelo y
+          periodo a un libro .xlsx local con fórmulas activas (la contrapartida sin
+          conexión de push)
         modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
         period_help: Código de período (p. ej. 1T, 2T, 0A)
         pull:
@@ -1465,6 +1474,11 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
+        document_format_help: 'Formato de documento del informe de cálculo: csv, o
+          pdf para el resumen del cálculo firmado (requiere el complemento opcional
+          pdf).'
+        document_only_help: Comprueba solo el documento, sin abrir el almacén del
+          perfil activo; sin --trusted-key, un resultado válido queda sin clave anclada.
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
@@ -1581,6 +1595,8 @@ cli:
         observed_at_help: Cuándo confirmó la atestación, como instante ISO 8601 con
           desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
           del trimestre ni en el futuro.
+        output_help: Ruta donde escribir el informe de cálculo; su directorio padre
+          debe existir.
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
@@ -1646,6 +1662,33 @@ cli:
           exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad
           no usada cuando introduzcas valores manuales.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        report:
+          development_software_identity: El fichero de presentación de este modelo
+            llevaría la identidad de software de desarrollo de Cadrumo con todo ceros;
+            la AEAT no aceptará ese fichero para su presentación.
+          errors:
+            calculation_required: La unidad de trabajo {work_unit_id} del modelo {modelo}
+              no tiene cálculo que informar; calcúlela y verifíquela primero.
+        report_help: Escribe el cálculo verificado o presentado de la unidad de trabajo
+          como informe de cálculo local; no es evidencia oficial de la AEAT.
+        report_verify:
+          errors:
+            file_not_found: No se encontró el resumen del cálculo en {path}.
+            trusted_key_invalid: --trusted-key debe ser una clave pública Ed25519
+              de 64 caracteres hexadecimales.
+          later_changes: El resumen coincide con el almacén tal como estaba al exportarlo;
+            desde entonces la revisión ha avanzado en su ciclo (por ejemplo, se ha
+            presentado o sustituido).
+          refused: El resumen del cálculo no se ha podido verificar; las comprobaciones
+            indican el motivo.
+          unpinned: 'El resumen es coherente y su firma es válida, pero no se ha anclado
+            ninguna clave: indique --trusted-key con la clave recibida por otro canal,
+            o verifíquelo contra el almacén del perfil que lo firmó.'
+        report_verify_help: 'Verifica un resumen del cálculo en PDF: su firma de integridad,
+          los datos adjuntos y las páginas, y, salvo con --document-only, que el almacén
+          cifrado del perfil activo sigue reproduciéndolo; no es evidencia oficial
+          de la AEAT.'
+        report_verify_path_help: Ruta del resumen del cálculo en PDF que se verifica.
         rescate_contingencia_year_help: 'Año en que acaeció la contingencia (jubilación,
           incapacidad, fallecimiento) del plan de pensiones. Determina la ventana
           temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana está cerrada
@@ -1759,6 +1802,8 @@ cli:
         status_discarded_summary: Esta unidad de trabajo está descartada, por lo que
           el cálculo no está disponible.
         status_help: Mostrar los metadatos de una unidad de trabajo
+        trusted_key_help: Clave pública Ed25519 (64 caracteres hexadecimales) en la
+          que confía, recibida por otro canal; el resumen debe estar firmado con ella.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
@@ -3014,6 +3059,9 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
+      investment_asset_id_help: Identidad del registro de bienes de inversión contra
+        la que se deduce esta adquisición, tal como consta en ese registro. Obligatoria
+        con un tipo de deducción de inversión y rechazada en cualquier otro.
       irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
         cobradas en neto usan actividad_economica; los alquileres pagados en neto
         usan arrendamiento_local o arrendamiento_vivienda_afecto. Royalties y los

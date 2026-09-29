@@ -131,6 +131,11 @@ adapters:
       sancion_incomplete: A szankciós dokumentumot nem sikerült teljesen beolvasni.
         Nyissa meg a székhelyen és ellenőrizze kézzel.
   outbound:
+    calculation_summary_pdf:
+      errors:
+        tag_plan_mismatch: A számítási összesítő megrajzolt oldalai nem egyeznek a
+          címkézési tervvel a(z) {page}. oldalon ({detail}); az összesítő elkészítése
+          elutasítva a pontatlan címkézés helyett.
     storage:
       _factory:
         errors:

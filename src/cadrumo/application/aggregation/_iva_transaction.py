@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from ...core.i18n.render import tr as render_tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -27,7 +28,12 @@ from ...domain.iva.components import (
     registry_component_presence_token,
     registry_kind_applicability_token,
 )
-from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ...domain.iva.deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    admits_iva_deduction_classification,
+    validate_iva_deduction_fact,
+)
+from ...domain.iva.errors import IvaValidationError
 from ...domain.iva.flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
@@ -134,6 +140,15 @@ class _IvaTransactionAmounts:
 class _IvaTransactionClassification:
     category: IvaCategory
     flow_direction: IvaFlowDirection
+
+
+@dataclass(frozen=True, slots=True)
+class _IvaTransactionAdmission:
+    """A row that cleared every pre-observation gate, with what it resolved to."""
+
+    context: _IvaTransactionContext
+    amounts: _IvaTransactionAmounts
+    classification: _IvaTransactionClassification
 
 
 def _substrate_admission_issue(
@@ -408,20 +423,44 @@ def _declared_category_issue(
     return None
 
 
+def _effective_iva_category_for(
+    transaction: Transaction,
+    *,
+    rate_kind: IvaRateKind,
+    operation: PinnedAuthorityOperation,
+) -> IvaCategory:
+    """Return the dated IVA category a ledger row settles under.
+
+    A declared category is resolved against the catalogue effective on the row's
+    own date, so the caller holds the effective member rather than the persisted
+    token; an undeclared one is read off the tier its rate resolved to, which is
+    the registry's own category for that tier.
+    """
+    effective_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+    explicit_category = transaction.iva_category
+    if explicit_category is not None:
+        return resolve_iva_category_catalogue(
+            effective_date=effective_date,
+            authority=operation,
+        ).require(explicit_category)
+    catalogue = resolve_iva_rate_kind_catalogue(effective_date=effective_date, authority=operation)
+    definition = next((item for item in catalogue.definitions if item.token == rate_kind), None)
+    if definition is None:
+        raise ValueError(f"IVA rate kind {rate_kind!s} is not declared by the pinned rate catalogue")
+    return IvaCategory(definition.category)
+
+
 def _resolve_iva_transaction_classification(
     transaction: Transaction,
     *,
     transaction_id: str,
     invoice_kind: InvoiceKind,
-    rate_kind: IvaRateKind,
+    amounts: _IvaTransactionAmounts,
     operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
-    explicit_category = transaction.iva_category
-    if explicit_category is not None:
-        effective_category = resolve_iva_category_catalogue(
-            effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
-            authority=operation,
-        ).require(explicit_category)
+    rate_kind = amounts.rate_kind
+    effective_category = _effective_iva_category_for(transaction, rate_kind=rate_kind, operation=operation)
+    if transaction.iva_category is not None:
         declared_issue = _declared_category_issue(
             transaction,
             transaction_id=transaction_id,
@@ -431,15 +470,6 @@ def _resolve_iva_transaction_classification(
         )
         if declared_issue is not None:
             return _IvaTransactionOutcome(gate_issue=declared_issue)
-    else:
-        catalogue = resolve_iva_rate_kind_catalogue(
-            effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
-            authority=operation,
-        )
-        definition = next((item for item in catalogue.definitions if item.token == rate_kind), None)
-        if definition is None:
-            raise ValueError(f"IVA rate kind {rate_kind!s} is not declared by the pinned rate catalogue")
-        effective_category = IvaCategory(definition.category)
     effective_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
     if not is_iva_cash_accounting_none(
         transaction.cash_accounting_treatment,
@@ -465,12 +495,23 @@ def _resolve_iva_transaction_classification(
     )
     # Input IVA is deductible only on an exact fact kind with immutable
     # provenance; refusing here reports the row instead of failing the run.
+    #
+    # Asked of fact 0085 rather than of the flow alone. Every RECEIVED row settles
+    # as ``soportado``, while LIVA art. 92.Uno grants a deduction only of a cuota
+    # that was devengada and repercutida -- so on an exempt (art. 20) or
+    # not-subject (art. 7) purchase, or a recargo de equivalencia acquisition
+    # cost, there is no deduction fact to classify and fact 0085 admits no kind
+    # for one. Demanding a classification there left the operator nothing to
+    # supply: no kind satisfied this gate and every kind failed the admissibility
+    # gate below, so an exempt insurance premium and a RETA quota could not be
+    # declared at all.
+    #
+    # Not a test of whether THIS row's cuota is zero. A 0 % tipo is sujeta y no
+    # exenta, so fact 0085 keeps ``domestic_zero`` in the domestic family and its
+    # deduction identity stays required.
     if (
         is_deducible_flow(flow_direction)
-        and effective_category
-        != resolve_iva_category_catalogue(effective_date=effective_date, authority=operation).require(
-            "recargo_equivalencia"
-        )
+        and admits_iva_deduction_classification(category=effective_category, flow_direction=flow_direction)
         and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
     ):
         return _IvaTransactionOutcome(
@@ -480,7 +521,116 @@ def _resolve_iva_transaction_classification(
                 detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
             ),
         )
+    # And, one step on from the screen above: the classification is PRESENT, so
+    # ask fact 0085 whether the combination it names has legal authority. This
+    # answer used to be taken only inside the observation's own model validator,
+    # after every typed gate here had passed, so an operator declaring a
+    # deduction kind their row cannot bear failed the whole calculation with an
+    # internal payload-boundary defect instead of being told which row to fix.
+    inadmissible_deduction = _inadmissible_deduction_issue(
+        transaction,
+        transaction_id=transaction_id,
+        category=effective_category,
+        rate_kind=rate_kind,
+        flow_direction=flow_direction,
+        base_amount=amounts.base_amount,
+        iva_amount=amounts.iva_amount,
+    )
+    if inadmissible_deduction is not None:
+        return _IvaTransactionOutcome(gate_issue=inadmissible_deduction)
     return _IvaTransactionClassification(category=effective_category, flow_direction=flow_direction)
+
+
+def _inadmissible_deduction_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    category: IvaCategory,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+) -> IvaLedgerAggregationIssue | None:
+    """Return why a PRESENT deduction classification is inadmissible, or ``None``.
+
+    Asks the domain validator the observation's own model validator asks, from
+    the exact facts the caller is about to put on an observation. The validator
+    remains the sole authority on admissibility -- the deduction applicability
+    catalogue's closed pairing table -- and this adds no rule to it. What it adds
+    is a boundary the refusal can be REPORTED at: consulted only inside the
+    observation, the answer arrives as a payload-boundary defect naming a model
+    class, with no ledger row, no field and no remedy for the operator whose data
+    is wrong.
+
+    The row's deduction identity fields travel with the transaction, while the
+    monetary facts are passed: a criterio-de-caja split carries a payment's share
+    of the base and cuota rather than the operation's, and the rectification
+    contract reads those amounts.
+
+    Absence is deliberately not this gate's business. A deducible row with no
+    kind or no provenance is
+    :attr:`IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION`;
+    answering ``None`` for it here keeps the two remedies distinct, because an
+    absent classification is SUPPLIED and an inadmissible one is CORRECTED.
+    """
+    deduction_fact_kind = transaction.deduction_fact_kind
+    deduction_provenance = transaction.deduction_provenance
+    if deduction_fact_kind is None and deduction_provenance is None:
+        return None
+    if deduction_fact_kind is None or deduction_provenance is None:
+        # Half declared: a kind with no evidence behind it, or evidence naming no
+        # kind. The pairing validator below needs both to say anything, so the one
+        # question answerable here is whether the row bears a deducible cuota for
+        # an authority to attach to at all. Where it does, the gap is ABSENCE and
+        # MISSING_DEDUCTION_CLASSIFICATION owns it; where it does not -- an output
+        # row's repercutida cuota, an exempt or not-subject purchase, a recargo de
+        # equivalencia acquisition cost -- there is nothing to complete and the
+        # half-declaration is itself the error. Falling through, it reached the
+        # operator as a payload-boundary defect from the observation's validator.
+        if is_deducible_flow(flow_direction) and admits_iva_deduction_classification(
+            category=category,
+            flow_direction=flow_direction,
+        ):
+            return None
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
+            detail=render_tr(
+                "aggregation.iva_ledger.errors.deduction_authority_on_non_deducible_row",
+                category=category.value,
+                flow_direction=flow_direction.value,
+            ),
+        )
+    # A COMPLETE classification is refused by the validator itself, which names
+    # the declared kind and the exact refusal. Screening the flow and the
+    # admissible families here first would answer the same rows with a message
+    # that names neither, so the specific answer is left to speak: fact 0085's
+    # family table is what :func:`admits_iva_deduction_classification` reads, so a
+    # row it admits nothing for cannot pass the validator either.
+    try:
+        validate_iva_deduction_fact(
+            kind=deduction_fact_kind,
+            provenance=deduction_provenance,
+            category=category,
+            rate_kind=rate_kind,
+            flow_direction=flow_direction,
+            base_amount=base_amount,
+            iva_amount=iva_amount,
+            investment_asset_id=transaction.investment_asset_id,
+            rectifies_ledger_id=transaction.rectifies_ledger_id,
+        )
+    except IvaValidationError as exc:
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
+            detail=render_tr(
+                "aggregation.iva_ledger.errors.inadmissible_deduction_classification",
+                deduction_fact_kind=deduction_fact_kind.value,
+                iva_category=category.value,
+                refusal=str(exc),
+            ),
+        )
+    return None
 
 
 def classify_iva_transaction(
@@ -499,6 +649,50 @@ def classify_iva_transaction(
     reference; an invalid prorrata reference is reported as a
     ``prorrata_issue`` alongside the observation.
     """
+    admission = _admit_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
+    if isinstance(admission, _IvaTransactionOutcome):
+        return admission
+    return _project_iva_transaction(
+        transaction,
+        resolved_period=resolved_period,
+        context=admission.context,
+        amounts=admission.amounts,
+        classification=admission.classification,
+        operation=operation,
+    )
+
+
+def iva_transaction_gate_issue(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Return the first pre-observation gate issue for one row, or ``None``.
+
+    :func:`classify_iva_transaction` stopped before the projection step. A
+    readiness consumer needs to know WHETHER a row will be excluded and why, not
+    what it would have contributed, and the projection step is where the
+    criterio-de-caja split and the prorrata attachment are computed -- work whose
+    result a readiness report has nothing to say about.
+
+    Running the same gates in the same order is the point: a readiness verdict
+    derived independently would eventually disagree with the calculation's, and
+    an operator cannot act on two answers.
+    """
+    admission = _admit_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
+    if isinstance(admission, _IvaTransactionOutcome):
+        return admission.gate_issue
+    return None
+
+
+def _admit_iva_transaction(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+    operation: PinnedAuthorityOperation,
+) -> _IvaTransactionAdmission | _IvaTransactionOutcome:
+    """Run every pre-observation gate, yielding the facts projection needs."""
     _resolve_iva_registry_declarations(effective_date=resolved_period.end_date, operation=operation)
     context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period, operation=operation)
     if isinstance(context, _IvaTransactionOutcome):
@@ -515,19 +709,12 @@ def classify_iva_transaction(
         transaction,
         transaction_id=context.transaction_id,
         invoice_kind=context.invoice_kind,
-        rate_kind=amounts.rate_kind,
+        amounts=amounts,
         operation=operation,
     )
     if isinstance(classification, _IvaTransactionOutcome):
         return classification
-    return _project_iva_transaction(
-        transaction,
-        resolved_period=resolved_period,
-        context=context,
-        amounts=amounts,
-        classification=classification,
-        operation=operation,
-    )
+    return _IvaTransactionAdmission(context=context, amounts=amounts, classification=classification)
 
 
 def _project_iva_transaction(
@@ -562,6 +749,8 @@ def _project_iva_transaction(
             deduction_provenance=transaction.deduction_provenance,
             operation=operation,
         )
+        if isinstance(observations, IvaLedgerAggregationIssue):
+            return _IvaTransactionOutcome(gate_issue=observations)
         if not observations:
             return _IvaTransactionOutcome(
                 gate_issue=IvaLedgerAggregationIssue(
@@ -674,7 +863,7 @@ def _cash_accounting_observations(
     deduction_fact_kind: IvaDeductionFactKind | None,
     deduction_provenance: IvaDeductionClassificationProvenance | None,
     operation: PinnedAuthorityOperation,
-) -> tuple[IvaLedgerObservation, ...]:
+) -> tuple[IvaLedgerObservation, ...] | IvaLedgerAggregationIssue:
     # Carried onto every observation this producer emits, exactly as the
     # ordinary path carries it. ``applied_rate is None`` is a claim that the
     # rate is genuinely UNKNOWN, and it makes an observation match no
@@ -687,6 +876,21 @@ def _cash_accounting_observations(
     for payment_date, base_amount, iva_amount, recargo_amount in _cash_accounting_settlement_parts(transaction):
         if not resolved_period.contains(payment_date):
             continue
+        # Re-asked per settlement part, not once for the operation. The
+        # deduction contract reads the base and cuota, and a criterio-de-caja
+        # split gives each observation a payment's share of both, so the
+        # operation-level answer does not settle the part's.
+        inadmissible_deduction = _inadmissible_deduction_issue(
+            transaction,
+            transaction_id=transaction.transaction_id,
+            category=category,
+            rate_kind=rate_kind,
+            flow_direction=flow_direction,
+            base_amount=base_amount,
+            iva_amount=iva_amount * proportionality,
+        )
+        if inadmissible_deduction is not None:
+            return inadmissible_deduction
         observations.append(
             _iva_observation(
                 ledger_id=transaction.transaction_id,

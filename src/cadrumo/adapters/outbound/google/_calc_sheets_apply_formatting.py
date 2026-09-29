@@ -8,7 +8,6 @@ formatting, grid, protection, and input-validation facets.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Literal
 
 from ....application.storage.calc_sheets.records import (
@@ -446,15 +445,8 @@ def build_cell_constraint_requests(
 
 
 def _condition_for_constraint(constraint: SheetCellConstraint) -> BooleanCondition | None:
-    """Resolve the tightest Sheets BooleanCondition for a constraint."""
-    lower = constraint.min_value
-    upper = constraint.max_value
-    if constraint.sign == "non_negative":
-        floor = Decimal("0")
-        lower = floor if lower is None else max(lower, floor)
-    elif constraint.sign == "non_positive":
-        ceiling = Decimal("0")
-        upper = ceiling if upper is None else min(upper, ceiling)
+    """Render the constraint's resolved bounds as a Sheets BooleanCondition."""
+    lower, upper = constraint.resolved_bounds()
     if lower is not None and upper is not None:
         return {
             "type": "NUMBER_BETWEEN",
@@ -477,16 +469,5 @@ def _condition_for_constraint(constraint: SheetCellConstraint) -> BooleanConditi
 
 
 def _input_message_for_constraint(constraint: SheetCellConstraint) -> str:
-    """Render the operator-visible constraint bounds and legal references."""
-    parts: list[str] = []
-    if constraint.sign == "non_negative":
-        parts.append("≥ 0")
-    elif constraint.sign == "non_positive":
-        parts.append("≤ 0")
-    if constraint.min_value is not None:
-        parts.append(f"≥ {format(constraint.min_value, 'f')}")
-    if constraint.max_value is not None:
-        parts.append(f"≤ {format(constraint.max_value, 'f')}")
-    bounds = " ∧ ".join(parts) if parts else "any"
-    refs = ", ".join(constraint.legal_refs)
-    return f"Casilla {constraint.casilla_id}: {bounds}. Refs: {refs}."
+    """Return the constraint's own operator-visible bounds and legal references."""
+    return constraint.grounding_message()

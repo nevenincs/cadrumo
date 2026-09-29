@@ -19,10 +19,11 @@ attribution arises from it.
 ## Runtime dependency licence disclosure
 
 The `cadrumo` distribution contains only this project's own code
-(Apache-2.0). It does not vendor or bundle any third-party package; declared
-dependencies are resolved and installed separately by the user's installer
-from PyPI under their own licences. Two declared dependencies carry
-non-permissive licences and are disclosed here explicitly:
+(Apache-2.0) and the font and colour-profile data listed under
+"Calculation-summary PDF" below. It does not vendor or bundle any third-party
+package; declared dependencies are resolved and installed separately by the
+user's installer from PyPI under their own licences. Two declared dependencies
+carry non-permissive licences and are disclosed here explicitly:
 
 - **ofxtools** — GPL-3.0-only (https://github.com/csingley/ofxtools). An
   OPTIONAL dependency, gated behind the `ofx` extra
@@ -43,6 +44,32 @@ non-permissive licences and are disclosed here explicitly:
 Every other declared dependency (direct and transitive) carries a permissive
 licence (MIT, BSD, Apache-2.0, ISC, PSF, Zlib, or equivalent) as recorded in
 its own package metadata.
+
+## Calculation-summary PDF
+
+The calculation-summary PDF (`aeat app modelo work report --document-format
+pdf`) is written with one optional dependency and embeds bundled font and
+colour-profile data in every summary it produces.
+
+- **ReportLab** — BSD-3-Clause, Copyright ReportLab Inc.
+  (https://www.reportlab.com/). An OPTIONAL dependency, gated behind the `pdf`
+  extra (`pip install cadrumo[pdf]`); it lays out the summary's pages and is
+  not bundled. Reading and verifying a summary does not use it.
+- **Hanken Grotesk** (Regular, SemiBold, Bold) — SIL Open Font License 1.1,
+  Copyright 2021 The Hanken Grotesk Project Authors
+  (https://github.com/marcologous/hanken-grotesk). Static TrueType instances
+  ship as package data under `src/cadrumo/_data/calculation_summary_pdf/fonts/`
+  with their licence text (`HankenGrotesk-OFL.txt`), and a subset of each face
+  is embedded in every summary.
+- **JetBrains Mono** (Regular, Bold) — SIL Open Font License 1.1, Copyright
+  2020 The JetBrains Mono Project Authors
+  (https://github.com/JetBrains/JetBrainsMono), from release 2.304. Shipped and
+  embedded the same way, with `JetBrainsMono-OFL.txt`.
+- **sRGB output-intent profile** — an ICC v4 profile of the IEC 61966-2.1
+  sRGB colour space generated with LittleCMS, whose profile carries the
+  statement "No copyright, use freely". It ships as
+  `src/cadrumo/_data/calculation_summary_pdf/color/sRGB-IEC61966-2.1.icc` and
+  is embedded as each summary's PDF/A output intent.
 
 ## Bundled AEAT / BOE corpus: reuse of public-sector information
 

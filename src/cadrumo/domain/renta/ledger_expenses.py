@@ -263,11 +263,16 @@ def _validated_first_slice_casilla(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="first-slice expense routing target")
 
 
-def _resolve_first_slice_expense_routing(
+def renta_first_slice_expense_routing(
     *,
     effective_date: date,
 ) -> Mapping[SpendingCategory, CasillaId]:
-    """Resolve the selected dated first-slice route for production consumers."""
+    """Resolve the selected dated first-slice route for production consumers.
+
+    Returns:
+        The governed mapping from spending category to its Modelo 100 first-slice
+        destination, for the revision selected at ``effective_date``.
+    """
     try:
         routing = resolve_first_slice_expense_routing(
             category_type=SpendingCategory,
@@ -339,7 +344,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
             raise RentaValidationError("category_family must match category")
         if not Period.from_year_and_code(self.tax_year, "0A").contains(self.filing_date):
             raise RentaValidationError("filing_date must fall inside the observation tax year")
-        target_casilla_id = _resolve_first_slice_expense_routing(effective_date=self.filing_date).get(self.category)
+        target_casilla_id = renta_first_slice_expense_routing(effective_date=self.filing_date).get(self.category)
         if target_casilla_id is None or self.target_casilla_id != target_casilla_id:
             raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
         if self.invoice_id is None and self.invoice_issue_date is not None:
@@ -650,7 +655,7 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError("fact and result categories must match")
     if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
-    target_casilla_id = _resolve_first_slice_expense_routing(effective_date=fact.filing_date).get(fact.category)
+    target_casilla_id = renta_first_slice_expense_routing(effective_date=fact.filing_date).get(fact.category)
     if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     invoice_status = (
@@ -820,6 +825,7 @@ __all__ = [
     "build_renta_deductible_expense_observation",
     "evaluate_renta_deductibility",
     "normalize_spending_category",
+    "renta_first_slice_expense_routing",
     "resolve_region_category_profiles",
     "select_deductibility_profile",
 ]

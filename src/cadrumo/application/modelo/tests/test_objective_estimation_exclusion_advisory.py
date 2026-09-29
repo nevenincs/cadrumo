@@ -26,6 +26,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ..verification_actions import _collect_revision_verification_findings
+from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -249,6 +250,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
             target=_calculation_revision(work_unit),
             profile=profile,
             transaction_repository=_EmptyTransactionRepository(work_unit.bucket_id),
+            invoice_repository=InvoiceCatalogueFake(),
             operation=_authority_operation_for_test,
             work_profile=None,
         )

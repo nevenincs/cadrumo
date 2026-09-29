@@ -273,12 +273,24 @@
             "modelo-303-criterio-caja-adquisiciones-cuota": "0",
             "modelo-303-criterio-caja-entregas-art75-base": "0",
             "modelo-303-criterio-caja-entregas-art75-cuota": "0",
+            "modelo-303-iva-autorepercutido-interior-deducible-base": "0",
+            "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base": "0",
+            "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota": "0",
             "modelo-303-iva-autorepercutido-interior-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-base": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
+            "modelo-303-iva-rectificacion-deducciones-importaciones-base": "0",
+            "modelo-303-iva-rectificacion-deducciones-importaciones-cuota": "0",
+            "modelo-303-iva-rectificacion-deducciones-interiores-base": "0",
+            "modelo-303-iva-rectificacion-deducciones-interiores-cuota": "0",
+            "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base": "0",
+            "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota": "0",
             "modelo-303-iva-repercutido-general-base": "1000",
             "modelo-303-iva-repercutido-general-cuota": "210",
             "modelo-303-iva-repercutido-reducido-base": "0",
@@ -289,8 +301,13 @@
             "modelo-303-iva-repercutido-super-reducido-cuota": "0",
             "modelo-303-iva-repercutido-super-reducido-transitorio-base": "0",
             "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": "0",
+            "modelo-303-iva-soportado-importaciones-base": "0",
+            "modelo-303-iva-soportado-importaciones-bienes-inversion-base": "0",
+            "modelo-303-iva-soportado-importaciones-bienes-inversion-cuota": "0",
             "modelo-303-iva-soportado-importaciones-cuota": "0",
             "modelo-303-iva-soportado-interiores-base": "500",
+            "modelo-303-iva-soportado-interiores-bienes-inversion-base": "0",
+            "modelo-303-iva-soportado-interiores-bienes-inversion-cuota": "0",
             "modelo-303-iva-soportado-interiores-cuota": "105",
             "modelo-303-profile-state-attribution-ratio": "100",
             "modelo-303-prorrata-regularizacion-casilla-44": "0",
@@ -298,7 +315,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
+          "calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -355,10 +372,10 @@
             "25": "0",
             "26": "0",
             "27": "210.00",
-            "28": "500",
+            "28": "500.00",
             "29": "105.00",
-            "30": "0",
-            "31": "0",
+            "30": "0.00",
+            "31": "0.00",
             "32": "0",
             "33": "0.00",
             "34": "0",
@@ -367,8 +384,8 @@
             "37": "0.00",
             "38": "0",
             "39": "0",
-            "40": "0",
-            "41": "0",
+            "40": "0.00",
+            "41": "0.00",
             "42": "0",
             "43": "0.00",
             "44": "0.00",
@@ -421,6 +438,9 @@
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
+            "iva.autorepercutido.interior.deducible.base": "0",
+            "iva.autorepercutido.interior.deducible.bienes-inversion": "0",
+            "iva.autorepercutido.interior.deducible.bienes-inversion.base": "0",
             "iva.autorepercutido.interior.devengado": "0",
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
@@ -436,6 +456,12 @@
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
             "iva.prorrata-volumen-total": "0",
+            "iva.rectificacion-deducciones.importaciones": "0",
+            "iva.rectificacion-deducciones.importaciones.base": "0",
+            "iva.rectificacion-deducciones.interiores": "0",
+            "iva.rectificacion-deducciones.interiores.base": "0",
+            "iva.rectificacion-deducciones.inversion-sujeto-pasivo": "0",
+            "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base": "0",
             "iva.regularizacion-inversiones": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
@@ -445,7 +471,10 @@
             "iva.resultado": "105.00",
             "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "105"
+            "iva.soportado.interiores": "105",
+            "iva.soportado.interiores.base": "500",
+            "iva.soportado.interiores.bienes-inversion": "0",
+            "iva.soportado.interiores.bienes-inversion.base": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -468,7 +497,12 @@
             "170": "0",
             "21": "0",
             "24": "0",
-            "28": "500",
+            "32": "0",
+            "34": "0",
+            "35": "0",
+            "36": "0",
+            "38": "0",
+            "39": "0",
             "43": "0",
             "44": "0",
             "59": "0",
@@ -481,19 +515,31 @@
             "decl.ejercicio": "2026",
             "decl.periodo": "1T",
             "iva.autorepercutido.interior.deducible": "0",
+            "iva.autorepercutido.interior.deducible.base": "0",
+            "iva.autorepercutido.interior.deducible.bienes-inversion": "0",
+            "iva.autorepercutido.interior.deducible.bienes-inversion.base": "0",
             "iva.autorepercutido.interior.devengado": "0",
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
+            "iva.rectificacion-deducciones.importaciones": "0",
+            "iva.rectificacion-deducciones.importaciones.base": "0",
+            "iva.rectificacion-deducciones.interiores": "0",
+            "iva.rectificacion-deducciones.interiores.base": "0",
+            "iva.rectificacion-deducciones.inversion-sujeto-pasivo": "0",
+            "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "105"
+            "iva.soportado.interiores": "105",
+            "iva.soportado.interiores.base": "500",
+            "iva.soportado.interiores.bienes-inversion": "0",
+            "iva.soportado.interiores.bienes-inversion.base": "0"
           },
           "modality": null,
           "modality_reason": null,
@@ -1671,43 +1717,59 @@
             {
               "absent_by_design": false,
               "casilla_id": "28",
-              "formula_id": null,
+              "formula_id": "modelo-303-iva-deducible-interiores-corrientes-base",
               "legal_refs": [
+                "ley-37-1992:art-84",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2026"
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.soportado.interiores.base",
+                "iva.autorepercutido.interior.deducible.base"
               ],
-              "value": "500"
+              "operand_refs": [
+                "iva.soportado.interiores.base",
+                "iva.autorepercutido.interior.deducible.base"
+              ],
+              "operand_values": [
+                "500",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "500.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "29",
               "formula_id": "modelo-303-dr303-29-projection",
               "legal_refs": [
+                "ley-37-1992:art-84",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": "value",
+              "op": "add",
               "operand_casilla_refs": [
-                "iva.soportado.interiores"
+                "iva.soportado.interiores",
+                "iva.autorepercutido.interior.deducible"
               ],
               "operand_refs": [
-                "iva.soportado.interiores"
+                "iva.soportado.interiores",
+                "iva.autorepercutido.interior.deducible"
               ],
               "operand_values": [
-                "105"
+                "105",
+                "0"
               ],
               "source_refs": [
                 "aeat-dr-303-2024-early",
@@ -1719,48 +1781,75 @@
             {
               "absent_by_design": false,
               "casilla_id": "30",
-              "formula_id": null,
+              "formula_id": "modelo-303-iva-deducible-interiores-bienes-inversion-base",
               "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-108",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2026"
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.soportado.interiores.bienes-inversion.base",
+                "iva.autorepercutido.interior.deducible.bienes-inversion.base"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.soportado.interiores.bienes-inversion.base",
+                "iva.autorepercutido.interior.deducible.bienes-inversion.base"
+              ],
+              "operand_values": [
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "31",
-              "formula_id": null,
+              "formula_id": "modelo-303-iva-deducible-interiores-bienes-inversion-cuota",
               "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-108",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2026"
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.soportado.interiores.bienes-inversion",
+                "iva.autorepercutido.interior.deducible.bienes-inversion"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.soportado.interiores.bienes-inversion",
+                "iva.autorepercutido.interior.deducible.bienes-inversion"
+              ],
+              "operand_values": [
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "32",
               "formula_id": null,
               "legal_refs": [
+                "ley-37-1992:art-17",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
@@ -1781,6 +1870,7 @@
               "casilla_id": "33",
               "formula_id": "modelo-303-dr303-33-projection",
               "legal_refs": [
+                "ley-37-1992:art-17",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
@@ -1812,6 +1902,7 @@
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
+                "ley-37-1992:art-108",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1832,6 +1923,7 @@
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
+                "ley-37-1992:art-108",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1849,6 +1941,11 @@
               "casilla_id": "36",
               "formula_id": null,
               "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
@@ -1869,6 +1966,7 @@
               "casilla_id": "37",
               "formula_id": "modelo-303-dr303-37-projection",
               "legal_refs": [
+                "ley-37-1992:art-84",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
@@ -1900,6 +1998,7 @@
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
+                "ley-37-1992:art-108",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1920,6 +2019,7 @@
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
+                "ley-37-1992:art-108",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1935,42 +2035,74 @@
             {
               "absent_by_design": false,
               "casilla_id": "40",
-              "formula_id": null,
+              "formula_id": "modelo-303-iva-rectificacion-deducciones-base",
               "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-99",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2026"
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.rectificacion-deducciones.interiores.base",
+                "iva.rectificacion-deducciones.importaciones.base",
+                "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.rectificacion-deducciones.interiores.base",
+                "iva.rectificacion-deducciones.importaciones.base",
+                "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
+              ],
+              "operand_values": [
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "41",
-              "formula_id": null,
+              "formula_id": "modelo-303-iva-rectificacion-deducciones-cuota",
               "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-99",
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
                 "ley-37-1992:art-95",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2026"
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.rectificacion-deducciones.interiores",
+                "iva.rectificacion-deducciones.importaciones",
+                "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.rectificacion-deducciones.interiores",
+                "iva.rectificacion-deducciones.importaciones",
+                "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
+              ],
+              "operand_values": [
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -3055,6 +3187,65 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.interior.deducible.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.interior.deducible.bienes-inversion",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.interior.deducible.bienes-inversion.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.interior.devengado",
               "formula_id": null,
               "legal_refs": [
@@ -3322,25 +3513,37 @@
               ],
               "op": "add",
               "operand_casilla_refs": [
-                "iva.soportado.interiores",
-                "iva.soportado.importaciones",
-                "iva.autorepercutido.intracomunitaria",
-                "iva.autorepercutido.interior.deducible",
+                "29",
+                "31",
+                "33",
+                "35",
+                "37",
+                "39",
+                "41",
+                "42",
                 "43",
                 "44"
               ],
               "operand_refs": [
-                "iva.soportado.interiores",
-                "iva.soportado.importaciones",
-                "iva.autorepercutido.intracomunitaria",
-                "iva.autorepercutido.interior.deducible",
+                "29",
+                "31",
+                "33",
+                "35",
+                "37",
+                "39",
+                "41",
+                "42",
                 "43",
                 "44"
               ],
               "operand_values": [
-                "105",
+                "105.00",
+                "0.00",
+                "0.00",
                 "0",
+                "0.00",
                 "0",
+                "0.00",
                 "0",
                 "0.00",
                 "0.00"
@@ -3491,6 +3694,126 @@
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.importaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.importaciones.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.interiores",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.interiores.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.inversion-sujeto-pasivo",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
               ],
               "value": "0"
             },
@@ -3712,6 +4035,62 @@
                 "aeat-dr-303-2026"
               ],
               "value": "105"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.soportado.interiores.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "500"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.soportado.interiores.bienes-inversion",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.soportado.interiores.bienes-inversion.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -3803,7 +4182,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3909,34 +4288,6 @@
           "events": [
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "4108cc9e42fe1af1d37453bbb775d5b7dd7e0c93d6f65e0e7e41ab6899defc41",
-              "event_type": "modelo.calculation.created",
-              "object_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
-              "object_type": "calculation_revision",
-              "occurred_at": "2026-04-01T09:00:00+00:00",
-              "payload": {
-                "borrador_binding_count": "0",
-                "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "borrador_participated": "false",
-                "borrador_snapshot_id": "",
-                "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
-                "casilla_count": "146",
-                "filing_year": "2026",
-                "formula_count": "28",
-                "has_provenance": "true",
-                "input_casilla_count": "36",
-                "modelo": "303",
-                "period": "1T",
-                "row_binding_count": "0",
-                "row_casilla_count": "0",
-                "source_provenance_count": "3",
-                "source_provenance_trace_sha256": "9cf169d9ce731bb7a2ff8e305f6ef7acf1482ebab0997e41c54760a7b95acc3b",
-                "source_transaction_count": "2",
-                "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-              }
-            },
-            {
-              "actor": "docs-sequence-sandbox",
               "event_id": "4756356f3409e5c92c58beab15127a6ac141fe955f21e8867e0ef0221cb92a29",
               "event_type": "modelo.work_unit.created",
               "object_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
@@ -3948,6 +4299,34 @@
                 "name": "303-2026-1T",
                 "period": "1T",
                 "revision_id": "2026-y-siguientes"
+              }
+            },
+            {
+              "actor": "docs-sequence-sandbox",
+              "event_id": "e655707500ba919fd0a3342e86fafd86a7e5923ca4318c25f36cf4eb5847dcfa",
+              "event_type": "modelo.calculation.created",
+              "object_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
+              "object_type": "calculation_revision",
+              "occurred_at": "2026-04-01T09:00:00+00:00",
+              "payload": {
+                "borrador_binding_count": "0",
+                "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "borrador_participated": "false",
+                "borrador_snapshot_id": "",
+                "calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
+                "casilla_count": "158",
+                "filing_year": "2026",
+                "formula_count": "33",
+                "has_provenance": "true",
+                "input_casilla_count": "53",
+                "modelo": "303",
+                "period": "1T",
+                "row_binding_count": "0",
+                "row_casilla_count": "0",
+                "source_provenance_count": "3",
+                "source_provenance_trace_sha256": "9cf169d9ce731bb7a2ff8e305f6ef7acf1482ebab0997e41c54760a7b95acc3b",
+                "source_transaction_count": "2",
+                "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
               }
             }
           ],

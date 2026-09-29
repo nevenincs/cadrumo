@@ -7,7 +7,15 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    StringConstraints,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from ....core.aggregation import (
     BindingAggregationOp,
@@ -17,10 +25,15 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.type_guards import is_object_list_or_tuple
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
-from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...iva.deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    admits_iva_deduction_classification,
+    validate_iva_deduction_fact,
+)
 from ...iva.flow import (
     IvaFlowDirection,
     is_deducible_flow,
@@ -89,6 +102,13 @@ def _coerce_cash_accounting_treatment_codes(value: object) -> object:
     if is_object_list_or_tuple(value):
         return tuple(value)
     return value
+
+
+def _project_deduction_fact_kinds(value: object) -> object:
+    """Project authored deduction-kind tokens through fact 0085, element-wise."""
+    if not is_object_list_or_tuple(value):
+        return value
+    return tuple(require_iva_deduction_fact_kind(item) for item in value)
 
 
 class IvaLedgerObservation(BaseModel):
@@ -232,11 +252,19 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if not is_deducible_flow(self.flow_direction) or self.category == category_catalogue.require(
-            "recargo_equivalencia"
+        # Fact 0085, not the flow direction, decides whether a deduction arises on
+        # this row. Every RECEIVED operation settles as ``soportado``, and LIVA
+        # art. 92.Uno grants a deduction only of a cuota devengada and borne by
+        # repercusión, so an exempt (art. 20) or not-subject (art. 7) purchase and
+        # a recargo de equivalencia acquisition raise none to classify. Keyed on
+        # the flow alone, this required authority that the same fact then refused,
+        # leaving those rows representable in no form at all.
+        if not is_deducible_flow(self.flow_direction) or not admits_iva_deduction_classification(
+            category=self.category,
+            flow_direction=self.flow_direction,
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
-                raise RegistryValidationError("output IVA facts cannot carry deduction authority")
+                raise RegistryValidationError("an IVA row bearing no deducible cuota cannot carry deduction authority")
             return self
         if self.deduction_fact_kind is None or self.deduction_provenance is None:
             raise RegistryValidationError("input IVA facts require exact deduction authority")
@@ -310,6 +338,27 @@ class LedgerIvaProvider(BaseModel):
     unmeasured line in a box that asserts a specific rate, and the annual return
     is where that assertion is read.
     """
+    deduction_fact_kinds: (
+        Annotated[
+            tuple[IvaDeductionFactKind, ...],
+            BeforeValidator(pydantic_validation_boundary(_project_deduction_fact_kinds)),
+        ]
+        | None
+    ) = Field(default=None, min_length=1)
+    """Fact-0085 deduction kinds this binding accepts, when the box is kind-specific.
+
+    ``None`` means the binding does not discriminate on the deduction and matches
+    every row its other axes admit. Set it where the FORM splits one deducible
+    quantity by what was acquired: Modelo 303 asks for the cuota soportada on
+    bienes corrientes and on bienes de inversión in different boxes ([28]/[29]
+    against [30]/[31], [32]/[33] against [34]/[35], [36]/[37] against [38]/[39]),
+    and the category, rate and flow of the two rows are identical. The ledger
+    row's reciprocal deduction kind is the only axis that tells them apart.
+
+    A row whose ``deduction_fact_kind`` is ``None`` matches no kind-specific
+    binding. Only a deducible flow carries a deduction kind, so the axis is
+    refused on any other flow rather than left to match nothing.
+    """
     fact: LedgerIvaFactValue = LedgerIvaFact.IVA_AMOUNT_SUM
 
     @field_validator("categories", mode="after")
@@ -379,6 +428,28 @@ class LedgerIvaProvider(BaseModel):
                 require_iva_exemption_article(token)
         if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("exemption_articles entries must be unique")
+        return value
+
+    @field_validator("deduction_fact_kinds", mode="after")
+    @classmethod
+    @pydantic_validation_boundary
+    def _deduction_fact_kinds_unique_on_a_deducible_flow(
+        cls,
+        value: tuple[IvaDeductionFactKind, ...] | None,
+        info: ValidationInfo,
+    ) -> tuple[IvaDeductionFactKind, ...] | None:
+        # A field validator rather than a model one: an after-model validator
+        # also runs when a built selector is carried into another model, where
+        # no governed-fact scope need be open to read the flow vocabulary.
+        if value is None:
+            return value
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("deduction_fact_kinds entries must be unique")
+        flow_direction = info.data.get("flow_direction")
+        if isinstance(flow_direction, IvaFlowDirection) and not is_deducible_flow(flow_direction):
+            raise RegistryValidationError(
+                f"deduction_fact_kinds selector requires a deducible flow_direction; got {flow_direction.value!r}",
+            )
         return value
 
     @model_validator(mode="after")
@@ -550,23 +621,45 @@ def _invoice_ledger_screen_shape(selector: LedgerIvaProvider) -> _InvoiceLedgerS
     )
 
 
+def _partitions_by_deduction_kind(matches: Sequence[IvaLedgerScreenBinding]) -> bool:
+    """Return whether the bindings serving one screen slot never claim the same row."""
+    if len(matches) == 1:
+        return True
+    claimed: set[IvaDeductionFactKind] = set()
+    for match in matches:
+        kinds = match.selector.deduction_fact_kinds
+        if kinds is None or claimed.intersection(kinds):
+            return False
+        claimed.update(kinds)
+    return True
+
+
 def invoice_ledger_screen_bindings(
     revision: ModeloRevision,
     *,
     modelo: str,
 ) -> tuple[IvaLedgerScreenBinding, ...]:
-    """Resolve the invoice screen's seven typed bindings from a revision.
+    """Resolve the invoice screen's typed bindings for its seven slots.
 
     The invoice-versus-ledger refusal applies only to the M303 and M390
     revisions.  For every other modelo the empty result preserves the previous
-    non-applicability contract.  For an applicable modelo, all seven shapes
-    must be present exactly once; an incomplete, duplicate, cross-model, or
-    unknown screen-shaped binding raises a registry validation error rather than
-    silently weakening the screen.
+    non-applicability contract.  For an applicable modelo, every one of the
+    seven slot shapes must be served; an incomplete, overlapping, cross-model,
+    or unknown screen-shaped binding raises a registry validation error rather
+    than silently weakening the screen.
+
+    A slot is served by one binding, or by several that partition it by
+    deduction kind: the domestic input IVA slot is split between the
+    corrientes and the bienes de inversión boxes, whose rows share category,
+    rate and flow.  Each of those bindings is screened, so an investment
+    purchase's invoice is compared against the ledger exactly as a corriente
+    one is.  Two bindings that could both claim one row would compare it twice,
+    so their kind sets must be declared and disjoint.
 
     Binding IDs are returned in a stable conceptual order (three IVA output
-    tiers, domestic input IVA, then three recargo tiers).  The IDs are merely
-    selected outputs; the selector is the authority used to identify them.
+    tiers, domestic input IVA, then three recargo tiers), and in declaration
+    order within a partitioned slot.  The IDs are merely selected outputs; the
+    selector is the authority used to identify them.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -615,13 +708,14 @@ def invoice_ledger_screen_bindings(
     selected: list[IvaLedgerScreenBinding] = []
     for shape in rate_slots:
         matches = expected_by_shape[shape]
-        if len(matches) != 1:
+        if not matches or not _partitions_by_deduction_kind(matches):
             state = "missing" if not matches else "duplicate"
             raise RegistryValidationError(
                 f"revision {revision.id!r} modelo {modelo!r} invoice IVA screen "
-                f"shape is {state}: expected exactly one, got {len(matches)} for {shape!r}",
+                f"shape is {state}: expected one binding or a deduction-kind partition, "
+                f"got {len(matches)} for {shape!r}",
             )
-        selected.append(matches[0])
+        selected.extend(matches)
 
     selected_ids = tuple(item.binding_id for item in selected)
     if len(set(selected_ids)) != len(selected_ids):
@@ -642,6 +736,68 @@ def invoice_ledger_screen_binding_ids(
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     return tuple(item.binding_id for item in invoice_ledger_screen_bindings(revision, modelo=modelo))
+
+
+class DeductionKindClaimOverlap(NamedTuple):
+    """Two deducible bindings of one selector that both claim some deduction kind.
+
+    ``shared_kinds`` is ``None`` when one of the two declares no kind at all and
+    so claims every row the other one claims.
+    """
+
+    binding_ids: tuple[BindingId, BindingId]
+    shared_kinds: tuple[IvaDeductionFactKind, ...] | None
+
+
+def _selector_identity_without_deduction_kinds(selector: LedgerIvaProvider) -> tuple[tuple[str, str], ...]:
+    """Render every selector axis except the deduction kind, so kind partitions group together."""
+    axes = STR_KEYED_MAPPING_ADAPTER.validate_python(selector.model_dump(exclude={"deduction_fact_kinds"}))
+    return tuple(sorted((key, repr(value)) for key, value in axes.items()))
+
+
+def deducible_deduction_kind_overlaps(revision: ModeloRevision) -> tuple[DeductionKindClaimOverlap, ...]:
+    """Return deducible bindings that split one quantity by deduction kind but overlap.
+
+    A form that asks for one deducible quantity in two boxes by what was
+    acquired -- Modelo 303 [28]/[29] against [30]/[31] -- is served by bindings
+    whose selectors agree on every axis and differ only in
+    ``deduction_fact_kinds``. That split holds only while no row is claimed by
+    both: a corrientes binding that also admits ``domestic_investment``, or
+    that declares no kind at all, puts a bien de inversión in [28] as well as in
+    [30], and the deduction is declared twice with nothing else to notice it.
+
+    Only bindings feeding a deducible casilla are compared, and only within a
+    selector group where at least one member declares a kind. The self-assessed
+    devengado side of an intra-community acquisition reads the same rows as its
+    deducible side on purpose, and a group where nobody splits by kind is not a
+    partition at all.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    targets = casillas_by_binding(revision)
+    deducible_casillas = {casilla.id for casilla in revision.casillas if "deducible" in casilla.section}
+    groups: dict[tuple[tuple[str, str], ...], list[tuple[BindingId, LedgerIvaProvider]]] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
+            continue
+        if not any(casilla_id in deducible_casillas for casilla_id in targets.get(binding.id, ())):
+            continue
+        selector = iva_ledger_selector(binding)
+        groups.setdefault(_selector_identity_without_deduction_kinds(selector), []).append((binding.id, selector))
+    overlaps: list[DeductionKindClaimOverlap] = []
+    for members in groups.values():
+        if all(selector.deduction_fact_kinds is None for _, selector in members):
+            continue
+        for index, (left_id, left) in enumerate(members):
+            for right_id, right in members[index + 1 :]:
+                if left.deduction_fact_kinds is None or right.deduction_fact_kinds is None:
+                    overlaps.append(DeductionKindClaimOverlap((left_id, right_id), None))
+                    continue
+                shared = tuple(kind for kind in left.deduction_fact_kinds if kind in right.deduction_fact_kinds)
+                if shared:
+                    overlaps.append(DeductionKindClaimOverlap((left_id, right_id), shared))
+    return tuple(overlaps)
 
 
 def validate_ledger_iva_aggregation_binding_definition(
@@ -686,7 +842,7 @@ def validate_ledger_iva_aggregation_binding_definition(
 
 
 class IvaSelectorAxesProtocol(Protocol):
-    """The six axes the IVA selector matcher reads off an observation.
+    """The axes the IVA selector matcher reads off an observation.
 
     Declared so the matcher can state the shape it actually needs instead of
     naming the full :class:`IvaLedgerObservation` record. Both that record and
@@ -734,13 +890,18 @@ class IvaSelectorAxesProtocol(Protocol):
         """Return the applied IVA rate as a fraction, when known."""
         ...
 
+    @property
+    def deduction_fact_kind(self) -> IvaDeductionFactKind | None:
+        """Return the fact-0085 deduction kind, when the row bears a deduction."""
+        ...
+
 
 class _IvaReachabilityProbeObservation(NamedTuple):
-    """Minimal shape carrying only the six axes the IVA matcher reads.
+    """Minimal shape carrying only the axes the IVA matcher reads.
 
     Stands in for :class:`IvaLedgerObservation` so the probe never needs the
     full record's unrelated required fields (ledger id, dates, amounts). The
-    matcher reads exactly these five attributes, which is the seam that makes
+    matcher reads exactly these attributes, which is the seam that makes
     the substitution legitimate.
     """
 
@@ -754,6 +915,9 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     # supplies the rate the binding under test names rather than a fixed value:
     # a rate-specific binding is reachable, just not by a differently-rated line.
     applied_rate: Decimal | None = None
+    # Same reasoning for the deduction kind: a kind-specific binding is asked
+    # whether a row of a kind it names can reach it.
+    deduction_fact_kind: IvaDeductionFactKind | None = None
 
 
 def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
@@ -801,6 +965,7 @@ def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
         # can. A None here would fail every rate-specific binding at build time
         # and read as "unreachable" when the binding is simply particular.
         applied_rate=(selector.applied_rates[0] if selector.applied_rates else None),
+        deduction_fact_kind=(selector.deduction_fact_kinds[0] if selector.deduction_fact_kinds else None),
     )
     if not matcher(probe):
         raise RegistryValidationError(
@@ -827,6 +992,10 @@ def _iva_ledger_observation_matches_selector(
     if observation.observation_role not in set(selector.observation_roles):
         return False
     if selector.applied_rates is not None and observation.applied_rate not in set(selector.applied_rates):
+        return False
+    if selector.deduction_fact_kinds is not None and observation.deduction_fact_kind not in set(
+        selector.deduction_fact_kinds,
+    ):
         return False
     if selector.exemption_articles is None:
         return True
@@ -989,28 +1158,22 @@ def unrouted_ledger_iva_quantities(
     quantities, so a row selected for its cuota reads as consumed while its
     base imponible reaches nothing at all.
 
-    The gap is live, not hypothetical, and it survives a revision declaring the
-    fact. Both Modelo 303 and Modelo 390 declare ``base_amount_sum`` bindings
-    covering the domestic tiers, so "is base imponible drawn" answers yes on
-    each. Their base bindings nonetheless reach no import or reverse-charge row:
-    ``import_third_country``,
-    ``intra_community_acquisition_reverse_charge`` and
-    ``intra_community_service_acquisition_reverse_charge`` have their CUOTA
-    drawn and their base drawn by nothing, on both modelos. The rows are
-    consumed for that cuota, so the row screen is silent by construction, and a
-    coverage test keyed on the fact alone would be silent too.
+    The gap survives a revision declaring the fact. A revision whose
+    ``base_amount_sum`` bindings cover the domestic tiers answers yes to "is
+    base imponible drawn", yet a category whose CUOTA some binding draws and
+    whose base no binding reaches -- as the import and intra-community
+    reverse-charge rows were on Modelo 303 and Modelo 390 before their base
+    boxes were bound -- is consumed for that cuota, so the row screen is silent
+    by construction, and a coverage test keyed on the fact alone would be
+    silent too.
 
-    That is why coverage is asked per row and per fact. The earlier worked
-    example here — Modelo 390 declaring no base binding at all — was closed by
-    the annual-form campaign, and closing it is precisely what would have
-    blinded a fact-keyed screen to the three categories above. A screen's value
-    is the mechanism, never the instance: this one keeps reporting whatever the
-    declared bindings fail to reach, and correctly falls silent on the four
-    domestic categories both modelos now cover.
+    That is why coverage is asked per row and per fact. A screen's value is the
+    mechanism, never the instance: this one keeps reporting whatever the
+    declared bindings fail to reach, and correctly falls silent on every
+    category the committed modelos now cover.
 
-    This function reports; it does not close. Routing an import or
-    reverse-charge base imponible is registry work with its own casillas and
-    grounding.
+    This function reports; it does not close. Routing a base imponible is
+    registry work with its own casillas and grounding.
 
     Args:
         revision: The :class:`ModeloRevision` whose IVA bindings decide which
@@ -1059,6 +1222,7 @@ def _iva_reachability_probe_for_category(
         observation_role=selector.observation_roles[0],
         exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
         applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
+        deduction_fact_kind=selector.deduction_fact_kinds[0] if selector.deduction_fact_kinds else None,
     )
 
 

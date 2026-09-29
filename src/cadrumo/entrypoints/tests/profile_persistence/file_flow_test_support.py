@@ -429,7 +429,7 @@ def _seed_work_unit(
     filing_year: int = 2026,
     period: str = "1T",
     revision_id: str = "2019-y-siguientes",
-):
+) -> WorkUnit:
     """Default fixture: modelo 130 1T 2026 — autónomo IRPF quarterly,
     9 manual casillas + 10 formulas + 1 prior-filing binding.
     Registry-resolvable so the formula engine runs end-to-end."""

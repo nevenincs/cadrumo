@@ -22,6 +22,7 @@ import pytest
 
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.bindings import CasillaObservationValueKind
 from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -44,6 +45,8 @@ _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
     "69",
     surface="_M303_PRINTED_RESULT_REFERENCE_CASILLA",
 )
+_M190_CONTACT_TELEFONO: CasillaId = validated_casilla_id("decl.persona-contacto-telefono")
+_M190_CONTACT_NOMBRE: CasillaId = validated_casilla_id("decl.persona-contacto-nombre")
 
 
 def _modelo_303_snapshot():
@@ -308,3 +311,30 @@ def test_compute_from_pull_normalizes_european_numeric_string() -> None:
 
     casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == _M130_INGRESOS_CASILLA)
     assert casilla_01_obs.value == Decimal("1234.56")
+
+
+def test_compute_from_pull_routes_text_casillas_as_text_and_leaves_empty_ones_absent() -> None:
+    """A text cell reaches the calculation as text; an empty one is absent, not zero.
+
+    Modelo 190 2022 declares its declarante contact slots as text. The pull once
+    gave every empty input cell a numeric zero, which for these casillas became a
+    ``0`` in the pulled calculation.
+    """
+    snapshot = published_snapshot("190", filing_year=2022, period="0A")
+    pull = PullResult(
+        spreadsheet_id="test-id",
+        operator_edits=_operator_edits_for(snapshot, {_M190_CONTACT_TELEFONO: "600123456"}),
+        binding_edits=_binding_edits_for(snapshot),
+        relation_edits=_relation_edits_for(snapshot),
+        metadata=_matching_metadata(snapshot),
+        metadata_match=MetadataMatchState.MATCHES,
+        cells_read=1,
+    )
+
+    result = compute_from_pull(snapshot, pull)
+
+    observations = {observation.casilla_id: observation for observation in result.observations}
+    assert observations[_M190_CONTACT_TELEFONO].value_kind == CasillaObservationValueKind.TEXT
+    assert observations[_M190_CONTACT_TELEFONO].value == "600123456"
+    assert _M190_CONTACT_NOMBRE not in observations
+    assert _M190_CONTACT_NOMBRE not in result.values

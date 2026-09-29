@@ -1013,7 +1013,14 @@ def validate_investment_asset_reciprocity(
     asset_profile_id: str,
     filing_year: int,
 ) -> None:
-    """Validate the one-to-one, same-profile/year/sector acquisition contract."""
+    """Validate the one-to-one, same-profile/year/sector acquisition contract.
+
+    ``observations`` is the acquisition evidence of the whole filing year, not
+    of one period: a record acquired in ``filing_year`` with no link among them
+    is refused. A period-scoped caller therefore supplies, beside its own
+    observations, the links of the rows the register places in the year's other
+    periods.
+    """
     if ledger_profile_id != asset_profile_id:
         raise BienInversionValidationError("investment ledger and asset register must share a secure profile")
     records_by_id = {record.identifier: record for record in register.records}

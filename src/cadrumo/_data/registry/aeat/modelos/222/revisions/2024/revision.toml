@@ -597,7 +597,7 @@ source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"
-continuidad_id = "tipo-declaracion"
+continuidad_id = "tipo-declaracion-resultado"
 from_revision = "2023"
 to_revision = "2024"
 origin = "seeded"

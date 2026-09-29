@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "(python_full_version >= '3.14' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform == 'win32')",
-    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version >= '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version < '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
 ]
 
@@ -250,6 +250,7 @@ all = [
     { name = "pillow" },
     { name = "playwright" },
     { name = "playwright-stealth" },
+    { name = "reportlab" },
 ]
 anthropic = [
     { name = "anthropic" },
@@ -269,6 +270,9 @@ llm = [
 ]
 ofx = [
     { name = "ofxtools" },
+]
+pdf = [
+    { name = "reportlab" },
 ]
 workbook-windows = [
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -361,6 +365,7 @@ requires-dist = [
     { name = "cadrumo", extras = ["google"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["llm"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["ofx"], marker = "extra == 'all'" },
+    { name = "cadrumo", extras = ["pdf"], marker = "extra == 'all'" },
     { name = "cadrumo-data-manuals", directory = "packaging/cadrumo_data_manuals" },
     { name = "cadrumo-data-official", directory = "packaging/cadrumo_data_official" },
     { name = "click", specifier = ">=8.1,<9" },
@@ -392,6 +397,7 @@ requires-dist = [
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'workbook-windows'", specifier = ">=311" },
     { name = "pyyaml", specifier = ">=6.0.3,<7" },
     { name = "questionary", specifier = ">=2.1.1,<3" },
+    { name = "reportlab", marker = "extra == 'pdf'", specifier = ">=5.0.1,<6" },
     { name = "rich", specifier = ">=14.2.0,<16" },
     { name = "rtoml", specifier = ">=0.13.0,<1" },
     { name = "snowballstemmer", specifier = ">=2.2,<4" },
@@ -401,7 +407,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
-provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "llm", "all"]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "llm", "pdf", "all"]
 
 [package.metadata.requires-dev]
 dev = [

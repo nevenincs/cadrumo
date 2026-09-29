@@ -200,6 +200,7 @@ def _registry_casilla_schema(
         casilla_id=casilla_id,
         value_type="decimal",
         required=False,
+        operator_supplied=formula is None,
         formula=formula,
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=("ley-58-2003:art-29",),

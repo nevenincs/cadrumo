@@ -277,6 +277,13 @@ Export, edit, and pull back modelo calculations using a Google Sheets spreadshee
 Run verification, read the report findings, and fix what blocks export.
 :::
 
+:::{grid-item-card} Share a calculation summary
+:link: calculation-summary
+:link-type: doc
+
+Write a signed PDF of a verified calculation, and check a copy against your data.
+:::
+
 :::{grid-item-card} File at AEAT
 :link: file-at-aeat
 :link-type: doc

@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ..errors import RegistryValidationError
 from ..schema_exports import (
     FilingEnvelopeCloserDerivation,
     FilingEnvelopeDefinition,
@@ -145,3 +146,23 @@ def test_the_declaration_carries_no_modelo_of_its_own() -> None:
     would silently address another modelo's declaration.
     """
     assert "modelo" not in FilingEnvelopeDefinition.model_fields
+
+
+@pytest.mark.parametrize(
+    ("prefix", "opening_tag"),
+    [(_THIRTEEN_ROW, b"<T303020251T0000>"), (_EIGHT_ROW, b"<T200020240A0000>")],
+)
+def test_the_relative_closer_answers_the_opening_tag_for_both_spellings(
+    prefix: tuple[tuple[FilingEnvelopePrefixRole, int], ...], opening_tag: bytes
+) -> None:
+    """The closer is derived from the payload's own opening tag, so neither spelling needs a modelo constant."""
+    declaration = _declaration(prefix)
+
+    assert declaration.opening_tag_extent == len(opening_tag) == 17
+    assert declaration.closer_for(opening_tag) == b"</" + opening_tag[1:]
+
+
+@pytest.mark.parametrize("opening_tag", [b"<T303020251T000", b"T303020251T0000>>"])
+def test_the_relative_closer_refuses_an_opening_tag_of_the_wrong_shape(opening_tag: bytes) -> None:
+    with pytest.raises(RegistryValidationError, match="opening tag must be 17 bytes"):
+        _declaration(_THIRTEEN_ROW).closer_for(opening_tag)

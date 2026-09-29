@@ -120,6 +120,7 @@ def test_the_exclusion_is_real_rather_than_a_stale_name() -> None:
         ("recargo_amount", Decimal("5.20")),
         ("taxable_base", Decimal("82.64")),
         ("notes", "corrección del recargo"),
+        ("investment_asset_id", "bi-0001"),
     ],
 )
 def test_changing_one_field_alone_registers_as_a_change(field: str, value: object) -> None:

@@ -37,13 +37,8 @@ _PURCHASE_IVA: Final = Decimal("10.50")
 _EXPECTED_RESULT: Final = _SALE_IVA - _PURCHASE_IVA
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 _EXPORT_ARTIFACT_PLACEHOLDER: Final = "<local-m303-export-artifact>"
-_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE: Final = "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-_PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC: Final = (
-    'Official export is unavailable: the record design reserves the header fields "Versión del Programa" '
-    'and "NIF del desarrollador" for the software developer, and no reviewed product identity exists for '
-    "them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification "
-    "remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer."
-)
+_DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER: Final = b"0000"
+_DEVELOPMENT_MOCK_DEVELOPER_TAX_ID: Final = b"00000000T"
 _AUTHORITY_GENERATION: Final = authority_generation
 
 
@@ -86,15 +81,15 @@ class IvaM303CliJourneyReceipt:
     verification_status: str
     verification_granted: bool
     export_status: str
-    export_failure_code: str | None
-    export_failure_diagnostic: str | None
-    export_artifact: str | None
-    export_size: int | None
-    export_sha256: str | None
-    export_layout_id: str | None
+    export_artifact: str
+    export_size: int
+    export_sha256: str
+    export_layout_id: str
     export_parser_verdict: str
-    exported_iva_resultado: str | None
-    local_export_only: bool | None
+    exported_iva_resultado: str
+    local_export_only: bool
+    export_software_identity_grade: str
+    developer_header_record: str
     commands: tuple[SanitizedCommandReceipt, ...]
 
     def to_dict(self) -> dict[str, object]:
@@ -118,7 +113,7 @@ def run_iva_m303_cli_journey(
             record design is not one whose developer-header positions the journey holds.
     """
     journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=(("303", _PERIOD),))
-    expected_refusal_positions = require_m303_developer_header_positions(journey_year, period=_PERIOD)
+    developer_header_positions = require_m303_developer_header_positions(journey_year, period=_PERIOD)
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -426,64 +421,34 @@ def run_iva_m303_cli_journey(
         ("app", "modelo", "export", work_unit_id, "--output", str(export_artifact)),
         result_keys=("work_unit_id", "calculation_revision_id", "file_sha256"),
         redacted_paths={export_artifact: _EXPORT_ARTIFACT_PLACEHOLDER},
-        accepted_refusal=(_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE, _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC),
     )
-    export_error = _object_mapping(export_document.get("error"))
-    if export_error:
-        if export_artifact.exists():
-            raise IvaCliJourneyError("refused Modelo 303 export wrote an artifact")
-        refusal_context = _object_mapping(export_error.get("context"))
-        observed_positions = tuple(
-            refusal_context.get(key) for key in ("record", "program_positions", "developer_positions")
+    exported = _result(export_document)
+    _require_export_receipt(
+        exported=exported,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        artifact=export_artifact,
+    )
+    payload = export_artifact.read_bytes()
+    if not payload:
+        raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
+    software_identity_grade = str(exported.get("software_identity_grade"))
+    if software_identity_grade != "development_mock":
+        raise IvaCliJourneyError(f"Modelo 303 export reported software identity grade {software_identity_grade!r}")
+    _require_developer_header(payload, developer_header_positions)
+    export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
+        authority_root=authority_root,
+        journey_year=journey_year,
+        payload=payload,
+    )
+    if parsed_resultado != _EXPECTED_RESULT:
+        raise IvaCliJourneyError(
+            f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
         )
-        if observed_positions != expected_refusal_positions:
-            raise IvaCliJourneyError(
-                f"export refusal located the developer header fields at {observed_positions}, "
-                f"not the official {expected_refusal_positions}"
-            )
-        export_status = "verified_export_blocked"
-        export_failure_code = _PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE
-        export_failure_diagnostic = _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC
-        receipt_export_artifact: str | None = None
-        export_size: int | None = None
-        export_sha256: str | None = None
-        export_layout_id: str | None = None
-        export_parser_verdict = "not_run_product_software_identity_pending"
-        exported_iva_resultado: str | None = None
-        local_export_only: bool | None = None
-    else:
-        exported = _result(export_document)
-        _require_export_receipt(
-            exported=exported,
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision_id,
-            artifact=export_artifact,
-        )
-        payload = export_artifact.read_bytes()
-        if not payload:
-            raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
-        export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
-            authority_root=authority_root,
-            journey_year=journey_year,
-            payload=payload,
-        )
-        if parsed_resultado != _EXPECTED_RESULT:
-            raise IvaCliJourneyError(
-                f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
-            )
-        export_status = "verified_exported"
-        export_failure_code = None
-        export_failure_diagnostic = None
-        receipt_export_artifact = _EXPORT_ARTIFACT_PLACEHOLDER
-        export_size = len(payload)
-        export_sha256 = _sha256_bytes(payload)
-        export_parser_verdict = "canonical_export_parser_verified"
-        exported_iva_resultado = f"{parsed_resultado:.2f}"
-        local_export_only = True
 
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaM303CliJourneyReceipt(
-        schema_version="iva-01-installed-cli-journey-v2",
+        schema_version="iva-01-installed-cli-journey-v3",
         filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
@@ -502,16 +467,16 @@ def run_iva_m303_cli_journey(
         verification_report_id=verification_report_id,
         verification_status=verification_status,
         verification_granted=True,
-        export_status=export_status,
-        export_failure_code=export_failure_code,
-        export_failure_diagnostic=export_failure_diagnostic,
-        export_artifact=receipt_export_artifact,
-        export_size=export_size,
-        export_sha256=export_sha256,
+        export_status="verified_exported",
+        export_artifact=_EXPORT_ARTIFACT_PLACEHOLDER,
+        export_size=len(payload),
+        export_sha256=_sha256_bytes(payload),
         export_layout_id=export_layout_id,
-        export_parser_verdict=export_parser_verdict,
-        exported_iva_resultado=exported_iva_resultado,
-        local_export_only=local_export_only,
+        export_parser_verdict="canonical_export_parser_verified",
+        exported_iva_resultado=f"{parsed_resultado:.2f}",
+        local_export_only=True,
+        export_software_identity_grade=software_identity_grade,
+        developer_header_record=developer_header_positions[0],
         commands=tuple(receipts),
     )
 
@@ -608,7 +573,6 @@ def _run(
     *,
     result_keys: tuple[str, ...],
     redacted_paths: Mapping[Path, str] | None = None,
-    accepted_refusal: tuple[str, str] | None = None,
 ) -> dict[str, object]:
     """Run one public command and retain a strict, sanitized receipt only."""
     document = cli.run(args, allow_error=True)
@@ -630,13 +594,27 @@ def _run(
         error_mapping = _object_mapping(error)
         code = error_mapping.get("code")
         message = error_mapping.get("message")
-        if accepted_refusal == (code, message):
-            return cast(dict[str, object], document)
         raise IvaCliJourneyError(
             "public command refused: "
             f"{' '.join(_sanitize_argv(args, artifact, redacted_paths))}; code={code}; message={message}"
         )
     return cast(dict[str, object], document)
+
+
+def _require_developer_header(payload: bytes, positions: tuple[str, str, str]) -> None:
+    """Refuse unless the official developer-header bytes carry the all-zero development identity."""
+    record, program_span, developer_span = positions
+    envelope_start = payload.find(b"<T303")
+    if envelope_start < 0:
+        raise IvaCliJourneyError(f"Modelo 303 export carries no {record} envelope prefix")
+    for span, expected in (
+        (program_span, _DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER),
+        (developer_span, _DEVELOPMENT_MOCK_DEVELOPER_TAX_ID),
+    ):
+        first, last = (int(bound) for bound in span.split("-"))
+        observed = payload[envelope_start + first - 1 : envelope_start + last]
+        if observed != expected:
+            raise IvaCliJourneyError(f"{record} bytes {span} carry {observed!r}, not the development identity")
 
 
 def _command_receipt(

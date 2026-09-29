@@ -21,6 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.modelo import Modelo
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import (
@@ -116,7 +117,7 @@ def test_iva_selector_role_policy_isolates_operation_information_from_settlement
 
 
 class _MinimalIvaObservation:
-    """Minimal stand-in carrying only the six axes the IVA matcher reads.
+    """Minimal stand-in carrying only the axes the IVA matcher reads.
 
     Satisfies ``IvaSelectorAxesProtocol`` structurally, which is what makes it
     a legitimate stand-in for the full observation record here.
@@ -132,6 +133,7 @@ class _MinimalIvaObservation:
         observation_role: IvaLedgerObservationRole,
         exemption_article: IvaExemptionArticle | None,
         applied_rate: Decimal | None = None,
+        deduction_fact_kind: IvaDeductionFactKind | None = None,
     ) -> None:
         self.category = category
         self.rate_kind = rate_kind
@@ -143,6 +145,9 @@ class _MinimalIvaObservation:
         # tests exercise: they vary the cash-accounting axis and must not
         # accidentally also constrain the rate filter.
         self.applied_rate = applied_rate
+        # No deduction kind, as for the production probe of a selector that
+        # declares none: the matcher asks it only of kind-specific bindings.
+        self.deduction_fact_kind = deduction_fact_kind
 
 
 def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None:

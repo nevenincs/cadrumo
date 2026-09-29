@@ -259,6 +259,53 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
     assert _created_event_count(events) == 1
 
 
+def test_same_key_differing_only_in_investment_asset_id_raises_conflict(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A same-key retry that only adds an investment-asset link is a conflict, never a silent no-op.
+
+    The stored row carries no link, as every row written before the link could
+    be recorded does. A faithful retry of that add still collapses to the no-op;
+    a retry adding the link must not be absorbed into it, or the register
+    identity the operator supplied is dropped.
+    """
+    repo, events = _repositories(secure_objects)
+    base: _ManualTransactionBaseArgs = {
+        "bucket_id": _BUCKET_ID,
+        "booked_date": _DEFAULT_BOOKED_DATE,
+        "amount": _DEFAULT_AMOUNT,
+        "direction": TransactionDirection.OUTGOING,
+        "description": "equipo informatico",
+        "idempotency_key": "asset-1",
+    }
+    with _ledger_ports(secure_objects, repo, events) as ports:
+        first = create_manual_transaction(
+            ManualLedgerTransactionCommand(**base),
+            ports=ports,
+            occurred_at=_DEFAULT_OCCURRED_AT,
+        )
+    with _ledger_ports(secure_objects, repo, events) as ports:
+        retry = create_manual_transaction(
+            ManualLedgerTransactionCommand(**base),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
+    assert retry.ref.transaction_id == first.ref.transaction_id
+    assert retry.bucket_event_ids == ()
+
+    with pytest.raises(TransactionValidationError), _ledger_ports(secure_objects, repo, events) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(**base, investment_asset_id="bi-0001"),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 11, 0, tzinfo=UTC),
+        )
+    assert tuple(repo.load().transactions) == (first.ref.transaction_id,)
+    assert _created_event_count(events) == 1
+    stored = repo.load().get(first.ref.transaction_id)
+    assert stored is not None
+    assert stored.investment_asset_id is None
+
+
 def test_same_key_differing_only_in_classified_by_override_raises_conflict(
     secure_objects: SecureObjectRepository,
 ) -> None:

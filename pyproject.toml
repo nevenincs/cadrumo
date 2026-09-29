@@ -208,6 +208,16 @@ llm = [
   # be refused.
   "nvidia-ml-py>=13,<14",
 ]
+# The calculation-summary PDF destination (`aeat app modelo work report
+# --document-format pdf`). ReportLab (BSD) lays out the pages; the tagging,
+# attachment and metadata pass runs on the already-declared `pikepdf`, and
+# verifying a summary needs no extra at all. ReportLab depends only on Pillow
+# and charset-normalizer, both already in the core closure. Lazily imported
+# behind `PDF_EXTRA`; without it the destination refuses before reading the
+# store.
+pdf = [
+  "reportlab>=5.0.1,<6",
+]
 # Deliberately absent: an `agent` extra. The operator agent harness, its
 # reviewed operating data, accessors, and MCP runtime are a separate
 # `cadrumo_harness` package shipped alongside it in this distribution.
@@ -229,6 +239,7 @@ all = [
   "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[llm]",
+  "cadrumo[pdf]",
 ]
 
 [build-system]
@@ -530,7 +541,10 @@ dev = [
   "pytest-xdist>=3.6.0",
   # Reproducible light-theme CLI GIFs for the repository README.
   "pillow==12.3.0",
-  # Used only to generate synthetic fixture PDFs in tests.
+  # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
+  # exclusive requirement: without it here the extra's probe reads ABSENT in
+  # the dev environment and the calculation-summary suite refuses instead of
+  # rendering.
   "reportlab>=4.4.10",
   # Stubs for the registry group's `lxml`. `lxml.etree` is a C extension
   # shipping no inline types, so it is the tree's only unresolved-import under
@@ -1244,7 +1258,7 @@ markers = [
   "docs: documentation build, stubs, and docstring structure verification",
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
   "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the `test-ci-perf` recipe and in the packaging performance pass, both of which only a dispatch-triggered release run reaches, so a quiet machine makes the advisory wall numbers meaningful too. Named by selection rather than by workflow file: the workflow set has churned once already, and the previous wording here outlived the lane it named.",
-  "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the npm-installed Hunspell dictionaries, for locale orthography; a real PowerShell, which a POSIX host has only if `pwsh` was installed; the read-only ingestion measurement corpus the ingestion-harness gates score against, which lives outside the checkout). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal` and `just test-ingest-corpus`.",
+  "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the npm-installed Hunspell dictionaries, for locale orthography; a real PowerShell, which a POSIX host has only if `pwsh` was installed; the read-only ingestion measurement corpus the ingestion-harness gates score against, which lives outside the checkout; a stock OpenSSL, for the calculation summary signature recipe). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal`, `just test-ingest-corpus` and `just test-calculation-summary-pdf`.",
   "os_keychain: tests whose assertion subject is the OS credential store itself (that a profile login custodies a session key there, and that a later process resumes the record by unwrapping its DEK under that key). Carried ALONGSIDE an execution marker, like `external_tool`. The capability is a property of the LOGON SESSION, not of the dependency set: a headless CI runner and an agent's SSH network logon reach a real backend that then refuses every credential call, so no keychain-custodied session key can exist there at all. Every lane excludes this marker; `just test-os-keychain` enrols it, and it is meaningful only in an interactive desktop session. Cases provable WITHOUT custody stay in the default lanes. A case belongs under this marker when it cannot reach its subject without a minted acceleration receipt, because `resume_profile_session` leaves the login PROCESS-SCOPED when the keychain is unavailable and mints no receipt at all. Apply the marker at the narrowest scope whose assertion actually requires custody.",
   "windows_only: tests whose assertion subject exists only on Windows -- today the two console-launcher stubs (`aeat.exe`, `cadrumo-mcp.exe`) that a Windows install materialises and no POSIX install has at all. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the OPERATING SYSTEM, not of the dependency set: on Linux or macOS there is no stub to project, so the subject of the assertion does not exist and no amount of installed tooling conjures it. Every lane excludes this marker; `just test-windows` enrols it, and it is meaningful only on a Windows checkout. Cases provable WITHOUT a launcher stub stay in the default lanes.",
   "resident_service: tests that query the resident vaultspec-rag search service over HTTP and assert on what it returns (golden-query retrieval, the live terminology sweep). Carried ALONGSIDE an execution marker, like `external_tool` and `os_keychain`. The precondition is a property of a RUNNING LOCAL SERVICE and the health of its index, not of the dependency set. The service is a separate development product rather than a Cadrumo runtime dependency. Every ordinary lane excludes this marker; `just test-resident-service` refreshes the index and enrols the tests serially, while the root conftest supplies their isolated pytest singleton scope. A degraded index remains a test failure rather than a reason to skip.",

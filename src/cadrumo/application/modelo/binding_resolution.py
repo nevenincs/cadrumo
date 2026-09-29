@@ -47,6 +47,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ..aggregation.source_mesh import CalculationSourceResolution
 from .borrador_binding import Modelo100BorradorSourceResolver
 from .calculation_route import require_calculation_route_resolver
@@ -219,12 +220,14 @@ def lift_previous_filing_casilla_overrides_to_bindings(
 
 @dataclass(frozen=True, slots=True)
 class DeclarationPeriodInputs:
-    """Work-unit metadata projected onto its two typed engine channels.
+    """Filing-context metadata projected onto its two typed engine channels.
 
     ``casilla_inputs`` carries the int-family ``filing_year`` role on the Decimal
     channel; ``text_casilla_inputs`` carries the string-family ``filing_period``
     role, whose registry ``data_type = "period_code"`` binds it to the typed
-    text-scalar channel and its ``period_code`` validator.
+    text-scalar channel and its ``period_code`` validator, and the
+    ``tipo_declaracion`` role, which holds the declaration's kind in its
+    period's chain.
     """
 
     casilla_inputs: dict[CasillaId, Decimal] = field(default_factory=dict)
@@ -236,24 +239,36 @@ def resolve_declaration_period_inputs(
     *,
     filing_year: int,
     period: _Period,
+    declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
-    """Resolve work-unit period metadata into informational casilla inputs.
+    """Resolve the declaration's filing context into informational casilla inputs.
 
     The :class:`ModeloRevision` supplies the
     informational casillas eligible for metadata projection. Only casillas with
-    unique ``filing_year`` or ``filing_period`` semantic roles are populated. The
-    ``filing_year`` role lands as a :class:`~decimal.Decimal` and the
-    ``filing_period`` role as the canonical :class:`~cadrumo.core.period.Period`
-    registry token (``"1T"``, ``"EXT-1T"``), which is the form AEAT accepts and
-    the only representation total over every declared period. A
-    non-informational role target raises
-    :class:`~ModeloError`.
+    unique ``filing_year``, ``filing_period`` or ``tipo_declaracion`` semantic
+    roles are populated. The ``filing_year`` role lands as a
+    :class:`~decimal.Decimal` and the ``filing_period`` role as the canonical
+    :class:`~cadrumo.core.period.Period` registry token (``"1T"``,
+    ``"EXT-1T"``), which is the form AEAT accepts and the only representation
+    total over every declared period. The ``tipo_declaracion`` role takes the
+    :class:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind` token
+    of the declaration being prepared -- ``original``, ``complementaria``,
+    ``sustitutiva`` or ``rectificativa`` -- the same kind its filing record
+    carries. A design that expresses that kind only through its complementaria
+    and sustitutiva marks still has a kind for an ordinary declaration, so the
+    casilla is never left for the operator to retype. A non-informational role
+    target raises :class:`~ModeloError`.
 
     See Also:
         :func:`~cadrumo.application.modelo.semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
             Enforces that each populated semantic role resolves to one casilla.
     """
-    return _resolve_declaration_period_inputs(revision, filing_year=filing_year, period=period)
+    return _resolve_declaration_period_inputs(
+        revision,
+        filing_year=filing_year,
+        period=period,
+        declaration_kind=declaration_kind,
+    )
 
 
 def _reject_binding_channel_mismatch(
@@ -396,8 +411,9 @@ def _resolve_declaration_period_inputs(
     *,
     filing_year: int,
     period: _Period,
+    declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
-    """Return informational-casilla inputs sourced from work-unit metadata."""
+    """Return informational-casilla inputs sourced from the declaration's filing context."""
     resolved: dict[CasillaId, Decimal] = {}
     filing_year_id = _informational_semantic_role_casilla_id(revision, "filing_year")
     if filing_year_id is not None:
@@ -407,6 +423,9 @@ def _resolve_declaration_period_inputs(
     filing_period_id = _informational_semantic_role_casilla_id(revision, "filing_period")
     if filing_period_id is not None:
         resolved_text[filing_period_id] = period.registry_token
+    declaration_kind_id = _informational_semantic_role_casilla_id(revision, "tipo_declaracion")
+    if declaration_kind_id is not None:
+        resolved_text[declaration_kind_id] = declaration_kind.value
     return DeclarationPeriodInputs(casilla_inputs=resolved, text_casilla_inputs=resolved_text)
 
 

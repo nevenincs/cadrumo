@@ -16,6 +16,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from ....domain.modelos.errors import ModeloError
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ..semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
@@ -95,6 +96,7 @@ def test_declaration_period_inputs_refuse_ambiguous_semantic_role() -> None:
             revision,
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
 
 
@@ -120,6 +122,7 @@ def test_declaration_period_inputs_project_real_registry_period_token(
         snapshot.revision,
         filing_year=2025,
         period=Period.from_year_and_code(2025, period_code),
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
     assert resolved.text_casilla_inputs[filing_period.id] == expected_token
@@ -143,6 +146,7 @@ def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
         snapshot.revision,
         filing_year=2025,
         period=period,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
     assert resolved.text_casilla_inputs[filing_period.id] == "EXT-1T"

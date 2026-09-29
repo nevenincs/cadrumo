@@ -461,6 +461,21 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.oss_evidence.present",
         "modelo.work.verify.oss_evidence.missing",
     ),
+    # Two scenarios, one condition: an annual withholding summary whose
+    # per-perceptor detail is empty is refused either because nothing proves the
+    # absence, or because the ledger contradicts the attestation that would. The
+    # operator's next step differs (attest, versus reconcile the invoices), so a
+    # single scenario would hide which refusal they met.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.withholding_detail.proven",
+        "modelo.work.verify.withholding_detail.unproven",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.withholding_detail.proven",
+        "modelo.work.verify.withholding_detail.contradicted",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
