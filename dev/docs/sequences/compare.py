@@ -27,6 +27,9 @@ One comparison policy per frame kind, applied to an executed
   reporting a unified diff on failure. No wildcards, no fuzzy matching, no
   "contains".
 - **Exit codes** are asserted on every frame.
+- **Setup frames** compare kind, argv, exit code and captures only. Their
+  golden stores no output, so the envelope and text tiers do not apply; their
+  ``@expect`` assertions still evaluate against the live run.
 
 ``@expect`` assertions are evaluated against the LIVE output
 (:func:`evaluate_expectations`), never against the golden: golden equality
@@ -56,7 +59,7 @@ from .golden_store import (
     refresh_invocation,
 )
 from .runner import FrameExecution, SequenceTranscript, _resolve_json_path
-from .schema import ParsedSequence
+from .schema import FrameKind, ParsedSequence
 
 __all__ = [
     "assert_transcript_matches_golden",
@@ -133,6 +136,12 @@ def compare_transcript_to_golden(
             golden_view = {item.name: item.value for item in expected.captures}
             live_view = {item.name: item.value for item in actual.captured}
             problems.append(f"{at}: captured values diverged — golden {golden_view!r}, live {live_view!r}")
+
+        # A setup golden stores no output to compare. When a frame changed to or
+        # from setup, the kind problem above already names it; an output diff
+        # against the other side's absent streams would only bury it.
+        if FrameKind.SETUP in (expected.kind, actual.kind):
+            continue
 
         # Envelope tier: golden and live must agree on whether a JSON envelope
         # exists and on which stream carried it (a success envelope moving to

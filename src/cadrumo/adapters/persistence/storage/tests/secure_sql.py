@@ -135,7 +135,7 @@ def read_db_at_rest_bytes(db_path: Path) -> bytes:
 def mutate_encrypted_secure_object_json(
     engine: Engine,
     *,
-    row_statement: Select[tuple[SecureObjectRow]],
+    row_statement: Select[SecureObjectRow],
     mutate: Callable[[dict[str, Any]], None],
 ) -> None:
     """Mutate one real secure-object JSON document while preserving its AEAD binding.

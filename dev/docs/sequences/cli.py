@@ -27,7 +27,10 @@ the frame grammar from
 shared grammar parser. A sequence whose author binds
 a ``@capture`` no later frame consumes is reported as a named advisory (never
 a failure): the capture still records into the transcript and golden, so it is
-review-visible, but the advisory keeps dead bindings from accumulating.
+review-visible, but the advisory keeps dead bindings from accumulating. A
+reader-facing frame whose recorded output exceeds
+:data:`~dev.docs.sequences.checks.READER_FRAME_OUTPUT_ADVISORY_BYTES` is
+reported the same way, by both modes.
 """
 
 from __future__ import annotations

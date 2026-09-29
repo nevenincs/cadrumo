@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "text": null
     },
     {
       "argv": [
@@ -50,34 +50,8 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "9a075f52dad08e80",
-          "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papeleria Central SL",
-          "taxable_base": "500",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -114,7 +88,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\t32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -151,13 +125,11 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\tff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "work",
@@ -170,48 +142,12 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
-        "notices": [],
-        "result": {
-          "applicability_guard_bypassed": false,
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "130",
-          "name": "130-2026-1T",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2019-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "3d88172f4204",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
     },
     {
       "argv": [
@@ -1111,6 +1047,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "irpf-lifecycle-q1"
 }

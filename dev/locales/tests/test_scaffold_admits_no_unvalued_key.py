@@ -40,7 +40,7 @@ _MODELO_KEY = f"{_MODELO_SCHEMA_PREFIX}390.casilla.continuidad.filing-year.label
 
 
 def _admit(*keys: str) -> dict[str, LocaleNode]:
-    return dict(_collect_required_leaves(set(keys), _EXISTING))
+    return _collect_required_leaves(set(keys), _EXISTING)
 
 
 def test_an_existing_translation_is_carried_through_untouched() -> None:

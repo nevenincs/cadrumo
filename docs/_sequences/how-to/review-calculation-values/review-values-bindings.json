@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "text": null
     },
     {
       "argv": [
@@ -37,7 +37,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+      "text": null
     },
     {
       "argv": [
@@ -61,7 +61,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -89,7 +89,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -121,34 +121,8 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "9a075f52dad08e80",
-          "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papeleria Central SL",
-          "taxable_base": "500",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -170,7 +144,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -192,13 +166,11 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": null
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "bindings",
@@ -211,229 +183,16 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.bindings.list",
-        "notices": [],
-        "result": {
-          "binding_count": 8,
-          "bindings": [
-            {
-              "binding_id": "modelo-130-resultados-negativos-anteriores",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-pagos-fraccionados-anteriores",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "irpf.previous_year_economic_activity_net_income",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-rendimiento-neto-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            }
-          ],
-          "missing_filter": false,
-          "modelo_filter": "130",
-          "operation": "modelo.bindings.list",
-          "period_filter": "1T",
-          "year_filter": 2026
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tFalse\nbinding_count\t8\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-taxable-base-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-rendimiento-neto-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tledger data\t-\tdecimal\tFalse\n"
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "bindings",
@@ -447,229 +206,16 @@
         "--missing"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.bindings.list",
-        "notices": [],
-        "result": {
-          "binding_count": 8,
-          "bindings": [
-            {
-              "binding_id": "modelo-130-resultados-negativos-anteriores",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-pagos-fraccionados-anteriores",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "irpf.previous_year_economic_activity_net_income",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-rendimiento-neto-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            }
-          ],
-          "missing_filter": true,
-          "modelo_filter": "130",
-          "operation": "modelo.bindings.list",
-          "period_filter": "1T",
-          "year_filter": 2026
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t8\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tprior filed declaration\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-taxable-base-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-rendimiento-neto-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tledger data\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tledger data\t-\tdecimal\tFalse\n"
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "bindings",
@@ -684,184 +230,12 @@
         "irpf.previous_year_economic_activity_net_income=0"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.bindings.resolve",
-        "notices": [],
-        "result": {
-          "binding_count": 8,
-          "bindings": [
-            {
-              "binding_id": "modelo-130-resultados-negativos-anteriores",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "override": null,
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-pagos-fraccionados-anteriores",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "override": null,
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "irpf.previous_year_economic_activity_net_income",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "override": "0",
-              "readiness": "prior filed declaration",
-              "relation_inputs": [],
-              "source": "previous_filing",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "override": null,
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "override": null,
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-rendimiento-neto-cumulative",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "override": null,
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95"
-              ],
-              "override": null,
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
-              "encoded_options": [],
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "override": null,
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            }
-          ],
-          "filing_year": 2026,
-          "modelo": "130",
-          "operation": "modelo.bindings.resolve",
-          "override_count": 1,
-          "period": "1T",
-          "revision": "2019-y-siguientes"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tregistry.modelo.bindings.resolve\nmodelo\t130\nrevision\t2019-y-siguientes\nfiling_year\t2026\nperiod\t1T\noverride_count\t1\nbinding_count\t8\nbinding_id\tsource\treadiness\toverride\nmodelo-130-resultados-negativos-anteriores\tprevious_filing\tprior filed declaration\t-\nmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tprior filed declaration\t-\nirpf.previous_year_economic_activity_net_income\tprevious_filing\tprior filed declaration\t0\nmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tledger data\t-\nmodelo-130-actividad-economica-ingresos-taxable-base-cumulative\tledger_renta_income_aggregation\tledger data\t-\nmodelo-130-actividad-economica-rendimiento-neto-cumulative\tledger_renta_income_aggregation\tledger data\t-\nmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tledger data\t-\nmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tledger data\t-\n"
     },
     {
       "argv": [
@@ -1576,6 +950,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "review-values-bindings"
 }
