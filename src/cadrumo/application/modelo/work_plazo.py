@@ -178,7 +178,7 @@ def modelo_work_deadline_posture(
 
     Args:
         work_unit: The :class:`WorkUnit` whose modelo, filing year, and
-            :class:`~cadrumo.core.Period` select a registry filing window.
+            :class:`~cadrumo.core.period.Period` select a registry filing window.
         reference_on: Optional date from which the caller observes the voluntary
             deadline. Defaults to the current Europe/Madrid civil date
             (:func:`cadrumo.core.time.clock.today_madrid`) — the AEAT filing plazo is a

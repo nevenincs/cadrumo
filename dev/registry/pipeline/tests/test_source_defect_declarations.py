@@ -420,8 +420,8 @@ class TestNoteGovernedAmountAdjudication:
         )
         return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
 
-    def test_the_live_catalogue_covers_every_sheet_the_2025_design_points_from(self) -> None:
-        declarations = note_governed_amounts_for("aeat-dr-390-2025")
+    def test_the_live_catalogue_covers_every_sheet_the_note_pointer_design_points_from(self) -> None:
+        declarations = note_governed_amounts_for(_M390_2025_SOURCE_REF)
 
         assert {item.sheet for item in declarations} == {"Pág. 2", "Pág. 2 bis", "Pág. 3", "Pág. 4"}
         for declaration in declarations:

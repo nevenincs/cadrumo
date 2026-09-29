@@ -34,13 +34,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
-from ..errors import AggregationValidationError
-from ..invoice_retencion import (
-    InvoiceRetencionProjectionDefect,
-    merge_manual_and_routed_retencion_observations,
-    project_received_invoice_retencion,
-    route_invoice_retenciones,
-)
+from ..invoice_retencion import InvoiceRetencionProjectionDefect, project_received_invoice_retencion
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -98,6 +92,17 @@ def _invoice(
             "fx_rate_source": None if fx_rate is None else _FX_RATE_SOURCE,
         },
     )
+
+
+def _projected_observations(*invoices: Invoice) -> tuple[RetencionObservation, ...]:
+    """Project each invoice and return the observations, refusing a defective fixture."""
+    observations: list[RetencionObservation] = []
+    for invoice in invoices:
+        projection = project_received_invoice_retencion(invoice, scheme=_PROFESIONAL)
+        assert projection.defects == (), f"the fixture invoice {invoice.invoice_number!r} must route"
+        assert projection.observation is not None
+        observations.append(projection.observation)
+    return tuple(observations)
 
 
 def test_received_invoice_routes_into_the_shared_observation_type() -> None:
@@ -215,19 +220,6 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
     )
 
 
-def test_routing_keeps_the_excluded_invoices_alongside_the_routed_ones() -> None:
-    """An excluded liability is one the taxpayer may still owe; it is not dropped."""
-    routed = _invoice(number="F-PROV-100")
-    issued = _invoice(number="F-CLI-200", kind=InvoiceKind.ISSUED)
-
-    routing = route_invoice_retenciones(((routed, _PROFESIONAL), (issued, _PROFESIONAL)))
-
-    assert len(routing.observations) == 1
-    assert routing.observations[0].source_object_id == routed.invoice_id
-    assert len(routing.excluded) == 1
-    assert routing.excluded[0].invoice_id == issued.invoice_id
-
-
 def test_routed_observations_aggregate_through_the_existing_modelo_111_path() -> None:
     """The projection's output is consumable by the aggregator that already exists.
 
@@ -240,66 +232,14 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
     first = _invoice(number="F-PROV-301")
     second = _invoice(number="F-PROV-302", base="2000.00", retention_amount="300.00")
 
-    routing = route_invoice_retenciones(((first, _PROFESIONAL), (second, _PROFESIONAL)))
     aggregation = aggregate_retenciones_111(
-        routing.observations,
+        _projected_observations(first, second),
         period=Period.from_year_and_code(2026, "1T"),
     )
 
     assert aggregation.total_retencion == Decimal("450.00")
     assert aggregation.total_taxable_base == Decimal("3000.00")
     assert aggregation.total_perceptors == 1
-
-
-def test_merge_unions_manual_and_routed_observations() -> None:
-    """The merge is a plain union when the two sides name disjoint invoices."""
-    manual = (
-        RetencionObservation(
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-            source_object_id="ledger-txn-1",
-            perceptor_nif="12345678Z",
-            perceptor_name="Ledger Perceptor",
-            scheme=_PROFESIONAL,
-            taxable_base=Decimal("500.00"),
-            retencion_amount=Decimal("75.00"),
-            accrued_on="2026-02-01",
-        ),
-    )
-    routing = route_invoice_retenciones(((_invoice(), _PROFESIONAL),))
-
-    merged = merge_manual_and_routed_retencion_observations(manual, routing.observations)
-
-    assert merged == (*manual, *routing.observations)
-
-
-def test_merge_refuses_when_a_manual_row_collides_with_a_routed_invoice() -> None:
-    """A hand-typed observation for the SAME invoice the routing already covers is refused.
-
-    ``persist_retencion_observations`` set-replaces the whole per-perceptor window, so
-    silently picking a winner between the two would either double-count the invoice's
-    retención in the rollup or silently drop whichever side lost. Refusing loudly is the
-    only sound choice when a bound value would otherwise gain two writers.
-    """
-    invoice = _invoice()
-    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
-    assert routing.observations, "the fixture invoice must route for this collision to be meaningful"
-    duplicate_manual = (
-        RetencionObservation(
-            source_kind=BindingSourceKind.PAYABLE_INVOICE,
-            source_object_id=invoice.invoice_id,
-            perceptor_nif="12345678Z",
-            perceptor_name="Hand-typed duplicate",
-            scheme=_PROFESIONAL,
-            taxable_base=Decimal("1000.00"),
-            retencion_amount=Decimal("150.00"),
-            accrued_on="2026-03-15",
-        ),
-    )
-
-    with pytest.raises(AggregationValidationError) as exc_info:
-        merge_manual_and_routed_retencion_observations(duplicate_manual, routing.observations)
-    assert exc_info.value.context is not None
-    assert exc_info.value.context["source_object_ids"] == invoice.invoice_id
 
 
 def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:
@@ -392,9 +332,8 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
     """
     invoice = _invoice(base="1000.00", retention_amount="150.00")
 
-    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
     aggregation = aggregate_retenciones_111(
-        routing.observations,
+        _projected_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
     )
 
@@ -416,9 +355,8 @@ def test_the_filed_base_is_never_the_grand_total() -> None:
     """
     invoice = _invoice(base="1000.00", retention_amount="150.00")
 
-    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
     aggregation = aggregate_retenciones_111(
-        routing.observations,
+        _projected_observations(invoice),
         period=Period.from_year_and_code(2026, "1T"),
     )
 

@@ -12,10 +12,20 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.application.modelo.export_projection import (
+    ModeloExportCompleteness,
+    ModeloExportEvidenceStatus,
+    ModeloExportPublicResultV2,
+)
 from cadrumo.application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
+)
+from cadrumo.application.modelo.operation_definitions import (
+    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    build_modelo_export_definition,
+    build_modelo_export_registration,
 )
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
@@ -28,6 +38,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.entrypoints.tui.modelo import runtime_lifecycle
 from cadrumo.entrypoints.tui.modelo.lifecycle import (
@@ -210,3 +221,105 @@ def test_attestation_terminal_refusal_uses_registered_refusal_code_and_observed_
         "terminal_condition": OperationTerminalCondition.REFUSED.value,
         "effect": OperationEffect.NONE.value,
     }
+
+
+def _unused_export_ports(**_kwargs: object) -> Any:
+    raise AssertionError("the export contract must not construct export ports")
+
+
+@lru_cache(maxsize=1)
+def _export_contract_set():
+    definition = build_modelo_export_definition(
+        export_ports_factory=cast(Any, _unused_export_ports),
+        signing_keypair_capability_factory=cast(Any, _unused_export_ports),
+        calculation_summary_pdf_writer=cast(Any, _unused_export_ports),
+    )
+    registration = build_modelo_export_registration(definition)
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,)).public_contract_set
+
+
+def _settled_export_projection(condition: OperationTerminalCondition) -> OperationPublicProjectionV1:
+    contracts = _export_contract_set()
+    contract = contracts.definitions[0]
+    succeeded = condition is OperationTerminalCondition.SUCCEEDED
+    return OperationPublicProjectionV1(
+        operation_id=_OPERATION_ID,
+        definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
+        subject_ref=_WORK_UNIT_ID,
+        revision=1,
+        anchor_cursor=0,
+        definition_contract=contract,
+        contract_set_digest=contracts.contract_set_digest,
+        lifecycle=OperationLifecycle.TERMINAL,
+        terminal_condition=condition,
+        effect=OperationEffect.UPDATED if succeeded else OperationEffect.NONE,
+        phase_code=None,
+        started_at=_NOW,
+        updated_at=_NOW,
+        progress=None,
+        close_policy=contract.close_policy,
+        cancellation=contract.cancellation,
+        cancellable_now=False,
+        cancellation_requested=False,
+        cancellation_acknowledged=False,
+        execution_deadline_at=None,
+        cleanup_deadline_at=None,
+        pending_interaction=OperationNoPendingInteractionV1(),
+        result_ref="c" * 64 if succeeded else None,
+        refusal_ref=None if succeeded else _REFUSAL_CODE,
+        failure_error_code=None,
+        diagnostic_ref=None,
+    )
+
+
+def _report_result() -> ModeloExportPublicResultV2:
+    return ModeloExportPublicResultV2(
+        calculation_revision_id="d" * 64,
+        artefact=ModeloExportArtefact.CALCULATION_REPORT_CSV,
+        export_format="csv",
+        output_path="C:/exports/report.csv",
+        byte_size=12,
+        file_sha256="e" * 64,
+        software_identity_grade=None,
+        evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
+        completeness=ModeloExportCompleteness.NOT_ASSESSED,
+    )
+
+
+def test_settled_export_result_is_read_through_the_runtime_reader() -> None:
+    expected = _report_result()
+    read: list[OperationPublicProjectionV1] = []
+
+    async def reader(projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+        read.append(projection)
+        return expected
+
+    door = ModeloWorkspaceLifecycleDoor(
+        work_unit_id=_WORK_UNIT_ID,
+        submit_operation=cast(Any, None),
+        read_export_result=reader,
+    )
+    projection = _settled_export_projection(OperationTerminalCondition.SUCCEEDED)
+
+    assert asyncio.run(door.settled_export_result(projection)) == expected
+    assert read == [projection]
+
+
+def test_settled_export_result_is_absent_without_a_readable_success() -> None:
+    async def refusing_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+    async def unreachable_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+        raise AssertionError("a refused export has no result to read")
+
+    succeeded = _settled_export_projection(OperationTerminalCondition.SUCCEEDED)
+    refused = _settled_export_projection(OperationTerminalCondition.REFUSED)
+
+    def door(reader: Any) -> ModeloWorkspaceLifecycleDoor:
+        return ModeloWorkspaceLifecycleDoor(
+            work_unit_id=_WORK_UNIT_ID, submit_operation=cast(Any, None), read_export_result=reader
+        )
+
+    assert asyncio.run(door(refusing_reader).settled_export_result(succeeded)) is None
+    assert asyncio.run(door(unreachable_reader).settled_export_result(refused)) is None
+    assert asyncio.run(door(None).settled_export_result(succeeded)) is None

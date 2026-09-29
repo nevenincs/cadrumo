@@ -366,21 +366,21 @@ def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> De
     the other seven use ``P012`` (decimal) — an AEAT dictionary quirk, not a
     semantic difference in the índice itself. A text-typed casilla's value
     only ever reaches :attr:`EvalContext.text_values`, never
-    :attr:`EvalContext.values` (the numeric map defaults it to zero and never
-    receives the operator's real figure), so reading it through
+    :attr:`EvalContext.values`: the numeric map carries no entry for a text
+    casilla at all, so reading it through
     :func:`~domain.calculations.registry.formula_runtime_ops.numeric_casilla_value`
-    alone would silently and permanently treat índice 4 as never declared.
-    Checking ``text_values`` first — and falling back to the numeric map only
-    when the casilla is genuinely absent from ``text_values`` (true for every
-    ``P012`` índice, which a caller never routes through ``text_inputs``) —
-    lets the same cascade loop handle both declared types without a
-    position-keyed special case. An unparsable or blank text value resolves to
-    zero, the same "índice not applied" signal a blank decimal casilla gives.
+    is refused. A casilla the registry declares as text is therefore read
+    from ``text_values`` whether or not the operator filled it, and the
+    numeric map serves every ``P012`` índice, which a caller never routes
+    through ``text_inputs``; the same cascade loop handles both declared
+    types without a position-keyed special case. An unparsable, blank or
+    absent text value resolves to zero, the same "índice not applied" signal
+    a blank decimal casilla gives.
     """
-    if casilla_id in ctx.text_values:
+    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
         ctx.operand_refs.append(casilla_id)
         ctx.operand_casilla_refs.append(casilla_id)
-        raw_text = ctx.text_values[casilla_id].strip()
+        raw_text = ctx.text_values.get(casilla_id, "").strip()
         try:
             value = Decimal(raw_text) if raw_text else ZERO
         except ArithmeticError:

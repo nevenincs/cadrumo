@@ -4,7 +4,7 @@
 This module does not reimplement any of it: it runs that harness and collects
 what it writes.
 
-Each capture is a fresh process. The harness rebuilds its app from birth on
+Each capture is one fresh process. The harness rebuilds its app from birth on
 every command, so a frame is always a statement about the current tree, and
 a crash in one surface cannot leave residue that colours the next.
 """
@@ -198,14 +198,13 @@ def capture(
 ) -> Capture:
     """Open ``surface`` at ``viewport`` and write its SVG to ``svg_path``.
 
-    Two harness commands, not one: ``open`` starts the session and prints the
-    frame bands this tool carries into the manifest, and ``shot`` exports the
-    same settled frame as SVG.
+    One harness command: ``open --shot`` prints the frame bands this tool
+    carries into the manifest and exports the same settled frame as SVG, so a
+    frame costs one interpreter start and one cold build rather than two.
     """
     svg_path.parent.mkdir(parents=True, exist_ok=True)
-    opening = ("open", surface, "--size", viewport.label, "--theme", theme)
+    opening = ("open", surface, "--size", viewport.label, "--theme", theme, "--shot", str(svg_path))
     frame_text = _run(opening if locale is None else (*opening, "--locale", locale), workspace=workspace)
-    _run(("shot", "--out", str(svg_path)), workspace=workspace)
     if not svg_path.is_file() or svg_path.stat().st_size == 0:
         raise HarnessError(f"the harness wrote no SVG for {surface} at {viewport.label}")
     return Capture(

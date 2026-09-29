@@ -32,7 +32,7 @@ BUNDLED_DATA_TEST_IDS: frozenset[str] = frozenset(
         "dev/registry/tests/test_semantic_role.py"
         "::TestTypoTwinWarning::test_reviewed_singleton_roles_are_marked_in_committed_registry",
         "dev/registry/tests/test_semantic_role.py"
-        "::TestTypoTwinWarning::test_m100_2024_2025_family_profile_roles_are_shared",
+        "::TestTypoTwinWarning::test_m100_family_profile_roles_are_shared_across_editions",
         "dev/registry/tests/test_semantic_role.py::TestTypoTwinWarning::test_reviewed_singleton_markers_do_not_warn",
         "dev/registry/tests/test_semantic_role.py"
         "::TestSignedCuotaResultadoRoles::test_irpf_and_is_signed_result_roles_are_bound_to_committed_casillas",

@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ....core.period import Period
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -26,6 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 3, 12, 0, tzinfo=UTC)
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _tx(
@@ -134,7 +136,7 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
         for label, transaction, expected_reason, present_detail, absent_detail in cases:
             _assert_single_issue(
                 label,
-                _issues_for_transaction(transaction, operation=_authority_operation_for_test),
+                _issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
                 expected_reason,
                 present_detail=present_detail,
                 absent_detail=absent_detail,
@@ -161,7 +163,7 @@ def test_foreign_currency_preflight_separates_converted_and_unconverted_rows() -
         for label, transaction, expected_reason, present_detail in cases:
             _assert_single_issue(
                 label,
-                _issues_for_transaction(transaction, operation=_authority_operation_for_test),
+                _issues_for_transaction(transaction, period=_PERIOD, operation=_authority_operation_for_test),
                 expected_reason,
                 present_detail=present_detail,
             )

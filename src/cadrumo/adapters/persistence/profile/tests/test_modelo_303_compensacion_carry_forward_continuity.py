@@ -59,6 +59,7 @@ from cadrumo.application.calculations.observations_repository import ResultDispo
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 
 from .....application.calculations.observations_repository import observation_key
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -94,11 +95,14 @@ _YEAR_N_PLUS_1 = 2026
 # source 2T is governed by ``aeat-dr-303-2024-early`` and the target 3T by
 # ``aeat-dr-303-2024-late``; both are the accepted official M303 sources for
 # their respective registry revisions.
-_YEAR_2024 = 2024
-_EARLY_2024_PERIOD = "2T"
-_LATE_2024_PERIOD = "3T"
-_EARLY_2024_REVISION = "2024-hasta-08-y-2t"
-_LATE_2024_REVISION = "2024-desde-09-y-3t"
+# The one exercise the registry authors as two Modelo 303 designs, split at 09/3T
+# into an early and a late revision.
+_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303")
+_SPLIT_DESIGN_EXERCISE = _EARLY_DESIGN.valid_from.year
+_EARLY_DESIGN_PERIOD = "2T"
+_LATE_DESIGN_PERIOD = "3T"
+_EARLY_DESIGN_REVISION = str(_EARLY_DESIGN.id)
+_LATE_DESIGN_REVISION = str(_LATE_DESIGN.id)
 
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.
@@ -277,15 +281,15 @@ _YEAR_N_PLUS_1_1T_INPUTS = {
 # supplies the 2T form context. These independently grounded inputs make the
 # expected source settlement and available carry 42.00: 63.00 deductible VAT
 # minus 21.00 accrued VAT, rather than an amount echoed back from the engine.
-_YEAR_2024_2T_CREDIT_INPUTS = {
+_EARLY_DESIGN_CREDIT_INPUTS = {
     "modelo-303-iva-repercutido-general-cuota": Decimal("21.00"),
     "modelo-303-iva-soportado-interiores-cuota": Decimal("63.00"),
 }
-_YEAR_2024_CARRY = Decimal("42.00")
+_EARLY_DESIGN_CARRY = Decimal("42.00")
 
 
-def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: Path) -> None:
-    """A real 2T/2024 credit reaches 3T's carried-carry casilla and binding.
+def test_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: Path) -> None:
+    """A real 2T credit of the split-design exercise reaches 3T's carried-carry casilla and binding.
 
     LIVA art. 99 makes the 2T surplus available for the following settlement.
     The two source values are independently grounded form inputs: 63.00
@@ -299,23 +303,23 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
         observation_repository = CalculationObservationRepository()
         source_snapshot = published_authority_operation().snapshot(
             _MODELO,
-            filing_year=_YEAR_2024,
-            period=_EARLY_2024_PERIOD,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_EARLY_DESIGN_PERIOD,
         )
-        assert source_snapshot.revision.id == _EARLY_2024_REVISION
+        assert source_snapshot.revision.id == _EARLY_DESIGN_REVISION
         source_result, _ = _calculate_303(
-            filing_year=_YEAR_2024,
-            period=_EARLY_2024_PERIOD,
-            cuota_binding_overrides=_YEAR_2024_2T_CREDIT_INPUTS,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_EARLY_DESIGN_PERIOD,
+            cuota_binding_overrides=_EARLY_DESIGN_CREDIT_INPUTS,
             relation_values={},
         )
-        assert source_result.values[_M303_RESULTADO_CASILLA] == -_YEAR_2024_CARRY
-        assert source_result.values[_M303_SALDO_COMPENSACION_CASILLA] == _YEAR_2024_CARRY
+        assert source_result.values[_M303_RESULTADO_CASILLA] == -_EARLY_DESIGN_CARRY
+        assert source_result.values[_M303_SALDO_COMPENSACION_CASILLA] == _EARLY_DESIGN_CARRY
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
                 _registry_observation(
-                    filing_year=_YEAR_2024,
-                    period=_EARLY_2024_PERIOD,
+                    filing_year=_SPLIT_DESIGN_EXERCISE,
+                    period=_EARLY_DESIGN_PERIOD,
                     result=source_result,
                 ),
                 source_kind="app_filing",
@@ -331,27 +335,27 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
         target_snapshot = published_authority_operation().snapshot(
             _MODELO,
-            filing_year=_YEAR_2024,
-            period=_LATE_2024_PERIOD,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_LATE_DESIGN_PERIOD,
         )
-        assert target_snapshot.revision.id == _LATE_2024_REVISION
+        assert target_snapshot.revision.id == _LATE_DESIGN_REVISION
         resolved = _resolve_carry_from_local_store(
             target_snapshot,
             repository=observation_repository,
             operation=_authority_operation_for_test,
         )
         target_result, _ = _calculate_303(
-            filing_year=_YEAR_2024,
-            period=_LATE_2024_PERIOD,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_LATE_DESIGN_PERIOD,
             cuota_binding_overrides=resolved,
             relation_values={},
         )
 
-    assert resolved.get(_CARRY_BINDING) == _YEAR_2024_CARRY
-    assert target_result.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == _YEAR_2024_CARRY
+    assert resolved.get(_CARRY_BINDING) == _EARLY_DESIGN_CARRY
+    assert target_result.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == _EARLY_DESIGN_CARRY
 
 
-def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
+def test_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
     """A persisted 2T observation cannot carry when its design stamp is wrong."""
     with (
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
@@ -359,16 +363,16 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
     ):
         observation_repository = CalculationObservationRepository()
         source_result, _ = _calculate_303(
-            filing_year=_YEAR_2024,
-            period=_EARLY_2024_PERIOD,
-            cuota_binding_overrides=_YEAR_2024_2T_CREDIT_INPUTS,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_EARLY_DESIGN_PERIOD,
+            cuota_binding_overrides=_EARLY_DESIGN_CREDIT_INPUTS,
             relation_values={},
         )
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
                 _registry_observation(
-                    filing_year=_YEAR_2024,
-                    period=_EARLY_2024_PERIOD,
+                    filing_year=_SPLIT_DESIGN_EXERCISE,
+                    period=_EARLY_DESIGN_PERIOD,
                     result=source_result,
                 ),
                 source_kind="app_filing",
@@ -378,7 +382,7 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
                     provenance_locator="test-local-filing:compensacion-carry",
                 ),
                 captured_at=_CLOCK,
-                stamped_revision_id=_EARLY_2024_REVISION,
+                stamped_revision_id=_EARLY_DESIGN_REVISION,
             )
         )
         statement = select(SecureObjectRow).where(
@@ -386,14 +390,14 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
             SecureObjectRow.object_key
             == observation_key(
                 _MODELO,
-                Period.from_year_and_code(_YEAR_2024, _EARLY_2024_PERIOD),
+                Period.from_year_and_code(_SPLIT_DESIGN_EXERCISE, _EARLY_DESIGN_PERIOD),
             ),
         )
 
         def mutate(envelope) -> None:
             # Mutation bite: 2T must be stamped with the early, not 3T,
             # design. The real carry gate drops this persisted source.
-            _stored_layer(envelope)["stamped_revision_id"] = _LATE_2024_REVISION
+            _stored_layer(envelope)["stamped_revision_id"] = _LATE_DESIGN_REVISION
 
         mutate_encrypted_secure_object_json(
             get_engine(profile.settings),
@@ -402,8 +406,8 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
         )
         target_snapshot = published_authority_operation().snapshot(
             _MODELO,
-            filing_year=_YEAR_2024,
-            period=_LATE_2024_PERIOD,
+            filing_year=_SPLIT_DESIGN_EXERCISE,
+            period=_LATE_DESIGN_PERIOD,
         )
         resolved = _resolve_carry_from_local_store(
             target_snapshot,

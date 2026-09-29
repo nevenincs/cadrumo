@@ -344,7 +344,7 @@ modelo:
             help: Casella 39 de la liquidació del pagament fraccionat del grup fiscal
               (Mod. 40.3 LIS).
             label: Modalitat art. 40.3 LIS - TOTAL - Disminucions
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra / art.
               40.3 base imposable)
       construct:

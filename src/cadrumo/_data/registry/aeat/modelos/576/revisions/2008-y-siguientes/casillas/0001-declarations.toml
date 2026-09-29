@@ -15,7 +15,10 @@ continuidad_evidence = "discriminador de fichero I (Ingreso) o N (Negativa), cam
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
-semantic_role = "tipo_declaracion"
+# "I" (Ingreso) or "N" (Negativa): the clave of the autoliquidacion's result,
+# not the kind of declaration in its period's chain, so the filing-context
+# projection of that kind never lands here.
+semantic_role = "tipo_declaracion_resultado"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]

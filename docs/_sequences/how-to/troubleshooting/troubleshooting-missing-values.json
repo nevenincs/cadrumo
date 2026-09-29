@@ -23,7 +23,7 @@
         "command": "modelo.bindings.list",
         "notices": [],
         "result": {
-          "binding_count": 34,
+          "binding_count": 51,
           "bindings": [
             {
               "binding_id": "modelo-303-iva-repercutido-general-cuota",
@@ -447,6 +447,156 @@
               "typed_enum": null
             },
             {
+              "binding_id": "modelo-303-iva-soportado-interiores-bienes-inversion-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-interiores-bienes-inversion-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-importaciones-bienes-inversion-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-importaciones-bienes-inversion-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
               "binding_id": "modelo-303-compensacion-pendiente-anteriores",
               "borrador_capable": false,
               "encoded_options": [],
@@ -685,6 +835,293 @@
               "source": "ledger_iva_aggregation",
               "source_refs": [
                 "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-interior-deducible-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-108",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-importaciones-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-17",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-interiores-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-interiores-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-importaciones-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-importaciones-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-80",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-99",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2022",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],

@@ -13,6 +13,7 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -24,6 +25,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.deadlines.models import TaxpayerProfile
@@ -54,7 +56,12 @@ from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_CLOCK = datetime(2026, 6, 27, 12, 45, tzinfo=UTC)
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest Modelo 100 editions the registry authors; both accept the payee
+# salary certificate as the 0596 retenciones source.
+_SALARY_CERTIFICATE_EDITIONS = newest_authored_editions("100", 2)
+
+_CLOCK = datetime(_SUPPORT.horizon, 6, 27, 12, 45, tzinfo=UTC)
 _BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
@@ -161,6 +168,24 @@ def test_revision_replay_inputs_include_calculated_informational_casillas() -> N
     work_unit = _work_unit(modelo="390", filing_year=2025, period_code="0A")
     revision = _revision(
         work_unit,
+        casilla_values={_M390_EJERCICIO_CASILLA: Decimal("2025")},
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M390_EJERCICIO_CASILLA] == "2025"
+
+
+def test_revision_replay_never_turns_a_text_casilla_placeholder_into_zero_text() -> None:
+    """A stored numeric placeholder for a text casilla replays as absent, not as ``"0"``.
+
+    Revisions calculated before text absence was typed carry a structural zero for
+    every text casilla the operator left empty. Stringifying it would hand the
+    filing renderer a ``"0"`` for a text field such as the declaration type.
+    """
+    work_unit = _work_unit(modelo="390", filing_year=2025, period_code="0A")
+    revision = _revision(
+        work_unit,
         casilla_values={
             _M390_EJERCICIO_CASILLA: Decimal("2025"),
             _M390_TIPO_DECLARACION_CASILLA: Decimal("0"),
@@ -170,7 +195,7 @@ def test_revision_replay_inputs_include_calculated_informational_casillas() -> N
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
     assert replay_inputs[_M390_EJERCICIO_CASILLA] == "2025"
-    assert replay_inputs[_M390_TIPO_DECLARACION_CASILLA] == "0"
+    assert _M390_TIPO_DECLARACION_CASILLA not in replay_inputs
 
 
 def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None:
@@ -233,8 +258,9 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
 
 
-def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024_0596() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+@pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
+def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_0596(filing_year: int) -> None:
+    work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
         input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
@@ -248,8 +274,9 @@ def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
-def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_values() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+@pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
+def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(filing_year: int) -> None:
+    work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -397,9 +424,11 @@ def _replayed_annual_draft(
     scalar_bindings: dict[str, Decimal],
     row_binding_values: dict[str, dict[str, str]],
     expected_values: dict[CasillaId, Decimal],
+    filing_year: int = 2025,
+    text_inputs: dict[CasillaId, str] | None = None,
 ):
     """Rehydrate one calculated annual revision through the public draft path."""
-    work_unit = _work_unit(modelo=modelo, filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo=modelo, filing_year=filing_year, period_code="0A")
     provider = build_runtime_schema_provider(
         modelos=(modelo,),
         filing_year=work_unit.filing_year,
@@ -413,7 +442,8 @@ def _replayed_annual_draft(
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={
-            casilla_id: canonical_decimal_string(value) for casilla_id, value in resolved_bound_inputs.items()
+            **{casilla_id: canonical_decimal_string(value) for casilla_id, value in resolved_bound_inputs.items()},
+            **(text_inputs or {}),
         },
         binding_overrides={
             binding_id: canonical_decimal_string(value) for binding_id, value in scalar_bindings.items()
@@ -532,6 +562,118 @@ def test_persisted_m190_row_bindings_export_optional_blank_rows_with_control_tot
     assert _parsed_field_values(parsed, "modelo-190-decl-total-percepciones") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-190-decl-percepciones-total") == (Decimal("600.00"),)
     assert _parsed_field_values(parsed, "modelo-190-decl-retenciones-total") == (Decimal("110.00"),)
+
+
+_M190_2022_TEXT_CONTACT_FIELDS: dict[str, CasillaId] = {
+    "modelo-190-decl-persona-contacto-telefono": validated_casilla_id("decl.persona-contacto-telefono"),
+    "modelo-190-decl-persona-contacto-nombre": validated_casilla_id("decl.persona-contacto-nombre"),
+    "modelo-190-decl-correo-electronico": validated_casilla_id("decl.correo-electronico"),
+    "modelo-190-decl-numero-identificativo": validated_casilla_id("decl.numero-identificativo"),
+    "modelo-190-decl-numero-identificativo-anterior": validated_casilla_id("decl.numero-identificativo-anterior"),
+}
+
+
+def _m190_2022_draft(*, text_inputs: dict[CasillaId, str] | None = None):
+    """Replay one calculated Modelo 190 2022 revision with a single perceptor."""
+    return _replayed_annual_draft(
+        modelo="190",
+        filing_year=2022,
+        scalar_bindings={
+            "modelo-190-percepciones-anual": Decimal("1"),
+            "modelo-190-perceptor-rows-percepcion-dineraria-total": Decimal("600"),
+            "modelo-190-perceptor-rows-percepcion-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-dineraria-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-especie-total": Decimal("0"),
+            "modelo-190-perceptor-rows-retencion-practicada-total": Decimal("110"),
+            "modelo-190-perceptor-rows-ingreso-a-cuenta-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-retencion-total": Decimal("0"),
+            "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
+        },
+        row_binding_values={
+            "modelo-190-perceptor-row-nif": {"1": "B12345674"},
+            "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL"},
+            "modelo-190-perceptor-row-provincia": {"1": "28"},
+            "modelo-190-perceptor-row-clave": {"1": "G"},
+            "modelo-190-perceptor-row-subclave": {"1": "01"},
+            "modelo-190-perceptor-row-percibido-dinerario": {"1": "600"},
+            "modelo-190-perceptor-row-percibido-especie": {"1": "0"},
+            "modelo-190-perceptor-row-retencion-practicada": {"1": "110"},
+            "modelo-190-perceptor-row-ingreso-a-cuenta": {"1": "0"},
+            "modelo-190-perceptor-row-territorial-deduccion": {"1": "0"},
+        },
+        expected_values={
+            validated_casilla_id("decl.total-percepciones"): Decimal("1"),
+            validated_casilla_id("decl.percepciones-total"): Decimal("600"),
+            validated_casilla_id("decl.retenciones-total"): Decimal("110"),
+        },
+        text_inputs=text_inputs,
+    )
+
+
+def _parsed_declarante_fields(parsed) -> dict[str, tuple[str, object]]:
+    return {
+        field.field_id: (field.raw, field.value)
+        for field in parsed.fields
+        if field.field_id in _M190_2022_TEXT_CONTACT_FIELDS
+    }
+
+
+def test_absent_m190_2022_text_contact_fields_stay_absent_and_blank_fill_the_record(tmp_path: Path) -> None:
+    """Empty contact and identity slots carry the design's own fill and read back as absent.
+
+    Before text absence was typed, these casillas calculated as a numeric zero and
+    the canonical parser read the zero-filled identifier slots back as the text
+    ``"0"``. The record design lets a filer leave all five empty.
+    """
+    draft, provider = _m190_2022_draft()
+    output_path = tmp_path / "modelo-190-2022.txt"
+
+    export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=_annual_export_snapshot("190"),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview("190").export_layouts[0]
+    fields = {field.id: field for record in layout.records for field in record.fields}
+    parsed = _parsed_declarante_fields(
+        parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources),
+    )
+
+    draft_values = {value.casilla_id: value for value in draft.values}
+    for field_id, casilla_id in _M190_2022_TEXT_CONTACT_FIELDS.items():
+        assert draft_values[casilla_id].value is None
+        assert fields[field_id].required is False
+        raw, value = parsed[field_id]
+        fill = "0" if fields[field_id].padding == "left_zero" else " "
+        assert raw == fill * len(raw), f"{field_id} carried {raw!r} instead of its declared fill"
+        assert value is None, f"{field_id} read back {value!r} for a slot the filer left empty"
+    assert not any(finding.casilla_id in _M190_2022_TEXT_CONTACT_FIELDS.values() for finding in draft.findings)
+
+
+def test_populated_m190_2022_text_contact_fields_round_trip_through_the_fichero(tmp_path: Path) -> None:
+    supplied = {
+        validated_casilla_id("decl.persona-contacto-telefono"): "600123456",
+        validated_casilla_id("decl.persona-contacto-nombre"): "PERSONA DE CONTACTO",
+        validated_casilla_id("decl.correo-electronico"): "contacto@example.org",
+        validated_casilla_id("decl.numero-identificativo"): "1901234567890",
+        validated_casilla_id("decl.numero-identificativo-anterior"): "1909876543210",
+    }
+    draft, provider = _m190_2022_draft(text_inputs=supplied)
+    output_path = tmp_path / "modelo-190-2022-contact.txt"
+
+    export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=_annual_export_snapshot("190"),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview("190").export_layouts[0]
+    parsed = _parsed_declarante_fields(
+        parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources),
+    )
+
+    assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == supplied
 
 
 def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(tmp_path: Path) -> None:

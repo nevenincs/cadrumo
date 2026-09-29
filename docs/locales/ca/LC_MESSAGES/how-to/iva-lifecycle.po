@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-28 08:27+0000\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -41,18 +41,19 @@ msgstr ""
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
-"Tributaria (AEAT). Modelo 303 export currently refuses without reviewed "
-"product/software identity authority, so you enter the calculated box "
-"values through the portal."
+"Tributaria (AEAT). Modelo 303 export writes a file whose envelope carries"
+" Cadrumo's all-zero development software identity, which AEAT does not "
+"accept, so you enter the calculated box values through the portal."
 msgstr ""
 "Cadrumo (l'ordre `aeat`) prepara fitxers locals per als formularis "
 "tributaris espanyols. No els presenta davant de l'Agència Estatal "
-"d'Administració Tributària (AEAT). Actualment l'exportació del Model 303 "
-"es nega sense una autoritat revisada d'identitat de producte/programari, "
-"de manera que introdueixes els valors calculats de les caselles a través "
-"del portal."
+"d'Administració Tributària (AEAT). L'exportació del Model 303 escriu un "
+"fitxer el sobre del qual porta la identitat de programari de "
+"desenvolupament de Cadrumo, formada només per zeros, que l'AEAT no "
+"accepta, de manera que introdueixes els valors calculats de les caselles "
+"a través del portal."
 
-#: ../../how-to/iva-lifecycle.md:14
+#: ../../how-to/iva-lifecycle.md:15
 msgid ""
 "The persona and the ledger continue from the income-tax run-through: Ana "
 "García López, consultant, activity started January 1, 2026. The same sale"
@@ -70,7 +71,7 @@ msgstr ""
 "angles fiscals. Si no has executat les ordres `profile create` i `ledger "
 "add` de l'etapa 1 i l'etapa 2 d'aquell recorregut, executa-les primer."
 
-#: ../../how-to/iva-lifecycle.md:21
+#: ../../how-to/iva-lifecycle.md:22
 msgid ""
 "The CLI prints help, labels, and messages in Spanish. This page keeps the"
 " explanations in English."
@@ -78,11 +79,11 @@ msgstr ""
 "La CLI imprimeix l'ajuda, les etiquetes i els missatges en castellà. "
 "Aquesta pàgina manté les explicacions en català."
 
-#: ../../how-to/iva-lifecycle.md:24
+#: ../../how-to/iva-lifecycle.md:25
 msgid "Prerequisites"
 msgstr "Requisits previs"
 
-#: ../../how-to/iva-lifecycle.md:26
+#: ../../how-to/iva-lifecycle.md:27
 msgid ""
 "A working `aeat` command, a master-key passphrase (the tool prompts for "
 "it), and the profile and first-quarter ledger rows from [the income-tax "
@@ -97,11 +98,11 @@ msgstr ""
 "<name>`. [Configura el teu perfil de contribuent](profile-setup.md) te hi"
 " guia."
 
-#: ../../how-to/iva-lifecycle.md:33
+#: ../../how-to/iva-lifecycle.md:34
 msgid "Confirm the IVA obligations:"
 msgstr "Confirma les obligacions d'IVA:"
 
-#: ../../how-to/iva-lifecycle.md:39
+#: ../../how-to/iva-lifecycle.md:40
 msgid ""
 "Ordinary non-exempt profiles file Modelo 303 quarterly; monthly IVA-"
 "liquidation profiles such as REDEME file monthly. Ana is quarterly."
@@ -110,11 +111,11 @@ msgstr ""
 "els perfils de liquidació mensual d'IVA com ara REDEME presenten "
 "mensualment. L'Ana és trimestral."
 
-#: ../../how-to/iva-lifecycle.md:42
+#: ../../how-to/iva-lifecycle.md:43
 msgid "Stage 1: the opening IVA credit balance"
 msgstr "Etapa 1: el saldo de crèdit d'IVA inicial"
 
-#: ../../how-to/iva-lifecycle.md:44
+#: ../../how-to/iva-lifecycle.md:45
 msgid ""
 "Modelo 303 keeps a running memory between periods: when a quarter leaves "
 "you with more IVA paid than collected, the difference is a credit "
@@ -130,13 +131,13 @@ msgstr ""
 "teu historial del Model 303, i el primer cop que utilitzes l'eina, aquest"
 " historial és buit, de manera que declares el saldo inicial una vegada."
 
-#: ../../how-to/iva-lifecycle.md:50
+#: ../../how-to/iva-lifecycle.md:51
 msgid "Ana started her activity this year, so her true opening balance is zero:"
 msgstr ""
 "L'Ana va iniciar la seva activitat aquest any, de manera que el seu saldo"
 " inicial real és zero:"
 
-#: ../../how-to/iva-lifecycle.md:56
+#: ../../how-to/iva-lifecycle.md:57
 msgid ""
 "If you migrate to the tool mid-history, seed the credit you were actually"
 " carrying instead of zero. Check the wallet at any time with `aeat app "
@@ -146,7 +147,7 @@ msgstr ""
 "portaves en lloc de zero. Comprova la cartera en qualsevol moment amb "
 "`aeat app modelo iva-wallet balance --as-of-year 2026`."
 
-#: ../../how-to/iva-lifecycle.md:60
+#: ../../how-to/iva-lifecycle.md:61
 msgid ""
 "Mistakes have a correction path (`aeat app modelo iva-wallet correct`, "
 "with `--reason` and `--confirm`) - but one guard is absolute: a seeded "
@@ -163,24 +164,24 @@ msgstr ""
 "topes, la xifra queda bloquejada exactament quan voldries que quedés "
 "bloquejada."
 
-#: ../../how-to/iva-lifecycle.md:67
+#: ../../how-to/iva-lifecycle.md:68
 msgid "Stage 2: the first quarterly return"
 msgstr "Etapa 2: la primera declaració trimestral"
 
-#: ../../how-to/iva-lifecycle.md:69
+#: ../../how-to/iva-lifecycle.md:70
 msgid ""
 "The first quarter's rows are already recorded and classified with their "
 "IVA detail (the sequence seeds them). Create, calculate, verify and file "
-"Modelo 303 for the quarter; the export step refuses because the envelope "
-"lacks reviewed product/software identity authority:"
+"Modelo 303 for the quarter; the export step writes the file with the all-"
+"zero development software identity:"
 msgstr ""
 "Les files del primer trimestre ja estan registrades i classificades amb "
 "el detall d'IVA (la seqüència les inicialitza). Crea, calcula, verifica i"
-" presenta el Model 303 del trimestre; el pas d'exportació es nega perquè "
-"al sobre li manca una autoritat revisada d'identitat de "
-"producte/programari:"
+" presenta el Model 303 del trimestre; el pas d'exportació escriu el "
+"fitxer amb la identitat de programari de desenvolupament formada només "
+"per zeros:"
 
-#: ../../how-to/iva-lifecycle.md:78
+#: ../../how-to/iva-lifecycle.md:79
 msgid ""
 "Calculation routes the classified rows into the IVA boxes: the sale's 210"
 " of IVA charged (repercutido), the purchase's 105 of deductible IVA paid "
@@ -194,7 +195,7 @@ msgstr ""
 "anterior. Amb les files de l'Ana, el trimestre acaba amb IVA a pagar: el "
 "repercutit supera el suportat."
 
-#: ../../how-to/iva-lifecycle.md:83
+#: ../../how-to/iva-lifecycle.md:84
 msgid ""
 "Upload the file at the portal, then record the filing with `aeat app "
 "modelo work file` and pull the justificante with `aeat app modelo "
@@ -206,7 +207,7 @@ msgstr ""
 "reconcile pull` (tots dos mostrats a la seqüència anterior): el mateix "
 "ritme de tancament que cada presentació d'aquests recorreguts."
 
-#: ../../how-to/iva-lifecycle.md:88
+#: ../../how-to/iva-lifecycle.md:89
 msgid ""
 "The per-box detail of this workflow is [Prepare a Modelo 303 IVA "
 "filing](modelo-303.md)."
@@ -214,11 +215,11 @@ msgstr ""
 "El detall casella per casella d'aquest flux de treball és [Prepara una "
 "presentació del Model 303 d'IVA](modelo-303.md)."
 
-#: ../../how-to/iva-lifecycle.md:91
+#: ../../how-to/iva-lifecycle.md:92
 msgid "Stage 3: a credit quarter, and the carry"
 msgstr "Etapa 3: un trimestre de crèdit, i el trasllat"
 
-#: ../../how-to/iva-lifecycle.md:93
+#: ../../how-to/iva-lifecycle.md:94
 msgid ""
 "Suppose the second quarter goes the other way: Ana buys a laptop and "
 "other equipment, and her deductible IVA exceeds what she charged. When "
@@ -236,7 +237,7 @@ msgstr ""
 "proves congelat de la documentació no pot reproduir, de manera que la "
 "cadena es mostra com a marcs de visualització:"
 
-#: ../../how-to/iva-lifecycle.md:99
+#: ../../how-to/iva-lifecycle.md:100
 msgid ""
 "Record the equipment purchase, then run the same chain as the first "
 "quarter:"
@@ -244,7 +245,7 @@ msgstr ""
 "Registra la compra de l'equip i executa després la mateixa cadena que al "
 "primer trimestre:"
 
-#: ../../how-to/iva-lifecycle.md:105
+#: ../../how-to/iva-lifecycle.md:106
 msgid ""
 "The commands from `work calculate` onwards each read the filed first "
 "quarter the credit carries from, so they are shown as display frames. "
@@ -260,7 +261,7 @@ msgstr ""
 "no es pot presentar fins que cada fila deduïble tingui la seva factura. "
 "[Adjunta factures i rebuts](ledger-evidence.md) ho explica pas a pas."
 
-#: ../../how-to/iva-lifecycle.md:111
+#: ../../how-to/iva-lifecycle.md:112
 msgid ""
 "In the third quarter the carry shows itself: the same chain with `3T` "
 "brings the prior-compensation box from the wallet, so the second "
@@ -273,7 +274,7 @@ msgstr ""
 "mou el saldo al llarg de l'any amb l'ordre de saldo de la cartera que es "
 "mostra executant-se a l'etapa 1 anterior."
 
-#: ../../how-to/iva-lifecycle.md:116
+#: ../../how-to/iva-lifecycle.md:117
 msgid ""
 "The balance reports the total, active, and expired credit and the lots it"
 " is made of. Credit expires after the legal window, so the wallet also "
@@ -283,11 +284,11 @@ msgstr ""
 "compon. El crèdit caduca després de la finestra legal, de manera que la "
 "cartera també anomena el proper any de caducitat."
 
-#: ../../how-to/iva-lifecycle.md:120
+#: ../../how-to/iva-lifecycle.md:121
 msgid "Stage 4 (optional): intra-community operations and Modelo 349"
 msgstr "Etapa 4 (opcional): operacions intracomunitàries i Model 349"
 
-#: ../../how-to/iva-lifecycle.md:122
+#: ../../how-to/iva-lifecycle.md:123
 msgid ""
 "Skip this stage unless you invoice clients or buy from suppliers in other"
 " EU member states."
@@ -295,7 +296,7 @@ msgstr ""
 "Omet aquesta etapa tret que factures clients o compres a proveïdors "
 "d'altres estats membres de la UE."
 
-#: ../../how-to/iva-lifecycle.md:125
+#: ../../how-to/iva-lifecycle.md:126
 msgid ""
 "If Ana takes an EU client, the operations must also appear on the "
 "recapitulative Modelo 349 - a listing, per EU operator, of the period's "
@@ -312,7 +313,7 @@ msgstr ""
 "registre VIES. Aquesta comprovació és una lectura en directe de l'AEAT, "
 "de manera que es mostra com a marc de visualització:"
 
-#: ../../how-to/iva-lifecycle.md:135
+#: ../../how-to/iva-lifecycle.md:136
 msgid ""
 "The full workflow - invoice records, the operation keys, rectifications "
 "of earlier periods - is [Prepare a Modelo 349 recapitulative "
@@ -326,11 +327,11 @@ msgstr ""
 "també alimenten les caselles intracomunitàries del 303; mantén-los "
 "coherents corregint els registres subjacents, mai les declaracions."
 
-#: ../../how-to/iva-lifecycle.md:141
+#: ../../how-to/iva-lifecycle.md:142
 msgid "Stage 5: the fourth quarter and the annual summary"
 msgstr "Etapa 5: el quart trimestre i el resum anual"
 
-#: ../../how-to/iva-lifecycle.md:143
+#: ../../how-to/iva-lifecycle.md:144
 msgid ""
 "Close the fourth quarter with the same `4T` chain in January. Then "
 "prepare the annual Modelo 390 summary, annual token `0A`, same year. "
@@ -352,13 +353,13 @@ msgstr ""
 "regla de reconciliació: un total anual que no concordi amb la suma dels "
 "trimestres és una troballa bloquejadora, no un avís."
 
-#: ../../how-to/iva-lifecycle.md:152
+#: ../../how-to/iva-lifecycle.md:153
 msgid "Open the annual summary, then run the same chain as a quarter:"
 msgstr ""
 "Obre el resum anual i executa després la mateixa cadena que per a un "
 "trimestre:"
 
-#: ../../how-to/iva-lifecycle.md:158
+#: ../../how-to/iva-lifecycle.md:159
 msgid ""
 "The commands from `work calculate` onwards each resolve all four filed "
 "quarters, so they are shown as display frames until every quarter of the "
@@ -368,7 +369,7 @@ msgstr ""
 "trimestres presentats, per això es mostren com a quadres de presentació "
 "fins que s'hagi presentat cada trimestre de l'any."
 
-#: ../../how-to/iva-lifecycle.md:161
+#: ../../how-to/iva-lifecycle.md:162
 msgid ""
 "The per-box detail is [Prepare the annual Modelo 390 "
 "summary](modelo-390.md)."
@@ -376,11 +377,11 @@ msgstr ""
 "El detall casella per casella és [Prepara el resum anual del Model "
 "390](modelo-390.md)."
 
-#: ../../how-to/iva-lifecycle.md:164
+#: ../../how-to/iva-lifecycle.md:165
 msgid "What you completed"
 msgstr "Què has completat"
 
-#: ../../how-to/iva-lifecycle.md:166
+#: ../../how-to/iva-lifecycle.md:167
 msgid ""
 "You carried the same taxpayer through a full IVA year: an opening wallet "
 "balance declared once, a paying quarter, a credit quarter whose "
@@ -394,29 +395,29 @@ msgstr ""
 "declaració següent, una branca recapitulativa opcional, i un resum anual "
 "que va reconciliar amb els quatre trimestres del teu propi registre."
 
-#: ../../how-to/iva-lifecycle.md:171
+#: ../../how-to/iva-lifecycle.md:172
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/iva-lifecycle.md:173
+#: ../../how-to/iva-lifecycle.md:174
 msgid "[The income-tax year](irpf-lifecycle.md) - the same persona through IRPF."
 msgstr ""
 "[L'any de l'impost sobre la renda](irpf-lifecycle.md): la mateixa persona"
 " a través de l'IRPF."
 
-#: ../../how-to/iva-lifecycle.md:174
+#: ../../how-to/iva-lifecycle.md:175
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentació del Model 303 d'IVA](modelo-303.md)"
 
-#: ../../how-to/iva-lifecycle.md:175
+#: ../../how-to/iva-lifecycle.md:176
 msgid "[Prepare the annual Modelo 390 summary](modelo-390.md)"
 msgstr "[Prepara el resum anual del Model 390](modelo-390.md)"
 
-#: ../../how-to/iva-lifecycle.md:176
+#: ../../how-to/iva-lifecycle.md:177
 msgid "[Prepare a Modelo 349 recapitulative declaration](modelo-349.md)"
 msgstr "[Prepara una declaració recapitulativa del Model 349](modelo-349.md)"
 
-#: ../../how-to/iva-lifecycle.md:177
+#: ../../how-to/iva-lifecycle.md:178
 msgid ""
 "[Deduct input IVA under prorrata](prorrata.md) - when your activity mixes"
 " IVA-taxed and exempt operations."

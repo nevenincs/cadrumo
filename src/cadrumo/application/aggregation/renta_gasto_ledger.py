@@ -137,6 +137,16 @@ class RentaGastoObservation(BaseModel):
     target_casilla_id: CasillaId
     deductible_amount: Decimal = Field(ge=Decimal("0"))
     filing_date: date
+    category_id: str | None = Field(default=None, min_length=1, max_length=128)
+    """The row's ledger spending category, or ``None`` when it declares none.
+
+    Every quarterly gasto lands on one target casilla, so the category cannot be
+    read back from :attr:`target_casilla_id` the way the annual first-slice
+    observation allows. It is carried here because a consumer still has to tell
+    an amortization-labelled row from an ordinary one -- the activity-asset
+    register's collision test is exactly that question -- and a row marked
+    business by classification alone legitimately carries no category.
+    """
 
 
 class RentaGastoLedgerAggregation(
@@ -366,6 +376,7 @@ def _classify_gasto_transaction(
         target_casilla_id=target_casilla_id,
         deductible_amount=deductible_amount,
         filing_date=filing_date,
+        category_id=transaction.category_id or None,
     )
 
 

@@ -1,8 +1,8 @@
 """A Modelo 193 settled prior-accrual row is refused at local filing and reported at verification.
 
-A key B coupon exigible in 2025 and collected in January 2026 is a pending row
-of the 2025 Modelo 193 and a settled prior-accrual row of the 2026 one. Local
-filing refuses the 2026 revision with the export gate's typed reason, and
+A key B coupon exigible in the last closed exercise and collected the next January
+is a pending row of that exercise's Modelo 193 and a settled prior-accrual row of
+the next one. Local filing refuses the collection-year revision with the export gate's typed reason, and
 verification reports the same detection as a non-blocking finding. The
 revision persists the contributor's accrual year, so the gates tell a settled
 row from a pending one exactly; a revision persisted without it falls back to
@@ -26,12 +26,15 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_YEAR,
+    MANUAL_HOLDER_NIF,
     capital_payment,
     capital_pending_payment,
     capital_request,
+    manual_capital_row,
+    seed_manual_percepcion_window,
     withholding_producer,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -40,10 +43,6 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
@@ -97,9 +96,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000193"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+_T0 = datetime(CAPITAL_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
 _FILE_LEAF = "modelo.work.file"
-_MANUAL_NIF = "33333333P"
 _FINDING_KEY = "application.modelo.findings.m193_settled_row_amount_authority_unresolved"
 
 
@@ -164,20 +162,20 @@ def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthority
 
 
 def _capture_coupon_collected_next_year(objects: SecureObjectRepository) -> None:
-    """Capture a key B coupon exigible on 15 December 2025 and collected on 20 January 2026."""
-    paid_on = date(2026, 1, 20)
-    transaction = capital_payment(provider_id="coupon-2025-12", booked_date=paid_on)
+    """Capture a key B coupon exigible on 15 December of CAPITAL_YEAR and collected on 20 January of the next year."""
+    paid_on = date(CAPITAL_YEAR + 1, 1, 20)
+    transaction = capital_payment(provider_id=f"coupon-{CAPITAL_YEAR}-12", booked_date=paid_on)
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="c" * 64,
         request=capital_request(
             transaction,
-            payment_event_id="coupon-payment-2026-01",
-            exigibility_occurred_on=date(2025, 12, 15),
+            payment_event_id=f"coupon-payment-{CAPITAL_YEAR + 1}-01",
+            exigibility_occurred_on=date(CAPITAL_YEAR, 12, 15),
             modelo_193_pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
         ),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=CAPITAL_YEAR,
+        cadence=quarterly_filer_cadence(CAPITAL_YEAR),
     )
     assert (
         withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
@@ -187,25 +185,10 @@ def _capture_coupon_collected_next_year(objects: SecureObjectRepository) -> None
 
 def _persist_manual_row(objects: SecureObjectRepository, *, filing_year: int) -> None:
     """Declare one ordinary key B row by hand for a second, synthetic holder."""
-    template = capital_pending_payment(
-        capital_payment(provider_id="manual-coupon"),
-        transaction_date=date(filing_year, 5, 5),
-    ).actual_recipient_detail
-    persist_percepcion_observations(
-        ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
-        modelo="193",
+    seed_manual_percepcion_window(
+        objects,
         filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, "0A"),
-        observations=[
-            template.model_copy(
-                update={
-                    "source_id": "manual-coupon",
-                    "source_allocation_id": "manual-1",
-                    "perceptor_tax_id": _MANUAL_NIF,
-                    "perceptor_legal_name": "Perceptor Manual Sintetico",
-                }
-            )
-        ],
+        observations=[manual_capital_row(filing_year=filing_year)],
     )
 
 
@@ -219,7 +202,7 @@ def _seed_declarant_retenciones(objects: SecureObjectRepository, *, filing_year:
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id=f"declarant-{filing_year}",
-                perceptor_nif=_MANUAL_NIF,
+                perceptor_nif=MANUAL_HOLDER_NIF,
                 perceptor_name="Perceptor Manual Sintetico",
                 scheme=RetencionScheme("intereses"),
                 taxable_base=Decimal("1000.00"),
@@ -350,9 +333,11 @@ def _blocking(report: VerificationReport) -> list[tuple[str, dict[str, object]]]
     return sorted(rows, key=repr)
 
 
-def _verify_2026(tmp_path: Path, *, capture: bool, operation: PinnedAuthorityOperation) -> VerificationReport:
-    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
-        _persist_manual_row(bucket.objects, filing_year=2026)
+def _verify_collection_year(
+    tmp_path: Path, *, capture: bool, operation: PinnedAuthorityOperation
+) -> VerificationReport:
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
+        _persist_manual_row(bucket.objects, filing_year=CAPITAL_YEAR + 1)
         if capture:
             _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
@@ -363,14 +348,14 @@ def test_verify_reports_a_settled_row_as_a_warning_that_changes_no_verification_
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Beside the same hand-declared row, the captured coupon adds one advisory and nothing that decides granting."""
-    ordinary = _verify_2026(tmp_path / "ordinary", capture=False, operation=operation)
-    settled = _verify_2026(tmp_path / "settled", capture=True, operation=operation)
+    ordinary = _verify_collection_year(tmp_path / "ordinary", capture=False, operation=operation)
+    settled = _verify_collection_year(tmp_path / "settled", capture=True, operation=operation)
 
     (finding,) = _settled_row_findings(settled)
     assert finding.kind is ModeloVerificationFindingKind.ADVISORY
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
     assert finding.message_facts["settled_prior_accrual_rows"] == 1
-    assert finding.message_facts["filing_year"] == 2026
+    assert finding.message_facts["filing_year"] == CAPITAL_YEAR + 1
     assert _settled_row_findings(ordinary) == []
     assert _blocking(settled) == _blocking(ordinary)
     assert settled.completeness_status is ordinary.completeness_status
@@ -381,7 +366,7 @@ def test_file_refuses_a_settled_row_revision_with_a_typed_reason_and_writes_noth
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The refusal comes before every lifecycle check and leaves no filing record, pointer, event or state change."""
-    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
 
@@ -405,7 +390,7 @@ def test_file_refuses_a_settled_row_revision_with_a_typed_reason_and_writes_noth
     (condition_evidence,) = verdict.evidence
     assert condition_evidence.values["settled_prior_accrual_rows"] == 1
     assert condition_evidence.values["amount_authority_resolved"] is False
-    assert condition_evidence.values["year"] == 2026
+    assert condition_evidence.values["year"] == CAPITAL_YEAR + 1
     assert get_registered_error_code(error).code == "REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED"
     assert after == revision
     assert records == {}
@@ -417,8 +402,8 @@ def test_file_refuses_a_settled_row_revision_with_a_typed_reason_and_writes_noth
 def test_a_pending_row_in_its_accrual_year_draws_no_finding_and_no_filing_refusal(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The same coupon is a pending row of 2025: its persisted accrual year says so, and nothing refuses it."""
-    with _m193_bucket(tmp_path, filing_year=2025, operation=operation) as bucket:
+    """The same coupon is a pending row of its accrual year: its persisted accrual year says so, and nothing refuses it."""
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
         report = _verify(revision.calculation_revision_id, operation=operation)
@@ -430,7 +415,7 @@ def test_a_pending_row_in_its_accrual_year_draws_no_finding_and_no_filing_refusa
         work_unit = _stored_work_unit(bucket)
 
     (contributor,) = _phase_contributors(revision)
-    assert contributor.source_filing_year == 2025
+    assert contributor.source_filing_year == CAPITAL_YEAR
     assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == ()
     assert _settled_row_findings(report) == []
 
@@ -438,24 +423,31 @@ def test_a_pending_row_in_its_accrual_year_draws_no_finding_and_no_filing_refusa
 def test_the_persisted_accrual_year_decides_the_settled_row_exactly(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A 2026 contributor accrued in 2025 is settled; one accrued in 2026 is pending, although 2026 can hold both."""
-    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
+    """A collection-year contributor accrued the year before is settled; one accrued that year is pending, though the year can hold both."""
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
         work_unit = _stored_work_unit(bucket)
 
     (contributor,) = _phase_contributors(revision)
-    assert contributor.source_filing_year == 2025
+    assert contributor.source_filing_year == CAPITAL_YEAR
     assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == (contributor,)
-    same_year = _with_source_filing_years(revision, 2026)
+    same_year = _with_source_filing_years(revision, CAPITAL_YEAR + 1)
     assert modelo_193_settled_prior_accrual_contributors(work_unit, same_year) == ()
 
 
-@pytest.mark.parametrize(("filing_year", "settled_rows"), [(2025, 0), (2026, 1)])
+@pytest.mark.parametrize("filing_year", [CAPITAL_YEAR, CAPITAL_YEAR + 1])
 def test_a_revision_persisted_without_the_accrual_year_keeps_the_conservative_rule(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation, filing_year: int, settled_rows: int
+    tmp_path: Path, *, operation: PinnedAuthorityOperation, filing_year: int
 ) -> None:
-    """Without the recorded year, the filing year decides through the grounded accrual-year bound."""
+    """Without the recorded year, the filing year decides through the grounded accrual-year bound.
+
+    Every supported year after the first grounded accrual year can hold a settled
+    prior-accrual row, so a contributor that lost its accrual year is counted as
+    settled there even when it is the pending row: the gate over-refuses rather
+    than lets a settled row through.
+    """
+    settled_rows = 1
     with _m193_bucket(tmp_path, filing_year=filing_year, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)

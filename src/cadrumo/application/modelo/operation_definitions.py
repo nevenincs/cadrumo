@@ -23,20 +23,25 @@ Core types:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
+from ...core.i18n.render import output_language as active_output_language
 from ...core.identity.hex_ids import WorkUnitId
+from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -107,6 +112,11 @@ from .amendment_projection import ModeloWorkAmendPublicResultV2
 from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_advisory_projection import ModeloCalculationAdvisories
 from .calculation_projection import ModeloCalculationSnapshot
+from .calculation_report_export import (
+    ModeloCalculationReportCommand,
+    ModeloCalculationReportResult,
+    export_modelo_calculation_report,
+)
 from .calculation_request_fields import ModeloCalculationInputFieldsV1
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_contract import ModeloEditMutationFamily
@@ -131,8 +141,13 @@ from .edit_models import (
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
-from .export_ports import ModeloExportPortsFactory
-from .export_projection import ModeloExportPublicResultV2
+from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
+from .export_projection import (
+    ModeloExportCompleteness,
+    ModeloExportEvidenceStatus,
+    ModeloExportPublicResultV2,
+    ModeloFicheroBoePublicReceipt,
+)
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .filing_projection import ModeloFilingRecordSnapshot
@@ -142,6 +157,7 @@ from .m303_ordinary_filing_evidence_authoring import (
     author_ordinary_m303_evidence_for_work,
 )
 from .metadata_projection import ModeloWorkMetadataSnapshot
+from .review_package_signing_ports import ReviewPackageSigningKeypairCapabilityFactory
 from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_projection import ModeloVerificationSnapshot
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
@@ -163,6 +179,7 @@ if TYPE_CHECKING:
     from ..operations.owner import OperationExecutorContext
     from .calculate_input import ModeloWorkCalculationServiceResult, WorkCalculateInputBundle
     from .calculation_action_ports import CalculationActionPorts
+    from .calculation_summary_pdf_ports import CalculationSummaryPdfWriter
     from .verification_repository_ports import VerificationRepositoryBundleFactory
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
@@ -1342,6 +1359,22 @@ def build_modelo_work_file_registration(
     )
 
 
+#: The document format each calculation-report artefact serialises to. A member of
+#: :class:`~cadrumo.core.modelo_export_artefact.ModeloExportArtefact` absent from
+#: this table is not a report artefact, which is what keeps the fichero-BOE member
+#: out of the report branch by construction rather than by a name comparison.
+_REPORT_DOCUMENT_FORMATS: Mapping[ModeloExportArtefact, CalculationReportDocumentFormat] = MappingProxyType(
+    {
+        ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV,
+        ModeloExportArtefact.CALCULATION_REPORT_PDF: CalculationReportDocumentFormat.PDF,
+    },
+)
+#: The same table read back, so a report receipt names the artefact that was asked for.
+_REPORT_ARTEFACTS: Mapping[CalculationReportDocumentFormat, ModeloExportArtefact] = MappingProxyType(
+    {document_format: artefact for artefact, document_format in _REPORT_DOCUMENT_FORMATS.items()},
+)
+
+
 class ModeloExportRequest(CredentialFreeOperationRequest):
     """The revision to export, where the operator wants the artefact, and the elections that shape it.
 
@@ -1364,6 +1397,13 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    #: Whether the operator chose to replace a file already at ``output_path``;
+    #: without that choice an existing file refuses the export.
+    replace_existing: bool = False
+    #: Which artefact to publish. Defaults to the AEAT-compatible filing file, so
+    #: a caller that names no artefact gets the export it always got; a
+    #: calculation report is an explicit choice.
+    artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -1374,6 +1414,70 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
         if not Path(self.output_path).is_absolute():
             raise ValueError("export output path must be resolved by the requesting frontend")
         return self
+
+
+class ModeloExportSettledResult(BaseModel):
+    """The export service's own receipt for one settled export, kept behind the secure operand boundary.
+
+    Exactly one receipt is present: the filing file's or the calculation
+    report's. The receipt is stored whole rather than as chosen fields, so the
+    public result is a projection of the very object the command line renders
+    and no surface re-derives a fact from anything else.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    fichero_boe: ModeloExportResult | None = None
+    calculation_report: ModeloCalculationReportResult | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_receipt(self) -> ModeloExportSettledResult:
+        """Refuse a settlement naming no artefact, or two."""
+        if (self.fichero_boe is None) == (self.calculation_report is None):
+            raise ValueError("a settled export carries exactly one receipt")
+        return self
+
+
+def _project_modelo_export_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project the service's settled receipt into the public export result.
+
+    Every fact is read from the receipt the export service returned; the only
+    translation is from its field spelling into the closed public vocabulary.
+    """
+    del terminal_receipt
+    settled = ModeloExportSettledResult.model_validate(result, strict=True)
+    if settled.fichero_boe is not None:
+        filing = settled.fichero_boe
+        return ModeloExportPublicResultV2(
+            calculation_revision_id=filing.calculation_revision_id,
+            artefact=ModeloExportArtefact.FICHERO_BOE,
+            export_format=filing.format,
+            output_path=str(filing.output_path),
+            byte_size=filing.byte_size,
+            file_sha256=filing.file_sha256,
+            software_identity_grade=filing.software_identity_grade,
+            evidence_status=ModeloExportEvidenceStatus(filing.local_evidence_status),
+            completeness=(
+                ModeloExportCompleteness.UNVERIFIED
+                if filing.completeness_unverified
+                else ModeloExportCompleteness.NOT_FLAGGED
+            ),
+            fichero_boe=ModeloFicheroBoePublicReceipt.from_result(filing),
+        )
+    report = settled.calculation_report
+    if report is None:
+        raise ValueError("a settled export carries exactly one receipt")
+    return ModeloExportPublicResultV2(
+        calculation_revision_id=report.calculation_revision_id,
+        artefact=_REPORT_ARTEFACTS[report.document_format],
+        export_format=report.document_format.value,
+        output_path=str(report.output_path),
+        byte_size=report.byte_size,
+        file_sha256=report.file_sha256,
+        software_identity_grade=report.software_identity_grade,
+        evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
+        completeness=ModeloExportCompleteness.NOT_ASSESSED,
+    )
 
 
 class ModeloExportExecutor:
@@ -1389,66 +1493,147 @@ class ModeloExportExecutor:
         *,
         profile_resolver: ModeloWorkVerifyProfileResolver,
         export_ports_factory: ModeloExportPortsFactory,
+        signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+        calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
     ) -> None:
-        """Bind the live profile the export gates are judged against."""
+        """Bind the live profile the export gates are judged against, and the summary PDF writer.
+
+        The writer is the outbound adapter the composition root supplies,
+        because this layer cannot import it. It is handed to the report
+        service on every report export and used only for the summary PDF.
+        """
         self._profile_resolver = profile_resolver
         self._export_ports_factory = export_ports_factory
+        self._signing_keypair_capability_factory = signing_keypair_capability_factory
+        self._calculation_summary_pdf_writer = calculation_summary_pdf_writer
 
     async def execute(
         self,
         request: OperationRequest[ModeloExportRequest],
         context: OperationExecutorContext,
     ) -> str | None:
-        """Delegate to the export authority and store its typed receipt.
+        """Delegate to the export authority and keep its receipt as the settled result.
 
         The command is built from the journalled request, so the identity an
         artefact is stamped with is the one this invocation recorded rather
         than whatever a closure happened to hold when the definition was built.
 
+        The service's receipt is stored behind the secure operand boundary and
+        its reference settles the operation, so a surface reads the evidence
+        status, completeness and identity grade the service stated rather than
+        a digest it would have to explain on its own.
+
         Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
         await context.events.phase("modelo.export.preconditions")
         payload = request.payload
-        command = ModeloExportCommand(
-            calculation_revision_id=payload.calculation_revision_id,
-            output_path=Path(payload.output_path),
-            actor=payload.actor,
-            refund_election=payload.refund_election,
-            payment_election=payload.payment_election,
-            prior_domiciliation_election=payload.prior_domiciliation_election,
-        )
         from ...core.bucket_pointer import require_active_bucket_id
 
-        def export() -> ModeloExportResult:
+        def export() -> ModeloExportSettledResult:
             with validating_governed_facts(context.authority_operation):
                 workflow_profile = self._profile_resolver(context.authority_operation)
-                return export_modelo_revision(
-                    command,
-                    workflow_profile=workflow_profile,
-                    operation=context.authority_operation,
-                    export_ports=self._export_ports_factory(
-                        bucket_id=require_active_bucket_id(),
-                        m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-                    ),
+                active_bucket_id = require_active_bucket_id()
+                export_ports = self._export_ports_factory(
+                    bucket_id=active_bucket_id,
+                    m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+                )
+                if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
+                    return ModeloExportSettledResult(
+                        fichero_boe=self._published_fichero_boe(
+                            payload,
+                            workflow_profile=workflow_profile,
+                            export_ports=export_ports,
+                            operation=context.authority_operation,
+                        )
+                    )
+                return ModeloExportSettledResult(
+                    calculation_report=self._published_calculation_report(
+                        payload,
+                        active_bucket_id=active_bucket_id,
+                        export_ports=export_ports,
+                        operation=context.authority_operation,
+                    )
                 )
 
         async def publish() -> str:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
-                result = await asyncio.to_thread(export)
+                settled = await asyncio.to_thread(export)
                 await context.events.effect(OperationEffect.UPDATED)
-                return await context.operands.put(
-                    ModeloExportPublicResultV2.from_result(result),
-                    written_at=_utc_now(),
-                )
+                return await context.operands.put(settled, written_at=_utc_now())
 
         return await await_cancellation_complete(publish(), task_name="modelo-export-publication")
+
+    @staticmethod
+    def _published_fichero_boe(
+        payload: ModeloExportRequest,
+        *,
+        workflow_profile: TaxpayerProfile,
+        export_ports: ModeloExportPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> ModeloExportResult:
+        """Publish the AEAT-compatible filing file and return the service's receipt."""
+        return export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=payload.calculation_revision_id,
+                output_path=Path(payload.output_path),
+                actor=payload.actor,
+                refund_election=payload.refund_election,
+                payment_election=payload.payment_election,
+                prior_domiciliation_election=payload.prior_domiciliation_election,
+                replace_existing=payload.replace_existing,
+            ),
+            workflow_profile=workflow_profile,
+            operation=operation,
+            export_ports=export_ports,
+        )
+
+    def _published_calculation_report(
+        self,
+        payload: ModeloExportRequest,
+        *,
+        active_bucket_id: str,
+        export_ports: ModeloExportPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> ModeloCalculationReportResult:
+        """Publish the calculation report and return the service's receipt.
+
+        The declaration-shaping elections are not threaded here and their absence
+        is not an omission: they decide the fichero's "Tipo de declaracion", and a
+        calculation report declares nothing. The service the command line reaches
+        is the one reached here, so the two surfaces cannot produce different
+        reports for one revision.
+
+        The report language is this invocation's own render language, so a
+        full-screen session set to Catalan produces a Catalan report exactly as
+        the command line does under ``--output-language ca``.
+
+        The summary PDF is drawn by the writer this enrolment was composed with,
+        the one the command line hands the same service. Where the optional
+        ``pdf`` extra is absent the service refuses the PDF with its own typed
+        error; nothing here substitutes another artefact.
+        """
+        return export_modelo_calculation_report(
+            ModeloCalculationReportCommand(
+                calculation_revision_id=payload.calculation_revision_id,
+                document_format=_REPORT_DOCUMENT_FORMATS[payload.artefact],
+                report_language=OutputLanguage(active_output_language()),
+                output_path=Path(payload.output_path),
+                replace_existing=payload.replace_existing,
+            ),
+            export_ports=export_ports,
+            signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
+            operation=operation,
+            pdf_writer=self._calculation_summary_pdf_writer,
+        )
 
 
 def build_modelo_export_definition(
     *,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
     export_ports_factory: ModeloExportPortsFactory,
+    signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+    calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
@@ -1456,12 +1641,14 @@ def build_modelo_export_definition(
         return ModeloExportExecutor(
             profile_resolver=profile_resolver,
             export_ports_factory=export_ports_factory,
+            signing_keypair_capability_factory=signing_keypair_capability_factory,
+            calculation_summary_pdf_writer=calculation_summary_pdf_writer,
         )
 
     return OperationDefinition(
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloExportRequest,
-        result_type=ModeloExportPublicResultV2,
+        result_type=ModeloExportSettledResult,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloExportRequest,
             executor_type=ModeloExportExecutor,
@@ -1508,6 +1695,7 @@ def build_modelo_export_registration(
         workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
+        result_projector=_project_modelo_export_result,
     )
 
 
@@ -2559,6 +2747,7 @@ __all__ = [
     "ModeloEditApplyPublicResultV1",
     "ModeloExportExecutor",
     "ModeloExportRequest",
+    "ModeloExportSettledResult",
     "ModeloWorkAmendBaseline",
     "ModeloWorkAmendExecutor",
     "ModeloWorkAmendOverride",
@@ -2612,6 +2801,8 @@ def build_modelo_lifecycle_operation_definitions(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
+    signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+    calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
     amendment_action_ports_factory: AmendmentActionPortsFactory,
@@ -2636,7 +2827,12 @@ def build_modelo_lifecycle_operation_definitions(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         ),
-        build_modelo_export_definition(export_ports_factory=export_ports_factory, profile_resolver=profile_resolver),
+        build_modelo_export_definition(
+            export_ports_factory=export_ports_factory,
+            profile_resolver=profile_resolver,
+            signing_keypair_capability_factory=signing_keypair_capability_factory,
+            calculation_summary_pdf_writer=calculation_summary_pdf_writer,
+        ),
         build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
         build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_file_definition(

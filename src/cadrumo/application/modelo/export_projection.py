@@ -1,23 +1,26 @@
-"""Lossless public receipt for a locally written Modelo export."""
+"""Public result of a locally written Modelo export, and the fichero-BOE receipt it carries."""
 
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
-from typing import Literal, Self
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
 from ...domain.filing.schema import ModeloCasillaProvenance
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
@@ -100,12 +103,11 @@ class ModeloIvaWalletDecisionPublicProvenance(BaseModel):
         )
 
 
-class ModeloExportPublicResultV2(BaseModel):
-    """Complete canonical export receipt, excluding the locally written bytes."""
+class ModeloFicheroBoePublicReceipt(BaseModel):
+    """Complete canonical fichero-BOE receipt, excluding the locally written bytes."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[2] = 2
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     bucket_id: BucketId
@@ -128,7 +130,7 @@ class ModeloExportPublicResultV2(BaseModel):
     local_evidence_status: str = Field(min_length=1)
     official_evidence_message: str = Field(min_length=1)
     completeness_unverified: bool
-    handoff_required: Literal[True] = True
+    software_identity_grade: AeatSoftwareIdentityGrade | None
 
     @classmethod
     def from_result(cls, result: ModeloExportResult) -> Self:
@@ -162,6 +164,7 @@ class ModeloExportPublicResultV2(BaseModel):
             local_evidence_status=result.local_evidence_status,
             official_evidence_message=result.official_evidence_message,
             completeness_unverified=result.completeness_unverified,
+            software_identity_grade=result.software_identity_grade,
         )
 
     def to_result(self) -> ModeloExportResult:
@@ -193,11 +196,100 @@ class ModeloExportPublicResultV2(BaseModel):
             local_evidence_status=self.local_evidence_status,
             official_evidence_message=self.official_evidence_message,
             completeness_unverified=self.completeness_unverified,
+            software_identity_grade=self.software_identity_grade,
         )
 
 
+class ModeloExportEvidenceStatus(StrEnum):
+    """What one exported artefact is worth as evidence, in the export service's own terms.
+
+    Neither artefact is official AEAT evidence; the two members keep apart the
+    filing file an operator may present and the calculation record that can
+    never be presented, because the remedy an operator reads differs.
+
+    Attributes:
+        LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE: The filing file's own
+            status token. Official evidence comes from AEAT only after filing.
+        LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE: A calculation
+            report, whose receipt always carries the local-calculation notice
+            saying it is not official AEAT filing evidence.
+    """
+
+    LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE = "local_export_not_official_aeat_filing_evidence"
+    LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE = (
+        "local_calculation_report_not_official_aeat_filing_evidence"
+    )
+
+
+class ModeloExportCompleteness(StrEnum):
+    """What one export's receipt says about whether every required casilla reached the file.
+
+    The export service states completeness only as a warning: it flags a
+    fixed-width filing file whose revision declares no completeness manifest,
+    because the structural-parity check could not run. Its silence is not a
+    verification, so it keeps its own member rather than reading as verified.
+
+    Attributes:
+        UNVERIFIED: The receipt flags the filing file as not completeness-verified.
+        NOT_FLAGGED: The filing file's receipt raises no completeness warning.
+        NOT_ASSESSED: A calculation report, which makes no completeness statement.
+    """
+
+    UNVERIFIED = "unverified"
+    NOT_FLAGGED = "not_flagged"
+    NOT_ASSESSED = "not_assessed"
+
+
+class ModeloExportPublicResultV2(BaseModel):
+    """Evidence that one export happened and what it could establish, without the exported material.
+
+    Custody of the artefact is the operator's from the moment it lands: this
+    result names the file and fingerprints it so a later reader can prove which
+    bytes were produced, and carries none of them. It also carries the three
+    facts an operator needs before relying on the file -- its evidence status,
+    its completeness and the grade of the software identity in its header -- so
+    an incomplete or development-grade export is stated, never implied.
+
+    A fichero-BOE export also carries the service's complete receipt, so a
+    frontend reached through the runtime renders the same receipt the export
+    service returned instead of re-deriving it from the summary.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 2
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    artefact: ModeloExportArtefact
+    #: The receipt's own format token: ``fichero-boe`` or the report's
+    #: serialisation, exactly as the command line prints it.
+    export_format: Annotated[str, Field(min_length=1, max_length=64)]
+    #: ``pattern=r"\S"`` refuses an all-whitespace destination, which
+    #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
+    #: and silently trimming one would mask a typo rather than surface it.
+    output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
+    byte_size: NonNegativeInt
+    file_sha256: ContentDigest
+    #: ``None`` when the artefact's layout reserves no software-identity slot.
+    software_identity_grade: AeatSoftwareIdentityGrade | None
+    evidence_status: ModeloExportEvidenceStatus
+    completeness: ModeloExportCompleteness
+    #: Present exactly when the artefact is the fichero-BOE.
+    fichero_boe: ModeloFicheroBoePublicReceipt | None = None
+    handoff_required: bool = True
+
+    @model_validator(mode="after")
+    def _receipt_matches_artefact(self) -> Self:
+        """Refuse a fichero-BOE result without its receipt, or a report result carrying one."""
+        if (self.artefact is ModeloExportArtefact.FICHERO_BOE) != (self.fichero_boe is not None):
+            raise ValueError("a fichero-BOE export result carries exactly its receipt")
+        return self
+
+
 __all__ = [
+    "ModeloExportCompleteness",
+    "ModeloExportEvidenceStatus",
     "ModeloExportPublicResultV2",
+    "ModeloFicheroBoePublicReceipt",
     "ModeloIvaWalletDecisionPublicProvenance",
     "ModeloPriorDomiciliationPublicProvenance",
 ]

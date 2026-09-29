@@ -95,10 +95,13 @@ def prepare_environment(repository: Path) -> None:
 
 
 def _apply_run_environment(root: Path, scratch: Path) -> None:
-    """Confine generic temporary, cache, coverage, and pytest scratch paths.
+    """Confine generic temporary, coverage, and pytest scratch paths.
 
-    Logs, artifacts and caches live in the run directory; temporary files live in
-    the run's short scratch, which the run directory is too deep to host.
+    Logs, artifacts and pytest's own cache live in the run directory; temporary
+    files live in the run's short scratch, which the run directory is too deep
+    to host. Tool caches such as uv's keep their own homes: pointing
+    ``XDG_CACHE_HOME`` at the run gave every run that builds or installs a
+    distribution a cold, gigabyte-sized uv cache that outlived it with the logs.
     """
     artifacts = root / "artifacts"
     cache = root / "cache"
@@ -108,7 +111,6 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
     os.environ[_RUN_SCRATCH_ENV] = str(scratch)
     os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
-    os.environ["XDG_CACHE_HOME"] = str(cache)
     os.environ.update(scratch_environment(scratch))
     tempfile.tempdir = str(scratch)
 
@@ -214,11 +216,18 @@ def log_start(nodeid: str) -> None:
 
 
 def log_report(report: pytest.TestReport) -> None:
-    """Record every terminal phase and flush failure detail immediately."""
+    """Record every terminal phase and flush failure detail immediately.
+
+    A test skipped at setup gets no call report, so its setup skip is its only
+    verdict. Without it the transcript shows a ``RUN`` line that never ends,
+    which reads exactly like a hung test.
+    """
     if _ACTIVE is None:
         return
-    if report.when == "call" or report.failed:
+    if report.when == "call" or report.failed or report.skipped:
         _ACTIVE.write(f"{report.outcome.upper()} {report.nodeid} phase={report.when} duration={report.duration:.6f}s")
+    if report.skipped and isinstance(report.longrepr, tuple):
+        _ACTIVE.write(str(report.longrepr[2]))
     if report.failed:
         _ACTIVE.write(str(report.longrepr))
         if report.capstdout:

@@ -44,6 +44,7 @@ from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity, development_mock_software_identity
 from cadrumo.domain.justificante.protocols import JustificanteRepositoryProtocol
 from cadrumo.domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -110,6 +111,7 @@ def _compose_modelo_export_ports(
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
+        product_software_identity=development_mock_software_identity(),
     )
 
 
@@ -138,6 +140,7 @@ def modelo_export_ports_for_test(
     prorrata_register: ProrrataRegisterRepositoryProtocol | None = None,
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol | None = None,
     transaction: TransactionCatalogueRepositoryProtocol | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
 ) -> ModeloExportPorts:
     """Compose real bucket-bound repositories, allowing focused authority overrides."""
     if bucket_id is None:
@@ -167,6 +170,9 @@ def modelo_export_ports_for_test(
         prorrata_register=prorrata_register if prorrata_register is not None else composed.prorrata_register,
         bienes_inversion=bienes_inversion if bienes_inversion is not None else composed.bienes_inversion,
         transaction=transaction if transaction is not None else composed.transaction,
+        product_software_identity=(
+            product_software_identity if product_software_identity is not None else composed.product_software_identity
+        ),
     )
 
 

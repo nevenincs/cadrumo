@@ -60,6 +60,12 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
     handoff=True,
 )
 
+_OFFLINE_WORKBOOK_EXPORT = ExecutionPolicySpec(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "local-io",
+    CommandWriteRoute.NONE,
+)
 
 _MODULE = ".modelo_spreadsheet_cli"
 _PAYLOADS = "._modelo_spreadsheet_payloads"
@@ -172,6 +178,46 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--dry-run",),
                 FLAG_VALUE,
                 "cli.app.modelo.spreadsheet.push.dry_run_help",
+                default=False,
+                flag=True,
+            ),
+        ),
+    ),
+    _leaf(
+        "app_modelo_spreadsheet_export",
+        "export",
+        "cli.app.modelo.spreadsheet.export_help",
+        "modelo_spreadsheet_export",
+        "ModeloSpreadsheetExportResult",
+        _OFFLINE_WORKBOOK_EXPORT,
+        "modelo.spreadsheet.export",
+        (
+            _MODELO,
+            _PERIOD,
+            _YEAR,
+            _option(
+                "output",
+                ("--output",),
+                PATH_VALUE,
+                "cli.app.modelo.spreadsheet.export.output_help",
+                required=True,
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _option(
+                "replace_existing",
+                ("--replace",),
+                FLAG_VALUE,
+                "cli.app.modelo.export.replace_help",
+                default=False,
+                flag=True,
+            ),
+            _option(
+                "prefill_relations",
+                ("--prefill-relations/--no-prefill-relations",),
+                FLAG_VALUE,
+                "cli.app.modelo.spreadsheet.push.prefill_relations_help",
                 default=False,
                 flag=True,
             ),

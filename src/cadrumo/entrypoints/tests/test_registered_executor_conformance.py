@@ -675,6 +675,24 @@ class _CloseWitness:
         self.closed = True
 
 
+class _HeldClock:
+    """A supervisor clock that stands still until released, then reads real time.
+
+    The supervisor measures its execution deadline on this clock, so while it
+    is held no amount of host slowness can expire the deadline before the
+    executor has suspended at its review.
+    """
+
+    def __init__(self) -> None:
+        self._held_at: datetime | None = now()
+
+    def __call__(self) -> datetime:
+        return now() if self._held_at is None else self._held_at
+
+    def release(self) -> None:
+        self._held_at = None
+
+
 @dataclass(slots=True)
 class _ExecutionDriver:
     """Single registered execution driver over the canonical composed supervisor."""
@@ -1873,6 +1891,7 @@ def _runtime(
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     execution_timeout: timedelta = timedelta(hours=1),
     amendment_action_ports_factory: AmendmentActionPortsFactory | None = None,
+    clock: Callable[[], datetime] = now,
 ) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
     """Fresh production profile, inventory, journal, lease, and operand custody per case."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
@@ -1922,7 +1941,7 @@ def _runtime(
                 operands=operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects)),
                 owner_id="1" * 64,
                 lease_token_factory=lambda: "2" * 64,
-                clock=now,
+                clock=clock,
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=execution_timeout,
                 cleanup_timeout=timedelta(minutes=2),
@@ -3269,12 +3288,20 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
 def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Let the supervisor-owned deadline drive the production CENSO continuation to timed out."""
+    """Let the supervisor-owned deadline drive the production CENSO continuation to timed out.
+
+    The deadline must pass while the review waits, not while the executor is
+    still working up to it: a deadline that expires first stops the executor
+    before any review exists. Holding the supervisor clock until the review is
+    on offer fixes that order on any host instead of racing a 50 ms budget.
+    """
     cleanup = _CloseWitness()
+    clock = _HeldClock()
     with _runtime(
         tmp_path / "censo-deadline",
         cleanup=cleanup,
         execution_timeout=timedelta(milliseconds=50),
+        clock=clock,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
         subject_ref, payload, secret = _payload(
@@ -3290,6 +3317,7 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
             )
             assert waiting.projection.execution_deadline_at is not None
             await asyncio.sleep(max((waiting.projection.execution_deadline_at - now()).total_seconds(), 0) + 0.01)
+            clock.release()
             operation_id = await driver.respond_apply(submitted, waiting)
             terminal = await driver.await_terminal(operation_id)
             assert terminal.projection.terminal_condition is OperationTerminalCondition.TIMED_OUT

@@ -539,6 +539,7 @@ def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity(
         "refund_election",
         "payment_election",
         "prior_domiciliation_election",
+        "replace_existing",
     )
     for spec in (export, build):
         assert all(

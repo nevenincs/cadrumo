@@ -12,6 +12,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
+from ...adapters.persistence.profile.review_package_signing import (
+    build_review_package_signing_keypair_capability,
+)
 from ...application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...application.modelo.export_projection import ModeloExportPublicResultV2
 from ...application.modelo.filing_projection import ModeloFilingRecordSnapshot
@@ -480,6 +484,8 @@ def test_the_filing_request_carries_elections_the_operator_declared() -> None:
 def _export_definition():
     return build_modelo_export_definition(
         export_ports_factory=build_modelo_export_ports,
+        signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
+        calculation_summary_pdf_writer=write_calculation_summary_pdf,
         profile_resolver=_test_profile_resolver,
     )
 
@@ -555,8 +561,13 @@ def test_the_export_request_accepts_each_election_the_command_line_accepts(elect
 
 
 def test_the_export_executor_hands_every_election_to_the_export_command() -> None:
-    """An election the request carries but the executor drops would reach the export as its default."""
-    source = textwrap.dedent(inspect.getsource(ModeloExportExecutor.execute))
+    """An election the request carries but the executor drops would reach the export as its default.
+
+    Read over the whole executor rather than its entry method: the elections
+    shape the fichero-BOE's declaration type, so the command they thread into is
+    built in the arm that publishes that artefact.
+    """
+    source = textwrap.dedent(inspect.getsource(ModeloExportExecutor))
     [command] = [
         node
         for node in ast.walk(ast.parse(source))

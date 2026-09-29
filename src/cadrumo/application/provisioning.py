@@ -14,7 +14,7 @@ statuses as
 :class:`~cadrumo.entrypoints.cli.config.check_payloads.CheckDependencyPayload`
 rows beside the active profile's capability posture from
 :func:`~cadrumo.application.user_profile.capabilities.resolve_active_capability`. Optional-extra
-probes walk the core :data:`~cadrumo.core.OPTIONAL_EXTRAS` catalogue of
+probes walk the core :data:`~cadrumo.core.optional_extras.OPTIONAL_EXTRAS` catalogue of
 :class:`~cadrumo.core.optional_extras.OptionalExtra` records, so CLI diagnostics and adapter import
 guards share one registry.
 """
@@ -1205,7 +1205,7 @@ def _local_model_provisioning_refusal(
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:
     """Probe each :class:`~cadrumo.core.optional_extras.OptionalExtra` into :class:`DependencyStatus` rows.
 
-    The result set is keyed by the same :data:`~cadrumo.core.OPTIONAL_EXTRAS`
+    The result set is keyed by the same :data:`~cadrumo.core.optional_extras.OPTIONAL_EXTRAS`
     catalogue used by :func:`~cadrumo.core.optional_extras.require_optional_extra`, keeping
     ``aeat config check`` and runtime feature guards aligned.
     """

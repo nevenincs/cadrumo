@@ -9,11 +9,14 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
+from ....domain.calculations.registry.runtime_graph import expression_binding_refs
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
+from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
@@ -53,6 +56,11 @@ _M184_NIF_TYPED_CASILLA: CasillaId = validated_casilla_id(
 )
 # Modelo 303 and Modelo 369 declare the same informational period casilla id.
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
+_M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio", surface="_M390_EJERCICIO_CASILLA")
+_M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
+    "decl.tipo-declaracion",
+    surface="_M390_TIPO_DECLARACION_CASILLA",
+)
 
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
@@ -201,3 +209,49 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
     assert context.get("casilla_id") == _DECL_PERIODO_CASILLA
     assert context.get("data_type") == "period_code"
     assert "period_code value '1' does not match" in str(refusal.value.__cause__)
+
+
+def _m390_2024_draft(inputs: dict[str, Decimal]):
+    period = Period.from_year_and_code(2024, "0A")
+    provider = build_runtime_schema_provider(modelos=("390",), filing_year=2024, period=period)
+    formula_bindings = {
+        binding_id
+        for formula in provider.get_snapshot("390").revision.formulas
+        for binding_id in expression_binding_refs(formula.expression)
+    }
+    return build_draft(
+        modelo="390",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M390 required text absence"),
+        inputs={**dict.fromkeys(formula_bindings, Decimal("0")), **inputs},
+        schema_provider=provider,
+    )
+
+
+def test_a_required_text_casilla_the_calculation_supplies_is_an_advisory_never_a_placeholder() -> None:
+    """Modelo 390 requires a declaration type no source supplies; it is reported, not faked.
+
+    The casilla is informational text. It once calculated as a numeric zero, which
+    replayed as the text ``"0"`` and satisfied the required check with a value the
+    declaration never had.
+    """
+    draft = _m390_2024_draft({_M390_EJERCICIO_CASILLA: Decimal("2024")})
+
+    value = next(item for item in draft.values if item.casilla_id == _M390_TIPO_DECLARACION_CASILLA)
+    assert value.kind is ModeloValueKind.EMPTY
+    assert value.value is None
+    findings = [finding for finding in draft.findings if finding.casilla_id == _M390_TIPO_DECLARACION_CASILLA]
+    assert [(finding.code, finding.severity) for finding in findings] == [
+        ("casilla-required-text-unsupplied", BaseSeverity.INFO),
+    ]
+    assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
+
+
+def test_a_required_numeric_casilla_left_empty_still_blocks_the_draft() -> None:
+    draft = _m390_2024_draft({})
+
+    findings = [finding for finding in draft.findings if finding.casilla_id == _M390_EJERCICIO_CASILLA]
+    assert [(finding.code, finding.severity) for finding in findings] == [
+        ("casilla-required-missing", BaseSeverity.ERROR),
+    ]
+    assert draft.status is ModeloDraftStatus.BORRADOR

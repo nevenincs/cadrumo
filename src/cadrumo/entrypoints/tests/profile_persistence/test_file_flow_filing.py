@@ -24,6 +24,7 @@ from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -58,6 +59,12 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+# Supported exercises whose Modelo 130 first-quarter window (closing in April) had
+# closed before the fixture filing clock, so filing one then is late. The floor is
+# excluded: its prior-year Modelo 100 carry lies below the support envelope.
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+_CLOSED_M130_EXERCISES = tuple(year for year in _SUPPORT.years if _SUPPORT.floor < year < T3.year)
 
 _FILING_BUCKET_ID = "12121212-1212-4212-8212-121212121212"
 
@@ -194,11 +201,12 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
     assert current.filing_record_id == filing.filing_record_id
 
 
-def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing(repos: Repos) -> None:
+@pytest.mark.parametrize("filing_year", _CLOSED_M130_EXERCISES)
+def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repos: Repos, filing_year: int) -> None:
     """A real historical M130 obligation can be marked filed locally after verification."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=filing_year)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -256,7 +264,7 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
     ).filed_calculation_revision_id == (revision.calculation_revision_id)
     observation = CalculationObservationRepository().load_observation(
         "130",
-        Period.from_year_and_code(2024, "1T"),
+        Period.from_year_and_code(filing_year, "1T"),
     )
     assert observation is not None
     assert observation.source_kind == APP_FILING_SOURCE_KIND
@@ -353,11 +361,12 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     )
 
 
-def test_file_records_overdue_modelo_130_2025_as_late_local_filing(repos: Repos) -> None:
-    """A real but closed M130/2025 obligation can still seed the local carry chain."""
+@pytest.mark.parametrize("filing_year", _CLOSED_M130_EXERCISES)
+def test_file_records_overdue_modelo_130_as_late_local_filing(repos: Repos, filing_year: int) -> None:
+    """A real but closed M130 obligation can still seed the local carry chain."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2025)
+    work_unit = seed_work_unit(wu_repo, filing_year=filing_year)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,

@@ -33,12 +33,14 @@ def run_modelo_export(
         timeout=timeout,
     )
     projection = completed.projection
+    receipt = projection.fichero_boe
     if (
-        not isinstance(projection, ModeloExportPublicResultV2)
-        or projection.bucket_id != str(client.profile_id)
-        or projection.work_unit_id != work_unit_id
+        projection.artefact is not request.artefact
         or projection.calculation_revision_id != request.calculation_revision_id
         or projection.output_path != request.output_path
+        or receipt is None
+        or receipt.bucket_id != str(client.profile_id)
+        or receipt.work_unit_id != work_unit_id
         or completed.effect is not OperationEffect.UPDATED
     ):
         raise submitted_operation_error(

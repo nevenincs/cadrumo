@@ -451,6 +451,22 @@ def _advisory_roll_forward_balances_fires(
     return reconciles is False
 
 
+def _advisory_equals_fires(
+    expr: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _text_values: Mapping[CasillaId, str],
+    _profile: TaxpayerProfile | None,
+) -> bool | None:
+    predicate = parse_verification_predicate_expression(expr)
+    if predicate is None or predicate.operator is not VerificationPredicateOperator.EQUALS:
+        return None
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) != 2:
+        return False
+    lhs, rhs = (casilla_values.get(cid, Decimal(0)) for cid in ids)
+    return lhs != rhs
+
+
 def _advisory_casilla_equals_implies_nonzero_fires(
     expr: str,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -562,6 +578,7 @@ _ADVISORY_PREDICATE_EVALUATORS: tuple[_AdvisoryPredicateEvaluator, ...] = (
     _advisory_implies_nonzero_fires,
     _advisory_implies_any_nonzero_fires,
     _advisory_roll_forward_balances_fires,
+    _advisory_equals_fires,
     _advisory_casilla_equals_implies_nonzero_fires,
     _advisory_casilla_equals_implies_profile_flag_fires,
     _advisory_casilla_equals_implies_diverges_fires,

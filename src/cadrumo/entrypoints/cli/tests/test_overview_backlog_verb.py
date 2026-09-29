@@ -6,6 +6,7 @@ import json
 import sys
 from collections.abc import Iterator
 from contextvars import ContextVar
+from datetime import date
 
 import pytest
 
@@ -13,7 +14,8 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....application.workflow.profile_bucket_scan import list_profile_buckets
 from ....core.classification.policies import SensitivityClass
-from ....core.time.clock import now
+from ....core.time.clock import now, today_madrid
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._overview_native_support import invoke_native_overview
 from ._runtime_profile_cli_fixture import NativeCliProfileFixture
 
@@ -40,6 +42,15 @@ def _invoke(args: list[str]):
     return invoke_native_overview(_PROFILE.get(), args)
 
 
+# The backlog lists only windows already closed today, so an exercise shows all four
+# quarters once its fourth-quarter window (closing in the next January) has passed.
+_CLOSED_EXERCISES = tuple(
+    year
+    for year in PublishedGovernedFactSource().supported_filing_years().years
+    if date(year + 1, 2, 28) < today_madrid()
+)
+
+
 def test_backlog_renders_envelope_with_explicit_window() -> None:
     """A concrete --from / --to window renders the backlog envelope
     including the range echo, as_of, and late_count header."""
@@ -63,7 +74,8 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
     assert "late_count\t" in result.output
 
 
-def test_backlog_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+@pytest.mark.parametrize("year", _CLOSED_EXERCISES)
+def test_backlog_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
     result = _invoke(
         [
             "--format",
@@ -72,9 +84,9 @@ def test_backlog_json_preserves_exact_modelo_303_2025_quarterly_coordinates() ->
             "overview",
             "backlog",
             "--from",
-            "2025-01-01",
+            f"{year}-01-01",
             "--to",
-            "2026-02-28",
+            f"{year + 1}-02-28",
             "--allow-incomplete",
         ],
     )
@@ -84,15 +96,10 @@ def test_backlog_json_preserves_exact_modelo_303_2025_quarterly_coordinates() ->
     coordinates = tuple(
         (item["modelo"], item["period"])
         for item in items
-        if item["modelo"] == "303" and item["period"].startswith("2025 ")
+        if item["modelo"] == "303" and item["period"].startswith(f"{year} ")
     )
 
-    assert coordinates == (
-        ("303", "2025 1T"),
-        ("303", "2025 2T"),
-        ("303", "2025 3T"),
-        ("303", "2025 4T"),
-    )
+    assert coordinates == tuple(("303", f"{year} {quarter}") for quarter in ("1T", "2T", "3T", "4T"))
 
 
 def test_backlog_rejects_malformed_from_date() -> None:

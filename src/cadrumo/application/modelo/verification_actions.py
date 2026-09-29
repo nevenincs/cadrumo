@@ -146,6 +146,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
+from ..user_profile.projections import record_to_path_values
 from ..workflow.engine import WorkflowEngine
 from ..workflow.run_models import WorkflowPurpose
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
@@ -207,12 +208,14 @@ from .verification_preconditions import (
     project_verification_findings,
 )
 from .verification_repository_ports import VerificationRepositoryBundle
+from .withholding_detail_gate import append_withholding_detail_findings
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from .work_profile import ModeloWorkProfile
@@ -486,6 +489,7 @@ def _collect_verification_gate_findings(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
@@ -502,6 +506,7 @@ def _collect_verification_gate_findings(
             target=target,
             profile=workflow_profile,
             transaction_repository=transaction_repository,
+            invoice_repository=invoice_repository,
             operation=operation,
             work_profile=work_profile,
         )
@@ -990,6 +995,7 @@ def verify_modelo_revision_with_preconditions(
             verification_repository=vr_repo,
             justificante_repository=repos.justificante,
             transaction_repository=repos.transaction,
+            invoice_repository=repos.draft_review_ports.invoice_repository,
             iva_compensation_decision_repository=repos.iva_compensation_decision,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
             operation=operation,
@@ -1885,6 +1891,7 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> tuple[
@@ -1952,6 +1959,17 @@ def _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_withholding_detail_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        profile_path_values=record_to_path_values(work_profile.record) if work_profile is not None else None,
+        operation=operation,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )

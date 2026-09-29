@@ -273,10 +273,24 @@ def test_scripted_create_ignores_configured_passphrase_without_an_explicit_chann
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
+def _descriptor_refers_to(descriptor: int, opened: os.stat_result) -> bool:
+    """Whether ``descriptor`` is still the file ``opened`` was taken from.
+
+    A closed number is reused by the next open in the same process, so a
+    successful ``fstat`` alone does not mean the channel stayed open.
+    """
+    try:
+        current = os.fstat(descriptor)
+    except OSError:
+        return False
+    return (current.st_dev, current.st_ino) == (opened.st_dev, opened.st_ino)
+
+
 def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channel(tmp_path: Path) -> None:
     reader, writer = os.pipe()
     os.write(writer, _creation_payload().encode())
     os.close(writer)
+    pipe = os.fstat(reader)
 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         created = invoke_cached_cli(
@@ -296,8 +310,7 @@ def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channe
 
     assert created.exit_code == 0, created.output
     assert json.loads(created.stdout)["result"]["profile_name"] == "Descriptor Operator"
-    with pytest.raises(OSError):
-        os.fstat(reader)
+    assert not _descriptor_refers_to(reader, pipe)
     assert [profile["name"] for profile in json.loads(listed.stdout)["result"]["profiles"]] == ["Descriptor Operator"]
 
 

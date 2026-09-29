@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import unicodedata
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -540,6 +541,12 @@ def test_llm_provider_metric_authorities_have_no_retired_or_split_public_identit
     for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
         source = source_path.read_text(encoding="utf-8")
         assert retired_public_name not in source
+        # A class statement spells its name, after the NFKC normalisation Python
+        # applies to non-ASCII identifiers, so only modules spelling one of the
+        # names can declare it; parsing the rest of the tree found nothing.
+        spelled = source if source.isascii() else unicodedata.normalize("NFKC", source)
+        if not any(name in spelled for name in declarations):
+            continue
         for node in ast.walk(ast.parse(source, filename=str(source_path))):
             if isinstance(node, ast.ClassDef) and node.name in declarations:
                 declarations[node.name].add(source_path.relative_to(source_root))

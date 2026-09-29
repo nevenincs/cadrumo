@@ -125,44 +125,39 @@ sequence_order = {source_refs = [2, 0, 1]}
 family = "constructs"
 selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-autoliquidacion"}
 sequence_additions = {deadline_windows = ["modelo-303-2025-01-mensual", "modelo-303-2025-02-mensual", "modelo-303-2025-03-mensual", "modelo-303-2025-04-mensual", "modelo-303-2025-05-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-07-mensual", "modelo-303-2025-08-mensual", "modelo-303-2025-09-mensual", "modelo-303-2025-10-mensual", "modelo-303-2025-11-mensual", "modelo-303-2025-12-mensual", "modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t"], source_refs = ["aeat-dr-303-2025", "aeat-calendario-contribuyente-2026", "boe-orden-hac-1347-2024-iva-authority"], workbook_parity_refs = ["modelo-303-dr"]}
-sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], legal_refs = [42], source_refs = [4, 7], workbook_parity_refs = [0]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5], legal_refs = [43], source_refs = [4, 7], workbook_parity_refs = [0]}
 sequence_order = {source_refs = [0, 1, 2, 6, 3, 4, 7, 5, 8]}
 
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-bien-inversion-divisor-inmueble"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "10", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-bien-inversion-divisor-mueble"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "5", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-bien-inversion-regularizacion-umbral-puntos"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "10", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-bien-inversion-ventana-anos-inmueble"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "9", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-bien-inversion-ventana-anos-mueble"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "4", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-dr303-154-transitional-rate-percent"}
@@ -180,16 +175,14 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-modulos-iva-dificil-justificacion-forfait"}
-sequence_additions = {source_citations = [{source_ref = "boe-orden-hac-1347-2024-iva-authority", required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]}], source_refs = ["boe-orden-hac-1347-2024-iva-authority"], values = [{value = "1", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
-sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
-
+sequence_additions = {source_citations = [{source_ref = "boe-orden-hac-1347-2024-iva-authority", required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]}], source_refs = ["boe-orden-hac-1347-2024-iva-authority"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-prorrata-especial-obligatoria-margen-porcentaje"}
-sequence_additions = {source_refs = ["aeat-dr-303-2025"], values = [{value = "10", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31, comparison = "inclusive"}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-
 [[revisions."2025".family_overrides]]
 family = "projection_endpoints"
 selector = {revision = "2024-desde-09-y-3t", id = "m303-differentiated-deduction:field-domestic-current-base.slot-1"}

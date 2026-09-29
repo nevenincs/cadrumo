@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 10:31+0200\n"
+"POT-Creation-Date: 2026-09-27 12:44+0000\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -162,6 +162,10 @@ msgid "Verify a filing"
 msgstr "Benyújtás ellenőrzése"
 
 #: ../../index.md:164
+msgid "Calculation summary PDF"
+msgstr "Számítási összesítő PDF"
+
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
@@ -173,51 +177,51 @@ msgstr "Benyújtás egyeztetése"
 msgid "Your filings"
 msgstr "Az Ön benyújtásai"
 
-#: ../../index.md:182
+#: ../../index.md:183
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../index.md:182
+#: ../../index.md:183
 msgid "Publish runtime authority"
 msgstr "Futásidejű hatóság közzététele"
 
-#: ../../index.md:182
+#: ../../index.md:183
 msgid "Disclaimer"
 msgstr "Jogi nyilatkozat"
 
-#: ../../index.md:182
+#: ../../index.md:183
 msgid "Help"
 msgstr "Súgó"
 
-#: ../../index.md:191
+#: ../../index.md:192
 msgid "Cadrumo reference"
 msgstr "Cadrumo referencia"
 
-#: ../../index.md:191
+#: ../../index.md:192
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "Overview"
 msgstr "Áttekintés"
 
-#: ../../index.md:202
+#: ../../index.md:203
 msgid "How it works"
 msgstr "Hogyan működik"
 
-#: ../../index.md:209
+#: ../../index.md:210
 msgid "Updates and downloads"
 msgstr "Frissítések és letöltések"
 
-#: ../../index.md:209
+#: ../../index.md:210
 msgid "Architecture"
 msgstr "Architektúra"
 
-#: ../../index.md:209
+#: ../../index.md:210
 msgid "Authoring guide"
 msgstr "Szerzői útmutató"
 
-#: ../../index.md:209
+#: ../../index.md:210
 msgid "Project"
 msgstr "Projekt"
 

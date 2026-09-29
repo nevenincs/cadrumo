@@ -11,7 +11,12 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
-from ...calculations.registry.tests.published_authority import published_supported_filing_years
+from ...calculations.registry.tests.authored_editions import deadline_source_with_sha256, source_exercise
+from ...calculations.registry.tests.legal_text import legal_text_match, spanish_date
+from ...calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ..engine import DeadlineEngine, applies_to, explain, next_deadline
 from ..errors import DeadlineValidationError, NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
@@ -28,6 +33,46 @@ from ..models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
+# The AEAT Calendario del contribuyente whose pinned PDF prints the Modelo 130 first
+# quarter as April 1-20 with direct debit through April 15; the exercise is the one
+# the Modelo 130 windows cite it for.
+_M130_Q1_CALENDAR_EXERCISE = source_exercise(
+    deadline_source_with_sha256("130", "8bc91454ece63a0139f1c0948637239a8c7b2b20fe17dd534b266cb46c0e631b")
+)
+# The AEAT Calendario del contribuyente whose pinned PDF (with the next edition's
+# January entries for its fourth quarter) grounds the Modelo 130 carry chain below.
+_M130_CARRY_CHAIN_CALENDAR_EXERCISE = source_exercise(
+    deadline_source_with_sha256("130", "dfdcae8889ab5fecffa368e235d933676c8a479915e09b107734f8339eed0f50")
+)
+
+
+def _renta_campaign(legal_ref: str, cutoff_month: int, cutoff_day: int) -> tuple[int, str, date, date, date]:
+    """Read one IRPF campaign's plazo general from its Orden and the ejercicio it declares.
+
+    The Orden prints the window as "entre los dias <d> de <mes> y <d> de <mes> de <año>";
+    the campaign declares the ejercicio before the year it runs in. The domiciliación
+    cutoff (the Orden's art. 13.3, not in the bundled corpus) is given as a day of that year.
+    """
+    match = legal_text_match(legal_ref, r"entre los dias (\d{1,2}) de (\w+) y (\d{1,2}) de (\w+) de (\d{4})")
+    opens_day, opens_month, closes_day, closes_month, year = match.groups()
+    closes_on = spanish_date(closes_day, closes_month, year)
+    return (
+        closes_on.year - 1,
+        legal_ref,
+        spanish_date(opens_day, opens_month, year),
+        closes_on,
+        date(closes_on.year, cutoff_month, cutoff_day),
+    )
+
+
+# Each IRPF campaign's plazo general, read from its Orden's own article: Orden
+# HAC/277/2026 art. 7 and Orden HAC/265/2024 art. 8.
+_RENTA_CAMPAIGNS = (
+    pytest.param(*_renta_campaign("orden-hac-277-2026:art-7", 6, 25), id="orden-hac-277-art-7"),
+    pytest.param(*_renta_campaign("orden-hac-265-2024:art-8", 6, 26), id="orden-hac-265-art-8"),
+)
 
 
 def _period(year: int, code: str) -> Period:
@@ -204,8 +249,9 @@ class TestCompute:
             _period(2026, "12"),
         ]
 
-    def test_modelo_303_2025_emits_exact_quarterly_or_monthly_cadence_from_profile(self) -> None:
-        quarterly = _engine().compute(_profile(), 2025, today=date(2025, 1, 1))
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_modelo_303_emits_exact_quarterly_or_monthly_cadence_from_profile(self, filing_year: int) -> None:
+        quarterly = _engine().compute(_profile(), filing_year, today=date(filing_year, 1, 1))
         monthly = _engine().compute(
             _profile(
                 iva=ModeloIVAProfile(
@@ -217,8 +263,8 @@ class TestCompute:
                     hydrocarbon_deposit_advance_payment_deduction_entitled=False,
                 ),
             ),
-            2025,
-            today=date(2025, 1, 1),
+            filing_year,
+            today=date(filing_year, 1, 1),
         )
 
         assert [item.period.registry_token for item in quarterly.obligations if item.modelo == "303"] == [
@@ -339,17 +385,18 @@ class TestCompute:
             "131",
         ]
 
-    def test_q1_2026_window_comesfrom_registry_data(self) -> None:
-        schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
-        q1 = next(o for o in schedule.obligations if o.modelo == "130" and o.period == _period(2026, "1T"))
+    def test_modelo_130_first_quarter_window_comes_from_registry_data(self) -> None:
+        year = _M130_Q1_CALENDAR_EXERCISE
+        schedule = _engine().compute(_profile(), year, today=date(year, 1, 1))
+        q1 = next(o for o in schedule.obligations if o.modelo == "130" and o.period == _period(year, "1T"))
 
-        assert q1.opens_on == date(2026, 4, 1)
-        assert q1.closes_on == date(2026, 4, 20)
-        assert q1.payment_cutoff_on == date(2026, 4, 15)
+        assert q1.opens_on == date(year, 4, 1)
+        assert q1.closes_on == date(year, 4, 20)
+        assert q1.payment_cutoff_on == date(year, 4, 15)
         assert "rd-439-2007:art-110" in q1.boe_references
 
-    def test_modelo_130_2025_windows_cover_same_year_carry_chain(self) -> None:
-        """M130 2025 deadlines are present so local filing can seed later quarters.
+    def test_modelo_130_calendar_windows_cover_same_year_carry_chain(self) -> None:
+        """M130 deadlines are present so local filing can seed later quarters.
 
         External authority: AEAT Calendario del contribuyente 2025 lists
         Modelos 130/131 quarterly presentation windows as April 1-21,
@@ -357,7 +404,8 @@ class TestCompute:
         July 16, and October 15. The 2026 calendar lists the 2025 fourth
         quarter window as January 1-30, with direct debit through January 27.
         """
-        schedule = _engine().compute(_profile(), 2025, today=date(2026, 6, 29))
+        year = _M130_CARRY_CHAIN_CALENDAR_EXERCISE
+        schedule = _engine().compute(_profile(), year, today=date(year + 1, 6, 29))
         rows = {
             obligation.period.registry_token: (
                 obligation.opens_on,
@@ -370,10 +418,10 @@ class TestCompute:
         }
 
         assert rows == {
-            "1T": (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15), ObligationStatus.OVERDUE),
-            "2T": (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16), ObligationStatus.OVERDUE),
-            "3T": (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15), ObligationStatus.OVERDUE),
-            "4T": (date(2026, 1, 1), date(2026, 1, 30), date(2026, 1, 27), ObligationStatus.OVERDUE),
+            "1T": (date(year, 4, 1), date(year, 4, 21), date(year, 4, 15), ObligationStatus.OVERDUE),
+            "2T": (date(year, 7, 1), date(year, 7, 21), date(year, 7, 16), ObligationStatus.OVERDUE),
+            "3T": (date(year, 10, 1), date(year, 10, 20), date(year, 10, 15), ObligationStatus.OVERDUE),
+            "4T": (date(year + 1, 1, 1), date(year + 1, 1, 30), date(year + 1, 1, 27), ObligationStatus.OVERDUE),
         }
 
     def test_obligations_sorted_by_close_date(self) -> None:
@@ -385,56 +433,60 @@ class TestCompute:
 class TestPreRegistrationObligationGate:
     """The deadline engine must not invent pre-registration obligations.
 
-    A 2026 registrant running the backlog must not be shown overdue 2025
-    IVA quarters — obligations from before
+    A registrant running the backlog must not be shown overdue IVA quarters
+    of an earlier exercise — obligations from before
     they had any economic activity. With ``activity_start_date`` set,
     the engine suppresses every window that closes before the alta;
     with it unset, behaviour is unchanged.
     """
 
-    def test_2026_registrant_has_no_2025_iva_obligations(self) -> None:
-        """A profile registered in 2026 owes no 2025 quarterly return.
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_registrant_after_the_exercise_has_no_iva_obligations_for_it(self, filing_year: int) -> None:
+        """A profile registered the following year owes no quarterly return for the exercise.
 
-        Computing the 2025 schedule for a taxpayer whose censo alta
-        is 2026-03-01 must drop every Modelo 303 window — all four
-        2025 quarters close before the alta date."""
+        Computing the schedule for a taxpayer whose censo alta is March 1
+        of the following year must drop every Modelo 303 window — all four
+        quarters close before the alta date."""
 
-        profile = _profile(activity_start_date=date(2026, 3, 1))
-        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+        alta = date(filing_year + 1, 3, 1)
+        profile = _profile(activity_start_date=alta)
+        schedule = _engine().compute(profile, filing_year, today=date(filing_year + 1, 5, 21))
 
         assert all(o.modelo != "303" for o in schedule.obligations), (
-            "2026 registrant was shown a 2025 IVA quarter that closed before their censo alta"
+            f"a {alta} registrant was shown a {filing_year} IVA quarter that closed before their censo alta"
         )
-        assert all(o.closes_on >= date(2026, 3, 1) for o in schedule.obligations), (
+        assert all(o.closes_on >= alta for o in schedule.obligations), (
             "an obligation window closing before the alta survived the gate"
         )
 
-    def test_unset_activity_start_date_keeps_full_2025_schedule(self) -> None:
-        """A profile with no alta date keeps the full 2025 schedule.
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_unset_activity_start_date_keeps_the_full_schedule(self, filing_year: int) -> None:
+        """A profile with no alta date keeps the full schedule.
 
         The gate is opt-in: when ``activity_start_date`` is ``None`` no
-        window is suppressed, so the 2025 schedule still carries the
+        window is suppressed, so the schedule still carries the
         four quarterly Modelo 303 obligations."""
 
         profile = _profile()
         assert profile.activity_start_date is None
-        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+        schedule = _engine().compute(profile, filing_year, today=date(filing_year + 1, 5, 21))
 
         iva_quarters = sorted((o.period for o in schedule.obligations if o.modelo == "303"), key=lambda p: p.code)
-        assert iva_quarters == [_period(2025, "1T"), _period(2025, "2T"), _period(2025, "3T"), _period(2025, "4T")]
+        assert iva_quarters == [_period(filing_year, code) for code in ("1T", "2T", "3T", "4T")]
 
-    def test_alta_inside_2025_keeps_only_post_alta_quarters(self) -> None:
-        """A mid-2025 alta keeps only the windows closing on or after it.
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_alta_inside_the_exercise_keeps_only_post_alta_quarters(self, filing_year: int) -> None:
+        """A mid-year alta keeps only the windows closing on or after it.
 
-        A taxpayer who registered 2025-09-01 owes the Q3 return (window
-        closes 2025-10-20, after the alta) and Q4, but not Q1 / Q2 —
+        A taxpayer who registered on September 1 owes the Q3 return (window
+        closes in October, after the alta) and Q4, but not Q1 / Q2 —
         those windows closed before they had any activity."""
 
-        profile = _profile(activity_start_date=date(2025, 9, 1))
-        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+        profile = _profile(activity_start_date=date(filing_year, 9, 1))
+        schedule = _engine().compute(profile, filing_year, today=date(filing_year + 1, 5, 21))
 
         iva_quarters = sorted((o.period for o in schedule.obligations if o.modelo == "303"), key=lambda p: p.code)
-        assert iva_quarters == [_period(2025, "3T"), _period(2025, "4T")]
+        assert iva_quarters == [_period(filing_year, "3T"), _period(filing_year, "4T")]
 
 
 class TestStatusTransitions:
@@ -517,37 +569,34 @@ class TestAnnualFilingWindows:
       junio de 2024.
     """
 
-    def test_modelo_100_window_resolves_for_renta_2025_campaign(self) -> None:
-        windows = [window for code, _revision, window in _engine().deadline_windows(2025) if code == "100"]
+    @pytest.mark.parametrize(
+        ("filing_year", "legal_ref", "opens_on", "closes_on", "payment_cutoff_on"), _RENTA_CAMPAIGNS
+    )
+    def test_modelo_100_window_resolves_for_each_grounded_renta_campaign(
+        self,
+        filing_year: int,
+        legal_ref: str,
+        opens_on: date,
+        closes_on: date,
+        payment_cutoff_on: date,
+    ) -> None:
+        windows = [window for code, _revision, window in _engine().deadline_windows(filing_year) if code == "100"]
         assert len(windows) == 1
         window = windows[0]
-        assert window.id == "modelo-100-2025-0a"
+        assert window.id == f"modelo-100-{filing_year}-0a"
         assert window.period_kind == "annual"
-        assert window.opens_on == date(2026, 4, 8)
-        assert window.closes_on == date(2026, 6, 30)
-        assert window.payment_cutoff_on == date(2026, 6, 25)
-        assert "orden-hac-277-2026:art-7" in window.legal_refs
-
-    def test_modelo_100_window_resolves_for_renta_2023_campaign(self) -> None:
-        windows = [window for code, _revision, window in _engine().deadline_windows(2023) if code == "100"]
-        assert len(windows) == 1
-        window = windows[0]
-        assert window.id == "modelo-100-2023-0a"
-        assert window.opens_on == date(2024, 4, 3)
-        assert window.closes_on == date(2024, 7, 1)
-        assert window.payment_cutoff_on == date(2024, 6, 26)
-        assert "orden-hac-265-2024:art-8" in window.legal_refs
+        assert window.opens_on == opens_on
+        assert window.closes_on == closes_on
+        assert window.payment_cutoff_on == payment_cutoff_on
+        assert legal_ref in window.legal_refs
 
     @pytest.mark.parametrize(
-        ("filing_year", "opens_on", "closes_on", "payment_cutoff_on"),
-        (
-            (2023, date(2024, 4, 3), date(2024, 7, 1), date(2024, 6, 26)),
-            (2025, date(2026, 4, 8), date(2026, 6, 30), date(2026, 6, 25)),
-        ),
+        ("filing_year", "_legal_ref", "opens_on", "closes_on", "payment_cutoff_on"), _RENTA_CAMPAIGNS
     )
     def test_modelo_100_tax_year_schedule_carries_its_following_campaign_window(
         self,
         filing_year: int,
+        _legal_ref: str,
         opens_on: date,
         closes_on: date,
         payment_cutoff_on: date,

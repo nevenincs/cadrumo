@@ -229,6 +229,13 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     #: non-inferable, so it is carried from the operator rather than derived
     #: from the category, the direction, or the counterparty country.
     deduction_fact_kind: IvaDeductionFactKind | None = None
+    #: The bienes-inversion register identity a LIVA art. 108 acquisition deducts
+    #: against. Required by fact 0085 for every investment deduction kind and
+    #: forbidden on every other one, and checked for reciprocity against the
+    #: register record's own ``acquisition_ledger_id``. Carried from the operator
+    #: because the register record is declared separately, after the ledger row
+    #: exists, and nothing in the movement itself identifies the asset.
+    investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
@@ -340,6 +347,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
+    investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None

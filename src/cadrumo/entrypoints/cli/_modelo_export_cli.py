@@ -11,6 +11,7 @@ from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
@@ -49,8 +50,27 @@ def _completeness_advisory_notice(result: ModeloExportResult) -> Notice:
     )
 
 
+def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.export.development_software_identity",
+        message=(
+            "The file header carries Cadrumo's all-zero development software identity; "
+            "AEAT will not accept this file for presentation."
+        ),
+        context={
+            "software_identity_grade": str(result.software_identity_grade),
+            "modelo": str(result.modelo),
+            "filing_year": str(result.filing_year),
+            "period": result.period.registry_token,
+        },
+    )
+
+
 def _export_notices(result: ModeloExportResult) -> list[Notice]:
     notices = [_local_export_evidence_notice(result)]
+    if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
+        notices.append(_development_software_identity_notice(result))
     if result.completeness_unverified:
         notices.append(_completeness_advisory_notice(result))
     return notices
@@ -71,6 +91,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
         f"format\t{result.format}",
         f"bucket_event_id\t{result.bucket_event_id}",
         f"evidence_status\t{result.local_evidence_status}",
+        f"software_identity_grade\t{result.software_identity_grade or 'none'}",
         f"evidence_notice\t{result.official_evidence_message}",
     ]
 
@@ -116,12 +137,16 @@ def modelo_export_verb(
             refund_election=operator_input.refund_election,
             payment_election=operator_input.payment_election,
             prior_domiciliation_election=operator_input.prior_domiciliation_election,
+            replace_existing=operator_input.replace_existing,
         ),
         work_unit_id=selected_revision.unit.work_unit_id,
     )
     if not isinstance(completed.projection, ModeloExportPublicResultV2):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    result = completed.projection.to_result()
+    receipt = completed.projection.fichero_boe
+    if receipt is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    result = receipt.to_result()
     export_result = ModeloExportPayload.from_result(result)
     emit_envelope(
         ctx,

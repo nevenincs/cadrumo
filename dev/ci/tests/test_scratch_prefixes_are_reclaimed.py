@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import ast
 import re
+import unicodedata
 from pathlib import Path
 from typing import Final
 
@@ -49,6 +50,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: PID and is minted by the sweep's own module, so it is not a discovered
 #: subject; every other swept family is.
 _SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, "cadrumo-pytest-")
+
+#: The callable whose calls mint a scratch family, as a bare name or an attribute.
+_MKDTEMP: Final = "mkdtemp"
 
 
 def _mkdtemp_prefixes(source: str) -> tuple[list[str], int, int]:
@@ -79,12 +83,19 @@ def _mkdtemp_prefixes(source: str) -> tuple[list[str], int, int]:
     prefixes: list[str] = []
     unreadable = 0
     anonymous = 0
-    for node in ast.walk(ast.parse(source)):
+    tree = ast.parse(source)
+    # Parsed first, so a source caught mid-write is still announced. The callee
+    # is an identifier, which Python folds to NFKC, so a source whose folded
+    # text never spells it holds no call to walk for.
+    folded = source if source.isascii() else unicodedata.normalize("NFKC", source)
+    if _MKDTEMP not in folded:
+        return prefixes, unreadable, anonymous
+    for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         function = node.func
         name = function.attr if isinstance(function, ast.Attribute) else getattr(function, "id", None)
-        if name != "mkdtemp":
+        if name != _MKDTEMP:
             continue
         # ``mkdtemp(suffix, prefix, dir)``: the second positional is the prefix,
         # and reading only the keyword would rebuild the blind spot this

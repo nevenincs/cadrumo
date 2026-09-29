@@ -20,4 +20,3 @@ required_text = ["operaciones con terceras personas"]
 value = "3005.06"
 date_axis = "filing_period"
 valid_from = 2011-01-01
-valid_to = 2024-12-31

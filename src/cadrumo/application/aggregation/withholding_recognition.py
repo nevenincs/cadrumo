@@ -17,7 +17,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class WithholdingRecognitionRule(StrEnum):
-    """The recognition rules whose 2025 applicability is explicitly grounded."""
+    """The recognition rules the RIRPF grounds: art. 78, with art. 94 for exigibility and art. 98 for formalization."""
 
     PAID_OR_SATISFIED = "paid_or_satisfied"
     EXIGIBILITY_OR_EARLIER_PAYMENT = "exigibility_or_earlier_payment"
@@ -42,7 +42,7 @@ class WithholdingRecipientTaxRegime(StrEnum):
 
 
 class WithholdingIncomeKind(StrEnum):
-    """Income kinds with a distinct 2025 recognition treatment."""
+    """Income kinds with a distinct recognition treatment."""
 
     WORK = "work"
     PROFESSIONAL = "professional"
@@ -107,15 +107,17 @@ def derive_withholding_recognition(
     *,
     modelo: str | None = None,
 ) -> WithholdingRecognition:
-    """Derive recognition from grounded 2025 evidence or refuse before mutation.
+    """Derive recognition from grounded evidence or refuse before mutation.
+
+    The applicable year is the filer cadence's, which the callers resolve through
+    the support envelope; the rules themselves come from the RIRPF provisions
+    :class:`WithholdingRecognitionRule` cites.
 
     ``modelo`` is intentionally optional while rule derivation is shared.  The
     formalization representation is retained as evidence, but filing into 123
     or 193 refuses until the selected modelo mapping is grounded.
     """
     _validate_recipient(evidence)
-    if evidence.applicable_year != 2025:
-        raise WithholdingRecognitionError("unsupported_applicable_year")
 
     if evidence.income_kind in {
         WithholdingIncomeKind.WORK,

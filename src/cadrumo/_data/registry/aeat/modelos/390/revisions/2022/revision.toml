@@ -112,7 +112,7 @@ removed_fields = []
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "iva.anual.soportado.interiores" }
-fields = { binding = "modelo-390-iva-soportado-interiores-cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.soportado.interiores" }
+fields = { formula = "modelo-390-iva-anual-deducible-interiores-corrientes-cuota", input_kind = "computed", legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.soportado.interiores" }
 removed_fields = []
 
 [[revisions."2022".casilla_overrides]]

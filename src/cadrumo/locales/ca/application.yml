@@ -827,6 +827,77 @@ application:
           actius amb `aeat app live borrador 100 list`.
         unsupported_modelo: El binding d'esborrany no està suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
+    calculation_report:
+      local_calculation_notice: 'Informe de càlcul local de Cadrumo. No és evidència
+        oficial de presentació davant l''AEAT. L''evidència oficial l''emet l''AEAT
+        després de la presentació: justificant; consulta de declaracions presentades;
+        o acarament per CSV.'
+    calculation_summary:
+      column_amount: Import
+      column_casilla: Casella
+      column_concept: Concepte
+      fact_exported_at: Exportat
+      fact_filing: Presentació
+      fact_revision_state: Estat de la revisió
+      fact_taxpayer: Contribuent
+      fact_verification: Verificació
+      filing_none: No presentat
+      filing_recorded: Presentació registrada a Cadrumo; la prova oficial és el justificant
+        de l'AEAT
+      footer_notice: 'Càlcul local de Cadrumo: no és evidència oficial de l''AEAT'
+      grade_development_mock: desenvolupament (no presentable)
+      grade_reviewed: revisada
+      identity_development_mock: 'Identitat de programari de desenvolupament (programa
+        {program}, NIF del desenvolupador {developer_tax_id}): el fitxer de presentació
+        d''aquest model no es pot presentar a l''AEAT.'
+      identity_none: El disseny de registre d'aquest model no reserva cap identitat
+        de programari.
+      identity_reviewed: 'Identitat de programari revisada: el fitxer de presentació
+        d''aquest model porta una identitat de programari registrada.'
+      legend: 'Valors: una xifra, inclòs un zero, és un valor calculat; «sense dada»
+        indica que la revisió no va registrar cap valor per a la casella; «n/a · no
+        aplicable» indica que el registre demostra que la casella no s''aplica a aquest
+        període.'
+      notice_title: 'Càlcul local: no és un justificant de l''AEAT'
+      page_counter: Pàgina {page} de {pages}
+      section_unnamed: Caselles
+      signature_meaning: La signatura d'integritat de Cadrumo adjunta a aquest PDF
+        acredita que la clau d'aquest perfil va declarar que, en l'instant d'exportació
+        segons el rellotge d'aquesta instal·lació, la revisió, l'informe de verificació,
+        la instantània del registre i la generació de l'autoritat indicats van produir
+        exactament aquest informe, aquest CSV i aquestes pàgines. No acredita l'acceptació
+        ni la presentació davant l'AEAT, la correcció jurídica, la veracitat de les
+        dades, la identitat ni el consentiment del contribuent, una hora de confiança
+        ni que la clau pertanyi a una persona concreta. Compareu l'empremta de la
+        clau amb una rebuda per un altre canal abans de confiar-hi.
+      state_borrador: Esborrany
+      state_descartado: Descartat
+      state_presentado: Presentat
+      state_presentado_supersedido: Presentat i substituït
+      state_verificado_completo: Verificat complet
+      subtitle: Exercici {year} · Període {period} · Revisió del registre {registry_revision}
+      title: Resum del càlcul · Model {modelo}
+      trace_authority_generation: Generació lògica de l'autoritat del registre
+      trace_calculation_revision: Revisió del càlcul
+      trace_csv_sha256: SHA-256 del CSV adjunt
+      trace_filing_record: Registre de presentació
+      trace_heading: Traçabilitat i integritat
+      trace_ledger_snapshot: Empremta de la instantània del llibre registre
+      trace_none: cap
+      trace_registry_snapshot: Instantània del registre (model · revisió · any · període)
+      trace_report_sha256: SHA-256 de l'informe (JSON adjunt)
+      trace_signing_key: Empremta de la clau de signatura (SHA-256)
+      trace_software_identity: Grau d'identitat de programari
+      trace_verification_report: Informe de verificació
+      trace_work_unit: Unitat de treball
+      value_absent: sense dada
+      value_false: 'No'
+      value_not_applicable: n/a · no aplicable
+      value_true: Sí
+      verification_blocked: Bloquejada
+      verification_complete: Completa
+      verification_incomplete: Incompleta
+      verification_none: Sense verificació registrada
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
@@ -907,6 +978,12 @@ application:
         no existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
         del registre per al model %{modelo}, exercici %{filing_year}, període %{period}.
+      calculation_report_notice_unavailable: No hi ha declaració de càlcul local disponible
+        per a l'idioma d'informe {report_language} (clau de catàleg {translation_key});
+        es rebutja l'informe de càlcul en lloc de produir-lo sense ella.
+      calculation_report_taxpayer_unknown: El perfil actiu no declara NIF ni nom del
+        contribuent. Completeu la identitat del perfil abans d'escriure un informe
+        de càlcul; un informe ha de dir de qui és la declaració que recull.
       calculation_revision_id_is_discarded_work_unit: L'identificador %{calculation_revision_id}
         és una unitat de treball descartada, no una revisió de càlcul.
       calculation_revision_id_is_work_unit: L'identificador %{calculation_revision_id}
@@ -915,6 +992,14 @@ application:
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisió de càlcul %{calculation_revision_id}
         pertany a la unitat de treball descartada %{work_unit_id}.
+      calculation_summary_chrome_unavailable: Falta el text {translation_key} del
+        resum del càlcul en l'idioma {report_language}; el resum es rebutja en lloc
+        de produir-se sense aquest text.
+      calculation_summary_pdf_unavailable: El resum del càlcul en PDF necessita el
+        complement opcional «{extra}», que aquesta instal·lació no té. Instal·leu-lo
+        amb pip install cadrumo[{extra}] i torneu-ho a provar; verificar un resum
+        no el necessita.
+      calculation_summary_pdf_unreadable: El fitxer no és un PDF llegible ({error_type}).
       caller_casilla_source_binding_conflict: 'Les entrades de casella aportades no
         poden sobreescriure caselles vinculades a una font derivada del dipòsit (caselles
         vinculades a font): %{casillas}.'
@@ -1264,6 +1349,28 @@ application:
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacció repercutida no té evidència
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} %{filing_year}
+        no declara cap percepció per a cap perceptor, però el llibre registre recull
+        rendes sotmeses a retenció satisfetes en aquest exercici: %{contradicting_invoice_count}
+        factura o factures rebudes que declaren una retenció que el contribuent deu
+        com a retenidor i %{contradicting_ledger_row_count} apunt o apunts de pagament
+        en una categoria IRPF de retenció. El detall %{source_family} del model %{source_modelo}
+        és buit, per la qual cosa res no les declara. Registreu-les mitjançant la
+        superfície d''agregació del model abans de verificar.'
+      withholding_detail_absent_attested: 'El model %{modelo} %{filing_year} no declara
+        cap percepció per a cap perceptor, i el període o períodes %{attested_periods}
+        consten atestats mitjançant la dada de perfil %{attestation_profile_path}
+        com a no haver satisfet cap renda sotmesa a retenció. No escau presentar resum
+        anual en un exercici en què no es va satisfer cap de les rendes que declara.
+        Reviseu l''exercici si es va abonar alguna renda exempta o inferior al llindar
+        de retenció: aquestes es declaren encara que no s''hagi practicat cap retenció.
+        Aquesta preparació local no és una presentació davant l''AEAT.'
+      withholding_detail_absent_unproven: 'El model %{modelo} %{filing_year} no declara
+        cap percepció per a cap perceptor i res no prova aquesta absència: el detall
+        %{source_family} del model %{source_modelo} és buit i el període o períodes
+        %{unattested_periods} no consten declarats sense retencions. Registreu els
+        registres per perceptor mitjançant la superfície d''agregació del model, o
+        declareu cada període mitjançant la dada de perfil %{attestation_profile_path}.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

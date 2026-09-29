@@ -47,7 +47,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.atomic_write import StagedPublication
 from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
@@ -80,17 +80,12 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_exports import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    ExportLayoutDefinition,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixRole,
-)
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ...domain.filing.software_identity import AeatProductSoftwareIdentity
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity, AeatSoftwareIdentityGrade
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import (
     SEALED_REVISION_STATES,
@@ -100,7 +95,6 @@ from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
-    ModeloExportProductIdentityUnavailableError,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
@@ -160,6 +154,7 @@ from .action_errors import (
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
+from .export_sink import LocalFileExportSink
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
@@ -321,18 +316,6 @@ class ModeloExportUnsupportedError(ModeloExportError):
     """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
 
 
-class ModeloExportOutputPathError(ModeloExportError):
-    """Raised when the operator-supplied ``--output`` path cannot receive the artefact.
-
-    Validated up front, before any fichero-BOE bytes are written, so an
-    unusable destination (empty path, an existing directory, a missing or
-    unwritable parent directory) is refused with a typed, operator-facing
-    message instead of surfacing a raw ``OSError`` traceback from the
-    staged write — and crucially before any cleartext financial bytes
-    touch disk.
-    """
-
-
 class ModeloExportCommand(BaseModel):
     """Strict input contract for :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
 
@@ -341,8 +324,9 @@ class ModeloExportCommand(BaseModel):
             revision to export. Must be in ``VERIFICADO_COMPLETO`` or
             ``FILED`` state.
         output_path: Absolute or working-directory-relative path to
-            write the fichero-BOE artefact. Parent directories are
-            created if missing.
+            write the fichero-BOE artefact. Its parent directory must
+            already exist; an existing file is refused unless
+            ``replace_existing`` is set.
         actor: Operator identifier captured into the
             ``MODELO_EXPORTED`` event payload and used as the draft
             ``approved_by`` field for the transient export draft.
@@ -359,9 +343,10 @@ class ModeloExportCommand(BaseModel):
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
             domiciliation. It is required for Modelo 303; non-303 exports
             resolve the neutral ``KEEP`` value internally.
-        product_software_identity: Explicit, reviewed product/software
-            authority for the Modelo 303 DP30300 envelope. It is required for
-            Modelo 303 and is not inferred from a taxpayer or presenter.
+        replace_existing: Whether the operator explicitly chose to replace a
+            file already at ``output_path``. An export is the artefact an
+            operator carries to AEAT, so destroying an earlier one is never
+            the default.
     """
 
     model_config = _STRICT_FROZEN
@@ -375,7 +360,7 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
-    product_software_identity: AeatProductSoftwareIdentity | None = None
+    replace_existing: bool = False
 
 
 class ModeloExportResult(BaseModel):
@@ -393,7 +378,7 @@ class ModeloExportResult(BaseModel):
             the active profile bucket at export time).
         modelo: AEAT modelo identifier.
         filing_year: AEAT filing year.
-        period: Filing period as a typed :class:`~cadrumo.core.Period` value.
+        period: Filing period as a typed :class:`~cadrumo.core.period.Period` value.
         output_path: Absolute path the file was written to.
         byte_size: Size of the written file in bytes.
         file_sha256: Hex-encoded SHA-256 of the written bytes.
@@ -407,6 +392,9 @@ class ModeloExportResult(BaseModel):
         refund_election: The semantic negative-result election when applicable.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
+        software_identity_grade: Grade of the program identifier and
+            developer NIF stamped into an envelope-prefixed header, or
+            ``None`` when the selected layout renders no such header.
     """
 
     model_config = _STRICT_FROZEN
@@ -434,6 +422,7 @@ class ModeloExportResult(BaseModel):
     )
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
+    software_identity_grade: AeatSoftwareIdentityGrade | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
     completeness_unverified: bool = Field(
@@ -452,46 +441,33 @@ class ModeloExportResult(BaseModel):
         return _COMPLETENESS_UNVERIFIED_MESSAGE
 
 
+def envelope_stamped_software_identity(
+    export_layout: ExportLayoutDefinition | None,
+    *,
+    product_software_identity: AeatProductSoftwareIdentity,
+) -> AeatProductSoftwareIdentity | None:
+    """Return the identity the selected layout's header reserves, or ``None``.
+
+    AEAT reserves the program identifier and developer NIF slots in an envelope
+    prefix or auxiliary envelope header. A layout that renders neither carries no
+    software identity at all, and claiming one for it would state a header fact
+    the file does not hold. Both the fichero-BOE writer and the calculation
+    report answer the question here so a report cannot name a grade the filing
+    file would not carry.
+    """
+    if export_layout is None:
+        return None
+    if export_layout.filing_envelope is None and export_layout.auxiliary_envelope_header is None:
+        return None
+    return product_software_identity
+
+
 def _sha256_ref(value: str) -> str:
     return f"sha256:{sha256_hex(value.encode('utf-8'))}"
 
 
-def _validate_output_path(output_path: Path) -> None:
-    """Refuse an unusable ``--output`` destination before writing any bytes.
-
-    A clean typed refusal here is the only safe place to reject a bad
-    destination: once the staged write has run, real fichero-BOE financial
-    bytes already exist in the staging sibling, and a late ``OSError`` at
-    publication would surface a raw traceback for a destination that was
-    unusable before a single byte was rendered.
-
-    Raises:
-        ModeloExportOutputPathError: When the path is empty, names an
-            existing directory, or its parent directory is missing or
-            not a directory.
-    """
-    raw = str(output_path).strip()
-    if not raw or raw == ".":
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": raw or "(empty)", "reason": "path is empty"},
-        )
-    if output_path.is_dir():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "path is an existing directory"},
-        )
-    parent = output_path.parent
-    if not parent.exists():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "parent directory does not exist"},
-        )
-    if not parent.is_dir():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "parent path is not a directory"},
-        )
+def _export_sink(command: ModeloExportCommand) -> LocalFileExportSink:
+    return LocalFileExportSink(path=command.output_path, replace_existing=command.replace_existing)
 
 
 def _iva_wallet_decision_export_provenance(
@@ -537,7 +513,18 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     )
 
 
-def _require_exportable_revision_state(revision: CalculationRevision) -> None:
+def require_exportable_revision_state(revision: CalculationRevision) -> None:
+    """Refuse a revision no export artefact may be produced from.
+
+    Only a sealed :class:`CalculationRevision` -- verificado-completo, presentado, or a superseded
+    presentado -- describes a settled calculation. A draft is still being
+    edited, so any artefact rendered from it would claim a state the revision
+    does not hold. Every modelo export destination applies this one rule rather
+    than restating the state set.
+
+    Raises:
+        CalculationRevisionStateError: The revision is not sealed.
+    """
     if revision.state not in SEALED_REVISION_STATES:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
@@ -571,7 +558,7 @@ def _compose_export_dictionary_values(
 
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return the typed :class:`~cadrumo.core.Period` carried by the work unit."""
+    """Return the typed :class:`~cadrumo.core.period.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
@@ -647,7 +634,7 @@ def _approve_export_draft(
     The :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` is forwarded to
     :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
-    workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
+    workflow gate. Returns the resolved :class:`~cadrumo.core.period.Period` and approved
     :class:`~domain.filing.schema.ModeloDraft`.
     """
     inputs: ModeloInputs = revision_filing_replay_inputs(
@@ -1040,6 +1027,10 @@ def _persist_exported_draft(
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
+    software_identity = envelope_stamped_software_identity(
+        export_layout,
+        product_software_identity=export_ports.product_software_identity,
+    )
     dictionary_values = (
         _compose_export_dictionary_values(
             draft=approved,
@@ -1059,7 +1050,8 @@ def _persist_exported_draft(
     # which discards it on EVERY exit that does not publish -- including an
     # operator interrupt -- so cleartext financial data cannot outlive a failed
     # export next to the destination the operator chose.
-    with hardened_staged_publication(command.output_path) as staged:
+    sink = _export_sink(command)
+    with sink.staged() as staged:
         receipt = _write_export_staging(
             staged=staged,
             command=command,
@@ -1067,7 +1059,7 @@ def _persist_exported_draft(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=command.product_software_identity,
+            product_software_identity=software_identity,
             schema_provider=schema_provider,
         )
         event = _emit_export_event(
@@ -1080,19 +1072,10 @@ def _persist_exported_draft(
             exported_at=exported_at,
             bucket_event_repository=export_ports.bucket_event,
         )
-        # Defence in depth: even though _validate_output_path refused an
-        # existing-directory / unwritable destination up front, a concurrent
-        # change to the destination (a TOCTOU race) can still make the
-        # publication fail with an OSError. Translate it to the same typed
-        # refusal that destination check raises, rather than surfacing a raw
-        # traceback from inside the write substrate.
-        try:
-            staged.publish()
-        except OSError as exc:
-            raise ModeloExportOutputPathError(
-                translated_message="application.modelo.errors.export_output_path_invalid",
-                context={"output_path": str(command.output_path), "reason": str(exc)},
-            ) from exc
+        # Defence in depth: the sink re-checks the path before staging and
+        # translates a destination that changed underneath it (a TOCTOU race,
+        # a file that appeared after the check) into the same typed refusal.
+        sink.publish(staged)
 
     # The receipt below was measured against the staging file, and the result and
     # the durable MODELO_EXPORTED event both publish those numbers against
@@ -1153,6 +1136,7 @@ def _persist_exported_draft(
         prior_domiciliation_election=prior_domiciliation_election,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
+        software_identity_grade=None if software_identity is None else software_identity.grade,
         completeness_unverified=completeness_unverified,
     )
 
@@ -1309,18 +1293,34 @@ def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> 
     )
 
 
-def _load_modelo_export_authorities(
-    command: ModeloExportCommand,
+def load_exportable_revision_target(
+    calculation_revision_id: CalculationRevisionId,
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
-    revision = export_ports.calculation.load(operation=operation).get(command.calculation_revision_id)
+    """Resolve the revision an export addresses together with its work unit.
+
+    The lookup every modelo export destination shares: the revision must exist,
+    its registry coordinates must still resolve under the caller's pinned
+    authority generation, its work unit must exist and carry the filing-instance
+    evidence its lifecycle requires, and that work unit must live in the active
+    bucket. A destination that repeated any of these would be free to admit a
+    revision the fichero-BOE refuses.
+
+    Raises:
+        CalculationRevisionNotFoundError: No revision carries that id.
+        WorkUnitNotFoundError: The revision names a work unit that is absent.
+        ModeloExportError: The work unit lacks required filing-instance evidence.
+        ModeloExportCrossBucketRefusedError: The work unit belongs to another
+            bucket than the active one.
+    """
+    revision = export_ports.calculation.load(operation=operation).get(calculation_revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": command.calculation_revision_id},
+            context={"calculation_revision_id": calculation_revision_id},
         )
     require_calculation_revision_coordinates_current(revision, operation=operation)
     work_unit = export_ports.work_unit.load().get(revision.work_unit_id)
@@ -1335,7 +1335,7 @@ def _load_modelo_export_authorities(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={
-                "calculation_revision_id": command.calculation_revision_id,
+                "calculation_revision_id": calculation_revision_id,
                 "cause_type": type(exc).__name__,
             },
         ) from exc
@@ -1410,44 +1410,6 @@ def _require_modelo_export_clean_state(
     )
 
 
-def _product_identity_unavailable(
-    *,
-    work_unit: WorkUnit,
-    envelope: FilingEnvelopeDefinition | AuxiliaryEnvelopeHeaderDefinition | None,
-    calculation_revision_id: str,
-) -> ModeloExportProductIdentityUnavailableError:
-    """Name the developer-owned header fields, located by the selected record design, that block export.
-
-    Positions are 1-based byte ranges accumulated from the layout's declared
-    prefix fields, so the refusal points at the same bytes the official design
-    reserves for the program identifier and the developer's tax identifier.
-    """
-    positions: dict[FilingEnvelopePrefixRole, str] = {}
-    offset = 0
-    for field in () if envelope is None else envelope.prefix_fields:
-        if field.role in {FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER, FilingEnvelopePrefixRole.DEVELOPER_TAX_ID}:
-            positions[field.role] = f"{offset + 1}-{offset + field.length}"
-        offset += field.length
-    program = positions.get(FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER)
-    developer = positions.get(FilingEnvelopePrefixRole.DEVELOPER_TAX_ID)
-    if envelope is None or program is None or developer is None:
-        raise ModeloExportError(
-            f"Modelo {work_unit.modelo} export layout renders an envelope without locating its product identity",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    return ModeloExportProductIdentityUnavailableError(
-        f"Modelo {work_unit.modelo} export needs {envelope.record_identity} header fields "
-        f"program identifier ({program}) and developer tax id ({developer}); no reviewed product identity exists",
-        context={
-            "calculation_revision_id": calculation_revision_id,
-            "modelo": str(work_unit.modelo),
-            "record": envelope.record_identity,
-            "program_positions": program,
-            "developer_positions": developer,
-        },
-    )
-
-
 def _resolve_modelo_exportprior_domiciliation(
     command: ModeloExportCommand,
     *,
@@ -1462,23 +1424,6 @@ def _resolve_modelo_exportprior_domiciliation(
         raise ModeloExportPriorDomiciliationElectionRequiredError(
             "Modelo 303 export requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
-        )
-    export_layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
-    # The product/software identity belongs to the layout's envelope prefix -- a
-    # filing envelope or an auxiliary header -- not to one modelo id.
-    renders_envelope_prefix = bool(export_layouts) and (
-        export_layouts[0].filing_envelope is not None or export_layouts[0].auxiliary_envelope_header is not None
-    )
-    if renders_envelope_prefix and command.product_software_identity is None:
-        raise _product_identity_unavailable(
-            work_unit=work_unit,
-            envelope=export_layouts[0].filing_envelope or export_layouts[0].auxiliary_envelope_header,
-            calculation_revision_id=command.calculation_revision_id,
-        )
-    if not renders_envelope_prefix and command.product_software_identity is not None:
-        raise ModeloExportError(
-            "product/software identity is only admitted for a layout that renders an envelope prefix",
-            context={"calculation_revision_id": command.calculation_revision_id},
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
         election=(
@@ -1510,8 +1455,8 @@ def _prepare_modelo_export(
     operation: PinnedAuthorityOperation,
 ) -> _PreparedModeloExport:
     """Load and validate every persisted authority required before export bytes."""
-    revision, work_unit = _load_modelo_export_authorities(
-        command,
+    revision, work_unit = load_exportable_revision_target(
+        command.calculation_revision_id,
         active_bucket_id=active_bucket_id,
         export_ports=export_ports,
         operation=operation,
@@ -1531,7 +1476,7 @@ def _prepare_modelo_export(
         filing_repository=export_ports.filing,
         justificante_repository=export_ports.justificante,
     )
-    _require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision)
     # A handoff whose filed source was replaced makes the revision a statement
     # about superseded facts, so it is refused before anything judges that
     # revision's own evidence -- the order verification and filing keep too.
@@ -1627,7 +1572,7 @@ def export_modelo_revision(
             refund election.
         :func:`~cadrumo.application.filing.producer_snapshot.build_filing_producer_snapshot`:
             Builds the sole typed producer boundary consumed by the renderer.
-        :func:`~cadrumo.application.modelo.export._validate_output_path`:
+        :meth:`~cadrumo.application.modelo.export_sink.LocalFileExportSink.require_writable`:
             Refuses unsafe destinations before fichero bytes are written.
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -1642,7 +1587,7 @@ def export_modelo_revision(
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
     # late publication — and never after cleartext financial bytes exist.
-    _validate_output_path(command.output_path)
+    _export_sink(command).require_writable()
 
     prepared = _prepare_modelo_export(
         command,
@@ -1694,10 +1639,12 @@ __all__ = [
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportEvidenceMissingError",
     "ModeloExportNoActiveBucketError",
-    "ModeloExportOutputPathError",
     "ModeloExportResult",
     "ModeloExportUnsupportedError",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
+    "envelope_stamped_software_identity",
     "export_modelo_revision",
+    "load_exportable_revision_target",
+    "require_exportable_revision_state",
 ]

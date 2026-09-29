@@ -9,6 +9,7 @@ from contextvars import ContextVar
 
 import pytest
 
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._overview_native_support import invoke_native_overview
 from ._runtime_profile_cli_fixture import NativeCliProfileFixture
 
@@ -36,6 +37,9 @@ def _invoke(args: list[str]):
     return invoke_native_overview(_PROFILE.get(), args)
 
 
+_SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
+
+
 def test_agenda_renders_envelope_with_explicit_date() -> None:
     """A concrete --date renders the agenda envelope including as_of,
     horizon, and the four cohort headers."""
@@ -52,7 +56,8 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
     assert "overdue\t" in result.output
 
 
-def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_agenda_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
     result = _invoke(
         [
             "--format",
@@ -61,7 +66,7 @@ def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> 
             "overview",
             "agenda",
             "--date",
-            "2025-02-01",
+            f"{year}-02-01",
             "--horizon",
             "365",
             "--allow-incomplete",
@@ -74,15 +79,10 @@ def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> 
     coordinates = tuple(
         (entry["modelo"], entry["period"])
         for entry in entries
-        if entry["modelo"] == "303" and entry["period"].startswith("2025 ")
+        if entry["modelo"] == "303" and entry["period"].startswith(f"{year} ")
     )
 
-    assert coordinates == (
-        ("303", "2025 1T"),
-        ("303", "2025 2T"),
-        ("303", "2025 3T"),
-        ("303", "2025 4T"),
-    )
+    assert coordinates == tuple(("303", f"{year} {quarter}") for quarter in ("1T", "2T", "3T", "4T"))
 
 
 def test_agenda_rejects_zero_horizon() -> None:

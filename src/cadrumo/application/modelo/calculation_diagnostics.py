@@ -129,7 +129,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
         prorrata_register_repository: Required bucket-bound prorrata register
             capability used by the Modelo 303 regularización advisory.
         bienes_inversion_repository: Required bucket-bound capital-goods register
-            capability used by the Modelo 303 regularización advisory.
+            capability used by the Modelo 303 regularización advisory and by
+            the annual IVA settlement advisory's reciprocity proof.
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement advisory.
         operation: The caller's pinned authority for an in-progress calculation.
@@ -280,6 +281,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
                 observation_repository=observation_repository,
                 prorrata_register_repository=prorrata_register_repository,
                 transaction_repository=transaction_repository,
+                bienes_inversion_repository=bienes_inversion_repository,
                 operation=authority,
             )
         )

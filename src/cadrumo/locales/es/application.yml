@@ -828,6 +828,77 @@ application:
           activos con `aeat app live borrador 100 list`.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
+    calculation_report:
+      local_calculation_notice: 'Informe de cálculo local de Cadrumo. No es evidencia
+        oficial de presentación ante la AEAT. La evidencia oficial la emite la AEAT
+        tras la presentación: justificante; consulta de declaraciones presentadas;
+        o cotejo por CSV.'
+    calculation_summary:
+      column_amount: Importe
+      column_casilla: Casilla
+      column_concept: Concepto
+      fact_exported_at: Exportado
+      fact_filing: Presentación
+      fact_revision_state: Estado de la revisión
+      fact_taxpayer: Contribuyente
+      fact_verification: Verificación
+      filing_none: No presentado
+      filing_recorded: Presentación registrada en Cadrumo; la prueba oficial es el
+        justificante de la AEAT
+      footer_notice: 'Cálculo local de Cadrumo: no es evidencia oficial de la AEAT'
+      grade_development_mock: desarrollo (no presentable)
+      grade_reviewed: revisada
+      identity_development_mock: 'Identidad de software de desarrollo (programa {program},
+        NIF de desarrollador {developer_tax_id}): el fichero de presentación de este
+        modelo no es presentable en la AEAT.'
+      identity_none: El diseño de registro de este modelo no reserva identidad de
+        software.
+      identity_reviewed: 'Identidad de software revisada: el fichero de presentación
+        de este modelo lleva una identidad de software registrada.'
+      legend: 'Valores: una cifra, incluido un cero, es un valor calculado; «sin dato»
+        indica que la revisión no registró valor para la casilla; «n/a · no aplicable»
+        indica que el registro demuestra que la casilla no aplica a este periodo.'
+      notice_title: 'Cálculo local: no es un justificante de la AEAT'
+      page_counter: Página {page} de {pages}
+      section_unnamed: Casillas
+      signature_meaning: La firma de integridad de Cadrumo adjunta a este PDF acredita
+        que la clave de este perfil declaró que, en el instante de exportación según
+        el reloj de esta instalación, la revisión, el informe de verificación, la
+        instantánea del registro y la generación de la autoridad indicados produjeron
+        exactamente este informe, este CSV y estas páginas. No acredita la aceptación
+        ni la presentación ante la AEAT, la corrección jurídica, la veracidad de los
+        datos, la identidad ni el consentimiento del contribuyente, una hora de confianza
+        ni que la clave pertenezca a una persona concreta. Compare la huella de la
+        clave con una recibida por otro canal antes de confiar en ella.
+      state_borrador: Borrador
+      state_descartado: Descartado
+      state_presentado: Presentado
+      state_presentado_supersedido: Presentado y sustituido
+      state_verificado_completo: Verificado completo
+      subtitle: Ejercicio {year} · Periodo {period} · Revisión del registro {registry_revision}
+      title: Resumen del cálculo · Modelo {modelo}
+      trace_authority_generation: Generación lógica de la autoridad del registro
+      trace_calculation_revision: Revisión del cálculo
+      trace_csv_sha256: SHA-256 del CSV adjunto
+      trace_filing_record: Registro de presentación
+      trace_heading: Trazabilidad e integridad
+      trace_ledger_snapshot: Huella de la instantánea del libro registro
+      trace_none: ninguno
+      trace_registry_snapshot: Instantánea del registro (modelo · revisión · año ·
+        periodo)
+      trace_report_sha256: SHA-256 del informe (JSON adjunto)
+      trace_signing_key: Huella de la clave de firma (SHA-256)
+      trace_software_identity: Grado de identidad de software
+      trace_verification_report: Informe de verificación
+      trace_work_unit: Unidad de trabajo
+      value_absent: sin dato
+      value_false: 'No'
+      value_not_applicable: n/a · no aplicable
+      value_true: Sí
+      verification_blocked: Bloqueada
+      verification_complete: Completa
+      verification_incomplete: Incompleta
+      verification_none: Sin verificación registrada
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
@@ -909,6 +980,12 @@ application:
         %{missing_path}; el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
+      calculation_report_notice_unavailable: No hay declaración de cálculo local disponible
+        para el idioma de informe {report_language} (clave de catálogo {translation_key});
+        se rechaza el informe de cálculo en lugar de producirlo sin ella.
+      calculation_report_taxpayer_unknown: El perfil activo no declara NIF ni nombre
+        del contribuyente. Complete la identidad del perfil antes de escribir un informe
+        de cálculo; un informe debe decir de quién es la declaración que recoge.
       calculation_revision_id_is_discarded_work_unit: El identificador %{calculation_revision_id}
         es una unidad de trabajo descartada, no una revisión de cálculo.
       calculation_revision_id_is_work_unit: El identificador %{calculation_revision_id}
@@ -916,6 +993,14 @@ application:
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisión de cálculo {calculation_revision_id}
         pertenece a la unidad de trabajo descartada {work_unit_id}.
+      calculation_summary_chrome_unavailable: Falta el texto {translation_key} del
+        resumen del cálculo en el idioma {report_language}; el resumen se rechaza
+        en lugar de producirse sin él.
+      calculation_summary_pdf_unavailable: El resumen del cálculo en PDF necesita
+        el complemento opcional «{extra}», que no está instalado en esta instalación.
+        Instálelo con pip install cadrumo[{extra}] y vuelva a intentarlo; verificar
+        un resumen no lo necesita.
+      calculation_summary_pdf_unreadable: El archivo no es un PDF legible ({error_type}).
       caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
         no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
         (casillas vinculadas a fuente): %{casillas}.'
@@ -1269,6 +1354,28 @@ application:
         motivo %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
         justificativa (vínculo %{binding_id}, origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} %{filing_year}
+        no declara ninguna percepción para ningún perceptor, pero el libro registro
+        recoge rentas sometidas a retención satisfechas en ese ejercicio: %{contradicting_invoice_count}
+        factura(s) recibida(s) que declara(n) una retención que el contribuyente debe
+        como retenedor y %{contradicting_ledger_row_count} apunte(s) de pago en una
+        categoría IRPF de retención. El detalle %{source_family} del modelo %{source_modelo}
+        está vacío, por lo que nada las declara. Regístrelas mediante la superficie
+        de agregación del modelo antes de verificar.'
+      withholding_detail_absent_attested: 'El modelo %{modelo} %{filing_year} no declara
+        ninguna percepción para ningún perceptor, y el periodo o periodos %{attested_periods}
+        constan atestiguados mediante el dato de perfil %{attestation_profile_path}
+        como no haber satisfecho ninguna renta sometida a retención. No procede presentar
+        resumen anual en un ejercicio en el que no se satisfizo ninguna de las rentas
+        que declara. Revise el ejercicio si se abonó alguna renta exenta o inferior
+        al umbral de retención: esas se declaran aunque no se haya practicado retención
+        alguna. Esta preparación local no es una presentación ante la AEAT.'
+      withholding_detail_absent_unproven: 'El modelo %{modelo} %{filing_year} no declara
+        ninguna percepción para ningún perceptor y nada prueba esa ausencia: el detalle
+        %{source_family} del modelo %{source_modelo} está vacío y el periodo o periodos
+        %{unattested_periods} no constan declarados sin retenciones. Registre los
+        registros por perceptor mediante la superficie de agregación del modelo, o
+        declare cada periodo mediante el dato de perfil %{attestation_profile_path}.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

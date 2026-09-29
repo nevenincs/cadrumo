@@ -11,6 +11,7 @@ import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....core.config import override_settings
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
@@ -20,6 +21,10 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
+
+# Active since the first supported exercise, so every year the schedule is
+# asked about falls inside the activity.
+_EARLIEST_ACTIVITY_START = f"{min(PublishedGovernedFactSource().supported_filing_years().years)}-01-01"
 
 
 @pytest.fixture
@@ -33,7 +38,7 @@ def _native_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
                 "identity.name": "Native",
                 "identity.surnames": "Overview",
                 "activities.description": "design",
-                "censo.activity_start_date": "2025-01-01",
+                "censo.activity_start_date": _EARLIEST_ACTIVITY_START,
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "taxpayer_type.fiscal_residency": "resident_irpf",
@@ -87,17 +92,19 @@ def test_explain_renders_envelope_for_known_modelo(_native_profile: NativeCliPro
     assert "profile_fact\ttax_id\t" in result.output
 
 
-def test_explain_json_uses_the_registry_backed_modelo_303_2025_schedule(
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_explain_json_uses_the_registry_backed_modelo_303_schedule(
     _native_profile: NativeCliProfileFixture,
+    year: int,
 ) -> None:
     result = _invoke(
         _native_profile,
-        ["--format", "json", "app", "overview", "explain", "303", "--year", "2025"],
+        ["--format", "json", "app", "overview", "explain", "303", "--year", str(year)],
     )
 
     assert result.exit_code == 0
     payload = json.loads(result.output)["result"]
-    assert (payload["modelo"], payload["year"]) == ("303", 2025)
+    assert (payload["modelo"], payload["year"]) == ("303", year)
     assert payload["applicable"] is True
     assert payload["scheduling_rationale"]
 

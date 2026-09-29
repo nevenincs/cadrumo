@@ -46,6 +46,17 @@ source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure"]
 # owed will read as legitimately absent rather than under-declared. That is the
 # silent direction, and whoever adds the extraction coverage owns the question.
 #
+# The apartado 5 deducible totals ([48]-[51], [56]-[59], [597]/[598] and
+# [639]/[62]) are situational like their Modelo 303 counterparts: a filer
+# without that kind of purchase leaves them blank.
+#
+# Apartado 7 ([84] and [86]) takes this class for the first reason's cousin:
+# the Manual practico de IVA, capitulo 9, says only a declarant taxed
+# exclusively in territorio comun fills it, so a legitimate filing can leave it
+# out. The apartado 9 identity they are held to is not a filed box at all; it
+# is enrolled so the gate sees every computed casilla assessed, and no filing
+# ever carries it.
+#
 # Grounded on the revision's own AEAT DR and framework-law refs, reused from
 # modelo-390-iva-annual-chain-verification. No externally_grounded_casilla_ids:
 # no bundled oracle prints this total as its own figure, and declaring one
@@ -55,6 +66,21 @@ id = "modelo-390-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "iva.anual.total-bases-cuotas-iva",
+    "iva.anual.suma-resultados",
+    "iva.anual.resultado-liquidacion",
+    "iva.anual.reconciliacion.resultados-liquidaciones",
+    "iva.anual.soportado.interiores.base",
+    "iva.anual.soportado.interiores",
+    "iva.anual.deducible.interiores-inversion.total.base",
+    "iva.anual.deducible.interiores-inversion.total.cuota",
+    "iva.anual.deducible.aic-corrientes.total.base",
+    "iva.anual.deducible.aic-corrientes.total.cuota",
+    "iva.anual.deducible.aic-inversion.total.base",
+    "iva.anual.deducible.aic-inversion.total.cuota",
+    "iva.anual.deducible.aic-servicios.total.base",
+    "iva.anual.deducible.aic-servicios.total.cuota",
+    "iva.anual.deducible.rectificacion.base",
+    "iva.anual.deducible.rectificacion.cuota",
 ]
 tolerance = "0.01"
 rounding = "money-2"

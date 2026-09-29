@@ -36,6 +36,7 @@ __all__ = [
     "LLM_EXTRA",
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
+    "PDF_EXTRA",
     "MissingOptionalExtraError",
     "OptionalExtra",
     "optional_extra_available",
@@ -87,8 +88,20 @@ OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX 
 # spec-only probe, so it needs no NVIDIA hardware and no NVML runtime: the
 # accelerator reader handles an absent driver on its own terms.
 LLM_EXTRA = OptionalExtra(extra="llm", import_name="pynvml", feature="local-inference document reading")
+# The calculation-summary PDF writer. ``reportlab`` is exclusive to the extra:
+# no core distribution requires it, so its spec is present exactly when the
+# extra is installed. Reading and verifying a summary needs no extra -- that
+# path runs on the core ``pikepdf``, ``pypdfium2`` and ``cryptography``.
+PDF_EXTRA = OptionalExtra(extra="pdf", import_name="reportlab", feature="the calculation-summary PDF")
 
-OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA, LLM_EXTRA)
+OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (
+    GOOGLE_EXTRA,
+    BROWSER_EXTRA,
+    ANTHROPIC_EXTRA,
+    OFX_EXTRA,
+    LLM_EXTRA,
+    PDF_EXTRA,
+)
 
 
 class MissingOptionalExtraError(CoreError):

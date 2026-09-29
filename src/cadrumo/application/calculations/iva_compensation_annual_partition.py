@@ -4,7 +4,7 @@ The resolver reads a :class:`~domain.calculations.registry.schema.RegistrySnapsh
 for the annual Modelo 390 revision, inspects its
 :class:`~domain.calculations.registry.schema.ModeloRevision` bindings owned by
 :attr:`~core.aggregation.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION`, and
-derives the two annual compensation partition amounts from filed Modelo 303
+derives the annual compensation partition amounts from filed Modelo 303
 :class:`~application.calculations.observations_repository.ObservationEnvelopePayload` records.
 """
 
@@ -52,6 +52,7 @@ from ...domain.iva_compensation.carry_forward import (
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_year_opening_balance,
 )
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -179,7 +180,16 @@ def resolve_iva_compensation_annual_partition_binding_values(
     )
     if not states:
         return {}
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=filing_year)
+    # The credit of earlier ejercicios is the oldest in the FIFO, so it is
+    # consumed before any credit the year generates. It is the one figure the
+    # four states do not state directly; an unknown opening leaves box 85
+    # unresolved rather than read as zero.
+    opening_balance = iva_compensation_year_opening_balance(states, filing_year=filing_year)
+    report = build_iva_compensation_carry_forward_report(
+        states,
+        as_of_year=filing_year,
+        opening_balance=opening_balance,
+    )
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=filing_year)
     values: dict[BindingId, Decimal] = {}
     last_period_binding = requirement.last_period_amount_binding_id
@@ -188,6 +198,9 @@ def resolve_iva_compensation_annual_partition_binding_values(
     generated_not_in_last_binding = requirement.generated_not_in_last_amount_binding_id
     if generated_not_in_last_binding is not None:
         values[generated_not_in_last_binding] = partition.generated_not_in_last_amount
+    prior_year_applied_binding = requirement.prior_year_applied_amount_binding_id
+    if prior_year_applied_binding is not None and opening_balance is not None:
+        values[prior_year_applied_binding] = report.opening_applied_amount
     return values
 
 
@@ -231,6 +244,7 @@ def _unresolved_diagnostics(
     binding_ids: tuple[BindingId, ...],
     source_periods: tuple[str, ...],
     resolver_id: str,
+    opening_unknown_binding_id: BindingId | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     periods = ",".join(source_periods) if source_periods else "(none)"
     return tuple(
@@ -240,7 +254,11 @@ def _unresolved_diagnostics(
             resolver_id=resolver_id,
             binding_id=binding_id,
             message=(
-                f"binding {binding_id!r} requires filed Modelo 303 compensation states "
+                f"binding {binding_id!r} needs the credit pending from earlier ejercicios when the "
+                "year opened, read from the first period's Modelo 303 box 110 or from its boxes 87 "
+                "and 78; the filed first period states neither, so the amount is unknown, not zero"
+                if binding_id == opening_unknown_binding_id
+                else f"binding {binding_id!r} requires filed Modelo 303 compensation states "
                 f"for periods {periods}; the source filing history is missing or incomplete"
             ),
         )
@@ -356,7 +374,7 @@ def _partition_provenance(
 
 
 class IvaCompensationAnnualPartitionSourceResolver:
-    """Resolve Modelo 390 boxes 97 / 662 from the IVA compensation FIFO partition."""
+    """Resolve Modelo 390 boxes 85 / 97 / 662 from the IVA compensation FIFO partition."""
 
     resolver_id: ClassVar[str] = _SOURCE_KIND.value
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
@@ -374,7 +392,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Resolve the Modelo 390 boxes 97 / 662 IVA compensation FIFO partition for ``context``.
+        """Resolve the Modelo 390 boxes 85 / 97 / 662 IVA compensation FIFO partition for ``context``.
 
         Returns:
             An empty resolution when the revision declares no such
@@ -398,6 +416,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             return loaded
         envelopes = loaded
         observed_periods = {envelope.observation.period for envelope in envelopes}
+        periods_complete = observed_periods == set(requirement.source_periods)
         binding_values = (
             resolve_iva_compensation_annual_partition_binding_values(
                 revision,
@@ -405,7 +424,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 filing_year=context.filing_year,
                 operation=self._operation,
             )
-            if observed_periods == set(requirement.source_periods)
+            if periods_complete
             else {}
         )
         unresolved = _unresolved_partition_bindings(requirement.binding_ids, binding_values)
@@ -418,6 +437,9 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 binding_ids=unresolved,
                 source_periods=requirement.source_periods,
                 resolver_id=self.resolver_id,
+                opening_unknown_binding_id=(
+                    requirement.prior_year_applied_amount_binding_id if periods_complete else None
+                ),
             )
             + _annual_source_evidence_diagnostics(
                 binding_ids=unresolved,

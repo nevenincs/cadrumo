@@ -1,4 +1,4 @@
-"""The registered export receipt is a lossless strict wire projection."""
+"""The registered export result carries a lossless strict fichero-BOE receipt."""
 
 from __future__ import annotations
 
@@ -8,7 +8,14 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
-from ....application.operations.registry import OperationRegistry
+from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
+from ....application.operations.registry import (
+    OperationDefinition,
+    OperationPublicDefinitionRegistrationV1,
+    OperationRegistry,
+)
+from ....core.modelo_export_artefact import ModeloExportArtefact
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -16,10 +23,23 @@ from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.filing.schema import ModeloCasillaProvenance
+from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
 from ..export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 from ..export_ports import ModeloExportPorts
-from ..export_projection import ModeloExportPublicResultV2
-from ..operation_definitions import build_modelo_export_definition, build_modelo_export_registration
+from ..export_projection import (
+    ModeloExportCompleteness,
+    ModeloExportEvidenceStatus,
+    ModeloExportPublicResultV2,
+    ModeloFicheroBoePublicReceipt,
+)
+from ..operation_definitions import (
+    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    ModeloExportSettledResult,
+    build_modelo_export_definition,
+    build_modelo_export_registration,
+)
+from ..review_package_signing_ports import ReviewPackageSigningKeypairCapability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -93,10 +113,11 @@ def _canonical_receipt(
         local_evidence_status="local_export_not_official_aeat_filing_evidence",
         official_evidence_message="The operator must submit this local export through AEAT.",
         completeness_unverified=completeness_unverified,
+        software_identity_grade=AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK if include_elections else None,
     )
 
 
-def test_export_public_result_v2_roundtrips_complete_canonical_receipt() -> None:
+def test_fichero_boe_receipt_roundtrips_complete_canonical_receipt() -> None:
     canonical = _canonical_receipt(
         include_prior_proof=True,
         include_wallet_provenance=True,
@@ -104,8 +125,8 @@ def test_export_public_result_v2_roundtrips_complete_canonical_receipt() -> None
         completeness_unverified=True,
     )
 
-    projected = ModeloExportPublicResultV2.from_result(canonical)
-    restored_projection = ModeloExportPublicResultV2.model_validate_json(projected.model_dump_json())
+    projected = ModeloFicheroBoePublicReceipt.from_result(canonical)
+    restored_projection = ModeloFicheroBoePublicReceipt.model_validate_json(projected.model_dump_json())
 
     assert restored_projection == projected
     assert restored_projection.to_result() == canonical
@@ -122,10 +143,10 @@ def test_export_public_result_v2_roundtrips_complete_canonical_receipt() -> None
     assert restored_projection.casilla_provenance == canonical.casilla_provenance
     assert restored_projection.completeness_unverified
     assert restored_projection.to_result().completeness_advisory_message == canonical.completeness_advisory_message
-    assert restored_projection.handoff_required is True
+    assert restored_projection.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
 
 
-def test_export_public_result_v2_preserves_neutral_optional_provenance() -> None:
+def test_fichero_boe_receipt_preserves_neutral_optional_provenance() -> None:
     canonical = _canonical_receipt(
         include_prior_proof=False,
         include_wallet_provenance=False,
@@ -133,8 +154,8 @@ def test_export_public_result_v2_preserves_neutral_optional_provenance() -> None
         completeness_unverified=False,
     )
 
-    projected = ModeloExportPublicResultV2.from_result(canonical)
-    restored = ModeloExportPublicResultV2.model_validate_json(projected.model_dump_json())
+    projected = ModeloFicheroBoePublicReceipt.from_result(canonical)
+    restored = ModeloFicheroBoePublicReceipt.model_validate_json(projected.model_dump_json())
 
     assert restored.to_result() == canonical
     assert restored.prior_domiciliation_election.to_provenance() == canonical.prior_domiciliation_election
@@ -143,22 +164,38 @@ def test_export_public_result_v2_preserves_neutral_optional_provenance() -> None
     assert restored.payment_election is None
     assert restored.refund_election is None
     assert not restored.completeness_unverified
+    assert restored.software_identity_grade is None
 
 
-def test_export_registration_binds_v2_to_the_complete_wire_model() -> None:
-    def unused_ports_factory(
-        *,
-        bucket_id: str,
-        m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
-    ) -> ModeloExportPorts:
-        del bucket_id, m303_rectificativa_taxpayer_tax_id
-        raise AssertionError("registration must not construct export ports")
+def _unused_ports_factory(*, bucket_id: str, m303_rectificativa_taxpayer_tax_id: SubjectTaxId) -> ModeloExportPorts:
+    del bucket_id, m303_rectificativa_taxpayer_tax_id
+    raise AssertionError("registration must not construct export ports")
 
-    definition = build_modelo_export_definition(export_ports_factory=unused_ports_factory)
-    registration = build_modelo_export_registration(definition)
+
+def _unused_signing_keypair(*, bucket_id: str) -> ReviewPackageSigningKeypairCapability:
+    del bucket_id
+    raise AssertionError("registration must not open the signing key")
+
+
+def _unused_pdf_writer(request: CalculationSummaryPdfRequest, /, *, certify: CalculationSummaryCertifier) -> bytes:
+    del request, certify
+    raise AssertionError("registration must not draw a summary")
+
+
+def _export_registration() -> tuple[OperationDefinition, OperationPublicDefinitionRegistrationV1]:
+    definition = build_modelo_export_definition(
+        export_ports_factory=_unused_ports_factory,
+        signing_keypair_capability_factory=_unused_signing_keypair,
+        calculation_summary_pdf_writer=_unused_pdf_writer,
+    )
+    return definition, build_modelo_export_registration(definition)
+
+
+def test_export_registration_binds_v2_to_the_public_wire_model() -> None:
+    definition, registration = _export_registration()
     OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
-    assert definition.result_type is ModeloExportPublicResultV2
+    assert definition.result_type is ModeloExportSettledResult
     assert registration.contract.result_schema is not None
     assert registration.contract.result_schema.schema_id == "modelo.export.result"
     assert registration.contract.result_schema.schema_version == 2
@@ -166,3 +203,65 @@ def test_export_registration_binds_v2_to_the_complete_wire_model() -> None:
         binding for binding in registration.schema_bindings if binding.identity.schema_id == "modelo.export.result"
     )
     assert result_binding.model_type is ModeloExportPublicResultV2
+
+
+def test_export_projection_carries_the_complete_fichero_boe_receipt() -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=True,
+        include_wallet_provenance=True,
+        include_elections=True,
+        completeness_unverified=True,
+    )
+    _, registration = _export_registration()
+    projector = registration.result_projector
+    assert projector is not None
+    terminal = OperationTerminalReceipt(
+        identity=OperationIdentity(
+            operation_id="e" * 64, definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID, subject_ref=_WORK_UNIT_ID
+        ),
+        revision=4,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        settled_at=_AT,
+        result_ref="f" * 64,
+    )
+
+    projected = projector(ModeloExportSettledResult(fichero_boe=canonical), terminal)
+    assert isinstance(projected, ModeloExportPublicResultV2)
+    restored = ModeloExportPublicResultV2.model_validate_json(projected.model_dump_json())
+
+    assert restored.artefact is ModeloExportArtefact.FICHERO_BOE
+    assert restored.evidence_status is ModeloExportEvidenceStatus.LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE
+    assert restored.completeness is ModeloExportCompleteness.UNVERIFIED
+    assert restored.fichero_boe is not None
+    assert restored.fichero_boe.to_result() == canonical
+
+
+def test_export_public_result_refuses_a_receipt_that_does_not_match_its_artefact() -> None:
+    canonical = _canonical_receipt(
+        include_prior_proof=False,
+        include_wallet_provenance=False,
+        include_elections=False,
+        completeness_unverified=False,
+    )
+    summary = {
+        "calculation_revision_id": _REVISION_ID,
+        "export_format": "fichero-boe",
+        "output_path": str(canonical.output_path),
+        "byte_size": canonical.byte_size,
+        "file_sha256": _FILE_DIGEST,
+        "software_identity_grade": None,
+        "evidence_status": ModeloExportEvidenceStatus.LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
+        "completeness": ModeloExportCompleteness.NOT_FLAGGED,
+    }
+
+    with pytest.raises(ValueError, match="carries exactly its receipt"):
+        ModeloExportPublicResultV2.model_validate({**summary, "artefact": ModeloExportArtefact.FICHERO_BOE})
+    with pytest.raises(ValueError, match="carries exactly its receipt"):
+        ModeloExportPublicResultV2.model_validate(
+            {
+                **summary,
+                "artefact": ModeloExportArtefact.CALCULATION_REPORT_CSV,
+                "fichero_boe": ModeloFicheroBoePublicReceipt.from_result(canonical),
+            }
+        )

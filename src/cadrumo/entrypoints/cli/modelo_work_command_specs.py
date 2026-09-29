@@ -13,6 +13,7 @@ from cadrumo.application.operator_surface.command_ports import (
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -29,6 +30,7 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
+    TranslationKey,
     ValueContract,
 )
 from .command_spec import translation_key as _key
@@ -47,6 +49,9 @@ _REFUND = ValueContract(DeferredTarget("...core.refund_election", "RefundElectio
 _PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__))
 _DOMICILIATION = ValueContract(
     DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
+)
+_REPORT_DOCUMENT_FORMAT = ValueContract(
+    DeferredTarget("...core.calculation_report_format", "CalculationReportDocumentFormat", __package__)
 )
 
 
@@ -110,6 +115,25 @@ _WIZARD = _policy(
     frozenset({"local-state"}),
     "interactive",
     CommandWriteRoute.PROFILE_BOUND,
+)
+#: Reads the sealed revision and writes one operator-chosen file. Nothing in the
+#: profile changes, so the write route stays NONE: the artefact is the operator's
+#: from the moment it lands, exactly as the offline workbook export declares it.
+_REPORT = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "local-io",
+    CommandWriteRoute.NONE,
+)
+#: Reads a summary file and, unless the check is document-only, rebuilds the
+#: report from the store. It writes no file; the profile's signing keypair is
+#: minted on first use, exactly as the report verb mints it, which is the one
+#: local-state effect it can have.
+_REPORT_VERIFY = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.NONE,
 )
 
 
@@ -359,6 +383,61 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _MODEL_READ,
         "._modelo_payloads",
         "WorkReviewResult",
+    ),
+    _leaf(
+        "report",
+        "._modelo_work_report_cli",
+        (
+            # ``--output`` leads because it is the one required parameter: the
+            # generated handler signature lists parameters in this order, and a
+            # required parameter may not follow one carrying a default.
+            _o(
+                "output",
+                "--output",
+                PATH_VALUE,
+                required=True,
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _a("work_unit_id"),
+            *_ADDRESS,
+            _o("document_format", "--document-format", _REPORT_DOCUMENT_FORMAT, default="csv"),
+            OptionSpec(
+                "replace_existing",
+                ("--replace",),
+                FLAG_VALUE,
+                ParameterDefault.value(False),
+                TranslationKey("cli.app.modelo.export.replace_help"),
+                is_flag=True,
+                flag_value=True,
+            ),
+            _LANG,
+        ),
+        _REPORT,
+        "._modelo_payloads",
+        "WorkReportResult",
+    ),
+    _leaf(
+        "report-verify",
+        "._modelo_work_report_cli",
+        (
+            ArgumentSpec(
+                "path",
+                PATH_VALUE,
+                ParameterDefault.required(),
+                _key("cli.app.modelo.work.report_verify_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _o("trusted_key", "--trusted-key"),
+            _o("document_only", "--document-only", FLAG_VALUE, flag=True),
+            _LANG,
+        ),
+        _REPORT_VERIFY,
+        "._modelo_payloads",
+        "WorkReportVerifyResult",
     ),
     _leaf(
         "revisions",

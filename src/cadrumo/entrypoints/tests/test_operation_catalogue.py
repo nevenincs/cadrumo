@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 from ...application.operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
-from ...tests.inventory import package_python_files
+from ...tests.inventory import package_python_files, releases_parsed_sources
 from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -127,6 +127,7 @@ def _production_sources() -> tuple[str, ...]:
     return tuple(path for path in _source_files() if "/tests/" not in path)
 
 
+@releases_parsed_sources
 @cache
 def _parsed(path: str) -> ast.Module:
     return ast.parse((_REPO_ROOT / path).read_text(encoding="utf-8"), filename=path)

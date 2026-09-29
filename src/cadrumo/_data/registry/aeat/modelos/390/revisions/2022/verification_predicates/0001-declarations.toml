@@ -20,3 +20,14 @@ id = "equals:resultado-regimen-general-equals-reconciliacion-303"
 predicate_id = "modelo-390-resultado-regimen-general-equals-reconciliacion-303"
 expression = 'equals(["iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"])'
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Apartado 9 is operator input; apartado 7 is computed. The annual identity
+# [86] = [95] - [97] - [98] - [662] ties them, so a blank [95] or [98] that the
+# year's results contradict surfaces here instead of reaching the fichero as a
+# silent zero.
+[[revisions."2022".verification_predicates]]
+id = "equals:resultado-liquidacion-equals-resultados-liquidaciones"
+predicate_id = "modelo-390-resultado-liquidacion-equals-resultados-liquidaciones"
+expression = 'equals(["iva.anual.resultado-liquidacion", "iva.anual.reconciliacion.resultados-liquidaciones"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

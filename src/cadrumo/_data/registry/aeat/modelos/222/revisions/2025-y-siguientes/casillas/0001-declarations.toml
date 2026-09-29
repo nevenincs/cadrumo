@@ -677,14 +677,17 @@ input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 source_refs = ["boe-modelo-202-base-order"]
 
+# The design's "Tipo de declaracion" is the clave of the pago fraccionado's
+# result -- Nota 1 of aeat-dr-222-2025 (campo 6 @13+1): I, U, G or N -- not the
+# kind of declaration in its period's chain; see the 2023 declaration.
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
-continuidad_id = "tipo-declaracion"
+continuidad_id = "tipo-declaracion-resultado"
 continuidad_origin = "seeded"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
-semantic_role = "tipo_declaracion"
+semantic_role = "tipo_declaracion_resultado"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]

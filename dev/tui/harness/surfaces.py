@@ -101,12 +101,6 @@ def _manager() -> App[Any]:
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 
     profile_id = require_active_bucket_id()
-    with bundled_indexed_authority().operation() as operation:
-        profile_decode_context = operation.profile_decode_context()
-        profiles = ProfileRecordRepository.for_current_session(
-            profile_id,
-            profile_decode_context=profile_decode_context,
-        )
     # The label comes from the summary projection, not the authenticated
     # aggregate: `load` takes a per-profile custody lock and reads password
     # material, the transaction journal and the label head to hand back a
@@ -115,9 +109,16 @@ def _manager() -> App[Any]:
         (item.label for item in summary_inventory().summaries if item.profile_id == profile_id),
         "",
     )
-
-    def _overview():
-        return build_profile_overview(profiles.load(profile_id), label=label)
+    # The overview is projected inside the lease and against the schema it
+    # pins, exactly as the installed session projects it; the lease ends with
+    # this block.
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        profiles = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        )
+        overview = build_profile_overview(profiles.load(profile_id), label=label, schema=profile_decode_context.schema)
 
     def _persist(path: str, value: str, expected_revision: int, expected_content_digest: str):
         with bundled_indexed_authority().operation() as operation:
@@ -129,11 +130,11 @@ def _manager() -> App[Any]:
                 expected_content_digest=expected_content_digest,
                 profile_decode_context=operation.profile_decode_context(),
             )
-        return build_profile_overview(record, label=label)
+            return build_profile_overview(record, label=label, schema=operation.profile_decode_context().schema)
 
     return ScreenHostApp(
         ProfileManagerScreen(
-            _overview(),
+            overview,
             persist=_persist,
         )
     )

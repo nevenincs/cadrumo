@@ -74,6 +74,7 @@ from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.iva_ledger import compute_annual_deducible_totals_by_regime
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     require_observation_envelope_coordinates_current,
@@ -240,6 +241,7 @@ def _settlement_prorrata_diagnostics(
     observation_repository: CalculationObservationRepositoryProtocol,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -250,6 +252,7 @@ def _settlement_prorrata_diagnostics(
         filing_year=filing_year,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        bienes_inversion_repository=bienes_inversion_repository,
         bucket_id=bucket_id,
         operation=operation,
     )
@@ -300,6 +303,7 @@ def collect_prorrata_regularizacion_diagnostics(
     observation_repository: CalculationObservationRepositoryProtocol,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -331,6 +335,9 @@ def collect_prorrata_regularizacion_diagnostics(
             used for the provisional carry and annual regime comparison.
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement comparison.
+        bienes_inversion_repository: Required bucket-bound capital-goods
+            register the annual IVA settlement comparison proves the year's
+            investment acquisitions against.
         bucket_id: Optional bucket identifier for loading the profile-scoped
             prorrata register. When supplied, unresolved provisional register
             state emits a per-period missing-carry advisory before settlement.
@@ -377,6 +384,7 @@ def collect_prorrata_regularizacion_diagnostics(
             observation_repository=observation_repository,
             prorrata_register_repository=prorrata_register_repository,
             transaction_repository=transaction_repository,
+            bienes_inversion_repository=bienes_inversion_repository,
             bucket_id=bucket_id,
             operation=authority,
         )
@@ -389,6 +397,7 @@ def _especial_mandatory_diagnostics(
     filing_year: int,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     bucket_id: str | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -421,6 +430,8 @@ def _especial_mandatory_diagnostics(
         revision=revision,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        investment_asset_register=bienes_inversion_repository.load(),
+        investment_asset_profile_id=bucket_id,
         operation=operation,
     )
     if totals is None:

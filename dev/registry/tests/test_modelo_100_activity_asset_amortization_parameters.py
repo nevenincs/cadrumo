@@ -20,7 +20,12 @@ def _parameters() -> dict[str, ParameterDefinition]:
     return {parameter.id: parameter for parameter in revision.parameters}
 
 
-def test_linear_authority_tables_are_paired_and_2025_only() -> None:
+def test_linear_authority_tables_are_paired_and_in_force_for_2025() -> None:
+    """Both linear tables state the same asset classes, each row in force across the whole of 2025.
+
+    The tables run open from the first edition stating them, so a row may begin
+    before 2025; what the 2025 edition must not carry is a row that ends within it.
+    """
     parameters = _parameters()
     for regime in ("normal", "simplificada"):
         prefix = f"renta-actividad-inmovilizado-amortizacion-{regime}"
@@ -32,8 +37,9 @@ def test_linear_authority_tables_are_paired_and_2025_only() -> None:
         assert coefficient_rows.keys() == period_rows.keys()
         assert coefficient_rows
         for row in (*coefficient_rows.values(), *period_rows.values()):
-            assert row.valid_from == date(2025, 1, 1)
-            assert row.valid_to == date(2025, 12, 31)
+            assert row.valid_from is not None
+            assert row.valid_from <= date(2025, 1, 1)
+            assert row.valid_to is None or row.valid_to >= date(2025, 12, 31)
 
 
 def test_material_and_intangible_authority_remain_distinct_and_grounded() -> None:

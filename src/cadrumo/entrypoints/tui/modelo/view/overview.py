@@ -35,22 +35,26 @@ invented on this screen.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from collections.abc import Awaitable, Callable, Mapping
+from types import MappingProxyType
+from typing import TYPE_CHECKING, ClassVar, Final, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Checkbox, DataTable, Input, Select, Static
 
 from .....application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
+from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationTerminalCondition
+from .....core.optional_extras import PDF_EXTRA, OptionalExtra, optional_extra_available
 from .....core.payment_election import PaymentElection
 from .....core.presentation import NoticePresentation
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -61,6 +65,7 @@ from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
 from ...operations.controller_port import OperationControllerPort
 from ...operations.refusal_explanation import public_refusal_explanation
+from ..export_result import EXPORT_ARTEFACT_LOCALE_KEYS, ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
@@ -78,7 +83,13 @@ from .models import (
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
-    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+    from .....application.modelo.export_projection import (
+        ModeloExportPublicResultV2,
+    )
+    from .....application.modelo.operation_definitions import (
+        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    )
+    from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from .models import ModeloWorkspaceDestinationIdV1
 
 _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_state")
@@ -101,6 +112,27 @@ PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: dict[PriorDomiciliationElection, str] 
     PriorDomiciliationElection.KEEP: "tui.modelo.export.prior_domiciliation_election.keep",
     PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
 }
+
+#: The artefacts only an optional extra can publish, with that extra. Where the
+#: extra is not installed the export control does not offer the artefact at all,
+#: so the operator never picks an export the installation would refuse and no
+#: other artefact is ever published in its place.
+_EXPORT_ARTEFACT_EXTRAS: Final[Mapping[ModeloExportArtefact, OptionalExtra]] = MappingProxyType(
+    {ModeloExportArtefact.CALCULATION_REPORT_PDF: PDF_EXTRA},
+)
+
+
+def _offered_export_artefacts() -> tuple[ModeloExportArtefact, ...]:
+    """Return the artefacts this installation can publish, in the order the control lists them.
+
+    Probed each time the control is composed, through the same spec-only probe
+    the export service's own refusal rests on.
+    """
+    return tuple(
+        artefact
+        for artefact in EXPORT_ARTEFACT_LOCALE_KEYS
+        if (extra := _EXPORT_ARTEFACT_EXTRAS.get(artefact)) is None or optional_extra_available(extra)
+    )
 
 
 def edit_control_id(kind: str, key: str) -> str:
@@ -172,8 +204,23 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                     placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
                     id="modelo-lifecycle-export-path",
                 )
+                yield Static(tr("tui.modelo.export.artefact.label"), markup=False)
+                yield Select[str](
+                    tuple(
+                        (tr(EXPORT_ARTEFACT_LOCALE_KEYS[member]), member.value)
+                        for member in _offered_export_artefacts()
+                    ),
+                    value=ModeloExportArtefact.FICHERO_BOE.value,
+                    allow_blank=False,
+                    id="modelo-lifecycle-export-artefact",
+                )
                 if self._is_m303_calculation():
                     yield from self._compose_export_elections()
+                yield Checkbox(
+                    tr("tui.modelo.export.replace_existing.label"),
+                    value=False,
+                    id="modelo-lifecycle-export-replace",
+                )
                 yield Button(tr("application.modelo.lifecycle.export"), id="modelo-lifecycle-export")
 
     def _compose_export_elections(self) -> ComposeResult:
@@ -331,6 +378,10 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 self._notice(tr("application.modelo.lifecycle.refusal.export_destination_required"))
                 return
             keyword_arguments = self._export_elections()
+            keyword_arguments["replace_existing"] = self.query_one("#modelo-lifecycle-export-replace", Checkbox).value
+            keyword_arguments["artefact"] = ModeloExportArtefact(
+                str(self.query_one("#modelo-lifecycle-export-artefact", Select).value),
+            )
         submit = getattr(actions, method_name, None)
         if submit is None:
             return
@@ -495,7 +546,12 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
 
     def _on_lifecycle_operation_settled(self, outcome: object) -> None:
-        """Publish the terminal result and refresh only after success."""
+        """Publish the terminal result and refresh only after success.
+
+        A successful export first states the facts its result carries, because
+        the refresh closes this page and an operator must see what the file is
+        worth before the workspace moves on.
+        """
         from ...operations.modal import OperationModalSettledOutcomeV1
 
         self._action_in_flight = False
@@ -525,9 +581,53 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
             return
         actions = self._session.lifecycle_actions
         refresh = None if actions is None else getattr(actions, "refresh_after_success", None)
-        if callable(refresh):
-            callback = cast("Callable[[], object]", refresh)
-            self.run_worker(self._refresh_after_success(callback), group="modelo-lifecycle-refresh", exclusive=True)
+        refresh_callback = cast("Callable[[], object]", refresh) if callable(refresh) else None
+        projection = outcome.view_model.projection
+        settled_export_result = None if actions is None else getattr(actions, "settled_export_result", None)
+        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and callable(settled_export_result):
+            self.run_worker(
+                self._state_export_result(
+                    cast("Callable[..., Awaitable[ModeloExportPublicResultV2 | None]]", settled_export_result),
+                    projection,
+                    refresh=refresh_callback,
+                ),
+                group="modelo-lifecycle-export-result",
+                exclusive=True,
+            )
+            return
+        if refresh_callback is not None:
+            self.run_worker(
+                self._refresh_after_success(refresh_callback), group="modelo-lifecycle-refresh", exclusive=True
+            )
+
+    async def _state_export_result(
+        self,
+        resolve: Callable[..., Awaitable[ModeloExportPublicResultV2 | None]],
+        projection: OperationPublicProjectionV1,
+        *,
+        refresh: Callable[[], object] | None,
+    ) -> None:
+        """Show the settled export's own facts, then refresh once the operator has closed them.
+
+        A result that cannot be read opens the same statement saying so, rather
+        than skipping it: the file exists either way, and its evidence status,
+        completeness and software identity are then unknown, not fine.
+        """
+        try:
+            result = await resolve(projection)
+        except Exception as failure:
+            get_logger(__name__).error(
+                "modelo export result could not be resolved: %s",
+                type(failure).__qualname__,
+                exc_info=True,
+            )
+            result = None
+
+        def closed(_: object) -> None:
+            if refresh is not None:
+                self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+
+        self.app.push_screen(ModeloExportResultScreen(result), closed)
 
     async def _refresh_after_success(self, refresh: Callable[[], object]) -> None:
         """Capture one new generation, then return so reopening resolves its persisted state."""

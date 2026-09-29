@@ -42,12 +42,13 @@ from urllib.parse import urlsplit
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo import Modelo
 from dev._paths import REPO_ROOT
 
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
-from ..terminology.casilla_projection import project_casilla_search_records
+from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.unified_record import to_search_record
 from ._http_serve_support import serve_directory
@@ -147,13 +148,17 @@ def _build_subset_site(out: Path) -> None:
 
 
 def _prorrata_records() -> _Materialised:
-    """Concept cards plus the M303 prorrata casillas - the smoke surfaces."""
+    """Concept cards plus the M303 prorrata casillas - the smoke surfaces.
+
+    The casillas come from the per-modelo projection, not the whole-registry one:
+    the gate surfaces M303 boxes, so walking every revision of every modelo to
+    discard all but one modelo's rows was the corpus this gate explicitly does not
+    build. It is the same projection code and the same dedup rule, entered at the
+    modelo the gate names; the whole-registry walk has its own gates.
+    """
     concept_cards, _ = project_concept_cards()
-    casillas, _ = project_casilla_search_records()
     records = [to_search_record(card) for card in concept_cards]
-    for casilla in casillas:
-        if casilla.modelo.value != "303":
-            continue
+    for casilla in project_modelo_casillas(Modelo("303")):
         if any("prorrata" in (text or "").lower() for text in casilla.descriptions.values()):
             records.append(to_search_record(casilla))
     return _Materialised(records=records)

@@ -3707,6 +3707,9 @@ modelo:
         renta-economic-activities:
           field:
             title: Modelo 100 economic-activity dependency evidence
+        renta-final-settlement:
+          field:
+            title: Modelo 100 final settlement result
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: Modelo 100 2025 Comunidad de Madrid nacimiento/adopción deducción
@@ -3720,6 +3723,9 @@ modelo:
         renta-payments-retentions:
           field:
             title: Modelo 100 retentions and payments on account
+        renta-personal-family:
+          field:
+            title: 'Modelo 100: datos del perfil personal y familiar'
         renta-real-estate-capital:
           field:
             title: Modelo 100 real-estate capital dependency evidence
@@ -8251,6 +8257,67 @@ modelo:
             '1916':
               label: Incremento por gastos en guarderías o centros de educación infantil
                 autorizados (cantidades no aplicadas en el ejercicio 2021)
+            ANOASDLG:
+              label: Ascendiente fecha de nacimiento
+            APENOMDLG:
+              label: Hijo o descendiente apellidos y nombre
+            APENOMDLG_ASC:
+              label: Ascendiente apellidos y nombre
+            CONVASDLG:
+              label: Ascendiente convivencia con varios descendientes
+            DECFAL:
+              label: Primer declarante fecha de fallecimiento
+            DNIASDLG:
+              label: Ascendiente NIF
+            DPFNAC_C:
+              label: Cónyuge fecha de nacimiento
+            DPFNAC_D:
+              help: Indique la fecha de nacimiento del primer declarante.
+              label: Primer declarante fecha de nacimiento
+            DPGMIN_C:
+              label: Cónyuge grado de discapacidad
+            DPGMIN_D:
+              label: Primer declarante grado de discapacidad
+            DPNIF_C:
+              label: Cónyuge NIF
+            DPNIF_D:
+              label: Primer declarante NIF
+            DP_APENOM_C:
+              label: Cónyuge apellidos y nombre
+            DP_APENOM_D:
+              label: Primer declarante apellidos y nombre
+            ECIVIL:
+              label: Primer declarante estado civil
+            FALLASDLG:
+              label: Ascendiente fecha de fallecimiento
+            FALLDLG:
+              label: Hijo o descendiente fecha de fallecimiento
+            FNACDLG:
+              label: Hijo o descendiente fecha de nacimiento
+            HIJOSUE:
+              label: Hijos o descendientes UE o EEE
+            MINUSDLG:
+              label: Hijo o descendiente clave discapacidad
+            NIFDLG:
+              label: Hijo o descendiente NIF
+            NORESIDENTE:
+              label: Cónyuge no residente no contribuyente IRPF
+            PCTMINASDLG:
+              label: Ascendiente clave de discapacidad
+            PH18:
+              label: Hijos menores de 18 anos en la unidad familiar
+            RESIDENTEUE:
+              label: Cónyuge residente UE o EEE
+            SEXO_C:
+              label: Cónyuge sexo
+            SEXO_D:
+              label: Primer declarante sexo
+            TIPOTRIBUTACION:
+              label: Tipo de tributacion
+            ZCCAD:
+              label: Comunidad Autónoma de residencia
+            ZRUE2:
+              label: País UE o EEE del cónyuge
           construct:
             renta-dependent-modelos:
               field:
@@ -15819,60 +15886,21 @@ modelo:
             A:
               label: 'Inversión con derecho a deducción: Adquisición y/o construcción
                 de la vivienda habitual'
-            ANOASDLG:
-              label: Ascendiente fecha de nacimiento
-            APENOMDLG:
-              label: Hijo o descendiente apellidos y nombre
-            APENOMDLG_ASC:
-              label: Ascendiente apellidos y nombre
             C:
               label: 'Inversión con derecho a deducción: Rehabilitación o ampliación
                 de la vivienda habitual'
-            CONVASDLG:
-              label: Ascendiente convivencia con varios descendientes
             D:
               label: 'Base de la deducción (límite máximo: 100.000 euros): Importe
                 total de la deducción por inversiones en empresas de nueva o reciente
                 creación'
-            DECFAL:
-              label: Primer declarante fecha de fallecimiento
-            DNIASDLG:
-              label: Ascendiente NIF
-            DPFNAC_C:
-              label: Cónyuge fecha de nacimiento
-            DPFNAC_D:
-              help: Indique la fecha de nacimiento del primer declarante.
-              label: Primer declarante fecha de nacimiento
-            DPGMIN_C:
-              label: Cónyuge grado de discapacidad
-            DPGMIN_D:
-              label: Primer declarante grado de discapacidad
-            DPNIF_C:
-              label: Cónyuge NIF
-            DPNIF_D:
-              label: Primer declarante NIF
-            DP_APENOM_C:
-              label: Cónyuge apellidos y nombre
-            DP_APENOM_D:
-              label: Primer declarante apellidos y nombre
             E:
               label: Cantidades satisfechas con derecho a deducción
-            ECIVIL:
-              label: Primer declarante estado civil
-            FALLASDLG:
-              label: Ascendiente fecha de fallecimiento
-            FALLDLG:
-              label: Hijo o descendiente fecha de fallecimiento
-            FNACDLG:
-              label: Hijo o descendiente fecha de nacimiento
             G:
               label: 'Importe con derecho a deducción (*): Aportaciones a actividades
                 prioritarias de mecenazgo con límite del 15% de la base liquidable'
             H:
               label: 'Importe con derecho a deducción (**): Donativos a entidades
                 reguladas en la Ley 49/2002 de 23 de diciembre'
-            HIJOSUE:
-              label: Hijos o descendientes UE o EEE
             I:
               label: 'Importes con derecho a deducción (*): Inversiones y gastos para
                 la protección y difusión del Patrimonio Histórico Español y de las
@@ -15882,28 +15910,6 @@ modelo:
               label: 'Importe con derecho a deducción (**): Donativos a fundaciones
                 y asociaciones de utilidad pública no comprendidas en la Ley 49/2002
                 de 23 de Diciembre'
-            MINUSDLG:
-              label: Hijo o descendiente clave discapacidad
-            NIFDLG:
-              label: Hijo o descendiente NIF
-            NORESIDENTE:
-              label: Cónyuge no residente no contribuyente IRPF
-            PCTMINASDLG:
-              label: Ascendiente clave de discapacidad
-            PH18:
-              label: Hijos menores de 18 anos en la unidad familiar
-            RESIDENTEUE:
-              label: Cónyuge residente UE o EEE
-            SEXO_C:
-              label: Cónyuge sexo
-            SEXO_D:
-              label: Primer declarante sexo
-            TIPOTRIBUTACION:
-              label: Tipo de tributacion
-            ZCCAD:
-              label: Comunidad Autónoma de residencia
-            ZRUE2:
-              label: País UE o EEE del cónyuge
             prestacion-inss-maternidad-paternidad-exenta:
               label: Prestaciones públicas por maternidad y paternidad exentas percibidas
                 del INSS
@@ -18197,9 +18203,6 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: 'Modelo 100: datos procedentes de modelos dependientes'
-            renta-final-settlement:
-              field:
-                title: Modelo 100 final settlement result
             renta-mini-model-actividades-economicas-objetiva:
               field:
                 title: Modelo 100 2025 estimación objetiva aggregators
@@ -18218,8 +18221,5 @@ modelo:
             renta-mini-model-regimenes-especiales:
               field:
                 title: Modelo 100 2025 atribución / imputación de rentas aggregators
-            renta-personal-family:
-              field:
-                title: 'Modelo 100: datos del perfil personal y familiar'
           field:
             label: Ejercicio 2025

@@ -127,6 +127,28 @@ def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     assert count == 1
 
 
+def test_decode_operator_edits_keeps_a_text_casilla_cell_as_the_operator_wrote_it() -> None:
+    """A text casilla's cell is not read as an amount, and an empty one stays absent."""
+    snapshot = published_snapshot("190", filing_year=2022, period="0A")
+    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    ids = ["decl.persona-contacto-telefono", "decl.numero-identificativo", "decl.persona-contacto-nombre"]
+    value_ranges = [
+        _value_range("Entradas!D2", [[600123456]]),
+        _value_range("Entradas!D3", [["0190123456789"]]),
+        _value_range("Entradas!D4", [[""]]),
+    ]
+
+    edits, cursor, count = _decode_operator_edits(value_ranges, 0, ids, casilla_by_id)
+
+    assert [(edit.casilla_id, edit.value) for edit in edits] == [
+        ("decl.persona-contacto-telefono", "600123456"),
+        ("decl.numero-identificativo", "0190123456789"),
+        ("decl.persona-contacto-nombre", None),
+    ]
+    assert cursor == 3
+    assert count == 2
+
+
 # ---------------------------------------------------------------------------
 # _decode_binding_edits over typed ValueRange list
 # ---------------------------------------------------------------------------

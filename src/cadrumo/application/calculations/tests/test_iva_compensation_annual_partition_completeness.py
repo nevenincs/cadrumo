@@ -80,7 +80,8 @@ def test_annual_evidence_diagnostics_name_only_the_actual_unresolved_binding() -
         for binding in snapshot.revision.bindings
         if binding.source is BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
     )
-    unresolved_binding_id, resolved_binding_id = requirement_binding_ids
+    assert len(requirement_binding_ids) > 1
+    unresolved_binding_id, *resolved_binding_ids = requirement_binding_ids
 
     diagnostics = _annual_source_evidence_diagnostics(
         binding_ids=(unresolved_binding_id,),
@@ -88,7 +89,7 @@ def test_annual_evidence_diagnostics_name_only_the_actual_unresolved_binding() -
     )
 
     assert [diagnostic.binding_id for diagnostic in diagnostics] == [unresolved_binding_id]
-    assert resolved_binding_id not in {diagnostic.binding_id for diagnostic in diagnostics}
+    assert not set(resolved_binding_ids) & {diagnostic.binding_id for diagnostic in diagnostics}
 
 
 def test_stale_m303_source_is_refused_during_carry_admission_and_leaves_bindings_unresolved() -> None:

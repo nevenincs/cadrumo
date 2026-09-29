@@ -8,14 +8,17 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 import typer
 from typer.core import TyperGroup
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operator_surface.contract import get_operator_surface_contract
+from ....application.user_profile.profile_record_repository import close_active_profile_record_session
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
@@ -255,7 +258,13 @@ def workflow_round_trip(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_W
     re-established a state no test changes.
     """
     with _certificate_bearing_backend(tmp_path_factory.mktemp("workflow-round-trip")) as backend:
-        yield _drive_workflow_round_trip(backend)
+        try:
+            yield _drive_workflow_round_trip(backend)
+        finally:
+            # The round-trip's login is this module's; the per-test boundary
+            # reads it as inherited, so only this teardown can close it.
+            close_active_profile_record_session()
+            close_active_bucket_session()
 
 
 _PROFILE_STATUS_EXPECTATIONS = (
@@ -284,7 +293,7 @@ def test_config_app_round_trip_certificate_configure_records_provider(
 @pytest.fixture(scope="module")
 def native_certificate_auth_reads(
     tmp_path_factory: pytest.TempPathFactory,
-) -> Iterator[tuple[dict[str, object], dict[str, object]]]:
+) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
     """Read configured certificate state through a protected native worker."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
@@ -333,13 +342,13 @@ def native_certificate_auth_reads(
 
 
 def test_config_app_round_trip_certificate_auth_status_reports_configured(
-    native_certificate_auth_reads: tuple[dict[str, object], dict[str, object]],
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
     assert native_certificate_auth_reads[0]["configured"] is True
 
 
 def test_config_app_round_trip_certificate_auth_test_records_provider(
-    native_certificate_auth_reads: tuple[dict[str, object], dict[str, object]],
+    native_certificate_auth_reads: tuple[dict[str, Any], dict[str, Any]],
 ) -> None:
     assert native_certificate_auth_reads[1]["provider"] == "certificate"
 

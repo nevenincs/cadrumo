@@ -115,6 +115,24 @@ def _existing_interpreter(interpreter: Path, *, cli: Path) -> Path:
     return interpreter
 
 
+def environment_interpreter(python: Path) -> Path:
+    """Return an environment's interpreter with its directories resolved and its final link kept.
+
+    The final ``bin/python`` link is the environment itself (see
+    :func:`_existing_interpreter`), so resolving the whole path would launch
+    the base installation that seeded it. Only the directories above it are
+    made canonical, which keeps a comparison with a sibling console script's
+    resolved directory sound.
+
+    Raises:
+        RuntimeError: When no interpreter exists at that path.
+    """
+    interpreter = python.parent.resolve(strict=True) / python.name
+    if not interpreter.is_file():
+        raise RuntimeError(f"no interpreter exists at {interpreter}")
+    return interpreter
+
+
 def installed_python_for_cli(cli: Path) -> Path:
     """Resolve the interpreter that owns an installed console entry point."""
     resolved = cli.resolve(strict=True)

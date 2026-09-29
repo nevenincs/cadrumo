@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bind
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta.actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
@@ -31,9 +32,10 @@ from ._modelo_bindings_support import (
 )
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
-    CompetingDepreciationTreatment,
+    LedgerRentaExpenseTreatment,
     activity_asset_expense_observations,
-    refuse_competing_depreciation_treatments,
+    classify_ledger_expenses_against_asset_register,
+    register_owned_acquisition_diagnostics,
 )
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .source_mesh import (
@@ -132,28 +134,32 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 error=exc,
             )
         asset_history = self._activity_asset_history_repository.load()
-        refuse_competing_depreciation_treatments(
+        register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,
             asset_history.claims,
             tuple(
-                CompetingDepreciationTreatment(
-                    asset_id=asset.asset_id,
+                LedgerRentaExpenseTreatment(
                     transaction_id=observation.transaction_id,
                     category=str(observation.category),
                     tax_year=observation.tax_year,
+                    deductible_amount=observation.deductible_amount,
+                    amortization_labelled=str(observation.target_casilla_id) in M100_AMORTIZATION_CASILLA_IDS,
                 )
                 for observation in aggregation.observations
-                for asset in asset_history.revisions
-                if observation.transaction_id == asset.acquisition.observed_transaction_id
-                and str(observation.target_casilla_id) in {"0208", "0227"}
             ),
+        )
+        withheld_transaction_ids = {acquisition.transaction_id for acquisition in register_owned}
+        ledger_observations = tuple(
+            observation
+            for observation in aggregation.observations
+            if observation.transaction_id not in withheld_transaction_ids
         )
         asset_observations = activity_asset_expense_observations(
             asset_history.claims,
             modelo="100",
             period=aggregation.period,
         )
-        all_observations = (*aggregation.observations, *asset_observations)
+        all_observations = (*ledger_observations, *asset_observations)
         unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -162,9 +168,14 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 context.revision,
                 all_observations,
             ),
-            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=source_issue_diagnostics(
                 aggregation.issues,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + register_owned_acquisition_diagnostics(
+                register_owned,
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
             )
@@ -186,7 +197,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 for observation in unrouted
             ),
             provenance=_flattened_provenance_for(
-                aggregation.observations,
+                ledger_observations,
                 _renta_observation_provenance,
             )
             + tuple(

@@ -13,6 +13,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -27,6 +28,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.filing.software_identity import DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -190,6 +192,12 @@ _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 exp
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
+# The last exercise of the Modelo 202 revision the registry authors right before the
+# first one that declares the B2 tramo casilla 67; the exportable fixture revision
+# below is seeded for its first period.
+_PRE_B2 = revision_before_first_declaring("202", "67")
+assert _PRE_B2.valid_to is not None
+_PRE_B2_LAST_EXERCISE = _PRE_B2.valid_to.year
 
 _MODELO_111_INPUTS: dict[CasillaId, str] = {
     _M111_CASILLA_03: "180.25",
@@ -343,18 +351,20 @@ def _seed_modelo_111_revisions(
     return work_unit_id, tuple(revision_ids)
 
 
-def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Persist a verified-complete M202 2024 1P revision with the 2023-2024 binding channel."""
+def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    """Persist a verified-complete pre-B2 M202 1P revision with the 2023-2024 binding channel."""
 
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="202", filing_year=2024, period="1P", operation=operation)
-    filing_period = Period.from_year_and_code(2024, "1P")
+    revision_id = active_registry_revision_id(
+        modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
+    )
+    filing_period = Period.from_year_and_code(_PRE_B2_LAST_EXERCISE, "1P")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="202",
-        filing_year=2024,
+        filing_year=_PRE_B2_LAST_EXERCISE,
         period=filing_period,
         revision_id=revision_id,
     )
@@ -374,10 +384,10 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("202"),
-        filing_year=2024,
+        filing_year=_PRE_B2_LAST_EXERCISE,
         period=filing_period,
         revision_id=revision_id,
-        name="202-2024-1P",
+        name=f"202-{_PRE_B2_LAST_EXERCISE}-1P",
         created_at=now,
         updated_at=now,
         current_calculation_revision_id=calculation_revision_id,
@@ -389,7 +399,7 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="202",
             revision_id=revision_id,
-            modelo_year=2024,
+            modelo_year=_PRE_B2_LAST_EXERCISE,
             period="1P",
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -398,7 +408,7 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         casilla_values=casilla_values,
         observations=registry_grounded_observations(
             modelo="202",
-            filing_year=2024,
+            filing_year=_PRE_B2_LAST_EXERCISE,
             period="1P",
             casilla_values=casilla_values,
         ),
@@ -493,16 +503,20 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     assert out.stat().st_size > 0
 
 
-def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity(
+def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomplete_producer_facts(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Envelope-bearing Modelo 202 exports require explicit product authority."""
+    """The development identity clears the envelope header; missing Modelo 202 producer facts still refuse.
+
+    The fixture profile declares no principal CNAE or official offsets, so the
+    export must stop before any byte is written rather than render blanks.
+    """
 
     _set_emilio_legal_entity_export_profile()
-    _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
-    out = tmp_path / "modelo-202-2024-1P.boe"
+    _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
+    out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
     result = _invoke(
         [
@@ -514,7 +528,7 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
             "--modelo",
             "202",
             "--year",
-            "2024",
+            str(_PRE_B2_LAST_EXERCISE),
             "--period",
             "1P",
             "--output",
@@ -524,18 +538,54 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
         ],
     )
 
-    assert result.exit_code == 2, result.output
+    assert result.exit_code != 0, result.output
     error = json.loads(result.output)["error"]
-    assert error["code"] == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-    assert error["category"] == "REFUSED"
     assert error["context"]["calculation_revision_id"] == calculation_revision_id
-    assert error["context"]["modelo"] == "202"
-    assert "Versión del Programa" in error["message"]
-    assert "NIF del desarrollador" in error["message"]
-    assert error["context"]["record"]
-    assert error["context"]["program_positions"]
-    assert error["context"]["developer_positions"]
+    assert error["context"]["cause_type"] == "FilingProducerSnapshotError"
     assert not out.exists()
+
+
+def test_export_without_an_envelope_prefix_reports_no_software_identity(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A layout without an envelope prefix carries no developer header, so no identity grade is reported."""
+    _set_emilio_legal_entity_export_profile()
+    _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
+        current_index=0,
+        filing_year=2024,
+        period="1T",
+        operation=operation,
+    )
+    out = tmp_path / "modelo-111-2024-1T.boe"
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
+            "--by",
+            "Emilio",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["result"]["software_identity_grade"] is None
+    assert "modelo.export.development_software_identity" not in {notice["code"] for notice in envelope["notices"]}
+    assert DEVELOPMENT_MOCK_DEVELOPER_TAX_ID.encode("ascii") not in out.read_bytes()
 
 
 def _export_through_the_operation(
@@ -579,15 +629,15 @@ def test_the_export_operation_and_the_command_line_reach_the_same_gate_for_one_r
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Both surfaces carry the same elections, so one revision meets the same export gate from either.
+    """Both surfaces carry the same elections and product identity, so one revision meets the same gate.
 
-    Every envelope-bearing export currently ends at the missing reviewed
-    product identity; the operation once failed earlier than that for a
-    Modelo 303, because it forwarded none of the elections the command line
-    supplies.
+    The operation once failed earlier than the command line for a Modelo 303,
+    because it forwarded none of the elections the command line supplies.
+    Byte parity of a successful export is proven for Modelo 303 in the
+    surface-parity module; here both routes must stop at the same producer gate.
     """
     _set_emilio_legal_entity_export_profile()
-    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
+    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     cli_out = tmp_path / "cli.boe"
     operation_out = tmp_path / "operation.boe"
 
@@ -612,10 +662,10 @@ def test_the_export_operation_and_the_command_line_reach_the_same_gate_for_one_r
         operation=operation,
     )
 
-    assert cli.exit_code == 2, cli.output
-    assert json.loads(cli.output)["error"]["code"] == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-    assert condition is OperationTerminalCondition.REFUSED
-    assert operation_code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    cli_code = json.loads(cli.output)["error"]["code"]
+    assert cli.exit_code != 0, cli.output
+    assert condition is not OperationTerminalCondition.SUCCEEDED
+    assert operation_code == cli_code
     assert not cli_out.exists()
     assert not operation_out.exists()
 

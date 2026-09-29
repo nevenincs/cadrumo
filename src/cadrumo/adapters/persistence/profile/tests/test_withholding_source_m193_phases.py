@@ -8,8 +8,9 @@ producer, real resolver and the published authority's 193 revision.
 
 A capital capture is anchored to the ledger payment, so every captured
 allocation carries its settlement event: "unpaid at year end" is a coupon
-exigible in 2025 and collected in January 2026, which is PENDING in the 2025
-source and SETTLED_PRIOR_ACCRUAL in the 2026 source.
+exigible in December of the last closed exercise and collected the next January,
+which is PENDING in the accrual year's source and SETTLED_PRIOR_ACCRUAL in the
+next year's source.
 """
 
 from __future__ import annotations
@@ -26,9 +27,13 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NIF,
     CAPITAL_IRPF,
+    CAPITAL_YEAR,
+    MANUAL_HOLDER_NIF,
     capital_payment,
     capital_pending_payment,
     capital_request,
+    manual_capital_row,
+    seed_manual_percepcion_window,
     withholding_producer,
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -44,10 +49,7 @@ from cadrumo.application.aggregation.m193_phase_materialization import (
     Modelo193PhaseRow,
     materialize_modelo_193_disclosure_phases,
 )
-from cadrumo.application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
+from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import Modelo193NonpaymentCause, Modelo193PendingPaymentEvidence
 from cadrumo.application.aggregation.source_mesh import (
@@ -57,6 +59,7 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     LARGE_COMPANY_FACTS,
+    published_pending_disclosure_years,
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
     withholding_work_profile,
@@ -71,9 +74,12 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+# The coupon accrues in the shared fixture's exercise, whose selected Modelo 193
+# edition grounds the pending disclosure, and is collected in the following one.
+_GROUNDED_ACCRUAL_EXERCISE = CAPITAL_YEAR
+_COLLECTION_EXERCISE = _GROUNDED_ACCRUAL_EXERCISE + 1
 _PENDING_NIF = "999999999"
-_MANUAL_NIF = "33333333P"
-_COUPON_ALLOCATION_ID = "coupon-allocation-2025-06"
+_COUPON_ALLOCATION_ID = f"coupon-allocation-{_GROUNDED_ACCRUAL_EXERCISE}-06"
 _NIF_BINDING = "modelo-193-perceptor-row-nif"
 _PENDIENTE_BINDING = "modelo-193-perceptor-row-pendiente"
 _ACCRUAL_YEAR_BINDING = "modelo-193-perceptor-row-ejercicio-devengo"
@@ -91,25 +97,25 @@ def _capture(capture: LedgerPaymentWithholdingCapture, objects: SecureObjectRepo
 
 
 def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdingCapture]:
-    """A key B coupon exigible 15 December 2025 that the holder collected on 20 January 2026.
+    """A key B coupon exigible 15 December of the accrual exercise that the holder collected on 20 January of the next year.
 
     ``coupon`` distinguishes a second coupon's identities from the first's.
     """
-    paid_on = date(2026, 1, 20)
-    transaction = capital_payment(provider_id=f"coupon-2025-12{coupon}", booked_date=paid_on)
+    paid_on = date(_COLLECTION_EXERCISE, 1, 20)
+    transaction = capital_payment(provider_id=f"coupon-{_GROUNDED_ACCRUAL_EXERCISE}-12{coupon}", booked_date=paid_on)
     distinct = (
         {
             "allocation_id": f"{_COUPON_ALLOCATION_ID}{coupon}",
-            "idempotency_key": f"coupon-capture-2025-12{coupon}",
-            "exigibility_event_id": f"coupon-exigible-2025-12{coupon}",
+            "idempotency_key": f"coupon-capture-{_GROUNDED_ACCRUAL_EXERCISE}-12{coupon}",
+            "exigibility_event_id": f"coupon-exigible-{_GROUNDED_ACCRUAL_EXERCISE}-12{coupon}",
         }
         if coupon
         else {}
     )
     request = capital_request(
         transaction,
-        payment_event_id=f"coupon-payment-2026-01{coupon}",
-        exigibility_occurred_on=date(2025, 12, 15),
+        payment_event_id=f"coupon-payment-{_COLLECTION_EXERCISE}-01{coupon}",
+        exigibility_occurred_on=date(_GROUNDED_ACCRUAL_EXERCISE, 12, 15),
         modelo_193_pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
         **distinct,
     )
@@ -117,48 +123,35 @@ def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdin
         transaction,
         catalogue_revision_id="c" * 64,
         request=request,
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_GROUNDED_ACCRUAL_EXERCISE,
+        cadence=quarterly_filer_cadence(_GROUNDED_ACCRUAL_EXERCISE),
     )
     return transaction.transaction_id, capture
 
 
 def _collected_same_year() -> LedgerPaymentWithholdingCapture:
-    """A coupon exigible 30 June 2025 and paid 2 July 2025, with no pending evidence."""
+    """A coupon exigible 30 June and paid 2 July of the accrual exercise, with no pending evidence."""
     transaction = capital_payment()
     return build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="c" * 64,
         request=capital_request(transaction),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_GROUNDED_ACCRUAL_EXERCISE,
+        cadence=quarterly_filer_cadence(_GROUNDED_ACCRUAL_EXERCISE),
     )
 
 
 def _manual_row(*, source_id: str, source_allocation_id: str) -> WithholdingObservation:
     """A hand-declared key B 193 row for a second, synthetic holder."""
-    template = capital_pending_payment(
-        capital_payment(provider_id="manual-coupon"),
-        transaction_date=date(2025, 5, 5),
-    ).actual_recipient_detail
-    return template.model_copy(
-        update={
-            "source_id": source_id,
-            "source_allocation_id": source_allocation_id,
-            "perceptor_tax_id": _MANUAL_NIF,
-            "perceptor_legal_name": "Perceptor Manual Sintetico",
-        }
+    return manual_capital_row(
+        filing_year=_GROUNDED_ACCRUAL_EXERCISE,
+        source_id=source_id,
+        source_allocation_id=source_allocation_id,
     )
 
 
 def _persist_manual(objects: SecureObjectRepository, row: WithholdingObservation) -> None:
-    persist_percepcion_observations(
-        ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
-        modelo="193",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        observations=[row],
-    )
+    seed_manual_percepcion_window(objects, filing_year=_GROUNDED_ACCRUAL_EXERCISE, observations=[row])
 
 
 def _resolve(
@@ -199,7 +192,7 @@ def _contributors(resolution: CalculationSourceResolution) -> tuple[CalculationS
     return tuple(row for row in resolution.provenance if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR)
 
 
-def test_2025_accrual_collected_in_2026_is_pending_in_the_2025_source(
+def test_grounded_accrual_collected_next_exercise_is_pending_in_the_accrual_source(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -207,7 +200,9 @@ def test_2025_accrual_collected_in_2026_is_pending_in_the_2025_source(
     _source_id, capture = _collected_next_year()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(capture, profile.repository)
-        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
+        resolution = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
+        )
 
     assert _row_values(resolution, _NIF_BINDING) == [_PENDING_NIF]
     assert _row_values(resolution, _PENDIENTE_BINDING) == ["X"]
@@ -220,26 +215,28 @@ def test_2025_accrual_collected_in_2026_is_pending_in_the_2025_source(
     (contributor,) = _contributors(resolution)
     assert contributor.parent_source_ref in primaries
     assert contributor.contributor_binding_source is BindingSourceKind.LEDGER_TRANSACTION
-    assert (contributor.source_modelo, contributor.source_filing_year) == ("123", 2025)
+    assert (contributor.source_modelo, contributor.source_filing_year) == ("123", _GROUNDED_ACCRUAL_EXERCISE)
     assert contributor.source_ref.startswith("retencion:")
 
 
-def test_the_same_allocation_is_settled_prior_accrual_in_the_2026_source(
+def test_the_same_allocation_is_settled_prior_accrual_in_the_collection_source(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """The 2025-window allocation reaches the payment year under the actual holder and its accrual year."""
+    """The accrual-window allocation reaches the payment year under the actual holder and its accrual year."""
     _source_id, capture = _collected_next_year()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(capture, profile.repository)
-        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
+        resolution = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_COLLECTION_EXERCISE
+        )
 
     assert _row_values(resolution, _NIF_BINDING) == [CAPITAL_HOLDER_NIF]
-    assert _row_values(resolution, _ACCRUAL_YEAR_BINDING) == ["2025"]
+    assert _row_values(resolution, _ACCRUAL_YEAR_BINDING) == [f"{_GROUNDED_ACCRUAL_EXERCISE}"]
     assert _row_values(resolution, _PENDIENTE_BINDING) == []
     assert [diagnostic.reason for diagnostic in resolution.diagnostics] == [_UNRESOLVED_AMOUNTS]
     (contributor,) = _contributors(resolution)
-    assert (contributor.source_modelo, contributor.source_filing_year) == ("123", 2025)
+    assert (contributor.source_modelo, contributor.source_filing_year) == ("123", _GROUNDED_ACCRUAL_EXERCISE)
 
 
 def test_a_same_year_payment_gives_no_phase_row_and_keeps_the_empty_store_advisory(
@@ -249,8 +246,12 @@ def test_a_same_year_payment_gives_no_phase_row_and_keeps_the_empty_store_adviso
     """A coupon collected in its own year is an ordinary 123 allocation, not a disclosure phase."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(_collected_same_year(), profile.repository)
-        accrual_year = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
-        next_year = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
+        accrual_year = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
+        )
+        next_year = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_COLLECTION_EXERCISE
+        )
 
     for resolution in (accrual_year, next_year):
         assert resolution.row_binding_values == {}
@@ -262,7 +263,9 @@ def test_a_same_year_payment_gives_no_phase_row_and_keeps_the_empty_store_adviso
 @pytest.mark.usefixtures("authority_operation")
 def test_key_c_cannot_carry_pending_payment_evidence() -> None:
     """Only keys A, B and D admit the pending treatment, so no key C phase row can be captured."""
-    detail = capital_pending_payment(capital_payment(), transaction_date=date(2026, 1, 20)).actual_recipient_detail
+    detail = capital_pending_payment(
+        capital_payment(), transaction_date=date(_COLLECTION_EXERCISE, 1, 20)
+    ).actual_recipient_detail
 
     with pytest.raises(ValidationError, match="perception_key"):
         Modelo193PendingPaymentEvidence.model_validate(
@@ -283,9 +286,11 @@ def test_a_manual_row_and_a_phase_row_compose_one_source(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(capture, profile.repository)
         _persist_manual(profile.repository, _manual_row(source_id="manual-coupon", source_allocation_id="manual-1"))
-        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
+        resolution = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
+        )
 
-    assert sorted(_row_values(resolution, _NIF_BINDING)) == sorted([_MANUAL_NIF, _PENDING_NIF])
+    assert sorted(_row_values(resolution, _NIF_BINDING)) == sorted([MANUAL_HOLDER_NIF, _PENDING_NIF])
     assert _row_values(resolution, _PENDIENTE_BINDING) == ["X"]
     assert resolution.diagnostics == ()
     primaries = [row for row in resolution.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY]
@@ -305,37 +310,49 @@ def test_a_manual_row_declaring_a_captured_allocation_refuses(
             profile.repository, _manual_row(source_id=source_id, source_allocation_id=_COUPON_ALLOCATION_ID)
         )
         with pytest.raises(AggregationValidationError) as exc_info:
-            _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
+            _resolve(
+                profile.repository,
+                authority_operation,
+                bucket_id=profile.bucket_id,
+                filing_year=_GROUNDED_ACCRUAL_EXERCISE,
+            )
 
     assert exc_info.value.translated_message == _COLLISION_KEY
     assert exc_info.value.context == {
         "modelo": "193",
-        "filing_year": "2025",
+        "filing_year": f"{_GROUNDED_ACCRUAL_EXERCISE}",
         "source_allocations": f"{source_id}/{_COUPON_ALLOCATION_ID}",
     }
 
 
-def test_a_later_accrual_carrying_pending_evidence_is_refused(
+def test_an_accrual_below_the_support_floor_carrying_pending_evidence_is_refused(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Pending disclosure is grounded for 2025 accruals only; a 2026 accrual stops the 2026 source."""
+    """No selected Modelo 193 edition grounds a pending disclosure below the floor, so it stops the floor-year source."""
+    floor = authority_operation.supported_filing_years().floor
+    below = floor - 1
     _source_id, capture = _collected_next_year()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(capture, profile.repository)
         retenciones = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        (captured,) = retenciones.load_observations("123", Period.from_year_and_code(2025, "4T"))
+        (captured,) = retenciones.load_observations("123", Period.from_year_and_code(_GROUNDED_ACCRUAL_EXERCISE, "4T"))
         retenciones.replace_observations(
             modelo="123",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=below,
+            period=Period.from_year_and_code(below, "4T"),
             observations=[
-                captured.model_copy(update={"source_object_id": "coupon-2026-01", "accrued_on": "2026-01-10"})
+                captured.model_copy(
+                    update={
+                        "source_object_id": f"coupon-{below}-12",
+                        "accrued_on": f"{below}-12-15",
+                    }
+                )
             ],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         with pytest.raises(Modelo193PhaseMaterializationError) as exc_info:
-            _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
+            _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=floor)
 
     assert exc_info.value.refusal_code == "unsupported_accrual_year"
 
@@ -350,7 +367,9 @@ def test_each_settled_row_carries_one_unresolved_amount_advisory(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(first, profile.repository)
         _capture(second, profile.repository)
-        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
+        resolution = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_COLLECTION_EXERCISE
+        )
 
     assert _row_values(resolution, _RETENCION_BINDING) == [str(CAPITAL_IRPF + CAPITAL_IRPF)]
     advisories = resolution.diagnostics
@@ -365,12 +384,12 @@ def test_each_settled_row_carries_one_unresolved_amount_advisory(
         assert diagnostic.binding_id is None
         assert diagnostic.remedy is not None
         for named in (
-            "Modelo 193 2026",
-            "accrued in 2025",
+            f"Modelo 193 {_COLLECTION_EXERCISE}",
+            f"accrued in {_GROUNDED_ACCRUAL_EXERCISE}",
             "captured capital withholding (Modelo 123 allocation, settled_prior_accrual disclosure phase)",
             "base retenciones e ingresos a cuenta (base_retenciones)",
             "retenciones e ingresos a cuenta (retencion_practicada)",
-            "declared in the 2025 Modelo 123.",
+            f"declared in the {_GROUNDED_ACCRUAL_EXERCISE} Modelo 123.",
         ):
             assert named in diagnostic.message
 
@@ -383,18 +402,22 @@ def test_the_settled_row_advisory_is_structured_on_the_phase_row(tmp_path: Path)
         _capture(capture, profile.repository)
         stored = RetencionObservationRepositoryAdapter(
             objects=profile.repository
-        ).load_source_observations_through_year("123", 2026)
+        ).load_source_observations_through_year("123", _COLLECTION_EXERCISE)
 
-    (pending,) = materialize_modelo_193_disclosure_phases(stored, filing_year=2025)
-    (settled,) = materialize_modelo_193_disclosure_phases(stored, filing_year=2026)
+    (pending,) = materialize_modelo_193_disclosure_phases(
+        stored, filing_year=_GROUNDED_ACCRUAL_EXERCISE, pending_disclosure_years=published_pending_disclosure_years()
+    )
+    (settled,) = materialize_modelo_193_disclosure_phases(
+        stored, filing_year=_COLLECTION_EXERCISE, pending_disclosure_years=published_pending_disclosure_years()
+    )
     assert pending.amount_authority_advisory is None
     advisory = settled.amount_authority_advisory
     assert advisory is not None
     assert (advisory.reason, advisory.modelo, advisory.filing_year, advisory.accrual_year) == (
         _UNRESOLVED_AMOUNTS,
         "193",
-        2026,
-        2025,
+        _COLLECTION_EXERCISE,
+        _GROUNDED_ACCRUAL_EXERCISE,
     )
     assert advisory.affected_fields == (
         Modelo193PhaseAmountField.BASE_RETENCIONES,
@@ -417,9 +440,11 @@ def test_an_ordinary_manual_row_carries_no_unresolved_amount_advisory(
     """A hand-declared 193 row is not a disclosure phase, so its amounts raise no authority advisory."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _persist_manual(profile.repository, _manual_row(source_id="manual-coupon", source_allocation_id="manual-1"))
-        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
+        resolution = _resolve(
+            profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
+        )
 
-    assert _row_values(resolution, _NIF_BINDING) == [_MANUAL_NIF]
+    assert _row_values(resolution, _NIF_BINDING) == [MANUAL_HOLDER_NIF]
     assert resolution.diagnostics == ()
 
 
@@ -435,7 +460,7 @@ def test_a_large_company_193_source_refuses_instead_of_a_quarterly_only_total(
                 profile.repository,
                 authority_operation,
                 bucket_id=profile.bucket_id,
-                filing_year=2025,
+                filing_year=_GROUNDED_ACCRUAL_EXERCISE,
                 facts=LARGE_COMPANY_FACTS,
             )
 
@@ -443,7 +468,7 @@ def test_a_large_company_193_source_refuses_instead_of_a_quarterly_only_total(
     assert raised.value.context == {
         "annual_modelo": "193",
         "modelo": "123",
-        "filing_year": "2025",
+        "filing_year": f"{_GROUNDED_ACCRUAL_EXERCISE}",
         "unscheduled_quarters": "1T|2T|3T|4T",
         "scheduled_periods": "",
         "monthly_windows_supported": False,

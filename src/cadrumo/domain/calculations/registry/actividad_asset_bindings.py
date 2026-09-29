@@ -234,9 +234,9 @@ def resolve_activity_asset_schedule_authority(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    if modelo_revision.id != str(tax_year):
+    if modelo_revision.valid_from.year > tax_year:
         raise ActividadAssetUnsupportedError(
-            f"Modelo 100 revision {modelo_revision.id} does not govern tax year {tax_year}",
+            f"Modelo 100 revision {modelo_revision.id} begins after tax year {tax_year}",
         )
     election = asset_revision.amortization
     refusal = _REFUSED_METHODS.get(election.method)

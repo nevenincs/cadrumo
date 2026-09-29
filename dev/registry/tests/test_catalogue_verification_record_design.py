@@ -13,7 +13,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
+from .authored_edition_support import authored_revisions, source_reference
 from .catalogue_verification_support import _catalogues, registry_tree
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -303,45 +305,75 @@ def _manual_extracted_text(corpus_path: str) -> str:
     return "\n".join(texts)
 
 
-def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual() -> None:
+def _dictionary_drift_exercise() -> int:
+    """Return the authored-history Modelo 100 edition whose dictionary drifted from its manual.
+
+    Below the support floor, it is the one edition whose casilla 0302 cites its AEAT
+    Renta manual beside its record-design dictionary.
+    """
+    floor = committed_supported_filing_years().floor
+    (exercise,) = (
+        revision.valid_from.year
+        for revision in authored_revisions("100")
+        if revision.valid_from.year < floor
+        and any(
+            casilla.id == "0302" and any(source_reference(ref).kind == "manual_pdf" for ref in casilla.source_refs)
+            for casilla in revision.casillas
+        )
+    )
+    return exercise
+
+
+_M100_DICTIONARY_DRIFT_EXERCISE = _dictionary_drift_exercise()
+_M100_DICTIONARY_SOURCE = f"aeat-dr-100-{_M100_DICTIONARY_DRIFT_EXERCISE}-dictionary"
+_M100_MANUAL_SOURCE = f"aeat-renta-{_M100_DICTIONARY_DRIFT_EXERCISE}-manual-parte1"
+
+
+def test_modelo_100_deportistas_0489_is_grounded_in_dictionary_and_manual() -> None:
     modelos, catalogues = registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "100")
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_M100_DICTIONARY_DRIFT_EXERCISE)]
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0489")
-    dictionary = catalogues.sources["aeat-dr-100-2021-dictionary"]
-    manual = catalogues.sources["aeat-renta-2021-manual-parte1"]
+    dictionary = catalogues.sources[_M100_DICTIONARY_SOURCE]
+    manual = catalogues.sources[_M100_MANUAL_SOURCE]
 
     assert dictionary.evidence_tier == "layout_authority"
     assert manual.evidence_tier == "official_source_guidance"
     assert casilla.label == _record_design_label(dictionary.corpus_path, "0489")
-    assert "aeat-renta-2021-manual-parte1" in casilla.source_refs
+    assert _M100_MANUAL_SOURCE in casilla.source_refs
     assert casilla.semantic_role == "irpf_red_deportistas_aportaciones_contribuciones"
 
     manual_text = " ".join(_manual_extracted_text(manual.corpus_path).split())
     assert "casillas [0488] y [0489]" in manual_text
-    assert "aportaciones y contribuciones realizadas en 2021" in manual_text
+    assert f"aportaciones y contribuciones realizadas en {_M100_DICTIONARY_DRIFT_EXERCISE}" in manual_text
 
 
-def test_modelo_100_2021_forestal_0302_prefers_manual_year_over_dictionary_drift() -> None:
+def test_modelo_100_forestal_0302_prefers_manual_year_over_dictionary_drift() -> None:
     modelos, catalogues = registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "100")
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_M100_DICTIONARY_DRIFT_EXERCISE)]
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0302")
-    dictionary = catalogues.sources["aeat-dr-100-2021-dictionary"]
-    manual = catalogues.sources["aeat-renta-2021-manual-parte1"]
+    dictionary = catalogues.sources[_M100_DICTIONARY_SOURCE]
+    manual = catalogues.sources[_M100_MANUAL_SOURCE]
 
     expected_label = (
-        "Ganancias patrimoniales obtenidas por los vecinos en 2021 como consecuencia de "
+        f"Ganancias patrimoniales obtenidas por los vecinos en {_M100_DICTIONARY_DRIFT_EXERCISE} como consecuencia de "
         "aprovechamientos forestales en montes públicos"
     )
 
-    assert _record_design_label(dictionary.corpus_path, "0302") == expected_label.replace("2021", "2020")
+    # The dictionary still prints the preceding exercise in this label.
+    assert _record_design_label(dictionary.corpus_path, "0302") == expected_label.replace(
+        str(_M100_DICTIONARY_DRIFT_EXERCISE), str(_M100_DICTIONARY_DRIFT_EXERCISE - 1)
+    )
     assert casilla.label == expected_label
-    assert "aeat-renta-2021-manual-parte1" in casilla.source_refs
+    assert _M100_MANUAL_SOURCE in casilla.source_refs
 
     manual_text = " ".join(_manual_extracted_text(manual.corpus_path).split())
     assert expected_label in manual_text
-    assert "Esta ganancia patrimonial ha estado sujeta en 2021 a la retención del 19 por 100" in manual_text
+    assert (
+        f"Esta ganancia patrimonial ha estado sujeta en {_M100_DICTIONARY_DRIFT_EXERCISE} a la retención del 19 por 100"
+        in manual_text
+    )
 
 
 def test_renta_manual_sources_match_manifest() -> None:

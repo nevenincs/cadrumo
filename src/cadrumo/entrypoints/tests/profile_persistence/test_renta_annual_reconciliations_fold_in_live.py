@@ -352,10 +352,10 @@ def _assert_empty_withholding_store_source_issue(result: BucketAggregationCalcul
     withholding_issues = [
         diag
         for diag in result.source_diagnostics
-        if diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "source_issue"
+        if diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "withholding_detail_absent"
     ]
     assert withholding_issues, (
-        f"M{modelo} must surface a 'source_issue' advisory when the enrolled withholding "
+        f"M{modelo} must surface a 'withholding_detail_absent' advisory when the enrolled withholding "
         f"resolver finds no per-perceptor-clave observations; source_diagnostics: {result.source_diagnostics}"
     )
     assert all(diag.resolver_id == _WITHHOLDING_SOURCE for diag in withholding_issues)

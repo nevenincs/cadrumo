@@ -28,6 +28,9 @@ from ....application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ....application.modelo.export_projection import (
+    ModeloExportPublicResultV2,
+)
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
@@ -46,10 +49,12 @@ from ....application.modelo.operation_definitions import (
     ModeloWorkFileRequest,
     ModeloWorkVerifyRequest,
 )
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationRequest
 from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
-from ....core.operations import OperationEffect
+from ....core.modelo_export_artefact import ModeloExportArtefact
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
@@ -77,6 +82,8 @@ class ModeloWorkspaceLifecycleDoor:
     ) = None
     #: Whether this work unit's Modelo 303 period asks the Modelo 390 exemption, resolved under the pinned authority.
     asks_modelo_390: bool = False
+    #: Reads one settled export's public result through the same runtime session.
+    read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV2]] | None = None
 
     async def calculate(
         self,
@@ -202,8 +209,15 @@ class ModeloWorkspaceLifecycleDoor:
         refund_election: RefundElection,
         payment_election: PaymentElection,
         prior_domiciliation_election: PriorDomiciliationElection,
+        replace_existing: bool = False,
+        artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
     ) -> OperationControllerPort:
-        """Export the selected verified revision to the operator-selected path with the operator's elections."""
+        """Export the selected verified revision to the operator-selected path with the operator's choices.
+
+        ``artefact`` names which export the operator asked for. It defaults to the
+        AEAT-compatible filing file so a caller that offers no choice submits the
+        export this door always submitted.
+        """
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -214,10 +228,31 @@ class ModeloWorkspaceLifecycleDoor:
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    replace_existing=replace_existing,
+                    artefact=artefact,
                     actor=_ACTOR_REF,
                 ),
             )
         )
+
+    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+        """Resolve one settled export's public result through the runtime's result door.
+
+        ``None`` when the projection is not a successful export or its result
+        cannot be resolved; the caller states that absence rather than inventing
+        the facts the result would have carried.
+        """
+        if (
+            self.read_export_result is None
+            or projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
+            or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            or projection.definition_contract.result_schema is None
+        ):
+            return None
+        try:
+            return await self.read_export_result(projection)
+        except (RuntimeRefusalError, RuntimeFrontendRefusedError):
+            return None
 
     def _require_calculation_revision(self) -> str:
         if self.calculation_revision_id is None:

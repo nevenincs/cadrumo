@@ -4,9 +4,9 @@ Every record is a frozen pydantic v2 model with `extra="forbid"` so that
 schema drift surfaces as validation failures at the moment the engine
 assembles the plan rather than as silent payload divergence at the
 renderer boundary. The records are intentionally narrow: the engine produces
-them, the Google apply adapter consumes them, and
-the pull/parity adapters compare incoming workbook cell values back against the
-same plan.
+them, the online Google apply adapter and the offline XLSX materializer consume
+them, and the pull/parity adapters compare incoming workbook cell values back
+against the same plan.
 
 A1 addressing
 -------------
@@ -265,15 +265,14 @@ class SheetFormulaCell(BaseModel):
 
 
 class SheetCellConstraint(BaseModel):
-    """A declarative value constraint surfaced to one Sheets cell.
+    """A declarative value constraint surfaced to one workbook cell.
 
-    Mirrors the registry's `CasillaConstraints` record into a Sheets
-    `setDataValidation` rule. The apply adapter renders this as a
-    `condition` block on the target cell so an operator who types an
-    out-of-range value sees Sheets's own validation banner reject it
-    in the workbook UI.
+    Mirrors the registry's `CasillaConstraints` record into the target
+    workbook's own input-validation rule: a Sheets `setDataValidation`
+    condition online, a cell data validation offline. An operator who
+    types an out-of-range value is refused by the workbook itself.
 
-    The constraint also propagates to the cell's `note` so the
+    The constraint also propagates to the cell's note so the
     operator sees the legal grounding ("LIRPF art. 56 — non-negative")
     even before they attempt invalid input.
     """
@@ -286,6 +285,50 @@ class SheetCellConstraint(BaseModel):
     max_value: Decimal | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     casilla_id: CasillaId
+
+    def resolved_bounds(self) -> tuple[Decimal | None, Decimal | None]:
+        """Return the tightest ``(minimum, maximum)`` the sign and the bounds together imply.
+
+        The sign is a bound like any other: ``non_negative`` floors the cell at
+        zero, ``non_positive`` caps it there, and an explicit bound on the same
+        side is kept when it is the tighter of the two. Resolving the pair on the
+        record keeps every transport's admitted range the same range -- a
+        transport deriving its own would admit values another refuses, for one
+        declared constraint.
+
+        Returns:
+            tuple[Decimal | None, Decimal | None]: The minimum and maximum the
+            cell admits, each ``None`` where that side is unbounded.
+        """
+        lower = self.min_value
+        upper = self.max_value
+        if self.sign == CasillaSignConstraint.NON_NEGATIVE:
+            floor = Decimal("0")
+            lower = floor if lower is None else max(lower, floor)
+        elif self.sign == CasillaSignConstraint.NON_POSITIVE:
+            ceiling = Decimal("0")
+            upper = ceiling if upper is None else min(upper, ceiling)
+        return (lower, upper)
+
+    def grounding_message(self) -> str:
+        """Render the operator-visible bounds and the legal references behind them.
+
+        Returns:
+            str: One sentence naming the casilla, its admitted range, and the
+            legal references that impose it.
+        """
+        parts: list[str] = []
+        if self.sign == CasillaSignConstraint.NON_NEGATIVE:
+            parts.append("≥ 0")
+        elif self.sign == CasillaSignConstraint.NON_POSITIVE:
+            parts.append("≤ 0")
+        if self.min_value is not None:
+            parts.append(f"≥ {format(self.min_value, 'f')}")
+        if self.max_value is not None:
+            parts.append(f"≤ {format(self.max_value, 'f')}")
+        bounds = " ∧ ".join(parts) if parts else "any"
+        refs = ", ".join(self.legal_refs)
+        return f"Casilla {self.casilla_id}: {bounds}. Refs: {refs}."
 
 
 class SheetRowSetColumn(BaseModel):

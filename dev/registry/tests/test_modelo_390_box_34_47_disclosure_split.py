@@ -45,12 +45,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _CASILLA_BOX_34 = "iva.anual.total-bases-cuotas-iva"
 _CASILLA_BOX_47 = "iva.anual.cuota-devengada-total"
 _FORMULA_BOX_34 = "modelo-390-iva-anual-total-bases-cuotas-iva"
+# The IVA rungs box [34] sums on this revision. The domestic inversion del
+# sujeto pasivo [28] is one of the rows the design totals in [33]/[34]; it is
+# also in [47], as Modelo 303 box [13] is in [27], so the two totals keep
+# differing by exactly the recargo de equivalencia.
 _NON_RECARGO_TERMS = frozenset(
     {
         "iva.anual.repercutido.general",
         "iva.anual.repercutido.reducido",
         "iva.anual.repercutido.super-reducido",
         "iva.anual.autorepercutido.intracomunitaria",
+        "iva.anual.autorepercutido.interior.cuota",
     }
 )
 

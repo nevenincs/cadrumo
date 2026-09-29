@@ -339,6 +339,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.calculation_report.CalculationReportNoticeUnavailableError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_REPORT_NOTICE_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_report_notice_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_report_export.ModeloCalculationReportTaxpayerUnknownError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_REPORT_TAXPAYER_UNKNOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_report_taxpayer_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_report_document.CalculationSummaryPdfUnavailableError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_SUMMARY_PDF_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_summary_pdf_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_summary_presentation.CalculationSummaryChromeUnavailableError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_SUMMARY_CHROME_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_summary_chrome_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_summary_pdf_ports.CalculationSummaryPdfUnreadableError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_SUMMARY_PDF_UNREADABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_summary_pdf_unreadable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export.ModeloExportUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNSUPPORTED",
@@ -349,7 +399,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.export.ModeloExportOutputPathError",
+        "cadrumo.application.modelo.export_sink.ModeloExportOutputPathError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
             category=ErrorCategory.REFUSED,

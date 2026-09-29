@@ -763,7 +763,13 @@ def resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ..
     return tuple(resolved)
 
 
-_SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=@+-]+$")
+#: Tokens PowerShell passes through bare. ``@`` is excluded because a leading
+#: ``@`` is splatting in argument mode: the argument silently disappears.
+_SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=+-]+$")
+
+#: Every character PowerShell's tokenizer reads as a single quote: the ASCII
+#: apostrophe and the four typographic quotes U+2018 to U+201B.
+_POWERSHELL_SINGLE_QUOTE = re.compile("['\u2018\u2019\u201a\u201b]")
 
 
 def _powershell_action_token(token: str) -> str:
@@ -772,11 +778,12 @@ def _powershell_action_token(token: str) -> str:
     PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
     strings, so JSON string quoting is not a safe copy/paste representation on
     the supported Windows shell. Single-quoted strings are literal there; an
-    embedded apostrophe is represented by two apostrophes.
+    embedded single quote is represented by doubling it, which includes the
+    typographic quotes that would otherwise end the literal early.
     """
     if _SAFE_ACTION_TOKEN.fullmatch(token):
         return token
-    return "'" + token.replace("'", "''") + "'"
+    return "'" + _POWERSHELL_SINGLE_QUOTE.sub(lambda quote: quote.group(0) * 2, token) + "'"
 
 
 def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:

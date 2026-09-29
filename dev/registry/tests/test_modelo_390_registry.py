@@ -84,6 +84,9 @@ _M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iv
 _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
 _M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-cuotas-ejercicio-anterior"
+)
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
@@ -329,6 +332,37 @@ def test_modelo_390_construct_requires_recargo_grounding(revision_id: str) -> No
         committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
+#: The apartado 5 deducible block read as the sum of the year's 303 boxes: the
+#: import corrientes base [52], the deducible half of the domestic inversión del
+#: sujeto pasivo inside [48]-[51], the three parts of [639]/[62], and each
+#: intra-community block's rate-blind layer and rate boxes.
+_M390_DEDUCIBLE_BLOCK_BINDING_IDS: tuple[str, ...] = (
+    "modelo-390-iva-soportado-importaciones-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-cuota",
+    "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-cuota",
+    *(
+        f"modelo-390-iva-rectificacion-deducciones-{part}-{fact}"
+        for part in ("interiores", "importaciones", "inversion-sujeto-pasivo")
+        for fact in ("base", "cuota")
+    ),
+    *(
+        f"modelo-390-iva-deducible-{block}{rate}-{fact}"
+        for block in ("aic-corrientes", "aic-inversion", "aic-servicios")
+        for rate in ("", "-tipo-4", "-tipo-5", "-tipo-10", "-tipo-21")
+        for fact in ("base", "cuota")
+    ),
+)
+#: The 2 % and 7,5 % intra-community deducible rate boxes the 2024 design adds.
+_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS: tuple[str, ...] = tuple(
+    f"modelo-390-iva-deducible-{block}-tipo-{rate}-{fact}"
+    for block in ("aic-corrientes", "aic-inversion", "aic-servicios")
+    for rate in ("2", "7-5")
+    for fact in ("base", "cuota")
+)
+
+
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revision_id: str) -> None:
     """Modelo 390 declares the same IVA flow-direction binding pattern as
@@ -376,6 +410,12 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-soportado-interiores-cuota",
         "modelo-390-iva-soportado-interiores-base",
         "modelo-390-iva-soportado-importaciones-cuota",
+        # The bienes de inversión totals [50]/[51] and [54]/[55], split from the
+        # corrientes ones above by the row's deduction kind.
+        "modelo-390-iva-soportado-interiores-bienes-inversion-cuota",
+        "modelo-390-iva-soportado-interiores-bienes-inversion-base",
+        "modelo-390-iva-soportado-importaciones-bienes-inversion-cuota",
+        "modelo-390-iva-soportado-importaciones-bienes-inversion-base",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
         "modelo-390-iva-recargo-equivalencia-general-cuota",
         "modelo-390-iva-recargo-equivalencia-reducido-cuota",
@@ -433,6 +473,8 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         # [27]/[28], previously fed in error by the AIC blind binding above.
         "modelo-390-iva-autorepercutido-interior-base",
         "modelo-390-iva-autorepercutido-interior-cuota",
+        *_M390_DEDUCIBLE_BLOCK_BINDING_IDS,
+        *(_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
     }
 
 
@@ -470,6 +512,14 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
     box_97_binding = bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]
     box_662_binding = bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]
+    box_85_binding = bindings["modelo-390-prev-303-compensacion-ejercicio-anterior"]
+    assert casillas[_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA].number == "85"
+    assert casillas[_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA].binding == box_85_binding.id
+    assert box_85_binding.source == "iva_compensation_annual_partition"
+    box_85_selector: Any = box_85_binding.provider
+    assert box_85_selector.source_modelo == "303"
+    assert binding_source_casilla_ids(box_85_binding) == compensation_source_ids
+    assert box_85_selector.partition_output == "prior_year_applied_amount"
     assert box_97_binding.source == "iva_compensation_annual_partition"
     box_97_selector: Any = box_97_binding.provider
     assert box_97_selector.source_modelo == "303"
@@ -490,9 +540,10 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
 
     requirement = iva_compensation_annual_partition_requirement(revision)
     assert requirement is not None
-    assert requirement.binding_ids == tuple(sorted((box_97_binding.id, box_662_binding.id)))
+    assert requirement.binding_ids == tuple(sorted((box_85_binding.id, box_97_binding.id, box_662_binding.id)))
     assert requirement.last_period_amount_binding_id == box_97_binding.id
     assert requirement.generated_not_in_last_amount_binding_id == box_662_binding.id
+    assert requirement.prior_year_applied_amount_binding_id == box_85_binding.id
     assert requirement.dependency_treatment == "direct_annual_settlement"
 
 

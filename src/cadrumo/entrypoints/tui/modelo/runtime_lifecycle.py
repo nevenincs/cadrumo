@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....application.modelo.export_projection import ModeloExportPublicResultV2
 from ....application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationPublicResultV2,
@@ -20,6 +21,7 @@ from ....application.modelo.m303_exonerado_390_applicability_attestation import 
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
 from ....application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import OperationObservationRefusalV1, OperationObservationSuccessV1
 from ....application.operations.models import OperationRequest
 from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
@@ -164,6 +166,16 @@ def compose_runtime_modelo_lifecycle_door(
             expected_session_id=session_id,
         )
 
+    async def read_export_result(projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+        if client.session_id != session_id or projection.subject_ref != work_unit_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        controller = RuntimeOperationController(
+            client=client,
+            operation_id=projection.operation_id,
+            session_id=session_id,
+        )
+        return await controller.read_settled_result(projection, ModeloExportPublicResultV2, result_version=2)
+
     def admit(observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
         if client.session_id != session_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
@@ -178,6 +190,7 @@ def compose_runtime_modelo_lifecycle_door(
         m303_exonerado_390_attestation_admission=admit if str(target.modelo) == "303" else None,
         asks_modelo_390=lifecycle.asks_modelo_390,
         submit_operation=submit,
+        read_export_result=read_export_result,
     )
 
 

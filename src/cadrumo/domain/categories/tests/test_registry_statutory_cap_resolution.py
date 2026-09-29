@@ -18,12 +18,15 @@ from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.schema import FactSelector, MappingFactEntry, MappingFactPayload
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import CategoryValidationError
 from ..registry import CATEGORY_PROFILE_FACT_ID, _profile_from_authority_fact, resolve_category_profiles
 from ..spending_category import SpendingCategory
 from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
 
 
 def _resolved_profile_fact(
@@ -47,9 +50,13 @@ def _with_entries(fact: ResolvedMappingFact, entries: tuple[MappingFactEntry, ..
     return fact.model_copy(update={"payload": MappingFactPayload(entries=entries)})
 
 
-def test_2026_national_diet_cap_carries_both_daily_variants(operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.parametrize("profile_year", _SUPPORTED_YEARS)
+def test_national_diet_cap_carries_both_daily_variants(
+    operation: PinnedAuthorityOperation,
+    profile_year: int,
+) -> None:
     """RIRPF art. 9.A.3.a: 26,67 EUR/day without an overnight stay, 53,34 EUR/day with one."""
-    rule = resolve_category_profiles(2026, operation=operation)[
+    rule = resolve_category_profiles(profile_year, operation=operation)[
         require_spending_category("manutencion_dietas_nacional")
     ].proportionality
 
