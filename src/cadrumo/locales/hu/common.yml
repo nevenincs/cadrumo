@@ -2028,6 +2028,11 @@ tui:
         volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
       title: A 303-es nyomtatvány bevallási adatai
     workbench:
+      applicability:
+        month: Ebben a hónapban nem alkalmazandó
+        period: Ebben az időszakban nem alkalmazandó
+        quarter: Ebben a negyedévben nem alkalmazandó
+        year: Ebben az évben nem alkalmazandó
       attention:
         staged: Módosítva, még nem alkalmazva
       browse:
@@ -2039,6 +2044,8 @@ tui:
         count: 'Megerősítendő rovatok: {count}'
         intro: A Cadrumo tárolja ezeket az értékeket, de senki nem adta meg őket.
           Csak akkor erősítse meg őket, ha Önre nézve helyesek.
+        none_in_section: Ebben a szakaszban nincs megerősítendő feltételezett érték.
+        none_on_page: Ezen az oldalon nincs megerősítendő feltételezett érték.
         sourced_left_out: 'A forrásból kitöltött rovatok nem szerepelnek: azok a forrásukból
           frissülnek.'
         tick: Átnéztem ezeket az értékeket, és helyesek
@@ -2163,6 +2170,7 @@ tui:
         own_calculation: A Cadrumo számítása; az AEAT még nem látta.
         result:
           choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
+          choice_pending_short: Beszámítás vagy visszatérítés
           direction_unknown_help: A Cadrumo még nem jelzi, hogy ez az összeg fizetendő
             vagy visszatérítendő. Benyújtás előtt ellenőrizze a hivatalos nyomtatványon.
           failed: 'Eredmény: nem számítható ki [{key}]'
@@ -2242,6 +2250,7 @@ tui:
         next_step: Következő lépés
         previous_page: Előző oldal
         review: Módosítások
+        scroll: Görgetés
         search: Keresés
         sort: Rendezés
         sources: Források
@@ -2304,6 +2313,7 @@ tui:
           done: Kész
           earlier: Korábbi bevallásból
           expanded: Nyitott szakasz
+          from_your_data: Az Ön adataiból
           here: Itt tart
           stale: Elavult
         on_screen: Ezen a képernyőn
@@ -2506,6 +2516,8 @@ tui:
         prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
           visz.
       section:
+        box: '{box}. rovat'
+        boxes: '{first}. rovattól {last}. rovatig'
         part: '{page}. oldal, {part}. rész'
         pending: '{heading} · teendő: {count}'
       sort:

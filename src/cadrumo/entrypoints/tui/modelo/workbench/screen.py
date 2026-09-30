@@ -10,7 +10,12 @@ sorted another way; and a help band explains the casilla under the cursor --
 its words, where its value comes from, what may be done about it, and, once
 loaded, its formula, official text and legal basis. ``/`` searches every page,
 ``g`` goes to a box by number, and ``?`` names the symbols on screen, then
-opens every symbol and key.
+opens every symbol and key. ``b`` confirms the assumed values of the section
+under the cursor, or of the page, together; never the whole declaration at once.
+
+A page that does not apply this period is dimmed, says so and asks nothing of
+the filer. A declaration recorded as filed says so wherever a box is explained,
+counts nothing as to do, and offers no key that would change it.
 
 The screen resolves nothing itself. It reads through the port the composition
 root hands it, off the event loop, and keeps only presentation state: the page
@@ -50,6 +55,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
+    ModeloFormResultDirection,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
@@ -60,7 +66,7 @@ from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, mode
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import output_language, tr
+from .....core.i18n.render import lookup_translation, output_language, tr
 from .....core.logging import get_logger
 from .....core.operations import OperationTerminalCondition
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
@@ -74,8 +80,8 @@ from ...search import TuiSearchHostV1
 from ..export_result import ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .bulk_confirm import BulkConfirmScreen
-from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, description_text
-from .editor import CasillaEditorScreen, EditorDecision, read_only_reason
+from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, description_text, rate_note
+from .editor import CasillaEditorScreen, EditorOutcome, read_only_reason
 from .export import WorkbenchExportScreen
 from .header import (
     DeadlineTone,
@@ -86,6 +92,7 @@ from .header import (
     fit_identity,
     fit_result_line,
     is_result_field,
+    result_line_text,
     result_view,
 )
 from .issues import WorkbenchIssuesScreen
@@ -95,6 +102,7 @@ from .navigator import (
     NavigatorState,
     breadcrumb,
     checked_boxes,
+    inapplicable_pages,
     navigator_rows,
     page_counts,
     presented_form,
@@ -103,7 +111,6 @@ from .navigator import (
 from .page_items import (
     WorkbenchFilter,
     WorkbenchPage,
-    first_attention,
     page_items,
     page_of,
     workbench_pages,
@@ -115,7 +122,15 @@ from .ports import (
     WorkbenchExportRequest,
     WorkbenchPreflight,
 )
-from .progress import NextAction, next_action_text, record_filing_text, stepper_marks, stepper_text, workbench_progress
+from .progress import (
+    NextAction,
+    fit_next_line,
+    next_action_text,
+    record_filing_text,
+    stepper_marks,
+    stepper_text,
+    workbench_progress,
+)
 from .result import WorkbenchResultScreen, result_lines
 from .review import EditReviewScreen, ReviewDecision, ReviewNote, recalculation_risk_text
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
@@ -125,21 +140,27 @@ from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSou
 from .vocabulary import (
     ATTENTION_MARKS,
     HERE_MARK,
-    NEEDS_ATTENTION,
+    SOURCE_WORDED_ORIGINS,
     TYPED_EDITABILITIES,
     WorkbenchMark,
     attention_words_key,
     editability_text,
-    origin_glyph,
     origin_text,
 )
+from .wording import does_not_apply_text, wrap_words
 
 if TYPE_CHECKING:
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
 
 _NARROW: Final[int] = 110
+_SHORT: Final[int] = 30
+"""Below this many rows the list shows one line per box and the help band one line, so ten or more boxes fit."""
 _GUTTERS: Final[int] = 2 * int(CADRUMO_CSS_TOKENS["cadrumo-gutter"])
+_NEXT_GAP: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
 _FOOTER_KEY_GAP: Final[int] = 1
+_NO_BREAK_SPACE: Final[str] = "\u00a0"
+_PALETTE_FRAME: Final[int] = 2
+"""The command palette key's rule on its left and its gap on its right, beside its words, in the compact footer."""
 _FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "enter",
     "n",
@@ -162,6 +183,17 @@ _FOOTER_PRIORITY: Final[tuple[str, ...]] = (
 """Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
 _HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
 """Keys the help and the legend name that the footer never shows."""
+_CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "b", "c", "f8", "n"})
+"""Footer keys that change a declaration or lead to what is left to do; a declaration recorded as filed shows none."""
+_ASKS_THE_FILER: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+"""Origins whose words ask the filer to act, which a declaration recorded as filed no longer does."""
+_NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
+    True: "tui.modelo.workbench.bulk_confirm.none_in_section",
+    False: "tui.modelo.workbench.bulk_confirm.none_on_page",
+}
+"""What ``b`` says with nothing assumed in the section under the cursor (``True``) or on the page."""
 _VALUE_CHANGING_OPERATIONS: Final[frozenset[str]] = frozenset(
     {str(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID), str(MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID)}
 )
@@ -222,8 +254,21 @@ _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "s": "tui.modelo.workbench.key.sources",
 }
 _CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
+_LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
+_SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
+"""The only keys the footer shows while the symbols panel is open."""
 _GREETED: Final[WeakSet[object]] = WeakSet()
 """The applications whose filer has already been told once where to find what the symbols mean."""
+
+
+class SymbolsPanel(VerticalScroll):
+    """The "Symbols and keys" panel, which scrolls with the arrow keys and says so in the footer."""
+
+    BINDINGS: ClassVar = [Binding("up", "scroll_up", "", show=True, key_display="↑↓")]
+
+    def describe_keys(self) -> None:
+        """Name the scroll key in the language now on screen."""
+        describe_bindings(self._bindings.key_to_bindings, {"up": _SCROLL_LOCALE_KEY})
 
 
 class ModeloWorkbenchScreen(AccountChromeScreen):
@@ -235,11 +280,26 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             width: 1fr;
             height: $cadrumo-band-height;
         }
+        ModeloWorkbenchScreen #wb-identity {
+            /* A neutral title bar beneath the account bar: the result, not the title, carries the emphasis. */
+            dock: top;
+            height: $cadrumo-band-height;
+            width: 100%;
+            margin-top: $cadrumo-band-height;
+            padding: $cadrumo-space-0 $cadrumo-gutter;
+            background: $panel;
+            color: $foreground;
+            text-style: bold;
+        }
+        ModeloWorkbenchScreen #wb-header {
+            color: $foreground;
+            text-style: bold;
+        }
         ModeloWorkbenchScreen #wb-deadline {
             width: auto;
             height: $cadrumo-band-height;
             padding: $cadrumo-space-0 $cadrumo-space-1;
-            background: $surface;
+            background: $panel;
             color: $foreground;
         }
         ModeloWorkbenchScreen #wb-deadline.-soon {
@@ -262,7 +322,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         }
         ModeloWorkbenchScreen #wb-result {
             width: auto;
+            color: $foreground;
             text-style: bold;
+        }
+        ModeloWorkbenchScreen #wb-result.-to-pay {
+            color: $warning;
+        }
+        ModeloWorkbenchScreen #wb-result.-to-pay.-overdue {
+            color: $error;
         }
         ModeloWorkbenchScreen #wb-result.-stale {
             text-style: dim;
@@ -276,14 +343,41 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             width: 1fr;
             margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section;
         }
+        ModeloWorkbenchScreen #wb-marks {
+            width: 1fr;
+            height: auto;
+        }
+        ModeloWorkbenchScreen.-outcome-stacked #wb-outcome {
+            layout: vertical;
+        }
+        ModeloWorkbenchScreen.-outcome-stacked #wb-stale {
+            margin: $cadrumo-space-0;
+        }
+        ModeloWorkbenchScreen.-outcome-stacked #wb-chips.-leading {
+            margin: $cadrumo-space-0;
+        }
         ModeloWorkbenchScreen #wb-stepper {
             width: auto;
         }
         ModeloWorkbenchScreen #wb-next {
             width: 1fr;
             margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section;
-            color: $accent;
+            color: $foreground;
             text-style: bold;
+            text-wrap: nowrap;
+            text-overflow: ellipsis;
+        }
+        ModeloWorkbenchScreen #wb-next.-confirm {
+            color: $warning;
+        }
+        ModeloWorkbenchScreen #wb-next.-resolve {
+            color: $error;
+        }
+        ModeloWorkbenchScreen.-next-below #wb-steps {
+            layout: vertical;
+        }
+        ModeloWorkbenchScreen.-next-below #wb-next {
+            margin: $cadrumo-space-0;
         }
         ModeloWorkbenchScreen #wb-banner {
             height: auto;
@@ -338,6 +432,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen.-narrow #wb-crumb {
             display: block;
         }
+        ModeloWorkbenchScreen.-narrow #wb-page {
+            display: none;
+        }
         ModeloWorkbenchScreen #wb-page {
             height: $cadrumo-band-height;
             padding: $cadrumo-space-0 $cadrumo-space-1;
@@ -363,6 +460,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             padding: $cadrumo-space-0 $cadrumo-gutter;
             background: $surface;
             border-top: $cadrumo-rule $panel;
+        }
+        ModeloWorkbenchScreen.-short #wb-help {
+            /* Its rule and one line. */
+            max-height: $cadrumo-space-2;
         }
         ModeloWorkbenchScreen #wb-help.-expanded {
             max-height: $cadrumo-help-expanded-max-height;
@@ -416,6 +517,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._operation_in_flight = False
         self._load: ModeloWorkFormLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
+        self._inapplicable: frozenset[str] = frozenset()
+        self._density_chosen: Density | None = None
+        self._explained: CasillaListEntry | None = None
         self._page_index = 0
         self._filter = WorkbenchFilter.ALL
         self._sort = SortOrder.FORM
@@ -431,20 +535,21 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        with Horizontal(id="wb-identity", classes="cadrumo-banner"):
+        with Horizontal(id="wb-identity"):
             yield Static(id="wb-header", markup=False)
             yield Static(id="wb-deadline", markup=False)
         with Vertical(id="wb-status"):
-            with Horizontal(classes="wb-line"):
+            with Horizontal(id="wb-outcome", classes="wb-line"):
                 yield Static(id="wb-result", markup=False)
-                yield Static(id="wb-stale", markup=False)
-                yield Static(id="wb-chips", markup=False)
-            with Horizontal(classes="wb-line"):
+                with Horizontal(id="wb-marks", classes="wb-line"):
+                    yield Static(id="wb-stale", markup=False)
+                    yield Static(id="wb-chips", markup=False)
+            with Horizontal(id="wb-steps", classes="wb-line"):
                 yield Static(id="wb-stepper", markup=False)
                 yield Static(id="wb-next", markup=False)
             yield Static(tr("tui.modelo.workbench.filed.read_only"), id="wb-banner", markup=False)
             yield Static(id="wb-notice", markup=False)
-        with VerticalScroll(id="wb-legend"):
+        with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
         with Horizontal(id="wb-body"):
             yield OptionList(id="wb-sections")
@@ -460,14 +565,18 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Describe the keys and read the declaration."""
         self._describe_keys()
         self._apply_width(self.size.width)
+        self._apply_height(self.size.height or self.app.size.height)
         self.run_worker(self._read, group="workbench-read", exclusive=True)
 
     def on_resize(self, event: events.Resize) -> None:
         """Fold the navigator away on narrow terminals and shorten the header to fit."""
         self._apply_width(event.size.width)
+        self._apply_height(event.size.height)
         self._render_header()
+        self._render_progress()
         self._describe_keys()
         self.call_after_refresh(self._render_navigator)
+        self.call_after_refresh(self._rewrap_help)
 
     def on_key(self, event: events.Key) -> None:
         """Take the first-open notice away at the filer's first keypress."""
@@ -479,6 +588,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _apply_width(self, width: int) -> None:
         self.set_class(width < _NARROW, "-narrow")
 
+    def _apply_height(self, height: int) -> None:
+        """On a short terminal show more boxes: one line each, a one-line help band that ``?`` expands."""
+        short = 0 < height < _SHORT
+        self.set_class(short, "-short")
+        if self._density_chosen is None:
+            self.query_one(CasillaList).set_density("compact" if short else "comfortable")
+
     def _width(self) -> int:
         return self.size.width or self.app.size.width
 
@@ -489,19 +605,30 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         return f"{display} {tr(translation_key)}"
 
     def _footer_keys(self, width: int) -> frozenset[str]:
-        """The keys the footer can show at ``width``, most needed first, without running past the edge."""
+        """The keys the footer can show at ``width``, most needed first, without running under the palette key.
+
+        A declaration recorded as filed shows no key that would change it or
+        lead to something left to do.
+        """
         descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
         others = [
             active.binding
             for key, active in self.active_bindings.items()
             if active.binding.show and key not in descriptions
         ]
-        budget = width - sum(
-            cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + _FOOTER_KEY_GAP
-            for binding in others
+        budget = (
+            width
+            - self._palette_cost()
+            - sum(
+                cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + _FOOTER_KEY_GAP
+                for binding in others
+            )
         )
+        hidden = _CHANGE_KEYS if self.recorded else frozenset()
         shown: set[str] = set()
         for key in _FOOTER_PRIORITY:
+            if key in hidden:
+                continue
             cost = cell_len(self._key_label(key, descriptions[key])) + _FOOTER_KEY_GAP
             if cost > budget:
                 break
@@ -509,7 +636,25 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             budget -= cost
         return frozenset(shown)
 
+    def _palette_cost(self) -> int:
+        """The cells the footer keeps at its right edge for the command palette key, when it shows one."""
+        app = self.app
+        if not app.ENABLE_COMMAND_PALETTE:
+            return 0
+        active = self.active_bindings.get(app.COMMAND_PALETTE_BINDING)
+        if active is None:
+            return 0
+        binding = active.binding
+        return cell_len(f"{app.get_key_display(binding)} {binding.description}") + _PALETTE_FRAME
+
     def _describe_keys(self) -> None:
+        if self._legend_level == 2:
+            # The symbols panel has its own keys: close it, and scroll it.
+            describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=_LEGEND_KEYS)
+            describe_bindings(self._bindings.key_to_bindings, {"escape": _CLOSE_LOCALE_KEY}, shown=_LEGEND_KEYS)
+            self.query_one(SymbolsPanel).describe_keys()
+            self.refresh_bindings()
+            return
         shown = self._footer_keys(self._width())
         describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=shown)
         self.query_one(CasillaList).describe_keys(_LIST_LOCALE_KEYS, shown=shown)
@@ -545,16 +690,28 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     @property
     def drawn_marks(self) -> tuple[WorkbenchMark, ...]:
-        """Every mark on screen now: the header's, the stepper's, the navigator's and the list's."""
-        marks: list[WorkbenchMark] = [mark for part in self._drawn.values() for mark in part]
-        casilla_list = self.query_one(CasillaList)
-        for item in casilla_list.items:
+        """Every mark on screen now: the list's box states, then the header's, the stepper's and the navigator's."""
+        return (*self.box_marks, *self.other_marks)
+
+    @property
+    def box_marks(self) -> tuple[WorkbenchMark, ...]:
+        """The states of the boxes the list shows, once per box: its origin and any attention mark."""
+        marks: list[WorkbenchMark] = []
+        for item in self.query_one(CasillaList).items:
             if isinstance(item, CasillaListEntry):
-                marks.append(mark_for_glyph(origin_glyph(item.field)))
+                glyph = item.origin_mark
+                if glyph.strip():
+                    marks.append(mark_for_glyph(glyph))
                 attention = item.attention
                 if attention is not None:
                     marks.append(ATTENTION_MARKS[attention])
-        if casilla_list.highlighted is not None:
+        return tuple(marks)
+
+    @property
+    def other_marks(self) -> tuple[WorkbenchMark, ...]:
+        """Every mark on screen that is not a box's state: the header's, the stepper's, the navigator's, the cursor."""
+        marks: list[WorkbenchMark] = [mark for part in self._drawn.values() for mark in part]
+        if self.query_one(CasillaList).highlighted is not None:
             marks.append(HERE_MARK)
         return tuple(marks)
 
@@ -574,23 +731,46 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         previous_page = self._pages[self._page_index].id if self._pages else None
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
+        self._inapplicable = inapplicable_pages(load.form)
         self.set_class(self.recorded, "-recorded")
         page_ids = [page.id for page in self._pages]
         if previous_page in page_ids:
             self._page_index = page_ids.index(previous_page)
         else:
-            attention = first_attention(self._pages)
+            attention = self._first_attention()
             self._page_index = 0 if attention is None else attention[0]
         loading = self.query("#wb-loading")
         for widget in loading:
             widget.remove()
         self._render_all()
+        self._describe_keys()
         if previous_page is None:
-            attention = first_attention(self._pages)
+            attention = self._first_attention()
             if attention is not None and attention[0] == self._page_index:
                 self.query_one(CasillaList).focus_address(attention[1])
             self._greet()
         self.query_one(CasillaList).focus()
+
+    def _applies(self, index: int) -> bool:
+        """Whether the page at ``index`` applies this period; the calculation details always do."""
+        return self._pages[index].id not in self._inapplicable
+
+    def _not_applying_text(self) -> str:
+        form = self.form
+        return "" if form is None else does_not_apply_text(form.period)
+
+    def _first_attention(self) -> tuple[int, AddressKey] | None:
+        """The first box that needs the filer, on a page that applies this period; none once recorded as filed."""
+        if self.recorded:
+            return None
+        staged = self._session.display()
+        for index, page in enumerate(self._pages):
+            if not self._applies(index):
+                continue
+            for item in page_items(page, staged=staged):
+                if isinstance(item, CasillaListEntry) and item.needs_filer:
+                    return index, item.key
+        return None
 
     def _greet(self) -> None:
         """Say once per session, on the notice line, where to find what the symbols mean."""
@@ -630,10 +810,18 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         result.update(line.result)
         result.display = bool(line.result)
         result.set_class(line.stale is not None, "-stale")
+        # Colour only reinforces the words: a result to pay reads as a warning, as an error once the deadline passed.
+        to_pay = form.result is not None and form.result.direction is ModeloFormResultDirection.TO_PAY and not recorded
+        result.set_class(to_pay, "-to-pay")
+        result.set_class(to_pay and form.deadline is not None and form.deadline.days_overdue is not None, "-overdue")
         stale = self.query_one("#wb-stale", Static)
         stale.update(line.stale or "")
         stale.display = line.stale is not None
-        self.query_one("#wb-chips", Static).update(_CHIP_GAP.join(chip.text for chip in line.chips))
+        chips_widget = self.query_one("#wb-chips", Static)
+        chips_widget.update(_CHIP_GAP.join(chip.text for chip in line.chips))
+        chips_widget.set_class(line.stale is None, "-leading")
+        # Too narrow for one line: the result on its own, the stale mark and the chips on the next.
+        self.set_class(line.stacked, "-outcome-stacked")
         stale_marks = () if view is None or line.stale is None else view.marks
         self._drawn["header"] = (*stale_marks, *(chip.mark for chip in line.chips))
 
@@ -644,15 +832,21 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         progress = workbench_progress(
             load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
         )
-        self.query_one("#wb-stepper", Static).update(stepper_text(progress))
+        stepper = stepper_text(progress)
+        self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
         key = _NEXT_KEYS[progress.next_action]
         action = next_action_text(progress, self._language)
         self._next_words = f"{action} [{key}]" if key else action
-        line = tr("tui.modelo.workbench.next_line", action=action, key=key) if key else action
-        if progress.next_action is NextAction.EXPORT:
-            line = f"{line} · {record_filing_text()}"
-        self.query_one("#wb-next", Static).update(line)
+        then = record_filing_text() if progress.next_action is NextAction.EXPORT else None
+        width = max(self._width() - _GUTTERS, 1)
+        line = fit_next_line(action, key, width, then=then)
+        # Beside the stepper when it fits there, else on a line of its own: never wrapped.
+        self.set_class(cell_len(line) > width - cell_len(stepper.plain) - _NEXT_GAP, "-next-below")
+        next_widget = self.query_one("#wb-next", Static)
+        next_widget.update(line)
+        next_widget.set_class(progress.next_action is NextAction.CONFIRM, "-confirm")
+        next_widget.set_class(progress.next_action is NextAction.RESOLVE, "-resolve")
 
     def _render_navigator(self) -> None:
         form = self.form
@@ -672,6 +866,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             checked=checked_boxes(form),
             width=label_width,
             show_attention=not self.recorded,
+            inapplicable=self._inapplicable,
+            not_applying=self._not_applying_text(),
         )
         navigator.clear_options()
         for row in rows:
@@ -694,6 +890,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             section=section,
             checked=checked_boxes(form),
             show_attention=not self.recorded,
+            not_applying=None if self._applies(self._page_index) else self._not_applying_text(),
         )
         self.query_one("#wb-crumb", Static).update(line)
         self._drawn["navigator"] = marks
@@ -710,6 +907,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             title = page.heading.text
             position = tr("tui.modelo.workbench.page_position", current=self._page_index + 1, total=len(self._pages))
             notes = [position, filter_words]
+            if not self._applies(self._page_index):
+                notes.insert(1, self._not_applying_text())
             casilla_list.set_items(page_items(page, staged=staged, mode=self._filter), language=self._language)
         else:
             title = tr("tui.modelo.workbench.sort.all_pages")
@@ -729,34 +928,54 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._render_help(message.entry)
         self._render_breadcrumb()
         entry = message.entry
-        if entry is None or not isinstance(entry.field.address, ModeloFormCasillaAddressV1):
+        if entry is not None:
+            self._ask_for_card(entry)
+
+    def _ask_for_card(self, entry: CasillaListEntry) -> None:
+        """Fetch a box's full help off the event loop, unless it is already held."""
+        if not isinstance(entry.field.address, ModeloFormCasillaAddressV1):
             return
         casilla_id = entry.field.address.casilla_id
         if (str(casilla_id), self._language) not in self._cards:
             self.run_worker(partial(self._fetch_card, entry), group="workbench-help", exclusive=True)
 
-    async def _fetch_card(self, entry: CasillaListEntry) -> None:
-        address = entry.field.address
+    def _held_card(self, field: ModeloFormField) -> ModeloCasillaHelpCardV1 | None:
+        address = field.address
         if not isinstance(address, ModeloFormCasillaAddressV1):
-            return
+            return None
+        return self._cards.get((str(address.casilla_id), self._language))
+
+    async def _card_for(self, field: ModeloFormField) -> ModeloCasillaHelpCardV1 | None:
+        """A box's full help, read off the event loop once and then held; ``None`` for a binding input or a failure."""
+        address = field.address
+        if not isinstance(address, ModeloFormCasillaAddressV1):
+            return None
+        held = self._held_card(field)
+        if held is not None:
+            return held
         try:
             card = await asyncio.to_thread(self._reader.help_card, address.casilla_id, self._language)
         except Exception as failure:
             get_logger(__name__).error(
                 "modelo workbench help could not be assembled: %s", type(failure).__qualname__, exc_info=True
             )
-            return
+            return None
         self._cards[(str(address.casilla_id), self._language)] = card
-        highlighted = self.query_one(CasillaList).highlighted
-        if highlighted is not None and highlighted.key == entry.key:
-            self._render_help(highlighted)
+        return card
+
+    async def _fetch_card(self, entry: CasillaListEntry) -> None:
+        if await self._card_for(entry.field) is None:
+            return
+        if self._explained is not None and self._explained.key == entry.key:
+            self._render_help(self._explained)
 
     def _render_help(self, entry: CasillaListEntry | None) -> None:
+        self._explained = entry
         band = self.query_one("#wb-help", Static)
         expanded = band.has_class("-expanded")
         lines: list[str] = []
         if expanded:
-            lines.extend((on_screen_text(self.drawn_marks), more_text()))
+            lines.extend((on_screen_text(self.box_marks, self.other_marks), more_text()))
         if entry is None:
             lines.append(tr("tui.modelo.workbench.help.empty"))
         else:
@@ -767,23 +986,42 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if shifted is not None:
                 lines.append(shifted)
             lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
-        band.update("\n".join(lines))
+        band.update("\n".join(self._band_lines(band, lines)))
+
+    def _band_lines(self, band: Static, lines: list[str]) -> list[str]:
+        """The band's lines, a line holding a no-break space broken here so it never breaks there.
+
+        The terminal would break a line at any space, splitting "art. 71"; a
+        line that holds a no-break space and does not fit is broken only at
+        the other spaces. Every other line is left to wrap as it would.
+        """
+        width = band.content_region.width or max(self._width() - _GUTTERS, 1)
+        shown: list[str] = []
+        for line in lines:
+            if _NO_BREAK_SPACE in line and cell_len(line) > width:
+                shown.extend(wrap_words(line, width))
+            else:
+                shown.append(line)
+        return shown
+
+    def _rewrap_help(self) -> None:
+        """Lay the help band out again for the width the terminal now has."""
+        if self._pages and not self._legend_level:
+            self._render_help(self.query_one(CasillaList).highlighted)
 
     def _box_help(self, entry: CasillaListEntry) -> list[str]:
         """What the band says about one box: its name, its marks in words, its description and its card."""
         field = entry.field
-        lines = [self._help_title(entry)]
-        state = origin_text(field)
-        attention = entry.attention
-        if attention is not None:
-            state = f"{state} · {ATTENTION_MARKS[attention].glyph} {tr(attention_words_key(attention))}"
-        lines.append(f"{state} · {editability_text(field)}")
+        lines = [self._help_title(entry), self._state_line(entry)]
         lines.append(description_text(field) or tr("tui.modelo.workbench.help.no_explanation"))
+        note = rate_note(entry)
+        if note is not None:
+            lines.append(note)
         card = None
         if isinstance(field.address, ModeloFormCasillaAddressV1):
             card = self._cards.get((str(field.address.casilla_id), self._language))
         if card is not None:
-            lines.extend(self._card_lines(card))
+            lines.extend(self._card_lines(card, field))
         form = self.form
         if form is not None and is_result_field(form, field):
             view = result_view(form, self._language, staged=len(self._session.changes), recorded=self.recorded)
@@ -803,13 +1041,46 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             title = f"{title} ({tr(f'tui.modelo.workbench.disclosure.{field.label.disclosure.value}')})"
         return title
 
-    @staticmethod
-    def _card_lines(card: ModeloCasillaHelpCardV1) -> list[str]:
+    def _state_line(self, entry: CasillaListEntry) -> str:
+        """Where the box's value stands and what may be done about it, in the words the row uses.
+
+        On a declaration recorded as filed the second half is why it cannot be
+        changed, and a state that asks the filer to act is not said at all.
+        """
+        field = entry.field
+        if self.recorded:
+            parts = [] if field.origin in _ASKS_THE_FILER else [origin_text(field)]
+            reason = read_only_reason(field, self._language, recorded=True)
+            if reason is not None:
+                parts.append(reason)
+            return " · ".join(parts)
+        state = origin_text(field)
+        attention = entry.attention
+        if attention is not None:
+            state = f"{state} · {ATTENTION_MARKS[attention].glyph} {tr(attention_words_key(attention))}"
+        return f"{state} · {editability_text(field)}"
+
+    def _said_by_origin(self, field: ModeloFormField) -> frozenset[str]:
+        """The sources' sentences the origin words already say: those of the kind of place they name."""
+        source = field.source
+        if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
+            return frozenset[str]()
+        said: set[str] = set()
+        for binding in field.bindings:
+            if binding.policy.family is source.family:
+                sentence = lookup_translation(binding.policy.origin_sentence_key, locale=self._language.value)
+                if sentence:
+                    said.add(sentence)
+        return frozenset(said)
+
+    def _card_lines(self, card: ModeloCasillaHelpCardV1, field: ModeloFormField) -> list[str]:
         lines: list[str] = []
         if card.formula is not None:
             lines.append(tr("tui.modelo.workbench.help.formula", formula=card.formula.text))
+        said = self._said_by_origin(field)
         for origin in card.origins:
-            lines.append(tr("tui.modelo.workbench.help.origin", origin=origin))
+            if origin not in said:
+                lines.append(tr("tui.modelo.workbench.help.origin", origin=origin))
         if card.feeds:
             lines.append(tr("tui.modelo.workbench.help.feeds", boxes=", ".join(card.feeds)))
         for quote in card.quotes:
@@ -833,14 +1104,16 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         panel_open = self._legend_level == 2
         if panel_open:
             text = legend_panel(
-                self.drawn_marks,
+                self.box_marks,
+                others=self.other_marks,
                 keys=self._all_keys_text(),
                 close=self._key_label("escape", _CLOSE_LOCALE_KEY),
             )
             self.query_one("#wb-legend-text", Static).update(text)
         self.set_class(panel_open, "-legend")
+        self._describe_keys()
         if panel_open:
-            self.query_one("#wb-legend", VerticalScroll).focus()
+            self.query_one(SymbolsPanel).focus()
         else:
             self._render_help(self.query_one(CasillaList).highlighted)
             self.query_one(CasillaList).focus()
@@ -906,7 +1179,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         page = self._pages[index]
         counts = page_counts(page, checked_boxes(self.form))
         self._navigator.toggle(
-            page, current=index == self._page_index, counts=counts, open_=None if direction < 0 else bool(direction)
+            page,
+            current=index == self._page_index,
+            counts=counts,
+            open_=None if direction < 0 else bool(direction),
+            applies=self._applies(index),
         )
         self._render_navigator()
         if self.focused is navigator:
@@ -932,11 +1209,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             forward = direction > 0
             indices = range(self._page_index + 1, len(self._pages)) if forward else range(self._page_index - 1, -1, -1)
             for index in indices:
+                if not self._applies(index):
+                    continue
                 targets = [
                     item
                     for item in page_items(self._pages[index], staged=self._session.display(), mode=self._filter)
-                    if isinstance(item, CasillaListEntry)
-                    and (item.attention is not None or item.field.origin in NEEDS_ATTENTION)
+                    if isinstance(item, CasillaListEntry) and item.needs_filer
                 ]
                 if targets:
                     self._show_page(index)
@@ -963,7 +1241,26 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def _close_search(self) -> None:
         self.remove_class("-searching")
-        self.query_one(CasillaList).focus()
+        casilla_list = self.query_one(CasillaList)
+        self._render_help(casilla_list.highlighted)
+        casilla_list.focus()
+
+    def on_workbench_search_panel_highlighted(self, message: WorkbenchSearchPanel.Highlighted) -> None:
+        """Explain in the help band the hit the filer is on, fetching its full help once."""
+        staged = self._session.display()
+        entry = next(
+            (
+                item
+                for page in self._pages
+                for item in page_items(page, staged=staged)
+                if isinstance(item, CasillaListEntry) and item.key == message.key
+            ),
+            None,
+        )
+        if entry is None:
+            return
+        self._render_help(entry)
+        self._ask_for_card(entry)
 
     def on_workbench_search_panel_chosen(self, message: WorkbenchSearchPanel.Chosen) -> None:
         """Go to the box the filer found."""
@@ -971,9 +1268,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._go_to(message.key)
 
     def action_toggle_density(self) -> None:
-        """Show fields on one line or two."""
+        """Show fields on one line or two; the filer's choice then holds whatever the terminal's height."""
         casilla_list = self.query_one(CasillaList)
         density: Density = "compact" if casilla_list.density == "comfortable" else "comfortable"
+        self._density_chosen = density
         casilla_list.set_density(density)
 
     def action_leave(self) -> None:
@@ -1009,6 +1307,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     # ── editing ─────────────────────────────────────────────────────────
 
+    def _status_line(self) -> str | None:
+        """The header's result line, for a dialog that covers the header to repeat at its top."""
+        form = self.form
+        if form is None:
+            return None
+        return result_line_text(form, self._language, staged=len(self._session.changes), recorded=self.recorded) or None
+
     def _notice(self, message: str) -> None:
         self.query_one("#wb-notice", Static).update(message)
 
@@ -1037,9 +1342,23 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if actions is None or form is None or not (recorded or form.edit_admitted):
             self._edit_unavailable()
             return
-        card = None
-        if isinstance(field.address, ModeloFormCasillaAddressV1):
-            card = self._cards.get((str(field.address.casilla_id), self._language))
+        if self._held_card(field) is None and isinstance(field.address, ModeloFormCasillaAddressV1):
+            # The panel names the boxes this one affects, which only the full help knows: read it first.
+            self.run_worker(partial(self._open_editor_once_explained, entry), group="workbench-editor", exclusive=True)
+            return
+        self._push_editor(entry, actions, self._held_card(field))
+
+    async def _open_editor_once_explained(self, entry: CasillaListEntry) -> None:
+        card = await self._card_for(entry.field)
+        actions = self._actions
+        if actions is not None:
+            self._push_editor(entry, actions, card)
+
+    def _push_editor(
+        self, entry: CasillaListEntry, actions: ModeloWorkbenchActionsV1, card: ModeloCasillaHelpCardV1 | None
+    ) -> None:
+        field = entry.field
+        recorded = self.recorded
         probe = WorkbenchEditSession(self._language)
         self.app.push_screen(
             CasillaEditorScreen(
@@ -1051,11 +1370,15 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 can_restore=probe.stage_restore(field) is None,
                 read_only_reason=read_only_reason(field, self._language, recorded=recorded),
                 feeds=() if card is None else card.feeds,
+                status_line=self._status_line(),
             ),
             partial(self._editor_closed, entry),
         )
 
-    def _editor_closed(self, entry: CasillaListEntry, decision: EditorDecision | None) -> None:
+    def _editor_closed(self, entry: CasillaListEntry, decision: EditorOutcome | None) -> None:
+        if isinstance(decision, OpenSourceSurface):
+            self._open_surface(decision)
+            return
         if decision is None:
             return
         field = entry.field
@@ -1077,16 +1400,76 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._refresh_after_staging()
 
     def action_bulk_confirm(self) -> None:
-        """List every assumed value and keep the ones the filer confirms as their own, for review."""
-        form = self.form
-        if self._actions is None or form is None or self.recorded or not form.edit_admitted:
+        """List the assumed values of the section under the cursor, or of the page, to confirm them together.
+
+        Never the whole declaration at once: the filer reads the values of one
+        part of the form before saying they are right.
+        """
+        if not self._may_confirm():
             self._edit_unavailable()
             return
-        assumed = tuple(field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM)
+        fields, in_section = self._confirm_scope()
+        assumed = tuple(field for field in fields if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM)
         if not assumed:
-            self._notice(tr("tui.modelo.workbench.stage_refused.nothing_to_confirm"))
+            self._notice(tr(_NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
             return
-        self.app.push_screen(BulkConfirmScreen(assumed, language=self._language), self._bulk_confirmed)
+        self.app.push_screen(
+            BulkConfirmScreen(assumed, language=self._language, status_line=self._status_line()), self._bulk_confirmed
+        )
+
+    def _may_confirm(self) -> bool:
+        form = self.form
+        return self._actions is not None and form is not None and not self.recorded and form.edit_admitted
+
+    def _confirm_scope(self) -> tuple[tuple[ModeloFormField, ...], bool]:
+        """The fields ``b`` offers: the section under the cursor, else the page; and whether it is a section."""
+        entry = self.query_one(CasillaList).highlighted
+        index = self._page_index if entry is None else page_of(self._pages, entry.key)
+        if not self._pages or index is None:
+            return (), False
+        page = self._pages[index]
+        section = None if entry is None else section_of(page, entry.key)
+        if section is not None:
+            return section_fields(section), True
+        return page.fields(), False
+
+    def _confirm_next(self) -> None:
+        """Offer the assumed values here, or go to the next part of the form that holds one and offer those.
+
+        A page that does not apply this period holds nothing to do, so its
+        assumed values are passed over here; ``b`` still offers them on request.
+        """
+        if not self._may_confirm():
+            self._edit_unavailable()
+            return
+        fields, _ = self._confirm_scope()
+        here = bool(self._pages) and self._applies(self._page_index)
+        if here and any(field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM for field in fields):
+            self.action_bulk_confirm()
+            return
+        target = self._next_assumed()
+        if target is not None:
+            self._go_to(target)
+        self.action_bulk_confirm()
+
+    def _next_assumed(self) -> AddressKey | None:
+        """The next assumed box after the cursor in form order, on a page that applies, coming round to the start."""
+        entry = self.query_one(CasillaList).highlighted
+        ordered = [
+            address_key(field.address)
+            for index, page in enumerate(self._pages)
+            if self._applies(index)
+            for field in page.fields()
+            if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+        ]
+        if not ordered:
+            return None
+        position = {
+            address_key(field.address): order
+            for order, field in enumerate(field for page in self._pages for field in page.fields())
+        }
+        here = -1 if entry is None else position.get(entry.key, -1)
+        return next((key for key in ordered if position[key] > here), ordered[0])
 
     def _bulk_confirmed(self, confirmed: tuple[ModeloFormField, ...] | None) -> None:
         if not confirmed:
@@ -1112,7 +1495,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         self.app.push_screen(
             WorkbenchSourcesScreen(
-                form, language=self._language, staged=self._session.display(), focus=message.entry.key
+                form,
+                language=self._language,
+                staged=self._session.display(),
+                focus=message.entry.key,
+                status_line=self._status_line(),
             ),
             self._sources_closed,
         )
@@ -1194,7 +1581,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             ReviewNote(box=self._box_of(finding.address), message=finding.message, blocking=finding.blocking)
             for finding in preflight.findings
         )
-        self.app.push_screen(EditReviewScreen(self._session.changes, notes=notes, at_risk=at_risk), self._review_closed)
+        self.app.push_screen(
+            EditReviewScreen(self._session.changes, notes=notes, at_risk=at_risk, status_line=self._status_line()),
+            self._review_closed,
+        )
 
     @staticmethod
     def _entries_unknown(form: ModeloWorkForm) -> bool:
@@ -1203,11 +1593,15 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     @staticmethod
     def _unattributed_boxes(form: ModeloWorkForm, *, excluding: frozenset[AddressKey] = frozenset()) -> tuple[str, ...]:
-        """The boxes holding a value nobody is recorded as having typed, which a recalculation returns to source."""
+        """The boxes holding a value nobody is recorded as having typed, which a recalculation returns to source.
+
+        Every such box is named, a zero in an optional box as much as an
+        assumed value: the question is what applying changes, not what is to do.
+        """
         return tuple(
             f"[{field.box}]" if field.box else field.label.text
             for field in form.fields()
-            if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM and address_key(field.address) not in excluding
+            if field.unattributed and address_key(field.address) not in excluding
         )
 
     def _box_of(self, address: ModeloFormAddressV1 | None) -> str | None:
@@ -1270,7 +1664,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         elif action is NextAction.APPLY:
             self.action_review()
         elif action is NextAction.CONFIRM:
-            self.action_bulk_confirm()
+            self._confirm_next()
         elif action is NextAction.RESOLVE and load.form.verification is not None:
             self.action_issues()
         elif action in {NextAction.FILL, NextAction.RESOLVE}:
@@ -1347,7 +1741,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if key is not None:
                 self._go_to(key)
 
-        self.app.push_screen(WorkbenchIssuesScreen(form), closed)
+        self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
 
     def action_export(self) -> None:
         """Export the verified declaration where and how the filer asks."""
@@ -1508,4 +1902,4 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         toggle_appearance(self.app)
 
 
-__all__ = ["ModeloWorkbenchScreen"]
+__all__ = ["ModeloWorkbenchScreen", "SymbolsPanel"]

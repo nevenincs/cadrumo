@@ -53,6 +53,7 @@ from ..review import EditReviewScreen
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
 from ..vocabulary import editability_text
+from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -86,7 +87,8 @@ def _unattributed_form() -> ModeloWorkForm:
                                                             update={
                                                                 "field": cell.field.model_copy(
                                                                     update={
-                                                                        "origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM
+                                                                        "origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM,
+                                                                        "unattributed": True,
                                                                     }
                                                                 )
                                                             }
@@ -215,6 +217,27 @@ async def test_recalculating_an_unattributed_declaration_asks_first_and_can_be_d
     assert after_declining == []
     assert "Nothing was recalculated" in notice
     assert actions.requested == ["calculate"]
+
+
+@pytest.mark.asyncio
+async def test_recalculating_names_an_optional_zero_nobody_entered_though_it_is_not_to_do() -> None:
+    zero = replace_fields(
+        synthetic_form(),
+        {"07": {"origin": ModeloFormOrigin.OPTIONAL_EMPTY, "value": Decimal("0.00"), "unattributed": True}},
+    )
+    form = zero.model_copy(update={"operator_entries_known": False})
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settle(pilot)
+            await pilot.press("c")
+            await _settle(pilot)
+            asked = app.screen
+            assert isinstance(asked, ConfirmScreen)
+            message = str(asked.query_one("#confirm-message", Static).render())
+
+    assert "[07]" in message
 
 
 @pytest.mark.asyncio

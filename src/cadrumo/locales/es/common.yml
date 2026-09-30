@@ -2059,6 +2059,11 @@ tui:
         abierto. No se ha calculado nada; vuelve a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
     workbench:
+      applicability:
+        month: No aplica este mes
+        period: No aplica en este periodo
+        quarter: No aplica este trimestre
+        year: No aplica este año
       attention:
         staged: Cambiada, sin aplicar
       browse:
@@ -2070,6 +2075,8 @@ tui:
         count: 'Casillas por confirmar: {count}'
         intro: Cadrumo tiene estos valores, pero nadie los introdujo. Confírmalos
           solo si son correctos para ti.
+        none_in_section: En esta sección no hay valores supuestos que confirmar.
+        none_on_page: En esta página no hay valores supuestos que confirmar.
         sourced_left_out: 'No aparecen las casillas que se rellenan desde un origen:
           se actualizan desde él.'
         tick: He revisado estos valores y son correctos para mí
@@ -2190,6 +2197,7 @@ tui:
         own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
         result:
           choice_pending: 'A compensar o a devolver: lo eliges al generar el fichero'
+          choice_pending_short: A compensar o a devolver
           direction_unknown_help: Cadrumo aún no indica si este importe es a ingresar
             o a devolver. Compruébalo en el modelo oficial antes de presentar.
           failed: 'Resultado: no se pudo calcular [{key}]'
@@ -2268,6 +2276,7 @@ tui:
         next_step: Siguiente paso
         previous_page: Página anterior
         review: Revisar cambios
+        scroll: Desplazar
         search: Buscar
         sort: Ordenar
         sources: Orígenes
@@ -2325,6 +2334,7 @@ tui:
           done: Hecho
           earlier: De una declaración anterior
           expanded: Sección abierta
+          from_your_data: De tus datos
           here: Estás aquí
           stale: Desactualizado
         on_screen: En esta pantalla
@@ -2523,6 +2533,8 @@ tui:
         prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
           te lleva a la casilla.
       section:
+        box: Casilla {box}
+        boxes: Casillas {first} a {last}
         part: Página {page}, parte {part}
         pending: '{heading} · pendientes: {count}'
       sort:

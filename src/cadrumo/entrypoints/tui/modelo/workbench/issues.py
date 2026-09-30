@@ -432,6 +432,12 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         WorkbenchIssuesScreen #issues-list {
             height: 1fr;
         }
+        WorkbenchIssuesScreen #issues-list > .option-list--option-highlighted,
+        WorkbenchIssuesScreen #issues-list:focus > .option-list--option-highlighted {
+            background: $panel;
+            color: $foreground;
+            text-style: bold;
+        }
         WorkbenchIssuesScreen #issues-actions {
             height: auto;
             margin-top: $cadrumo-stack;

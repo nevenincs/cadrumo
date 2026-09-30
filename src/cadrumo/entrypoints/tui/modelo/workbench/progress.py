@@ -19,7 +19,12 @@ it has been filed there.
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
 not checked, and a verification that found something to resolve sends the
-filer to what it found rather than back to verifying.
+filer to what it found rather than back to verifying. What a page that does
+not apply this period holds is never to do, so it neither keeps filling in
+open nor is counted on the next-action line.
+
+The next-action line always fits one line: it keeps its key and, when the
+words run out of room, shortens the words rather than wrapping.
 """
 
 from __future__ import annotations
@@ -29,12 +34,14 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Final
 
+from rich.cells import cell_len
 from rich.text import Text
 
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
+from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 from .wording import date_text
 
@@ -85,6 +92,8 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
 _PENDING_STYLE: Final[str] = "dim"
 _RECORD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next.record"
 _RECORD_KEY: Final[str] = "F8"
+_NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
+_ELLIPSIS: Final[str] = "…"
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,9 +123,10 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     can say it is right. Every step shows whether it is done, wherever it sits;
     the first step not done is the current one.
     """
-    to_fill = form.counts.needs_input
-    assumed = form.counts.default_to_confirm
-    blocked = form.counts.blocked
+    counts = to_do_counts(form)
+    to_fill = counts.needs_input
+    assumed = counts.default_to_confirm
+    blocked = counts.blocked
     clean = staged == 0
     filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
@@ -138,13 +148,15 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
             steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
         else:
             steps.append(StepState(step, StepStatus.PENDING))
-    action, count = _next(form, staged=staged, to_fill=to_fill, blocked=blocked, verified=verified, filed=filed)
+    action, count = _next(
+        form, staged=staged, to_fill=to_fill, assumed=assumed, blocked=blocked, verified=verified, filed=filed
+    )
     recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
     return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count, recorded_at=recorded_at)
 
 
 def _next(
-    form: ModeloWorkForm, *, staged: int, to_fill: int, blocked: int, verified: bool, filed: bool
+    form: ModeloWorkForm, *, staged: int, to_fill: int, assumed: int, blocked: int, verified: bool, filed: bool
 ) -> tuple[NextAction, int]:
     if staged:
         return NextAction.APPLY, staged
@@ -152,8 +164,8 @@ def _next(
         return NextAction.RECORDED, 0
     if to_fill and not verified:
         return NextAction.FILL, to_fill
-    if form.counts.default_to_confirm:
-        return NextAction.CONFIRM, form.counts.default_to_confirm
+    if assumed:
+        return NextAction.CONFIRM, assumed
     if verified:
         return NextAction.EXPORT, 0
     if form.calculation_revision_id is None:
@@ -201,12 +213,43 @@ def record_filing_text() -> str:
     return f"{tr(_RECORD_LOCALE_KEY)} [{_RECORD_KEY}]"
 
 
+def _shortened(text: str, room: int) -> str:
+    if cell_len(text) <= room:
+        return text
+    kept = ""
+    for character in text:
+        if cell_len(kept + character + _ELLIPSIS) > room:
+            break
+        kept += character
+    return kept.rstrip() + _ELLIPSIS
+
+
+def fit_next_line(action: str, key: str, width: int, *, then: str | None = None) -> str:
+    """The next-action line in at most ``width`` cells: the action, its key, and ``then`` when it fits.
+
+    ``then`` is the step after this one, dropped first. The key is never
+    dropped; the action's words are shortened, ending in an ellipsis, before
+    the line is allowed to wrap.
+    """
+    if not key:
+        full = action if then is None else f"{action} · {then}"
+        return full if cell_len(full) <= width else _shortened(action, width)
+    line = tr(_NEXT_LINE_LOCALE_KEY, action=action, key=key)
+    if then is not None and cell_len(f"{line} · {then}") <= width:
+        return f"{line} · {then}"
+    if cell_len(line) <= width:
+        return line
+    frame = cell_len(tr(_NEXT_LINE_LOCALE_KEY, action="", key=key))
+    return tr(_NEXT_LINE_LOCALE_KEY, action=_shortened(action, max(width - frame, 1)), key=key)
+
+
 __all__ = [
     "NextAction",
     "StepState",
     "StepStatus",
     "WorkbenchProgress",
     "WorkbenchStep",
+    "fit_next_line",
     "next_action_text",
     "record_filing_text",
     "stepper_marks",

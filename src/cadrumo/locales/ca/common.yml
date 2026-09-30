@@ -2047,6 +2047,11 @@ tui:
         obert. No s'ha calculat res; torna a triar Calcula.
       title: Dades de l'autoliquidació del Model 303
     workbench:
+      applicability:
+        month: No s'aplica aquest mes
+        period: No s'aplica en aquest període
+        quarter: No s'aplica aquest trimestre
+        year: No s'aplica aquest any
       attention:
         staged: Canviada, sense aplicar
       browse:
@@ -2058,6 +2063,8 @@ tui:
         count: 'Caselles per confirmar: {count}'
         intro: Cadrumo té aquests valors, però ningú no els ha introduït. Confirma'ls
           només si són correctes per a tu.
+        none_in_section: En aquesta secció no hi ha valors suposats per confirmar.
+        none_on_page: En aquesta pàgina no hi ha valors suposats per confirmar.
         sourced_left_out: 'No hi apareixen les caselles que s''emplenen des d''un
           origen: s''actualitzen des d''ell.'
         tick: He revisat aquests valors i són correctes per a mi
@@ -2181,6 +2188,7 @@ tui:
         own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
         result:
           choice_pending: 'A compensar o a retornar: ho tries en generar el fitxer'
+          choice_pending_short: A compensar o a retornar
           direction_unknown_help: Cadrumo encara no indica si aquest import és a ingressar
             o a retornar. Comprova-ho al model oficial abans de presentar.
           failed: 'Resultat: no s''ha pogut calcular [{key}]'
@@ -2260,6 +2268,7 @@ tui:
         next_step: Pas següent
         previous_page: Pàgina anterior
         review: Revisa els canvis
+        scroll: Desplaçar
         search: Cerca
         sort: Ordena
         sources: Orígens
@@ -2319,6 +2328,7 @@ tui:
           done: Fet
           earlier: D'una declaració anterior
           expanded: Secció oberta
+          from_your_data: De les teves dades
           here: Ets aquí
           stale: Desactualitzat
         on_screen: En aquesta pantalla
@@ -2519,6 +2529,8 @@ tui:
         prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
           et porta a la casella.
       section:
+        box: Casella {box}
+        boxes: Caselles {first} a {last}
         part: Pàgina {page}, part {part}
         pending: '{heading} · pendents: {count}'
       sort:

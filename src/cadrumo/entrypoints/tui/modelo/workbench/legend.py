@@ -1,8 +1,10 @@
 """What every symbol on the workbench means, one key away and built from the marks the screen draws.
 
 The filer never has to remember a glyph. Pressing ``?`` once opens the help
-band, whose first line names only the symbols now on screen, each with how
-often it appears; pressing it again opens "Symbols and keys" under the header:
+band, whose first line names only the symbols now on screen: a box's state
+with how many boxes are in it, counted once per box, and every other symbol
+(done, you are here, an open or closed page) by name alone; pressing it again
+opens "Symbols and keys" under the header:
 the symbols on screen first, then every symbol the workbench can draw,
 grouped, each with its name, a one-line meaning and the key that acts on it.
 
@@ -41,6 +43,14 @@ from .vocabulary import (
 
 _ENTRY_SEPARATOR: Final[str] = " · "
 _RULE: Final[str] = "──"
+_NAME_LOCALE_KEYS: Final[dict[WorkbenchMark, str]] = {
+    ORIGIN_MARKS[ModeloFormOrigin.IMPORTED]: "tui.modelo.workbench.legend.name.from_your_data",
+}
+"""Names the legend gives a mark in place of the mark's own words.
+
+A row names where an imported value comes from (your records, your profile, the
+AEAT data); the legend names the one symbol they share for all of them.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,17 +148,33 @@ def legend_glyphs() -> frozenset[str]:
     return frozenset(_ORDER)
 
 
-def on_screen(marks: Iterable[WorkbenchMark]) -> tuple[tuple[WorkbenchMark, int], ...]:
-    """The marks drawn now, each once with how often it is drawn, in the legend's order."""
-    counted = Counter(marks)
+def mark_name(mark: WorkbenchMark) -> str:
+    """What the legend calls a mark."""
+    return tr(_NAME_LOCALE_KEYS.get(mark, mark.translation_key))
+
+
+def on_screen(
+    boxes: Iterable[WorkbenchMark], others: Iterable[WorkbenchMark] = ()
+) -> tuple[tuple[WorkbenchMark, int | None], ...]:
+    """The marks on screen in the legend's order: a box state with its count of boxes, any other mark uncounted.
+
+    ``boxes`` holds one mark per state per box shown; ``others`` every other
+    mark drawn, which is listed once without a count unless a box shows it too.
+    """
+    counted: dict[WorkbenchMark, int | None] = dict(Counter(boxes))
+    for mark in others:
+        counted.setdefault(mark, None)
     return tuple(sorted(counted.items(), key=lambda pair: _ORDER[pair[0].glyph]))
 
 
-def on_screen_text(marks: Iterable[WorkbenchMark]) -> str:
-    """The help band's first line: the symbols on screen with their names and counts."""
-    entries = _ENTRY_SEPARATOR.join(
-        f"{mark.glyph} {tr(mark.translation_key)} {count}" for mark, count in on_screen(marks)
-    )
+def _entry(mark: WorkbenchMark, count: int | None) -> str:
+    named = f"{mark.glyph} {mark_name(mark)}"
+    return named if count is None else f"{named} {count}"
+
+
+def on_screen_text(boxes: Iterable[WorkbenchMark], others: Iterable[WorkbenchMark] = ()) -> str:
+    """The help band's first line: the symbols on screen with their names, and how many boxes show each state."""
+    entries = _ENTRY_SEPARATOR.join(_entry(mark, count) for mark, count in on_screen(boxes, others))
     return f"{tr('tui.modelo.workbench.legend.on_screen')}: {entries}"
 
 
@@ -166,24 +192,24 @@ def _heading(text: str) -> Text:
     return Text(f"{_RULE} {text} {_RULE}", style="bold")
 
 
-def legend_panel(marks: Iterable[WorkbenchMark], *, keys: str, close: str) -> Text:
+def legend_panel(
+    boxes: Iterable[WorkbenchMark], *, others: Iterable[WorkbenchMark] = (), keys: str, close: str
+) -> Text:
     """The full "Symbols and keys" reference: what is on screen, then every symbol, then the keys."""
     panel = Text()
     panel.append(f"{tr('tui.modelo.workbench.legend.title')}   {close}\n", style="bold")
     panel.append(f"{tr('tui.modelo.workbench.legend.intro')}\n")
-    shown = on_screen(marks)
+    shown = on_screen(boxes, others)
     if shown:
         panel.append_text(_heading(tr("tui.modelo.workbench.legend.on_screen")))
         panel.append("\n")
-        panel.append(
-            _ENTRY_SEPARATOR.join(f"{mark.glyph} {tr(mark.translation_key)} {count}" for mark, count in shown) + "\n"
-        )
+        panel.append(_ENTRY_SEPARATOR.join(_entry(mark, count) for mark, count in shown) + "\n")
     for group in LEGEND_LOCALE_KEYS:
         panel.append_text(_heading(tr(group.heading_key)))
         panel.append("\n")
         for entry in group.entries:
             key = f"  [{entry.key}]" if entry.key else ""
-            panel.append(f" {entry.mark.glyph} {tr(entry.mark.translation_key)}: {tr(entry.meaning_key)}{key}\n")
+            panel.append(f" {entry.mark.glyph} {mark_name(entry.mark)}: {tr(entry.meaning_key)}{key}\n")
     panel.append_text(_heading(tr("tui.modelo.workbench.legend.group.keys")))
     panel.append(f"\n{keys}")
     return panel
@@ -211,6 +237,7 @@ __all__ = [
     "legend_glyphs",
     "legend_panel",
     "mark_for_glyph",
+    "mark_name",
     "more_text",
     "on_screen",
     "on_screen_text",

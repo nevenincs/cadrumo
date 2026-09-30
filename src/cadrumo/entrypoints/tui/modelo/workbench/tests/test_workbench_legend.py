@@ -49,12 +49,14 @@ def _screen_text(screen: ModeloWorkbenchScreen) -> str:
     return "\n".join(parts)
 
 
-def _listed(line: str) -> dict[str, int]:
+def _listed(line: str) -> dict[str, int | None]:
+    """Each glyph the line names, with its count of boxes, or ``None`` for a mark listed by name alone."""
     _, _, entries = line.partition(": ")
-    listed: dict[str, int] = {}
+    listed: dict[str, int | None] = {}
     for entry in entries.split(_SEPARATOR):
         glyph, _, rest = entry.partition(" ")
-        listed[glyph] = int(rest.rsplit(" ", 1)[1])
+        last = rest.rsplit(" ", 1)[-1]
+        listed[glyph] = int(last) if last.isdigit() else None
     return listed
 
 
@@ -90,8 +92,9 @@ async def test_the_first_question_mark_names_exactly_the_symbols_on_screen() -> 
     assert band[1] == "Press ? again for all symbols and keys."
     assert set(listed) - _AMBIGUOUS == drawn
     assert not set(listed) & _AMBIGUOUS
-    assert listed["Δ"] == 1
-    assert listed["◷"] == 1
+    assert listed["Δ"] == 1, "a box's state is counted once per box"
+    assert listed["◷"] is None, "a mark that is not a box's state is named without a count"
+    assert listed["▸"] is None
 
 
 @pytest.mark.asyncio

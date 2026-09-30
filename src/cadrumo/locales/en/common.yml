@@ -2000,6 +2000,11 @@ tui:
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts
     workbench:
+      applicability:
+        month: Does not apply this month
+        period: Does not apply this period
+        quarter: Does not apply this quarter
+        year: Does not apply this year
       attention:
         staged: Changed, not applied
       browse:
@@ -2011,6 +2016,8 @@ tui:
         count: 'Boxes to confirm: {count}'
         intro: Cadrumo holds these values, but nobody entered them. Confirm them only
           if they are right for you.
+        none_in_section: There are no assumed values to confirm in this section.
+        none_on_page: There are no assumed values to confirm on this page.
         sourced_left_out: 'Boxes filled from a source are not listed: they update
           from their source.'
         tick: I have checked these values and they are right for me
@@ -2132,6 +2139,7 @@ tui:
         result:
           choice_pending: 'To carry forward or to be refunded: you choose when you
             create the file'
+          choice_pending_short: To carry forward or refund
           direction_unknown_help: Cadrumo does not yet say whether this amount is
             to pay or to refund. Check it against the official form before you file.
           failed: 'Result: could not be calculated [{key}]'
@@ -2209,6 +2217,7 @@ tui:
         next_step: Next step
         previous_page: Previous page
         review: Review changes
+        scroll: Scroll
         search: Search
         sort: Sort
         sources: Sources
@@ -2268,6 +2277,7 @@ tui:
           done: Done
           earlier: From an earlier declaration
           expanded: Open section
+          from_your_data: From your data
           here: You are here
           stale: Out of date
         on_screen: On this screen
@@ -2463,6 +2473,8 @@ tui:
         empty: No box matches {query}.
         prompt: Search every page by box number or by words. Enter goes to the box.
       section:
+        box: Box {box}
+        boxes: Boxes {first} to {last}
         part: Page {page}, part {part}
         pending: '{heading} · to do: {count}'
       sort:

@@ -16,8 +16,12 @@ magnitude where a word carries the direction. A declaration recorded as filed
 shows its result undimmed, no deadline and no attention chips: nothing is left
 to do on it here.
 
-The header never drops the result to fit. A narrow terminal loses the modelo's
-name before the deadline, and the result's box before any chip.
+The header never drops the result to fit, and never runs past the screen's
+edge. A narrow terminal loses the modelo's name before the deadline, and the
+result's box before any chip. When the result and its chips still do not fit
+one line, the result takes a line of its own, in fewer words if it must (a
+choice still to be made reads as its two directions and the amount, the rest
+said in the help), and the out-of-date mark and the chips share the next.
 """
 
 from __future__ import annotations
@@ -44,6 +48,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.result_disposition import ResultDisposition
 from .casilla_list import CasillaListEntry, value_text
+from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 from .wording import date_text, modelo_number, modelo_title, period_words
 
@@ -70,6 +75,8 @@ _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = Mapping
 
 _NEGATIVE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.negative"
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending"
+_CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending_short"
+_ELLIPSIS: Final[str] = "…"
 _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
@@ -130,6 +137,13 @@ class ResultView:
     help: tuple[str, ...]
     #: The direction in words and the amount it carries, once both are known.
     settled: tuple[str, str] | None = None
+    #: The fewest words that still state the result, for a line too narrow for ``short_text``.
+    brief_text: str | None = None
+
+    @property
+    def briefest(self) -> str:
+        """The result in the fewest words it has."""
+        return self.brief_text if self.brief_text is not None else self.short_text
 
     @property
     def marks(self) -> tuple[WorkbenchMark, ...]:
@@ -212,9 +226,9 @@ def _result_fields(form: ModeloWorkForm) -> dict[str, ModeloFormField]:
     return fields
 
 
-def _money(value: Decimal, field: ModeloFormField | None, language: OutputLanguage) -> str:
-    data_type = field.data_type if field is not None else _MONEY
-    return format_casilla_value(value, data_type=data_type, language=language)
+def _money(value: Decimal, language: OutputLanguage) -> str:
+    """A settlement amount, as money whatever type its box declares: a result is always an amount to pay or get."""
+    return format_casilla_value(value, data_type=_MONEY, language=language)
 
 
 def _boxed(parts: list[str], box: str | None) -> tuple[str, str]:
@@ -273,28 +287,37 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
         return ResultView(text=text, short_text=text, stale=stale, failed=False, help=())
     disposition = result.disposition if result is not None else None
     settled: tuple[str, str] | None = None
+    brief: str | None = None
     if result is not None and result.election_may_change:
-        settled = (tr(_CHOICE_PENDING_LOCALE_KEY), _money(abs(value), field, language))
+        settled = (tr(_CHOICE_PENDING_LOCALE_KEY), _money(abs(value), language))
         full, short = _boxed(list(settled), box)
+        brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
+        help_lines.append(settled[0])
     elif disposition is ResultDisposition.RESULTADO_A_DEDUCIR:
         full, short = _boxed([tr(_NEGATIVE_LOCALE_KEY)], box)
     elif direction is ModeloFormResultDirection.UNKNOWN:
-        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, field, language))
+        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
         full, short = _boxed(list(settled), box)
         help_lines.append(tr("tui.modelo.workbench.header.result.direction_unknown_help"))
     elif direction is ModeloFormResultDirection.NIL:
         full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
     else:
-        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(abs(value), field, language))
+        settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(abs(value), language))
         full, short = _boxed(list(settled), box)
     if value < 0 and settled is not None and direction is not ModeloFormResultDirection.UNKNOWN and box:
-        help_lines.append(
-            tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, field, language))
-        )
+        help_lines.append(tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language)))
     other = _other_boxes_help(form, settling, fields, language)
     if other is not None:
         help_lines.append(other)
-    return ResultView(text=full, short_text=short, stale=stale, failed=False, help=tuple(help_lines), settled=settled)
+    return ResultView(
+        text=full,
+        short_text=short,
+        stale=stale,
+        failed=False,
+        help=tuple(help_lines),
+        settled=settled,
+        brief_text=brief,
+    )
 
 
 def _field_amount(field: ModeloFormField | None) -> Decimal | None:
@@ -316,7 +339,9 @@ def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionC
     """One chip per attention level with anything in it, counted from the form; none once recorded.
 
     What blocks is every blocking finding of the last check, and a result box
-    the calculation could not produce when no finding already names it.
+    the calculation could not produce when no finding already names it. What
+    is missing or assumed on a page that does not apply this period is not
+    counted: nothing there is asked of the filer.
     """
     if recorded:
         return ()
@@ -331,10 +356,11 @@ def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionC
         and field.box not in named
         and is_result_field(form, field)
     )
+    to_do = to_do_counts(form)
     counts = {
         ChipLevel.BLOCKS: blocks,
-        ChipLevel.MISSING: form.counts.needs_input,
-        ChipLevel.CONFIRM: form.counts.default_to_confirm,
+        ChipLevel.MISSING: to_do.needs_input,
+        ChipLevel.CONFIRM: to_do.default_to_confirm,
         ChipLevel.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
     }
     return tuple(AttentionChip(level, count) for level, count in counts.items() if count)
@@ -342,19 +368,44 @@ def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionC
 
 @dataclass(frozen=True, slots=True)
 class ResultLine:
-    """The parts of the result line that fit one width: the result, the stale mark and the chips kept."""
+    """The parts of the result line that fit one width: the result, the stale mark and the chips kept.
+
+    ``stacked`` puts the result on a line of its own, above the stale mark and the chips.
+    """
 
     result: str
     stale: str | None
     chips: tuple[AttentionChip, ...]
+    stacked: bool = False
+
+    def marks_text(self) -> str:
+        """The stale mark and the chips as one string, as the second line of a stacked result shows them."""
+        return _PART_GAP.join(part for part in (self.stale, *(chip.text for chip in self.chips)) if part)
 
     def text(self) -> str:
         """The line as one string."""
-        return _PART_GAP.join(part for part in (self.result, self.stale, *(chip.text for chip in self.chips)) if part)
+        return _PART_GAP.join(part for part in (self.result, self.marks_text()) if part)
+
+
+def _cut(text: str, width: int) -> str:
+    if cell_len(text) <= width:
+        return text
+    kept = ""
+    for character in text:
+        if cell_len(kept + character + _ELLIPSIS) > width:
+            break
+        kept += character
+    return kept.rstrip() + _ELLIPSIS
 
 
 def fit_result_line(view: ResultView, chips: tuple[AttentionChip, ...], width: int) -> ResultLine:
-    """Keep what fits in ``width``: the box goes first, then the least urgent chips; the result stays."""
+    """Keep what fits in ``width``, never running past it; the result always stays.
+
+    On one line the box goes first, then the least urgent chips. When the
+    result does not fit one line beside even its stale mark, it takes a line of
+    its own in the fullest words that fit, and the stale mark and the chips
+    share the line below, the least urgent chips going first there.
+    """
     line = ResultLine(view.text, view.stale, chips)
     if cell_len(line.text()) <= width:
         return line
@@ -363,7 +414,18 @@ def fit_result_line(view: ResultView, chips: tuple[AttentionChip, ...], width: i
     while kept and cell_len(line.text()) > width:
         kept.pop()
         line = ResultLine(view.short_text, view.stale, tuple(kept))
-    return line
+    if cell_len(line.text()) <= width:
+        return line
+    result = next(
+        (text for text in (view.text, view.short_text, view.briefest) if cell_len(text) <= width),
+        _cut(view.briefest, width),
+    )
+    below = ResultLine(result, view.stale, chips, stacked=True)
+    kept = list(chips)
+    while kept and cell_len(below.marks_text()) > width:
+        kept.pop()
+        below = ResultLine(result, view.stale, tuple(kept), stacked=True)
+    return below
 
 
 def fit_identity(form: ModeloWorkForm, language: OutputLanguage, deadline: DeadlineView | None, width: int) -> str:

@@ -225,7 +225,7 @@ def test_a_narrow_line_drops_the_box_and_then_the_least_urgent_chips_but_never_t
     assert not narrow.result.endswith("[19]")
     assert cell_len(narrow.text()) <= 76
     assert [chip.level for chip in narrow.chips] == [ChipLevel.BLOCKS, ChipLevel.MISSING][: len(narrow.chips)]
-    assert tightest.result == view.short_text and tightest.chips == ()
+    assert tightest.stacked and cell_len(tightest.result) <= 10 and tightest.chips == ()
     assert whole == wide_text
 
 
@@ -284,6 +284,51 @@ async def test_the_header_fits_every_width_and_keeps_the_result(width: int) -> N
     assert "▲ blocking: 1" in parts["#wb-chips"] or width < 100
 
 
+_HEADER_WIDGETS = ("#wb-header", "#wb-deadline", "#wb-result", "#wb-stale", "#wb-chips", "#wb-stepper", "#wb-next")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 100, 120])
+async def test_a_choice_still_to_make_keeps_every_header_part_inside_the_screen(width: int) -> None:
+    form = with_deadline(
+        with_findings(
+            with_result(
+                synthetic_form(),
+                ModeloFormResultDirection.TO_CARRY_FORWARD,
+                Decimal("-45"),
+                disposition=ResultDisposition.COMPENSACION,
+                election=True,
+            ),
+            blocking=("06",),
+            worth_checking=("01",),
+        ),
+        days_left=5,
+    )
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(width, 30)) as pilot:
+            await _settle(pilot)
+            await pilot.press("enter")
+            await _settle(pilot)
+            await pilot.press(*"5", "enter")
+            await _settle(pilot)
+            placed = {
+                selector: (widget.region, str(widget.render()))
+                for selector in _HEADER_WIDGETS
+                if (widget := screen.query_one(selector, Static)).display and str(widget.render())
+            }
+            app.exit(None)
+
+    result = placed["#wb-result"][1]
+    assert f"45.00{_NBSP}€" in result
+    assert "#wb-chips" in placed and "#wb-stale" in placed, "nothing the filer must see is dropped"
+    for selector, (region, text) in placed.items():
+        assert region.x >= 0 and region.right <= width, f"{selector} runs past the screen at {width}: {region}"
+        assert region.height == 1, f"{selector} wraps at {width}"
+        assert cell_len(text) <= region.width, f"{selector} is cut at {width}: {text!r}"
+
+
 @pytest.mark.asyncio
 async def test_the_header_is_refreshed_the_moment_a_change_is_staged() -> None:
     with override_settings(cadrumo_output_language="es"):
@@ -301,3 +346,41 @@ async def test_the_header_is_refreshed_the_moment_a_change_is_staged() -> None:
 
     assert before == ""
     assert after == "◷ desactualizado: cambios sin aplicar: 1 [R]"
+
+
+def _colour(screen: ModeloWorkbenchScreen, selector: str, *, background: bool = False) -> str:
+    styles = screen.query_one(selector).styles
+    return (styles.background if background else styles.color).hex
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("direction", "late", "expected"),
+    [
+        (ModeloFormResultDirection.TO_PAY, False, "warning"),
+        (ModeloFormResultDirection.TO_PAY, True, "error"),
+        (ModeloFormResultDirection.TO_REFUND, True, "foreground"),
+    ],
+)
+async def test_the_result_carries_the_emphasis_and_the_title_bar_is_a_neutral_surface(
+    direction: ModeloFormResultDirection, late: bool, expected: str
+) -> None:
+    form = with_result(synthetic_form(needs_input=False), direction, Decimal("1300"))
+    form = with_deadline(form, days_late=2) if late else with_deadline(form, days_left=20)
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            theme = app.theme_variables
+            result = _colour(screen, "#wb-result")
+            identity = _colour(screen, "#wb-identity", background=True)
+            next_step = _colour(screen, "#wb-next")
+            bold = screen.query_one("#wb-result").styles.text_style.bold
+            app.exit(None)
+
+    assert result.lower() == theme[expected].lower()
+    assert bold
+    assert identity.lower() != theme["primary"].lower(), "the title bar is not the loudest thing on screen"
+    assert next_step.lower() != theme["primary"].lower()
+    assert next_step.lower() != theme["accent"].lower()

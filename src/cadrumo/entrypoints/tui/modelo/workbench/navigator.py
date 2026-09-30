@@ -3,8 +3,8 @@
 A heading is the official one or a plain description of where the section
 sits, never a registry id: a heading that reads like an identifier (such as
 ``rdtotrabajores``, ``modelo-349-operador`` or ``DatosEconomicos/Resultados``)
-is refused for the official heading, or the section is named by its place,
-"Page 2, part 3".
+is refused for the official heading, or the section is named by the boxes it
+holds, "Boxes 0018 to 0025", or, holding none, by its place, "Page 2, part 3".
 
 Each section counts what needs the filer on the one attention scale: what
 blocks filing, what is missing and what is assumed, and, dimmed, what the last
@@ -13,6 +13,15 @@ Pages carry the same counts and fold open and closed; a finished page starts
 closed, and the page holding the cursor or anything to do starts open. Below
 the navigator's width the same facts become one breadcrumb line, so the counts
 are never lost.
+
+A layout may print two parts of one page under the same heading; the
+navigator lists that heading once, with the parts' counts added together.
+
+A page the read model states does not apply to this period is dimmed, says so
+in place of its counts, starts closed, and counts nothing as to do: its boxes
+are not asked of the filer. A page that only may not apply, which the data
+cannot decide, is listed and counted like any other, so nothing is set aside on
+a guess.
 """
 
 from __future__ import annotations
@@ -28,6 +37,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
+    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -87,16 +97,20 @@ def readable_text(text: ModeloFormText) -> str | None:
 
 
 def section_title(section: ModeloFormSection, *, page_number: int, part_number: int) -> ModeloFormText:
-    """The words a section is shown under: its heading, then its official heading, then its place."""
+    """The words a section is shown under: its heading, its official heading, the boxes it holds, or its place."""
     if readable_text(section.heading) is not None:
         return section.heading
     official = section.official_heading
     if official and not looks_like_identifier(official):
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
-    return ModeloFormText(
-        text=tr("tui.modelo.workbench.section.part", page=page_number, part=part_number),
-        disclosure=ModeloFormTextDisclosure.LOCALIZED,
-    )
+    boxes = [field.box for field in section_fields(section) if field.box]
+    if len(boxes) == 1:
+        text = tr("tui.modelo.workbench.section.box", box=boxes[0])
+    elif boxes:
+        text = tr("tui.modelo.workbench.section.boxes", first=boxes[0], last=boxes[-1])
+    else:
+        text = tr("tui.modelo.workbench.section.part", page=page_number, part=part_number)
+    return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
 def page_title(heading: ModeloFormText, *, page_number: int) -> ModeloFormText:
@@ -158,6 +172,31 @@ def presented_form(form: ModeloWorkForm, *, recorded: bool = False) -> ModeloWor
         update["working_figures"] = tuple(_settled(field) for field in form.working_figures)
         update["unplaced"] = tuple(item.model_copy(update={"field": _settled(item.field)}) for item in form.unplaced)
     return form.model_copy(update=update)
+
+
+def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
+    """The official pages the read model states do not apply to this filing, by id."""
+    return frozenset(page.id for page in form.pages if page.applies is False)
+
+
+def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
+    """The form's counts without what the pages that do not apply hold as missing or assumed.
+
+    Those pages ask nothing of the filer, so their boxes are never to do; every
+    other count, blockers included, stays as the read model states it.
+    """
+    set_aside = [page.counts for page in form.pages if page.applies is False]
+    if not set_aside:
+        return form.counts
+    counts = form.counts
+    return counts.model_copy(
+        update={
+            "needs_input": max(counts.needs_input - sum(item.needs_input for item in set_aside), 0),
+            "default_to_confirm": max(
+                counts.default_to_confirm - sum(item.default_to_confirm for item in set_aside), 0
+            ),
+        }
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,17 +315,71 @@ class NavigatorState:
 
     chosen: dict[str, bool] = field(default_factory=dict)
 
-    def expanded(self, page: WorkbenchPage, *, current: bool, counts: AttentionCounts) -> bool:
-        """Whether a page is open: the filer's choice, else open when current or with something to do."""
+    def expanded(self, page: WorkbenchPage, *, current: bool, counts: AttentionCounts, applies: bool = True) -> bool:
+        """Whether a page is open: the filer's choice, else open when current or with something to do.
+
+        A page that does not apply this period starts closed, even under the cursor.
+        """
         chosen = self.chosen.get(page.id)
         if chosen is not None:
             return chosen
-        return current or counts.to_do > 0
+        return applies and (current or counts.to_do > 0)
 
-    def toggle(self, page: WorkbenchPage, *, current: bool, counts: AttentionCounts, open_: bool | None) -> None:
+    def toggle(
+        self,
+        page: WorkbenchPage,
+        *,
+        current: bool,
+        counts: AttentionCounts,
+        open_: bool | None,
+        applies: bool = True,
+    ) -> None:
         """Open, close or flip one page."""
-        now = self.expanded(page, current=current, counts=counts)
+        now = self.expanded(page, current=current, counts=counts, applies=applies)
         self.chosen[page.id] = (not now) if open_ is None else open_
+
+
+def heading_groups(page: WorkbenchPage) -> tuple[tuple[ModeloFormSection, ...], ...]:
+    """The page's sections gathered under their headings, in the order each heading first appears.
+
+    A layout that prints two parts of the page under one heading yields one
+    group holding both, so the navigator names that heading once.
+    """
+    groups: dict[str, list[ModeloFormSection]] = {}
+    for section in page.sections:
+        groups.setdefault(section.heading.text, []).append(section)
+    return tuple(tuple(group) for group in groups.values())
+
+
+def _section_rows(
+    index: int,
+    page: WorkbenchPage,
+    *,
+    checked: Mapping[str, int],
+    width: int,
+    show_attention: bool,
+    applies: bool,
+) -> list[NavigatorRow]:
+    """One line per heading of an open page; a page that does not apply draws its lines dimmed and uncounted."""
+    rows: list[NavigatorRow] = []
+    for group in heading_groups(page):
+        first = group[0]
+        line = Text("    ")
+        section_marks: list[WorkbenchMark] = []
+        chips = Text()
+        if show_attention and applies:
+            counts = field_counts((item for section in group for item in section_fields(section)), checked)
+            chips = counts.text()
+            line.append(f"{counts.mark.glyph} ")
+            section_marks.append(counts.mark)
+            section_marks.extend(counts.drawn())
+        line.append(_fit(first.heading.text, _room(width, line, chips)))
+        if chips.plain:
+            line.append(" ").append_text(chips)
+        if not applies:
+            line.stylize(_DIMMED)
+        rows.append(NavigatorRow(f"section:{index}:{first.id}", line, tuple(section_marks)))
+    return rows
 
 
 def navigator_rows(
@@ -297,13 +390,23 @@ def navigator_rows(
     checked: Mapping[str, int],
     width: int,
     show_attention: bool,
+    inapplicable: frozenset[str] = frozenset(),
+    not_applying: str = "",
 ) -> tuple[NavigatorRow, ...]:
-    """Lay the pages and their sections out as navigator lines, closed pages without their sections."""
+    """Lay the pages and their sections out as navigator lines, closed pages without their sections.
+
+    A page in ``inapplicable`` is dimmed and says ``not_applying`` in place of
+    its counts; it counts nothing as to do and starts closed. Without
+    ``show_attention``, as on a declaration recorded as filed, no page counts
+    anything, so none opens for something to do.
+    """
     rows: list[NavigatorRow] = []
     for index, page in enumerate(pages):
-        counts = page_counts(page, checked)
+        applies = page.id not in inapplicable
+        # Nothing counts on a page that does not apply, nor anywhere once no attention is shown (a filed declaration).
+        counts = page_counts(page, checked) if applies and show_attention else AttentionCounts()
         is_current = index == current
-        expanded = state.expanded(page, current=is_current, counts=counts) if page.sections else False
+        expanded = state.expanded(page, current=is_current, counts=counts, applies=applies) if page.sections else False
         fold = (EXPANDED_MARK if expanded else COLLAPSED_MARK) if page.sections else None
         marks: list[WorkbenchMark] = []
         prompt = Text()
@@ -313,30 +416,21 @@ def navigator_rows(
         if is_current:
             prompt.append(f"{HERE_MARK.glyph} ")
             marks.append(HERE_MARK)
-        suffix = Text()
-        if show_attention:
+        suffix = Text(not_applying) if not applies else Text()
+        if applies and show_attention:
             suffix, drawn = _suffix(counts)
             marks.extend(drawn)
+        start = len(prompt.plain)
         prompt.append(_fit(page.heading.text, _room(width, prompt, suffix)))
         if suffix.plain:
             prompt.append(" ").append_text(suffix)
+        if not applies:
+            prompt.stylize(_DIMMED, start)
         rows.append(NavigatorRow(f"page:{index}", prompt, tuple(marks)))
-        if not expanded:
-            continue
-        for section in page.sections:
-            section_counts = field_counts(section_fields(section), checked)
-            line = Text("    ")
-            section_marks: list[WorkbenchMark] = []
-            chips = section_counts.text() if show_attention else Text()
-            if show_attention:
-                mark = section_counts.mark
-                line.append(f"{mark.glyph} ")
-                section_marks.append(mark)
-                section_marks.extend(section_counts.drawn())
-            line.append(_fit(section.heading.text, _room(width, line, chips)))
-            if chips.plain:
-                line.append(" ").append_text(chips)
-            rows.append(NavigatorRow(f"section:{index}:{section.id}", line, tuple(section_marks)))
+        if expanded:
+            rows.extend(
+                _section_rows(index, page, checked=checked, width=width, show_attention=show_attention, applies=applies)
+            )
     return tuple(rows)
 
 
@@ -355,15 +449,21 @@ def breadcrumb(
     section: ModeloFormSection | None,
     checked: Mapping[str, int],
     show_attention: bool,
+    not_applying: str | None = None,
 ) -> tuple[Text, tuple[WorkbenchMark, ...]]:
-    """The navigator in one line for a narrow terminal: the page, the section and what the page needs."""
+    """The navigator in one line for a narrow terminal: the page, the section and what the page needs.
+
+    ``not_applying`` is said, dimmed, in place of the counts of a page that does not apply this period.
+    """
     page = pages[current]
     parts = [tr("tui.modelo.workbench.page_position", current=current + 1, total=len(pages)), page.heading.text]
     if section is not None:
         parts.append(section.heading.text)
     line = Text(" · ".join(parts))
     marks: tuple[WorkbenchMark, ...] = ()
-    if show_attention:
+    if not_applying is not None:
+        line.append(" · ").append(not_applying, style=_DIMMED)
+    elif show_attention:
         chips, marks = _suffix(page_counts(page, checked))
         line.append(" · ").append_text(chips)
     return line, marks
@@ -376,6 +476,8 @@ __all__ = [
     "breadcrumb",
     "checked_boxes",
     "field_counts",
+    "heading_groups",
+    "inapplicable_pages",
     "looks_like_identifier",
     "navigator_rows",
     "page_counts",
@@ -384,4 +486,5 @@ __all__ = [
     "readable_text",
     "section_of",
     "section_title",
+    "to_do_counts",
 ]

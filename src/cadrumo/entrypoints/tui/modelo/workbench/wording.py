@@ -7,8 +7,13 @@ shown as its official code rather than guessed at.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from datetime import date
+from types import MappingProxyType
 from typing import Final
+
+from rich.cells import cell_len
 
 from .....application.modelo.value_presentation import format_casilla_value
 from .....core.external_constants import OutputLanguage
@@ -21,6 +26,17 @@ PERIOD_WORD_NAMES: Final[tuple[str, ...]] = (
     "annual",
 )
 """Every period the workbench names in words; any other period reads as its code and year."""
+
+_NOT_APPLYING_LOCALE_KEYS: Final[Mapping[PeriodKind, str]] = MappingProxyType(
+    {
+        PeriodKind.QUARTERLY: "tui.modelo.workbench.applicability.quarter",
+        PeriodKind.MONTHLY: "tui.modelo.workbench.applicability.month",
+        PeriodKind.ANNUAL: "tui.modelo.workbench.applicability.year",
+    }
+)
+_NOT_APPLYING_PERIOD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.applicability.period"
+_BREAKABLE_SPACE: Final[re.Pattern[str]] = re.compile(r"[^\S\u00a0]+")
+"""Where words may break: any space except a no-break space, which holds "art. 71" or "1 000" together."""
 
 
 def period_words(period: Period) -> str:
@@ -36,6 +52,38 @@ def period_words(period: Period) -> str:
     else:
         return f"{code} {year}"
     return tr(f"tui.modelo.workbench.period.{name}", year=year)
+
+
+def does_not_apply_text(period: Period) -> str:
+    """Say that a page does not apply, naming the period the way the filer counts it: this quarter, month or year."""
+    return tr(_NOT_APPLYING_LOCALE_KEYS.get(period.kind, _NOT_APPLYING_PERIOD_LOCALE_KEY))
+
+
+def wrap_words(text: str, width: int) -> tuple[str, ...]:
+    """Break ``text`` into lines of at most ``width`` cells, only where a space other than a no-break one stands.
+
+    A single word wider than the line is cut where it must be, so no line
+    ever runs past ``width``.
+    """
+    width = max(width, 1)
+    lines: list[str] = []
+    line = ""
+    for word in _BREAKABLE_SPACE.split(text.strip()):
+        candidate = f"{line} {word}" if line else word
+        if cell_len(candidate) <= width:
+            line = candidate
+            continue
+        if line:
+            lines.append(line)
+        line = word
+        while cell_len(line) > width:
+            cut = 1
+            while cell_len(line[: cut + 1]) <= width:
+                cut += 1
+            lines.append(line[:cut])
+            line = line[cut:]
+    lines.append(line)
+    return tuple(lines)
 
 
 def modelo_number(modelo: str) -> str:
@@ -57,4 +105,12 @@ def date_text(value: date, language: OutputLanguage) -> str:
     return format_casilla_value(value, data_type="date", language=language)
 
 
-__all__ = ["PERIOD_WORD_NAMES", "date_text", "modelo_number", "modelo_title", "period_words"]
+__all__ = [
+    "PERIOD_WORD_NAMES",
+    "date_text",
+    "does_not_apply_text",
+    "modelo_number",
+    "modelo_title",
+    "period_words",
+    "wrap_words",
+]

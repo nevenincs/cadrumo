@@ -4,8 +4,12 @@ A filer copying from the AEAT form or a letter knows a box by its number; one
 looking for a concept knows its words. Search reads every page, matches a box
 number exactly first and then by its start, and matches words against the
 label and the description without regard to case or accents, so "retencion"
-finds "Retenciones". Each hit reads as the list would show it: the box, the
-label, the page, the value and where it comes from. Go to box takes a number
+finds "Retenciones". A query of digits alone is a box number and nothing else:
+1, 01 and 0001 name the same box, then come the boxes whose number starts with
+what was typed, and a number is never found inside another. The first hit is
+selected as soon as there is one, and the help band explains the hit
+selected. Each hit reads as the list would show it: the box, the label, the
+page, the value and where it comes from. Go to box takes a number
 and lands on it, or says the form has no such box.
 
 The panel opens under the header in place of the list, so the result and the
@@ -38,6 +42,7 @@ from .page_items import StagedDisplay, WorkbenchPage, page_items
 from .vocabulary import origin_text
 
 _BOX_QUERY: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Za-z]?")
+_DIGITS: Final[re.Pattern[str]] = re.compile(r"\d+")
 _SEPARATOR: Final[str] = " · "
 _EXACT: Final[int] = 0
 _PREFIX: Final[int] = 1
@@ -111,6 +116,7 @@ def search(entries: tuple[SearchEntry, ...], query: str) -> tuple[SearchEntry, .
         return ()
     tokens = folded(wanted).split()
     number = _box_number(wanted) if _BOX_QUERY.fullmatch(wanted) else None
+    digits_only = _DIGITS.fullmatch(wanted) is not None
     ranked: list[tuple[int, int, SearchEntry]] = []
     for position, entry in enumerate(entries):
         rank = None
@@ -118,9 +124,9 @@ def search(entries: tuple[SearchEntry, ...], query: str) -> tuple[SearchEntry, .
             box = _box_number(entry.box)
             if box == number:
                 rank = _EXACT
-            elif box.startswith(number):
+            elif _starts_with(entry.box, wanted):
                 rank = _PREFIX
-        if rank is None:
+        if rank is None and not digits_only:
             haystack = folded(f"{entry.box or ''} {entry.label} {entry.description}")
             if all(token in haystack for token in tokens):
                 rank = _WORDS
@@ -128,6 +134,18 @@ def search(entries: tuple[SearchEntry, ...], query: str) -> tuple[SearchEntry, .
             ranked.append((rank, position, entry))
     ranked.sort(key=lambda hit: (hit[0], hit[1]))
     return tuple(entry for _, _, entry in ranked)
+
+
+def _starts_with(box: str, typed: str) -> bool:
+    """Whether a box's number starts with what was typed: as the box is written, or without its leading zeros.
+
+    Typed leading zeros are kept, so "01" finds "0100" but never "10".
+    """
+    written = box.casefold()
+    typed = typed.casefold()
+    if written.startswith(typed):
+        return True
+    return not typed.startswith("0") and _box_number(box).startswith(typed)
 
 
 def find_box(entries: tuple[SearchEntry, ...], number: str) -> SearchEntry | None:
@@ -164,6 +182,14 @@ class WorkbenchSearchPanel(Vertical):
     )
 
     BINDINGS: ClassVar = [Binding("down", "results", "", show=False)]
+
+    class Highlighted(Message):
+        """The hit the filer is on changed, so the help band can explain it."""
+
+        def __init__(self, key: AddressKey) -> None:
+            """Carry the highlighted box's address."""
+            super().__init__()
+            self.key = key
 
     class Chosen(Message):
         """The filer chose a box to go to."""
@@ -222,6 +248,8 @@ class WorkbenchSearchPanel(Vertical):
         self._hits = search(self._entries, query)
         for index, hit in enumerate(self._hits):
             results.add_option(Option(Text(hit.text()), id=str(index)))
+        if self._hits:
+            results.highlighted = 0
         if not query.strip():
             status.update("")
         elif self._hits:
@@ -248,6 +276,13 @@ class WorkbenchSearchPanel(Vertical):
             return
         if self._hits:
             self.post_message(self.Chosen(self._hits[0].key))
+
+    def on_option_list_option_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        """Tell the workbench which hit is selected, so the help band explains it."""
+        event.stop()
+        index = int(event.option.id or "0")
+        if 0 <= index < len(self._hits):
+            self.post_message(self.Highlighted(self._hits[index].key))
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         """Go to the hit the filer picked."""

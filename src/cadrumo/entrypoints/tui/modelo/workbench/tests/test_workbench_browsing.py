@@ -82,7 +82,7 @@ def test_a_heading_that_reads_like_an_identifier_is_recognised(text: str, identi
     assert looks_like_identifier(text) is identifier
 
 
-def test_a_section_is_named_by_its_heading_its_official_heading_or_its_place() -> None:
+def test_a_section_is_named_by_its_heading_its_official_heading_its_boxes_or_its_place() -> None:
     technical = ModeloFormText(text="rdtotrabajores", disclosure=ModeloFormTextDisclosure.TECHNICAL)
     id_like = ModeloFormText(text="modelo-349-operador", disclosure=ModeloFormTextDisclosure.LOCALIZED)
     with override_settings(cadrumo_output_language="en"):
@@ -93,7 +93,7 @@ def test_a_section_is_named_by_its_heading_its_official_heading_or_its_place() -
             part_number=1,
         )
 
-    assert [section.heading.text for section in by_place.pages[0].sections] == ["Page 1, part 1", "Page 1, part 2"]
+    assert [section.heading.text for section in by_place.pages[0].sections] == ["Boxes 01 to 03", "Boxes 07 to 09"]
     assert by_place.pages[1].sections[0].heading.text == "III. Total liquidación"
     assert by_official.text == "II. Operaciones intracomunitarias"
     assert by_official.disclosure is ModeloFormTextDisclosure.OFFICIAL_SPANISH
