@@ -73,7 +73,9 @@ class TestCalcTimeRevisionAssertion:
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the stale (pinned) revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
-        assert "re-create" in msg.lower() or "recreate" in msg.lower() or "re-create" in msg
+        assert "create the declaration again" in msg.lower(), (
+            "message must tell the filer how to move to the current version"
+        )
 
     def test_calc_time_assertion_passes_for_correctly_pinned_revision(
         self, authority_operation: PinnedAuthorityOperation
@@ -101,7 +103,9 @@ class TestRevisionForWorkUnitAssertion:
             msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the stale (pinned) revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
-        assert "re-create" in msg.lower()
+        assert "create the declaration again" in msg.lower(), (
+            "message must tell the filer how to move to the current version"
+        )
 
     def test_revision_for_work_unit_passes_for_correctly_pinned_revision(
         self, authority_operation: PinnedAuthorityOperation
