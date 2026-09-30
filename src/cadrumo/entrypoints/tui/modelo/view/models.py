@@ -72,7 +72,7 @@ axis has exactly one definition: the route factory consumes this alias, and
 a destination cannot be registered that no view model can address.
 """
 
-type ModeloWorkspaceDispositionGlyphV1 = Literal["✓", "—", "✖", "?"]
+type ModeloWorkspaceDispositionGlyphV1 = Literal["✓", "—", "×", "?"]
 """A disposition's distinguishing mark, never its colour.
 
 Follows the shared ``RequirementBadge`` discipline -- two operators
@@ -88,7 +88,7 @@ exactly the axis where the filing destination has nothing else to say.
 _DISPOSITION_GLYPH: Final[dict[ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceDispositionGlyphV1]] = {
     ModeloWorkspaceCapabilityDisposition.AVAILABLE: "✓",
     ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE: "—",
-    ModeloWorkspaceCapabilityDisposition.REFUSED: "✖",
+    ModeloWorkspaceCapabilityDisposition.REFUSED: "×",
     ModeloWorkspaceCapabilityDisposition.UNMEASURED: "?",
 }
 

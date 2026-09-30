@@ -99,7 +99,7 @@ flows:
       search_empty: No setting matches “{query}”.
       search_placeholder: Search settings
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} required
+      section_pending: '! {title} - required still missing: {missing}'
       sources_summary: Fill the profile from AEAT records or your own documents instead
         of typing it.
       sources_title: Import data (optional)

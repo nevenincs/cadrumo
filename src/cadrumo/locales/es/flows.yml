@@ -100,7 +100,7 @@ flows:
       search_empty: Ningún ajuste coincide con «{query}».
       search_placeholder: Buscar ajustes
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} obligatorias
+      section_pending: '! {title} - obligatorias sin completar: {missing}'
       sources_summary: Rellena el perfil a partir de los registros de la AEAT o de
         tus documentos en lugar de escribirlo.
       sources_title: Importar datos (opcional)

@@ -261,8 +261,8 @@ class ContentDataTable[CellType](DataTable[CellType]):
 
 
 _NOTICE_GLYPH: Final[dict[str, str]] = {
-    "info": "ⓘ",
-    "warning": "⚠",
+    "info": "•",
+    "warning": "▲",
 }
 
 
@@ -342,7 +342,7 @@ class RequirementStatus(StrEnum):
 
 
 _REQUIREMENT_GLYPH: Final[dict[RequirementStatus, str]] = {
-    RequirementStatus.REQUIRED_MISSING: "✖",
+    RequirementStatus.REQUIRED_MISSING: "!",
     RequirementStatus.REQUIRED_PRESENT: "✓",
     RequirementStatus.NEEDS_APPLICABILITY: "?",
     RequirementStatus.OPTIONAL: "○",

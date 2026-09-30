@@ -101,7 +101,7 @@ flows:
       search_empty: 'Egyetlen beállítás sem egyezik ezzel: „{query}”.'
       search_placeholder: Beállítások keresése
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} kötelező
+      section_pending: '! {title} - hiányzó kötelező adatok: {missing}'
       sources_summary: Töltse ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaiból
         gépelés helyett.
       sources_title: Adatok importálása (opcionális)

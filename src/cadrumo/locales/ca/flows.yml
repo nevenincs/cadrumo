@@ -101,7 +101,7 @@ flows:
       search_empty: Cap ajust no coincideix amb «{query}».
       search_placeholder: Cercar ajustos
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} obligatòries
+      section_pending: '! {title} - obligatòries pendents: {missing}'
       sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus
         documents en lloc d'escriure'l.
       sources_title: Importa dades (opcional)

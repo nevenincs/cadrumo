@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8bc709ac26654c1431ce707cd9d46200f663fefcc0bfd8d92ec61860b051484'
+body_hash: 'sha256:b57662cc4bcd16f7558e82b0e5d6f94489d55c7a5b325d09c8c48e853a757b52'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -53,3 +53,20 @@ related:
 - `S16` `verify:` `pytest test_source_policy.py` -> `pass`
 - `S16` `verify:` `ruff + ty + basedpyright` -> `pass`
 - `S16` `by:` `orchestrator`
+- `S20` `M` `src/cadrumo/entrypoints/tui/components/status.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/modelo/view/models.py`
+- `S20` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S20` `M` `src/cadrumo/locales/en/flows.yml`
+- `S20` `M` `src/cadrumo/locales/es/flows.yml`
+- `S20` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S20` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S20` `A` `dev/tui/tests/test_shipped_glyphs_are_in_the_pinned_font.py`
+- `S20` `verify:` `pytest dev/tui/tests/test_shipped_glyphs_are_in_the_pinned_font.py` -> `pass`
+- `S20` `verify:` `pytest tui components + modelo view + manager onboarding + theme (79 ran)` -> `pass`
+- `S20` `by:` `orchestrator`
+
+## Notes
+
+- `S20` 6 TUI tests errored at import on a concurrent session's uncommitted launcher.py edit (ModeloWorkspaceReadContendedError without an error-code entry); not caused by this Step
