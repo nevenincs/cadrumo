@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d04d7ad0e8e28122a5f9794ee2a47d6f9e57f2789093317f9f4eae51e2f14105'
+body_hash: 'sha256:0dac25b0052987d03b4e223634ce338b389cfc0d6d3666ed941d5332cc84fbe6'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -207,6 +207,18 @@ and never holds the journey. The warnings before applying or recalculating a dec
 calculated elsewhere still name every box whose value nobody entered. That is a separate question:
 what applying changes. Bulk confirm works on a page or a section, not on the whole declaration at
 once.
+
+Amendment 2026-09-30, decided by the operator. The calculation's own diagnostics reach the
+workbench on the same attention scale as verification findings, worded for the filer, deduplicated
+against findings about the same box and cause, and marked as belonging to the last calculation
+until the next one. Those that mean an amount from the filer's records reached no box, or that a
+filed box could not be worked out (an unrouted declarable quantity or observation, an absent
+withholding detail, an unresolved binding on a filed box, a terminal origin mismatch, an unhandled
+binding source, a source domain not ready, and a reverse-charge VAT amount that could not be
+derived) block filing: while one stands, export and recording are withheld exactly as they are
+for unconfirmed assumed values, and a recalculation that clears it releases them. They persist
+with the calculation so that reopening the declaration keeps them; every other diagnostic is held
+only until the next calculation. A box that could not be worked out never reads as zero.
 
 ### D5 Editing interaction
 
