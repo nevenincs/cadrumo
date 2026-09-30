@@ -3,26 +3,26 @@ docs:
     binding_source:
       atribucion_member: from the atribución de rentas members you recorded
       bienes_inversion_regularizacion: from your bienes de inversión regularisation
-      borrador: from the AEAT borrador
+      borrador: from AEAT data (the borrador)
       collectible_invoice: from the invoices you issued
       design_constant: from a constant fixed by the AEAT record design
       donativo_donor: from the donativo donor records
       foreign_asset: from your foreign-asset records
       gasto193_contributor: from the administration and deposit expenses per contribuyente
       inventory: from your stock inventory
-      iva_compensation_annual_partition: from the IVA compensación carried across
+      iva_compensation_annual_partition: from the VAT compensation carried across
         the year
-      iva_wallet_decision: from your IVA compensación decision
-      ledger_impatriado_income_aggregation: from your income records under the impatriado
+      iva_wallet_decision: from your VAT compensation decision
+      ledger_impatriado_income_aggregation: from your income entries under the impatriado
         regime
-      ledger_irnr_income_aggregation: from your IRNR income records
+      ledger_irnr_income_aggregation: from your IRNR income entries
       ledger_iva_aggregation: from your VAT records
       ledger_oss_aggregation: from your OSS sales records
       ledger_renta_gastos_estimacion_directa_aggregation: from your expense records
         under estimación directa
       ledger_renta_gastos_pago_fraccionado_aggregation: from your expense records
         for the pago fraccionado
-      ledger_renta_income_aggregation: from your income records
+      ledger_renta_income_aggregation: from your income entries
       ledger_transaction: from your records
       m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
         annual summary
@@ -32,7 +32,7 @@ docs:
       previous_filing: from your previous filing
       profile: from your taxpayer profile
       prorrata_regularizacion: from your prorrata regularisation
-      purchase_invoice_evidence: from your purchase-invoice evidence
+      purchase_invoice_evidence: from the supporting documents of your received invoices
       refund_operation: from your refund operations
       related_party_operation: from your related-party operations
       relation_prefill: from a related modelo's result
@@ -47,19 +47,19 @@ docs:
       quarterly: Filed quarterly
     chrome:
       alternative_join: ', or'
-      binding: Binding
-      casilla_count: '{casillas} casillas in {sections} sections'
-      casilla_id: Casilla id
-      casilla_index: Every casilla
-      casilla_index_hint: Pick a casilla to jump to it.
+      binding: Filled from
+      casilla_count: '{casillas} boxes in {sections} sections'
+      casilla_id: Box id
+      casilla_index: Every box
+      casilla_index_hint: Pick a box to jump to it.
       derived_from: from
       established_by: Established by
       formula: Formula
       general_section: General
-      index_intro: One page per modelo. Every casilla says how it is filled (you enter
+      index_intro: One page per modelo. Every box says how it is filled (you enter
         it, it is calculated from other boxes, or it is filled from your records),
         where it sits on the official form, and the law that establishes it.
-      index_title: Casilla reference
+      index_title: Box reference
       legal_basis: Legal basis
       list_and: and
       not_on_official_form: Not on the official form

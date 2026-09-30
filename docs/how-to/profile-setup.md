@@ -340,7 +340,7 @@ Re-run the wizard over an existing profile to change its facts:
 
 Edit mode walks the same pages with your current answers in place. Change what
 you need, then confirm the review page. Nothing is written until you confirm:
-edits stay staged during the walk, and an interrupted edit discards them all.
+changes are held until you confirm, and an interrupted edit discards them all.
 There is no save-and-exit in edit mode. Finish the walk in one sitting. The
 tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.

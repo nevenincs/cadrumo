@@ -85,8 +85,7 @@ flows:
     namespace_detail: detail {number}
     onboarding:
       continue: Continue
-      done: Setup is complete. Continue to the workbench, or keep adding optional
-        detail below.
+      done: Setup is complete. Continue to Home, or keep adding optional detail below.
       finish: Finish setup
       heading: Set up your profile
       intro: Only the answers needed to prepare your declarations are asked here.
@@ -105,7 +104,7 @@ flows:
       sources_title: Import data (optional)
       step: 'Step {step} of {steps}: {section}'
       step_finish: 'Step {step} of {steps}: finish setup'
-      to_workbench: Continue to the workbench
+      to_workbench: Continue to Home
     plantilla_media:
       average_workforce: Average workforce
       list_failed: The declared years could not be read. Try again.
@@ -175,6 +174,7 @@ flows:
           cross_period_dependency_unclean: Prior-period dependency not clean
           missing_required_casilla: Missing required casilla
           reconciliation_mismatch: Reconciliation mismatch
+          stale_calculation: Calculation out of date
         finding_severity:
           blocking: Blocking
           warning: Warning

@@ -166,8 +166,8 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         # The row's 2 % establishes the scale of a figure equal to it as a fraction or as a percentage.
         assert worked("2.00") == rate
         assert worked("0.02") == rate
-        # A figure matching the row's rate at neither scale keeps its scale undeclared, never guessed.
-        assert "%" not in worked("3")
+        # A figure matching the row's rate at neither scale is never guessed, and never shown bare: only a dot.
+        assert worked("3") == "·"
         # An optional rate box nobody filled shows nothing; one holding a zero shows it, and says it was left at 0.
         optional = entries["169"]
         assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY

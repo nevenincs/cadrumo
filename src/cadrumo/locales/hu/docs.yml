@@ -3,7 +3,7 @@ docs:
     binding_source:
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából
-      borrador: az AEAT borrador tervezetéből
+      borrador: az AEAT-adatokból (borrador)
       collectible_invoice: a kiállított számláiból
       design_constant: az AEAT rekordtervében rögzített állandóból
       donativo_donor: a nyilvántartott adományozóiból
@@ -27,11 +27,11 @@ docs:
         rendszerének éves összesítéséből
       m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből
       manual_input: az Ön által megadott értékből
-      payable_invoice: a befogadott számláiból
+      payable_invoice: a beérkezett számláiból
       previous_filing: a korábbi bevallásából
       profile: az adózói profiljából
       prorrata_regularizacion: az arányosítás korrekciójából
-      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
+      purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       refund_operation: a visszatérítési ügyleteiből
       related_party_operation: a kapcsolt ügyleteiből
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
@@ -46,7 +46,7 @@ docs:
       quarterly: Negyedévente benyújtandó
     chrome:
       alternative_join: ', vagy'
-      binding: Adatkötés
+      binding: Kitöltés forrása
       casilla_count: '{casillas} rovat {sections} szakaszban'
       casilla_id: Rovat-azonosító
       casilla_index: Az összes rovat

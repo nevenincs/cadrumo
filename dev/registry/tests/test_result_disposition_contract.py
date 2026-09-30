@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -15,6 +16,10 @@ from cadrumo.core.result_disposition import (
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+_ANY_PERIOD = Period.from_year_and_code(2025, "1T")
+"""A positive result pays in every period, so the period this contract derives it in does not matter."""
 
 
 def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -> None:
@@ -38,7 +43,7 @@ def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -
                 continue
             values = {casilla_id: Decimal("1") for casilla_id in revision_result_ids}
             try:
-                disposition = derive_result_disposition(modelo.id, values)
+                disposition = derive_result_disposition(modelo.id, values, period=_ANY_PERIOD)
             except Exception as exc:
                 offences.append(f"modelo {modelo.id} revision {revision_id}: resolver raised {exc!r}")
                 continue

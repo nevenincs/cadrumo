@@ -121,6 +121,8 @@ class ModeloVerificationFindingKind(StrEnum):
     CROSS_PERIOD_DEPENDENCY_UNCLEAN = "cross_period_dependency_unclean"
     BLOCKING_RULE = "blocking_rule"
     ADVISORY = "advisory"
+    #: The records changed after the calculation, or cannot be shown not to have; it must be calculated again.
+    STALE_CALCULATION = "stale_calculation"
 
 
 OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND: Mapping[
@@ -133,6 +135,7 @@ OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND: Mapping[
         ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: OperatorActionAxis.FILE_PRIOR_PERIOD,
         ModeloVerificationFindingKind.BLOCKING_RULE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ModeloVerificationFindingKind.ADVISORY: OperatorActionAxis.REVIEW_ADVISORY,
+        ModeloVerificationFindingKind.STALE_CALCULATION: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
     },
 )
 """Total coarse action spine for verification findings.

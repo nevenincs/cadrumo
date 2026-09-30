@@ -1131,7 +1131,9 @@ def _results(context: _FormContext) -> tuple[CasillaId, ...]:
 
 def _result(context: _FormContext, fields: Iterable[ModeloFormField]) -> ModeloFormResult | None:
     """The settlement box, printed where the form shows it."""
-    result = settlement_result(str(context.review.modelo), context.snapshot.revision, context.rows)
+    result = settlement_result(
+        str(context.review.modelo), context.snapshot.revision, context.rows, context.review.period
+    )
     if result is None:
         return None
     box = next(

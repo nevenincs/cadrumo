@@ -86,8 +86,8 @@ flows:
     namespace_detail: '{number}. részlet'
     onboarding:
       continue: Tovább
-      done: A beállítás kész. Lépjen tovább a munkaterületre, vagy adjon meg további
-        opcionális adatokat alább.
+      done: A beállítás kész. Lépjen tovább a Kezdőlapra, vagy adjon meg további opcionális
+        adatokat alább.
       finish: Beállítás befejezése
       heading: Profil beállítása
       intro: Itt csak a bevallások elkészítéséhez szükséges válaszokat kérjük. Nyomja
@@ -107,7 +107,7 @@ flows:
       sources_title: Adatok importálása (opcionális)
       step: '{step}. lépés / {steps}: {section}'
       step_finish: '{step}. lépés / {steps}: a beállítás befejezése'
-      to_workbench: Tovább a munkaterületre
+      to_workbench: Tovább a Kezdőlapra
     plantilla_media:
       average_workforce: Átlagos állományi létszám
       list_failed: A bejelentett éveket nem sikerült beolvasni. Próbáld újra.
@@ -178,6 +178,7 @@ flows:
           cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
           missing_required_casilla: Kötelező mező hiányzik
           reconciliation_mismatch: Egyeztetési eltérés
+          stale_calculation: Elavult számítás
         finding_severity:
           blocking: Blokkoló
           warning: Figyelmeztetés

@@ -234,13 +234,14 @@ def _registry_observation(
     )
 
 
-def _filing_result_disposition(result: RegistryCalculationResult):
+def _filing_result_disposition(result: RegistryCalculationResult, *, filing_year: int, period: str):
     """Use the production result-disposition resolver at this test filing boundary."""
     casilla_ids = result_disposition_casilla_ids("303")
     assert casilla_ids is not None
     disposition = derive_result_disposition(
         "303",
         {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+        period=Period.from_year_and_code(filing_year, period),
     )
     assert disposition is not None
     return disposition
@@ -324,7 +325,7 @@ def _file_year_quarters_and_reconcile(
                 source_kind="app_filing",
                 captured_at=_CLOCK,
                 result_disposition=ResultDispositionProjection(
-                    disposition=_filing_result_disposition(q_result),
+                    disposition=_filing_result_disposition(q_result, filing_year=filing_year, period=period),
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{filing_year}:{period}",
                 ),

@@ -3,16 +3,16 @@ docs:
     binding_source:
       atribucion_member: desde los miembros en atribución de rentas
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
-      borrador: desde el borrador de la AEAT
+      borrador: desde los datos de la AEAT (el borrador)
       collectible_invoice: desde las facturas emitidas
       design_constant: desde una constante fijada por el diseño de registro de la
         AEAT
       donativo_donor: desde los donantes registrados
-      foreign_asset: desde sus bienes en el extranjero
+      foreign_asset: desde tus bienes en el extranjero
       gasto193_contributor: desde los gastos de administración y depósito por contribuyente
-      inventory: desde su inventario de existencias
+      inventory: desde tu inventario de existencias
       iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
-      iva_wallet_decision: desde su decisión de compensación de IVA
+      iva_wallet_decision: desde tu decisión de compensación de IVA
       ledger_impatriado_income_aggregation: desde tus registros de ingresos del régimen
         de impatriados
       ledger_irnr_income_aggregation: desde tus registros de ingresos de IRNR
@@ -26,15 +26,15 @@ docs:
       ledger_transaction: desde tus registros
       m303_regimen_simplificado_annual_summary: desde el resumen anual del régimen
         simplificado del modelo 303
-      m347_third_party_operation: desde sus operaciones con terceras personas
-      manual_input: desde un valor que usted aporta
+      m347_third_party_operation: desde tus operaciones con terceras personas
+      manual_input: desde un valor que aportas tú
       payable_invoice: desde las facturas recibidas
-      previous_filing: desde su declaración anterior
-      profile: desde su perfil de contribuyente
+      previous_filing: desde tu declaración anterior
+      profile: desde tu perfil de contribuyente
       prorrata_regularizacion: desde la regularización de prorrata
-      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
-      refund_operation: desde sus operaciones de devolución
-      related_party_operation: desde sus operaciones vinculadas
+      purchase_invoice_evidence: desde los justificantes de tus facturas recibidas
+      refund_operation: desde tus operaciones de devolución
+      related_party_operation: desde tus operaciones vinculadas
       relation_prefill: desde el resultado de un modelo relacionado
       retenciones_aggregation: desde las retenciones registradas
       withholding: desde las retenciones soportadas
@@ -43,11 +43,11 @@ docs:
       ad_hoc: Se presenta cuando ocurre el hecho
       annual: Se presenta anualmente
       monthly: Se presenta mensualmente
-      profile_based: Se presenta según su perfil
+      profile_based: Se presenta según tu perfil
       quarterly: Se presenta trimestralmente
     chrome:
       alternative_join: ', o'
-      binding: Vínculo de datos
+      binding: Se rellena desde
       casilla_count: '{casillas} casillas en {sections} secciones'
       casilla_id: Identificador de casilla
       casilla_index: Todas las casillas
@@ -57,8 +57,8 @@ docs:
       formula: Fórmula
       general_section: General
       index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
-        introduce usted, se calcula a partir de otras casillas o se rellena desde
-        sus registros), dónde figura en el modelo oficial y qué norma la establece.
+        introduces tú, se calcula a partir de otras casillas o se rellena desde tus
+        registros), dónde figura en el modelo oficial y qué norma la establece.
       index_title: Referencia de casillas
       legal_basis: Base legal
       list_and: y
@@ -97,13 +97,13 @@ docs:
       bound: Se rellena automáticamente
       computed: Se calcula automáticamente
       informational: Solo informativa
-      manual: Lo introduce usted
+      manual: Lo introduces tú
       projection_only: Se rellena desde su fila de origen
     input_kind_count:
-      bound: rellenadas desde sus registros
+      bound: rellenadas desde tus registros
       computed: calculadas
       informational: solo informativas
-      manual: que introduce usted
+      manual: que introduces tú
       projection_only: rellenadas desde su fila de origen
     length:
       at_least: Al menos {min} caracteres

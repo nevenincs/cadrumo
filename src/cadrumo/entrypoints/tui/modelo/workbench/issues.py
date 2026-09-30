@@ -147,6 +147,7 @@ _DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = Mappin
         ),
         ModeloVerificationFindingKind.BLOCKING_RULE: "tui.modelo.workbench.issues.detail.blocking_rule",
         ModeloVerificationFindingKind.ADVISORY: "tui.modelo.workbench.issues.detail.advisory",
+        ModeloVerificationFindingKind.STALE_CALCULATION: "tui.modelo.workbench.issues.detail.stale_calculation",
     }
 )
 _VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
@@ -201,6 +202,8 @@ _RECORDS_NONE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.none
 _RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.field_missing"
 _RECORDS_ACTION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.action.records_at_source"
 _RECORD_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.record_value"
+_RECORDS_WHERE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.records"
+"""Where a finding about the filer's records, rather than a box, sits: in those records."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -380,7 +383,11 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
         key: AddressKey | None = None
         box = issue.box or "·"
         if finding.casilla_id is None:
-            where = tr("tui.modelo.workbench.issues.where.declaration")
+            where = tr(
+                _RECORDS_WHERE_LOCALE_KEY
+                if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
+                else "tui.modelo.workbench.issues.where.declaration"
+            )
         else:
             candidate = address_key(ModeloFormCasillaAddressV1(casilla_id=finding.casilla_id))
             record = records.get(str(finding.casilla_id))

@@ -62,6 +62,8 @@ _NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
 )
 """Labels that name no column: a technical name, or words saying the form gives the box no name."""
 _RECORDS_KEY: Final[str] = "tui.modelo.workbench.repeating"
+#: The kind of address that names a casilla, as a finding about a record column names it.
+_CASILLA_KIND: Final[str] = "casilla"
 _RECORDS_UNKNOWN_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
 _RECORDS_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
 
@@ -291,11 +293,18 @@ def _grid_items(
 def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
     """A repeating group's records, read-only, or a plain statement that their number is not known."""
     if not block.rows_known:
-        return [CasillaListNote(tr(_RECORDS_UNKNOWN_KEY), indent=2)]
+        return [CasillaListNote(tr(_RECORDS_UNKNOWN_KEY), indent=2, column_casilla_ids=block.column_casilla_ids)]
     items: list[CasillaListItem] = [CasillaListHeading(tr(_RECORDS_KEY, count=len(block.rows)), level=1)]
     if block.rows:
         headings = _column_headings(block.columns, ())
-        items.append(CasillaListRecords(headings=headings, data_types=block.column_data_types, rows=block.rows))
+        items.append(
+            CasillaListRecords(
+                headings=headings,
+                data_types=block.column_data_types,
+                rows=block.rows,
+                column_casilla_ids=block.column_casilla_ids,
+            )
+        )
         items.append(CasillaListNote(tr(_RECORDS_READ_ONLY_KEY), indent=2))
     return items
 
@@ -382,11 +391,27 @@ def page_items(
 
 
 def page_of(pages: tuple[WorkbenchPage, ...], key: AddressKey) -> int | None:
-    """Return the index of the page that shows one address, if any does."""
+    """Return the index of the page that shows one address, if any does.
+
+    A casilla that is a column of a repeating group's records is shown on the
+    page holding that group's table.
+    """
     for index, page in enumerate(pages):
         if any(address_key(field.address) == key for field in page.fields()):
             return index
+    kind, identifier = key
+    if kind != _CASILLA_KIND:
+        return None
+    for index, page in enumerate(pages):
+        if any(identifier in block.column_casilla_ids for block in _repeating_blocks(page)):
+            return index
     return None
+
+
+def _repeating_blocks(page: WorkbenchPage) -> tuple[ModeloFormRepeatingBlock, ...]:
+    return tuple(
+        block for section in page.sections for block in section.blocks if isinstance(block, ModeloFormRepeatingBlock)
+    )
 
 
 def first_attention(pages: tuple[WorkbenchPage, ...]) -> tuple[int, AddressKey] | None:

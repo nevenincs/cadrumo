@@ -49,7 +49,7 @@ from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_fo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _WIDTHS = [80, 120, 200]
-_RECORDED_REASON = "No. This declaration is recorded as filed."
+_RECORDED_REASON = lookup_translation("tui.modelo.workbench.editor.can_change.recorded", locale="en")
 _CHANGE_KEY_WORDS = ("Review changes", "Next step", "Calculate", "Confirm assumed values", "Next to do")
 
 
@@ -203,7 +203,7 @@ async def test_the_next_step_never_takes_more_than_one_line(width: int) -> None:
 @pytest.mark.parametrize("width", [8, 20, 30, 60])
 def test_a_next_step_too_long_for_its_line_keeps_its_key_and_shortens_its_words(width: int) -> None:
     with override_settings(cadrumo_output_language="en"):
-        line = fit_next_line("Confirm the assumed values (to confirm: 4)", "n", width, then="Record filing [F8]")
+        line = fit_next_line("Confirm the assumed values (to confirm: 4)", "n", width)
 
     assert cell_len(line) <= max(width, cell_len("Next: … [n]"))
     assert line.endswith("[n]")

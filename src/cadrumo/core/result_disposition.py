@@ -35,6 +35,14 @@ Grounded verbatim from the bundled official diseños
   N (Negativa/Sin actividad/Resultado cero)".
 - M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
   zero is cuota cero, and negative is solicitud de devolución.
+
+The quarter decides a negative instalment result, per the bundled official
+instructions (``_data/corpus/aeat_official/instructions/modelo_130`` and
+``modelo_131``, sections "(5) A deducir" and "(6) Negativa"): a negative
+result of the 1st, 2nd or 3rd quarter is "A deducir" (``B``) from later
+instalments of the same year, while a negative result of the 4th quarter, like
+a zero one, is "Negativa" (``N``). Modelo 130 reads its casilla 19, Modelo 131
+its casilla 15.
 """
 
 from __future__ import annotations
@@ -48,6 +56,7 @@ from typing import Final
 from .casilla_id import CasillaId, validated_casilla_id
 from .errors.hierarchy import CoreValidationError
 from .modelo import Modelo
+from .period import Period, StandardPeriodCode
 
 
 class ResultDisposition(StrEnum):
@@ -108,6 +117,8 @@ class _DispositionSpec:
     result_casilla_ids: tuple[CasillaId, ...]
     negative: ResultDisposition
     zero: ResultDisposition
+    final_quarter_negative: ResultDisposition | None = None
+    """The code for a negative result of the year's last quarter, where it differs from ``negative``."""
 
 
 _M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
@@ -143,16 +154,21 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         negative=ResultDisposition.COMPENSACION,
         zero=ResultDisposition.NEGATIVA,
     ),
-    # IRPF pago fraccionado: a negative result is "resultado a deducir" (B), not C.
+    # IRPF pago fraccionado: a negative result of quarters 1 to 3 is "a deducir"
+    # (B), not C; in the 4th quarter it is "negativa" (N). Instructions of
+    # Modelo 130, sections (5) A deducir and (6) Negativa, on casilla 19.
     Modelo("130"): _DispositionSpec(
         result_casilla_ids=(_M130_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
+        final_quarter_negative=ResultDisposition.NEGATIVA,
     ),
+    # Instructions of Modelo 131, sections (5) A deducir and (6) Negativa, on casilla 15.
     Modelo("131"): _DispositionSpec(
         result_casilla_ids=(_M131_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
+        final_quarter_negative=ResultDisposition.NEGATIVA,
     ),
     # Retenciones: only I/N (no credit code). "Resultado a ingresar" casilla.
     Modelo("111"): _DispositionSpec(
@@ -284,8 +300,10 @@ def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     return spec.result_casilla_ids
 
 
-def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> ResultDisposition | None:
-    """Derive the fichero result disposition for ``modelo`` from its computed result.
+def derive_result_disposition(
+    modelo: str, casilla_values: Mapping[CasillaId, Decimal], *, period: Period
+) -> ResultDisposition | None:
+    """Derive the fichero result disposition for ``modelo`` from its computed result in ``period``.
 
     Sums the modelo's final-result casilla(s) from ``casilla_values`` and maps the
     sign to the modelo's diseño-grounded code. ``casilla_values`` must contain
@@ -295,7 +313,8 @@ def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, De
 
     - ``> 0`` → :attr:`ResultDisposition.INGRESO` (``I``) for every modelo.
     - ``< 0`` → the modelo's credit code (C for M303 IVA, B for M130/M131 IRPF
-      pagos fraccionados; N for retenciones, which cannot go sub-zero in practice).
+      pagos fraccionados in quarters 1 to 3 and N in the 4th; N for retenciones,
+      which cannot go sub-zero in practice).
     - ``== 0`` (or the casilla absent) → the modelo's zero code (``N``).
 
     Returns the derived :class:`ResultDisposition`, or ``None`` for a modelo
@@ -309,6 +328,8 @@ def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, De
     if result > 0:
         return ResultDisposition.INGRESO
     if result < 0:
+        if spec.final_quarter_negative is not None and period.standard_code is StandardPeriodCode.Q4:
+            return spec.final_quarter_negative
         return spec.negative
     return spec.zero
 

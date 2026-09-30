@@ -804,7 +804,7 @@ review:
         backend.
   filing:
     draft_placeholder_summary: Draft pending
-    finding_summary: Validation finding on draft
+    finding_summary: Issue found on the draft
     stale_approval_summary: Draft approval is stale
   filter:
     errors:
@@ -1082,18 +1082,18 @@ tui:
       accepted: Accepted
       not_observed: Not observed
       rejected: Rejected
-      submitted: Submitted
+      submitted: Submission observed
     area:
       census: Census
-      evidence_comparison: Evidence comparison
+      evidence_comparison: Comparison with AEAT
       filed_declarations: Filed declarations
       notifications: Notifications
       reconciliation: Reconciliation
     availability:
       available: Available
       locked: Locked
-      never_captured: Never captured
-      stale: Stale
+      never_captured: Not read yet
+      stale: Out of date
       unavailable: Unavailable
     census:
       title: AEAT Sync census
@@ -1124,7 +1124,7 @@ tui:
       local_filing: Local filing
       local_value: Local value
       read: Read
-      receipt: Receipt
+      receipt: AEAT receipt
       resolution: Resolution
       sources: Sources
       status: Status
@@ -1137,11 +1137,11 @@ tui:
       unobserved: Not observed
     document_custody_state:
       held: Held
-      not_captured: Not captured
+      not_captured: Not held
       refused: Refused
       unavailable: Unavailable
     evidence_comparison:
-      title: AEAT Sync evidence comparison
+      title: 'AEAT Sync: comparison with AEAT'
     filed_declarations:
       title: AEAT Sync filed declarations
     justificante_state:
@@ -1151,9 +1151,9 @@ tui:
       verified: Verified
     local_filing_state:
       draft: Draft
-      filed: Filed
+      filed: Recorded as filed
       not_observed: Not observed
-      ready: Ready
+      ready: Ready to file
     notification:
       already_handled: This notification has already been opened.
       document_handed_off: Notification document handed to the host.
@@ -1219,7 +1219,7 @@ tui:
       unobserved: Not observed
     zone:
       census: Census
-      evidence_comparison: Evidence comparison
+      evidence_comparison: Comparison with AEAT
       filed_declarations: Filed declarations
       notifications: Notifications
       overview: Overview
@@ -1229,7 +1229,7 @@ tui:
       available: Available
       locked: Locked
       never_captured: Not read yet
-      stale: From the last reading
+      stale: Out of date
       unavailable: Unavailable
     calendar:
       action:
@@ -1237,32 +1237,33 @@ tui:
         open: Open this declaration
       aeat:
         accepted: Accepted
-        justificante_verified: Receipt verified
+        justificante_verified: AEAT receipt verified
         not_observed: Not observed
         submitted_observed: Submission observed
-        unknown: Source unobservable
+        unknown: Unknown
       column:
-        aeat: AEAT evidence
-        close: Closes
+        aeat: AEAT status
+        close: Deadline
         declaration: Declaration
         legal: Legal status
         local: Local status
       detail:
         action: 'Enter action: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}
-          · Evidence consistency: {conflict}'
-        dates: 'Opens: {opening} · Payment: {payment} · Original close: {original}
-          · Effective close: {effective} · Evaluated: {evaluated} · Days overdue:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · AEAT receipt: {receipt}
+          · Consistency with AEAT: {conflict}'
+        dates: 'Opens: {opening} · Payment: {payment} · Original deadline: {original}
+          · Effective deadline: {effective} · Evaluated: {evaluated} · Days overdue:
           {overdue} · Shift: {shift}'
         holidays: 'Holidays: {coverage}'
         source: '{source}: {availability} · Observed: {observed}'
       empty:
         known: There are no obligations in this range.
         search: No obligation matches the search and scope.
-        stale: The last observed agenda ({observed}) has no rows; the data is stale.
+        stale: The last observed filing calendar ({observed}) has no rows; the data
+          is out of date.
       evidence:
         clear: No conflict observed
-        conflicted: Conflicting AEAT evidence observed
+        conflicted: Conflicting AEAT status observed
       justificante:
         not_verified: Not verified
         unknown: Unknown
@@ -1270,15 +1271,15 @@ tui:
       legal:
         due_soon: Due soon
         due_today: Due today
-        filed: Filed
+        filed: Recorded as filed
         not_applicable: Not applicable
         overdue: Overdue
         upcoming: Upcoming
       local:
-        external_baseline_imported: External record imported
-        not_ready_to_file: Not ready
+        external_baseline_imported: External filing imported
+        not_ready_to_file: Not ready to file
         ready_to_file: Ready to file
-        unknown: Source unobservable
+        unknown: Unknown
       never_observed: Never observed
       none: Not applicable
       observation:
@@ -1295,8 +1296,8 @@ tui:
           there.
       scope:
         all: All
-        evidence_unknown: Unknown AEAT evidence
-        filed: Filed locally
+        evidence_unknown: Unknown AEAT status
+        filed: Recorded as filed
         overdue: Overdue
         past: Past
         upcoming: Upcoming
@@ -1304,25 +1305,25 @@ tui:
         placeholder: Search by Modelo, year, period, status, or date
       source:
         aeat:
-          evidence: AEAT evidence
+          evidence: AEAT status
         local:
           filing: Local filing
         schedule: Legal schedule
-      title: Declarations agenda
+      title: Filing calendar
       user:
         due: Due
-        filed: Filed locally
-        late: Late
+        filed: Recorded as filed
+        late: Overdue
         unknown: Unknown
     column:
       aeat_confirmation: AEAT confirmation
-      aeat_evidence: AEAT evidence
+      aeat_evidence: AEAT status
       availability: Status
       calculation: Current calculation
       current: Current
       declaration: Declaration
       destination: Area
-      filed: Filed
+      filed: Recorded as filed
       local_filing: Local filing status
       local_state: Local status
       result: Result
@@ -1349,31 +1350,31 @@ tui:
       aeat_csv_register: AEAT CSV register observed
       aeat_justificante_pdf: AEAT receipt PDF observed
       aeat_live_capture: AEAT live observation
-      none: No AEAT evidence observed
+      none: No AEAT status observed
     filing_history:
-      axes: Local filing status, AEAT confirmation and externally observed AEAT evidence
+      axes: Local filing status, AEAT confirmation and externally observed AEAT status
         are separate facts.
       chain_detail: 'Origin: {origin} · Type: {kind} · AEAT: {confirmation} · Corrects
         an earlier declaration: {amends}'
       title: Filing history
     filing_state:
-      supersedido: Superseded local record
-      vigente: Current local record
+      supersedido: Replaced recorded filing
+      vigente: Current recorded filing
     lifecycle:
-      amended: Amendment started
+      amended: Correction started
       calculated: Calculation completed
       created: Declaration created
       discarded: Declaration discarded
       exported: Declaration exported
-      external_evidence_imported: External AEAT evidence imported
-      filed: Filing recorded locally
-      observation_overridden: Observation overridden by operator
-      observation_override_cleared: Operator override cleared
+      external_evidence_imported: External AEAT data imported
+      filed: Filing recorded
+      observation_overridden: Observation replaced by hand
+      observation_override_cleared: Manual replacement removed
       reconciled: Reconciled with AEAT
       renamed: Declaration renamed
-      superseded: Filing superseded locally
-      verification_refused: Verification refused
-      verified: Verification completed
+      superseded: Recorded filing replaced
+      verification_refused: Check refused
+      verified: Check completed
     origin:
       aeat: AEAT
       local: Local
@@ -1400,13 +1401,13 @@ tui:
     revision_state:
       borrador: Draft
       descartado: Discarded
-      presentado: Filed calculation
-      presentado_supersedido: Superseded filed calculation
-      verificado_completo: Verification complete
+      presentado: Recorded as filed
+      presentado_supersedido: Recorded as filed, then replaced
+      verificado_completo: Check complete
     revisions:
-      explanation: Calculation revisions are saved calculation versions, not Modelo
-        registry revisions.
-      title: Calculation revisions
+      explanation: Earlier calculations are the saved versions of this declaration's
+        calculation.
+      title: Earlier calculations
     unavailable:
       title: Declarations area unavailable
     value:
@@ -1438,14 +1439,14 @@ tui:
     aeat_sync: AEAT Sync
     declarations: Declarations
     home: Home
-    ledger: Ledger
+    ledger: Records
     profile: Profile
     withholding: Withholding
   filing_year_route:
     invalid: Enter a valid four-digit filing year.
-    open: Open withholding
+    open: Open Withholding
     prompt: Select a filing year (YYYY)
-    unavailable: Withholding evidence is unavailable for this profile and year.
+    unavailable: Withholding is not available for this profile and year.
   home:
     account_fallback: Account
     action:
@@ -1453,7 +1454,7 @@ tui:
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'AEAT evidence: %{state}'
+    aeat_evidence: 'AEAT status: %{state}'
     aeat_state:
       accepted: accepted by AEAT
       justificante_verified: AEAT receipt verified
@@ -1464,35 +1465,34 @@ tui:
       available: Available
       available_empty: '%{label} - %{detail}'
       locked: Locked - unlock the selected profile to view this information
-      never_captured: Not captured yet
+      never_captured: Not read yet
       reason:
         workbench:
           calendar:
-            aeat_reader_unavailable: Not captured yet - appears after the first AEAT
-              Sync
+            aeat_reader_unavailable: Not read yet - appears after the first AEAT Sync
             taxpayer_model_undeclared: Unavailable - the profile does not yet say
               what kind of taxpayer this is
           home:
             actions_projector_unavailable: Unavailable - next actions appear once
-              every ledger area has been checked
+              all your records have been checked
             agenda_projector_unavailable: Unavailable - the filing calendar could
               not be worked out
             declarations_resume_projector_unavailable: Unavailable - the declarations
               to resume could not be read
-            messages_never_pulled: Not captured yet - AEAT messages appear after the
-              first AEAT Sync
+            messages_never_pulled: Not read yet - AEAT messages appear after the first
+              AEAT Sync
             taxpayer_profile_incomplete: Unavailable - the profile is missing required
               answers; complete them in Profile
           ledger:
-            snapshot_projector_unavailable: Unavailable - shown once every ledger
-              area has been checked
-      stale: Stale - the last local snapshot needs refresh
+            snapshot_projector_unavailable: Unavailable - shown once all your records
+              have been checked
+      stale: Out of date - the last local copy needs refreshing
       stale_observed: '%{label}; last observed %{observed_at}'
       unavailable: Unavailable - this information cannot be shown right now
     declaration_state:
       discarded: Discarded
       draft: Draft
-      filed: Filed
+      filed: Recorded as filed
       needs_review: Needs review
       ready: Ready
     empty:
@@ -1502,29 +1502,29 @@ tui:
     evidence: 'Local: %{local} · AEAT: %{aeat}'
     heading:
       actions: Next actions
-      agenda: Filing agenda
+      agenda: Filing calendar
       declarations: Declarations
-      ledger: Ledger readiness
+      ledger: Records readiness
       messages: Messages
     ledger_summary: Available - %{entries} entries; %{requiring_review} need review;
-      %{unclassified} unclassified; %{missing_evidence} missing evidence
+      %{unclassified} unclassified; %{missing_evidence} missing supporting documents
     local_state:
-      external_baseline_imported: external filing baseline stored locally
-      not_ready_to_file: not ready locally
-      ready_to_file: ready locally
+      external_baseline_imported: external filing imported
+      not_ready_to_file: not ready to file
+      ready_to_file: ready to file
     messages_summary: Available - %{count} requiring attention
     period_state:
       due: Due
-      filed: Filed
+      filed: Recorded as filed
       late: Overdue
       unknown: Schedule unknown
     reason:
       blocked_dependency: A declaration dependency is blocked
-      blocked_evidence: A blocker needs supporting evidence
+      blocked_evidence: A blocker needs a supporting document
       blocked_review: Blocked work needs review
       declaration_needs_review: Declaration needs review
-      evidence_missing: Supporting evidence is missing
-      ledger_classification_pending: Ledger classification is pending
+      evidence_missing: A supporting document is missing
+      ledger_classification_pending: Classification in Records is pending
     session:
       active: Active local session
       expired: Session expired
@@ -1535,7 +1535,7 @@ tui:
     area:
       classification: Classification
       entries: Entries
-      evidence: Evidence
+      evidence: Supporting documents
       import: Import
       overview: Overview
       reconciliation: Reconciliation
@@ -1544,12 +1544,12 @@ tui:
       available: Available
       choose_entry: Choose an entry
       locked: Locked
-      never_captured: Not captured yet
+      never_captured: Not read yet
       stale: Out of date
       unavailable: Unavailable
     classification:
-      boundary: Input classification, the prorrata sector, and purchase evidence are
-        recorded through their dedicated capture or attachment flows.
+      boundary: Input classification, the prorrata sector, and purchase documents
+        are recorded through their dedicated capture or attachment flows.
       business: Business
       cancel: Cancel
       confirm: Confirm
@@ -1558,11 +1558,11 @@ tui:
       failure: The classification could not be saved.
       field:
         business_pct: Business share (decimal fraction from 0 to 1; Mixed only)
-        deduction_fact_kind: Deduction fact kind (registry token)
-        irpf_category: IRPF category (registry token)
-        iva_amount: IVA amount
-        iva_category: IVA category (registry token)
-        iva_rate: IVA rate (decimal fraction; e.g. 0.21)
+        deduction_fact_kind: Deduction type (code)
+        irpf_category: IRPF category (code)
+        iva_amount: VAT amount
+        iva_category: VAT category (code)
+        iva_rate: VAT rate (decimal fraction; e.g. 0.21)
         prorrata_reference: Prorrata reference
         taxable_base: Taxable base
         usage_ratio_id: Usage ratio ID
@@ -1572,7 +1572,7 @@ tui:
       prompt: Choose a classification for the selected entry.
       success: Classification saved.
       target: Entry {position} of {total} · reference {short_id}
-      title: Classify ledger entry
+      title: Classify entry
     column:
       amount: Amount
       area: Area
@@ -1589,8 +1589,8 @@ tui:
       review_status: Review status
       status: Status
     entries:
-      empty: No entries are present in this snapshot.
-      title: Ledger entries
+      empty: No entries yet.
+      title: Entries
     entry_label: '{date} · {description}'
     evidence:
       add: Add document
@@ -1609,14 +1609,14 @@ tui:
       confirm_failed: The invoice was not recorded.
       confirmed: 'Invoice {number} recorded: total {total} {currency}.'
       confirming: Recording the invoice from the document…
-      detail: 'Size: {size} bytes · captured {captured}'
+      detail: 'Size: {size} bytes · added {captured}'
       draft:
-        amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        amounts: Base {base} · VAT {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Checks that disagree with the document: {count}'
         identity: Invoice {number} dated {date}
         supplier: 'Supplier: {name} · NIF {nif}'
         unread: unread
-      empty: No evidence awaits review.
+      empty: No supporting documents await review.
       extract: Read document
       loading: Reading the documents…
       path_placeholder: Type the path of the file
@@ -1643,13 +1643,13 @@ tui:
       records_heading: Invoice documents on this machine
       reviewed: Reviewed
       safe_metadata: Safe metadata only; document contents stay protected.
-      title: Evidence review
+      title: Supporting documents review
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this
         screen.
       refresh_failed: Your change was saved, but this view could not be re-read. Return
         to Home to refresh it.
-      refreshing: Updating the workspace…
+      refreshing: Updating…
     import:
       again: Import another file
       browse: Browse
@@ -1672,8 +1672,8 @@ tui:
         did_import: 'Imported: {count}'
         did_skip: 'Skipped as already recorded: {count}'
         files: 'Files read: {count}'
-        likely_duplicates: 'Possible duplicates: {count} (already in the ledger or
-          earlier in this file). They are imported; review them.'
+        likely_duplicates: 'Possible duplicates: {count} (already in your records
+          or earlier in this file). They are imported; review them.'
         not_measured: New and already-recorded invoices are only counted when the
           import is applied.
         refused_file: 'Not read: {file}: {reason}'
@@ -1699,7 +1699,7 @@ tui:
         xlsx: Excel workbook
       provider_label: Statement format
       success: Imported {imported}; skipped {skipped}.
-      title: Import ledger entries
+      title: Import entries
     invoice:
       again: Add another invoice
       cancel: Cancel
@@ -1722,16 +1722,16 @@ tui:
         invoice_class: Invoice class
         invoice_date: Invoice date (YYYY-MM-DD)
         invoice_number: Invoice number
-        iva_category: IVA treatment (registry token)
-        iva_rate: IVA rate (%)
+        iva_category: VAT treatment (code)
+        iva_rate: VAT rate (%)
         kind: Invoice type
         notes: Notes
         operation_date: Operation date, when it differs from the invoice date (YYYY-MM-DD)
         operation_type: Modelo 349 operation key
         recargo_amount: Equivalence surcharge amount
         rectifies_invoice_number: Number of the invoice this one corrects
-        retention_amount: IRPF retention amount
-        retention_rate: IRPF retention rate (%)
+        retention_amount: IRPF withholding amount
+        retention_rate: IRPF withholding rate (%)
         series: Series
         taxable_base: Taxable base
       kind:
@@ -1741,18 +1741,18 @@ tui:
         add: Add line
         field:
           description: Line description
-          iva_amount: Line IVA amount
-          iva_rate: IVA rate slot (registry token, such as RATE_21)
-          oss_rate_kind: OSS rate kind (registry token)
+          iva_amount: Line VAT amount
+          iva_rate: VAT rate (code, such as RATE_21)
+          oss_rate_kind: OSS rate type (code)
           quantity: Quantity
           spending_category_id: Spending category
           subtotal: Line base
           unit_price: Unit price
-        heading: Invoice lines. For an invoice with more than one IVA rate, add each
-          printed line here and leave the taxable base and IVA rate above empty.
-        none: 'No lines entered: the taxable base and IVA rate above are used.'
+        heading: Invoice lines. For an invoice with more than one VAT rate, add each
+          printed line here and leave the taxable base and VAT rate above empty.
+        none: 'No lines entered: the taxable base and VAT rate above are used.'
         remove: Remove last line
-        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · VAT
           {rate} {amount}'
       open: Add invoice
       operation_type_none: No Modelo 349 key
@@ -1762,27 +1762,27 @@ tui:
         base_or_lines: Enter a taxable base, or add at least one invoice line.
         date: '{field} must be a date written YYYY-MM-DD.'
         lines_and_base: Enter the invoice either as lines or as one taxable base and
-          IVA rate, not both.
+          VAT rate, not both.
         required: '{field} is required.'
       progress: Recording the invoice…
       prompt: Enter the invoice as it is printed. It is checked and recorded only
         after you review it.
       review: Review
-      success: 'Invoice {number} recorded: base {base}, IVA {iva}, total {total} {currency}.'
+      success: 'Invoice {number} recorded: base {base}, VAT {iva}, total {total} {currency}.'
       summary:
-        amounts: Taxable base {base} {currency} · IVA rate {rate}
+        amounts: Taxable base {base} {currency} · VAT rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
         operation: Modelo 349 key {code} · operation date {date}
         recargo: Equivalence surcharge {amount} {currency}
         rectifies: Corrects invoice {number}
-        retention: 'IRPF retention: rate {rate} · amount {amount}'
+        retention: 'IRPF withholding: rate {rate} · amount {amount}'
       title: Add an invoice
     overview:
       affected_declarations: Affected declarations
-      areas: Ledger areas
+      areas: Areas of Records
       quality: Data quality and unresolved work
-      title: Ledger overview
+      title: 'Records: overview'
     reconciliation:
       affected: Affected declarations
       amount_match: Amount matches
@@ -1801,16 +1801,16 @@ tui:
       inconsistencies: Link inconsistencies
       invoice: Invoice
       invoice_label: '{counterparty} · {total}'
-      local_only: Local Ledger evidence only. AEAT Sync is a separate workspace.
-      match_evidence: Canonical match evidence
-      modelo: Form
+      local_only: Local Records data only. AEAT Sync is a separate area.
+      match_evidence: Why these match
+      modelo: Modelo
       'no': 'No'
       period: Period
       progress: Linking…
-      score: Canonical score
+      score: Match score
       success: Link saved.
       suggestions: Suggested links
-      title: Local Ledger reconciliation
+      title: 'Records: local reconciliation'
       'yes': 'Yes'
     records:
       failed: The change was refused or could not be saved.
@@ -1830,7 +1830,7 @@ tui:
       source: Source file
       transaction_detail: Entry detail
     refusal:
-      application_state: This area is unavailable in the current Ledger state.
+      application_state: This area is unavailable in the current state of Records.
       destination_pending: This area is not available in this version yet.
       no_entries: There are no entries to classify yet.
       selection_required: Choose an entry first, then open this task for it.
@@ -1842,13 +1842,13 @@ tui:
       exclude_confirm: Exclude entry
       exclude_failed: The entry was not excluded.
       exclude_hint: Press x to exclude the highlighted entry from filing.
-      exclude_question: Exclude {entry} from filing? It stays in the ledger and can
-        be classified again later.
+      exclude_question: Exclude {entry} from filing? It stays in your records and
+        can be classified again later.
       excluded: '{entry} was excluded from filing.'
       excluding: Excluding the entry…
       filter_all: 'Filter: all review statuses'
       open: Open review
-      title: Ledger review
+      title: 'Records: review'
     review_status:
       excluded: Excluded
       pending: Pending
@@ -1860,7 +1860,7 @@ tui:
       ready: Ready
       unmeasured: Not measured
     unavailable:
-      title: Ledger area unavailable
+      title: Records unavailable
   local_reader:
     answer:
       'no': 'no'
@@ -1876,7 +1876,7 @@ tui:
       service_installed: Runtime installed
       service_running: Runtime running
       text_model_pulled: Text model downloaded
-      verified: Reader verified
+      verified: Reader checked
       vision_model_pulled: Scan model downloaded
     choose_role: Choose a task in the table to download, load, check or remove its
       model.
@@ -1903,7 +1903,7 @@ tui:
     extraction_ready: Invoice documents can be read on this machine.
     fitness:
       fit: fit
-      not_verified: not verified
+      not_verified: not checked
       timed_out: timed out
       unfit: unfit
     host: 'Runtime at {endpoint} · installed: {installed} · answering: {reachable}
@@ -1937,7 +1937,7 @@ tui:
       load: load
       pull: download
       start: start
-      verify: verification
+      verify: check
     setup_stopped: 'Setup stopped at {step}: {condition}.'
     start: Start runtime
     state:
@@ -1953,7 +1953,7 @@ tui:
         calculation_report_csv: Calculation report (CSV), a local record only
         calculation_report_pdf: Signed calculation summary (PDF), a local record only
         fichero_boe: Fichero BOE for presentation at AEAT
-        label: Artefact to export
+        label: Document to export
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
         domiciliacion: Direct debit (domiciliación)
@@ -1973,17 +1973,18 @@ tui:
         close: Close
         completeness:
           not_assessed: 'Not assessed: a calculation report is not a filing file'
-          not_flagged: No completeness warning raised by the export
-          unverified: 'Not verified: the revision declares no completeness manifest'
+          not_flagged: The export raised no completeness issue
+          unverified: 'Not checked: Cadrumo has no completeness list for this version
+            of the modelo'
         evidence_status:
           local_calculation_report_not_official_aeat_filing_evidence: Local calculation
             report; not official AEAT filing evidence
           local_export_not_official_aeat_filing_evidence: Local export; not official
             AEAT filing evidence
         label:
-          artefact: Exported artefact
+          artefact: Exported document
           byte_size: Size (bytes)
-          calculation_revision_id: Calculation revision
+          calculation_revision_id: Saved calculation
           completeness: Completeness
           evidence_status: Evidence status
           export_format: Format
@@ -1999,10 +2000,10 @@ tui:
           evidence status, completeness and software identity are unknown. Check the
           file before relying on it.
         warning:
-          completeness_unverified: 'This filing file was not completeness-verified:
-            its revision declares no completeness manifest, so the structural-parity
-            check could not confirm that every required box reached the file. Review
-            the exported boxes against the official Diseño de Registros before filing.'
+          completeness_unverified: 'This filing file was not checked for completeness:
+            Cadrumo has no completeness list for this version of the modelo, so it
+            could not confirm that every required box reached the file. Review the
+            exported boxes against the official Diseño de Registros before filing.'
           development_software_identity: The file header carries the all-zero development
             software identity; AEAT will not accept this file for presentation.
           development_software_identity_of_filing_file: The filing file for this modelo
@@ -2012,24 +2013,24 @@ tui:
             evidence comes from AEAT after filing: justificante; consulta de declaraciones
             presentadas; or CSV cotejo.'
     m303_evidence:
-      admission_unavailable: A new attestation cannot be recorded for this declaration
+      admission_unavailable: A new confirmation cannot be recorded for this declaration
         here. Nothing was calculated.
-      attestation_attachment_id: Existing attestation identifier
-      attestation_sha256: Existing attestation SHA-256
+      attestation_attachment_id: Existing confirmation identifier
+      attestation_sha256: Existing confirmation SHA-256
       cancel: Cancel
       cancelled: Calculation cancelled; no filing facts were recorded.
       existing_attestation_hint: Answer the question. Then either enter an existing
-        attestation that the Modelo 390 exemption section does not apply (its identifier
+        confirmation that the Modelo 390 exemption section does not apply (its identifier
         and SHA-256), or leave those blank and enter when you confirmed it to record
-        a new attestation.
+        a new confirmation.
       joint_return_elected: Joint self-assessment (autoliquidación conjunta)?
       no_modelo_390_question_hint: Answer the question. This period's return does
         not ask about the Modelo 390 exemption; only the return for the last period
         of the year does (December, or the 4th quarter).
-      observed_at: Confirmed at, for a new attestation (ISO 8601 with UTC offset,
+      observed_at: Confirmed at, for a new confirmation (date and time with UTC offset,
         for example 2025-04-01T12:00:00Z)
       required: Answer the joint self-assessment question. In the last period of the
-        year also give either a complete existing attestation or a confirmation time
+        year also give either a complete existing confirmation or a confirmation time
         with its UTC offset, not both.
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
@@ -2069,9 +2070,9 @@ tui:
         operator_entries_at_risk: 'Some boxes hold values that were not entered on
           this screen ({count}): {boxes}. This declaration was last calculated outside
           this screen, so Cadrumo cannot tell whether you typed them. When you calculate
-          again, each of these boxes takes the value its source or the form gives
-          it, or is left empty for you to fill in. To keep a value, enter it here
-          first.'
+          again, each of these boxes takes the value its source or the official form
+          gives it, or is left empty for you to fill in. To keep a value, enter it
+          here first.'
         operator_entries_unknown: This declaration was last calculated outside this
           screen, so Cadrumo cannot tell which values you typed. Calculating again
           keeps only the values entered here.
@@ -2112,7 +2113,8 @@ tui:
           here: Yes. Type the new value below.
           not_here: Not here. Change it in {area}, then calculate again.
           not_yet: Not here yet. Change it in {area}.
-          recorded: No. This declaration is recorded as filed.
+          recorded: No. It is recorded as filed. To change it, start a correction
+            of this declaration.
           replace: Yes. Your value will replace the source's {value}, in this declaration
             only. Your records do not change, and you can go back to the source's
             value at any time.
@@ -2151,8 +2153,10 @@ tui:
       export:
         confirm_first: 'Confirm the assumed values before creating the file or recording
           the filing (to confirm: {count}) [n].'
+        resolve_first: 'Resolve what blocks filing before creating the file or recording
+          the filing (blocking: {count}) [i].'
         title: Export the declaration
-        verify_first: Verify the declaration before exporting it [F8].
+        verify_first: Check the declaration before exporting it [F8].
       filed:
         read_only: 'Recorded as filed: you can look at it but not change it. To change
           it, start a correction of this declaration.'
@@ -2161,6 +2165,9 @@ tui:
         amount: only boxes with an amount
         attention: only what needs attention
         calculated: only calculated values
+        empty: Nothing on this page for this filter.
+        empty_next: 'Nothing on this page for this filter. Next page with something:
+          {page}'
         mine: only your values
         records: only values from your records
       go_to:
@@ -2168,7 +2175,7 @@ tui:
         prompt: 'Go to box: type its number and press Enter.'
       grid:
         column_unnamed: Column {number}
-        records_read_only: These records come from your data. Change them there.
+        records_read_only: This table is filled from your records. Change them there.
         records_unknown: Cadrumo does not know how many records there are.
         row_boxes: '{heading} · [{first}] to [{last}]'
       header:
@@ -2192,10 +2199,11 @@ tui:
             to pay or to refund. Check it against the official form before you file.
           failed: 'Result: could not be calculated [{key}]'
           negative: 'Negative result: nothing to pay'
+          negative_carried: 'Negative result: {amount} to deduct in later quarters'
           not_calculated: 'Result: not calculated yet [{key}]'
           other_boxes: 'Other result boxes on this form: {boxes}'
-          sign_help: Box [{box}] shows {value} on the form. The header shows the amount
-            without its sign and says the direction in words.
+          sign_help: Box [{box}] shows {value} on the official form. The header shows
+            the amount without its sign and says the direction in words.
           to_carry_forward: To carry forward
           to_pay: To pay
           to_refund: To be refunded
@@ -2203,6 +2211,7 @@ tui:
           zero: Result zero
         stale:
           changes: 'out of date: changes not applied yet: {count} [{key}]'
+          recalculate: 'out of date: calculate again [{key}]'
       help:
         empty: There are no boxes in this view.
         feeds: 'Used in: {boxes}'
@@ -2212,6 +2221,8 @@ tui:
         no_explanation: There is no written explanation for this box yet.
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
+        origin_no_earlier_declaration: This box holds 0 because there is no earlier
+          declaration this year to carry a value from.
       in_spanish: (in Spanish)
       issues:
         action:
@@ -2235,6 +2246,9 @@ tui:
             If the right value is zero, enter 0 so that it counts as yours.
           reconciliation_mismatch: 'Two figures that should agree do not. Neither
             is chosen for you: check both and correct the one that is wrong.'
+          stale_calculation: Your records changed after this declaration was calculated,
+            so its figures may no longer match them. The filing cannot be recorded
+            until it is calculated again.
         empty: Nothing to look at.
         go_to_box: Go to box
         key:
@@ -2260,6 +2274,7 @@ tui:
           declaration: Whole declaration
           not_on_form: A box not shown on this declaration's pages
           record_value: A value every record in a table needs
+          records: In your records
           unnumbered: 'Values without a box number: {count}'
       key:
         back: Back
@@ -2304,12 +2319,12 @@ tui:
         meaning:
           level:
             blocks: Must be fixed before you can record the filing.
-            check: A warning. It does not stop you from filing.
+            check: Worth checking. It does not stop you from filing.
             info: An explanation, for example why a source was not used.
           mark:
             collapsed: Press → to open it.
             done: 'Finished: nothing left to do here.'
-            earlier: Carried from a declaration you filed before.
+            earlier: Carried from an earlier declaration you recorded as filed.
             expanded: Press ← to close it.
             here: The selected box, or the step you are on.
             staged: You changed this box. The change is not applied yet.
@@ -2324,8 +2339,8 @@ tui:
             entered: You typed this value.
             imported: 'From your data in Cadrumo: your records, your profile or AEAT
               data you imported.'
-            informational: Fixed by the form, or shown for reference. You do not fill
-              it in.
+            informational: Fixed by the official form, or shown for reference. You
+              do not fill it in.
             needs_input: The declaration needs this value and nobody has given it.
             not_applicable: Stays empty by rule, or does not apply to this declaration.
             not_calculated_yet: Calculate the declaration to fill it.
@@ -2357,6 +2372,7 @@ tui:
         confirm: 'Confirm the assumed values (to confirm: {count})'
         export: Create the file to file with AEAT
         fill: 'Complete the marked boxes (to do: {count})'
+        recalculate: 'Calculate again: your records changed'
         record: Once you have filed it with AEAT, record the filing here
         recorded: Recorded as filed on {date}
         resolve: 'Resolve what blocks filing (to do: {count})'
@@ -2408,6 +2424,7 @@ tui:
         imported:
           aeat_draft: From AEAT data
           earlier_filings: From an earlier declaration
+          earlier_filings_none: No earlier declaration this year
           fixed_by_design: Set by the form
           named_filing: From modelo {modelo}, {period}
           profile: From your profile
@@ -2530,12 +2547,13 @@ tui:
         operator_entries_at_risk: 'Some boxes hold values that were not entered on
           this screen ({count}): {boxes}. This declaration was last calculated outside
           this screen, so Cadrumo cannot tell whether you typed them. When you apply,
-          each of these boxes takes the value its source or the form gives it, or
-          is left empty for you to fill in. To keep a value, enter it here first.'
+          each of these boxes takes the value its source or the official form gives
+          it, or is left empty for you to fill in. To keep a value, enter it here
+          first.'
         operator_entries_unknown: This declaration was last calculated outside this
           screen, so Cadrumo cannot tell which values you typed. Applying keeps only
           the changes listed here. Any other value typed outside this screen takes
-          the value its source or the form gives it, or is left empty.
+          the value its source or the official form gives it, or is left empty.
         rebased: 'The declaration changed after you entered these changes, which are
           not applied yet. Check the marked lines again (changed: {count}).'
         title: 'Changes to apply: {count}'
@@ -2564,8 +2582,9 @@ tui:
           blank: Left blank or do not apply
           calculated: Calculated
           earlier_declarations: Earlier declarations
+          earlier_declarations_none: No earlier declaration this year
           information: Shown for information
-          needs_you: Need your value
+          needs_you: Need your input
           profile: Your profile
           records: Your records
           registers: Registers you keep
@@ -2635,44 +2654,44 @@ tui:
     navigation:
       unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
-    opening: Opening your workbench…
+    opening: Opening Cadrumo…
     palette:
       placeholder: Search for areas, records and actions…
     system:
       quit: Quit
       quit_help: Leave Cadrumo; the profile's session stays as it is
     title: Cadrumo terminal session
-    updating: Updating the workbench…
+    updating: Updating…
   search:
     action:
-      classify_ledger: Classify ledger
+      classify_ledger: Classify records
       edit_profile: Edit profile
       explain_overview: Explain overview
-      link_ledger: Link ledger record
-      list_filing_records: View filing records
+      link_ledger: Link entry
+      list_filing_records: View filings
       list_notifications: View notifications
-      list_work_revisions: View work revisions
-      review_ledger: Review ledger
-      review_ledger_evidence: Review ledger evidence
-      unknown: Unrecognised workbench action
-      validate_ledger: Validate ledger
+      list_work_revisions: View earlier calculations
+      review_ledger: Review records
+      review_ledger_evidence: Review supporting documents
+      unknown: Unrecognised action
+      validate_ledger: Check records
     destination:
       aeat_sync: Open AEAT Sync
       declarations: Open Declarations
       home: Open Home
-      ledger: Open Ledger
+      ledger: Open Records
       profile: Open Profile
-      unknown: Open workbench area
-      withholding: Open withholding evidence
+      unknown: Open area
+      withholding: Open Withholding
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
-      declarations: Declarations, calculation revisions, filing history and calendar
+      declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
-      ledger: Entries, review, classification and supporting evidence
+      ledger: Entries, review, classification and supporting documents
       profile: This profile's details and the sources that fill them in
       withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
-      not_composed: Not every workbench source could be read yet.
+      not_composed: Not every area could be read yet.
       refresh_failed: The last refresh could not rebuild the index.
       unavailable: Search is unavailable in this session
       unknown: Search could not be prepared.
@@ -2682,39 +2701,39 @@ tui:
         declaration: Declaration
         filing: Filing
         history: Filing history
-        ledger_entry: Ledger entry
-        ledger_evidence: Ledger evidence
+        ledger_entry: Entry
+        ledger_evidence: Supporting document
         modelo: Modelo
         notification: Notification
         reconciliation: Reconciliation
-        revision: Calculation revision
+        revision: Earlier calculation
       source:
-        declaration: Declaration records
-        filing: Filing records
+        declaration: Declarations
+        filing: Filings
         history: Filing history
-        ledger_entry: Local ledger
-        ledger_evidence: Ledger evidence
+        ledger_entry: Records
+        ledger_evidence: Supporting documents
         modelo: Modelo catalogue
         notification: AEAT notifications
-        reconciliation: Reconciliation findings
-        revision: Calculation history
+        reconciliation: Reconciliation issues
+        revision: Earlier calculations
       status:
         declaration_draft: Draft
-        declaration_filed: Filed
+        declaration_filed: Recorded as filed
         declaration_in_progress: In progress
         declaration_needs_attention: Needs attention
         declaration_ready: Ready to file
         filing_accepted: Accepted
         filing_rejected: Rejected
-        filing_submitted: Submitted
+        filing_submitted: Submission observed
         history_not_observed: Not observed
         history_observed: Observed
         ledger_entry_classified: Classified
         ledger_entry_needs_review: Needs review
         ledger_entry_ready: Ready
-        ledger_evidence_captured: Captured
+        ledger_evidence_captured: Added
         ledger_evidence_missing: Missing
-        ledger_evidence_stale: Stale
+        ledger_evidence_stale: Out of date
         modelo_available: Available
         modelo_unavailable: Unavailable
         notification_read: Read
@@ -2722,4 +2741,4 @@ tui:
         reconciliation_open: Open
         reconciliation_resolved: Resolved
         revision_current: Current
-        revision_superseded: Superseded
+        revision_superseded: Replaced

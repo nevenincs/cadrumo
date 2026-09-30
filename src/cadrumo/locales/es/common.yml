@@ -820,20 +820,20 @@ overview:
 provisioning:
   condition:
     role_model_fit_for_role: '%{model} respondió al documento de prueba, pero su respuesta
-      no sirve para leer una factura. Elija otro modelo de texto.'
+      no sirve para leer una factura. Elige otro modelo de texto.'
     role_model_fitness_verified: 'No hay ninguna comprobación de aptitud registrada
       para los pesos actuales de %{model}. Esto no significa que el modelo no sea
-      apto: ejecute `aeat config provision verify` para comprobarlo.'
+      apto: ejecuta `aeat config provision verify` para comprobarlo.'
     role_model_fitness_within_timeout: '%{model} no terminó su respuesta de prueba
       antes de agotarse el tiempo límite. Puede ser demasiado lento para este equipo;
-      elija un modelo más pequeño o aumente el tiempo de espera del LLM y vuelva a
+      elige un modelo más pequeño o aumenta el tiempo de espera del LLM y vuelve a
       ejecutar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
-        no permite el uso comercial. Lo ha indicado usted de forma explícita, así
-        que Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia
-        aparte del editor.
+        no permite el uso comercial. Lo has indicado tú de forma explícita, así que
+        Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia aparte
+        del editor.
 review:
   adapters:
     errors:
@@ -1129,21 +1129,21 @@ tui:
       accepted: Aceptada
       not_observed: No observada
       rejected: Rechazada
-      submitted: Presentada
+      submitted: Presentación observada
     area:
       census: Censo
-      evidence_comparison: Comparación de evidencias
+      evidence_comparison: Comparación con la AEAT
       filed_declarations: Declaraciones presentadas
       notifications: Notificaciones
       reconciliation: Conciliación
     availability:
       available: Disponible
       locked: Bloqueada
-      never_captured: Nunca capturada
-      stale: Desactualizada
+      never_captured: Aún sin leer
+      stale: Desactualizado
       unavailable: No disponible
     census:
-      title: Censo de sincronización AEAT
+      title: Censo de Sincronización AEAT
     census_category:
       activity: Actividad
       address: Dirección
@@ -1171,26 +1171,26 @@ tui:
       local_filing: Estado de presentación local
       local_value: Valor local
       read: Lectura
-      receipt: Justificante
+      receipt: Justificante de la AEAT
       resolution: Resolución
-      sources: Fuentes
+      sources: Orígenes
       status: Estado
     discrepancy:
       aeat_only: Solo AEAT
-      contradictory_source: Fuente contradictoria
+      contradictory_source: Origen contradictorio
       local_only: Solo datos locales
       none: Sin diferencia
       state_mismatch: Estados no coincidentes
       unobserved: No observada
     document_custody_state:
       held: En custodia
-      not_captured: No capturado
+      not_captured: Sin custodia
       refused: Rechazado
       unavailable: No disponible
     evidence_comparison:
-      title: Comparación de evidencias de sincronización AEAT
+      title: 'Sincronización AEAT: comparación con la AEAT'
     filed_declarations:
-      title: Declaraciones presentadas en sincronización AEAT
+      title: Declaraciones presentadas en Sincronización AEAT
     justificante_state:
       available: Disponible
       not_observed: No observado
@@ -1198,9 +1198,9 @@ tui:
       verified: Verificado
     local_filing_state:
       draft: Borrador
-      filed: Presentada
+      filed: Registrada como presentada
       not_observed: No observada
-      ready: Lista
+      ready: Lista para presentar
     notification:
       already_handled: Esta notificación ya se ha abierto.
       document_handed_off: Documento de notificación entregado al anfitrión.
@@ -1214,16 +1214,16 @@ tui:
       unknown: Desconocido
       unread: No leída
     notifications:
-      title: Notificaciones de sincronización AEAT
+      title: Notificaciones de Sincronización AEAT
     operation:
       already_handled: Esta operación ya se ha entregado al anfitrión.
       failed: No se pudo iniciar la operación.
       handed_off: Operación entregada al anfitrión.
       in_flight: Ya hay una operación en curso.
     overview:
-      title: Resumen de sincronización AEAT
+      title: Resumen de Sincronización AEAT
     reconciliation:
-      title: Conciliación de sincronización AEAT
+      title: Conciliación de Sincronización AEAT
     reconciliation_state:
       accept_aeat: Aceptar AEAT
       dismissed: Descartada
@@ -1235,7 +1235,7 @@ tui:
         disponible.
       operation_handoff: Las operaciones con la AEAT no se pueden iniciar desde esta
         sesión.
-      source: Esta fuente no está disponible para su consulta.
+      source: Este origen no está disponible para consultarlo.
       sources_missing: 'Esta área necesita datos que aún no están disponibles: %{sources}.'
       unread_notification: Las notificaciones no leídas no pueden abrir documentos.
     section:
@@ -1268,7 +1268,7 @@ tui:
       unobserved: No observado
     zone:
       census: Censo
-      evidence_comparison: Comparación de evidencias
+      evidence_comparison: Comparación con la AEAT
       filed_declarations: Declaraciones presentadas
       notifications: Notificaciones
       overview: Resumen
@@ -1278,7 +1278,7 @@ tui:
       available: Disponible
       locked: Bloqueado
       never_captured: Aún sin leer
-      stale: Datos de la última lectura
+      stale: Desactualizado
       unavailable: No disponible
     calendar:
       action:
@@ -1286,33 +1286,33 @@ tui:
         open: Abrir esta declaración
       aeat:
         accepted: Aceptada
-        justificante_verified: Justificante verificado
+        justificante_verified: Justificante de la AEAT verificado
         not_observed: No observada
-        submitted_observed: Envío observado
-        unknown: Fuente no observable
+        submitted_observed: Presentación observada
+        unknown: Desconocido
       column:
-        aeat: Evidencia AEAT
-        close: Cierre
+        aeat: Estado en la AEAT
+        close: Plazo
         declaration: Declaración
         legal: Situación legal
         local: Estado local
       detail:
         action: 'Acción al pulsar Intro: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}
-          · Coherencia de evidencia: {conflict}'
-        dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original}
-          · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante de la
+          AEAT: {receipt} · Coherencia con la AEAT: {conflict}'
+        dates: 'Apertura: {opening} · Pago: {payment} · Plazo original: {original}
+          · Plazo efectivo: {effective} · Evaluado: {evaluated} · Días de retraso:
           {overdue} · Ajuste: {shift}'
         holidays: 'Festivos: {coverage}'
         source: '{source}: {availability} · Observado: {observed}'
       empty:
         known: No hay obligaciones en este intervalo.
         search: Ninguna obligación coincide con la búsqueda y el ámbito.
-        stale: No hay filas en la última agenda observada ({observed}); los datos
-          están desactualizados.
+        stale: No hay filas en el último calendario fiscal observado ({observed});
+          los datos están desactualizados.
       evidence:
         clear: Sin conflicto observado
-        conflicted: Evidencia AEAT contradictoria observada
+        conflicted: Estado contradictorio en la AEAT observado
       justificante:
         not_verified: No verificado
         unknown: Desconocido
@@ -1320,17 +1320,17 @@ tui:
       legal:
         due_soon: Vence pronto
         due_today: Vence hoy
-        filed: Presentada
-        not_applicable: No aplicable
+        filed: Registrada como presentada
+        not_applicable: No aplica
         overdue: Vencida
         upcoming: Próxima
       local:
-        external_baseline_imported: Registro externo importado
-        not_ready_to_file: No lista
+        external_baseline_imported: Presentación externa importada
+        not_ready_to_file: No lista para presentar
         ready_to_file: Lista para presentar
-        unknown: Fuente no observable
+        unknown: Desconocido
       never_observed: Nunca observado
-      none: No aplicable
+      none: No aplica
       observation:
         not_recorded: Actual y disponible; hora de observación no registrada
         time_not_recorded: Hora de observación no registrada
@@ -1345,34 +1345,34 @@ tui:
           allí.
       scope:
         all: Todas
-        evidence_unknown: Evidencia AEAT desconocida
-        filed: Presentadas localmente
+        evidence_unknown: Estado en la AEAT desconocido
+        filed: Registradas como presentadas
         overdue: Vencidas
         past: Pasadas
         upcoming: Próximas
       search:
-        placeholder: Buscar por modelo, ejercicio, período, estado o fecha
+        placeholder: Buscar por modelo, ejercicio, periodo, estado o fecha
       source:
         aeat:
-          evidence: Evidencia AEAT
+          evidence: Estado en la AEAT
         local:
           filing: Presentación local
         schedule: Calendario legal
-      title: Agenda de declaraciones
+      title: Calendario fiscal
       user:
         due: Pendiente
-        filed: Presentada localmente
-        late: Atrasada
+        filed: Registrada como presentada
+        late: Vencida
         unknown: Desconocida
     column:
       aeat_confirmation: Confirmación AEAT
-      aeat_evidence: Evidencia de la AEAT
+      aeat_evidence: Estado en la AEAT
       availability: Estado
       calculation: Cálculo actual
       current: Actual
       declaration: Declaración
-      destination: Apartado
-      filed: Presentada
+      destination: Área
+      filed: Registrada como presentada
       local_filing: Estado local de presentación
       local_state: Estado local
       result: Resultado
@@ -1399,31 +1399,31 @@ tui:
       aeat_csv_register: Registro CSV de la AEAT observado
       aeat_justificante_pdf: Justificante PDF de la AEAT observado
       aeat_live_capture: Observación en directo de la AEAT
-      none: Sin evidencia observada de la AEAT
+      none: Sin estado observado en la AEAT
     filing_history:
-      axes: El estado local de presentación, la confirmación de la AEAT y la evidencia
-        observada de la AEAT son hechos distintos.
+      axes: El estado local de presentación, la confirmación de la AEAT y el estado
+        observado en la AEAT son hechos distintos.
       chain_detail: 'Origen: {origin} · Tipo: {kind} · AEAT: {confirmation} · Corrige
         una declaración anterior: {amends}'
       title: Historial de presentaciones
     filing_state:
-      supersedido: Registro local sustituido
-      vigente: Registro local vigente
+      supersedido: Presentación registrada sustituida
+      vigente: Presentación registrada vigente
     lifecycle:
-      amended: Rectificación iniciada
+      amended: Corrección iniciada
       calculated: Cálculo completado
       created: Declaración creada
       discarded: Declaración descartada
       exported: Declaración exportada
-      external_evidence_imported: Evidencia externa de la AEAT importada
-      filed: Presentación registrada localmente
-      observation_overridden: Observación sustituida por el operador
-      observation_override_cleared: Sustitución del operador eliminada
+      external_evidence_imported: Datos externos de la AEAT importados
+      filed: Presentación registrada
+      observation_overridden: Observación sustituida manualmente
+      observation_override_cleared: Sustitución manual eliminada
       reconciled: Conciliada con la AEAT
       renamed: Declaración renombrada
-      superseded: Presentación sustituida localmente
-      verification_refused: Verificación rechazada
-      verified: Verificación completada
+      superseded: Presentación registrada sustituida
+      verification_refused: Comprobación rechazada
+      verified: Comprobación completada
     origin:
       aeat: AEAT
       local: Local
@@ -1446,36 +1446,36 @@ tui:
             taxpayer_profile_incomplete: El calendario fiscal no puede calcularse
               hasta completar las respuestas obligatorias del perfil. Complétalas
               en la sección Perfil.
-      source: Esta fuente no está disponible actualmente.
+      source: Este origen no está disponible actualmente.
     revision_state:
       borrador: Borrador
       descartado: Descartado
-      presentado: Cálculo presentado
-      presentado_supersedido: Cálculo presentado sustituido
-      verificado_completo: Verificación completa
+      presentado: Registrado como presentado
+      presentado_supersedido: Registrado como presentado y sustituido
+      verificado_completo: Comprobación completa
     revisions:
-      explanation: Las revisiones de cálculo son versiones guardadas del cálculo,
-        no revisiones del registro del modelo.
-      title: Revisiones de cálculo
+      explanation: Los cálculos anteriores son las versiones guardadas del cálculo
+        de esta declaración.
+      title: Cálculos anteriores
     unavailable:
       title: Área de declaraciones no disponible
     value:
       available: Disponible
       'no': 'No'
       none: Ninguno
-      not_applicable: No aplicable
+      not_applicable: No aplica
       result_unknown: No disponible
       'yes': Sí
     work_create:
       created: Se ha creado {address}. Vuelve a Declaraciones para trabajar en ella.
       modelo: Modelo
-      period: Período
+      period: Periodo
       progress: Creando o retomando la declaración seleccionada…
       refusal:
         modelo: Indica un número de modelo.
         not_applicable: 'El modelo %{modelo} no se aplica a este perfil: %{reason}
           Si debería aplicarse, corrige el perfil en Perfil (F4) y vuelve a intentarlo.'
-        period: Indica un período válido para el ejercicio seleccionado.
+        period: Indica un periodo válido para el ejercicio seleccionado.
         year: Indica un ejercicio admitido de cuatro cifras.
       reused: Se ha retomado {address}. Vuelve a Declaraciones para trabajar en ella.
       submit: Crear o retomar
@@ -1488,15 +1488,14 @@ tui:
     aeat_sync: Sincronización AEAT
     declarations: Declaraciones
     home: Inicio
-    ledger: Libro registro
+    ledger: Registros
     profile: Perfil
     withholding: Retenciones
   filing_year_route:
-    invalid: Introduzca un ejercicio válido de cuatro cifras.
-    open: Abrir retenciones
-    prompt: Seleccione un ejercicio (AAAA)
-    unavailable: Los justificantes de retenciones no están disponibles para este perfil
-      y ejercicio.
+    invalid: Introduce un ejercicio válido de cuatro cifras.
+    open: Abrir Retenciones
+    prompt: Selecciona un ejercicio (AAAA)
+    unavailable: Retenciones no está disponible para este perfil y ejercicio.
   home:
     account_fallback: Cuenta
     action:
@@ -1504,7 +1503,7 @@ tui:
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
     address: Modelo %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'Evidencia de la AEAT: %{state}'
+    aeat_evidence: 'Estado en la AEAT: %{state}'
     aeat_state:
       accepted: aceptada por la AEAT
       justificante_verified: justificante de la AEAT verificado
@@ -1515,35 +1514,35 @@ tui:
       available: Disponible
       available_empty: '%{label} - %{detail}'
       locked: Bloqueado - desbloquea el perfil seleccionado para ver esta información
-      never_captured: Todavía sin capturar
+      never_captured: Aún sin leer
       reason:
         workbench:
           calendar:
-            aeat_reader_unavailable: Todavía sin capturar - aparece tras la primera
-              Sincronización AEAT
+            aeat_reader_unavailable: Aún sin leer - aparece tras la primera Sincronización
+              AEAT
             taxpayer_model_undeclared: No disponible - el perfil aún no indica qué
               tipo de contribuyente es
           home:
             actions_projector_unavailable: No disponible - las próximas acciones aparecen
-              cuando se han comprobado todas las áreas del libro
+              cuando se han comprobado todos tus registros
             agenda_projector_unavailable: No disponible - no se pudo calcular el calendario
               de presentación
             declarations_resume_projector_unavailable: No disponible - no se pudieron
               leer las declaraciones que retomar
-            messages_never_pulled: Todavía sin capturar - los mensajes de la AEAT
-              aparecen tras la primera Sincronización AEAT
+            messages_never_pulled: Aún sin leer - los mensajes de la AEAT aparecen
+              tras la primera Sincronización AEAT
             taxpayer_profile_incomplete: No disponible - al perfil le faltan respuestas
               obligatorias; complétalas en Perfil
           ledger:
             snapshot_projector_unavailable: No disponible - se muestra cuando se han
-              comprobado todas las áreas del libro
+              comprobado todos tus registros
       stale: Desactualizado - la última copia local necesita actualizarse
       stale_observed: '%{label}; última observación %{observed_at}'
       unavailable: No disponible - esta información no puede mostrarse ahora
     declaration_state:
       discarded: Descartada
       draft: Borrador
-      filed: Presentada
+      filed: Registrada como presentada
       needs_review: Necesita revisión
       ready: Lista
     empty:
@@ -1553,29 +1552,29 @@ tui:
     evidence: 'Local: %{local} · AEAT: %{aeat}'
     heading:
       actions: Próximas acciones
-      agenda: Agenda de presentación
+      agenda: Calendario fiscal
       declarations: Declaraciones
-      ledger: Preparación del libro
+      ledger: Preparación de los registros
       messages: Mensajes
     ledger_summary: Disponible - %{entries} apuntes; %{requiring_review} necesitan
       revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
     local_state:
-      external_baseline_imported: base de presentación externa guardada localmente
-      not_ready_to_file: no lista localmente
-      ready_to_file: lista localmente
+      external_baseline_imported: presentación externa importada
+      not_ready_to_file: no lista para presentar
+      ready_to_file: lista para presentar
     messages_summary: Disponible - %{count} requieren atención
     period_state:
       due: Pendiente
-      filed: Presentada
-      late: Fuera de plazo
+      filed: Registrada como presentada
+      late: Vencida
       unknown: Calendario desconocido
     reason:
       blocked_dependency: Una dependencia de la declaración está bloqueada
-      blocked_evidence: Un bloqueo necesita justificante de respaldo
+      blocked_evidence: Un bloqueo necesita un justificante
       blocked_review: El trabajo bloqueado necesita revisión
       declaration_needs_review: La declaración necesita revisión
-      evidence_missing: Falta el justificante de respaldo
-      ledger_classification_pending: Falta clasificar apuntes del libro
+      evidence_missing: Falta un justificante
+      ledger_classification_pending: Falta clasificar apuntes en Registros
     session:
       active: Sesión local activa
       expired: Sesión caducada
@@ -1585,7 +1584,7 @@ tui:
   ledger:
     area:
       classification: Clasificación
-      entries: Asientos
+      entries: Apuntes
       evidence: Justificantes
       import: Importación
       overview: Resumen
@@ -1593,9 +1592,9 @@ tui:
       review: Revisión
     availability:
       available: Disponible
-      choose_entry: Elige un asiento
+      choose_entry: Elige un apunte
       locked: Bloqueado
-      never_captured: Aún no capturado
+      never_captured: Aún sin leer
       stale: Desactualizado
       unavailable: No disponible
     classification:
@@ -1609,10 +1608,10 @@ tui:
       failure: No se pudo guardar la clasificación.
       field:
         business_pct: Porcentaje profesional (fracción de 0 a 1; solo Mixta)
-        deduction_fact_kind: Tipo de hecho de deducción (identificador del registro)
-        irpf_category: Categoría de IRPF (identificador del registro)
+        deduction_fact_kind: Tipo de deducción (código)
+        irpf_category: Categoría de IRPF (código)
         iva_amount: Cuota de IVA
-        iva_category: Categoría de IVA (identificador del registro)
+        iva_category: Categoría de IVA (código)
         iva_rate: Tipo de IVA (fracción decimal; p. ej., 0.21)
         prorrata_reference: Referencia de prorrata
         taxable_base: Base imponible
@@ -1623,7 +1622,7 @@ tui:
       prompt: Elige una clasificación para el apunte seleccionado.
       success: Clasificación guardada.
       target: Apunte {position} de {total} · referencia {short_id}
-      title: Clasificar apunte contable
+      title: Clasificar apunte
     column:
       amount: Importe
       area: Área
@@ -1634,14 +1633,14 @@ tui:
       description: Descripción
       destination: Destino
       direction: Sentido
-      entry: Asiento
+      entry: Apunte
       items: Elementos
       next: Siguiente paso
       review_status: Estado de revisión
       status: Estado
     entries:
-      empty: Esta captura no contiene asientos.
-      title: Asientos del libro contable
+      empty: Todavía no hay apuntes.
+      title: Apuntes
     entry_label: '{date} · {description}'
     evidence:
       add: Añadir documento
@@ -1652,7 +1651,7 @@ tui:
       already_confirmed: La factura {number} ya estaba registrada (total {total} {currency});
         no se ha añadido nada.
       column:
-        file: Archivo
+        file: Fichero
         invoice: Factura
         status: Revisión
         type: Tipo
@@ -1660,7 +1659,7 @@ tui:
       confirm_failed: La factura no se ha registrado.
       confirmed: 'Factura {number} registrada: total {total} {currency}.'
       confirming: Registrando la factura a partir del documento…
-      detail: 'Tamaño: {size} bytes · capturado {captured}'
+      detail: 'Tamaño: {size} bytes · añadido {captured}'
       draft:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Comprobaciones que no cuadran con el documento: {count}'
@@ -1670,7 +1669,7 @@ tui:
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       loading: Leyendo los documentos…
-      path_placeholder: Escribe la ruta del archivo
+      path_placeholder: Escribe la ruta del fichero
       pending: Pendiente
       printed_total_disagrees: El total impreso en el documento no coincide con el
         registrado. Revisa la factura.
@@ -1701,15 +1700,15 @@ tui:
         esta pantalla.
       refresh_failed: El cambio se ha guardado, pero esta vista no se ha podido volver
         a leer. Vuelve al Inicio para actualizarla.
-      refreshing: Actualizando el espacio de trabajo…
+      refreshing: Actualizando…
     import:
-      again: Importar otro archivo
+      again: Importar otro fichero
       browse: Examinar
       cancel: Cancelar
       cancelled: Importación cancelada. No se ha guardado nada.
       confirm: Confirmar importación
       confirming: Revisa la previsualización y confirma para guardarla.
-      country_label: País de la contraparte, dos letras (se usa si el archivo no tiene
+      country_label: País de la contraparte, dos letras (se usa si el fichero no tiene
         columna de país)
       country_required: Indica el país de la contraparte con dos letras, por ejemplo
         ES.
@@ -1718,14 +1717,14 @@ tui:
         bank_statement: Extracto bancario
         invoices_issued: Facturas emitidas
         invoices_received: Facturas recibidas
-      kind_label: Qué contiene el archivo
+      kind_label: Qué contiene el fichero
       outcome:
         diagnostic: 'Nota: {message}'
         did_import: 'Importadas: {count}'
         did_skip: 'Omitidas por estar ya registradas: {count}'
-        files: 'Archivos leídos: {count}'
-        likely_duplicates: 'Posibles duplicados: {count} (ya en el libro o antes en
-          este archivo). Se importan; revísalos.'
+        files: 'Ficheros leídos: {count}'
+        likely_duplicates: 'Posibles duplicados: {count} (ya en tus registros o antes
+          en este fichero). Se importan; revísalos.'
         not_measured: Las facturas nuevas y las ya registradas solo se cuentan al
           aplicar la importación.
         refused_file: 'No leído: {file}: {reason}'
@@ -1734,24 +1733,24 @@ tui:
         unmapped: 'Columnas no importadas: {columns}'
         would_import: 'Se importarían: {count}'
         would_skip: 'Se omitirían por estar ya registradas: {count}'
-      path_label: Archivo o carpeta
+      path_label: Fichero o carpeta
       path_missing: No existe nada en {path}.
       path_placeholder: Escribe una ruta o usa Examinar
-      path_required: Indica la ruta de un archivo o carpeta.
+      path_required: Indica la ruta de un fichero o carpeta.
       preview: Previsualizar
-      previewing: Leyendo el archivo…
+      previewing: Leyendo el fichero…
       progress: Importación en curso…
-      prompt: Elige qué contiene el archivo y dónde está, y previsualízalo. No se
+      prompt: Elige qué contiene el fichero y dónde está, y previsualízalo. No se
         guarda nada hasta que confirmes.
       provider:
         auto: Detectar automáticamente
-        csv: Archivo CSV
-        ofx: Archivo OFX o QFX
+        csv: Fichero CSV
+        ofx: Fichero OFX o QFX
         pdf_n26: Extracto PDF de N26
         xlsx: Libro de Excel
       provider_label: Formato del extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
-      title: Importar apuntes contables
+      title: Importar apuntes
     invoice:
       again: Añadir otra factura
       cancel: Cancelar
@@ -1774,7 +1773,7 @@ tui:
         invoice_class: Clase de factura
         invoice_date: Fecha de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
-        iva_category: Tratamiento del IVA (clave del registro)
+        iva_category: Tratamiento del IVA (código)
         iva_rate: Tipo de IVA (%)
         kind: Tipo de factura
         notes: Notas
@@ -1795,8 +1794,8 @@ tui:
         field:
           description: Descripción de la línea
           iva_amount: Cuota de IVA de la línea
-          iva_rate: Tipo de IVA (clave del registro, como RATE_21)
-          oss_rate_kind: Clase de tipo OSS (clave del registro)
+          iva_rate: Tipo de IVA (código, como RATE_21)
+          oss_rate_kind: Clase de tipo OSS (código)
           quantity: Cantidad
           spending_category_id: Categoría de gasto
           subtotal: Base de la línea
@@ -1836,9 +1835,9 @@ tui:
       title: Añadir una factura
     overview:
       affected_declarations: Declaraciones afectadas
-      areas: Áreas del libro
+      areas: Áreas de Registros
       quality: Calidad de los datos y trabajo pendiente
-      title: Resumen del libro contable
+      title: 'Registros: resumen'
     reconciliation:
       affected: Declaraciones afectadas
       amount_match: Coincide el importe
@@ -1857,17 +1856,16 @@ tui:
       inconsistencies: Incoherencias de enlaces
       invoice: Factura
       invoice_label: '{counterparty} · {total}'
-      local_only: Solo datos locales del libro. Sincronización AEAT es un espacio
-        distinto.
-      match_evidence: Evidencia canónica de coincidencia
+      local_only: Solo datos locales de Registros. Sincronización AEAT es otra área.
+      match_evidence: Por qué coinciden
       modelo: Modelo
       'no': 'No'
       period: Periodo
       progress: Enlazando…
-      score: Puntuación canónica
+      score: Puntuación de coincidencia
       success: Enlace guardado.
       suggestions: Enlaces sugeridos
-      title: Conciliación local del libro
+      title: 'Registros: conciliación local'
       'yes': Sí
     records:
       failed: El cambio se rechazó o no se pudo guardar.
@@ -1884,30 +1882,29 @@ tui:
       save: Guardar cambio
       saved: Cambio guardado.
       saving: Guardando cambio…
-      source: Archivo de origen
+      source: Fichero de origen
       transaction_detail: Detalle del apunte
     refusal:
-      application_state: Esta área no está disponible en el estado actual del libro
-        contable.
+      application_state: Esta área no está disponible en el estado actual de Registros.
       destination_pending: Esta área aún no está disponible en esta versión.
-      no_entries: Todavía no hay asientos que clasificar.
-      selection_required: Selecciona primero un asiento y abre después esta tarea
-        para él.
+      no_entries: Todavía no hay apuntes que clasificar.
+      selection_required: Selecciona primero un apunte y abre después esta tarea para
+        él.
       submission_unavailable: Esta tarea no se puede realizar desde esta pantalla
         en esta sesión.
     review:
-      empty: Ahora mismo no hay asientos que revisar.
+      empty: Ahora mismo no hay apuntes que revisar.
       exclude_cancel: Mantener apunte
       exclude_confirm: Excluir apunte
       exclude_failed: El apunte no se ha excluido.
       exclude_hint: Pulsa x para excluir de la declaración el apunte resaltado.
-      exclude_question: ¿Excluir {entry} de la declaración? Sigue en el libro y se
-        puede volver a clasificar más adelante.
+      exclude_question: ¿Excluir {entry} de la declaración? Sigue en tus registros
+        y se puede volver a clasificar más adelante.
       excluded: '{entry} se ha excluido de la declaración.'
       excluding: Excluyendo el apunte…
       filter_all: 'Filtro: todos los estados de revisión'
       open: Abrir revisión
-      title: Revisión del libro contable
+      title: 'Registros: revisión'
     review_status:
       excluded: Excluido
       pending: Pendiente
@@ -1919,7 +1916,7 @@ tui:
       ready: Preparado
       unmeasured: Sin medir
     unavailable:
-      title: Área del libro contable no disponible
+      title: Registros no disponibles
   local_reader:
     answer:
       'no': 'no'
@@ -1935,7 +1932,7 @@ tui:
       service_installed: Runtime instalado
       service_running: Runtime en marcha
       text_model_pulled: Modelo de texto descargado
-      verified: Lector verificado
+      verified: Lector comprobado
       vision_model_pulled: Modelo de escaneos descargado
     choose_role: Elige una tarea de la tabla para descargar, cargar, comprobar o eliminar
       su modelo.
@@ -1963,7 +1960,7 @@ tui:
     extraction_ready: Los documentos de factura se pueden leer en este equipo.
     fitness:
       fit: apto
-      not_verified: sin verificar
+      not_verified: sin comprobar
       timed_out: tiempo agotado
       unfit: no apto
     host: 'Runtime en {endpoint} · instalado: {installed} · responde: {reachable}
@@ -1997,7 +1994,7 @@ tui:
       load: la carga
       pull: la descarga
       start: el arranque
-      verify: la verificación
+      verify: la comprobación
     setup_stopped: 'La preparación se ha detenido en {step}: {condition}.'
     start: Iniciar runtime
     state:
@@ -2013,7 +2010,7 @@ tui:
         calculation_report_csv: Informe de cálculo (CSV), solo registro local
         calculation_report_pdf: Resumen del cálculo firmado (PDF), solo registro local
         fichero_boe: Fichero BOE para presentar en la AEAT
-        label: Artefacto a exportar
+        label: Documento a exportar
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
         domiciliacion: Domiciliación bancaria
@@ -2028,22 +2025,23 @@ tui:
         devolver: Solicitar la devolución
         label: 'Resultado negativo: compensar o solicitar la devolución'
       replace_existing:
-        label: Sustituir el archivo que ya exista en esta ruta
+        label: Sustituir el fichero que ya exista en esta ruta
       result:
         close: Cerrar
         completeness:
           not_assessed: 'No evaluada: un informe de cálculo no es un fichero de presentación'
-          not_flagged: La exportación no ha emitido ningún aviso de integridad
-          unverified: 'Sin verificar: la revisión no declara manifiesto de integridad'
+          not_flagged: La exportación no ha señalado ninguna incidencia de integridad
+          unverified: 'Sin comprobar: Cadrumo no tiene lista de integridad para esta
+            versión del modelo'
         evidence_status:
           local_calculation_report_not_official_aeat_filing_evidence: Informe de cálculo
             local; no es evidencia oficial de presentación ante la AEAT
           local_export_not_official_aeat_filing_evidence: Exportación local; no es
             evidencia oficial de presentación ante la AEAT
         label:
-          artefact: Artefacto exportado
+          artefact: Documento exportado
           byte_size: Tamaño (bytes)
-          calculation_revision_id: Revisión del cálculo
+          calculation_revision_id: Cálculo guardado
           completeness: Integridad
           evidence_status: Estado como evidencia
           export_format: Formato
@@ -2060,11 +2058,11 @@ tui:
           así que se desconocen su estado como evidencia, su integridad y su identidad
           de software. Revisa el fichero antes de confiar en él.
         warning:
-          completeness_unverified: 'No se ha verificado la integridad de este fichero
-            de presentación: su revisión no declara manifiesto de integridad, así
-            que la comprobación de paridad estructural no ha podido confirmar que
-            todas las casillas obligatorias lleguen al fichero. Revisa las casillas
-            exportadas frente al Diseño de Registros oficial antes de presentar.'
+          completeness_unverified: 'No se ha comprobado la integridad de este fichero
+            de presentación: Cadrumo no tiene lista de integridad para esta versión
+            del modelo, así que no ha podido confirmar que todas las casillas obligatorias
+            lleguen al fichero. Revisa las casillas exportadas frente al Diseño de
+            Registros oficial antes de presentar.'
           development_software_identity: La cabecera del fichero lleva la identidad
             de software de desarrollo con todo ceros; la AEAT no aceptará este fichero
             para su presentación.
@@ -2075,24 +2073,24 @@ tui:
             la AEAT. La evidencia oficial la emite la AEAT tras la presentación: justificante;
             consulta de declaraciones presentadas; o cotejo por CSV.'
     m303_evidence:
-      admission_unavailable: Aquí no se puede registrar una atestación nueva para
+      admission_unavailable: Aquí no se puede registrar una confirmación nueva para
         esta declaración. No se ha calculado nada.
-      attestation_attachment_id: Identificador de la atestación existente
-      attestation_sha256: SHA-256 de la atestación existente
+      attestation_attachment_id: Identificador de la confirmación existente
+      attestation_sha256: SHA-256 de la confirmación existente
       cancel: Cancelar
       cancelled: Cálculo cancelado; no se ha registrado ningún dato de la autoliquidación.
-      existing_attestation_hint: Responde a la pregunta. Después, indica una atestación
-        existente de que no procede el apartado de exoneración del modelo 390 (su
-        identificador y SHA-256), o déjalos en blanco e indica cuándo lo confirmaste
-        para registrar una atestación nueva.
+      existing_attestation_hint: Responde a la pregunta. Después, indica una confirmación
+        existente de que no procede la sección de exoneración del modelo 390 (su identificador
+        y SHA-256), o déjalos en blanco e indica cuándo lo confirmaste para registrar
+        una confirmación nueva.
       joint_return_elected: ¿Autoliquidación conjunta?
       no_modelo_390_question_hint: Responde a la pregunta. La autoliquidación de este
-        período no pregunta por la exoneración del modelo 390; solo lo hace la del
-        último período del año (diciembre o cuarto trimestre).
-      observed_at: Confirmado el, para una atestación nueva (ISO 8601 con desfase
+        periodo no pregunta por la exoneración del modelo 390; solo lo hace la del
+        último periodo del año (diciembre o cuarto trimestre).
+      observed_at: Confirmado el, para una confirmación nueva (fecha y hora con desfase
         UTC, por ejemplo 2025-04-01T12:00:00Z)
       required: Responde a la pregunta sobre la autoliquidación conjunta. En el último
-        período del año indica además una atestación existente completa o una hora
+        periodo del año indica además una confirmación existente completa o una hora
         de confirmación con su desfase UTC, pero no ambas.
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelve a elegir Calcular.
@@ -2134,8 +2132,8 @@ tui:
           en esta pantalla ({count}): {boxes}. Esta declaración se calculó por última
           vez fuera de esta pantalla, así que Cadrumo no puede saber si los escribiste
           tú. Al volver a calcular, cada una de estas casillas toma el valor que le
-          den su origen o el modelo, o queda vacía para que la rellenes. Para conservar
-          un valor, introdúcelo aquí antes.'
+          den su origen o el modelo oficial, o queda vacía para que la rellenes. Para
+          conservar un valor, introdúcelo aquí antes.'
         operator_entries_unknown: Esta declaración se calculó por última vez fuera
           de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
           Al volver a calcular solo se conservan los valores introducidos aquí.
@@ -2176,7 +2174,8 @@ tui:
           here: Sí. Escribe el nuevo valor debajo.
           not_here: Aquí no. Cámbialo en {area} y vuelve a calcular.
           not_yet: Aquí todavía no. Cámbialo en {area}.
-          recorded: No. Esta declaración está registrada como presentada.
+          recorded: No. Está registrada como presentada. Para cambiarla, inicia una
+            corrección de esta declaración.
           replace: Sí. Tu valor sustituirá al del origen ({value}), solo en esta declaración.
             Tus registros no cambian y puedes volver al valor del origen cuando quieras.
           replace_unknown: Sí. Tu valor sustituirá al del origen, solo en esta declaración.
@@ -2213,8 +2212,10 @@ tui:
       export:
         confirm_first: 'Confirma los valores supuestos antes de generar el fichero
           o registrar la presentación (por confirmar: {count}) [n].'
+        resolve_first: 'Resuelve lo que impide presentar antes de generar el fichero
+          o registrar la presentación (impiden presentar: {count}) [i].'
         title: Exportar la declaración
-        verify_first: Verifica la declaración antes de exportarla [F8].
+        verify_first: Comprueba la declaración antes de exportarla [F8].
       filed:
         read_only: 'Registrada como presentada: puedes consultarla, pero no cambiarla.
           Para cambiarla, inicia una corrección de esta declaración.'
@@ -2223,6 +2224,9 @@ tui:
         amount: solo las casillas con importe
         attention: solo lo pendiente
         calculated: solo los valores calculados
+        empty: No hay nada en esta página con este filtro.
+        empty_next: 'No hay nada en esta página con este filtro. Siguiente página
+          con algo: {page}'
         mine: solo tus valores
         records: solo lo que viene de tus registros
       go_to:
@@ -2230,7 +2234,7 @@ tui:
         prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
       grid:
         column_unnamed: Columna {number}
-        records_read_only: Estos registros salen de tus datos. Cámbialos allí.
+        records_read_only: Esta tabla se rellena con tus registros. Cámbialos allí.
         records_unknown: Cadrumo no sabe cuántos registros hay.
         row_boxes: '{heading} · [{first}] a [{last}]'
       header:
@@ -2254,10 +2258,12 @@ tui:
             o a devolver. Compruébalo en el modelo oficial antes de presentar.
           failed: 'Resultado: no se pudo calcular [{key}]'
           negative: 'Resultado negativo: nada a ingresar'
+          negative_carried: 'Resultado negativo: {amount} a deducir en los siguientes
+            trimestres'
           not_calculated: 'Resultado: aún sin calcular [{key}]'
           other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
-          sign_help: La casilla [{box}] figura en el modelo como {value}. Arriba se
-            muestra el importe sin signo y el sentido en palabras.
+          sign_help: La casilla [{box}] figura en el modelo oficial como {value}.
+            Arriba se muestra el importe sin signo y el sentido en palabras.
           to_carry_forward: A compensar
           to_pay: A ingresar
           to_refund: A devolver
@@ -2265,6 +2271,7 @@ tui:
           zero: Resultado cero
         stale:
           changes: 'desactualizado: cambios sin aplicar: {count} [{key}]'
+          recalculate: 'desactualizado: vuelve a calcular [{key}]'
       help:
         empty: No hay casillas en esta vista.
         feeds: 'Se usa en: {boxes}'
@@ -2274,6 +2281,8 @@ tui:
         no_explanation: Aún no hay una explicación escrita para esta casilla.
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+        origin_no_earlier_declaration: Esta casilla vale 0 porque este año no hay
+          ninguna declaración anterior de la que traer un valor.
       in_spanish: (en español)
       issues:
         action:
@@ -2298,6 +2307,9 @@ tui:
             valor. Si el valor correcto es cero, escribe 0 para que conste como tuyo.
           reconciliation_mismatch: 'Dos cifras que deberían coincidir no coinciden.
             No se elige ninguna por ti: revisa las dos y corrige la que esté mal.'
+          stale_calculation: Tus registros han cambiado desde que se calculó esta
+            declaración, así que sus cifras pueden no coincidir ya con ellos. No se
+            puede registrar la presentación hasta que vuelvas a calcularla.
         empty: No hay nada que revisar.
         go_to_box: Ir a la casilla
         key:
@@ -2323,6 +2335,7 @@ tui:
           declaration: Toda la declaración
           not_on_form: Una casilla que no aparece en las páginas de esta declaración
           record_value: Un dato que necesita cada registro de una tabla
+          records: En tus registros
           unnumbered: 'Valores sin número de casilla: {count}'
       key:
         back: Volver
@@ -2366,12 +2379,12 @@ tui:
         meaning:
           level:
             blocks: Hay que resolverlo antes de registrar la presentación.
-            check: Un aviso. No te impide presentar.
+            check: Conviene revisarlo. No te impide presentar.
             info: Una explicación, por ejemplo por qué no se usó un origen.
           mark:
             collapsed: Pulsa → para abrirla.
             done: 'Terminado: no queda nada por hacer aquí.'
-            earlier: Traído de una declaración que presentaste antes.
+            earlier: Traído de una declaración anterior registrada como presentada.
             expanded: Pulsa ← para cerrarla.
             here: La casilla seleccionada o el paso en el que estás.
             staged: Cambiaste esta casilla. El cambio aún no se ha aplicado.
@@ -2386,8 +2399,8 @@ tui:
             entered: Escribiste tú este valor.
             imported: 'De tus datos en Cadrumo: tus registros, tu perfil o datos de
               la AEAT que importaste.'
-            informational: Lo fija el modelo o se muestra como referencia. No tienes
-              que rellenarlo.
+            informational: Lo fija el modelo oficial o se muestra como referencia.
+              No tienes que rellenarlo.
             needs_input: La declaración necesita este dato y nadie lo ha dado.
             not_applicable: Queda vacía por norma o no se aplica a esta declaración.
             not_calculated_yet: Calcula la declaración para rellenarla.
@@ -2418,6 +2431,7 @@ tui:
         confirm: 'Confirma los valores supuestos (por confirmar: {count})'
         export: Genera el fichero para presentarlo en la AEAT
         fill: 'Completa las casillas marcadas (pendientes: {count})'
+        recalculate: 'Vuelve a calcular: tus registros han cambiado'
         record: Cuando la hayas presentado en la AEAT, registra aquí la presentación
         recorded: Registrada como presentada el {date}
         resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
@@ -2469,6 +2483,7 @@ tui:
         imported:
           aeat_draft: De datos de la AEAT
           earlier_filings: De una declaración anterior
+          earlier_filings_none: Ninguna declaración anterior este año
           fixed_by_design: Fijado por el modelo
           named_filing: Del modelo {modelo}, {period}
           profile: De tu perfil
@@ -2591,13 +2606,13 @@ tui:
           en esta pantalla ({count}): {boxes}. Esta declaración se calculó por última
           vez fuera de esta pantalla, así que Cadrumo no puede saber si los escribiste
           tú. Al aplicar, cada una de estas casillas toma el valor que le den su origen
-          o el modelo, o queda vacía para que la rellenes. Para conservar un valor,
-          introdúcelo aquí antes.'
+          o el modelo oficial, o queda vacía para que la rellenes. Para conservar
+          un valor, introdúcelo aquí antes.'
         operator_entries_unknown: Esta declaración se calculó por última vez fuera
           de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
           Al aplicar solo se conservan los cambios de esta lista. Cualquier otro valor
-          escrito fuera de esta pantalla toma el valor que le den su origen o el modelo,
-          o queda vacío.
+          escrito fuera de esta pantalla toma el valor que le den su origen o el modelo
+          oficial, o queda vacío.
         rebased: 'La declaración cambió después de que escribieras estos cambios,
           que aún no están aplicados. Revisa de nuevo las líneas marcadas (cambiadas:
           {count}).'
@@ -2628,6 +2643,7 @@ tui:
           blank: En blanco o no aplican
           calculated: Calculados
           earlier_declarations: Declaraciones anteriores
+          earlier_declarations_none: Ninguna declaración anterior este año
           information: Solo informativos
           needs_you: Falta tu dato
           profile: Tu perfil
@@ -2700,46 +2716,45 @@ tui:
     navigation:
       unavailable: No se puede abrir el área solicitada en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
-    opening: Abriendo tu área de trabajo…
+    opening: Abriendo Cadrumo…
     palette:
       placeholder: Busca áreas, registros y acciones…
     system:
       quit: Salir
       quit_help: Sale de Cadrumo; la sesión del perfil queda como está
     title: 'Cadrumo: sesión de terminal'
-    updating: Actualizando el área de trabajo…
+    updating: Actualizando…
   search:
     action:
-      classify_ledger: Clasificar libro mayor
+      classify_ledger: Clasificar registros
       edit_profile: Editar perfil
       explain_overview: Explicar el resumen
-      link_ledger: Vincular registro del libro mayor
+      link_ledger: Vincular apunte
       list_filing_records: Ver presentaciones
       list_notifications: Ver notificaciones
-      list_work_revisions: Ver revisiones del trabajo
-      review_ledger: Revisar libro mayor
-      review_ledger_evidence: Revisar evidencia del libro mayor
-      unknown: Acción del área de trabajo no reconocida
-      validate_ledger: Validar libro mayor
+      list_work_revisions: Ver cálculos anteriores
+      review_ledger: Revisar registros
+      review_ledger_evidence: Revisar justificantes
+      unknown: Acción no reconocida
+      validate_ledger: Comprobar registros
     destination:
-      aeat_sync: Abrir sincronización AEAT
-      declarations: Abrir declaraciones
-      home: Abrir inicio
-      ledger: Abrir libro mayor
-      profile: Abrir perfil
-      unknown: Abrir área de trabajo
-      withholding: Abrir justificantes de retenciones
+      aeat_sync: Abrir Sincronización AEAT
+      declarations: Abrir Declaraciones
+      home: Abrir Inicio
+      ledger: Abrir Registros
+      profile: Abrir Perfil
+      unknown: Abrir área
+      withholding: Abrir Retenciones
     destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
-      declarations: Declaraciones, revisiones de cálculo, historial de presentaciones
+      declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo
       ledger: Apuntes, revisión, clasificación y justificantes
-      profile: Los datos de este perfil y las fuentes que los completan
+      profile: Los datos de este perfil y los orígenes que los completan
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
-      not_composed: Todavía no se han podido leer todas las fuentes del espacio de
-        trabajo.
+      not_composed: Todavía no se han podido leer todas las áreas.
       refresh_failed: La última actualización no pudo reconstruir el índice.
       unavailable: La búsqueda no está disponible en esta sesión
       unknown: No se ha podido preparar la búsqueda.
@@ -2749,39 +2764,39 @@ tui:
         declaration: Declaración
         filing: Presentación
         history: Historial de presentaciones
-        ledger_entry: Apunte del libro mayor
-        ledger_evidence: Evidencia del libro mayor
+        ledger_entry: Apunte
+        ledger_evidence: Justificante
         modelo: Modelo
         notification: Notificación
         reconciliation: Conciliación
-        revision: Revisión de cálculo
+        revision: Cálculo anterior
       source:
-        declaration: Registros de declaraciones
-        filing: Registros de presentaciones
+        declaration: Declaraciones
+        filing: Presentaciones
         history: Historial de presentaciones
-        ledger_entry: Registros locales
-        ledger_evidence: Evidencia del libro mayor
+        ledger_entry: Registros
+        ledger_evidence: Justificantes
         modelo: Catálogo de modelos
         notification: Notificaciones de la AEAT
-        reconciliation: Hallazgos de conciliación
-        revision: Historial de cálculos
+        reconciliation: Incidencias de conciliación
+        revision: Cálculos anteriores
       status:
         declaration_draft: Borrador
-        declaration_filed: Presentada
+        declaration_filed: Registrada como presentada
         declaration_in_progress: En curso
         declaration_needs_attention: Requiere atención
         declaration_ready: Lista para presentar
         filing_accepted: Aceptada
         filing_rejected: Rechazada
-        filing_submitted: Enviada
+        filing_submitted: Presentación observada
         history_not_observed: No observada
         history_observed: Observada
         ledger_entry_classified: Clasificado
         ledger_entry_needs_review: Requiere revisión
         ledger_entry_ready: Listo
-        ledger_evidence_captured: Capturada
+        ledger_evidence_captured: Añadido
         ledger_evidence_missing: Ausente
-        ledger_evidence_stale: Desactualizada
+        ledger_evidence_stale: Desactualizado
         modelo_available: Disponible
         modelo_unavailable: No disponible
         notification_read: Leída

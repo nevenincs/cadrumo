@@ -64,7 +64,7 @@ this period can safely build on the ones before it. For the background, see
 ## See everything that happened to a filing
 
 Stream every recorded lifecycle event for one modelo (calculations,
-verification passes and refusals, filings, amendments, imports):
+verification passes and refusals, filings, corrections, imports):
 
 ```{cli-sequence} filing-readiness-history
 :verify: Confirm the modelo history stream resolves for the filing year.

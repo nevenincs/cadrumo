@@ -275,7 +275,7 @@ async def test_a_label_shown_in_spanish_says_so_in_the_filers_language() -> None
 
 
 @pytest.mark.asyncio
-async def test_a_rate_reads_as_a_percentage_only_where_its_bounds_declare_the_unit() -> None:
+async def test_a_rate_reads_as_a_percentage_where_its_unit_is_declared_and_never_as_a_bare_figure() -> None:
     items: tuple[CasillaListItem, ...] = (
         CasillaListEntry(
             _field(
@@ -294,10 +294,10 @@ async def test_a_rate_reads_as_a_percentage_only_where_its_bounds_declare_the_un
 
     assert f"21{_PERCENT} " in _line_with(lines, "Pro rata")
     assert f"12,5{_PERCENT} " in _line_with(lines, "Share")
-    # A rate whose unit the registry does not declare keeps its bare figure rather than guessing one.
+    # A rate whose unit nothing declares is neither guessed nor shown as a bare figure: only a dot.
     undeclared = _line_with(lines, "VAT rate")
-    assert " 4 " in undeclared
-    assert "%" not in undeclared
+    assert " · = " in undeclared
+    assert not any(character.isdigit() for character in undeclared.split("]", 1)[1])
 
 
 def _sourced(origin: ModeloFormOrigin, source: ModeloFormValueSource) -> ModeloFormField:
@@ -390,7 +390,7 @@ async def test_an_empty_box_says_so_once_in_its_origin_words_and_keeps_a_held_ze
 
     assert _line_with(lines, "Optional amount").endswith(" · ○ Optional, empty")
     assert _line_with(lines, "Pending total").endswith(" · ◌ Not calculated yet")
-    assert _line_with(lines, "Waiting amount").endswith(" · ⇣ Not imported yet")
+    assert _line_with(lines, "Waiting amount").endswith(" · … Not imported yet")
     assert _line_with(lines, "Emptied amount").endswith(" · □ Cleared by you")
     assert _line_with(lines, "Missing amount").endswith(" · ! Needs your input")
     assert _line_with(lines, "Other amount").endswith(" · - Not applicable")
@@ -400,7 +400,9 @@ async def test_an_empty_box_says_so_once_in_its_origin_words_and_keeps_a_held_ze
     assert "empty" not in zero
     # A box holding nothing shows no number beside its words.
     assert not any(character.isdigit() for character in _line_with(lines, "Optional amount").split("]", 1)[1])
-    assert not any("no data" in line or "…" in line for line in lines)
+    assert not any("no data" in line for line in lines)
+    # The only ellipsis is the mark of the value still to be imported, never a value cell's placeholder.
+    assert all(line.count("…") == ("Waiting amount" in line) for line in lines)
 
 
 @pytest.mark.asyncio

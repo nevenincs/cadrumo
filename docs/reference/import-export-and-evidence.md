@@ -17,7 +17,7 @@ it.”
 | Other business inputs | Typed invoice catalogues and stock-inventory ledgers in encrypted repositories; typed foreign-asset observations supplied by the caller | Reusable business facts that remain separate from a filing until an enrolled resolver projects them |
 | Registry | {term}`modelo` revision, numbered {term}`casilla` fields, formulas, bindings, legal references, and export layout | The versioned rulebook used to interpret the facts |
 | Calculation revision | Inputs, observations, overrides, calculated casillas, and provenance | A reproducible attempt at calculating one return |
-| Filing record | Current or superseded filing state linked to a calculation revision and optionally carrying external AEAT evidence | What the application records as filed, and the history behind it |
+| Filing record | Current or superseded filing state linked to a calculation revision and optionally carrying the external AEAT status | What the application records as filed, and the history behind it |
 | Official evidence | {term}`justificante`, AEAT verification record, or captured filed declaration | Evidence originating from AEAT after submission |
 
 Every calculated casilla can carry formula, legal, and source provenance. Ledger
@@ -196,7 +196,7 @@ manifest. Do not treat that output as a complete evidence package.
 
 A genuinely complete audit handoff would normally combine:
 
-1. Official AEAT evidence proving submission.
+1. Official AEAT receipt proving submission.
 2. The exact submitted-file digest or captured filed copy.
 3. A verified audit evidence bundle containing every referenced supporting record.
 4. The calculation or review package explaining how those records produced the

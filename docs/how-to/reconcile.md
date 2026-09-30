@@ -199,7 +199,7 @@ profile, so the list reads back what happened at the time.
 - [File your modelo at the AEAT portal](file-at-aeat.md) - the
   filing handoff that produces the justificante.
 - [Quickstart](quickstart.md) - the end-to-end filing workflow.
-- [Review and supply calculation inputs](review-calculation-values.md) - amend
+- [Review and supply calculation inputs](review-calculation-values.md) - correct
   a filing if reconciliation finds a mismatch.
 - [CLI reference](../cli/index.rst) - full option reference.
 - [Diagnose and repair your local setup](troubleshooting.md) - fix local

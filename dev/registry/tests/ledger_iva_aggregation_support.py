@@ -20,6 +20,7 @@ from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, B
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -141,13 +142,16 @@ def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> B
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
-def _filing_result_disposition(result: RegistryCalculationResult) -> ResultDisposition:
+def _filing_result_disposition(
+    result: RegistryCalculationResult, *, filing_year: int, period: str
+) -> ResultDisposition:
     """Use the production result-disposition resolver at this test filing boundary."""
     casilla_ids = result_disposition_casilla_ids("303")
     assert casilla_ids is not None
     disposition = derive_result_disposition(
         "303",
         {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+        period=Period.from_year_and_code(filing_year, period),
     )
     assert disposition is not None
     return disposition
@@ -381,7 +385,7 @@ def _calculate_390_from_observations_and_303_filings(
                         .revision.id
                     ),
                     result_disposition=ResultDispositionProjection(
-                        disposition=_filing_result_disposition(result),
+                        disposition=_filing_result_disposition(result, filing_year=filing_year, period=period),
                         provenance_kind="app_filing",
                         provenance_locator=f"test-local-filing:{filing_year}:{period}",
                     ),

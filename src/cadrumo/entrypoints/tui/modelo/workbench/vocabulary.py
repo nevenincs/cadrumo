@@ -50,6 +50,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormScalar,
     ModeloWorkForm,
 )
+from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .wording import date_text, period_words
@@ -83,7 +84,8 @@ ORIGIN_GLYPHS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
         ModeloFormOrigin.INFORMATIONAL: "◇",
         ModeloFormOrigin.NEEDS_INPUT: "!",
         ModeloFormOrigin.IMPORTED: "↓",
-        ModeloFormOrigin.NOT_IMPORTED_YET: "⇣",
+        # Not the imported arrow in a lighter stroke, which reads the same at terminal size: a value still to come.
+        ModeloFormOrigin.NOT_IMPORTED_YET: "…",
         ModeloFormOrigin.OPTIONAL_EMPTY: "○",
         ModeloFormOrigin.CLEARED: "□",
         ModeloFormOrigin.DEFAULT_TO_CONFIRM: "◐",
@@ -465,6 +467,57 @@ def _from_aeat_data(field: ModeloFormField) -> bool:
     return field.origin is ModeloFormOrigin.IMPORTED and source is not None and source.family is SourceFamily.AEAT_DRAFT
 
 
+_NAMING_CARRY_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
+    }
+)
+"""Carries whose binding names the earlier declarations it reads for the declaration at hand.
+
+The read model names them through each one's temporal window; a window that
+names none for this declaration is a scope-out, so an empty list for one of
+these carries means no earlier declaration applies, never that one was not
+identified.
+"""
+_FROM_EARLIER_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
+)
+"""Origins whose words say where a carried value comes from, so they must not name a declaration that does not exist."""
+
+
+_NO_EARLIER_WORDS_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.earlier_filings_none"
+_NO_EARLIER_EXPLANATION_KEY: Final[str] = "tui.modelo.workbench.help.origin_no_earlier_declaration"
+
+
+def no_earlier_filing(field: ModeloFormField) -> bool:
+    """Whether a value carried from an earlier declaration has none to carry from: no earlier one applies.
+
+    Only a carry that names its declarations can say so; a value it carries
+    is then a zero by rule, not one read from a filing.
+    """
+    source = field.source
+    return (
+        field.origin in _FROM_EARLIER_ORIGINS
+        and source is not None
+        and source.family is SourceFamily.EARLIER_FILINGS
+        and source.source_kind in _NAMING_CARRY_KINDS
+        and not source.earlier_filings
+    )
+
+
+def origin_explanation(field: ModeloFormField) -> str | None:
+    """A sentence explaining an origin its few words cannot, or ``None`` when the words suffice.
+
+    A zero carried where no earlier declaration applies is explained as such,
+    so the filer does not look for a filing that does not exist.
+    """
+    if no_earlier_filing(field) and holds_zero(field.value):
+        return tr(_NO_EARLIER_EXPLANATION_KEY)
+    return None
+
+
 _NAMED_FILING_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {
         ModeloFormOrigin.IMPORTED: "tui.modelo.workbench.origin_source.imported.named_filing",
@@ -517,6 +570,8 @@ def origin_words(
         return tr(_FORM_SET_WORDS_KEY)
     if aeat_imported is not None and language is not None and _from_aeat_data(field):
         return tr(_AEAT_IMPORTED_ON_KEY, date=date_text(aeat_imported, language))
+    if no_earlier_filing(field):
+        return tr(_NO_EARLIER_WORDS_KEY)
     source = field.source
     if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
         return tr(origin_words_key(field.origin))
@@ -648,6 +703,8 @@ __all__ = [
     "field_needs_filer",
     "holds_nothing",
     "holds_zero",
+    "no_earlier_filing",
+    "origin_explanation",
     "origin_glyph",
     "origin_source_words_key",
     "origin_text",

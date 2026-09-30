@@ -18,7 +18,8 @@ is. Two situations ask the filer to acknowledge before
 applying: a declaration that does not record which of its values the filer
 typed, where applying recalculates every value not listed without anything
 typed elsewhere, and a declaration that changed after the changes were staged,
-whose changed boxes are marked.
+whose changed boxes are marked. The acknowledgement reads "[ ]" until it is
+ticked, so an unticked box never looks ticked.
 """
 
 from __future__ import annotations
@@ -39,8 +40,9 @@ from textual.widgets import Button, Checkbox, Static
 from .....application.modelo.source_policy import SourceFamily
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
+from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
-from .header import blocks_marked
+from .issues import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
@@ -205,6 +207,12 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         EditReviewScreen #review-acknowledge {
             margin-top: $cadrumo-stack;
         }
+        EditReviewScreen #review-acknowledge > .toggle--button {
+            color: $foreground;
+        }
+        EditReviewScreen #review-acknowledge.-on > .toggle--button {
+            color: $text-success;
+        }
         EditReviewScreen #review-actions {
             height: auto;
             margin-top: $cadrumo-stack;
@@ -289,7 +297,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 if self._notes:
                     yield Static(self._notes_text(), id="review-findings", markup=False)
             if self._needs_acknowledgement:
-                yield Checkbox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
+                yield TickBox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
             with Horizontal(id="review-actions"):
                 yield Button(tr("tui.modelo.workbench.review.back"), id="review-back")
                 yield Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error")

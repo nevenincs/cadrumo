@@ -358,17 +358,17 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           },
           {
             "action": null,
-            "code": "modelo.work.verify.finding.blocking_rule",
+            "code": "modelo.work.verify.finding.stale_calculation",
             "context": {
               "anchored": "True",
               "changed_count": "0",
               "filing_year": "2026",
-              "kind": "blocking_rule",
+              "kind": "stale_calculation",
               "legal_refs": "ley-37-1992:art-164, rd-1619-2012:art-2",
               "modelo": "303",
               "period": "1T",
@@ -376,7 +376,7 @@
               "severity": "blocking",
               "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "Your records changed after modelo 303 2026, period 1T, was calculated: 0 entries changed and 1 removed. Calculate it again.",
+            "message": "Your records changed after modelo 303 2026, period 1T, was calculated (entries removed: 1). Calculate it again.",
             "severity": "warning"
           }
         ],
@@ -409,7 +409,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -446,12 +446,12 @@
               },
               "casilla_id": null,
               "expectation_id": null,
-              "kind": "blocking_rule",
+              "kind": "stale_calculation",
               "legal_refs": [
                 "ley-37-1992:art-164",
                 "rd-1619-2012:art-2"
               ],
-              "message": "Your records changed after modelo 303 2026, period 1T, was calculated: 0 entries changed and 1 removed. Calculate it again.",
+              "message": "Your records changed after modelo 303 2026, period 1T, was calculated (entries removed: 1). Calculate it again.",
               "severity": "blocking",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -473,7 +473,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "feeea36137095bd3cfcc19702bbd4967818cf5583c4963e11b935d7191b21aba",
+          "verification_report_id": "e181794a8b44d00e43ccecfddea68e9e2c1d3411fb841dba10b3c44ba9f49829",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -568,7 +568,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           }
         ],
@@ -600,7 +600,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",

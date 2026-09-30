@@ -189,23 +189,27 @@ def test_a_rate_the_design_prints_reads_as_set_by_the_form(operation: PinnedAuth
 
 
 @pytest.mark.parametrize(
-    ("value", "direction", "disposition"),
+    ("quarter", "value", "direction", "disposition"),
     [
         # "I (ingreso)": a positive box 19 is paid.
-        (Decimal("1300.00"), ModeloFormResultDirection.TO_PAY, ResultDisposition.INGRESO),
-        # "B (resultado a deducir)": a negative box 19 is deducted in later quarters.
-        (Decimal("-50.00"), ModeloFormResultDirection.TO_CARRY_FORWARD, ResultDisposition.RESULTADO_A_DEDUCIR),
-        # "N (negativa)": a zero result is a nil return.
-        (Decimal("0.00"), ModeloFormResultDirection.NIL, ResultDisposition.NEGATIVA),
+        ("1T", Decimal("1300.00"), ModeloFormResultDirection.TO_PAY, ResultDisposition.INGRESO),
+        # "(5) A deducir": a negative box 19 of quarters 1 to 3 is deducted in later quarters.
+        ("1T", Decimal("-50.00"), ModeloFormResultDirection.TO_DEDUCT_LATER, ResultDisposition.RESULTADO_A_DEDUCIR),
+        # "(6) Negativa": a negative box 19 of the 4th quarter is declared negative and carries nothing.
+        ("4T", Decimal("-50.00"), ModeloFormResultDirection.NEGATIVE, ResultDisposition.NEGATIVA),
+        # "N (negativa)": a zero result is a nil return in any quarter.
+        ("1T", Decimal("0.00"), ModeloFormResultDirection.NIL, ResultDisposition.NEGATIVA),
+        ("4T", Decimal("0.00"), ModeloFormResultDirection.NIL, ResultDisposition.NEGATIVA),
     ],
 )
 def test_the_modelo_130_result_settles_as_its_record_design_declares(
     operation: PinnedAuthorityOperation,
+    quarter: str,
     value: Decimal,
     direction: ModeloFormResultDirection,
     disposition: ResultDisposition,
 ) -> None:
-    result = _form(operation, "130", 2026, "1T", values={"19": value}).result
+    result = _form(operation, "130", 2026, quarter, values={"19": value}).result
 
     assert result is not None
     assert result.box == "19"

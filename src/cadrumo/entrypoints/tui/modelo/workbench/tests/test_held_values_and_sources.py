@@ -28,35 +28,76 @@ from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import absent_value_text
+from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormAeatData,
+    ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
     ModeloFormValueSource,
     ModeloWorkForm,
+    address_key,
+)
+from ......application.modelo.work_form_service import modelo_form_snapshot
+from ......application.modelo.work_review import (
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
 )
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
+from ......core.modelo_work_progress_state import ModeloWorkProgressState
+from ......core.period import Period
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.filing.schema import ModeloValueKind
+from ......domain.modelos.codes import ModeloCode
+from ......domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ....components.host import ScreenHostApp
-from ..casilla_list import CasillaList, CasillaListEntry, grid_value_text, row_value_text, stated_value_text
+from ..casilla_list import (
+    CasillaList,
+    CasillaListEntry,
+    CasillaListNote,
+    grid_value_text,
+    rate_note,
+    row_value_text,
+    stated_value_text,
+    value_text,
+)
 from ..editor import CasillaEditorScreen, EditorOutcome, read_only_reason, where_from_text
-from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, workbench_pages
+from ..grid import CasillaListRecords
+from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
+from ..screen import ModeloWorkbenchScreen
 from ..search import search_entries
-from ..sources import SOURCE_GROUP_MARKS, SourceGroupKind, group_prompt, group_words, source_group_kind, source_groups
+from ..sources import (
+    SOURCE_GROUP_MARKS,
+    SourceGroupKind,
+    SourceState,
+    group_prompt,
+    group_words,
+    reading_text,
+    source_group_kind,
+    source_groups,
+)
 from ..vocabulary import (
     FORM_SET_MARK,
     ORIGIN_MARKS,
     aeat_imported_on,
+    no_earlier_filing,
+    origin_explanation,
     origin_glyph,
     origin_text,
     origin_words,
 )
 from ..wording import date_text
-from .workbench_fixture import FakeActions, fed_by, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -353,7 +394,7 @@ async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_file
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
             can_change = _text(filed, "#editor-can-change-text")
-        correction = tr("tui.modelo.workbench.filed.read_only")
+        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
     assert affects.bottom <= entry.y
     assert can_change == correction
 
@@ -394,3 +435,205 @@ def test_the_filters_narrow_a_page_to_records_calculated_values_or_amounts() -> 
         if isinstance(item, CasillaListEntry)
     }
     assert "07" in staged
+
+
+# ── a carry with no earlier declaration names none ───────────────────────
+
+
+def _carried(*, filings: tuple[ModeloFormEarlierFiling, ...] = ()) -> ModeloFormField:
+    return form_field(
+        "05",
+        "Prior fractional payments",
+        ModeloFormOrigin.IMPORTED,
+        Decimal("0.00"),
+        editability=ModeloFormEditability.LOCKED_SOURCE,
+        bindings=(fed_by("m130.prior", BindingSourceKind.PREVIOUS_FILING),),
+    ).model_copy(
+        update={
+            "source": ModeloFormValueSource(
+                family=SourceFamily.EARLIER_FILINGS,
+                source_kind=BindingSourceKind.PREVIOUS_FILING,
+                earlier_filings=filings,
+            )
+        }
+    )
+
+
+@pytest.mark.parametrize("language", _LANGUAGES)
+def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(language: OutputLanguage) -> None:
+    none = _carried()
+    named = _carried(filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2026, "1T")),))
+    form = _with_fields(synthetic_form(), {"01": none.model_copy(update={"box": "01"})})
+    with override_settings(cadrumo_output_language=language.value):
+        words = tr("tui.modelo.workbench.origin_source.imported.earlier_filings_none")
+        explanation = tr("tui.modelo.workbench.help.origin_no_earlier_declaration")
+        generic = tr("tui.modelo.workbench.origin_source.imported.earlier_filings")
+        assert no_earlier_filing(none) and not no_earlier_filing(named)
+        # The row, help band and panel words say there is none, never "from an earlier declaration".
+        assert origin_words(none) == words != generic
+        assert origin_explanation(none) == explanation
+        assert where_from_text(none) == explanation
+        # Not yet imported, it still names no filing, and explains no zero it does not hold.
+        waiting = none.model_copy(update={"origin": ModeloFormOrigin.NOT_IMPORTED_YET, "value": None})
+        assert origin_words(waiting) == words
+        assert origin_explanation(waiting) is None
+        # A carry that names its declaration keeps naming it.
+        assert "130" in origin_words(named)
+        assert origin_explanation(named) is None
+        # The sources map: the group says there is none, and its source found nothing although it resolved.
+        group = next(item for item in source_groups(form) if item.kind is SourceGroupKind.EARLIER_DECLARATIONS)
+        assert group.none_to_carry
+        heading = str(group_prompt(group, expanded=True))
+        assert tr("tui.modelo.workbench.sources.group.earlier_declarations_none") in heading
+        assert tr("tui.modelo.workbench.sources.group.earlier_declarations") not in heading
+        (reading,) = group.readings
+        assert reading.state is SourceState.NONE_FOUND
+        assert reading_text(reading) == tr(
+            "tui.modelo.workbench.sources.none_found", source=tr(reading.policy.label_key)
+        )
+
+
+def test_the_real_first_quarter_130_carries_from_no_earlier_declaration(operation: PinnedAuthorityOperation) -> None:
+    first = _real_form(operation, "130", "1T")
+    second = _real_form(operation, "130", "2T")
+    prior_first = next(field for field in first.fields() if field.box == "05")
+    prior_second = next(field for field in second.fields() if field.box == "05")
+    assert no_earlier_filing(prior_first)
+    assert not no_earlier_filing(prior_second)
+    with override_settings(cadrumo_output_language="en"):
+        assert origin_words(prior_first) == "No earlier declaration this year"
+        assert "130" in origin_words(prior_second)
+
+
+# ── a rate never shows a bare figure ─────────────────────────────────────
+
+
+def _real_form(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    code: str,
+    year: int = 2026,
+    figure: Decimal | None = None,
+    findings: tuple[ModeloVerificationFinding, ...] = (),
+) -> ModeloWorkForm:
+    """A real form built from the published authority, every rate casilla holding ``figure`` when one is given."""
+    period = Period.from_year_and_code(year, code)
+    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
+    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+    rates = {str(casilla.id) for casilla in snapshot.revision.casillas if str(casilla.data_type) == "ratio"}
+    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
+    if figure is not None:
+        rows = tuple(
+            row.model_copy(update={"value": figure, "realised_kind": ModeloValueKind.LITERAL})
+            if str(row.casilla_id) in rates
+            else row
+            for row in rows
+        )
+    review = ModeloWorkReview(
+        bucket_id="13000000-0000-4000-8000-000000000458",
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        work_unit_id="d" * 64,
+        calculation_revision_id=None,
+        lifecycle_state=None,
+        verification_outcome=None,
+        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+        casillas=rows,
+        findings=findings,
+        blockers=(),
+    )
+    return build_modelo_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=operation.form_layout(modelo, snapshot.revision.id),
+        revision=None,
+        permitted_surface=None,
+        entered_casilla_ids=None,
+        overridden_binding_ids=None,
+        language=OutputLanguage.EN,
+    )
+
+
+@pytest.mark.parametrize(("modelo", "code", "year"), [("303", "1T", 2026), ("390", "0A", 2025)])
+def test_no_rate_cell_on_a_real_layout_shows_a_figure_without_a_percent_sign(
+    operation: PinnedAuthorityOperation, modelo: str, code: str, year: int
+) -> None:
+    checked = 0
+    for figure in (None, Decimal("0.00"), Decimal("21.00"), Decimal("0.21"), Decimal("3.5")):
+        form = _real_form(operation, modelo, code, year, figure)
+        for language in (OutputLanguage.EN, OutputLanguage.ES):
+            with override_settings(cadrumo_output_language=language.value):
+                for page in workbench_pages(form):
+                    for item in page_items(page, staged={}):
+                        if not isinstance(item, CasillaListEntry) or item.field.data_type != "ratio":
+                            continue
+                        shown = [value_text(item, language), row_value_text(item, language)]
+                        if item.row_label is not None:
+                            shown.append(grid_value_text(item, language))
+                        for text in shown:
+                            has_figure = any(character.isdigit() for character in text)
+                            assert not has_figure or "%" in text, (modelo, item.field.box, figure, text)
+                        # A cell that shows no rate says why, rather than leaving a dot unexplained.
+                        if row_value_text(item, language) == "·" and item.field.value is not None:
+                            assert rate_note(item, language) is not None, (modelo, item.field.box, figure)
+                        checked += 1
+    assert checked
+
+
+# ── a finding about a table's records leads to the table ─────────────────
+
+
+@pytest.mark.asyncio
+async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operators_table(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    column = "op.codigo-pais"
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=column,
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        message_facts={"casilla_id": column},
+        legal_refs=("ley-37-1992:art-99",),
+    )
+    form = _real_form(operation, "349", "1T", findings=(finding,))
+    key = ("casilla", column)
+    pages = workbench_pages(form)
+    target = page_of(pages, key)
+    # No field is that column: only the page holding the operators' table shows it.
+    assert target is not None
+    assert not any(address_key(field.address) == key for page in pages for field in page.fields())
+    records = [
+        item
+        for item in page_items(pages[target], staged={})
+        if isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids
+    ]
+    assert records
+    # The screen starts three pages on, away from the table, so landing there is the finding's doing.
+    assert min(3, len(pages) - 1) != target
+    with override_settings(cadrumo_output_language="en"):
+        heading = tr("tui.modelo.workbench.repeating", count=0)
+        unknown = tr("tui.modelo.workbench.grid.records_unknown")
+        screen = ModeloWorkbenchScreen(FakeReader(form=form))
+        async with ScreenHostApp(screen).run_test(size=(120, 36)) as pilot:
+            for _ in range(3):
+                await pilot.pause()
+            casilla_list = screen.query_one(CasillaList)
+            await pilot.press("]", "]", "]")
+            for _ in range(2):
+                await pilot.pause()
+            await pilot.press("i")
+            for _ in range(3):
+                await pilot.pause()
+            await pilot.press("enter")
+            for _ in range(4):
+                await pilot.pause()
+            shown = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
+            listed = casilla_list.items
+    # The list now shows the page holding the table whose column the finding names, and the table is in view.
+    assert any(
+        isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids for item in listed
+    )
+    assert any(heading in line or unknown in line for line in shown), shown

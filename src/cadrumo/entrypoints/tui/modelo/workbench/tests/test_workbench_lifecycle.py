@@ -111,7 +111,7 @@ async def test_an_export_waits_for_verification() -> None:
             notice = _notice(screen)
 
     assert still_workbench
-    assert notice == "Verify the declaration before exporting it [F8]."
+    assert notice == tr("tui.modelo.workbench.export.verify_first", locale="en")
     assert actions.exports == []
 
 

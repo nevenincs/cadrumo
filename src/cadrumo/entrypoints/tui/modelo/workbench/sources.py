@@ -13,7 +13,9 @@ the form and decides nothing else.
 
 A group fed by sources names each source and whether it produced anything; a
 value carried from an earlier declaration names that declaration when the form
-does, and the AEAT data by the day it was imported when the form knows it.
+does, and the AEAT data by the day it was imported when the form knows it. A
+carry with no earlier declaration to read from names none: the group says
+there is none, and its source reads as having found nothing.
 "None found" means the last calculation read that source and it gave
 nothing, which differs from a source not read yet because nothing has been
 calculated, and from a zero the source did give, which the box shows as its
@@ -87,6 +89,7 @@ from .vocabulary import (
     ORIGIN_MARKS,
     WorkbenchMark,
     aeat_imported_on,
+    no_earlier_filing,
 )
 from .wording import date_text, modelo_number, period_words
 
@@ -166,6 +169,7 @@ _FILED_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyTyp
 )
 """Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
 _AEAT_IMPORTED_ON_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
+_NO_EARLIER_GROUP_KEY: Final[str] = "tui.modelo.workbench.sources.group.earlier_declarations_none"
 _STATE_LOCALE_KEYS: Final[Mapping[SourceState, str]] = MappingProxyType(
     {
         SourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
@@ -253,6 +257,13 @@ class SourceGroup:
         """The boxes in this group."""
         return frozenset(address_key(field.address) for field in self.fields)
 
+    @property
+    def none_to_carry(self) -> bool:
+        """Whether this is the earlier-declarations group and none of its boxes has an earlier declaration to read."""
+        return self.kind is SourceGroupKind.EARLIER_DECLARATIONS and all(
+            no_earlier_filing(field) for field in self.fields
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class GoToCasilla:
@@ -320,7 +331,10 @@ def _readings(fields: tuple[ModeloFormField, ...], *, calculated: bool) -> tuple
                 listed.append(field)
     readings = []
     for kind, policy in policies.items():
-        if produced[kind]:
+        if led[kind] and all(no_earlier_filing(field) for field in led[kind]):
+            # A carry with no earlier declaration to read produced nothing, whatever zero it resolved to.
+            state = SourceState.NONE_FOUND
+        elif produced[kind]:
             state = SourceState.PRODUCED
         else:
             state = SourceState.NONE_FOUND if calculated else SourceState.NOT_YET
@@ -455,16 +469,21 @@ def group_words(
     recorded: bool = False,
     imported_on: date | None = None,
     language: OutputLanguage | None = None,
+    none_to_carry: bool = False,
 ) -> str:
     """A group's mark and name; on a declaration ``recorded`` as filed, a group that would ask names what it holds.
 
     Such a group draws no mark, as its boxes' rows draw none there. The AEAT
     data group names the day ``imported_on`` the data was imported, written
-    for ``language``, the active output language when not given.
+    for ``language``, the active output language when not given. An
+    earlier-declarations group with ``none_to_carry`` says there is no earlier
+    declaration to read.
     """
     if recorded and kind in _FILED_GROUP_LOCALE_KEYS:
         return f"  {tr(_FILED_GROUP_LOCALE_KEYS[kind])}"
     glyph = SOURCE_GROUP_MARKS[kind].glyph
+    if kind is SourceGroupKind.EARLIER_DECLARATIONS and none_to_carry:
+        return f"{glyph} {tr(_NO_EARLIER_GROUP_KEY)}"
     if kind is SourceGroupKind.AEAT_DATA and imported_on is not None:
         written = date_text(imported_on, OutputLanguage(output_language()) if language is None else language)
         return f"{glyph} {tr(_AEAT_IMPORTED_ON_KEY, date=written)}"
@@ -472,7 +491,12 @@ def group_words(
 
 
 def _group_words(group: SourceGroup) -> str:
-    return group_words(group.kind, recorded=group.recorded, imported_on=group.imported_on)
+    return group_words(
+        group.kind,
+        recorded=group.recorded,
+        imported_on=group.imported_on,
+        none_to_carry=group.none_to_carry,
+    )
 
 
 def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:

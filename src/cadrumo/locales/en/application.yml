@@ -778,13 +778,13 @@ application:
         consulta de declaraciones presentadas; or CSV cotejo.'
     calculation_summary:
       column_amount: Amount
-      column_casilla: Casilla
+      column_casilla: Box
       column_concept: Concept
       fact_exported_at: Exported
       fact_filing: Filing
       fact_revision_state: Revision state
       fact_taxpayer: Taxpayer
-      fact_verification: Verification
+      fact_verification: Check
       filing_none: Not filed
       filing_recorded: Filing recorded in Cadrumo; the official proof is the AEAT
         receipt
@@ -798,11 +798,11 @@ application:
       identity_reviewed: 'Reviewed software identity: the filing file for this modelo
         carries a registered software identity.'
       legend: 'Values: a figure, zero included, is a calculated value; “no data” means
-        the revision recorded no value for the casilla; “n/a · not applicable” means
-        the registry proves the casilla does not apply to this period.'
+        this calculation recorded no value for the box; “n/a · not applicable” means
+        the official rules show the box does not apply to this period.'
       notice_title: 'Local calculation: not an AEAT receipt'
       page_counter: Page {page} of {pages}
-      section_unnamed: Casillas
+      section_unnamed: Boxes
       signature_meaning: The Cadrumo integrity signature embedded in this PDF attests
         that this profile's key declared that, at the export instant by this installation's
         clock, the named revision, verification report, registry snapshot and authority
@@ -813,23 +813,23 @@ application:
         another channel before trusting it.
       state_borrador: Draft
       state_descartado: Discarded
-      state_presentado: Filed
-      state_presentado_supersedido: Filed, superseded
-      state_verificado_completo: Verified complete
+      state_presentado: Recorded as filed
+      state_presentado_supersedido: Recorded as filed, then replaced
+      state_verificado_completo: Check complete
       subtitle: Filing year {year} · Period {period} · Registry revision {registry_revision}
       title: Calculation summary · Modelo {modelo}
       trace_authority_generation: Registry authority logical generation
       trace_calculation_revision: Calculation revision
       trace_csv_sha256: Embedded CSV SHA-256
       trace_filing_record: Filing record
-      trace_heading: Traceability and integrity
-      trace_ledger_snapshot: Ledger snapshot fingerprint
+      trace_heading: Technical details
+      trace_ledger_snapshot: Records snapshot fingerprint
       trace_none: none
       trace_registry_snapshot: Registry snapshot (modelo · revision · year · period)
       trace_report_sha256: Report SHA-256 (embedded JSON)
       trace_signing_key: Signing key fingerprint (SHA-256)
       trace_software_identity: Software identity grade
-      trace_verification_report: Verification report
+      trace_verification_report: Check report
       trace_work_unit: Work unit
       value_absent: no data
       value_false: 'No'
@@ -838,7 +838,7 @@ application:
       verification_blocked: Blocked
       verification_complete: Complete
       verification_incomplete: Incomplete
-      verification_none: No verification recorded
+      verification_none: No check recorded
     edit:
       parse:
         above_maximum: The largest value allowed is {bound}.
@@ -970,7 +970,7 @@ application:
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
-        for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
+        for modelo {modelo} {filing_year} {period}; {finding_count} issue(s) remain.
       deductible_iva_evidence_missing: 'Deductible IVA ledger rows require linked
         purchase invoice evidence. Link the invoice to the ledger row, then run work
         verify again: verification refuses to complete while a deductible row has
@@ -1087,7 +1087,7 @@ application:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run the ledger preflight for period
-        %{period} and resolve its findings before calculating.'
+        %{period} and resolve its issues before calculating.'
       local_observation_actor_blank: A manual observation override must name the operator
         who records it.
       local_observation_override_missing: Modelo %{modelo} %{filing_year} %{period}
@@ -1235,7 +1235,7 @@ application:
         period %{target_period}, needs the date your activity started.
       cross_period_dependency_unclean: This declaration uses figures from modelo %{source_modelo}
         for %{source_filing_year}, period %{source_period}, and that declaration still
-        has open problems. Resolve them there first.
+        has open issues. Resolve them there first.
       cross_period_first_year_fractional_suppression: Modelo %{source_modelo} for
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.
@@ -1270,8 +1270,8 @@ application:
         EUR. The increase of %{delta_value_eur} EUR is over the %{redeclaration_increase_threshold_eur}
         EUR above which you must declare it again.'
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
-        your modelo 303 returns for the year, and %{source_issue_count} problem(s)
-        with them are still open, so this declaration cannot be completed.
+        your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
+        them are still open, so this declaration cannot be completed.
       iva_selected_scope_evidence_failure: Some VAT entries in this declaration are
         missing supporting documents (%{source_ref_count} with a reference, %{unidentified_source_count}
         without one), so the check cannot finish.
@@ -1280,6 +1280,12 @@ application:
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
         period %{period}, was calculated: %{changed_count} entries changed and %{removed_count}
         removed. Calculate it again.'
+      ledger_snapshot_drift_changed: 'Your records changed after modelo %{modelo}
+        %{filing_year}, period %{period}, was calculated (entries changed: %{changed_count}).
+        Calculate it again.'
+      ledger_snapshot_drift_removed: 'Your records changed after modelo %{modelo}
+        %{filing_year}, period %{period}, was calculated (entries removed: %{removed_count}).
+        Calculate it again.'
       m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,
@@ -1327,7 +1333,7 @@ application:
         not by you, so this value cannot be filled in automatically.
       transaction_evidence_missing_deductible: An expense you deduct has no invoice
         or receipt attached. Attach it to the entry in your records.
-      transaction_evidence_missing_output: A sales invoice on which you charge VAT
+      transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments (percepciones) to anyone, but your records show payments
@@ -1360,7 +1366,6 @@ application:
         max_length: At most {maximum} characters.
         min_length: At least {minimum} characters.
         non_negative: Cannot be negative.
-        none_declared: No limits are declared for this box.
         range: Between {minimum} and {maximum}.
       formula:
         clamp: '{value} kept between {minimum} and {maximum}'
@@ -1401,18 +1406,18 @@ application:
       calculate: Calculate
       export: Export
       export_destination_placeholder: Export destination path
-      file_cancelled: Local filing was cancelled; nothing was recorded.
-      file_confirm_accept: Record local filing
+      file_cancelled: Cancelled. Nothing was recorded.
+      file_confirm_accept: Record filing
       file_confirm_cancel: Cancel
-      file_confirm_message: This records the verified declaration in this application's
-        local filing history. It does not submit anything to AEAT.
-      file_confirm_title: Record a local filing?
+      file_confirm_message: This records the checked declaration as filed in Cadrumo.
+        It does not submit anything to AEAT.
+      file_confirm_title: Record filing?
       refusal:
         calculation_required: Calculate this declaration before continuing.
         edit_unavailable: This declaration offers no editable values right now; recalculate
           or reopen it before editing.
         export_destination_required: Enter an export destination path.
-        verification_required: Verify this calculation before recording a local filing.
+        verification_required: Check this calculation before recording the filing.
     profile_binding:
       errors:
         boolean_value_channel_mismatch: The profile fact for binding {binding_id}
@@ -1471,7 +1476,7 @@ application:
           stop you from filing.
         regroup_income_lines: Correct how the income lines are grouped, then calculate
           again.
-        resolve_303_returns: Resolve the open problems in that year's modelo 303 returns,
+        resolve_303_returns: Resolve the open issues in that year's modelo 303 returns,
           then calculate again.
         retry_or_update: Try again, or update the application.
         review_attested_year: Nothing to do, unless that year you paid exempt income

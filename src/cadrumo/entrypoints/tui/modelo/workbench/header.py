@@ -5,19 +5,23 @@ workbench. The first names the declaration and its deadline, the last day of
 the filing window with the days left, "today" or "passed". The second gives
 the result: the direction in words, the amount and the box that settles it,
 "not calculated yet" before the first calculation, an out-of-date mark while
-changes wait to be applied, and one chip per attention level that has anything
-in it. The third, the stepper and the next action, is :mod:`.progress`'s.
+changes wait to be applied or after the filer's records changed under the
+calculation, and one chip per attention level that has anything in it. The
+third, the stepper and the next action, is :mod:`.progress`'s.
 
 Everything shown is what the read model states. The direction comes from the
 settlement box's declared disposition, never from the sign; when nothing
 declares it the amount keeps its sign under the plain word "Result" and the
 help says why. Money is formatted by the same function as the rows, the
-magnitude where a word carries the direction. A declaration recorded as filed
+magnitude where a word carries the direction: a negative instalment result
+the filer deducts in later quarters says so with its amount, and a negative
+result nothing carries says it settles nothing. A declaration recorded as filed
 shows its result undimmed, no deadline and no attention chips: nothing is left
 to do on it here.
 
-What blocks filing is counted once, by :func:`blocking_count`, so the chip and
-the next-action line never disagree, and every blocker mark is drawn in the
+What blocks filing and what is missing are each counted once, by
+:func:`blocking_count` and :func:`missing_count`, so the chips and the
+next-action line never disagree, and every blocker mark is drawn in the
 theme's error colour, as the rows draw it.
 
 The header never drops the result to fit, and never runs past the screen's
@@ -30,7 +34,6 @@ said in the help), and the out-of-date mark and the chips share the next.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
@@ -52,19 +55,10 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .....core.result_disposition import ResultDisposition
 from .casilla_list import CasillaListEntry, value_text
+from .issues import IssueLevel, blocks_marked, issue_lines
 from .navigator import to_do_counts
-from .vocabulary import (
-    ATTENTION_ROLES,
-    BLOCKS_MARK,
-    CHECK_MARK,
-    CONFIRM_MARK,
-    MISSING_MARK,
-    STALE_MARK,
-    Attention,
-    WorkbenchMark,
-)
+from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 from .wording import date_text, modelo_number, modelo_title, period_words
 
 _MONEY: Final[str] = "money"
@@ -82,27 +76,21 @@ _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = Mapping
         ModeloFormResultDirection.TO_PAY: "tui.modelo.workbench.header.result.to_pay",
         ModeloFormResultDirection.TO_REFUND: "tui.modelo.workbench.header.result.to_refund",
         ModeloFormResultDirection.TO_CARRY_FORWARD: "tui.modelo.workbench.header.result.to_carry_forward",
+        ModeloFormResultDirection.TO_DEDUCT_LATER: "tui.modelo.workbench.header.result.negative_carried",
+        ModeloFormResultDirection.NEGATIVE: "tui.modelo.workbench.header.result.negative",
         ModeloFormResultDirection.NIL: "tui.modelo.workbench.header.result.zero",
         ModeloFormResultDirection.UNKNOWN: "tui.modelo.workbench.header.result.unknown",
     }
 )
 """The words for each direction the read model states; total over the directions."""
 
-_NEGATIVE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.negative"
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending"
 _CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending_short"
 _ELLIPSIS: Final[str] = "…"
 _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
-
-BLOCKS_STYLE: Final[str] = f"${ATTENTION_ROLES[Attention.BLOCKED].value}"
-"""The style every blocker mark is drawn in: the registry's colour role for it, as the active theme resolves it."""
-
-
-def blocks_marked(text: str) -> Content:
-    """``text`` as drawn, every blocker mark in it in the error colour, wherever it stands."""
-    return Content(text).highlight_regex(re.escape(BLOCKS_MARK.glyph), style=BLOCKS_STYLE)
+_RECALCULATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.recalculate"
 
 
 class ChipLevel(StrEnum):
@@ -193,10 +181,8 @@ class AttentionChip:
 
     @property
     def content(self) -> Content:
-        """The chip as drawn: its words, in the error colour when it counts what blocks filing."""
-        if self.level is ChipLevel.BLOCKS:
-            return Content.styled(self.text, BLOCKS_STYLE)
-        return Content(self.text)
+        """The chip as drawn: a blocker's mark in the error colour, as every surface draws it."""
+        return blocks_marked(self.text)
 
 
 def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool) -> str:
@@ -301,11 +287,12 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     box = (result.box if result is not None else None) or (field.box if field is not None else None)
     value = result.value if result is not None else _field_amount(field)
     direction = result.direction if result is not None else ModeloFormResultDirection.UNKNOWN
-    stale = (
-        f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
-        if staged and not recorded
-        else None
-    )
+    stale: str | None = None
+    if staged and not recorded:
+        stale = f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
+    elif form.calculation_out_of_date and not recorded:
+        # The records changed after the calculation, so the figure is no longer current.
+        stale = f"{STALE_MARK.glyph} {tr(_RECALCULATE_LOCALE_KEY, key=_CALCULATE_KEY)}"
     help_lines: list[str] = [tr("tui.modelo.workbench.header.own_calculation")]
     origin = field.origin if field is not None else None
     failed = origin is ModeloFormOrigin.CALCULATION_FAILED
@@ -315,7 +302,6 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or value is None:
         text = tr(_NOT_CALCULATED_LOCALE_KEY, key=_CALCULATE_KEY)
         return ResultView(text=text, short_text=text, stale=stale, failed=False, help=())
-    disposition = result.disposition if result is not None else None
     settled: tuple[str, str] | None = None
     brief: str | None = None
     if result is not None and result.election_may_change:
@@ -323,8 +309,14 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
         full, short = _boxed(list(settled), box)
         brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
         help_lines.append(settled[0])
-    elif disposition is ResultDisposition.RESULTADO_A_DEDUCIR:
-        full, short = _boxed([tr(_NEGATIVE_LOCALE_KEY)], box)
+    elif direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
+        if box:
+            help_lines.append(
+                tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
+            )
+    elif direction is ModeloFormResultDirection.NEGATIVE:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
     elif direction is ModeloFormResultDirection.UNKNOWN:
         settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
         full, short = _boxed(list(settled), box)
@@ -383,6 +375,19 @@ def blocking_count(form: ModeloWorkForm) -> int:
     return len(blocking) + failed
 
 
+def missing_findings(form: ModeloWorkForm) -> int:
+    """How many findings of a missing value name no box the missing boxes already count, such as a record's value."""
+    return sum(1 for line in issue_lines(form) if line.level is IssueLevel.MISSING)
+
+
+def missing_count(form: ModeloWorkForm) -> int:
+    """How many values the declaration still needs: boxes on pages that apply, and findings no such box answers.
+
+    The header's chip and the next-action line both count with this.
+    """
+    return to_do_counts(form).needs_input + missing_findings(form)
+
+
 def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionChip, ...]:
     """One chip per attention level with anything in it, counted from the form; none once recorded.
 
@@ -395,7 +400,7 @@ def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionC
     to_do = to_do_counts(form)
     counts = {
         ChipLevel.BLOCKS: blocking_count(form),
-        ChipLevel.MISSING: to_do.needs_input,
+        ChipLevel.MISSING: missing_count(form),
         ChipLevel.CONFIRM: to_do.default_to_confirm,
         ChipLevel.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
     }
@@ -487,7 +492,6 @@ def result_line_text(form: ModeloWorkForm, language: OutputLanguage, *, staged: 
 
 
 __all__ = [
-    "BLOCKS_STYLE",
     "AttentionChip",
     "ChipLevel",
     "DeadlineTone",
@@ -496,13 +500,14 @@ __all__ = [
     "ResultView",
     "attention_chips",
     "blocking_count",
-    "blocks_marked",
     "deadline_help",
     "deadline_view",
     "fit_identity",
     "fit_result_line",
     "identity_text",
     "is_result_field",
+    "missing_count",
+    "missing_findings",
     "result_line_text",
     "result_view",
 ]

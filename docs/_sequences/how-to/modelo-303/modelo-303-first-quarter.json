@@ -940,7 +940,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           }
         ],
@@ -973,7 +973,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",

@@ -13,18 +13,22 @@ entered, keeps filling in open and withholds both the file for the AEAT and
 recording the filing until the filer confirms it or types another: an
 unentered value in a box the declaration files is exactly the suspicious zero
 that must be surfaced before filing, and the file is what reaches the AEAT.
-Recording a filing only records it in Cadrumo, so a verified declaration is
-offered the file to take to the AEAT first, and recording once it has been
-filed there.
+Anything that blocks filing, whether the check or the calculation found it,
+withholds both in the same way. Recording a filing only records it in Cadrumo,
+so a verified declaration is offered the file to take to the AEAT first, and
+recording the filing once that file exists: the next-action line carries one
+action at a time.
 
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
 not checked, and a verification that found something to resolve sends the
 filer to what it found rather than back to verifying. The count beside a step
-counts what that step resolves: resolving counts what blocks filing, as the
-header's chip does. What a page that does not apply this period holds is never
-to do, so it neither keeps filling in open nor is counted on the next-action
-line. A blocked step is drawn in the error colour, as every blocker mark is.
+counts what that step resolves, as the header's chips count it: filling in
+counts the values still missing, boxes and findings alike, and resolving
+counts what blocks filing and any missing value only a finding names. What a
+page that does not apply this period holds is never to do, so it neither
+keeps filling in open nor is counted on the next-action line. A blocked
+step's mark is drawn in the error colour, as every blocker mark is.
 
 The next-action line always fits one line: it keeps its key and, when the
 words run out of room, shortens the words rather than wrapping.
@@ -44,7 +48,8 @@ from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
-from .header import BLOCKS_STYLE, blocking_count
+from .header import blocking_count, missing_findings
+from .issues import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 from .wording import date_text
@@ -78,6 +83,7 @@ class NextAction(StrEnum):
     RESOLVE = "resolve"
     VERIFY = "verify"
     EXPORT = "export"
+    RECORD = "record"
     RECORDED = "recorded"
 
 
@@ -94,9 +100,6 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
-_STATUS_STYLES: Final[dict[StepStatus, str]] = {StepStatus.PENDING: _PENDING_STYLE, StepStatus.BLOCKED: BLOCKS_STYLE}
-_RECORD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next.record"
-_RECORD_KEY: Final[str] = "F8"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
 _ELLIPSIS: Final[str] = "…"
 
@@ -113,8 +116,9 @@ class StepState:
 class WorkbenchProgress:
     """The journey's state, the next action it offers, and when the filing was recorded, once it is.
 
-    ``assumed`` counts the assumed values on pages that apply this period;
-    while any remains, neither the file for the AEAT nor recording the filing
+    ``assumed`` counts the assumed values on pages that apply this period and
+    ``blocking`` what blocks filing, as the header's chip counts it; while
+    either is not zero, neither the file for the AEAT nor recording the filing
     is offered.
     """
 
@@ -123,15 +127,21 @@ class WorkbenchProgress:
     count: int
     recorded_at: datetime | None = None
     assumed: int = 0
+    blocking: int = 0
 
     @property
     def filing_withheld(self) -> bool:
-        """Whether an assumed value still withholds the file for the AEAT and recording the filing."""
-        return self.assumed > 0
+        """Whether an assumed value or something that blocks filing withholds the file and the recording."""
+        return self.assumed > 0 or self.blocking > 0
 
 
-def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
+def workbench_progress(
+    form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool, exported: bool = False
+) -> WorkbenchProgress:
     """Place a declaration on the filing journey from its form and lifecycle facts.
+
+    ``exported`` says the file for the AEAT was created, so recording the
+    filing is what comes next.
 
     A declaration recorded as filed is done whatever its form still marks. A
     verified one is not sent back to filing in the boxes verification already
@@ -141,6 +151,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     """
     counts = to_do_counts(form)
     to_fill = counts.needs_input
+    unboxed = missing_findings(form)
     assumed = counts.default_to_confirm
     blocked = counts.blocked
     blocking = blocking_count(form)
@@ -149,7 +160,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     done = {
         WorkbenchStep.FILL: clean and filled,
         WorkbenchStep.CALCULATE: clean and form.calculation_revision_id is not None,
-        WorkbenchStep.REVIEW: clean and verified and blocked == 0,
+        WorkbenchStep.REVIEW: clean and (filed or (verified and blocked == 0 and blocking == 0)),
         WorkbenchStep.FILE: clean and filed,
     }
     steps: list[StepState] = []
@@ -169,11 +180,13 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         form,
         staged=staged,
         to_fill=to_fill,
+        unboxed=unboxed,
         assumed=assumed,
         blocked=blocked,
         blocking=blocking,
         verified=verified,
         filed=filed,
+        exported=exported,
     )
     recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
     return WorkbenchProgress(
@@ -182,6 +195,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         count=count,
         recorded_at=recorded_at,
         assumed=0 if filed else assumed,
+        blocking=0 if filed else blocking,
     )
 
 
@@ -190,28 +204,31 @@ def _next(
     *,
     staged: int,
     to_fill: int,
+    unboxed: int,
     assumed: int,
     blocked: int,
     blocking: int,
     verified: bool,
     filed: bool,
+    exported: bool,
 ) -> tuple[NextAction, int]:
     if staged:
         return NextAction.APPLY, staged
     if filed:
         return NextAction.RECORDED, 0
     if to_fill and not verified:
-        return NextAction.FILL, to_fill
+        return NextAction.FILL, to_fill + unboxed
     if assumed:
         return NextAction.CONFIRM, assumed
-    if verified:
-        return NextAction.EXPORT, 0
+    if verified and not blocking:
+        return (NextAction.RECORD if exported else NextAction.EXPORT), 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
-    if blocked or blocking or form.verification in _UNRESOLVED_VERDICTS:
-        # The header's chip counts what blocks filing; boxes the check marked
-        # stand in only when no finding is left to count.
-        return NextAction.RESOLVE, blocking or blocked
+    if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
+        # The header's chips count what blocks filing and the missing values
+        # only a finding names; boxes the check marked stand in only when no
+        # finding is left to count.
+        return NextAction.RESOLVE, (blocking + unboxed) or blocked
     return NextAction.VERIFY, 0
 
 
@@ -222,15 +239,16 @@ def _step_name(step: WorkbenchStep) -> str:
 def stepper_text(progress: WorkbenchProgress) -> Content:
     """Render the steps as one line: a mark and a name each.
 
-    A step not started is dimmed and unmarked, and a blocked step is drawn in
-    the error colour.
+    A step not started is dimmed and unmarked, and a blocked step's mark is
+    drawn in the error colour.
     """
     parts: list[Content] = []
     for state in progress.steps:
         mark = _STATUS_MARKS[state.status]
-        words = _step_name(state.step) if mark is None else f"{mark.glyph} {_step_name(state.step)}"
-        style = _STATUS_STYLES.get(state.status)
-        parts.append(Content(words) if style is None else Content.styled(words, style))
+        if mark is None:
+            parts.append(Content.styled(_step_name(state.step), _PENDING_STYLE))
+        else:
+            parts.append(blocks_marked(f"{mark.glyph} {_step_name(state.step)}"))
     return Content(_STEP_SEPARATOR).join(parts)
 
 
@@ -249,11 +267,6 @@ def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> s
     return tr(f"tui.modelo.workbench.next.{action.value}", count=progress.count)
 
 
-def record_filing_text() -> str:
-    """The second half of a verified declaration's next line: record the filing once it is filed with the AEAT."""
-    return f"{tr(_RECORD_LOCALE_KEY)} [{_RECORD_KEY}]"
-
-
 def _shortened(text: str, room: int) -> str:
     if cell_len(text) <= room:
         return text
@@ -265,19 +278,15 @@ def _shortened(text: str, room: int) -> str:
     return kept.rstrip() + _ELLIPSIS
 
 
-def fit_next_line(action: str, key: str, width: int, *, then: str | None = None) -> str:
-    """The next-action line in at most ``width`` cells: the action, its key, and ``then`` when it fits.
+def fit_next_line(action: str, key: str, width: int) -> str:
+    """The next-action line in at most ``width`` cells: the one action and its key.
 
-    ``then`` is the step after this one, dropped first. The key is never
-    dropped; the action's words are shortened, ending in an ellipsis, before
-    the line is allowed to wrap.
+    The key is never dropped; the action's words are shortened, ending in an
+    ellipsis, before the line is allowed to wrap.
     """
     if not key:
-        full = action if then is None else f"{action} · {then}"
-        return full if cell_len(full) <= width else _shortened(action, width)
+        return action if cell_len(action) <= width else _shortened(action, width)
     line = tr(_NEXT_LINE_LOCALE_KEY, action=action, key=key)
-    if then is not None and cell_len(f"{line} · {then}") <= width:
-        return f"{line} · {then}"
     if cell_len(line) <= width:
         return line
     frame = cell_len(tr(_NEXT_LINE_LOCALE_KEY, action="", key=key))
@@ -292,7 +301,6 @@ __all__ = [
     "WorkbenchStep",
     "fit_next_line",
     "next_action_text",
-    "record_filing_text",
     "stepper_marks",
     "stepper_text",
     "workbench_progress",

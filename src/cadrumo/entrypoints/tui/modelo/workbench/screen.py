@@ -98,7 +98,6 @@ from .header import (
     DeadlineTone,
     ResultLine,
     attention_chips,
-    blocks_marked,
     deadline_help,
     deadline_view,
     fit_identity,
@@ -107,7 +106,7 @@ from .header import (
     result_line_text,
     result_view,
 )
-from .issues import WorkbenchIssuesScreen
+from .issues import WorkbenchIssuesScreen, blocks_marked
 from .keys import describe_bindings
 from .legend import first_open_text, legend_panel, mark_for_glyph, more_text, on_screen_text
 from .navigator import (
@@ -136,9 +135,9 @@ from .ports import (
 )
 from .progress import (
     NextAction,
+    WorkbenchProgress,
     fit_next_line,
     next_action_text,
-    record_filing_text,
     stepper_marks,
     stepper_text,
     workbench_progress,
@@ -155,8 +154,10 @@ from .vocabulary import (
     SOURCE_WORDED_ORIGINS,
     TYPED_EDITABILITIES,
     WorkbenchMark,
+    aeat_imported_on,
     attention_words_key,
     editability_text,
+    origin_explanation,
     origin_text,
 )
 from .wording import does_not_apply_text, wrap_words
@@ -216,6 +217,9 @@ _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.ALL,
     WorkbenchFilter.ATTENTION,
     WorkbenchFilter.MINE,
+    WorkbenchFilter.RECORDS,
+    WorkbenchFilter.CALCULATED,
+    WorkbenchFilter.AMOUNT,
 )
 _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.APPLY: "R",
@@ -225,6 +229,7 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.CALCULATE: "F8",
     NextAction.VERIFY: "F8",
     NextAction.EXPORT: "e",
+    NextAction.RECORD: "F8",
     NextAction.RECORDED: "",
 }
 _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
@@ -261,8 +266,13 @@ _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "s": "tui.modelo.workbench.key.sources",
 }
 _CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
+_EMPTY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty"
+_EMPTY_NEXT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty_next"
+_CRUMB_SEPARATOR: Final[str] = " · "
 _WITHHELD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.confirm_first"
 """Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
+_BLOCKED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.resolve_first"
+"""Why neither is offered while something blocks filing."""
 _LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
 _SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""
@@ -385,14 +395,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         }
         ModeloWorkbenchScreen.-next-below #wb-next {
             margin: $cadrumo-space-0;
-        }
-        ModeloWorkbenchScreen #wb-banner {
-            height: auto;
-            display: none;
-            color: $warning;
-        }
-        ModeloWorkbenchScreen.-recorded #wb-banner {
-            display: block;
         }
         ModeloWorkbenchScreen #wb-notice {
             height: auto;
@@ -537,6 +539,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._cards: dict[tuple[str, OutputLanguage], ModeloCasillaHelpCardV1] = {}
         self._language = OutputLanguage(output_language())
         self._session = WorkbenchEditSession(self._language)
+        self._exported = False
 
     # ── composition ─────────────────────────────────────────────────────
 
@@ -554,7 +557,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             with Horizontal(id="wb-steps", classes="wb-line"):
                 yield Static(id="wb-stepper", markup=False)
                 yield Static(id="wb-next", markup=False)
-            yield Static(tr("tui.modelo.workbench.filed.read_only"), id="wb-banner", markup=False)
             yield Static(id="wb-notice", markup=False)
         with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
@@ -739,7 +741,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
         self._inapplicable = inapplicable_pages(load.form)
-        self.set_class(self.recorded, "-recorded")
         page_ids = [page.id for page in self._pages]
         if previous_page in page_ids:
             self._page_index = page_ids.index(previous_page)
@@ -839,18 +840,15 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         load = self._load
         if load is None:
             return
-        progress = workbench_progress(
-            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
-        )
+        progress = self._progress(load)
         stepper = stepper_text(progress)
         self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
         key = _NEXT_KEYS[progress.next_action]
         action = next_action_text(progress, self._language)
         self._next_words = f"{action} [{key}]" if key else action
-        then = record_filing_text() if progress.next_action is NextAction.EXPORT else None
         width = max(self._width() - _GUTTERS, 1)
-        line = fit_next_line(action, key, width, then=then)
+        line = fit_next_line(action, key, width)
         # Beside the stepper when it fits there, else on a line of its own: never wrapped.
         self.set_class(cell_len(line) > width - cell_len(stepper.plain) - _NEXT_GAP, "-next-below")
         next_widget = self.query_one("#wb-next", Static)
@@ -902,32 +900,65 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             show_attention=not self.recorded,
             not_applying=None if self._applies(self._page_index) else self._not_applying_text(),
         )
+        # The page title line is hidden here, so the crumb names a filter or an order that is not the default.
+        for note in self._listing_notes(name_every_filter=False):
+            line.append(f"{_CRUMB_SEPARATOR}{note}")
         self.query_one("#wb-crumb", Static).update(line)
         self._drawn["navigator"] = marks
+
+    def _listing_notes(self, *, name_every_filter: bool) -> list[str]:
+        """What the list shows beyond its page: an order other than the form's, the filter, and why it is empty.
+
+        Without ``name_every_filter`` the filter is named only when it hides
+        something, as the narrow crumb names it.
+        """
+        notes: list[str] = []
+        if self._sort is not SortOrder.FORM:
+            notes.append(tr(SORT_LOCALE_KEYS[self._sort]))
+        if name_every_filter or self._filter is not WorkbenchFilter.ALL:
+            notes.append(tr(f"tui.modelo.workbench.filter.{self._filter.value}"))
+        empty = self._empty_listing_note()
+        if empty is not None:
+            notes.append(empty)
+        return notes
+
+    def _empty_listing_note(self) -> str | None:
+        """Why the list is empty, naming the next page the filter leaves something on; ``None`` when it shows boxes."""
+        if any(isinstance(item, CasillaListEntry) for item in self.query_one(CasillaList).items):
+            return None
+        if self._sort is SortOrder.FORM:
+            staged = self._session.display()
+            count = len(self._pages)
+            for step in range(1, count):
+                index = (self._page_index + step) % count
+                items = page_items(self._pages[index], staged=staged, mode=self._filter)
+                if any(isinstance(item, CasillaListEntry) for item in items):
+                    return tr(_EMPTY_NEXT_LOCALE_KEY, page=self._pages[index].heading.text)
+        return tr(_EMPTY_LOCALE_KEY)
 
     def _render_page(self) -> None:
         if not self._pages:
             return
         form = self.form
         casilla_list = self.query_one(CasillaList)
-        filter_words = tr(f"tui.modelo.workbench.filter.{self._filter.value}")
         staged = self._session.display()
+        notes: list[str] = []
         if self._sort is SortOrder.FORM:
             page = self._pages[self._page_index]
             title = page.heading.text
-            position = tr("tui.modelo.workbench.page_position", current=self._page_index + 1, total=len(self._pages))
-            notes = [position, filter_words]
+            notes.append(tr("tui.modelo.workbench.page_position", current=self._page_index + 1, total=len(self._pages)))
             if not self._applies(self._page_index):
-                notes.insert(1, self._not_applying_text())
+                notes.append(self._not_applying_text())
             casilla_list.set_items(page_items(page, staged=staged, mode=self._filter), language=self._language)
         else:
             title = tr("tui.modelo.workbench.sort.all_pages")
-            notes = [tr(SORT_LOCALE_KEYS[self._sort]), filter_words]
             items = sorted_items(self._pages, order=self._sort, staged=staged, mode=self._filter)
             casilla_list.set_items(items, language=self._language)
+        notes.extend(self._listing_notes(name_every_filter=True))
         if form is not None and form.layout_provenance is not ModeloFormLayoutProvenance.REVIEWED:
             notes.append(tr(f"tui.modelo.workbench.layout.{form.layout_provenance.value}"))
         self.query_one("#wb-page", Static).update(f"{title}   " + " · ".join(notes))
+        self._render_breadcrumb()
         if casilla_list.highlighted is None:
             self._render_help(None)
 
@@ -1027,6 +1058,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         note = rate_note(entry, self._language)
         if note is not None:
             lines.append(note)
+        explained = origin_explanation(field)
+        if explained is not None:
+            lines.append(explained)
         card = None
         if isinstance(field.address, ModeloFormCasillaAddressV1):
             card = self._cards.get((str(field.address.casilla_id), self._language))
@@ -1066,12 +1100,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """
         field = entry.field
         if self.recorded:
-            parts = [origin_text(field, recorded=True)]
+            parts = [
+                origin_text(field, recorded=True, aeat_imported=aeat_imported_on(self.form), language=self._language)
+            ]
             reason = read_only_reason(field, self._language, recorded=True)
             if reason is not None:
                 parts.append(reason)
             return " · ".join(parts)
-        state = origin_text(field)
+        state = origin_text(field, aeat_imported=aeat_imported_on(self.form), language=self._language)
         attention = entry.attention
         if attention is not None:
             state = f"{state} · {ATTENTION_MARKS[attention].glyph} {tr(attention_words_key(attention))}"
@@ -1253,7 +1289,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if not self._pages:
             return
         entries = search_entries(
-            self._pages, staged=self._session.display(), language=self._language, recorded=self.recorded
+            self._pages,
+            staged=self._session.display(),
+            language=self._language,
+            recorded=self.recorded,
+            aeat_imported=aeat_imported_on(self.form),
         )
         self.add_class("-searching")
         self.query_one(WorkbenchSearchPanel).open(mode, entries)
@@ -1391,6 +1431,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 feeds=() if card is None else card.feeds,
                 status_line=self._status_line(),
                 recorded=recorded,
+                aeat_imported=aeat_imported_on(self.form),
             ),
             partial(self._editor_closed, entry),
         )
@@ -1687,8 +1728,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         load = self._load
         if load is None:
             return
-        staged = len(self._session.changes)
-        progress = workbench_progress(load.form, staged=staged, verified=load.verified, filed=self.recorded)
+        progress = self._progress(load)
         actions = self._actions
         action = progress.next_action
         if action is NextAction.RECORDED:
@@ -1707,6 +1747,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._calculate(actions)
         elif action is NextAction.VERIFY:
             self._run_operation(actions.verify)
+        elif action is NextAction.EXPORT:
+            self.action_export()
         else:
             self._confirm_file(actions.file)
 
@@ -1775,36 +1817,50 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
 
-    def _withheld_for_assumed(self) -> bool:
-        """Refuse the file for the AEAT and recording the filing while an assumed value remains, and offer them.
+    def _progress(self, load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
+        """Where the declaration stands now, with the changes staged here and any file created here."""
+        return workbench_progress(
+            load.form,
+            staged=len(self._session.changes),
+            verified=load.verified,
+            filed=self.recorded,
+            exported=self._exported,
+        )
 
-        Says why on the notice line and opens the confirm step on the next
-        assumed values, where the filer may confirm them or type others.
+    def _filing_withheld(self) -> bool:
+        """Refuse the file for the AEAT and recording the filing while anything withholds them, and say why.
+
+        Something that blocks filing, found by the check or by the
+        calculation, comes first: the notice says so and the issue list opens
+        on it. Otherwise an assumed value is the reason: the notice says so and
+        the confirm step opens on the next assumed values.
         """
         load = self._load
         if load is None:
             return False
-        progress = workbench_progress(
-            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
-        )
+        progress = self._progress(load)
         if not progress.filing_withheld:
             return False
+        if progress.blocking:
+            self.action_issues()
+            self._notice(tr(_BLOCKED_LOCALE_KEY, count=progress.blocking))
+            return True
         if self._may_confirm():
             self._confirm_next()
         self._notice(tr(_WITHHELD_LOCALE_KEY, count=progress.assumed))
         return True
 
     def action_export(self) -> None:
-        """Export the verified declaration where and how the filer asks, once no value is only assumed."""
+        """Export the verified declaration where and how the filer asks, once nothing withholds it."""
         actions = self._actions
         load = self._load
         if actions is None or load is None:
             self._edit_unavailable()
             return
+        if self._filing_withheld():
+            return
         if not load.verified:
             self._notice(tr("tui.modelo.workbench.export.verify_first"))
-            return
-        if self._withheld_for_assumed():
             return
 
         def asked(request: WorkbenchExportRequest | None) -> None:
@@ -1814,7 +1870,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
 
     def _confirm_file(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
-        if self._withheld_for_assumed():
+        if self._filing_withheld():
             return
 
         def closed(confirmed: bool | None) -> None:
@@ -1900,6 +1956,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and actions is not None:
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
         changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
+        # A file created here makes recording the filing the next step, until the values change under it.
+        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID:
+            self._exported = True
+        elif changes_values:
+            self._exported = False
         before = self._load if changes_values else None
         self.run_worker(
             partial(self._read_after, before, yours, definition if reports_itself else None),

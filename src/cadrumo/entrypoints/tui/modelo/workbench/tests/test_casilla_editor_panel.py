@@ -329,14 +329,15 @@ async def test_a_sourced_box_says_where_it_comes_from_what_it_affects_and_where_
             buttons = _labels(editor)
             await pilot.press("enter")
             await _settle(pilot)
+        area = tr("tui.destination.ledger")
 
     assert "De tus registros" in now
     assert where == "Registros de ingresos", "the answer names the source, not the kind of place the Now line names"
-    assert can_change == "Aquí no. Cámbialo en Libro registro y vuelve a calcular."
+    assert can_change == f"Aquí no. Cámbialo en {area} y vuelve a calcular."
     assert affects == "[03]"
-    assert keys == "Teclas: a Abrir Libro registro · Esc Volver"
+    assert keys == f"Teclas: a Abrir {area} · Esc Volver"
     assert not inputs
-    assert buttons == ["Volver", "Abrir Libro registro"]
+    assert buttons == ["Volver", f"Abrir {area}"]
     assert app.return_value is None, "Enter on the focused Back closes without a request"
 
 
@@ -484,9 +485,12 @@ def test_a_recorded_declaration_makes_even_a_typed_box_read_only() -> None:
     with override_settings(cadrumo_output_language="en"):
         typed = read_only_reason(_assumed(), OutputLanguage.EN)
         recorded = read_only_reason(_assumed(), OutputLanguage.EN, recorded=True)
+        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
 
     assert typed is None
-    assert recorded == "No. This declaration is recorded as filed."
+    # A filed declaration's answer says how to change it: by starting a correction.
+    assert recorded == correction
+    assert "correction" in recorded
 
 
 def test_a_replaceable_source_names_the_value_the_filers_value_would_replace() -> None:

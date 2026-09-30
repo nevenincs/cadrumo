@@ -86,8 +86,8 @@ flows:
     namespace_detail: detall {number}
     onboarding:
       continue: Continua
-      done: La configuració és completa. Continua a l'àrea de treball o continua afegint
-        detalls opcionals a sota.
+      done: La configuració és completa. Continua a Inici o continua afegint detalls
+        opcionals a sota.
       finish: Acaba la configuració
       heading: Configura el teu perfil
       intro: Aquí només es demanen les respostes necessàries per preparar les teves
@@ -107,7 +107,7 @@ flows:
       sources_title: Importa dades (opcional)
       step: 'Pas {step} de {steps}: {section}'
       step_finish: 'Pas {step} de {steps}: acabar la configuració'
-      to_workbench: Continua a l'àrea de treball
+      to_workbench: Continua a Inici
     plantilla_media:
       average_workforce: Plantilla mitjana
       list_failed: No s'han pogut llegir els anys declarats. Torna-ho a provar.
@@ -126,7 +126,7 @@ flows:
     rows:
       add: Afegir fila
       remove: Eliminar fila
-      remove_confirm: Voleu eliminar la fila %{row} de la secció %{section}?
+      remove_confirm: Vols eliminar la fila %{row} de la secció %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:
@@ -178,6 +178,7 @@ flows:
           cross_period_dependency_unclean: Dependència anterior no neta
           missing_required_casilla: Falta una casella obligatòria
           reconciliation_mismatch: Discrepància de conciliació
+          stale_calculation: Càlcul desactualitzat
         finding_severity:
           blocking: Bloquejant
           warning: Advertiment

@@ -864,7 +864,7 @@ application:
       fact_filing: Presentación
       fact_revision_state: Estado de la revisión
       fact_taxpayer: Contribuyente
-      fact_verification: Verificación
+      fact_verification: Comprobación
       filing_none: No presentado
       filing_recorded: Presentación registrada en Cadrumo; la prueba oficial es el
         justificante de la AEAT
@@ -879,8 +879,8 @@ application:
       identity_reviewed: 'Identidad de software revisada: el fichero de presentación
         de este modelo lleva una identidad de software registrada.'
       legend: 'Valores: una cifra, incluido un cero, es un valor calculado; «sin dato»
-        indica que la revisión no registró valor para la casilla; «n/a · no aplicable»
-        indica que el registro demuestra que la casilla no aplica a este periodo.'
+        indica que este cálculo no registró valor para la casilla; «n/a · no aplicable»
+        indica que las reglas oficiales muestran que la casilla no aplica a este periodo.'
       notice_title: 'Cálculo local: no es un justificante de la AEAT'
       page_counter: Página {page} de {pages}
       section_unnamed: Casillas
@@ -895,24 +895,24 @@ application:
         clave con una recibida por otro canal antes de confiar en ella.
       state_borrador: Borrador
       state_descartado: Descartado
-      state_presentado: Presentado
-      state_presentado_supersedido: Presentado y sustituido
-      state_verificado_completo: Verificado completo
+      state_presentado: Registrado como presentado
+      state_presentado_supersedido: Registrado como presentado y sustituido
+      state_verificado_completo: Comprobación completa
       subtitle: Ejercicio {year} · Periodo {period} · Revisión del registro {registry_revision}
       title: Resumen del cálculo · Modelo {modelo}
       trace_authority_generation: Generación lógica de la autoridad del registro
       trace_calculation_revision: Revisión del cálculo
       trace_csv_sha256: SHA-256 del CSV adjunto
       trace_filing_record: Registro de presentación
-      trace_heading: Trazabilidad e integridad
-      trace_ledger_snapshot: Huella de la instantánea del libro registro
+      trace_heading: Detalles técnicos
+      trace_ledger_snapshot: Huella de la instantánea de tus registros
       trace_none: ninguno
       trace_registry_snapshot: Instantánea del registro (modelo · revisión · año ·
         periodo)
       trace_report_sha256: SHA-256 del informe (JSON adjunto)
       trace_signing_key: Huella de la clave de firma (SHA-256)
       trace_software_identity: Grado de identidad de software
-      trace_verification_report: Informe de verificación
+      trace_verification_report: Informe de comprobación
       trace_work_unit: Unidad de trabajo
       value_absent: sin dato
       value_false: 'No'
@@ -921,7 +921,7 @@ application:
       verification_blocked: Bloqueada
       verification_complete: Completa
       verification_incomplete: Incompleta
-      verification_none: Sin verificación registrada
+      verification_none: Sin comprobación registrada
     edit:
       parse:
         above_maximum: El valor máximo es {bound}.
@@ -1062,7 +1062,7 @@ application:
         Casillas afectadas: %{computed}.'
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
         está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
-        hallazgo(s).
+        incidencia(s).
       deductible_iva_evidence_missing: 'Las lineas del libro con IVA deducible requieren
         una factura de compra vinculada. Vincula la factura a la linea y vuelve a
         ejecutar work verify: la verificación no se completa mientras una linea deducible
@@ -1331,26 +1331,26 @@ application:
         quarter_4: 4.º trimestre
       value_absent: un valor vacío
     findings:
-      art20_reduccion_possible: La casilla %{rnt_id} recoge %{rnt_value} EUR de rendimiento
-        neto del trabajo, dentro del límite del art. 20 LIRPF, así que la casilla
-        %{reduccion_id} puede darte una reducción que aún no aplicas. Comprueba si
-        te corresponde.
-      art52_reduccion_individual_sublimit_possible: La casilla %{reduccion_id} recoge
+      art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
+        rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
+        la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.
+        Comprueba si te corresponde.
+      art52_reduccion_individual_sublimit_possible: La casilla [%{reduccion_id}] recoge
         %{reduccion_value} EUR de reducción por previsión social, por encima del sublímite
         individual de %{sublimit} EUR del art. 52 LIRPF, y no has declarado aportaciones
         con contribución empresarial. Comprueba que se aplicó el sublímite individual.
-      attribution_received_uncaptured: La casilla %{casilla_id} de %{filing_year}
+      attribution_received_uncaptured: La casilla [%{casilla_id}] de %{filing_year}
         recoge %{casilla_value} EUR de renta atribuida, pero tu perfil no indica de
         dónde sale. Añádela a tu perfil.
       attribution_received_unfolded: Tu perfil recoge %{total_base} EUR de renta atribuida
-        en %{filing_year}, pero la casilla %{casilla_id} no la incluye.
+        en %{filing_year}, pero la casilla [%{casilla_id}] no la incluye.
       cross_casilla_invariant_violated: Dos o más casillas de este modelo no concuerdan
         entre sí como exigen las normas oficiales.
       cross_period_activity_start_missing: El modelo %{target_modelo} de %{target_filing_year},
         periodo %{target_period}, necesita la fecha en que empezó tu actividad.
       cross_period_dependency_unclean: Esta declaración usa datos del modelo %{source_modelo}
         de %{source_filing_year}, periodo %{source_period}, y esa declaración aún
-        tiene problemas pendientes. Resuélvelos allí primero.
+        tiene incidencias pendientes. Resuélvelas allí primero.
       cross_period_first_year_fractional_suppression: El modelo %{source_modelo} de
         %{source_filing_year}, periodo %{source_period}, no te corresponde porque
         tu actividad empezó el %{activity_start_date}.
@@ -1372,20 +1372,20 @@ application:
         es correcto.
       cuota_less_ledger_row_base_missing: Un apunte de tus registros no tiene base
         imponible que declarar.
-      dt12a_reduccion_antiquity_possible: La casilla %{reduccion_id} recoge %{reduccion_value}
+      dt12a_reduccion_antiquity_possible: La casilla [%{reduccion_id}] recoge %{reduccion_value}
         EUR de reducción de la DT 12ª. Comprueba que cumples la condición de antigüedad
         que exige.
-      dt12a_reduccion_possible: La casilla %{ingreso_id} recoge %{ingreso_value} EUR
-        de rendimientos del trabajo, por encima del umbral de la DT 12ª, así que la
-        casilla %{reduccion_id} puede darte una reducción que aún no aplicas. Comprueba
-        si te corresponde.
+      dt12a_reduccion_possible: La casilla [%{ingreso_id}] recoge %{ingreso_value}
+        EUR de rendimientos del trabajo, por encima del umbral de la DT 12ª, así que
+        la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.
+        Comprueba si te corresponde.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el valor
         de uno de tus bienes en el extranjero ha pasado de %{prior_value_eur} EUR
         a %{current_value_eur} EUR. El aumento de %{delta_value_eur} EUR supera los
         %{redeclaration_increase_threshold_eur} EUR a partir de los cuales debes volver
         a declararlo.'
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
-        datos de tus modelos 303 del año, y aún hay %{source_issue_count} problema(s)
+        datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
       iva_selected_scope_evidence_failure: Faltan justificantes en algunos apuntes
         de IVA de esta declaración (%{source_ref_count} con referencia y %{unidentified_source_count}
@@ -1395,6 +1395,12 @@ application:
       ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
         %{modelo} de %{filing_year}, periodo %{period}: %{changed_count} apuntes modificados
         y %{removed_count} eliminados. Vuelve a calcularlo.'
+      ledger_snapshot_drift_changed: 'Tus registros han cambiado desde que se calculó
+        el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes modificados:
+        %{changed_count}). Vuelve a calcularlo.'
+      ledger_snapshot_drift_removed: 'Tus registros han cambiado desde que se calculó
+        el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes eliminados:
+        %{removed_count}). Vuelve a calcularlo.'
       m193_settled_row_amount_authority_unresolved: El modelo 193 de %{filing_year}
         incluye %{settled_prior_accrual_rows} pago(s) de rendimientos devengados en
         un ejercicio anterior. Las normas oficiales no indican cómo declarar su base
@@ -1410,10 +1416,10 @@ application:
       m303_m349_intracom_reconciliation_mismatch: En el periodo %{period_code} de
         %{filing_year}, el total intracomunitario del modelo 303 (%{m303_total} EUR)
         y el total del modelo 349 (%{m349_total} EUR) difieren en %{gap} EUR.
-      madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id}, con
-        un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
+      madrid_nacimiento_adopcion_eligibility_advisory: La casilla [%{casilla_id}],
+        con un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
         de la Comunidad de Madrid por nacimiento o adopción.
-      missing_required_casilla: La casilla obligatoria %{casilla_id} está vacía.
+      missing_required_casilla: La casilla obligatoria [%{casilla_id}] está vacía.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
         el valor %{declared} que indicaste en tu perfil supera el límite de %{threshold}
         de la estimación objetiva (módulos).'
@@ -1421,7 +1427,7 @@ application:
         (OSS), pero no hay justificantes guardados de ellas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
-      pulled_filing_casilla_mismatch: 'Casilla %{casilla_number} del periodo %{period_code}
+      pulled_filing_casilla_mismatch: 'Casilla [%{casilla_number}] del periodo %{period_code}
         de %{filing_year}: el cálculo da %{computed_value}, pero la declaración presentada
         ante la AEAT muestra %{filed_value}.'
       registry_advisory_predicate_fired: Una comprobación integrada ha marcado esta
@@ -1478,7 +1484,6 @@ application:
         max_length: Como máximo {maximum} caracteres.
         min_length: Como mínimo {minimum} caracteres.
         non_negative: No puede ser negativo.
-        none_declared: No hay límites declarados para esta casilla.
         range: Entre {minimum} y {maximum}.
       formula:
         clamp: '{value} entre {minimum} y {maximum}'
@@ -1519,19 +1524,18 @@ application:
       calculate: Calcular
       export: Exportar
       export_destination_placeholder: Ruta de destino de la exportación
-      file_cancelled: Se ha cancelado la presentación local; no se ha registrado nada.
-      file_confirm_accept: Registrar presentación local
+      file_cancelled: Cancelado. No se ha registrado nada.
+      file_confirm_accept: Registrar presentación
       file_confirm_cancel: Cancelar
-      file_confirm_message: Esto registra la declaración verificada en el historial
-        local de esta aplicación. No presenta nada ante la AEAT.
-      file_confirm_title: ¿Registrar una presentación local?
+      file_confirm_message: Esto registra la declaración comprobada como presentada
+        en Cadrumo. No presenta nada ante la AEAT.
+      file_confirm_title: ¿Registrar la presentación?
       refusal:
         calculation_required: Calcula esta declaración antes de continuar.
         edit_unavailable: Esta declaración no ofrece valores editables en este momento;
           vuelva a calcularla o ábrala de nuevo antes de editar.
         export_destination_required: Introduce una ruta de destino para la exportación.
-        verification_required: Verifica este cálculo antes de registrar una presentación
-          local.
+        verification_required: Comprueba este cálculo antes de registrar la presentación.
     profile_binding:
       errors:
         boolean_value_channel_mismatch: El dato del perfil para el vínculo {binding_id}
@@ -1577,9 +1581,9 @@ application:
         correct_and_recalculate: Corrige lo que indica y vuelve a calcular y comprobar.
         declare_asset_again: Vuelve a declarar ese bien en esta declaración.
         enter_box_value: Escribe el valor en la casilla y vuelve a calcular.
-        enter_or_confirm_payments: Registra las percepciones de cada perceptor en
+        enter_or_confirm_payments: Introduce las percepciones de cada perceptor en
           el detalle de este modelo, o confirma cada periodo en tu perfil.
-        enter_payee_payments: Registra las percepciones de cada perceptor en el detalle
+        enter_payee_payments: Introduce las percepciones de cada perceptor en el detalle
           de este modelo y vuelve a comprobar.
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
@@ -1587,7 +1591,7 @@ application:
         read_and_decide: Léelo y decide si te afecta. No te impide presentar.
         regroup_income_lines: Corrige cómo están agrupadas las líneas de renta y vuelve
           a calcular.
-        resolve_303_returns: Resuelve los problemas pendientes de los modelos 303
+        resolve_303_returns: Resuelve las incidencias pendientes de los modelos 303
           de ese año y vuelve a calcular.
         retry_or_update: Inténtalo de nuevo o actualiza la aplicación.
         review_attested_year: No tienes que hacer nada, salvo que ese año pagaras
