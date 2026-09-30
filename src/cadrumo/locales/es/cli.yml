@@ -1407,7 +1407,11 @@ cli:
           aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
           prioridad.
         bucket_id_help: Perfil al que pertenece la unidad de trabajo
-        calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
+        calculate_help: Calcular una nueva revisión draft para la unidad de trabajo.
+          Este comando calcula solo a partir de los valores que se le indican. Los
+          valores introducidos antes en la interfaz de pantalla completa (aeat app
+          tui) no se conservan salvo que se vuelvan a indicar aquí; la interfaz de
+          pantalla completa sí los conserva.
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde.'
         calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero

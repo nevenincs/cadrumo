@@ -1391,6 +1391,9 @@ cli:
           mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységhez tartozó profil.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
+          Ez a parancs kizárólag a neki megadott értékekből számol. A teljes képernyős
+          felületen (aeat app tui) korábban megadott értékek nem maradnak meg, hacsak
+          itt újra meg nem adja őket; a teljes képernyős felület megőrzi őket.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható.'
         calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött,

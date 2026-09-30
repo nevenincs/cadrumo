@@ -1297,7 +1297,10 @@ cli:
           Snapshot binding values are used only for registry bindings marked aeat_prefilled;
           caller --binding overrides always take precedence.
         bucket_id_help: Profile the work unit belongs to
-        calculate_help: Persist a new draft calculation revision for the work unit
+        calculate_help: Persist a new draft calculation revision for the work unit.
+          This command calculates only from the values given to it. Values entered
+          earlier in the full-screen interface (aeat app tui) are not kept unless
+          you give them again here; the full-screen interface keeps them.
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later.'
         calculate_source_advisory: 'ADVISORY: %{message} The calculation completed,

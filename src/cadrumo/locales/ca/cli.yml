@@ -1391,7 +1391,10 @@ cli:
           prioritat.
         bucket_id_help: Perfil al qual pertany la unitat de treball
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
-          de treball
+          de treball. Aquesta ordre calcula només a partir dels valors que se li indiquen.
+          Els valors introduïts abans a la interfície de pantalla completa (aeat app
+          tui) no es conserven tret que es tornin a indicar aquí; la interfície de
+          pantalla completa sí que els conserva.
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard.'
         calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
