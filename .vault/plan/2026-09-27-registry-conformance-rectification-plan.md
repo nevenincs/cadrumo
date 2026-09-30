@@ -8,9 +8,9 @@ related:
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:04a3f7a579ad8cffa0a93f821033069f40c8af3166016fc16b5b3d0b1edabc9b'
+body_hash: 'sha256:8f59e52c2f69de4303575bad57b1ade66b0eeef31b02a97d2dd1dd7291cc7f9d'
 ---
 
 # `registry-conformance-rectification` plan
@@ -106,6 +106,8 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
 - [ ] `P05.S32` - Fix the delta converter defects the rectification lanes found, each with a detector case: uncaused roots judged minimal, constraints carrying both source-ref forms, greedy positions over declared ones, a casilla baseline forcing a family baseline, export layouts folded into whole overrides, and out-of-period windows inherited by storage; `dev/registry/edition_delta_migration.py`.
 - [ ] `P05.S33` - Complete the Modelo 604 2024 and Modelo 308 2019 construct memberships from their designs, and re-measure 604's storage reuse once the converter keeps its layout per edition; `src/cadrumo/_data/registry/aeat/modelos/604/`.
+- [ ] `P05.S34` - Withdraw the 2025 Modelo 220 jurisdiction assignment of boxes 02796 and 02797, which rests on an identical ambiguous caption, and leave the pair unauthored in both editions until an official source states the foral column; `src/cadrumo/_data/registry/aeat/modelos/220/`.
+- [ ] `P05.S35` - Re-review the Modelo 184 2022, 182 2024 and 220 2024 editions against their new members and restamp them through the conformance stamp command; `src/cadrumo/_data/registry/aeat/modelos/`.
 
 ## Parallelization
 

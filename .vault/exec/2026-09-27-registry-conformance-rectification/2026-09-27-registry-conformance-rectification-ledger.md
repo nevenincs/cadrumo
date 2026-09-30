@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d13bb1e8d210b763d4cd8a1ea92460eb56ce5328e21879fb5f66afac5221d673'
+body_hash: 'sha256:15f047cbcb50fbe779b6e98b3b58b9016ba761f7bbb064eb9a5505f0ca595976'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -303,6 +303,31 @@ related:
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/revision.toml`
 - `S11` `verify:` `296 converter proof, apply and no-op; candidate inspection publication_valid for 308, 216, 296, 604; hydration and 1612 locale labels unchanged; pytest 485 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_220_liquidacion_iii_across_editions.py`
+- `S11` `A` `dev/registry/tests/test_modelo_322_490_design_boxes_across_editions.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/490.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/490.yml`
+- `S11` `verify:` `220/322/490 hydration and 4-locale labels unchanged except the intended 220 move; 490 converter proof, apply, no-op; candidate inspection publication_valid; runtime 184 passed, dev 455 passed (10 failures in resident search golden queries)` -> `pass`
 
 ## Notes
 
@@ -321,3 +346,4 @@ related:
 - `S11` 131/2026 explicit root reuses 2025 storage (192 to 10 stated members); late-authoring candidates genuinely new or unevidenced; 2022-2023 modulos engine blocked on legal catalogue entries (orden-hfp-1335-2021 and orden-hfp-1172-2022 DA and Anexo II instructions) owned by P05.S17; 2026 parameter rows close at 2026-12-31 and are restated
 - `S11` 202 INCN binding authored at 2019-2022 (every design prints the 6M flag); cuota-base relation kept at 2025 because its source box sits on DP200014 before 2023; 222/2025 root reuses 2024 non-structural families; its 18% modality row inherits the open 2023 row
 - `S11` 296/2024 root reuses 2023 storage (124 to 56 stated); 308 roots already stored by baseline, stale cause tokens dropped as false; 604 root reason corrected, storage reuse deferred to the converter fix; 216 unchanged; all late-authoring candidates genuinely new
+- `S11` 220 T22009001 34 boxes authored at 2024 (identical 2024 and 2025 layout); 490/2023 root reuses 2022-2t-4t storage (386 to 33 casillas stated); 322 and 490 2022 roots already reused storage, reasons corrected and positions pruned; 220 boxes 02796 and 02797 left for P05.S34
