@@ -137,8 +137,9 @@ the values you enter and the values the official design fixes. Each source
 says what you can do about its values and whether it has produced data, and
 lists the boxes it feeds.
 
-Press Enter to go to a box, or `o` to open the area that owns the source, such
-as the ledger or your profile.
+Press Enter to open a box: the workbench goes to it and, where you may enter,
+replace or restore its value, opens its editor. Press `o` to open the area that
+owns the source, such as the ledger or your profile.
 
 ## Calculate, verify, file and export
 

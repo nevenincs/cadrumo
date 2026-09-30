@@ -10,9 +10,10 @@ missing, overridden or staged value reads exactly as it does on its page. A box
 fed by several sources is listed once, under the first, and noted under the
 others.
 
-The view decides nothing and edits nothing. Enter returns to the workbench on
-the chosen box, where it can be changed if its policy allows; ``o`` asks the
-workbench to open the product area that owns the source, such as the ledger.
+The view decides nothing and edits nothing itself. Enter opens the chosen box:
+the workbench goes to it and, where its policy lets the filer enter, replace or
+restore its value, opens its editor there; ``o`` asks the workbench to open the
+product area that owns the source, such as the ledger.
 """
 
 from __future__ import annotations
@@ -89,7 +90,7 @@ class SourcesListing:
 
 @dataclass(frozen=True, slots=True)
 class GoToCasilla:
-    """The filer chose a box: return to the workbench on it."""
+    """The filer chose a box: return to the workbench on it, in its editor where it can be changed."""
 
     key: AddressKey
 
@@ -267,7 +268,7 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         casilla_list.focus()
 
     def on_casilla_list_edit_requested(self, message: CasillaList.EditRequested) -> None:
-        """Return to the workbench on the chosen box."""
+        """Return to the workbench on the chosen box, to change it there."""
         message.stop()
         self.dismiss(GoToCasilla(message.entry.key))
 

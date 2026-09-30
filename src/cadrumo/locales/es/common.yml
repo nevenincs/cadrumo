@@ -2317,7 +2317,7 @@ tui:
         intro: Cada origen, lo que puedes hacer con sus valores y las casillas que
           alimenta.
         key:
-          go: Ir a la casilla
+          go: Abrir la casilla
           open: Abrir el origen
         listed_above: '{field} · ya aparece arriba'
         no_surface: «{source}» no tiene un apartado propio que abrir.

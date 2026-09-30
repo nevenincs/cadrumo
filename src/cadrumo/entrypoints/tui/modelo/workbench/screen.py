@@ -594,7 +594,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def on_casilla_list_edit_requested(self, message: CasillaList.EditRequested) -> None:
         """Open the editor for the casilla under the cursor, or say why it cannot be edited."""
-        field = message.entry.field
+        self._open_editor(message.entry)
+
+    def _open_editor(self, entry: CasillaListEntry) -> None:
+        field = entry.field
         actions = self._actions
         form = self.form
         if actions is None or form is None or not form.edit_admitted:
@@ -616,7 +619,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 can_clear=probe.stage_clear(field) is None,
                 can_restore=probe.stage_restore(field) is None,
             ),
-            partial(self._editor_closed, message.entry),
+            partial(self._editor_closed, entry),
         )
 
     def _editor_closed(self, entry: CasillaListEntry, decision: EditorDecision | None) -> None:
@@ -663,6 +666,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _sources_closed(self, choice: SourcesChoice | None) -> None:
         if isinstance(choice, GoToCasilla):
             self._go_to(choice.key)
+            entry = self.query_one(CasillaList).highlighted
+            if entry is not None and entry.key == choice.key and entry.field.editability in TYPED_EDITABILITIES:
+                self._open_editor(entry)
         elif isinstance(choice, OpenSourceSurface):
             self._open_surface(choice)
 

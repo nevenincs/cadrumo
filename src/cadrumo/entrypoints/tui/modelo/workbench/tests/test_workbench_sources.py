@@ -21,6 +21,7 @@ from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
 from ..casilla_list import CasillaList
+from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from ..sources import WorkbenchSourcesScreen, source_groups, sources_listing, surface_target
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
@@ -141,3 +142,27 @@ async def test_without_a_way_to_open_other_areas_the_workbench_says_where_to_fin
 
     assert back
     assert notice == "That area cannot be opened from here; open it from the main menu."
+
+
+@pytest.mark.asyncio
+async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workbench() -> None:
+    with override_settings(cadrumo_output_language="es"):
+        screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            await pilot.press("s")
+            await _settle(pilot)
+            sources = app.screen
+            assert isinstance(sources, WorkbenchSourcesScreen)
+            chosen = sources.query_one(CasillaList).highlighted
+            await pilot.press("enter")
+            await _settle(pilot)
+            editor = app.screen
+            landed_on = screen.query_one(CasillaList).highlighted
+
+    assert chosen is not None
+    assert chosen.field.box == "06"
+    assert isinstance(editor, CasillaEditorScreen)
+    assert landed_on is not None
+    assert landed_on.field.box == "06"

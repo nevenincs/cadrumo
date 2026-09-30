@@ -2307,7 +2307,7 @@ tui:
           your_entries: Valors que introdueixes tu
         intro: Cada origen, què pots fer amb els seus valors i les caselles que alimenta.
         key:
-          go: Ves a la casella
+          go: Obre la casella
           open: Obre l'origen
         listed_above: '{field} · ja apareix a dalt'
         no_surface: «{source}» no té un apartat propi per obrir.

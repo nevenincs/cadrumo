@@ -2290,7 +2290,7 @@ tui:
         intro: Minden forrás, hogy mit tehet az értékeivel, és mely rovatokat tölti
           ki.
         key:
-          go: Ugrás a rovatra
+          go: Rovat megnyitása
           open: Forrás megnyitása
         listed_above: '{field} · fentebb már szerepel'
         no_surface: A(z) „{source}” forrásnak nincs megnyitható saját területe.

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 10:40+0200\n"
+"POT-Creation-Date: 2026-09-30 10:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -561,17 +561,20 @@ msgstr ""
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:140
 msgid ""
-"Press Enter to go to a box, or `o` to open the area that owns the source,"
-" such as the ledger or your profile."
+"Press Enter to open a box: the workbench goes to it and, where you may "
+"enter, replace or restore its value, opens its editor. Press `o` to open "
+"the area that owns the source, such as the ledger or your profile."
 msgstr ""
-"Prem Retorn per anar a una casella, o `o` per obrir l'apartat al qual "
-"pertany l'origen, com el llibre registre o el teu perfil."
+"Prem Retorn per obrir una casella: el banc de treball hi va i, on pots "
+"introduir, substituir o restaurar el seu valor, obre el seu editor. Prem "
+"`o` per obrir l'apartat al qual pertany l'origen, com el llibre registre "
+"o el teu perfil."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:143
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:144
 msgid "Calculate, verify, file and export"
 msgstr "Calcular, verificar, presentar i exportar"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:145
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:146
 msgid ""
 "Press F8 to run the step the journey line offers, or `c` to recalculate "
 "at any time once your changes are applied. The values you entered are "
@@ -581,7 +584,7 @@ msgstr ""
 "per recalcular en qualsevol moment quan els teus canvis estiguin "
 "aplicats. Els valors que vas introduir es conserven."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:147
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:148
 msgid ""
 "If the declaration was last calculated outside the workbench, "
 "recalculating asks first, and names the boxes whose values go back to "
@@ -591,7 +594,7 @@ msgstr ""
 "treball, recalcular pregunta abans i anomena les caselles els valors de "
 "les quals tornen al seu origen."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:149
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:150
 msgid ""
 "The first Modelo 303 calculation asks the filing answers its period "
 "needs: whether you file a joint return and, in the last period of the "
@@ -601,7 +604,7 @@ msgstr ""
 "període: si presentes una declaració conjunta i, en l'últim període de "
 "l'any, si estàs exempt del Model 390."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:152
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:153
 msgid ""
 "Verification checks the declaration. A box that stops you from filing "
 "shows ▲, and the navigator counts it on its section. When verification "
@@ -615,13 +618,13 @@ msgstr ""
 " llistar les troballes, primer les que impedeixen presentar, i Retorn per"
 " anar a la casella que anomena una troballa."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:156
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:157
 msgid "Filing asks you to confirm, then records the filing in Cadrumo."
 msgstr ""
 "La presentació et demana confirmació i després registra la presentació a "
 "Cadrumo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:157
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:158
 msgid ""
 "Once the declaration is verified, `e` exports it: choose where to save "
 "it, which file to write and, for Modelo 303, the refund, payment and "
@@ -633,11 +636,11 @@ msgstr ""
 "i domiciliació. Després, el resultat de l'exportació indica el que val el"
 " fitxer."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:161
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:162
 msgid "When something looks unexpected"
 msgstr "Quan alguna cosa no és l'esperada"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:163
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:164
 msgid ""
 "**Default, please confirm.** For a declaration calculated outside the "
 "workbench, Cadrumo cannot tell which values you typed. Enter the value to"
@@ -649,7 +652,7 @@ msgstr ""
 " valor per confirmar-lo; si no, la propera aplicació o recàlcul el torna "
 "al seu origen."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:167
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:168
 msgid ""
 "**fixed.** The official design prints the value of the box; you cannot "
 "change it."
@@ -657,7 +660,7 @@ msgstr ""
 "**fixat.** El disseny oficial imprimeix el valor de la casella; no el "
 "pots canviar."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:169
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:170
 msgid ""
 "**pages arranged automatically.** The pages were arranged from the "
 "official design by Cadrumo and have not been reviewed by hand. Every box "
@@ -667,7 +670,7 @@ msgstr ""
 "partir del disseny oficial i no s'han revisat a mà. Cada casella continua"
 " apareixent exactament una vegada."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:172
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:173
 msgid ""
 "A declaration whose modelo has no arrangement opens with every box in box"
 " number order, for viewing only."

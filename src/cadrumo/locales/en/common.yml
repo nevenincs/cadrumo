@@ -2256,7 +2256,7 @@ tui:
           your_entries: Values you enter
         intro: Each source, what you can do about its values, and the boxes it feeds.
         key:
-          go: Go to box
+          go: Open box
           open: Open source
         listed_above: '{field} · listed above'
         no_surface: “{source}” has no area of its own to open.
