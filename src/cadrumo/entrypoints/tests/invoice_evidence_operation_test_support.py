@@ -68,6 +68,7 @@ def prepare_invoice_evidence_conformance_case(
         profile_id,
         (
             UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.redeme_enrolled", value=False),
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),

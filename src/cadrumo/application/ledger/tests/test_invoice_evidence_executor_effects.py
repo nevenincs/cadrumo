@@ -148,9 +148,12 @@ async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkey
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("save_succeeded", [False, True])
-async def test_off_host_executor_keeps_last_real_save_effect_on_later_refusal(
-    monkeypatch: pytest.MonkeyPatch, save_succeeded: bool
+@pytest.mark.parametrize(
+    ("save_succeeded", "later_refusal"),
+    [(False, False), (True, True), (True, False)],
+)
+async def test_off_host_executor_reports_the_actual_append_effect(
+    monkeypatch: pytest.MonkeyPatch, save_succeeded: bool, later_refusal: bool
 ) -> None:
     recorder = _Recorder()
     hooks: list[tuple[Callable[[], None] | None, Callable[[bool], None] | None]] = []
@@ -174,17 +177,23 @@ async def test_off_host_executor_keeps_last_real_save_effect_on_later_refusal(
         recorder.timeline.append(("secure-save", save_succeeded))
         after(save_succeeded)
         assert not recorder.active
-        if save_succeeded:
+        if later_refusal:
             recorder.timeline.append(("later-reader-refusal", True))
             raise RuntimeError("reader refused after the consent append")
-        recorder.timeline.append(("dispatch-refused", True))
-        raise RuntimeError("consent append failed before dispatch")
+        if not save_succeeded:
+            recorder.timeline.append(("dispatch-refused", True))
+            raise RuntimeError("consent append failed before dispatch")
+        recorder.timeline.append(("reader", "off-host"))
+        return InvoiceDraft(invoice_number="A-2")
 
     monkeypatch.setattr(operation, "extract_invoice_draft_from_evidence", read)
-    with pytest.raises(RuntimeError, match=r"reader refused|consent append failed"):
-        await operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks)).execute(
-            _request(off_host=True), _context(recorder)
-        )
+    executor = operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks))
+    if later_refusal or not save_succeeded:
+        with pytest.raises(RuntimeError, match=r"reader refused|consent append failed"):
+            await executor.execute(_request(off_host=True), _context(recorder))
+    else:
+        reference = await executor.execute(_request(off_host=True), _context(recorder))
+        assert reference == "b" * 64
 
     expected = [OperationEffect.NONE, OperationEffect.UNKNOWN]
     if save_succeeded:
@@ -198,4 +207,9 @@ async def test_off_host_executor_keeps_last_real_save_effect_on_later_refusal(
     assert recorder.timeline.index(("mint", _SOURCE)) < recorder.timeline.index(
         ("enter", next(value for kind, value in recorder.timeline if kind == "enter"))
     )
-    assert recorder.result is None
+    if later_refusal or not save_succeeded:
+        assert recorder.result is None
+    else:
+        assert isinstance(recorder.result, operation.LedgerEvidenceExtractExecutionResult)
+        assert recorder.result.result.consent_audit_effect is OperationEffect.UPDATED
+        assert recorder.result.result.draft.invoice_number == "A-2"

@@ -174,7 +174,7 @@ cli:
           adatokat ki kell nyerni (a --evidence-id alternatívája).
         extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
           az adatokat ki kell nyerni.
-        extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
+        extract_help: A számla PDF-mezőinek helyi kinyerése áttekinthető
           piszkozatba.
         extract_off_host_needs_content_address: Ennek a bizonylatnak nincs tartalmi
           lenyomata, ezért a gépen kívüli beolvasás nem rögzíthető az elküldendő bájtokhoz

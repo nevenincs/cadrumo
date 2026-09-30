@@ -460,56 +460,38 @@ def evidence_extract(
     off_host_provider: LLMProvider | None = None,
     acknowledge_off_host: bool = False,
 ) -> None:
-    """Run the on-host PDF text-layer extractor over stored evidence bytes.
-
-    Reads the evidence or attachment bytes from secure storage into memory,
-    runs the grounded on-host heuristics (never a cloud call, never a
-    temp file: ``sensitive-financial-data-secure-storage-only``), and
-    prints the best-effort :class:`InvoiceDraft` for operator review.
-    Every field the heuristics could not ground in the extracted text is
-    ``null`` rather than guessed. Extracting never mints or persists an
-    invoice; confirmation is a separate operator action.
-    """
+    """Submit one evidence extraction and print its source-bound review digests."""
     _require_exact_evidence_reference(evidence_id, attachment_id)
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=transaction_repository.bucket_id)
-    consent_token = _mint_extract_consent(
-        bucket_id=transaction_repository.bucket_id,
+    _validate_extract_consent_options(
         evidence_id=evidence_id,
         off_host_provider=off_host_provider,
         acknowledged=acknowledge_off_host,
-        evidence_ports=evidence_ports,
     )
-    with bundled_indexed_authority().operation() as operation:
-        period = default_invoice_extraction_period()
-        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-        draft = _extract_evidence_draft(
-            bucket_id=transaction_repository.bucket_id,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            off_host_provider=off_host_provider,
-            consent_token=consent_token,
-            evidence_ports=evidence_ports,
-            operation=operation,
-            legends=legends,
-        )
-    reviewed_reference = evidence_id or attachment_id or ""
-    emit_envelope(
-        ctx,
-        command="ledger.evidence.extract",
-        result=EvidenceExtractResult.model_validate(
-            _evidence_extract_payload(
-                bucket_id=transaction_repository.bucket_id,
-                evidence_id=evidence_id,
-                attachment_id=attachment_id,
-                off_host_provider=off_host_provider,
-                consent_token=consent_token,
-                draft=draft,
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
+    profile_id = UUID(transaction_repository.bucket_id)
+    request = LedgerEvidenceExtractRequest(
+        profile_id=profile_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        off_host_provider=off_host_provider,
+        acknowledge_off_host=acknowledge_off_host,
+    )
+    completed = submit_invoice_evidence_extract(ctx, request)
+    projection = completed.projection
+
+    def render() -> None:
+        reference = projection.evidence_id or projection.attachment_id or ""
+        emit_envelope(
+            ctx,
+            command="ledger.evidence.extract",
+            result=EvidenceExtractResult.model_validate(
+                _evidence_extract_payload(bucket_id=transaction_repository.bucket_id, projection=projection),
             ),
-        ),
-        lines=_evidence_extract_lines(transaction_repository.bucket_id, evidence_id, attachment_id, draft),
-        notices=_evidence_extract_notices(reviewed_reference, draft),
-    )
+            lines=_evidence_extract_lines(transaction_repository.bucket_id, projection),
+            notices=_evidence_extract_notices(reference, projection.draft),
+        )
+
+    _present_registered_evidence_operation(completed, render)
 
 
 def evidence_confirm(
