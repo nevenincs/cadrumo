@@ -245,7 +245,7 @@ class ModeloFormValueSource(_FormModel):
 class ModeloFormRateUnit(StrEnum):
     """The unit a rate is stated in."""
 
-    #: A fraction of one: ``0.04`` is four per cent.
+    #: Stated as a fraction of one, so ``0.04`` is four per cent.
     FRACTION = "fraction"
 
 
