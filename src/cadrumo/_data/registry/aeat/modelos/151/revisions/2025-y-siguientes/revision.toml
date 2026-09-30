@@ -7626,11 +7626,23 @@ fields = {applicable_reason = "Modelo 151: la persona física residente que ha o
 sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-2"]}
 sequence_removals = {legal_refs = [2]}
 
+# The export link is the one the 2015-2022 edition authors; from ejercicio 2023
+# it cites the successor design and the orden that approves the successor model.
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "application_links"
 selector = {revision = "2015-2022", id = "modelo-151-export"}
-sequence_additions = {source_refs = ["aeat-dr-151-2023"]}
-sequence_removals = {source_refs = [0]}
+sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-1"], source_refs = ["aeat-dr-151-2023"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+
+# The annual filing schedule is the one the 2015-2022 edition authors. Orden
+# HFP/1338/2023 arts. 2 and 3 restate its obligados and its plazo by the same
+# remission to the general IRPF plazo, so from ejercicio 2023 only the governing
+# articles change; the annual shape, period and profile condition are inherited.
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2015-2022", id = "modelo-151-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-2", "orden-hfp-1338-2023:art-3"]}
+sequence_removals = {legal_refs = [2, 3]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "constructs"
@@ -7660,3 +7672,7 @@ sequence_order = {casillas = [0, 4, 1, 5, 2, 3]}
 [[revisions."2025-y-siguientes".family_removals]]
 family = "verification_predicates"
 selector = {revision = "2015-2022", id = "implies-nonzero:base-liquidable-ahorro-implica-cuota-del-ahorro"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2015-2022", id = "modelo-151-2022-0a"}

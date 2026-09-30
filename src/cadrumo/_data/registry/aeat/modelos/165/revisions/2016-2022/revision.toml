@@ -79,14 +79,6 @@ reason = "Verification predicates express conditional checks over verification e
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
 
-[revisions."2016-2022".family_dispositions.deadline_windows]
-reason = """
-The cited Orden establishes January presentation, but no exercise-specific
-calendar windows for 2016-2022 are bundled. A date is not inferred from a
-recurring legal month; this revision therefore declares none."""
-legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure"]
-
 [[revisions."2016-2022".lineage_attestations]]
 family = "casillas"
 continuidad_id = "filing-year"

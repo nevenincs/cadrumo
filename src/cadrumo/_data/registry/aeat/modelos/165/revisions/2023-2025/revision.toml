@@ -48,3 +48,7 @@ selector = {revision = "2016-2022", id = "modelo-165-informative"}
 fields = {workbook_parity_refs = ["modelo-165-orden-static-layout"]}
 sequence_additions = {source_refs = ["aeat-dr-165-2026"]}
 sequence_removals = {source_refs = [2]}
+
+[[revisions."2023-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2016-2022", id = "modelo-165-2022-0a"}

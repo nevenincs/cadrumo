@@ -102,6 +102,37 @@ required_text = [
     "71.880",
 ]
 
+[legal."ley-35-2006:art-93-ahorro-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-93-2021.html#a93"
+document_id = "BOE-A-2006-20764"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn=1#a93"
+published_at = 2006-11-29
+effective_from = 2021-01-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-review"
+corpus_tier = "provision_excerpt"
+notes = """\
+LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen especial de impatriados, redacción en vigor \
+del 1-1-2021 al 31-12-2022: la fija el art. 61 de la Ley 11/2020, de 30 de diciembre (BOE-A-2020-17339), \
+que modifica las letras e) y f) del apartado 2 con efectos desde 1 de enero de 2021, y la sustituye la \
+redacción de la Ley 31/2022 con efectos 1-1-2023 (ley-35-2006:art-93-ahorro-2023). Es la redacción que \
+rige el ejercicio 2022. Cuatro tramos: 19% hasta 6.000, 21% hasta 50.000 (cuota 1.140), 23% hasta \
+200.000 (10.380), 26% en adelante (44.880). Capturada del texto consolidado en la versión que el \
+selector de BOE marca para 2020-12-31 (act.php?p=20201231); el API de legislación consolidada \
+(texto/bloque/a93) sirve esa misma redacción con fecha_vigencia 20210101 y la siguiente con 20230101."""
+required_text = [
+    "Se modifican las letras e) y f) del apartado 2, con efectos desde 1 de enero de 2021, por el art. 61 de la Ley 11/2020",
+    "200.000,00",
+    "44.880",
+    "En adelante",
+]
+
 [legal."rd-439-2007:art-113"]
 evidence_tier = "legal_authority"
 authority = "boe"
