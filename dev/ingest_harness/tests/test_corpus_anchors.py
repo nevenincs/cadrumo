@@ -5,12 +5,13 @@ written down. They are asserted rather than trusted because stale counts (34
 transcriptions, 8 twins, 26 vision-path, 36 category-scorable) reached a decided
 record before anyone re-derived them, and prose cannot notice when it goes stale.
 
-The cases that read the corpus carry ``external_tool`` beside ``integration``
-because the corpus is EXTERNAL and read-only and no CI runner holds it, so every
-ordinary lane holds them out and ``just test-ingest-corpus`` enrols them. That is
-a lane, not a skip: the assertions run wherever the corpus exists and fail
-honestly if it is present but changed. Report collected-versus-deselected counts
-when quoting a run of this file.
+The cases that read the corpus carry ``private_ingest_corpus`` beside
+``integration`` because the corpus is EXTERNAL and read-only and no CI runner
+holds it, so every ordinary lane holds them out and ``just test-ingest-corpus``
+enrols them. That is a lane, not a skip: the assertions run wherever the
+configured corpus exists, and fail honestly if it is unconfigured, absent, or
+present but changed. Report collected-versus-deselected counts when quoting a
+run of this file.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ import pytest
 
 from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT, normalise_whitespace
 from .._colocation_ceiling import CeilingOutcome, colocation_ceiling
-from .._key import CORPUS_ROOT, EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, load_corpus_key
+from .._key import EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, corpus_root, load_corpus_key
 from .._reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_with_key_context
 
 _MINIMUM_CORPUS_DOCUMENTS = 200
@@ -35,14 +36,14 @@ of reporting a clean partition over the remnant.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_pinned_key_is_the_one_every_figure_is_quoted_against(key: CorpusKey) -> None:
     """Hash and length together, so a truncated read fails as a length mismatch."""
     assert key.sha256 == EXPECTED_KEY_SHA256
     assert key.byte_length == EXPECTED_KEY_BYTES
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_internal_schema_version_is_the_stale_value_and_is_not_an_identifier(key: CorpusKey) -> None:
     """Pins the reason the harness prints it only as a do-not-cite.
 
@@ -61,7 +62,7 @@ def test_a_key_that_is_not_the_pinned_one_is_refused(tmp_path) -> None:  # type:
         load_corpus_key(impostor)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_every_denominator_matches_the_value_measured_from_the_key(key: CorpusKey) -> None:
     """The corrected denominators, each re-derived rather than inherited."""
     counts = key.denominators
@@ -75,7 +76,7 @@ def test_every_denominator_matches_the_value_measured_from_the_key(key: CorpusKe
     assert counts.category_scorable == 59
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_documents_without_authored_truth_are_a_corpus_wide_hazard(key: CorpusKey) -> None:
     """81 documents, not the nine a single incident happened to involve.
 
@@ -86,7 +87,7 @@ def test_the_documents_without_authored_truth_are_a_corpus_wide_hazard(key: Corp
     assert key.denominators.fabrication_trap_slots == 1364
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_naive_scorability_filter_would_lose_the_generated_set(key: CorpusKey) -> None:
     """Proves the trap is real on the REAL key, not only on a synthetic one.
 
@@ -101,7 +102,7 @@ def test_the_naive_scorability_filter_would_lose_the_generated_set(key: CorpusKe
     assert len(generated_ids & key.category_scorable_ids) == 30, "the intrinsic subset a flag lookup drops"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_control_document_is_two_entries_and_both_are_addressable(key: CorpusKey) -> None:
     """Any claim about the poisoned control must name WHICH entry it is about."""
     matching = [row.doc_id for row in key.documents if "COM-2026-0005" in row.doc_id]
@@ -114,7 +115,7 @@ def test_the_control_document_is_two_entries_and_both_are_addressable(key: Corpu
         assert key.document(doc_id).doc_id == doc_id
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_every_twin_resolves_to_a_document_that_exists(key: CorpusKey) -> None:
     """The prose link is verified, so a reworded note fails rather than drops a pair."""
     known = {row.doc_id for row in key.documents}
@@ -126,7 +127,7 @@ def test_every_twin_resolves_to_a_document_that_exists(key: CorpusKey) -> None:
         assert key.document(pair.twin_doc_id).is_vision_path, "a vision twin must reach the pipeline as pixels"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_optimism_bias_caveat_is_verbatim_from_the_corpus_gap_register() -> None:
     """The caveat text must still occur in the corpus's own file.
 
@@ -135,12 +136,12 @@ def test_the_optimism_bias_caveat_is_verbatim_from_the_corpus_gap_register() -> 
     both sides because the source is hard-wrapped prose and the column width is
     not the property being pinned.
     """
-    gaps = normalise_whitespace((CORPUS_ROOT / "GAPS.md").read_text(encoding="utf-8"))
+    gaps = normalise_whitespace((corpus_root() / "GAPS.md").read_text(encoding="utf-8"))
 
     assert normalise_whitespace(SPANISH_OPTIMISM_BIAS_CAVEAT) in gaps
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_reference_point_names_a_real_document_and_states_its_confounds(key: CorpusKey) -> None:
     """The upper reference is recorded with every condition that qualifies it."""
     document = key.document(SONNET_4_6_REC_DOM_IMG_008.doc_id)
@@ -152,7 +153,7 @@ def test_the_reference_point_names_a_real_document_and_states_its_confounds(key:
     assert "field-form contract" in joined, "the prompt/grounding confound must travel with the figure"
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_reference_points_reported_denominator_is_not_the_keys_own(key: CorpusKey) -> None:
     """The '7 of 8' subset is not defined by the corpus, and the record says so.
 
@@ -169,7 +170,7 @@ def test_the_reference_points_reported_denominator_is_not_the_keys_own(key: Corp
     assert "DENOMINATOR IS NOT THE KEY'S" in " ".join(SONNET_4_6_REC_DOM_IMG_008.caveats)
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_reference_point_inherits_the_spanish_caveat_from_the_key(key: CorpusKey) -> None:
     """Its document is a Spanish photograph, so the optimism bias applies to it too."""
     ((point, document_caveats),) = reference_points_with_key_context(key)
@@ -178,7 +179,7 @@ def test_the_reference_point_inherits_the_spanish_caveat_from_the_key(key: Corpu
     assert SPANISH_OPTIMISM_BIAS_CAVEAT in document_caveats
 
 
-@pytest.mark.external_tool
+@pytest.mark.private_ingest_corpus
 def test_the_colocation_ceiling_is_measurable_and_every_failure_is_explained() -> None:
     """The party-attribution ceiling over the corpus, asserted as a property not a rate.
 
@@ -207,7 +208,7 @@ def test_the_colocation_ceiling_is_measurable_and_every_failure_is_explained() -
     red under both of those mutations. Read the two together or neither means
     much.
     """
-    documents = json.loads((CORPUS_ROOT / "GROUND_TRUTH.json").read_text(encoding="utf-8"))["documents"]
+    documents = json.loads((corpus_root() / "GROUND_TRUTH.json").read_text(encoding="utf-8"))["documents"]
 
     # The partition assertion below compares two figures that both come out of
     # one `colocation_ceiling` call, so a corpus that quietly shrank moves both

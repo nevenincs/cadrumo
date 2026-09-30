@@ -26,7 +26,7 @@ from .._key import CorpusKey, IngestCorpusDocument
 from .._result import EngineRoute, HarnessModelTier, HarnessRefusalError, PipelineStage, Scored
 from .._runner import HarnessReport
 
-pytestmark = [pytest.mark.integration, pytest.mark.external_tool, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.private_ingest_corpus, pytest.mark.hex_core]
 
 
 def _structured_documents(key: CorpusKey) -> list[IngestCorpusDocument]:

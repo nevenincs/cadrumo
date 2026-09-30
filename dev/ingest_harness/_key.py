@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from collections.abc import Mapping
 from enum import StrEnum
@@ -45,23 +46,37 @@ from typing import Any, Final, Self
 from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
-    "CORPUS_ROOT",
     "EXPECTED_KEY_BYTES",
     "EXPECTED_KEY_SHA256",
+    "INGEST_CORPUS_ROOT_ENV",
     "CorpusKey",
     "CorpusKeyError",
+    "CorpusRootError",
     "Denominators",
     "IngestCorpusDocument",
     "ProvenanceClass",
     "TwinPair",
+    "corpus_root",
     "load_corpus_key",
 ]
 
 _STRICT = ConfigDict(frozen=True, strict=True, extra="forbid")
 
-CORPUS_ROOT: Final = Path(r"Y:\code\llm-invoice-smoke\corpus")
-"""The external corpus tree. Read-only: it is not a git repository, so a delete
-there is unrecoverable and nothing in this package ever opens it for writing."""
+INGEST_CORPUS_ROOT_ENV: Final = "CADRUMO_INGEST_CORPUS_ROOT"
+"""Names the external corpus tree: the directory holding ``GROUND_TRUTH.json``.
+
+There is deliberately no default. The corpus is operator data outside the
+checkout, so any built-in path names one machine's drive and resolves to nothing
+anywhere else. Set it in the environment or in ``env/.env``, which the root
+conftest bridges into the test process. The tree is read-only: it is not a git
+repository, so a delete there is unrecoverable and nothing in this package ever
+opens it for writing."""
+
+_ENROLLING_RECIPE: Final = "just test-ingest-corpus"
+"""The one recipe that selects the tests reading the corpus."""
+
+_KEY_NAME: Final = "GROUND_TRUTH.json"
+"""The corpus key's file name at the corpus root."""
 
 EXPECTED_KEY_SHA256: Final = "e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593"
 """The v5 key's content hash. The only identifier a figure may be quoted with."""
@@ -91,6 +106,37 @@ _VISION_PATH_FORMATS: Final = frozenset({"image_photo", "pdf_scan"})
 
 class CorpusKeyError(RuntimeError):
     """The key is not the pinned one, or contradicts itself."""
+
+
+class CorpusRootError(RuntimeError):
+    """The corpus root is not configured, or does not name a directory."""
+
+
+def corpus_root() -> Path:
+    """Return the configured external corpus tree, refusing when there is none.
+
+    Raises rather than returning a fallback, so a corpus-reading test run on a
+    machine that lacks the corpus fails with the remedy instead of skipping or
+    reading whatever happens to sit at a guessed path.
+
+    Raises:
+        CorpusRootError: When :data:`INGEST_CORPUS_ROOT_ENV` is unset or blank,
+            or names a location that holds no corpus key.
+    """
+    configured = os.environ.get(INGEST_CORPUS_ROOT_ENV, "").strip()
+    if not configured:
+        raise CorpusRootError(
+            f"{INGEST_CORPUS_ROOT_ENV} is not set. Point it at the read-only ingestion measurement "
+            f"corpus -- the directory holding {_KEY_NAME} -- in the environment or in env/.env, "
+            f"then run `{_ENROLLING_RECIPE}`."
+        )
+    root = Path(configured)
+    if not (root / _KEY_NAME).is_file():
+        raise CorpusRootError(
+            f"{INGEST_CORPUS_ROOT_ENV} names {root}, which holds no {_KEY_NAME}. Point it at the "
+            f"read-only ingestion measurement corpus -- the directory holding {_KEY_NAME}."
+        )
+    return root
 
 
 class ProvenanceClass(StrEnum):
@@ -357,16 +403,22 @@ def load_corpus_key(path: Path | None = None) -> CorpusKey:
     The hash is computed before the payload is parsed, so an unpinned key cannot
     reach any downstream derivation at all.
 
+    Args:
+        path: The key file to read; the configured :func:`corpus_root`'s
+            ``GROUND_TRUTH.json`` when omitted.
+
     Raises:
+        CorpusRootError: When no path is given and the corpus root is not configured.
         CorpusKeyError: When the file's hash or length is not the pinned one.
     """
-    key_path = path if path is not None else CORPUS_ROOT / "GROUND_TRUTH.json"
+    key_path = path if path is not None else corpus_root() / _KEY_NAME
     raw = key_path.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     if digest != EXPECTED_KEY_SHA256 or len(raw) != EXPECTED_KEY_BYTES:
         raise CorpusKeyError(
             "corpus key is not the pinned v5 key; every figure in this campaign is quoted "
             f"against sha256 {EXPECTED_KEY_SHA256} ({EXPECTED_KEY_BYTES} bytes), but "
-            f"{key_path} has sha256 {digest} ({len(raw)} bytes)",
+            f"{key_path} has sha256 {digest} ({len(raw)} bytes). Point {INGEST_CORPUS_ROOT_ENV} "
+            "at the corpus that carries the pinned key.",
         )
     return CorpusKey.from_payload(json.loads(raw.decode("utf-8")), sha256=digest, byte_length=len(raw))

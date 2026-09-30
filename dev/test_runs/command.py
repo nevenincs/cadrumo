@@ -10,6 +10,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -28,6 +29,7 @@ _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 _LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
 _INTERRUPTED_EXIT_STATUS: Final[int] = 130
 _CHILD_STOP_TIMEOUT_SECONDS: Final[float] = 5.0
+_STREAM_CHUNK_BYTES: Final[int] = 64 * 1024
 _DIAGNOSTIC_RE: Final[re.Pattern[str]] = re.compile(r"^\[([A-Z][A-Z0-9_]*)\]")
 _DIAGNOSTIC_DETAIL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\[(?P<code>[A-Z][A-Z0-9_]*)\] (?P<path>.+):(?P<line>\d+): (?P<message>.*)$"
@@ -1277,6 +1279,31 @@ async def _stop_interrupted_process(process: asyncio.subprocess.Process) -> None
         pass
 
 
+async def _stream_lines(stream: asyncio.StreamReader) -> AsyncIterator[bytes]:
+    """Yield every line of ``stream`` whole, however long it is.
+
+    ``StreamReader.readline`` refuses a line longer than the reader's limit --
+    64 KiB unless the process was created with another -- and discards what it
+    had buffered, so the run died on the first long line. The locale audit
+    prints its entire report as one JSON line well past that. Reading bounded
+    chunks and splitting on newlines here keeps each line intact without a
+    ceiling that the next larger report would cross.
+    """
+    pending = bytearray()
+    while chunk := await stream.read(_STREAM_CHUNK_BYTES):
+        # Only the bytes just appended can hold a newline not yet seen, so a
+        # line spanning many chunks is scanned once rather than once per chunk.
+        search_from = len(pending)
+        pending += chunk
+        line_start = 0
+        while (newline := pending.find(b"\n", search_from)) != -1:
+            yield bytes(pending[line_start : newline + 1])
+            line_start = search_from = newline + 1
+        del pending[:line_start]
+    if pending:
+        yield bytes(pending)
+
+
 async def _stream_process(
     command: tuple[str, ...],
     *,
@@ -1297,7 +1324,7 @@ async def _stream_process(
     )
     assert process.stdout is not None
     try:
-        while line := await process.stdout.readline():
+        async for line in _stream_lines(process.stdout):
             decoded = line.decode(_UTF_8, errors="replace")
             if processor is None:
                 print(decoded, end="", flush=True)

@@ -42,7 +42,8 @@ def test_command_run_finalizes_metadata_when_interrupted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class InterruptingOutput:
-        async def readline(self) -> bytes:
+        async def read(self, size: int) -> bytes:
+            del size
             run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
@@ -84,6 +85,64 @@ def test_command_run_finalizes_metadata_when_interrupted(
     transcript = (run_dir / "run.log").read_text(encoding="utf-8")
     assert "INTERRUPTED exit=130" in transcript
     assert "FINISH " in transcript
+
+
+_PAST_THE_DEFAULT_STREAM_LIMIT = 4 * 64 * 1024 + 17
+"""A line length four times asyncio's default 64 KiB stream limit, off any chunk boundary."""
+
+
+def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(tmp_path: Path) -> None:
+    long_line = "x" * _PAST_THE_DEFAULT_STREAM_LIMIT
+    script = f"import sys; sys.stdout.write('before\\n' + 'x' * {_PAST_THE_DEFAULT_STREAM_LIMIT} + '\\nafter\\ntail')"
+
+    status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
+
+    assert status == 0
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    transcript = (run_dir / "run.log").read_text(encoding="utf-8").splitlines()
+    start = transcript.index("before")
+    assert transcript[start : start + 3] == ["before", long_line, "after"]
+    # Output ending without a newline is still delivered; the transcript's own
+    # FINISH record then follows it on the same line, as it always has.
+    assert transcript[start + 3].startswith("tail"), transcript[start + 3]
+
+
+def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The locale audit prints its whole report as one line; its size is not bounded by 64 KiB."""
+    backlog = [
+        {"domain": "cli", "key": f"cli.key_{index:05d}", "locale": "es", "state": "missing"} for index in range(4_000)
+    ]
+    payload = {
+        "outcome": "backlog",
+        "headline": "Translate the backlog.",
+        "summary": {
+            "translation_backlog": {"exact": True, "unique_keys_to_translate": 4_000, "cells_to_translate": 4_000}
+        },
+        "details": {"backlog": backlog, "findings": []},
+    }
+    report = tmp_path / "report.json"
+    report.write_text(json.dumps(payload), encoding="utf-8")
+    assert len(report.read_bytes()) > _PAST_THE_DEFAULT_STREAM_LIMIT
+    script = f"import pathlib, sys; sys.stdout.write(pathlib.Path({str(report)!r}).read_text(encoding='utf-8') + '\\n')"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="check-locales",
+        signal="locales-status",
+    )
+
+    assert status == 0
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "blocking_findings"
+    assert finished["translation_backlog"]["cells_to_translate"] == 4_000
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(row) for row in persisted] == backlog
 
 
 def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
