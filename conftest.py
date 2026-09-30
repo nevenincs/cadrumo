@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import gc
 import os
+import sys
 import tempfile
 from collections.abc import Iterator
 from importlib import import_module
@@ -218,9 +219,42 @@ def pytest_testnodedown(node: object, error: object | None) -> None:
     fixture_resolution_hook.record_refused_from_node(node)
 
 
+_SHARED_AUTHORITY_MODULE = "cadrumo.domain.calculations.registry.authority"
+"""The module that owns the process-shared registry authority reader."""
+
+
+def _release_shared_registry_authority() -> None:
+    """Close the process-shared registry authority, if this process opened it.
+
+    The shared owner holds the frozen generation's database open until
+    interpreter teardown, which comes after the exit cleanup that removes the
+    snapshot and the run's scratch around it. Windows refuses to delete a file a
+    live connection holds, so a run that read the registry left both behind.
+    A process that never imported the owning module holds nothing, and nothing
+    is imported for it here.
+
+    A release refused because an operation still holds a lease is logged by the
+    release and restated on stderr here, never raised: the session's verdict is
+    already decided, and the run log records which file then kept the scratch.
+    """
+    if _SHARED_AUTHORITY_MODULE not in sys.modules:
+        return
+    from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
+
+    if not release_bundled_indexed_authority():
+        sys.stderr.write("the shared registry authority stayed open at session end: an operation still holds it\n")
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_unconfigure(config: pytest.Config) -> None:
-    """Restate the run-log location beneath the terminal reporter's last word."""
+    """Release the shared registry authority, then restate the run-log location last.
+
+    The release happens on a controller only, and only here: every session
+    fixture and lease has ended by now and xdist has torn its workers down, so
+    the frozen snapshot is no longer read by anything in the run.
+    """
+    if not hasattr(config, "workerinput"):
+        _release_shared_registry_authority()
     _run_logging.restate(config)
 
 

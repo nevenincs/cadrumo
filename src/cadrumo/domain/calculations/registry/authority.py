@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.identity.digest import ContentDigest
+from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
@@ -49,7 +50,7 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .authority_store import SQLiteAuthorityReader
+from .authority_store import AuthorityStoreError, SQLiteAuthorityReader
 from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
@@ -80,6 +81,8 @@ from .temporal import ModeloRevisionDirectory, select_revision, select_revision_
 
 if TYPE_CHECKING:
     from ...user_profile.schema import ProfileSchemaDefinition
+
+_LOGGER = get_logger(__name__)
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -890,10 +893,17 @@ class IndexedRegistryAuthority:
             self._close_retired_readers()
 
     def close(self) -> None:
-        """Close the reader after every operation lease has ended."""
+        """Close the reader after every operation lease has ended.
+
+        Every reader is checked before any is closed, so a refusal leaves the
+        owner whole: a retired generation still serving an operation must not
+        leave the current one closed behind it.
+        """
         with self._reader_lock:
-            self._reader.close()
-            for reader in self._retired_readers:
+            readers = (self._reader, *self._retired_readers)
+            if any(reader.active_leases for reader in readers):
+                raise AuthorityStoreError("cannot close an authority reader while operations hold leases")
+            for reader in readers:
                 reader.close()
             self._retired_readers.clear()
 
@@ -934,6 +944,37 @@ def bundled_indexed_authority() -> IndexedRegistryAuthority:
         if _bundled_indexed_authority is None:
             _bundled_indexed_authority = IndexedRegistryAuthority(bundled_authority_descriptor_path())
         return _bundled_indexed_authority
+
+
+def release_bundled_indexed_authority() -> bool:
+    """Close the process-shared authority owner and forget it, unless an operation still holds it.
+
+    :func:`bundled_indexed_authority` admits its database on first use and then
+    holds it open for as long as the process keeps the owner. A long-lived host
+    releases it on its orderly shutdown, so the database's file handles close
+    then rather than at interpreter teardown. A later
+    :func:`bundled_indexed_authority` call admits whatever generation the
+    selector names at that point. Releasing when no owner is open does nothing.
+
+    An operation still holding a lease keeps the owner open and shared, since
+    closing it would fail that operation mid-read. That refusal is logged rather
+    than raised: a host releases on its way out, and a raise there would replace
+    the exit it is completing.
+
+    Returns:
+        Whether the process holds no shared owner afterwards.
+    """
+    global _bundled_indexed_authority
+    with _bundled_indexed_authority_lock:
+        if _bundled_indexed_authority is None:
+            return True
+        try:
+            _bundled_indexed_authority.close()
+        except AuthorityStoreError as refusal:
+            _LOGGER.warning("the shared registry authority stayed open: %s", refusal)
+            return False
+        _bundled_indexed_authority = None
+        return True
 
 
 def bundled_authority_descriptor_path() -> Path:

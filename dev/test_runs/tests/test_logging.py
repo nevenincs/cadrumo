@@ -25,6 +25,7 @@ from dev.test_runs.paths import (
     allocate_scratch_directory,
 )
 from dev.test_runs.reaper import INTERRUPTED_GRACE_SECONDS, assess_scratch_directories, reclaim_run_directories
+from dev.test_runs.tests.authority_probe import LEAK_LEASE_ENV
 from dev.test_runs.tests.failing_probe import FAILURE_MESSAGE
 from dev.test_runs.tests.setup_skip_probe import SKIP_REASON
 
@@ -168,6 +169,109 @@ def test_a_failing_run_keeps_its_scratch_until_the_reaper_reclaims_it() -> None:
     assert [verdict.reclaimable for verdict in verdicts] == [True], verdicts
     assert reclaim_run_directories(verdicts) == 1
     assert not scratch.exists()
+
+
+def _registry_reading_environment(*, leak_lease: bool = False) -> dict[str, str]:
+    """Return an environment in which a child run freezes its own authority snapshot into its scratch."""
+    environment = _top_level_environment()
+    environment["CADRUMO_AUTHORITY_ROOT"] = str(REPO_ROOT / ".authority")
+    if leak_lease:
+        environment[LEAK_LEASE_ENV] = "1"
+    return environment
+
+
+def test_a_passing_run_that_read_the_registry_removes_its_scratch() -> None:
+    """The shared owner held the run's frozen snapshot open, which Windows will not let anything delete.
+
+    Released at session end, the snapshot and the scratch around it go with the run.
+    """
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.OK, output
+    scratch = _scratch_of(run_log)
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+    assert not scratch.exists()
+
+
+def test_a_parallel_run_that_read_the_registry_removes_its_scratch() -> None:
+    """Workers read the controller's snapshot and are gone before the controller removes it."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n", "2", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+
+    assert result.returncode == pytest.ExitCode.OK, output
+    scratch = _scratch_of(run_log)
+    assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
+    assert not scratch.exists()
+
+
+def test_a_failing_run_that_read_the_registry_still_keeps_its_scratch() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "dev/test_runs/tests/authority_probe.py",
+            "dev/test_runs/tests/failing_probe.py",
+        ],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.TESTS_FAILED, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH KEPT {scratch}: exit=1"
+        assert scratch.is_dir()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def test_a_lease_left_open_is_reported_and_leaves_the_runs_verdict_alone() -> None:
+    """A release refused under a live lease is reported, never raised, and the run still passes."""
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/authority_probe.py"],
+        cwd=REPO_ROOT,
+        env=_registry_reading_environment(leak_lease=True),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    output, run_log = result.stdout + result.stderr, _child_run_log(result)
+    scratch = _scratch_of(run_log)
+    try:
+        assert result.returncode == pytest.ExitCode.OK, output
+        assert "the shared registry authority stayed open at session end" in result.stderr, output
+        assert run_log.read_text(encoding="utf-8").splitlines()[-1].startswith("SCRATCH "), output
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
 
 
 def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Path) -> None:
