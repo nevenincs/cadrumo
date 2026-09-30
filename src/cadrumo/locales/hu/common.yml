@@ -2103,19 +2103,49 @@ tui:
         official: 'Hivatalos szöveg ({source}): „{text}”'
         origin: 'Forrás: {origin}'
       issues:
-        blocking: Akadályozza a benyújtást
-        column:
-          kind: Fajta
-          message: Megállapítás
-        title: Amit az ellenőrzés talált
+        action:
+          advisory: Olvasd el, és döntsd el, hogy vonatkozik-e rád. Nem akadályozza
+            a benyújtást.
+          confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket,
+            vagy írd be a helyeset.
+          cross_period_dependency_unclean: Előbb rendezd a korábbi időszak bevallását,
+            majd számolj újra.
+          generic: Javítsd ki, amit leír, majd számolj és ellenőrizz újra.
+          missing_required_casilla: Írd be az értéket a rovatba, majd számolj újra.
+          reconciliation_mismatch: Hasonlítsd össze a számokat, javítsd ki a hibásat,
+            majd számolj újra.
+        assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
+        box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
+        detail:
+          advisory: Ez tanács. A bevallást a jelenlegi formájában is benyújthatod.
+          blocking_rule: A modelo egyik szabálya nem teljesül. A benyújtás addig nem
+            rögzíthető, amíg nem teljesül.
+          cross_period_dependency_unclean: Ez a bevallás egy még le nem zárt korábbi
+            időszak számait használja, ezért az eredménye még változhat.
+          missing_required_casilla: A bevallás nem nyújtható be ez az érték nélkül.
+            Ha a helyes érték nulla, írj be 0-t, hogy a sajátodként szerepeljen.
+          reconciliation_mismatch: 'Két számnak egyeznie kellene, de nem egyezik.
+            Egyiket sem választjuk ki helyetted: nézd át mindkettőt, és javítsd ki
+            a hibásat.'
+        empty: Nincs átnézendő tétel.
+        go_to_box: Ugrás a rovathoz
+        key:
+          less: Kevesebb
+          more: Továbbiak
+        technical: Technikai részletek
+        title: Átnézendő problémák
         verdict:
-          blocked: 'Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást. Megállapítások:
+          blocked: 'Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást. Problémák:
             {count}.'
-          complete: 'Az ellenőrzés sikeres. Átnézendő megállapítások: {count}.'
-          incomplete: 'Az ellenőrzés nem teljes: kötelező adat hiányzik. Megállapítások:
-            {count}.'
-          none: Ezt a számítást még nem ellenőrizték.
-        warning: Érdemes átnézni
+          complete: 'Az ellenőrzés sikeres. Átnézendő problémák: {count}.'
+          incomplete: 'Az ellenőrzés nem teljes: hiányoznak a bevalláshoz szükséges
+            adatok. Problémák: {count}.'
+          none: A bevallást még nem ellenőrizték.
+        what_to_do: 'Teendő: {action}'
+        where:
+          declaration: A teljes bevallás
+          not_on_form: Egy rovat, amely nem szerepel a bevallás oldalain
+          unnumbered: 'Rovatszám nélküli értékek: {count}'
       key:
         back: Vissza
         calculate: Számítás
@@ -2139,6 +2169,10 @@ tui:
         message: 'Nem alkalmazott módosítások: {count}. Ha most kilép, elvesznek.'
         stay: Szerkesztés folytatása
         title: Nem alkalmazott módosítások
+      level:
+        blocks: Akadályozza a benyújtást
+        check: Érdemes átnézni
+        info: Tájékoztatásul
       loading: A bevallás betöltése…
       modelo_number: '{modelo}-es nyomtatvány'
       modelo_title: '{modelo}-es nyomtatvány · {title}'
@@ -2279,33 +2313,35 @@ tui:
       section:
         pending: '{heading} · teendő: {count}'
       sources:
-        family:
-          aeat_draft: Az AEAT tervezete
-          earlier_filings: Korábbi bevallások
-          fixed_by_design: A hivatalos minta által rögzített értékek
-          profile: Az Ön profilja
-          records: Az Ön nyilvántartásai
-          registers: Az Ön által vezetett jegyzékek
-          your_entries: Az Ön által megadott értékek
-        intro: Minden forrás, hogy mit tehet az értékeivel, és mely rovatokat tölti
-          ki.
+        and_more: és még {count}
+        count: 'Rovatok: {count}'
+        group:
+          aeat_data: AEAT-adatok
+          assumed: Feltételezett, erősítsd meg
+          blank: Üresen hagyott vagy nem alkalmazandó
+          calculated: Számított
+          earlier_declarations: Korábbi bevallások
+          information: Csak tájékoztatásul
+          needs_you: Hiányzik az adatod
+          profile: A profilod
+          records: A nyilvántartásaid
+          registers: Az általad vezetett nyilvántartó könyvek
+          replaced: Az értékeid másokat váltanak fel
+          set_by_form: A nyomtatvány rögzíti
+          unnamed: Meg nem nevezett forrásból
+          yours: Általad megadott vagy megerősített
+        intro: Minden rovat aszerint csoportosítva, honnan származik az értéke. Nyiss
+          meg egy csoportot a rovatai megtekintéséhez.
         key:
+          expand: Rovatok
           go: Rovat megnyitása
           open: Forrás megnyitása
-        listed_above: '{field} · fentebb már szerepel'
+        no_source: Ezt a rovatot nem egy másik terület tölti ki.
         no_surface: A(z) „{source}” forrásnak nincs megnyitható saját területe.
-        none: A bevallás egyetlen rovata sem forrásból kapja az értékét.
+        none: Ennek a bevallásnak nincs megjeleníthető rovata.
+        none_found: '{source}: nincs találat'
         not_here: Ez a terület innen nem nyitható meg; nyissa meg a főmenüből.
-        policy:
-          edit_at_home: a profiljában módosítható
-          enter: Ön adja meg
-          fix_at_source: a forrásnál javítható
-          fixed: nem módosítható
-          override_with_reason: felülírható
-          undecided: itt még nem módosítható
-        state:
-          complete: van adat
-          missing: 'nincs adat: {missing}/{total}'
+        not_yet: '{source}: még nincs lekérdezve'
         title: Honnan származnak az értékek
       stage_refused:
         not_editable: Ez a rovat így nem módosítható.

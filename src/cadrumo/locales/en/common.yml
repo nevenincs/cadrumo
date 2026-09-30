@@ -2073,18 +2073,46 @@ tui:
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
       issues:
-        blocking: Blocks filing
-        column:
-          kind: Kind
-          message: Finding
-        title: What verification found
+        action:
+          advisory: Read it and decide whether it applies to you. It does not stop
+            you from filing.
+          confirm: Open each box and confirm its value, or type the right one.
+          cross_period_dependency_unclean: Settle the declaration of the earlier period
+            first, then calculate again.
+          generic: Correct what it describes, then calculate and check again.
+          missing_required_casilla: Enter the value in the box, then calculate again.
+          reconciliation_mismatch: Compare the figures, correct the one that is wrong,
+            then calculate again.
+        assumed: Nobody has entered the values in these boxes.
+        box_not_on_form: Box {box} is not shown on this declaration's pages.
+        detail:
+          advisory: This is advice. You can file the declaration as it is.
+          blocking_rule: A rule of this modelo is not met. The filing cannot be recorded
+            until it is.
+          cross_period_dependency_unclean: This declaration uses figures from an earlier
+            period that is not settled yet, so its result can still change.
+          missing_required_casilla: The declaration cannot be filed without this value.
+            If the right value is zero, enter 0 so that it counts as yours.
+          reconciliation_mismatch: 'Two figures that should agree do not. Neither
+            is chosen for you: check both and correct the one that is wrong.'
+        empty: Nothing to look at.
+        go_to_box: Go to box
+        key:
+          less: Show less
+          more: Show more
+        technical: Technical details
+        title: Issues to look at
         verdict:
-          blocked: 'Verification found something that blocks filing. Findings: {count}.'
-          complete: 'Verification passed. Findings to look at: {count}.'
-          incomplete: 'Verification is not complete: some required information is
-            missing. Findings: {count}.'
-          none: This calculation has not been verified yet.
-        warning: Worth a look
+          blocked: 'The check found something that blocks filing. Issues: {count}.'
+          complete: 'The check passed. Issues to look at: {count}.'
+          incomplete: 'The check is not complete: some values the declaration needs
+            are missing. Issues: {count}.'
+          none: The declaration has not been checked yet.
+        what_to_do: 'What to do: {action}'
+        where:
+          declaration: Whole declaration
+          not_on_form: A box not shown on this declaration's pages
+          unnumbered: 'Values without a box number: {count}'
       key:
         back: Back
         calculate: Calculate
@@ -2108,6 +2136,10 @@ tui:
           lost.'
         stay: Keep editing
         title: Changes not applied
+      level:
+        blocks: Blocks filing
+        check: Worth checking
+        info: For your information
       loading: Loading the declaration…
       modelo_number: Modelo {modelo}
       modelo_title: Modelo {modelo} · {title}
@@ -2246,32 +2278,35 @@ tui:
       section:
         pending: '{heading} · to do: {count}'
       sources:
-        family:
-          aeat_draft: The AEAT draft
-          earlier_filings: Earlier filings
-          fixed_by_design: Fixed by the official design
+        and_more: and {count} more
+        count: 'Boxes: {count}'
+        group:
+          aeat_data: AEAT data
+          assumed: Assumed, please confirm
+          blank: Left blank or do not apply
+          calculated: Calculated
+          earlier_declarations: Earlier declarations
+          information: Shown for information
+          needs_you: Need your value
           profile: Your profile
           records: Your records
           registers: Registers you keep
-          your_entries: Values you enter
-        intro: Each source, what you can do about its values, and the boxes it feeds.
+          replaced: Your values replace others
+          set_by_form: Set by the form
+          unnamed: From a source not named
+          yours: Entered or confirmed by you
+        intro: Every box, grouped by where its value comes from. Open a group to see
+          its boxes.
         key:
+          expand: Show boxes
           go: Open box
           open: Open source
-        listed_above: '{field} · listed above'
+        no_source: This box is not filled from another area.
         no_surface: “{source}” has no area of its own to open.
-        none: No box in this declaration takes its value from a source.
+        none: This declaration has no boxes to show.
+        none_found: '{source}: none found'
         not_here: That area cannot be opened from here; open it from the main menu.
-        policy:
-          edit_at_home: changed in your profile
-          enter: you enter it
-          fix_at_source: corrected at its source
-          fixed: cannot be changed
-          override_with_reason: you may replace it
-          undecided: cannot be changed here yet
-        state:
-          complete: has data
-          missing: 'no data: {missing} of {total}'
+        not_yet: '{source}: not read yet'
         title: Where the values come from
       stage_refused:
         not_editable: This box cannot be changed that way.

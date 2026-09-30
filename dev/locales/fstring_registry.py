@@ -353,7 +353,6 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     shown without a note.
     """
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
-    from cadrumo.application.modelo.source_policy import SourceFamily, SourceOverridePolicy
     from cadrumo.application.modelo.work_form_models import (
         ModeloFormEditability,
         ModeloFormLayoutProvenance,
@@ -394,8 +393,6 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("review.finding", WORDED_FINDING_CODES),
         ("result_diff.group", tuple(item.value for item in ResultGroup)),
         ("result_diff.count", tuple(item.value for item in ResultGroup)),
-        ("sources.family", tuple(item.value for item in SourceFamily)),
-        ("sources.policy", tuple(item.value for item in SourceOverridePolicy)),
         ("period", PERIOD_WORD_NAMES),
     )
     return (

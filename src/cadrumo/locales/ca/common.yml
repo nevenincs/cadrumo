@@ -2121,19 +2121,48 @@ tui:
         official: 'Text oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
       issues:
-        blocking: Impedeix presentar
-        column:
-          kind: Tipus
-          message: Troballa
-        title: El que ha trobat la verificació
+        action:
+          advisory: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
+          confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
+          cross_period_dependency_unclean: Resol primer la declaració del període
+            anterior i torna a calcular.
+          generic: Corregeix el que indica i torna a calcular i comprovar.
+          missing_required_casilla: Escriu el valor a la casella i torna a calcular.
+          reconciliation_mismatch: Compara les xifres, corregeix la que estigui malament
+            i torna a calcular.
+        assumed: Ningú no ha escrit els valors d'aquestes caselles.
+        box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
+        detail:
+          advisory: És un consell. Pots presentar la declaració tal com està.
+          blocking_rule: No es compleix una regla d'aquest model. No es pot registrar
+            la presentació fins que es compleixi.
+          cross_period_dependency_unclean: Aquesta declaració fa servir xifres d'un
+            període anterior que encara no està resolt, així que el resultat encara
+            pot canviar.
+          missing_required_casilla: La declaració no es pot presentar sense aquest
+            valor. Si el valor correcte és zero, escriu 0 perquè consti com a teu.
+          reconciliation_mismatch: 'Dues xifres que haurien de coincidir no coincideixen.
+            No se''n tria cap per tu: revisa-les totes dues i corregeix la que estigui
+            malament.'
+        empty: No hi ha res a revisar.
+        go_to_box: Anar a la casella
+        key:
+          less: Mostra'n menys
+          more: Mostra'n més
+        technical: Detalls tècnics
+        title: Incidències per revisar
         verdict:
-          blocked: 'La verificació ha trobat alguna cosa que impedeix presentar. Troballes:
+          blocked: 'La comprovació ha trobat alguna cosa que impedeix presentar. Incidències:
             {count}.'
-          complete: 'La verificació és correcta. Troballes per revisar: {count}.'
-          incomplete: 'La verificació no és completa: falta informació obligatòria.
-            Troballes: {count}.'
-          none: Aquest càlcul encara no s'ha verificat.
-        warning: Convé revisar-ho
+          complete: 'La comprovació és correcta. Incidències per revisar: {count}.'
+          incomplete: 'La comprovació no és completa: falten dades que la declaració
+            necessita. Incidències: {count}.'
+          none: La declaració encara no s'ha comprovat.
+        what_to_do: 'Què cal fer: {action}'
+        where:
+          declaration: Tota la declaració
+          not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
+          unnumbered: 'Valors sense número de casella: {count}'
       key:
         back: Tornar
         calculate: Calcula
@@ -2157,6 +2186,10 @@ tui:
         message: 'Tens canvis sense aplicar: {count}. Si surts ara, es perden.'
         stay: Continua editant
         title: Canvis sense aplicar
+      level:
+        blocks: Impedeix presentar
+        check: Convé revisar-ho
+        info: Per a la teva informació
       loading: Carregant la declaració…
       modelo_number: Model {modelo}
       modelo_title: Model {modelo} · {title}
@@ -2297,32 +2330,35 @@ tui:
       section:
         pending: '{heading} · pendents: {count}'
       sources:
-        family:
-          aeat_draft: Esborrany de l'AEAT
-          earlier_filings: Declaracions anteriors
-          fixed_by_design: Fixats pel disseny oficial
+        and_more: i {count} més
+        count: 'Caselles: {count}'
+        group:
+          aeat_data: Dades de l'AEAT
+          assumed: Suposats, confirma'ls
+          blank: En blanc o no s'apliquen
+          calculated: Calculats
+          earlier_declarations: Declaracions anteriors
+          information: Només informatius
+          needs_you: Falta la teva dada
           profile: El teu perfil
-          records: La teva comptabilitat
-          registers: Registres que portes
-          your_entries: Valors que introdueixes tu
-        intro: Cada origen, què pots fer amb els seus valors i les caselles que alimenta.
+          records: Els teus registres
+          registers: Llibres registre que portes
+          replaced: Els teus valors en substitueixen d'altres
+          set_by_form: Fixats pel model
+          unnamed: D'un origen sense nom
+          yours: Escrits o confirmats per tu
+        intro: Totes les caselles, agrupades segons d'on surt el valor. Obre un grup
+          per veure'n les caselles.
         key:
+          expand: Mostra les caselles
           go: Obre la casella
           open: Obre l'origen
-        listed_above: '{field} · ja apareix a dalt'
+        no_source: Aquesta casella no s'omple des d'un altre apartat.
         no_surface: «{source}» no té un apartat propi per obrir.
-        none: Cap casella d'aquesta declaració no pren el valor d'un origen.
+        none: Aquesta declaració no té caselles per mostrar.
+        none_found: '{source}: no s''ha trobat res'
         not_here: Des d'aquí no es pot obrir aquest apartat; obre'l des del menú principal.
-        policy:
-          edit_at_home: es canvia al teu perfil
-          enter: l'introdueixes tu
-          fix_at_source: es corregeix al seu origen
-          fixed: no es pot canviar
-          override_with_reason: el pots substituir
-          undecided: encara no es pot canviar aquí
-        state:
-          complete: amb dades
-          missing: 'sense dades: {missing} de {total}'
+        not_yet: '{source}: encara sense consultar'
         title: D'on surten els valors
       stage_refused:
         not_editable: Aquesta casella no es pot canviar així.

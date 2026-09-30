@@ -2133,19 +2133,47 @@ tui:
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
       issues:
-        blocking: Impide presentar
-        column:
-          kind: Tipo
-          message: Hallazgo
-        title: Lo que encontró la verificación
+        action:
+          advisory: Léelo y decide si te afecta. No te impide presentar.
+          confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
+          cross_period_dependency_unclean: Resuelve primero la declaración del periodo
+            anterior y vuelve a calcular.
+          generic: Corrige lo que indica y vuelve a calcular y comprobar.
+          missing_required_casilla: Escribe el valor en la casilla y vuelve a calcular.
+          reconciliation_mismatch: Compara las cifras, corrige la que esté mal y vuelve
+            a calcular.
+        assumed: Nadie ha escrito los valores de estas casillas.
+        box_not_on_form: La casilla {box} no aparece en las páginas de esta declaración.
+        detail:
+          advisory: Es un consejo. Puedes presentar la declaración tal como está.
+          blocking_rule: No se cumple una regla de este modelo. No se puede registrar
+            la presentación hasta que se cumpla.
+          cross_period_dependency_unclean: Esta declaración usa cifras de un periodo
+            anterior que aún no está resuelto, así que su resultado todavía puede
+            cambiar.
+          missing_required_casilla: La declaración no se puede presentar sin este
+            valor. Si el valor correcto es cero, escribe 0 para que conste como tuyo.
+          reconciliation_mismatch: 'Dos cifras que deberían coincidir no coinciden.
+            No se elige ninguna por ti: revisa las dos y corrige la que esté mal.'
+        empty: No hay nada que revisar.
+        go_to_box: Ir a la casilla
+        key:
+          less: Ver menos
+          more: Ver más
+        technical: Detalles técnicos
+        title: Incidencias para revisar
         verdict:
-          blocked: 'La verificación encontró algo que impide presentar. Hallazgos:
+          blocked: 'La comprobación encontró algo que impide presentar. Incidencias:
             {count}.'
-          complete: 'La verificación es correcta. Hallazgos para revisar: {count}.'
-          incomplete: 'La verificación no está completa: falta información obligatoria.
-            Hallazgos: {count}.'
-          none: Este cálculo aún no se ha verificado.
-        warning: Conviene revisarlo
+          complete: 'La comprobación es correcta. Incidencias para revisar: {count}.'
+          incomplete: 'La comprobación no está completa: faltan datos que la declaración
+            necesita. Incidencias: {count}.'
+          none: La declaración aún no se ha comprobado.
+        what_to_do: 'Qué hacer: {action}'
+        where:
+          declaration: Toda la declaración
+          not_on_form: Una casilla que no aparece en las páginas de esta declaración
+          unnumbered: 'Valores sin número de casilla: {count}'
       key:
         back: Volver
         calculate: Calcular
@@ -2168,6 +2196,10 @@ tui:
         message: 'Tienes cambios sin aplicar: {count}. Si sales ahora, se pierden.'
         stay: Seguir editando
         title: Cambios sin aplicar
+      level:
+        blocks: Impide presentar
+        check: Conviene revisarlo
+        info: Para tu información
       loading: Cargando la declaración…
       modelo_number: Modelo {modelo}
       modelo_title: Modelo {modelo} · {title}
@@ -2306,34 +2338,36 @@ tui:
       section:
         pending: '{heading} · pendientes: {count}'
       sources:
-        family:
-          aeat_draft: Borrador de la AEAT
-          earlier_filings: Declaraciones anteriores
-          fixed_by_design: Fijados por el diseño oficial
+        and_more: y {count} más
+        count: 'Casillas: {count}'
+        group:
+          aeat_data: Datos de la AEAT
+          assumed: Supuestos, confírmalos
+          blank: En blanco o no aplican
+          calculated: Calculados
+          earlier_declarations: Declaraciones anteriores
+          information: Solo informativos
+          needs_you: Falta tu dato
           profile: Tu perfil
-          records: Tu contabilidad
-          registers: Registros que llevas
-          your_entries: Valores que introduces tú
-        intro: Cada origen, lo que puedes hacer con sus valores y las casillas que
-          alimenta.
+          records: Tus registros
+          registers: Libros registro que llevas
+          replaced: Tus valores sustituyen a otros
+          set_by_form: Fijados por el modelo
+          unnamed: De un origen sin nombre
+          yours: Escritos o confirmados por ti
+        intro: Todas las casillas, agrupadas según de dónde sale su valor. Abre un
+          grupo para ver sus casillas.
         key:
+          expand: Ver casillas
           go: Abrir la casilla
           open: Abrir el origen
-        listed_above: '{field} · ya aparece arriba'
+        no_source: Esta casilla no se rellena desde otro apartado.
         no_surface: «{source}» no tiene un apartado propio que abrir.
-        none: Ninguna casilla de esta declaración toma su valor de un origen.
+        none: Esta declaración no tiene casillas que mostrar.
+        none_found: '{source}: no se encontró nada'
         not_here: Desde aquí no se puede abrir ese apartado; ábrelo desde el menú
           principal.
-        policy:
-          edit_at_home: se cambia en tu perfil
-          enter: lo introduces tú
-          fix_at_source: se corrige en su origen
-          fixed: no se puede cambiar
-          override_with_reason: puedes sustituirlo
-          undecided: aún no se puede cambiar aquí
-        state:
-          complete: con datos
-          missing: 'sin datos: {missing} de {total}'
+        not_yet: '{source}: aún sin consultar'
         title: De dónde salen los valores
       stage_refused:
         not_editable: Esta casilla no se puede cambiar así.
