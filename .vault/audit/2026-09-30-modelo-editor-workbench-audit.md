@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c2e4d227e390091dabab427d319bb383e8679bdf8fe6bd8113e4a186c68ed51'
+body_hash: 'sha256:e9a696d62237f79cc57b81c612ad3d82b7733a813178bda9be65dfcdcaa76cf1'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -182,6 +182,27 @@ descriptor of the headline totals, grounded in each modelo's summary record.
 
 The form carries the last day to file but not the first, which matters for Renta before its
 campaign opens. Open: expose the window start from the same calendar resolver the deadline uses.
+
+### modelo-100-headings | medium | Modelo 100's layout has no official headings for its pages and sections
+
+The declared layout for Modelo 100 carries registry element names ("DatosEconomicos/Resultados",
+"calculoimpuestores", "rdtotrabajores") as headings. The workbench now refuses identifier-like
+headings and falls back to "Page N, part M", and labels parts by box range as an interim, but
+Renta is the modelo most filers use and needs its official headings. Open, for the layout family's
+owner: author the official Renta headings.
+
+### affects-chain | low | the editor names only the boxes a box feeds directly
+
+The help card knows only direct formula targets, so the editor's "Affects" line cannot show the
+chain to the result ("[07] to [12] to [19]"). Open: expose the path to the settlement box from the
+help card, derived from the revision's formulas.
+
+### grids-as-official-tables | medium | Modelo 303's rate grid still renders stacked
+
+D1 and D4 require grids as the official rows and columns, falling back to stacked records only on
+narrow terminals. 303's accrued-VAT grid still renders stacked with "General regime" repeated,
+the largest remaining gap between the workbench and the official form. Open, part of the
+workbench-shape finding.
 
 ## Recommendations
 
