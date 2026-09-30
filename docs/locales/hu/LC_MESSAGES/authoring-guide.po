@@ -31,28 +31,28 @@ msgid ""
 "interface (CLI)."
 msgstr ""
 "A Cadrumo egy spanyol adóbevallási alkalmazás. Az AEAT a külső spanyol "
-"adóhatóság. Ez az útmutató bemutatja, hogyan hajtson végre egy "
-"dokumentációs változtatást, és hogyan vigye végig a felülvizsgálaton. "
-"Négy dokumentációs felület létezik: a kódtár markdown-ja, a forráskódba "
-"ágyazott docstringek, és két generált referencia - az egyik az "
-"alkalmazásprogramozási felülethez (API), a másik a parancssori felülethez"
-" (CLI)."
+"adóhatóság. Ez az útmutató megmutatja, hogyan hajthatsz végre egy "
+"dokumentációs változtatást, és hogyan viheted végig a felülvizsgálaton. "
+"Négy dokumentációs felület létezik: a tárolóban lévő markdown, a "
+"forráskódba ágyazott docstringek, valamint két generált referencia - az "
+"egyik az alkalmazásprogramozási felülethez (API), a másik a parancssori "
+"felülethez (CLI)."
 
 #: ../../authoring-guide.md:5
 msgid "Choose the right surface"
-msgstr "Válassza ki a megfelelő felületet"
+msgstr "Válaszd ki a megfelelő felületet"
 
 #: ../../authoring-guide.md:7
 msgid "Where you make a change depends on what you're changing:"
-msgstr "Hogy hol hajtja végre a változtatást, az attól függ, mit módosít:"
+msgstr "Hogy hol hajtod végre a változtatást, az attól függ, mit módosítasz:"
 
 #: ../../authoring-guide.md:9
 msgid ""
 "**Repository markdown** is hand-written. Edit the README or a guide under"
 " `docs/` directly."
 msgstr ""
-"**A kódtár markdown-ja** kézzel írott. Szerkessze közvetlenül a README-t "
-"vagy egy útmutatót a `docs/` alatt."
+"**A tárolóban lévő markdown** kézzel írott. A README-t vagy a `docs/` "
+"alatti útmutatókat közvetlenül szerkesztheted."
 
 #: ../../authoring-guide.md:10
 msgid ""
@@ -60,9 +60,10 @@ msgid ""
 "docstring in the source, and let Sphinx (the documentation build tool) "
 "render it. Never copy a signature into prose by hand."
 msgstr ""
-"**A docstringek** az API-referencia egyetlen forrása. Szerkessze a "
-"docstringet a forrásban, és hagyja, hogy a Sphinx (a dokumentációépítő "
-"eszköz) megjelenítse. Soha ne másoljon kézzel egy szignatúrát a szövegbe."
+"**A docstringek** az API-referencia egyetlen forrása. A docstringet a "
+"forráskódban szerkeszd, a megjelenítést pedig bízd a Sphinxre (a "
+"dokumentációépítő eszközre). Soha ne másolj kézzel szignatúrát a "
+"szövegbe."
 
 #: ../../authoring-guide.md:11
 msgid ""
@@ -73,8 +74,8 @@ msgid ""
 msgstr ""
 "**Az API-referencia** minden teljes dokumentációépítés elején a "
 "forrásmodulokból generálódik. Csak az áttekintő oldala, a "
-"`docs/api/index.md` kézzel írott; a modul-oldalak az építés kimenetei, és"
-" soha nem kerülnek be a kódtárba."
+"`docs/api/index.md` kézzel írott; a modulok oldalai az építés kimenetei, "
+"és soha nem kerülnek be a tárolóba."
 
 #: ../../authoring-guide.md:12
 msgid ""
@@ -83,7 +84,7 @@ msgid ""
 "commands that follow."
 msgstr ""
 "**A CLI-referenciát** a parancsfából (a CLI-parancsok és -alparancsok "
-"teljes halmazából) generáljuk. Ne szerkessze; generálja újra az alábbi "
+"teljes halmazából) generáljuk. Ne szerkeszd; generáld újra az alábbi "
 "parancsokkal."
 
 #: ../../authoring-guide.md:14
@@ -94,9 +95,7 @@ msgstr "A generálási fogalmak meghatározása"
 msgid ""
 "When working with generated documentation, understand the following "
 "terminology:"
-msgstr ""
-"Amikor generált dokumentációval dolgozik, értse meg a következő "
-"terminológiát:"
+msgstr "Generált dokumentációval dolgozva érdemes ismerned a következő fogalmakat:"
 
 #: ../../authoring-guide.md:18
 msgid ""
@@ -119,7 +118,7 @@ msgid ""
 "sequence. Only `just docs-generate-sequences` writes goldens."
 msgstr ""
 "**szekvencia-golden (sequence golden)**: egy dokumentált CLI-szekvencia "
-"rögzített, a kódtárba bevezetett kimenete. Goldeneket csak a `just docs-"
+"rögzített, a tárolóba bevezetett kimenete. Goldeneket csak a `just docs-"
 "generate-sequences` ír."
 
 #: ../../authoring-guide.md:21
@@ -128,7 +127,7 @@ msgstr "Változtatás előnézete és ellenőrzése"
 
 #: ../../authoring-guide.md:23
 msgid "Choose the narrowest preview that shows your change:"
-msgstr "Válassza a legszűkebb előnézetet, amely megmutatja a változtatását:"
+msgstr "Válaszd a legszűkebb előnézetet, amely megmutatja a változtatásodat:"
 
 #: ../../authoring-guide.md:25
 msgid ""
@@ -138,8 +137,8 @@ msgid ""
 " and takes about 20 seconds."
 msgstr ""
 "**Egy oldal:** a `just docs-page authoring-guide` egyetlen oldalt jelenít"
-" meg. Az elérési út a kódtárhoz vagy a `docs/` könyvtárhoz viszonyított, "
-"az utótag elhagyható. Írás közben használja. Egy ismételt előnézet "
+" meg. Az elérési út a tárolóhoz vagy a `docs/` könyvtárhoz viszonyított, "
+"az utótag elhagyható. Írás közben használd. Egy ismételt előnézet "
 "újrahasználja az építési gyorsítótárát, és körülbelül 20 másodpercig "
 "tart."
 
@@ -149,7 +148,7 @@ msgid ""
 "directory. Use it when a change spans several related pages."
 msgstr ""
 "**Egy könyvtár:** a `just docs-page how-to` a könyvtár összes oldalát "
-"megjeleníti. Akkor használja, ha egy változtatás több összefüggő oldalt "
+"megjeleníti. Akkor használd, ha egy változtatás több összefüggő oldalt "
 "érint."
 
 #: ../../authoring-guide.md:27
@@ -164,7 +163,7 @@ msgstr ""
 "valahányszor egy `docs/` alatti oldal megváltozik. Az adózóknak szóló "
 "oldalakat a 8788-as porton szolgálja ki, és ismételt futtatáskor a már "
 "futó előnézethez csatlakozik. Ha a docstringeket és az API-oldalakat is "
-"figyelni szeretné, futtassa a `uv run --no-sync python -m dev.docs.serve "
+"figyelni szeretnéd, futtasd a `uv run --no-sync python -m dev.docs.serve "
 "--scope full --open-browser` parancsot."
 
 #: ../../authoring-guide.md:28
@@ -173,8 +172,8 @@ msgid ""
 "API reference. Run it before you hand a change over for review."
 msgstr ""
 "**Teljes építés:** a `just docs-build` a teljes webhelyet felépíti, az "
-"API-referenciával együtt. Futtassa, mielőtt egy változtatást "
-"felülvizsgálatra átad."
+"API-referenciával együtt. Futtasd, mielőtt felülvizsgálatra átadnál egy "
+"változtatást."
 
 #: ../../authoring-guide.md:30
 msgid ""
@@ -182,10 +181,10 @@ msgid ""
 "execute them, so a preview never proves a sequence still matches the "
 "product. Verify the sequences and the rest of the documentation with:"
 msgstr ""
-"Az előnézetek a CLI-szekvenciákat a kódtárba bevezetett goldenjeikből "
+"Az előnézetek a CLI-szekvenciákat a tárolóba bevezetett goldenjeikből "
 "jelenítik meg, és nem futtatják őket, így egy előnézet soha nem "
-"bizonyítja, hogy egy szekvencia még mindig egyezik a termékkel. A "
-"szekvenciákat és a dokumentáció többi részét ezekkel ellenőrizze:"
+"bizonyítja, hogy egy szekvencia még egyezik a termékkel. A szekvenciákat "
+"és a dokumentáció többi részét ezekkel ellenőrizd:"
 
 #: ../../authoring-guide.md:38
 msgid ""
@@ -196,8 +195,8 @@ msgid ""
 msgstr ""
 "A `just docs-sequences-check` és a `just docs-generate-sequences` nem fut"
 " le, amíg a helyi regiszterhatóság (registry authority) elavult. "
-"Frissítse a `uv run --no-sync python -m dev.registry.pipeline publish-"
-"authority --if-stale` paranccsal, majd futtassa újra a parancsot."
+"Frissítsd a `uv run --no-sync python -m dev.registry.pipeline publish-"
+"authority --if-stale` paranccsal, majd futtasd újra a parancsot."
 
 #: ../../authoring-guide.md:40
 msgid ""
@@ -209,7 +208,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:42
 msgid "Take a narrative change through review"
-msgstr "Egy szöveges változtatás végigvitele a felülvizsgálaton"
+msgstr "Szöveges változtatás végigvitele a felülvizsgálaton"
 
 #: ../../authoring-guide.md:44
 msgid ""
@@ -227,8 +226,8 @@ msgid ""
 " each page a Diataxis type — Diataxis is a documentation framework that "
 "sorts pages into four kinds: tutorial, how-to, reference, or explanation."
 msgstr ""
-"**Drótváz.** Vázolja fel a dokumentumot címként és szakaszcélokként. "
-"Rendeljen minden oldalhoz egy Diataxis-típust - a Diataxis egy "
+"**Drótváz.** Vázold fel a dokumentumot címekkel és szakaszcélokkal. "
+"Rendelj minden oldalhoz egy Diataxis-típust - a Diataxis egy "
 "dokumentációs keretrendszer, amely négyféle kategóriába sorolja az "
 "oldalakat: oktatóanyag, útmutató, referencia vagy magyarázat."
 
@@ -238,9 +237,9 @@ msgid ""
 "wireframe and confirms a newcomer would understand what each section "
 "delivers. Revise until every section passes."
 msgstr ""
-"**Finomítás.** Egy projektkontextussal nem rendelkező felülvizsgáló csak "
-"a drótvázat olvassa el, és megerősíti, hogy egy újonnan érkező megértené,"
-" mit ad át az egyes szakaszok. Módosítsa mindaddig, amíg minden szakasz "
+"**Finomítás.** Egy projektet nem ismerő felülvizsgáló csak a drótvázat "
+"olvassa el, és megerősíti, hogy egy újonnan érkező megértené, mit "
+"nyújtanak az egyes szakaszok. Módosíts mindaddig, amíg minden szakasz "
 "átmegy."
 
 #: ../../authoring-guide.md:48
@@ -272,9 +271,8 @@ msgid ""
 "**Editorial review.** A reviewer with no project context checks the "
 "writing against the same prose-style rules."
 msgstr ""
-"**Szerkesztői felülvizsgálat.** Egy projektkontextussal nem rendelkező "
-"felülvizsgáló ugyanazon szövegstílus-szabályok alapján ellenőrzi a "
-"szöveget."
+"**Szerkesztői felülvizsgálat.** Egy projektet nem ismerő felülvizsgáló "
+"ugyanazon szövegstílus-szabályok alapján ellenőrzi a szöveget."
 
 #: ../../authoring-guide.md:52
 msgid ""
@@ -286,7 +284,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:54
 msgid "Keep the roles separate"
-msgstr "Tartsa külön a szerepeket"
+msgstr "Tartsd külön a szerepeket"
 
 #: ../../authoring-guide.md:56
 msgid ""
@@ -296,16 +294,16 @@ msgid ""
 "quality, work from the document alone, without the codebase. The "
 "separation keeps each judgment honest."
 msgstr ""
-"Tartsa a kutatást, a fogalmazást és a felülvizsgálatot külön kezekben. "
-"Amikor kontextust gyűjt, ne írja meg a végleges szöveget. Amikor szerző, "
-"az összegyűjtött kontextusból írjon, és ne találjon ki tényeket. Amikor "
-"szerkesztői minőség szempontjából vizsgál felül, kizárólag a "
-"dokumentumból dolgozzon, a kódbázis nélkül. Az elkülönítés minden "
-"megítélést őszintén tart."
+"Tartsd külön kezekben a kutatást, a fogalmazást és a felülvizsgálatot. "
+"Amikor kontextust gyűjtesz, ne írd meg a végleges szöveget. Amikor "
+"szerzőként dolgozol, az összegyűjtött kontextusból írj, és ne találj ki "
+"tényeket. Amikor szerkesztői minőség szempontjából vizsgálsz felül, "
+"kizárólag a dokumentumból dolgozz, a kódbázis nélkül. Az elkülönítés "
+"miatt marad őszinte minden ítélet."
 
 #: ../../authoring-guide.md:58
 msgid "Don't encode process metadata"
-msgstr "Ne kódoljon folyamat-metaadatokat"
+msgstr "Ne kódolj folyamat-metaadatokat"
 
 #: ../../authoring-guide.md:60
 msgid ""
@@ -315,10 +313,10 @@ msgid ""
 " and decision-record identifiers, and agent or campaign labels. A reader "
 "should see the product, not the process that built it."
 msgstr ""
-"A dokumentáció elérési útjai, fájlnevei és tartalma csak domén- és "
-"témaneveket hordoznak. Ne tegye beléjük a dokumentációs keretrendszert "
+"A dokumentáció elérési útjai, fájlnevei és tartalma csak terület- és "
+"témaneveket hordoznak. Ne vidd beléjük a dokumentációs keretrendszert "
 "vagy a projektmenedzsment-folyamatot. Ez kizárja a hullám-, fázis- és "
-"lépésazonosítókat, a terv- és döntésirekord-azonosítókat, valamint az "
+"lépésazonosítókat, a terv- és döntésrekord-azonosítókat, valamint az "
 "ügynök- vagy kampánycímkéket. Az olvasónak a terméket kell látnia, nem a "
 "folyamatot, amely felépítette."
 

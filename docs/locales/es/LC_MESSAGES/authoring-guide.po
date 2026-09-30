@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Cadrumo es una aplicación española de presentación de declaraciones "
 "tributarias. La AEAT es la autoridad tributaria española externa. Esta "
-"guía le muestra cómo hacer un cambio en la documentación y llevarlo a "
+"guía te muestra cómo hacer un cambio en la documentación y llevarlo a "
 "través de la revisión. Existen cuatro superficies de documentación: el "
 "markdown del repositorio, los docstrings dentro del código y dos "
 "referencias generadas: una para la interfaz de programación de "
@@ -45,7 +45,7 @@ msgstr "Elige la superficie adecuada"
 
 #: ../../authoring-guide.md:7
 msgid "Where you make a change depends on what you're changing:"
-msgstr "Dónde hagas un cambio depende de lo que estés cambiando:"
+msgstr "El lugar donde haces un cambio depende de lo que vayas a cambiar:"
 
 #: ../../authoring-guide.md:9
 msgid ""
@@ -63,8 +63,8 @@ msgid ""
 msgstr ""
 "**Los docstrings** son la única fuente de la referencia de la API. Edita "
 "el docstring en el código y deja que Sphinx (la herramienta de "
-"construcción de la documentación) lo renderice. Nunca copia una firma en "
-"el texto a mano."
+"construcción de la documentación) lo renderice. Nunca copies una firma en"
+" el texto a mano."
 
 #: ../../authoring-guide.md:11
 msgid ""
@@ -87,7 +87,7 @@ msgid ""
 msgstr ""
 "**La referencia de la CLI** se genera a partir del árbol de comandos (el "
 "conjunto completo de comandos y subcomandos de la CLI). No la edites; "
-"regenérela con los comandos que se indican a continuación."
+"regenérala con los comandos que se indican a continuación."
 
 #: ../../authoring-guide.md:14
 msgid "Definitions of generation terms"
@@ -229,7 +229,7 @@ msgid ""
 " each page a Diataxis type — Diataxis is a documentation framework that "
 "sorts pages into four kinds: tutorial, how-to, reference, or explanation."
 msgstr ""
-"**Esquema.** Esboce el documento como títulos e intenciones de cada "
+"**Esquema.** Esboza el documento como títulos e intenciones de cada "
 "sección. Asigna a cada página un tipo de Diataxis: Diataxis es un marco "
 "de documentación que clasifica las páginas en cuatro clases: tutorial, "
 "guía práctica, referencia o explicación."
@@ -265,8 +265,8 @@ msgid ""
 "**Technical review.** Reviewers verify every command, flag, path, and "
 "class name against the code."
 msgstr ""
-"**Revisión técnica.** Los revisores verifican cada comando, flag, ruta y "
-"nombre de clase contra el código."
+"**Revisión técnica.** Los revisores verifican cada comando, opción, ruta "
+"y nombre de clase contra el código."
 
 #: ../../authoring-guide.md:51
 msgid ""
@@ -304,7 +304,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:58
 msgid "Don't encode process metadata"
-msgstr "No codifique metadatos del proceso"
+msgstr "No codifiques metadatos del proceso"
 
 #: ../../authoring-guide.md:60
 msgid ""

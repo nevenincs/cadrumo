@@ -30,9 +30,9 @@ msgid ""
 "the application programming interface (API) and one for the command-line "
 "interface (CLI)."
 msgstr ""
-"Cadrumo és una aplicació de presentació d'impostos espanyols. L'AEAT és "
+"Cadrumo és una aplicació per presentar impostos a Espanya. L'AEAT és "
 "l'autoritat fiscal espanyola externa. Aquesta guia et mostra com fer un "
-"canvi a la documentació i portar-lo per la revisió. Existeixen quatre "
+"canvi a la documentació i portar-lo per la revisió. Hi ha quatre "
 "superfícies de documentació: el markdown del repositori, les docstrings "
 "dins del codi font i dues referències generades: una per a la interfície "
 "de programació d'aplicacions (API) i una per a la interfície de línia "
@@ -44,7 +44,7 @@ msgstr "Tria la superfície adequada"
 
 #: ../../authoring-guide.md:7
 msgid "Where you make a change depends on what you're changing:"
-msgstr "On fas un canvi depèn d'allò que canvies:"
+msgstr "El lloc on fas un canvi depèn del que canvies:"
 
 #: ../../authoring-guide.md:9
 msgid ""
@@ -62,7 +62,8 @@ msgid ""
 msgstr ""
 "Les **docstrings** són la font única de la referència de l'API. Edita la "
 "docstring al codi font i deixa que Sphinx (l'eina de construcció de la "
-"documentació) la representi. No copiïs mai una signatura a la prosa a mà."
+"documentació) la generi. No copiïs mai una signatura a mà dins de la "
+"prosa."
 
 #: ../../authoring-guide.md:11
 msgid ""
@@ -74,7 +75,7 @@ msgstr ""
 "La **referència de l'API** es genera a partir dels mòduls del codi font a"
 " l'inici de cada compilació completa de la documentació. Només la seva "
 "pàgina de resum, `docs/api/index.md`, s'escriu a mà; les pàgines dels "
-"mòduls són resultat de la compilació i no es desen mai al repositori."
+"mòduls són sortida de la compilació i no es desen mai al repositori."
 
 #: ../../authoring-guide.md:12
 msgid ""
@@ -94,7 +95,9 @@ msgstr "Definicions dels termes de generació"
 msgid ""
 "When working with generated documentation, understand the following "
 "terminology:"
-msgstr "Quan treballis amb documentació generada, comprèn la terminologia següent:"
+msgstr ""
+"Quan treballis amb documentació generada, cal que coneguis la "
+"terminologia següent:"
 
 #: ../../authoring-guide.md:18
 msgid ""
@@ -126,7 +129,7 @@ msgstr "Previsualitza i verifica un canvi"
 
 #: ../../authoring-guide.md:23
 msgid "Choose the narrowest preview that shows your change:"
-msgstr "Tria la previsualització més acotada que mostri el teu canvi:"
+msgstr "Tria la previsualització més reduïda que mostri el teu canvi:"
 
 #: ../../authoring-guide.md:25
 msgid ""
@@ -160,9 +163,9 @@ msgstr ""
 "**Previsualització en directe:** `just docs-serve` recompila i actualitza"
 " el navegador cada vegada que canvia una pàgina dins de `docs/`. Serveix "
 "les pàgines per als contribuents al port 8788, i tornar-lo a executar es "
-"connecta a la previsualització que ja està en marxa. Per vigilar també "
-"les docstrings i les pàgines de l'API, executa `uv run --no-sync python "
-"-m dev.docs.serve --scope full --open-browser`."
+"connecta a la previsualització que ja està en marxa. Per seguir també els"
+" canvis de les docstrings i de les pàgines de l'API, executa `uv run "
+"--no-sync python -m dev.docs.serve --scope full --open-browser`."
 
 #: ../../authoring-guide.md:28
 msgid ""
@@ -170,8 +173,7 @@ msgid ""
 "API reference. Run it before you hand a change over for review."
 msgstr ""
 "**Compilació completa:** `just docs-build` compila tot el lloc, inclosa "
-"la referència de l'API. Executa-la abans de lliurar un canvi per a la "
-"revisió."
+"la referència de l'API. Executa-la abans d'enviar un canvi a revisió."
 
 #: ../../authoring-guide.md:30
 msgid ""
@@ -192,10 +194,9 @@ msgid ""
 "then run the command again."
 msgstr ""
 "`just docs-sequences-check` i `just docs-generate-sequences` es neguen a "
-"executar-se mentre l'autoritat local del registre estigui "
-"desactualitzada. Actualitza-la amb `uv run --no-sync python -m "
-"dev.registry.pipeline publish-authority --if-stale` i torna a executar "
-"l'ordre."
+"executar-se mentre l'autoritat local del registre estigui obsoleta. "
+"Actualitza-la amb `uv run --no-sync python -m dev.registry.pipeline "
+"publish-authority --if-stale` i torna a executar l'ordre."
 
 #: ../../authoring-guide.md:40
 msgid ""
@@ -238,7 +239,7 @@ msgid ""
 msgstr ""
 "**Refinament.** Un revisor sense context del projecte llegeix només "
 "l'esquema i confirma que un nouvingut entendria què aporta cada secció. "
-"Revisa fins que cada secció ho superi."
+"Fes els canvis necessaris fins que totes les seccions ho superin."
 
 #: ../../authoring-guide.md:48
 msgid ""
@@ -261,8 +262,8 @@ msgid ""
 "**Technical review.** Reviewers verify every command, flag, path, and "
 "class name against the code."
 msgstr ""
-"**Revisió tècnica.** Els revisors verifiquen cada ordre, indicador, camí "
-"i nom de classe contra el codi."
+"**Revisió tècnica.** Els revisors verifiquen cada ordre, opció, camí i "
+"nom de classe amb el codi."
 
 #: ../../authoring-guide.md:51
 msgid ""
@@ -292,15 +293,15 @@ msgid ""
 "quality, work from the document alone, without the codebase. The "
 "separation keeps each judgment honest."
 msgstr ""
-"Mantén la recerca, la redacció i la revisió en mans separades. Quan "
+"Mantén la recerca, la redacció i la revisió en mans diferents. Quan "
 "apleguis context, no escriguis la prosa final. Quan redactis, escriu a "
 "partir del context aplegat i no inventis fets. Quan revisis la qualitat "
-"editorial, treballa només amb el document, sense el codi base. La "
-"separació manté honest cada judici."
+"editorial, treballa només amb el document, sense la base de codi. La "
+"separació garanteix que cada valoració sigui honesta."
 
 #: ../../authoring-guide.md:58
 msgid "Don't encode process metadata"
-msgstr "No codifiquis metadades de procés"
+msgstr "No hi incloguis metadades de procés"
 
 #: ../../authoring-guide.md:60
 msgid ""
