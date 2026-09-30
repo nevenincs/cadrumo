@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:ccc151a3d26a844e4457e2d5e213f3ab1d5988a7f2012a65437a0ea86ff505eb'
+body_hash: 'sha256:f67c57197ea94097ef2b6373210b9d20a66fa9b382875438adb35b0388e037d5'
 ---
 
 # `tui-registry-api-gate` plan
@@ -59,7 +59,7 @@ pages must show the calculated boxes and the review's findings.
 - [x] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [x] `S07` - Read a persisted boolean-channel binding override as a truth value in the work review, with the truth tokens defined once beside the stored field the replay writer fills, because acceptance showed the review refusing every Modelo 100 revision; `src/cadrumo/domain/modelos/calculation_revision.py`.
 - [x] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
+- [x] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
 
 ## Parallelization
 
