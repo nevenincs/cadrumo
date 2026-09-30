@@ -738,13 +738,8 @@ operation:
     status:
       running: Running
     terminal:
-      cancelled: Cancelled
       failed: Failed
-      interrupted: Interrupted
-      refused: Refused
-      succeeded: Succeeded
       succeeded_partial: Partly succeeded
-      timed_out: Timed out
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.
@@ -1918,35 +1913,6 @@ tui:
     unreadable: The reader's state could not be read.
     verify: Check model
   modelo:
-    assertion:
-      matched: Matches
-      mismatched: Does not match
-      not_present: None recorded
-    capability:
-      calculation_materialization: Calculated values
-      filing_draft_readiness: Filing draft
-      schema_inspection: Form layout
-      verification_readiness: Verification
-    destination:
-      column: Page
-      filing: Filing
-      heading: Pages of this declaration
-      inputs: Inputs
-      provenance: Provenance
-      results: Results
-      verification: Verification
-    disposition:
-      available: Available
-      not_applicable: Does not apply
-      refused: Refused
-      unmeasured: Not measured
-    edit:
-      apply: Apply declared values
-      binding: Declared input {binding}
-      scalar: Box {casilla}
-    evidence_kind:
-      legal: Legal reference
-      source: Source reference
     export:
       artefact:
         calculation_report_csv: Calculation report (CSV), a local record only
@@ -2010,21 +1976,6 @@ tui:
           not_official: 'This file is not official AEAT filing evidence. Official
             evidence comes from AEAT after filing: justificante; consulta de declaraciones
             presentadas; or CSV cotejo.'
-    finding_kind:
-      advisory: Advice
-      blocking_rule: Rule not met
-      cross_period_dependency_unclean: Earlier period needs attention
-      missing_required_casilla: Required box missing
-      reconciliation_mismatch: Totals do not agree
-    finding_severity:
-      blocking: Blocks filing
-      warning: Warning
-    input_kind:
-      bound: Filled from your records
-      computed: Calculated
-      informational: For information only
-      manual: You enter it
-      projection_only: Shown, not filed
     m303_evidence:
       admission_unavailable: A new attestation cannot be recorded for this declaration
         here. Nothing was calculated.
@@ -2048,36 +1999,13 @@ tui:
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts
-    record_family:
-      bindings: Values from your records
-      casillas: Boxes
-      formulas: Formulas
-      parameters: Parameters
-      relations: Links to other forms
-    recovery_action:
-      operator:
-        modelo:
-          work:
-            calculate: Calculate this work unit
-            create: Create the work unit for this declaration
-            status: Review this work unit's status
-            verify: Verify this work unit
-    review_status:
-      agent_reviewed: Reviewed automatically
-      operator_reviewed: Reviewed by a person
-      pending_review: Not reviewed yet
-    technical:
-      column:
-        field: Detail
-        value: Identifier
-      finding_refs: Legal references, finding {position}
-      producer_of: Source of "{capability}"
-      record_family: Section
-    technical_details: Technical details
     workbench:
       attention:
         blocked: Blocks filing
         staged: Changed, not applied
+      calculate:
+        apply_first: Apply or discard your changes before recalculating [R].
+      defaults_to_confirm: 'defaults not yet confirmed: {count} [n]'
       design_constant: '{column}: {value} · fixed by the official design'
       details_page: Calculation details
       disclosure:
@@ -2124,6 +2052,9 @@ tui:
         restore: Restore source
         save: Add to changes
         unreadable: This value could not be read.
+      export:
+        title: Export the declaration
+        verify_first: Verify the declaration before exporting it [F8].
       filter:
         all: all boxes
         attention: only what needs attention
@@ -2132,13 +2063,16 @@ tui:
         empty: There are no boxes in this view.
         feeds: 'Used in: {boxes}'
         formula: 'Calculation: {formula}'
+        keys: 'Keys: {keys}'
         legal: 'Legal basis: {citations}'
         no_explanation: There is no written explanation for this box yet.
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
       key:
         back: Back
+        calculate: Calculate
         edit: Edit
+        export: Export
         filter: Filter
         help: Help
         next_attention: Next to do
@@ -2274,34 +2208,9 @@ tui:
         fill: Fill in
         review: Review
       value:
+        fixed_by_design: fixed
         not_applicable: n/a
       was: was {value}
-    workspace_refusal:
-      facts:
-        modelo: Modelo
-        period: Period
-        required_grade: Required grade
-        work_unit_id: Work unit
-      reason:
-        authority_grade_unavailable: The selected revision's authority does not yet
-          support the requested calculated view.
-        bucket_assertion_mismatch: The declaration's stored identity does not match
-          what was requested.
-        calculation_unavailable: This declaration has not been calculated yet, so
-          no values are available.
-        consistency_unavailable: The declaration's consistency could not be confirmed.
-        locale_unavailable: The declaration's translated labels could not be read.
-        schema_unavailable: The declaration's schema could not be read.
-        static_inspection_unavailable: The form layout itself could not be read for
-          this declaration.
-        target_not_found: No work exists yet for this declaration, so there is nothing
-          to calculate.
-        visible_target_ambiguous: More than one declaration matches this address,
-          so none can be opened as one.
-        workspace_changed: This declaration changed while it was open; reopen it to
-          see the current state.
-      static_fallback: Showing the form layout only. No calculated values are shown
-        below.
   root:
     account:
       appearance: Appearance

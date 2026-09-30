@@ -72,27 +72,37 @@ class StepState:
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchProgress:
-    """The journey's state and the next action it offers."""
+    """The journey's state, the next action it offers and how many defaults remain unconfirmed."""
 
     steps: tuple[StepState, ...]
     next_action: NextAction
     count: int
+    defaults_to_confirm: int = 0
 
 
 def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
-    """Place a declaration on the filing journey from its form and lifecycle facts."""
-    to_fill = form.counts.needs_input + form.counts.default_to_confirm
+    """Place a declaration on the filing journey from its form and lifecycle facts.
+
+    The lifecycle facts dominate: a verified declaration has passed its checks
+    and a filed one has been filed, whatever its form still marks, so neither is
+    sent back to filling. Filling asks only for boxes that need the filer; a
+    default the filer has not confirmed is reported beside the next action
+    rather than holding the journey back. Every step shows whether it is done,
+    wherever it sits; the first step not done is the current one.
+    """
+    to_fill = form.counts.needs_input
     blocked = form.counts.blocked
+    clean = staged == 0
     done = {
-        WorkbenchStep.FILL: to_fill == 0 and staged == 0,
-        WorkbenchStep.CALCULATE: form.calculation_revision_id is not None and staged == 0,
-        WorkbenchStep.REVIEW: verified and blocked == 0 and staged == 0,
-        WorkbenchStep.FILE: filed and staged == 0,
+        WorkbenchStep.FILL: clean and (filed or verified or to_fill == 0),
+        WorkbenchStep.CALCULATE: clean and form.calculation_revision_id is not None,
+        WorkbenchStep.REVIEW: clean and verified and blocked == 0,
+        WorkbenchStep.FILE: clean and filed,
     }
     steps: list[StepState] = []
     current_found = False
     for step in WorkbenchStep:
-        if done[step] and not current_found:
+        if done[step]:
             steps.append(StepState(step, StepStatus.DONE))
         elif not current_found:
             current_found = True
@@ -101,7 +111,8 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         else:
             steps.append(StepState(step, StepStatus.PENDING))
     action, count = _next(form, staged=staged, to_fill=to_fill, blocked=blocked, verified=verified, filed=filed)
-    return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count)
+    advisory = 0 if verified or filed or action is NextAction.APPLY else form.counts.default_to_confirm
+    return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count, defaults_to_confirm=advisory)
 
 
 def _next(
@@ -109,17 +120,17 @@ def _next(
 ) -> tuple[NextAction, int]:
     if staged:
         return NextAction.APPLY, staged
+    if filed:
+        return NextAction.DONE, 0
+    if verified:
+        return NextAction.FILE, 0
     if to_fill:
         return NextAction.FILL, to_fill
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
     if blocked:
         return NextAction.RESOLVE, blocked
-    if not verified:
-        return NextAction.VERIFY, 0
-    if not filed:
-        return NextAction.FILE, 0
-    return NextAction.DONE, 0
+    return NextAction.VERIFY, 0
 
 
 def _step_name(step: WorkbenchStep) -> str:
@@ -137,12 +148,20 @@ def next_action_text(progress: WorkbenchProgress) -> str:
     return tr(f"tui.modelo.workbench.next.{progress.next_action.value}", count=progress.count)
 
 
+def defaults_text(progress: WorkbenchProgress) -> str:
+    """Say how many defaults the filer has not confirmed, or nothing when none remain."""
+    if not progress.defaults_to_confirm:
+        return ""
+    return tr("tui.modelo.workbench.defaults_to_confirm", count=progress.defaults_to_confirm)
+
+
 __all__ = [
     "NextAction",
     "StepState",
     "StepStatus",
     "WorkbenchProgress",
     "WorkbenchStep",
+    "defaults_text",
     "next_action_text",
     "stepper_text",
     "workbench_progress",

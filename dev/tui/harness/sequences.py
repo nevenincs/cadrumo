@@ -44,7 +44,8 @@ from cadrumo.entrypoints.tui.launcher import (
     compose_installed_workbench_root,
     operation_services_scope,
 )
-from cadrumo.entrypoints.tui.modelo.routes import MODELO_WORKSPACE_DESTINATIONS
+from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.tests.frame import capture
 from dev.docs.sequences.checks import discover_sequences
@@ -53,15 +54,16 @@ from dev.docs.sequences.golden_store import golden_path, read_golden
 from dev.docs.sequences.runner import SANDBOX_PROFILE_LABEL, SequenceSandbox, executed_sequence_sandbox
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
-_WORKSPACE_PREFIX: Final[str] = "modelo.workspace."
 _DECLARATIONS_DESTINATION: Final = "workbench.declarations"
 _GOLDEN_PROBLEMS_KEPT: Final[int] = 5
 
-_PAGE_SCREENS: Final[dict[str, object]] = {
-    destination.removeprefix(_WORKSPACE_PREFIX): factory
-    for destination, factory in MODELO_WORKSPACE_DESTINATIONS.items()
+_PAGE_SCREENS: Final[dict[str, type[object]]] = {
+    "workbench": ModeloWorkbenchScreen,
+    "sources": WorkbenchSourcesScreen,
 }
-"""Each workspace page, by the short name a scenario uses, to the screen its route builds."""
+"""Each page past Declarations, by the short name a scenario uses, to the screen the filer lands on."""
+_PAGE_KEYS: Final[dict[str, tuple[str, ...]]] = {"workbench": (), "sources": ("s",)}
+"""The keys a filer presses on the workbench to reach each page."""
 
 
 @dataclass(frozen=True)
@@ -91,11 +93,7 @@ this only chooses which declaration of its outcome to show."""
 
 
 def scenario_pages() -> tuple[str, ...]:
-    """The Declarations list, then every Modelo workspace page in route-table order.
-
-    Read from the production route table, so a page added there is captured
-    with no edit here.
-    """
+    """The Declarations list, then the declaration's workbench and the views it opens."""
     return (DECLARATIONS_PAGE, *_PAGE_SCREENS)
 
 
@@ -105,10 +103,10 @@ def scenario_surface(sequence_id: str, page: str) -> str:
 
 
 def page_interfaces(page: str) -> tuple[str, ...]:
-    """The interface class a scenario page paints, from the route table that builds it.
+    """The interface class a scenario page paints.
 
     The Declarations page claims nothing: its screen is already covered by the
-    fixture surfaces, and which subclass a route builds is the route's business.
+    fixture surfaces.
     """
     factory = _PAGE_SCREENS.get(page)
     if not isinstance(factory, type):
@@ -233,8 +231,10 @@ async def _capture(
         await _settle(pilot)
         if shot.page != DECLARATIONS_PAGE:
             await _select(pilot, "#declarations-list", _declaration_key(scenario, app))
-            if shot.page != "overview":
-                await _select(pilot, "#workspace-overview-destinations", f"{_WORKSPACE_PREFIX}{shot.page}")
+            keys = _PAGE_KEYS[shot.page]
+            if keys:
+                await pilot.press(*keys)
+                await _settle(pilot)
             _require_page(scenario, app, shot.page)
         frame = capture(
             app,

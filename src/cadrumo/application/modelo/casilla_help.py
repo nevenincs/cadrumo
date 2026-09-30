@@ -31,6 +31,7 @@ from typing import Final
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -148,7 +149,7 @@ class ModeloCasillaHelpCardV1(BaseModel):
     feeds: tuple[str, ...]
 
 
-class CasillaHelpCatalogueError(LookupError):
+class CasillaHelpCatalogueError(InternalInvariantError):
     """The catalogue carries no text for a help phrase the card must show."""
 
 

@@ -734,6 +734,16 @@ errors:
       sus textos de presentación.'
     internal_flow_validator_registry: 'Error interno: el registro de validadores del
       flujo guiado rechazó la operación.'
+    internal_modelo_help_catalogue_gap: Falta en el catálogo un texto de ayuda de
+      esta casilla.
+    internal_modelo_source_kind_unclassified: Un origen de valores no tiene familia
+      declarada, así que no se puede explicar.
+    internal_modelo_value_presentation_catalogue_gap: Falta en el catálogo una palabra
+      para mostrar un valor.
+    internal_modelo_value_presentation_unknown: El tipo de valor de una casilla no
+      tiene regla de presentación.
+    internal_modelo_work_form_layout: La distribución del impreso de este modelo no
+      coincide con su revisión.
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
@@ -856,8 +866,6 @@ errors:
     canonical_tui_modelo_workspace_declaration_admission: La declaración del espacio
       de trabajo de Modelo no se puede admitir en la generación actual del espacio
       de trabajo.
-    canonical_tui_modelo_workspace_session_admission: La sesión del espacio de trabajo
-      de Modelo no se puede admitir a partir de la proyección proporcionada.
     canonical_tui_module_argument: El módulo TUI solo admite los argumentos compatibles.
     canonical_tui_navigation_contract: La petición de navegación del TUI infringe
       su contrato.
@@ -1173,6 +1181,7 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_edit_parse: No se ha podido leer este dato.
     refused_modelo_export_prior_domiciliation_election_required: La exportación del
       modelo 303 necesita una elección sobre la domiciliación anterior (mantenerla,
       o anularla o modificarla); no se indicó ninguna, así que no se ha escrito nada.

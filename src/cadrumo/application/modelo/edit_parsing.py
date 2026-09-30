@@ -27,6 +27,7 @@ from typing import Annotated, Final
 from pydantic import Field
 
 from ...core.decimal.grammar import european_thousands_reading_is_ambiguous
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.identity.documents import IdentityError, SpanishTaxIdFormat
@@ -108,11 +109,19 @@ _NIF_IDENTITY_REASONS: Final = {
 }
 
 
-class _RefusedError(Exception):
-    """Internal short-circuit carrying one reason and its message arguments."""
+_PARSE_REFUSED_KEY: Final[str] = "errors.refused.refused_modelo_edit_parse"
+
+
+class ModeloEditParseRefusedError(CadrumoError):
+    """One entry the grammar refuses, with its reason and message arguments.
+
+    Raised inside the parser and turned into a typed refusal at its boundary,
+    so a caller receives a refusal value, never this error.
+    """
 
     def __init__(self, reason: ModeloEditParseReason, *arguments: str) -> None:
-        super().__init__(reason.value)
+        """Carry the refusal's reason and its message arguments, never the refused text."""
+        super().__init__(translated_message=_PARSE_REFUSED_KEY, context={"reason": reason.value})
         self.reason = reason
         self.arguments = arguments
 
@@ -129,7 +138,7 @@ def _valid_groups(integer_part: str, separator_set: frozenset[str]) -> str:
     if not _GROUPED_INTEGER_RE.fullmatch(groups[0]) or any(
         len(group) != 3 or not group.isdigit() for group in groups[1:]
     ):
-        raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
     return "".join(groups)
 
 
@@ -138,7 +147,7 @@ def _split_on_decimal(body: str, decimal_mark: str) -> tuple[str, str | None]:
     if not mark:
         return body, None
     if not tail.isdigit() or not head:
-        raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
     return head, tail
 
 
@@ -156,12 +165,12 @@ def _read_single_mark(
         return _valid_groups(body, frozenset({mark}))
     lead, _, tail = body.partition(mark)
     if not lead or not tail.isdigit() or not lead.isdigit():
-        raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
     if mark == marks.decimal:
         return f"{lead}.{tail}"
     # The mark is this locale's grouping or the other convention's decimal mark.
     if european_thousands_reading_is_ambiguous(f"{lead}.{tail}"):
-        raise _RefusedError(ModeloEditParseReason.AMBIGUOUS_SEPARATOR)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.AMBIGUOUS_SEPARATOR)
     normalisations.append(ModeloEditNormalisation.FOREIGN_DECIMAL_MARK_READ)
     return f"{lead}.{tail}"
 
@@ -170,25 +179,25 @@ def _canonical_number(lexeme: str, locale: OutputLanguage, normalisations: list[
     """Read one localized number into a decimal, refusing anything two-way readable."""
     text = lexeme.strip()
     if not text:
-        raise _RefusedError(ModeloEditParseReason.EMPTY)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.EMPTY)
     if text.lower() in _NON_FINITE:
-        raise _RefusedError(ModeloEditParseReason.NON_FINITE)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NON_FINITE)
     if text.startswith("+"):
-        raise _RefusedError(ModeloEditParseReason.EXPLICIT_PLUS)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.EXPLICIT_PLUS)
     if _SCIENTIFIC_RE.fullmatch(text):
-        raise _RefusedError(ModeloEditParseReason.SCIENTIFIC_NOTATION)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.SCIENTIFIC_NOTATION)
     if not _NUMERIC_CHARS_RE.fullmatch(text):
-        raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
     negative = text.startswith("-")
     body = text[1:] if negative else text
     marks = _LOCALE_MARKS[locale]
     spaces = [character for character in body if character in _SPACE_GROUPS]
     if spaces:
         if not marks.groups <= _SPACE_GROUPS:
-            raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
         integer_part, fraction = _split_on_decimal(body, marks.decimal)
         if "." in integer_part or "," in integer_part:
-            raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
         normalisations.append(ModeloEditNormalisation.SEPARATORS_REMOVED)
         digits = _valid_groups(integer_part, _SPACE_GROUPS)
         canonical = digits if fraction is None else f"{digits}.{fraction}"
@@ -198,7 +207,7 @@ def _canonical_number(lexeme: str, locale: OutputLanguage, normalisations: list[
         group_mark = "," if decimal_mark == "." else "."
         integer_part, fraction = _split_on_decimal(body, decimal_mark)
         if decimal_mark in integer_part:
-            raise _RefusedError(ModeloEditParseReason.BAD_GROUPING)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
         digits = _valid_groups(integer_part, frozenset({group_mark}))
         normalisations.append(ModeloEditNormalisation.SEPARATORS_REMOVED)
         if decimal_mark != marks.decimal:
@@ -209,7 +218,7 @@ def _canonical_number(lexeme: str, locale: OutputLanguage, normalisations: list[
     else:
         canonical = body
     if not _CANONICAL_DECIMAL_RE.fullmatch(canonical):
-        raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
     return _finite(f"-{canonical}" if negative else canonical)
 
 
@@ -217,34 +226,34 @@ def _finite(canonical: str) -> Decimal:
     try:
         value = Decimal(canonical)
     except InvalidOperation as exc:
-        raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER) from exc
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER) from exc
     if not value.is_finite():
-        raise _RefusedError(ModeloEditParseReason.NON_FINITE)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NON_FINITE)
     return value
 
 
 def _typed_number(value: ModeloScalar) -> Decimal:
     """Read an already-typed or machine-canonical value; no locale grammar applies."""
     if isinstance(value, bool):
-        raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
     if isinstance(value, Decimal):
         if not value.is_finite():
-            raise _RefusedError(ModeloEditParseReason.NON_FINITE)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.NON_FINITE)
         return value
     if isinstance(value, int):
         return Decimal(value)
     if isinstance(value, str):
         text = value.strip()
         if text.lower() in _NON_FINITE:
-            raise _RefusedError(ModeloEditParseReason.NON_FINITE)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.NON_FINITE)
         if text.startswith("+"):
-            raise _RefusedError(ModeloEditParseReason.EXPLICIT_PLUS)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.EXPLICIT_PLUS)
         if _SCIENTIFIC_RE.fullmatch(text):
-            raise _RefusedError(ModeloEditParseReason.SCIENTIFIC_NOTATION)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.SCIENTIFIC_NOTATION)
         if not _CANONICAL_DECIMAL_RE.fullmatch(text):
-            raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
         return _finite(text)
-    raise _RefusedError(ModeloEditParseReason.NOT_A_NUMBER)
+    raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
 
 
 def _fraction_digits(value: Decimal) -> int:
@@ -256,22 +265,24 @@ def _checked_number(value: Decimal, grammar: ModeloEditValueGrammarV1) -> Decima
     """Apply precision, sign, bounds and the money operand range; never round."""
     if grammar.family is ModeloEditValueFamily.INTEGER:
         if value != value.to_integral_value():
-            raise _RefusedError(ModeloEditParseReason.NOT_AN_INTEGER)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_AN_INTEGER)
         value = Decimal(int(value))
     elif grammar.max_fraction_digits is not None and _fraction_digits(value.normalize()) > grammar.max_fraction_digits:
-        raise _RefusedError(ModeloEditParseReason.TOO_MANY_DECIMALS, str(grammar.max_fraction_digits))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_MANY_DECIMALS, str(grammar.max_fraction_digits))
     if grammar.sign == CasillaSignConstraint.NON_NEGATIVE and value < 0:
-        raise _RefusedError(ModeloEditParseReason.NEGATIVE_NOT_ALLOWED)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NEGATIVE_NOT_ALLOWED)
     if grammar.sign == CasillaSignConstraint.NON_POSITIVE and value > 0:
-        raise _RefusedError(ModeloEditParseReason.POSITIVE_NOT_ALLOWED)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.POSITIVE_NOT_ALLOWED)
     minimum = grammar.minimum_value()
     if minimum is not None and value < minimum:
-        raise _RefusedError(ModeloEditParseReason.BELOW_MINIMUM, canonical_decimal_string(minimum))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.BELOW_MINIMUM, canonical_decimal_string(minimum))
     maximum = grammar.maximum_value()
     if maximum is not None and value > maximum:
-        raise _RefusedError(ModeloEditParseReason.ABOVE_MAXIMUM, canonical_decimal_string(maximum))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.ABOVE_MAXIMUM, canonical_decimal_string(maximum))
     if grammar.money_operand_bound and abs(value) > MONEY_OPERAND_MAXIMUM:
-        raise _RefusedError(ModeloEditParseReason.OUT_OF_OPERAND_RANGE, canonical_decimal_string(MONEY_OPERAND_MAXIMUM))
+        raise ModeloEditParseRefusedError(
+            ModeloEditParseReason.OUT_OF_OPERAND_RANGE, canonical_decimal_string(MONEY_OPERAND_MAXIMUM)
+        )
     return value
 
 
@@ -286,19 +297,19 @@ def _typed_boolean(value: ModeloScalar) -> bool:
     elif isinstance(value, str):
         token = value.strip().lower()
     else:
-        raise _RefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
     if token not in _TYPED_BOOLEAN_TOKENS:
-        raise _RefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
     return _TYPED_BOOLEAN_TOKENS[token]
 
 
 def _lexeme_boolean(lexeme: str, locale: OutputLanguage) -> bool:
     token = lexeme.strip().lower()
     if not token:
-        raise _RefusedError(ModeloEditParseReason.EMPTY)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.EMPTY)
     words = {**_LOCALE_MARKS[locale].booleans, **_UNIVERSAL_BOOLEANS}
     if token not in words:
-        raise _RefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_BOOLEAN)
     return words[token]
 
 
@@ -311,7 +322,7 @@ def _chosen_token(text: str, grammar: ModeloEditValueGrammarV1, normalisations: 
         return text
     folded = [token for token in tokens if token.casefold() == text.casefold()]
     if len(folded) != 1:
-        raise _RefusedError(ModeloEditParseReason.NOT_IN_CHOICES, str(len(tokens)))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_IN_CHOICES, str(len(tokens)))
     normalisations.append(ModeloEditNormalisation.CASE_MATCHED)
     return folded[0]
 
@@ -321,15 +332,15 @@ def _checked_nif(text: str, tax_id_format: SpanishTaxIdFormat) -> str:
         return validate_spanish_tax_id(text, tax_id_format)
     except IdentityError as refused:
         reason = _NIF_IDENTITY_REASONS.get(refused.translated_message or "", ModeloEditParseReason.NIF_CHECKSUM)
-        raise _RefusedError(reason) from refused
+        raise ModeloEditParseRefusedError(reason) from refused
 
 
 def _checked_iban(text: str) -> str:
     canonical = normalise_iban(text)
     if IBAN_SHAPE_RE.fullmatch(canonical) is None:
-        raise _RefusedError(ModeloEditParseReason.IBAN_SHAPE)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.IBAN_SHAPE)
     if iban_mod_97(canonical) != 1:
-        raise _RefusedError(ModeloEditParseReason.IBAN_CHECKSUM)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.IBAN_CHECKSUM)
     return canonical
 
 
@@ -342,20 +353,20 @@ def _checked_text(
 ) -> str:
     """Canonicalise text through the registry validator the engine runs, then its declared shape."""
     if not isinstance(value, str):
-        raise _RefusedError(ModeloEditParseReason.NOT_TEXT)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_TEXT)
     text = value.strip()
     if text != value:
         normalisations.append(ModeloEditNormalisation.TRIMMED)
     data_type = grammar.data_type
     if not text and data_type != "text":
-        raise _RefusedError(ModeloEditParseReason.EMPTY)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.EMPTY)
     if data_type in {"nif", "iban"}:
         stripped = text.translate(_NIF_SEPARATORS)
         if stripped != text:
             normalisations.append(ModeloEditNormalisation.SEPARATORS_REMOVED)
     if data_type == "nif":
         if tax_id_format is None:
-            raise _RefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
         canonical = _checked_nif(text, tax_id_format)
     elif data_type == "iban":
         canonical = _checked_iban(text)
@@ -366,15 +377,15 @@ def _checked_text(
         try:
             canonical = validate_registry_text_scalar(data_type, canonical, tax_id_format=tax_id_format)
         except RegistryValidationError as refused:
-            raise _RefusedError(ModeloEditParseReason.INVALID_CODE) from refused
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.INVALID_CODE) from refused
     if data_type in _UPPER_CASED_TEXT_TYPES and any(character.islower() for character in text):
         normalisations.append(ModeloEditNormalisation.UPPER_CASED)
     if grammar.min_length is not None and len(canonical) < grammar.min_length:
-        raise _RefusedError(ModeloEditParseReason.TOO_SHORT, str(grammar.min_length))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_SHORT, str(grammar.min_length))
     if grammar.max_length is not None and len(canonical) > grammar.max_length:
-        raise _RefusedError(ModeloEditParseReason.TOO_LONG, str(grammar.max_length))
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_LONG, str(grammar.max_length))
     if grammar.pattern is not None and re.fullmatch(grammar.pattern, canonical) is None:
-        raise _RefusedError(ModeloEditParseReason.PATTERN_MISMATCH)
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.PATTERN_MISMATCH)
     return canonical
 
 
@@ -410,14 +421,14 @@ def validate_modelo_edit_value(
     normalisations: list[ModeloEditNormalisation] = []
     try:
         if grammar.channel is ModeloEditValueChannel.UNAVAILABLE:
-            raise _RefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
         if grammar.family is ModeloEditValueFamily.BOOLEAN:
             return _outcome(address, _typed_boolean(value), normalisations)
         if grammar.family in {ModeloEditValueFamily.DECIMAL, ModeloEditValueFamily.INTEGER}:
             return _outcome(address, _checked_number(_typed_number(value), grammar), normalisations)
         text = _checked_text(value, grammar, tax_id_format=tax_id_format, normalisations=normalisations)
         return _outcome(address, text, normalisations)
-    except _RefusedError as refused:
+    except ModeloEditParseRefusedError as refused:
         return ModeloEditParseRefusalV1(address=address, reason=refused.reason, message_arguments=refused.arguments)
 
 
@@ -460,13 +471,13 @@ def parse_modelo_edit_lexeme(
     normalisations: list[ModeloEditNormalisation] = []
     try:
         if grammar.channel is ModeloEditValueChannel.UNAVAILABLE:
-            raise _RefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
+            raise ModeloEditParseRefusedError(ModeloEditParseReason.CHANNEL_UNAVAILABLE)
         if grammar.family is ModeloEditValueFamily.BOOLEAN:
             return _outcome(address, _lexeme_boolean(request.lexeme, request.entry_locale), normalisations)
         if grammar.family in {ModeloEditValueFamily.DECIMAL, ModeloEditValueFamily.INTEGER}:
             number = _canonical_number(request.lexeme, request.entry_locale, normalisations)
             return _outcome(address, _checked_number(number, grammar), normalisations)
-    except _RefusedError as refused:
+    except ModeloEditParseRefusedError as refused:
         return ModeloEditRefusedV1(
             refusal=ModeloEditParseRefusalV1(
                 address=address, reason=refused.reason, message_arguments=refused.arguments
@@ -479,6 +490,7 @@ def parse_modelo_edit_lexeme(
 
 
 __all__ = [
+    "ModeloEditParseRefusedError",
     "ModeloEditParseRequestV1",
     "modelo_edit_address_grammar",
     "parse_modelo_edit_lexeme",

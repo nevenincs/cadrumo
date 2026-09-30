@@ -33,8 +33,13 @@ from typing import Final
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
+from ...domain.calculations.registry.export_field_casilla import (
+    export_field_casilla_id,
+    layout_fields_in_emission_order,
+)
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
@@ -118,12 +123,24 @@ _BINDING_DATA_TYPE: Final[Mapping[str, str]] = {
 }
 
 
-class ModeloWorkFormLayoutError(ValueError):
+class ModeloWorkFormLayoutError(InternalInvariantError):
     """A declared layout does not account for every casilla exactly once."""
 
 
 class _FormContext:
     """Everything one form build reads, indexed once."""
+
+    def export_decimals(self, casilla_id: str) -> int | None:
+        """The implied decimals of the export field that emits one casilla, read once per form."""
+        if self._export_decimals is None:
+            decimals: dict[str, int] = {}
+            for layout in self.snapshot.revision.export_layouts:
+                for record, field in layout_fields_in_emission_order(layout):
+                    target = export_field_casilla_id(record, field, bindings=self.bindings)
+                    if target is not None and field.decimals is not None:
+                        decimals.setdefault(str(target), field.decimals)
+            self._export_decimals = decimals
+        return self._export_decimals.get(casilla_id)
 
     def __init__(
         self,
@@ -142,6 +159,8 @@ class _FormContext:
         self.rows: dict[str, ModeloWorkReviewCasilla] = {str(row.casilla_id): row for row in review.casillas}
         self.casillas: dict[str, CasillaDefinition] = {str(item.id): item for item in snapshot.revision.casillas}
         self.bindings: dict[str, BindingDefinition] = {str(item.id): item for item in snapshot.revision.bindings}
+        self.snapshot = snapshot
+        self._export_decimals: dict[str, int] | None = None
         manifest = snapshot.revision.completeness_manifest
         self.manifest: frozenset[str] = (
             frozenset() if manifest is None else frozenset(str(item.casilla_id) for item in manifest.casillas)
@@ -509,14 +528,32 @@ class _LayoutWalk:
         }
         self.seen: set[str] = set()
 
-    def casilla(self, casilla_id: str) -> ModeloFormField:
+    def casilla(self, casilla_id: str, *, design_constant: str | None = None) -> ModeloFormField:
+        """Show one placed casilla; a box whose value the official design fixes is never editable.
+
+        Its value is the design's literal read at the export field's declared
+        scale. A literal whose scale the registry does not declare is shown as
+        fixed without a number: neither the literal's raw digits nor the
+        engine's own figure for the box is what the filed fichero carries.
+        """
         if casilla_id in self.seen:
             raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
         placement = self.placements.get(casilla_id)
         if placement is None or placement.kind is not FormPlacementKind.ON_FORM:
             raise ModeloWorkFormLayoutError(f"casilla {casilla_id!r} sits on a page without an on-form placement")
         self.seen.add(casilla_id)
-        return _casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
+        field = _casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
+        if design_constant is None:
+            return field
+        fixed = _design_value(design_constant, self.context.export_decimals(casilla_id))
+        return field.model_copy(
+            update={
+                "editability": ModeloFormEditability.DESIGN_CONSTANT,
+                "not_writable_reason": None,
+                "origin": ModeloFormOrigin.INFORMATIONAL,
+                "value": fixed,
+            }
+        )
 
     def page(self, page: FormPageDefinition) -> ModeloFormPage:
         language = self.context.language
@@ -548,7 +585,7 @@ class _LayoutWalk:
         language = self.context.language
         if isinstance(block, FormFieldBlock):
             field = (
-                self.casilla(str(block.casilla_id))
+                self.casilla(str(block.casilla_id), design_constant=block.design_constant)
                 if block.casilla_id is not None
                 else _binding_field(str(block.binding_id), self.context)
             )
@@ -584,6 +621,10 @@ class _LayoutWalk:
             return ModeloFormGridCell(kind=kind, field=self.casilla(str(casilla_id)))
         if kind is FormCellKind.BINDING_INPUT and binding_id is not None:
             return ModeloFormGridCell(kind=kind, field=_binding_field(str(binding_id), self.context))
+        if kind is FormCellKind.DESIGN_CONSTANT and casilla_id is not None:
+            return ModeloFormGridCell(
+                kind=kind, field=self.casilla(str(casilla_id), design_constant=literal), literal=literal
+            )
         return ModeloFormGridCell(kind=kind, literal=literal)
 
     def repeating(self, block: FormRepeatingGroupBlock) -> ModeloFormRepeatingBlock:
@@ -611,6 +652,7 @@ class _LayoutWalk:
         return ModeloFormRepeatingBlock(
             id=block.id,
             columns=columns,
+            column_casilla_ids=column_casillas,
             column_data_types=data_types,
             min_rows=block.min_rows,
             max_rows=block.max_rows,
@@ -728,6 +770,13 @@ def build_modelo_work_form(
         operator_entries_known=entered_casilla_ids is not None,
         edit_admitted=permitted_surface is not None,
     )
+
+
+def _design_value(literal: str, decimals: int | None) -> Decimal | None:
+    """Read a design literal as the fichero writes it: digits with the export field's implied decimals."""
+    if decimals is None or not literal.isdigit():
+        return None
+    return Decimal(int(literal)).scaleb(-decimals)
 
 
 def _results(context: _FormContext) -> tuple[CasillaId, ...]:

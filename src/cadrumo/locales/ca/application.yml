@@ -898,6 +898,38 @@ application:
       verification_complete: Completa
       verification_incomplete: Incompleta
       verification_none: Sense verificació registrada
+    edit:
+      parse:
+        above_maximum: El valor màxim és {bound}.
+        address_not_writable: Aquesta casella no es pot canviar així.
+        ambiguous_separator: No queda clar quin signe separa els decimals; escriu
+          el nombre sense separador de milers, per exemple 1234,56.
+        bad_grouping: Els separadors de milers no estan ben col·locats; escriu, per
+          exemple, 1.234.567,89.
+        below_minimum: El valor mínim és {bound}.
+        channel_unavailable: Aquest valor encara no es pot introduir aquí.
+        empty: Escriu un valor.
+        explicit_plus: Escriu el nombre sense el signe +.
+        iban_checksum: Els dígits de control d'aquest IBAN no són correctes.
+        iban_shape: Aquest IBAN no té la forma correcta.
+        invalid_code: Aquest codi no és vàlid per a aquesta casella.
+        negative_not_allowed: Aquesta casella no admet imports negatius.
+        nif_checksum: La lletra de control d'aquest NIF no és correcta.
+        nif_leader: Aquest NIF no comença com un de vàlid.
+        nif_length: Un NIF té 9 caràcters.
+        non_finite: Escriu un nombre real.
+        not_a_boolean: Respon sí o no.
+        not_a_number: Escriu un nombre, per exemple 1.234,56.
+        not_an_integer: Escriu un nombre enter, sense decimals.
+        not_in_choices: Tria una de les {count} opcions permeses.
+        not_text: Escriu un text.
+        out_of_operand_range: L'import no pot superar {bound}.
+        pattern_mismatch: El text no té el format que demana l'imprès.
+        positive_not_allowed: Aquesta casella només admet imports negatius o zero.
+        scientific_notation: Escriu el nombre complet, sense notació científica.
+        too_long: Escriu com a màxim {length} caràcters.
+        too_many_decimals: Fes servir com a màxim {digits} decimals; no s'arrodoneix.
+        too_short: Escriu almenys {length} caràcters.
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
@@ -1421,7 +1453,6 @@ application:
       calculate: Calcula
       export: Exporta
       export_destination_placeholder: Camí de destinació de l'exportació
-      file: Registra la presentació local
       file_cancelled: La presentació local s'ha cancel·lat; no s'ha registrat res.
       file_confirm_accept: Registra la presentació local
       file_confirm_cancel: Cancel·la
@@ -1435,7 +1466,6 @@ application:
         export_destination_required: Introduïu un camí de destinació per a l'exportació.
         verification_required: Verifiqueu aquest càlcul abans de registrar una presentació
           local.
-      verify: Verifica
     profile_binding:
       errors:
         boolean_value_channel_mismatch: El fet del perfil per al vincle {binding_id}

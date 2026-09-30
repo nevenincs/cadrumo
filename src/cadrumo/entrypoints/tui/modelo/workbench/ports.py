@@ -13,32 +13,26 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
-    ModeloFormAddressV1,
-    ModeloFormField,
-    ModeloFormScalar,
-    ModeloWorkForm,
-)
+from .....application.modelo.work_form_models import ModeloFormAddressV1, ModeloFormField, ModeloFormScalar
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.casilla_id import CasillaId
 from .....core.external_constants import OutputLanguage
+from .....core.modelo_export_artefact import ModeloExportArtefact
+from .....core.payment_election import PaymentElection
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.refund_election import RefundElection
+from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
 
 if TYPE_CHECKING:
+    from .....application.modelo.operation_definitions import ModeloExportPublicResultV2
+    from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...operations.controller import OperationController
-
-
-@dataclass(frozen=True, slots=True)
-class WorkbenchLoadV1:
-    """One read of a declaration: its form and the lifecycle facts the journey needs."""
-
-    form: ModeloWorkForm
-    verified: bool
-    filed: bool
 
 
 class ModeloWorkbenchReaderV1(Protocol):
     """Reads one declaration's form and the help of its casillas."""
 
-    def load(self, language: OutputLanguage) -> WorkbenchLoadV1:
+    def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         """Read the declaration's current form in ``language``."""
         ...
 
@@ -85,6 +79,34 @@ class WorkbenchRefused:
 type WorkbenchParseOutcome = WorkbenchParsed | WorkbenchRefused
 
 
+@dataclass(frozen=True, slots=True)
+class WorkbenchCalculationEvidence:
+    """What a calculation must first ask the filer: the ordinary Modelo 303 filing answers."""
+
+    work_unit_id: str
+    asks_modelo_390: bool
+
+
+@dataclass(frozen=True, slots=True)
+class WorkbenchExportOffer:
+    """The exports this installation can publish, and whether the declaration asks payment elections."""
+
+    artefacts: tuple[ModeloExportArtefact, ...]
+    asks_elections: bool
+
+
+@dataclass(frozen=True, slots=True)
+class WorkbenchExportRequest:
+    """One export the filer asked for, with every election set, never blank."""
+
+    output_path: str
+    artefact: ModeloExportArtefact
+    refund_election: RefundElection
+    payment_election: PaymentElection
+    prior_domiciliation_election: PriorDomiciliationElection
+    replace_existing: bool
+
+
 class ModeloWorkbenchActionsV1(Protocol):
     """Parses the filer's typing and runs the declaration's operations."""
 
@@ -96,8 +118,12 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Submit the staged changes and recalculate, through the supervised operation."""
         ...
 
-    async def calculate(self) -> OperationController:
-        """Recalculate the declaration, keeping the filer's values."""
+    def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
+        """What the next calculation must first ask the filer, or ``None`` when it asks nothing."""
+        ...
+
+    async def calculate(self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None) -> OperationController:
+        """Recalculate the declaration, keeping the filer's values, with the answers it asked for."""
         ...
 
     async def verify(self) -> OperationController:
@@ -108,13 +134,27 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Record the verified calculation as filed locally."""
         ...
 
+    def export_offer(self) -> WorkbenchExportOffer:
+        """The exports on offer for this declaration."""
+        ...
+
+    async def export(self, request: WorkbenchExportRequest) -> OperationController:
+        """Export the verified calculation as the filer asked."""
+        ...
+
+    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+        """The facts of one settled export, or ``None`` when they cannot be read."""
+        ...
+
 
 __all__ = [
     "ModeloWorkbenchActionsV1",
     "ModeloWorkbenchReaderV1",
+    "WorkbenchCalculationEvidence",
     "WorkbenchChange",
     "WorkbenchChangeKind",
-    "WorkbenchLoadV1",
+    "WorkbenchExportOffer",
+    "WorkbenchExportRequest",
     "WorkbenchParseOutcome",
     "WorkbenchParsed",
     "WorkbenchRefused",

@@ -675,6 +675,16 @@ errors:
       its display copy.'
     internal_flow_validator_registry: 'Internal error: the guided flow validator registry
       rejected the operation.'
+    internal_modelo_help_catalogue_gap: A help text for this box is missing from the
+      catalogue.
+    internal_modelo_source_kind_unclassified: A value source has no declared family,
+      so it cannot be explained.
+    internal_modelo_value_presentation_catalogue_gap: A word for showing a value is
+      missing from the catalogue.
+    internal_modelo_value_presentation_unknown: A box's value type has no display
+      rule.
+    internal_modelo_work_form_layout: This modelo's form layout does not match its
+      revision.
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
@@ -791,8 +801,6 @@ errors:
       available.
     canonical_tui_modelo_workspace_declaration_admission: The Modelo workspace declaration
       cannot be admitted in the current workspace generation.
-    canonical_tui_modelo_workspace_session_admission: The Modelo workspace session
-      cannot be admitted from the supplied projection.
     canonical_tui_module_argument: The TUI module accepts only its supported arguments.
     canonical_tui_navigation_contract: The TUI navigation request violates its contract.
     canonical_tui_recovery_handover_cancelled: The recovery handover was cancelled
@@ -1089,6 +1097,7 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_edit_parse: This entry could not be read.
     refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
       needs a choice for any earlier direct debit (keep it, or cancel or modify it);
       none was given, so nothing was written. Choose one and export again.

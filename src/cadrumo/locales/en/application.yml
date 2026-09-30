@@ -816,6 +816,37 @@ application:
       verification_complete: Complete
       verification_incomplete: Incomplete
       verification_none: No verification recorded
+    edit:
+      parse:
+        above_maximum: The largest value allowed is {bound}.
+        address_not_writable: This box cannot be changed that way.
+        ambiguous_separator: It is unclear which mark separates the decimals; type
+          the number without thousands separators, for example 1234.56.
+        bad_grouping: The thousands separators are misplaced; type, for example, 1,234,567.89.
+        below_minimum: The smallest value allowed is {bound}.
+        channel_unavailable: This value cannot be entered here yet.
+        empty: Enter a value.
+        explicit_plus: Type the number without the + sign.
+        iban_checksum: The check digits of this IBAN are not correct.
+        iban_shape: This IBAN does not have the right shape.
+        invalid_code: This code is not valid for this box.
+        negative_not_allowed: This box does not accept negative amounts.
+        nif_checksum: The check letter of this NIF is not correct.
+        nif_leader: This NIF does not start like a valid one.
+        nif_length: A NIF has 9 characters.
+        non_finite: Enter a real number.
+        not_a_boolean: Answer yes or no.
+        not_a_number: Enter a number, for example 1,234.56.
+        not_an_integer: Enter a whole number, without decimals.
+        not_in_choices: Choose one of the {count} allowed options.
+        not_text: Enter some text.
+        out_of_operand_range: The amount cannot exceed {bound}.
+        pattern_mismatch: The text is not in the format the form asks for.
+        positive_not_allowed: This box accepts only negative amounts or zero.
+        scientific_notation: Type the whole number, without scientific notation.
+        too_long: Type at most {length} characters.
+        too_many_decimals: Use at most {digits} decimal places; nothing is rounded.
+        too_short: Type at least {length} characters.
     errors:
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result
@@ -1304,7 +1335,6 @@ application:
       calculate: Calculate
       export: Export
       export_destination_placeholder: Export destination path
-      file: Record local filing
       file_cancelled: Local filing was cancelled; nothing was recorded.
       file_confirm_accept: Record local filing
       file_confirm_cancel: Cancel
@@ -1317,7 +1347,6 @@ application:
           or reopen it before editing.
         export_destination_required: Enter an export destination path.
         verification_required: Verify this calculation before recording a local filing.
-      verify: Verify
     profile_binding:
       errors:
         boolean_value_channel_mismatch: The profile fact for binding {binding_id}

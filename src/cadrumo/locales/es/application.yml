@@ -899,6 +899,38 @@ application:
       verification_complete: Completa
       verification_incomplete: Incompleta
       verification_none: Sin verificación registrada
+    edit:
+      parse:
+        above_maximum: El valor máximo es {bound}.
+        address_not_writable: Esta casilla no se puede cambiar así.
+        ambiguous_separator: No queda claro qué signo separa los decimales; escribe
+          el número sin separador de miles, por ejemplo 1234,56.
+        bad_grouping: Los separadores de miles no están bien colocados; escribe, por
+          ejemplo, 1.234.567,89.
+        below_minimum: El valor mínimo es {bound}.
+        channel_unavailable: Este valor todavía no se puede introducir aquí.
+        empty: Escribe un valor.
+        explicit_plus: Escribe el número sin el signo +.
+        iban_checksum: Los dígitos de control de este IBAN no son correctos.
+        iban_shape: Este IBAN no tiene la forma correcta.
+        invalid_code: Este código no es válido para esta casilla.
+        negative_not_allowed: Esta casilla no admite importes negativos.
+        nif_checksum: La letra de control de este NIF no es correcta.
+        nif_leader: Este NIF no empieza como uno válido.
+        nif_length: Un NIF tiene 9 caracteres.
+        non_finite: Escribe un número real.
+        not_a_boolean: Responde sí o no.
+        not_a_number: Escribe un número, por ejemplo 1.234,56.
+        not_an_integer: Escribe un número entero, sin decimales.
+        not_in_choices: Elige una de las {count} opciones permitidas.
+        not_text: Escribe un texto.
+        out_of_operand_range: El importe no puede superar {bound}.
+        pattern_mismatch: El texto no tiene el formato que pide el impreso.
+        positive_not_allowed: Esta casilla solo admite importes negativos o cero.
+        scientific_notation: Escribe el número completo, sin notación científica.
+        too_long: Escribe como máximo {length} caracteres.
+        too_many_decimals: Usa como máximo {digits} decimales; no se redondea.
+        too_short: Escribe al menos {length} caracteres.
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
@@ -1426,7 +1458,6 @@ application:
       calculate: Calcular
       export: Exportar
       export_destination_placeholder: Ruta de destino de la exportación
-      file: Registrar presentación local
       file_cancelled: Se ha cancelado la presentación local; no se ha registrado nada.
       file_confirm_accept: Registrar presentación local
       file_confirm_cancel: Cancelar
@@ -1440,7 +1471,6 @@ application:
         export_destination_required: Introduce una ruta de destino para la exportación.
         verification_required: Verifica este cálculo antes de registrar una presentación
           local.
-      verify: Verificar
     profile_binding:
       errors:
         boolean_value_channel_mismatch: El dato del perfil para el vínculo {binding_id}

@@ -693,7 +693,7 @@ def _collect_verification_gate_findings(
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 
-def _existing_granting_verification_report(
+def granting_verification_report(
     catalogue: VerificationReportCatalogue,
     calculation_revision_id: CalculationRevisionId,
 ) -> VerificationReport | None:
@@ -934,7 +934,7 @@ def verify_modelo_revision_with_preconditions(
         # A non-draft revision with no granting report is an inconsistent state,
         # so it falls through to the hard refusal below rather than fabricating
         # one. Mirrors the re-file no-op in file_modelo_revision.
-        existing = _existing_granting_verification_report(
+        existing = granting_verification_report(
             require_verification_report_coordinates_current(vr_repo.load(), operation=operation),
             calculation_revision_id,
         )

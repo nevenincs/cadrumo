@@ -750,13 +750,8 @@ operation:
     status:
       running: Folyamatban
     terminal:
-      cancelled: Megszakítva
       failed: Sikertelen
-      interrupted: Félbeszakadt
-      refused: Elutasítva
-      succeeded: Sikeres
       succeeded_partial: Részben sikeres
-      timed_out: Időtúllépés
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
@@ -1944,35 +1939,6 @@ tui:
     unreadable: Az olvasó állapotát nem sikerült lekérdezni.
     verify: Modell ellenőrzése
   modelo:
-    assertion:
-      matched: Egyezik
-      mismatched: Nem egyezik
-      not_present: Nincs rögzítve
-    capability:
-      calculation_materialization: Számított értékek
-      filing_draft_readiness: Benyújtási tervezet
-      schema_inspection: Nyomtatvány felépítése
-      verification_readiness: Ellenőrzés
-    destination:
-      column: Oldal
-      filing: Benyújtás
-      heading: A bevallás oldalai
-      inputs: Bemenetek
-      provenance: Eredet
-      results: Eredmények
-      verification: Ellenőrzés
-    disposition:
-      available: Elérhető
-      not_applicable: Nem vonatkozik rá
-      refused: Elutasítva
-      unmeasured: Nincs felmérve
-    edit:
-      apply: Bevallott értékek alkalmazása
-      binding: 'Bevallott adat: {binding}'
-      scalar: '{casilla}. rovat'
-    evidence_kind:
-      legal: Jogszabályi hivatkozás
-      source: Forráshivatkozás
     export:
       artefact:
         calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
@@ -2038,21 +2004,6 @@ tui:
           not_official: 'Ez a fájl nem az AEAT hivatalos benyújtási bizonylata. A
             hivatalos bizonylatot az AEAT adja ki a benyújtás után: justificante;
             benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
-    finding_kind:
-      advisory: Tanács
-      blocking_rule: Nem teljesülő szabály
-      cross_period_dependency_unclean: Egy korábbi időszak figyelmet igényel
-      missing_required_casilla: Hiányzik egy kötelező mező
-      reconciliation_mismatch: Az összegek nem egyeznek
-    finding_severity:
-      blocking: Akadályozza a benyújtást
-      warning: Figyelmeztetés
-    input_kind:
-      bound: Az Ön nyilvántartásából töltődik
-      computed: Számított
-      informational: Csak tájékoztató
-      manual: Ön adja meg
-      projection_only: Megjelenik, de nem kerül benyújtásra
     m303_evidence:
       admission_unavailable: Itt nem rögzíthető új nyilatkozat ehhez a bevalláshoz.
         Semmi sem lett kiszámítva.
@@ -2076,36 +2027,14 @@ tui:
       stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
         volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
       title: A 303-es nyomtatvány bevallási adatai
-    record_family:
-      bindings: Értékek a nyilvántartásából
-      casillas: Mezők
-      formulas: Képletek
-      parameters: Paraméterek
-      relations: Kapcsolatok más nyomtatványokkal
-    recovery_action:
-      operator:
-        modelo:
-          work:
-            calculate: Számítsa ki ezt a munkaegységet
-            create: Hozza létre a bevalláshoz tartozó munkaegységet
-            status: Tekintse át ennek a munkaegységnek az állapotát
-            verify: Ellenőrizze ezt a munkaegységet
-    review_status:
-      agent_reviewed: Automatikusan átnézve
-      operator_reviewed: Ember nézte át
-      pending_review: Még nincs átnézve
-    technical:
-      column:
-        field: Részlet
-        value: Azonosító
-      finding_refs: Jogszabályi hivatkozások, {position}. megállapítás
-      producer_of: „{capability}” forrása
-      record_family: Szakasz
-    technical_details: Technikai részletek
     workbench:
       attention:
         blocked: Akadályozza a benyújtást
         staged: Módosítva, még nem alkalmazva
+      calculate:
+        apply_first: Az újraszámítás előtt alkalmazza vagy vesse el a módosításait
+          [R].
+      defaults_to_confirm: 'meg nem erősített alapértékek: {count} [n]'
       design_constant: '{column}: {value} · a hivatalos terv rögzíti'
       details_page: A számítás részletei
       disclosure:
@@ -2151,6 +2080,9 @@ tui:
         restore: Forrás visszaállítása
         save: Hozzáadás a módosításokhoz
         unreadable: Ez az érték nem olvasható.
+      export:
+        title: A bevallás exportálása
+        verify_first: Exportálás előtt ellenőrizze a bevallást [F8].
       filter:
         all: minden rovat
         attention: csak a teendők
@@ -2159,13 +2091,16 @@ tui:
         empty: Ebben a nézetben nincs rovat.
         feeds: 'Felhasználva: {boxes}'
         formula: 'Számítás: {formula}'
+        keys: 'Billentyűk: {keys}'
         legal: 'Jogalap: {citations}'
         no_explanation: Ehhez a rovathoz még nincs írott magyarázat.
         official: 'Hivatalos szöveg ({source}): „{text}”'
         origin: 'Forrás: {origin}'
       key:
         back: Vissza
+        calculate: Számítás
         edit: Szerkesztés
+        export: Exportálás
         filter: Szűrő
         help: Súgó
         next_attention: Következő teendő
@@ -2303,34 +2238,9 @@ tui:
         fill: Kitöltés
         review: Ellenőrzés
       value:
+        fixed_by_design: rögzített
         not_applicable: nem alk.
       was: 'korábban: {value}'
-    workspace_refusal:
-      facts:
-        modelo: Modell
-        period: Időszak
-        required_grade: Szükséges szint
-        work_unit_id: Munkaegység
-      reason:
-        authority_grade_unavailable: A kiválasztott revízió hatósági szintje még nem
-          támogatja a kért számított nézetet.
-        bucket_assertion_mismatch: A bevallás tárolt azonossága nem egyezik a kért
-          azonossággal.
-        calculation_unavailable: Ezt a bevallást még nem számították ki, ezért nincsenek
-          elérhető értékek.
-        consistency_unavailable: A bevallás konzisztenciáját nem sikerült megerősíteni.
-        locale_unavailable: A bevallás lefordított feliratait nem sikerült beolvasni.
-        schema_unavailable: A bevallás sémáját nem sikerült beolvasni.
-        static_inspection_unavailable: Ennek a bevallásnak az űrlap-elrendezését nem
-          sikerült beolvasni.
-        target_not_found: Ehhez a bevalláshoz még nem létezik munka, így nincs mit
-          kiszámítani.
-        visible_target_ambiguous: Egynél több bevallás felel meg ennek a címnek, ezért
-          egyik sem nyitható meg egyetlenként.
-        workspace_changed: Ez a bevallás megváltozott, amíg nyitva volt; nyissa meg
-          újra az aktuális állapot megtekintéséhez.
-      static_fallback: Csak az űrlap elrendezése látható. Az alábbiakban nem jelennek
-        meg számított értékek.
   root:
     account:
       appearance: Megjelenés

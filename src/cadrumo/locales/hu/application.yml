@@ -861,6 +861,37 @@ application:
       verification_complete: Teljes
       verification_incomplete: Hiányos
       verification_none: Nincs rögzített ellenőrzés
+    edit:
+      parse:
+        above_maximum: 'A legnagyobb megengedett érték: {bound}.'
+        address_not_writable: Ez a rovat így nem módosítható.
+        ambiguous_separator: Nem egyértelmű, melyik jel választja el a tizedeseket;
+          írja be a számot ezres tagolás nélkül, például 1234,56.
+        bad_grouping: 'Az ezres tagolás helytelen; írja így, például: 1 234 567,89.'
+        below_minimum: 'A legkisebb megengedett érték: {bound}.'
+        channel_unavailable: Ez az érték itt még nem adható meg.
+        empty: Adjon meg egy értéket.
+        explicit_plus: Írja be a számot + jel nélkül.
+        iban_checksum: Ennek az IBAN-nak hibásak az ellenőrző számjegyei.
+        iban_shape: Ennek az IBAN-nak nem megfelelő a formája.
+        invalid_code: Ez a kód nem érvényes ehhez a rovathoz.
+        negative_not_allowed: Ez a rovat nem fogad el negatív összeget.
+        nif_checksum: Ennek a NIF-nek az ellenőrző betűje hibás.
+        nif_leader: Ez a NIF nem úgy kezdődik, mint egy érvényes.
+        nif_length: A NIF 9 karakterből áll.
+        non_finite: Adjon meg egy valós számot.
+        not_a_boolean: Válaszoljon igennel vagy nemmel.
+        not_a_number: Adjon meg egy számot, például 1 234,56.
+        not_an_integer: Adjon meg egy egész számot, tizedesjegyek nélkül.
+        not_in_choices: Válasszon a(z) {count} megengedett lehetőség közül.
+        not_text: Adjon meg szöveget.
+        out_of_operand_range: 'Az összeg nem haladhatja meg ezt: {bound}.'
+        pattern_mismatch: A szöveg formátuma nem felel meg a nyomtatvány által kértnek.
+        positive_not_allowed: Ez a rovat csak negatív összeget vagy nullát fogad el.
+        scientific_notation: Írja be a teljes számot, tudományos jelölés nélkül.
+        too_long: Írjon legfeljebb {length} karaktert.
+        too_many_decimals: Legfeljebb {digits} tizedesjegyet használjon; nincs kerekítés.
+        too_short: Írjon legalább {length} karaktert.
     errors:
       amendment_complementaria_liability_decrease: A(z) {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
@@ -1379,7 +1410,6 @@ application:
       calculate: Számítás
       export: Exportálás
       export_destination_placeholder: Export célútvonala
-      file: Helyi bevallás rögzítése
       file_cancelled: A helyi bevallás rögzítése megszakadt; semmi sem került rögzítésre.
       file_confirm_accept: Helyi bevallás rögzítése
       file_confirm_cancel: Mégse
@@ -1393,7 +1423,6 @@ application:
         export_destination_required: Adjon meg export célútvonalat.
         verification_required: A helyi bevallás rögzítése előtt ellenőrizze ezt a
           számítást.
-      verify: Ellenőrzés
     profile_binding:
       errors:
         boolean_value_channel_mismatch: A(z) {binding_id} kötés profiladata logikai

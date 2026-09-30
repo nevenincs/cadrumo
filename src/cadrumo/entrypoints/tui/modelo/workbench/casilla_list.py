@@ -21,7 +21,7 @@ edit session answers it.
 from __future__ import annotations
 
 from bisect import bisect_right
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from typing import ClassVar, Final, Literal, override
 
@@ -40,6 +40,7 @@ from .....application.modelo.value_presentation import (
     format_casilla_value,
 )
 from .....application.modelo.work_form_models import (
+    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormTextDisclosure,
@@ -71,6 +72,7 @@ _WIDE: Final[int] = 110
 _WIDEST: Final[int] = 150
 _PENDING_VALUE: Final[str] = "…"
 _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
+_FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +155,8 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     field = entry.field
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_KEY)
+    if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
+        return tr(_FIXED_BY_DESIGN_VALUE_KEY)
     if field.origin in {ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED}:
         return _PENDING_VALUE
     if field.value is None or field.origin in {ModeloFormOrigin.CLEARED, ModeloFormOrigin.NOT_IMPORTED_YET}:
@@ -323,10 +327,15 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._scroll_to_cursor()
         self.refresh()
 
-    def describe_keys(self, descriptions: Mapping[str, str]) -> None:
-        """Describe this list's own keys in the language now on screen."""
-        describe_bindings(self._bindings.key_to_bindings, descriptions)
+    def describe_keys(self, descriptions: Mapping[str, str], *, shown: Collection[str] | None = None) -> None:
+        """Describe this list's own keys in the language now on screen, showing ``shown`` in the footer."""
+        describe_bindings(self._bindings.key_to_bindings, descriptions, shown=shown)
         self.refresh_bindings()
+
+    def binding_for(self, key: str) -> Binding | None:
+        """The binding this list declares for ``key``, if any."""
+        bindings = self._bindings.key_to_bindings.get(key)
+        return bindings[0] if bindings else None
 
     def focus_address(self, key: AddressKey) -> bool:
         """Put the cursor on one address; ``False`` when this page does not show it."""

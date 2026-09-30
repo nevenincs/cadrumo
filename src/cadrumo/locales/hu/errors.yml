@@ -692,6 +692,15 @@ errors:
       a megjelenítendő szövegeit.'
     internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
       elutasította a műveletet.'
+    internal_modelo_help_catalogue_gap: A rovat egyik súgószövege hiányzik a katalógusból.
+    internal_modelo_source_kind_unclassified: Egy értékforrásnak nincs megadott családja,
+      ezért nem magyarázható.
+    internal_modelo_value_presentation_catalogue_gap: Egy érték megjelenítéséhez szükséges
+      szó hiányzik a katalógusból.
+    internal_modelo_value_presentation_unknown: Egy rovat értéktípusához nincs megjelenítési
+      szabály.
+    internal_modelo_work_form_layout: A nyomtatvány elrendezése nem egyezik a modell
+      változatával.
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
@@ -809,8 +818,6 @@ errors:
       el.
     canonical_tui_modelo_workspace_declaration_admission: A nyomtatvány munkaterület-deklarációja
       nem engedélyezhető a jelenlegi munkaterület-generációban.
-    canonical_tui_modelo_workspace_session_admission: A nyomtatvány munkaterület-munkamenete
-      nem engedélyezhető a megadott vetítés alapján.
     canonical_tui_module_argument: A TUI-modul csak a támogatott argumentumokat fogadja
       el.
     canonical_tui_navigation_contract: A TUI navigációs kérése megsérti a szerződését.
@@ -1113,6 +1120,7 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
+    refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
     refused_modelo_export_prior_domiciliation_election_required: A 303-as nyomtatvány
       exportálásához döntés szükséges a korábbi csoportos beszedésről (megtartás,
       illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi sem íródott

@@ -38,21 +38,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.tui.modelo.installed_workspace.ModeloWorkspaceDeclarationAdmissionError",
+        "cadrumo.entrypoints.tui.modelo.workbench.installed.ModeloWorkspaceDeclarationAdmissionError",
         ErrorCode(
             code="REFUSED_TUI_MODELO_WORKSPACE_DECLARATION_ADMISSION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.canonical_tui_modelo_workspace_declaration_admission",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.tui.modelo.view.controller.ModeloWorkspaceSessionAdmissionError",
-        ErrorCode(
-            code="REFUSED_TUI_MODELO_WORKSPACE_SESSION_ADMISSION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_tui_modelo_workspace_session_admission",
             retryable=False,
             runbook_id=None,
         ),

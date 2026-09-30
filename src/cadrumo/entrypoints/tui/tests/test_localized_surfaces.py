@@ -1,24 +1,16 @@
-"""A language switch changes what is written, never what is being addressed.
+"""A language switch changes what the workbench writes, never what it addresses.
 
-WHAT ALREADY EXISTED, so this is not a second copy of it. The session layer is
-proven: `test_workspace_read_session` shows a language switch is a locale-only
-refresh, that the semantic identity ignores every locale-bearing field, and
-that the locale axes really do move. The editor screen is proven to render in
-every shipped catalogue. Neither reaches the six routed workspace
-DESTINATIONS, and both stop short of the screen: a projection can carry a
-stable identity while the mounted surface still reorders its controls or
-changes which of them can be reached, and nothing would notice.
+The form builder is proven to localize labels and headings; this asserts the
+invariant where the filer meets it, on the mounted workbench, across all FOUR
+shipped languages. Catalan and Hungarian are exactly where a missing catalogue
+entry shows up, and a fallback is not a failure here: a label may resolve to
+the official Spanish wording and say so. What a language may NOT change is
+which boxes are shown, in what order, with what value and state, or which
+controls exist and in what keyboard order.
 
-So this asserts the invariant where the operator meets it -- on the mounted
-screen -- and it asserts it across all FOUR shipped languages rather than the
-two the session tests use. Catalan and Hungarian are exactly where a missing
-catalogue entry shows up, and a fallback is not a failure here: the product is
-allowed to resolve a requested language to another one. What it is NOT allowed
-to do is let that change the address, the controls, or their order.
-
-THE COMPARISON IS AGAINST ONE SEEDED STORAGE, not four. Resolving four
-languages from four separately seeded profiles would differ in bucket identity
-and creation instants, so any difference found could not be attributed to
+THE COMPARISON IS AGAINST ONE SEEDED STORAGE, not four. Reading four languages
+from four separately seeded profiles would differ in bucket identity and
+creation instants, so any difference found could not be attributed to
 language -- which is the only thing this module is about.
 """
 
@@ -29,121 +21,95 @@ from collections.abc import Iterator
 import pytest
 from textual.widget import Widget
 
+from ....application.modelo.work_form_models import ModeloFormTextDisclosure, ModeloWorkForm, address_key
+from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
-from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
-from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session, semantic_identity
-from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
-from .modelo_workspace_session import real_workspace_inspection_result
+from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.screen import ModeloWorkbenchScreen
+from .modelo_workbench_session import real_workbench
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LANGUAGES = tuple(OutputLanguage)
-_DESTINATIONS = [
-    pytest.param(destination_id, id=destination_id.rsplit(".", 1)[-1])
-    for destination_id in MODELO_WORKSPACE_DESTINATIONS
-]
 
 
 @pytest.fixture(scope="module")
-def sessions_by_language(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> Iterator[dict[OutputLanguage, ModeloWorkspaceReadSession]]:
-    """One admitted session per shipped language, over ONE seeded address."""
+def workbench(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
+    """One seeded declaration, read in every shipped language."""
     root = tmp_path_factory.mktemp("localized")
-    with real_workspace_inspection_result(root) as seeded:
-        opened: dict[OutputLanguage, ModeloWorkspaceReadSession] = {}
-        for language in _LANGUAGES:
-            session = open_workspace_read_session(seeded.resolve(language).projection)
-            opened[language] = session
-        yield opened
+    with real_workbench(root) as installed:
+        yield installed
 
 
-def test_every_shipped_language_opens_the_same_workspace(
-    sessions_by_language: dict[OutputLanguage, ModeloWorkspaceReadSession],
+@pytest.fixture(scope="module")
+def forms_by_language(workbench: InstalledModeloWorkbench) -> dict[OutputLanguage, ModeloWorkForm]:
+    """The same declaration's form, read once per shipped language."""
+    return {language: workbench.load(language).form for language in _LANGUAGES}
+
+
+def test_every_shipped_language_reads_the_same_declaration(
+    forms_by_language: dict[OutputLanguage, ModeloWorkForm],
 ) -> None:
-    """The semantic identity is one value across all four catalogues.
-
-    Asserted as a SET rather than pairwise against Spanish, so a language that
-    agrees with Spanish while disagreeing with the others cannot hide.
-    """
-    identities = {language: semantic_identity(session.projection) for language, session in sessions_by_language.items()}
-    distinct = set(identities.values())
-    assert len(distinct) == 1, "a language switch changed which workspace this is: " + "; ".join(
-        f"{language.value}={identity}" for language, identity in identities.items()
-    )
-
-
-def test_the_locale_axis_actually_moves_across_the_shipped_catalogues(
-    sessions_by_language: dict[OutputLanguage, ModeloWorkspaceReadSession],
-) -> None:
-    """Invariance is only meaningful if the language is genuinely being varied.
-
-    Without this, every assertion in this module would pass on a product that
-    ignored the requested language entirely -- the identities would be stable
-    because nothing moved. A fallback is permitted, so the requirement is that
-    the REQUESTED language is carried faithfully, not that every request
-    resolves to itself.
-    """
-    requested = {
-        language: session.projection.locale.requested_language for language, session in sessions_by_language.items()
+    """Boxes, their order, values, states and what may be done about them are language-free."""
+    shapes = {
+        language: tuple(
+            (address_key(field.address), field.box, field.value, field.origin, field.editability)
+            for field in form.fields()
+        )
+        for language, form in forms_by_language.items()
     }
-    assert set(requested.values()) == set(_LANGUAGES), (
-        f"the requested language was not carried through for every catalogue: {requested}"
+    assert len(set(shapes.values())) == 1, "a language changed which boxes are shown or how they stand"
+    assert next(iter(shapes.values())), "the declaration read no boxes, so the comparison proves nothing"
+
+
+def test_the_words_actually_change_across_the_shipped_catalogues(
+    forms_by_language: dict[OutputLanguage, ModeloWorkForm],
+) -> None:
+    """The control: invariance is cheap when nothing varies, so the labels must differ by language."""
+    labels = {
+        language: tuple(field.label.text for field in form.fields()) for language, form in forms_by_language.items()
+    }
+    assert labels[OutputLanguage.ES] != labels[OutputLanguage.EN], "Spanish and English read identically"
+    assert labels[OutputLanguage.ES] != labels[OutputLanguage.HU], "Spanish and Hungarian read identically"
+
+
+def test_each_form_says_which_language_served_each_label(
+    forms_by_language: dict[OutputLanguage, ModeloWorkForm],
+) -> None:
+    """A form records the language asked for, and a label that fell back to Spanish says so."""
+    assert {language: form.language for language, form in forms_by_language.items()} == {
+        language: language for language in _LANGUAGES
+    }
+    spanish = forms_by_language[OutputLanguage.ES]
+    assert all(field.label.disclosure is not ModeloFormTextDisclosure.SPANISH_FALLBACK for field in spanish.fields()), (
+        "a Spanish read cannot fall back to Spanish"
     )
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("destination_id", _DESTINATIONS)
-async def test_a_destination_mounts_the_same_controls_in_every_language(
-    destination_id: ModeloWorkspaceDestinationIdV1,
-    sessions_by_language: dict[OutputLanguage, ModeloWorkspaceReadSession],
-) -> None:
-    """Translation may change the words in a control, never which controls exist.
-
-    Compared on the ORDERED focus chain, not on a set of ids: keyboard identity
-    is an order, and a language that mounted the same controls in a different
-    sequence would move every operator's muscle memory while satisfying a
-    set comparison. The ids themselves are semantic addresses and are never
-    translated, so any difference here is a structural one.
-    """
+async def test_the_workbench_mounts_the_same_controls_in_every_language(workbench: InstalledModeloWorkbench) -> None:
+    """Translation may change the words in a control, never which controls exist or their keyboard order."""
     chains: dict[OutputLanguage, tuple[str | None, ...]] = {}
-    mounted: dict[OutputLanguage, tuple[str | None, ...]] = {}
-    for language, session in sessions_by_language.items():
-        app = ScreenHostApp(MODELO_WORKSPACE_DESTINATIONS[destination_id](session))
-        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
-            await pilot.pause()
-            chains[language] = tuple(widget.id for widget in app.screen.focus_chain)
-            mounted[language] = tuple(sorted(widget.id for widget in app.screen.query(Widget) if widget.id is not None))
-            app.exit(None)
+    mounted: dict[OutputLanguage, tuple[str, ...]] = {}
+    for language in _LANGUAGES:
+        with override_settings(cadrumo_output_language=language.value):
+            screen = ModeloWorkbenchScreen(workbench, actions=workbench)
+            app = ScreenHostApp(screen)
+            async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+                for _ in range(200):
+                    await pilot.pause()
+                    if screen.form is not None:
+                        break
+                assert screen.form is not None
+                chains[language] = tuple(widget.id for widget in app.screen.focus_chain)
+                mounted[language] = tuple(
+                    sorted(widget.id for widget in app.screen.query(Widget) if widget.id is not None)
+                )
+                app.exit(None)
 
-    assert len(set(chains.values())) == 1, (
-        f"{destination_id} offers a different keyboard order per language: "
-        + "; ".join(f"{language.value}={chain}" for language, chain in chains.items())
+    assert len(set(chains.values())) == 1, "a language offers a different keyboard order: " + "; ".join(
+        f"{language.value}={chain}" for language, chain in chains.items()
     )
-    assert len(set(mounted.values())) == 1, (
-        f"{destination_id} mounts a different control set per language: "
-        + "; ".join(f"{language.value}={len(ids)} widgets" for language, ids in mounted.items())
-    )
-
-
-def test_the_requested_languages_resolution_is_reported_so_the_axis_is_not_assumed(
-    sessions_by_language: dict[OutputLanguage, ModeloWorkspaceReadSession],
-) -> None:
-    """Record what each request RESOLVES to, because invariance is cheap when nothing varies.
-
-    This is the control: if every request resolved to the same catalogue, the
-    invariance assertions above would compare two copies of one input and
-    prove far less than they appear to. The modelo workspace content is
-    translated for every shipped language, so each request must resolve to its
-    own catalogue; a silent fallback would turn that green into one that means
-    nothing.
-    """
-    resolved = {
-        language: session.projection.locale.resolved_language for language, session in sessions_by_language.items()
-    }
-    assert set(resolved) == set(_LANGUAGES), "a shipped language was not exercised"
-    assert resolved == {language: language for language in _LANGUAGES}, (
-        f"a requested language no longer resolves to its own catalogue: {resolved}"
-    )
+    assert len(set(mounted.values())) == 1, "a language mounts a different control set"

@@ -36,22 +36,30 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......application.modelo.work_review import ModeloWorkProgress
 from ......core.aggregation import BindingSourceKind
 from ......core.casilla_id import CasillaId
+from ......core.errors.hierarchy import CadrumoError
 from ......core.external_constants import OutputLanguage
+from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
+from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
 from ..ports import (
+    WorkbenchCalculationEvidence,
     WorkbenchChange,
-    WorkbenchLoadV1,
+    WorkbenchExportOffer,
+    WorkbenchExportRequest,
     WorkbenchParsed,
     WorkbenchParseOutcome,
     WorkbenchRefused,
 )
 
 if TYPE_CHECKING:
+    from ......application.modelo.operation_definitions import ModeloExportPublicResultV2
+    from ......application.operations.frontend_projection import OperationPublicProjectionV1
     from ....operations.controller import OperationController
 
 
@@ -244,10 +252,10 @@ class FakeReader:
     loads: int = 0
     cards: list[str] = field(default_factory=list)
 
-    def load(self, language: OutputLanguage) -> WorkbenchLoadV1:
+    def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         """Return the fixed form."""
         self.loads += 1
-        return WorkbenchLoadV1(form=self.form, verified=self.verified, filed=self.filed)
+        return ModeloWorkFormLoadV1(form=self.form, verified=self.verified, filed=self.filed)
 
     def help_card(self, casilla_id: CasillaId, language: OutputLanguage) -> ModeloCasillaHelpCardV1:
         """Return a card whose formula names the casilla, and record the request."""
@@ -274,6 +282,11 @@ class FakeActions:
 
     applied: list[tuple[WorkbenchChange, ...]] = field(default_factory=list)
     requested: list[str] = field(default_factory=list)
+    evidence: WorkbenchCalculationEvidence | None = None
+    evidence_given: list[OrdinaryM303FilingEvidenceSubmission | None] = field(default_factory=list)
+    exports: list[WorkbenchExportRequest] = field(default_factory=list)
+    asks_elections: bool = False
+    refusal: CadrumoError | None = None
 
     def parse(self, field: ModeloFormField, lexeme: str, language: OutputLanguage) -> WorkbenchParseOutcome:
         """Read a Spanish decimal, or refuse with a fix-it sentence."""
@@ -288,9 +301,16 @@ class FakeActions:
         self.applied.append(changes)
         raise RuntimeError("no operation service in this test")
 
-    async def calculate(self) -> OperationController:
-        """Record a calculate request."""
+    def calculation_evidence(self) -> WorkbenchCalculationEvidence | None:
+        """Return the evidence the next calculation asks for, as the test set it."""
+        return self.evidence
+
+    async def calculate(self, m303_evidence: OrdinaryM303FilingEvidenceSubmission | None = None) -> OperationController:
+        """Record a calculate request and the evidence it carried; refuse as the test asks."""
         self.requested.append("calculate")
+        self.evidence_given.append(m303_evidence)
+        if self.refusal is not None:
+            raise self.refusal
         raise RuntimeError("no operation service in this test")
 
     async def verify(self) -> OperationController:
@@ -302,6 +322,19 @@ class FakeActions:
         """Record a file request."""
         self.requested.append("file")
         raise RuntimeError("no operation service in this test")
+
+    def export_offer(self) -> WorkbenchExportOffer:
+        """Offer the filing file, and the payment elections when the test asks for them."""
+        return WorkbenchExportOffer(artefacts=(ModeloExportArtefact.FICHERO_BOE,), asks_elections=self.asks_elections)
+
+    async def export(self, request: WorkbenchExportRequest) -> OperationController:
+        """Record an export request."""
+        self.exports.append(request)
+        raise RuntimeError("no operation service in this test")
+
+    async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+        """No export ever settles in these tests."""
+        return None
 
 
 __all__ = ["FakeActions", "FakeReader", "form_field", "synthetic_form"]

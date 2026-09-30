@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:48893795166b250db55c853a60fb3ad536677f82feeb0ed368fed0108ea8d087'
+body_hash: 'sha256:bc64381eb259b20afbfb2847e4473b4291427f70e2eed9312d07978eea88bc4e'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -322,6 +322,142 @@ related:
 - `S19` `verify:` `pytest form loading over real encrypted storage and the republished authority (2, integration)` -> `pass`
 - `S19` `verify:` `ruff + ty` -> `pass`
 - `S19` `by:` `orchestrator`
+- `S25` `M` `dev/locales/fstring_registry.py`
+- `S25` `M` `dev/locales/tests/test_audit.py`
+- `S25` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S25` `M` `dev/quality/metadata/import_load_targets.json`
+- `S25` `M` `dev/tui/harness/sequences.py`
+- `S25` `M` `dev/tui/harness/tests/test_sequence_scenarios.py`
+- `S25` `A` `docs/api/cadrumo.application.modelo.caller_context.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.casilla_help.rst`
+- `S25` `R` `docs/api/cadrumo.entrypoints.tui.modelo.view.inputs.rst` -> `docs/api/cadrumo.application.modelo.edit_parse_text.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.edit_parsing.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.edit_preflight.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.edit_value_grammar.rst`
+- `S25` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.source_policy.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.value_presentation.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.work_form.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.work_form_models.rst`
+- `S25` `A` `docs/api/cadrumo.application.modelo.work_form_service.rst`
+- `S25` `A` `docs/api/cadrumo.domain.modelos.calculation_revision_operator_layer.rst`
+- `S25` `M` `docs/api/cadrumo.domain.modelos.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.installed_workspace.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.routes.rst`
+- `S25` `M` `docs/api/cadrumo.entrypoints.tui.modelo.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.controller.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.filing.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.models.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.overview.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.provenance.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.results.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.technical_details.rst`
+- `S25` `D` `docs/api/cadrumo.entrypoints.tui.modelo.view.verification.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.casilla_list.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.dialog_width.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.editor.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.export.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.installed.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.keys.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.page_items.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.ports.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.progress.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.review.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.screen.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.session.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.sources.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.vocabulary.rst`
+- `S25` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.wording.rst`
+- `S25` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S25` `A` `src/cadrumo/application/modelo/edit_parse_text.py`
+- `S25` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S25` `M` `src/cadrumo/application/modelo/source_policy.py`
+- `S25` `A` `src/cadrumo/application/modelo/tests/test_work_form_every_revision.py`
+- `S25` `M` `src/cadrumo/application/modelo/value_presentation.py`
+- `S25` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S25` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S25` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S25` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S25` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S25` `M` `src/cadrumo/core/errors/registry/_entrypoints_part2.py`
+- `S25` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_workspace_destinations.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/installed_workspace.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/routes.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c2_workspace_accessibility.py`
+- `S25` `R` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_screen.py` -> `src/cadrumo/entrypoints/tui/modelo/tests/test_export_result_screen.py`
+- `S25` `R` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_m303_evidence_lifecycle.py` -> `src/cadrumo/entrypoints/tui/modelo/tests/test_m303_evidence_lifecycle.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_m303_evidence_screen.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/__init__.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/controller.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/filing.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/inputs.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/models.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/provenance.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/results.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/technical_details.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/__init__.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/conftest.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_installed_workspace.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_lifecycle_action_failure.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_lifecycle_notice_delivery.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_m303_evidence_screen.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_inputs.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_provenance_and_filing.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_read_session.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_results.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_session_admission.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_verification.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_view_models.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/modelo/view/verification.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/export.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/keys.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_installed_factory.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_lifecycle.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/tests/modelo_workbench_session.py`
+- `S25` `D` `src/cadrumo/entrypoints/tui/tests/modelo_workspace_session.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/tests/test_localized_surfaces.py`
+- `S25` `R` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_modelo_projection_reader.py` -> `src/cadrumo/entrypoints/tui/tests/test_modelo_projection_reader.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/tests/test_responsive_surfaces.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/tests/test_theme_accessibility.py`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/common.yml`
+- `S25` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S25` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/en/common.yml`
+- `S25` `M` `src/cadrumo/locales/en/errors.yml`
+- `S25` `M` `src/cadrumo/locales/en/flows.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/common.yml`
+- `S25` `M` `src/cadrumo/locales/es/errors.yml`
+- `S25` `M` `src/cadrumo/locales/es/flows.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/common.yml`
+- `S25` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S25` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S25` `verify:` `pytest TUI, workbench, surfaces, harness scenarios, entrypoint edit and form loading (1293)` -> `pass`
+- `S25` `verify:` `pytest application modelo, error registry and locale audit gates (1745)` -> `pass`
+- `S25` `verify:` `every reachable revision builds its form from the published layout with every casilla accounted for` -> `pass`
+- `S25` `verify:` `import gate clean, 0 hard findings, 2963 modules load` -> `pass`
+- `S25` `verify:` `apidocs scaffold --check and module inventory --check` -> `pass`
+- `S25` `verify:` `locale audit ca en es hu` -> `pass`
+- `S25` `verify:` `dev/locales casilla orthography (11) need spelling dictionaries not installed in this worktree` -> `fail`
+- `S25` `verify:` `dev/locales baseline failures outside this diff (composed segment; finding facts x3)` -> `fail`
+- `S25` `by:` `orchestrator`
 
 ## Notes
 
@@ -351,3 +487,8 @@ related:
 - `S13` 146 generated per-revision `form_layouts` fragments are logged as their registry tree
 - `S14` The authority tree is gitignored runtime state; the descriptor row records the publication, not a committed file
 - `S19` The change query lists moved values and origins; separating the filer's changes from recalculated and newly sourced values is the workbench's reading of it, owned by the page retirement Step
+- `S25` The production harness found three integration defects fixed here: the lifecycle door class was imported for type checking only; the 303 layout's design-constant boxes were not counted as shown; snapshots were asked at filing grade, refusing applicability-only revisions
+- `S25` 303's design-fixed rate boxes carry their literal as text without a declared scale, so the workbench shows them fixed without a number; the registry should declare the scale
+- `S25` Modelo 130 leaves boxes 13 to 19 without a value when `[07]` is negative; the workbench labels them could-not-calculate, which may overstate a failure
+- `S25` A CLI-calculated declaration records no operator layer, so its defaults read as to-confirm; they are reported beside the next action rather than blocking the journey
+- `S25` The overview-driven export integration test was retired with its page; the export through the workbench is proven again in the acceptance Step

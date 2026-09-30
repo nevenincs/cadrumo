@@ -50,6 +50,7 @@ from .work_review import build_modelo_work_review
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import RegistrySnapshot
 
 _VERIFIED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
     {
@@ -97,6 +98,21 @@ def _head(
     return head is not None, head
 
 
+def modelo_form_snapshot(
+    operation: PinnedAuthorityOperation, modelo: ModeloCode, filing_year: int, period: Period, revision_id: str
+) -> RegistrySnapshot:
+    """The snapshot a form reads its revision through, at the grade that revision declares.
+
+    Asking every revision for filing grade would refuse an applicability-only
+    one the filer can still open and inspect, so the form asks for what the
+    revision actually claims, as the work review does.
+    """
+    grade = operation.revision(str(modelo), revision_id).effective_authority_grade
+    return operation.snapshot(
+        str(modelo), filing_year=filing_year, period=period.registry_token, revision_id=revision_id, grade=grade
+    )
+
+
 def load_modelo_work_form(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -126,9 +142,7 @@ def load_modelo_work_form(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
     )
-    snapshot = operation.snapshot(
-        str(modelo), filing_year=filing_year, period=period.registry_token, revision_id=review.registry_revision_id
-    )
+    snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
     layout = operation.form_layout(str(modelo), review.registry_revision_id)
     resolved, head = _head(review.calculation_revision_id, calculation_repository)
     layer = caller_context_of(head).operator_layer if resolved else None
@@ -196,5 +210,6 @@ __all__ = [
     "ModeloFormValueChangeV1",
     "ModeloWorkFormLoadV1",
     "load_modelo_work_form",
+    "modelo_form_snapshot",
     "modelo_work_form_changes",
 ]

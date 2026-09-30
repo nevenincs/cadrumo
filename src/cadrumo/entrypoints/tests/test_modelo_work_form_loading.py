@@ -87,6 +87,10 @@ def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: P
     assert entered.value == Decimal("100")
     assert _field(recalculated.form, "06").origin is ModeloFormOrigin.ENTERED
     assert _field(recalculated.form, "06").editability is ModeloFormEditability.NO_ADMISSION
+    derived = _field(recalculated.form, "07")
+    assert derived.origin is ModeloFormOrigin.CALCULATED
+    assert derived.value == Decimal("-100.00")
+    assert recalculated.form.calculation_revision_id is not None
     assert not edited.verified
     assert not edited.filed
 

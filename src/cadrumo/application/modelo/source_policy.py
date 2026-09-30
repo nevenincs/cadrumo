@@ -30,6 +30,7 @@ from typing import Final
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 
@@ -149,7 +150,7 @@ _POLICY_OUTSIDE_THE_LADDER: Final[Mapping[BindingSourceKind, SourceOverridePolic
 """The policies the product owns for kinds the calculation ladder does not govern."""
 
 
-class UnclassifiedSourceKindError(LookupError):
+class UnclassifiedSourceKindError(InternalInvariantError):
     """A binding source kind has no declared family, so no explanation is invented for it."""
 
 

@@ -9,7 +9,7 @@ lists with the class, so an in-place edit would re-describe every instance.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import replace
 
 from textual.binding import Binding
@@ -17,13 +17,20 @@ from textual.binding import Binding
 from .....core.i18n.render import tr
 
 
-def describe_bindings(table: dict[str, list[Binding]], descriptions: Mapping[str, str]) -> None:
-    """Give each named key its catalogue description and show it in the footer."""
+def describe_bindings(
+    table: dict[str, list[Binding]], descriptions: Mapping[str, str], *, shown: Collection[str] | None = None
+) -> None:
+    """Give each named key its catalogue description, showing in the footer those ``shown`` names.
+
+    Without ``shown`` every described key is shown. A key left out of the
+    footer keeps its description, so the help and the key panel still name it.
+    """
     for key, translation_key in descriptions.items():
         entries = table.get(key)
         if entries:
             label = tr(translation_key)
-            table[key] = [replace(binding, description=label, show=True) for binding in entries]
+            show = shown is None or key in shown
+            table[key] = [replace(binding, description=label, show=show) for binding in entries]
 
 
 __all__ = ["describe_bindings"]

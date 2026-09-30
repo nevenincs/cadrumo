@@ -19,8 +19,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
 from functools import partial
-from typing import ClassVar, Final, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
+from rich.cells import cell_len
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -29,6 +30,7 @@ from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
+from .....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormField,
@@ -38,6 +40,9 @@ from .....application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
@@ -48,8 +53,12 @@ from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
 from ...operations.controller import OperationController
 from ...operations.refusal_explanation import public_refusal_explanation
+from ...search import TuiSearchHostV1
+from ..export_result import ModeloExportResultScreen
+from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, value_text
 from .editor import CasillaEditorScreen, EditorDecision
+from .export import WorkbenchExportScreen
 from .keys import describe_bindings
 from .page_items import (
     WorkbenchFilter,
@@ -60,16 +69,35 @@ from .page_items import (
     section_nav_text,
     workbench_pages,
 )
-from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchChangeKind, WorkbenchLoadV1
-from .progress import NextAction, next_action_text, stepper_text, workbench_progress
+from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchChangeKind, WorkbenchExportRequest
+from .progress import NextAction, defaults_text, next_action_text, stepper_text, workbench_progress
 from .review import EditReviewScreen, ReviewDecision
 from .session import StageRefusal, WorkbenchEditSession
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
 from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_words_key, origin_words_key
 from .wording import modelo_number, modelo_title, period_words
 
+if TYPE_CHECKING:
+    from .....application.operations.frontend_projection import OperationPublicProjectionV1
+
 _NARROW: Final[int] = 110
 _NAV_MARGIN: Final[int] = 8
+_FOOTER_KEY_GAP: Final[int] = 1
+_FOOTER_PRIORITY: Final[tuple[str, ...]] = (
+    "enter",
+    "n",
+    "question_mark",
+    "escape",
+    "f8",
+    "R",
+    "s",
+    "left_square_bracket",
+    "right_square_bracket",
+    "f",
+    "c",
+    "e",
+)
+"""Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
 _NAV_MIN_LABEL: Final[int] = 12
 _FRAGMENT_SEPARATOR: Final[str] = " … "
 _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
@@ -94,6 +122,8 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "escape": "tui.modelo.workbench.key.back",
     "R": "tui.modelo.workbench.key.review",
     "f8": "tui.modelo.workbench.key.next_step",
+    "c": "tui.modelo.workbench.key.calculate",
+    "e": "tui.modelo.workbench.key.export",
 }
 _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
@@ -170,6 +200,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         Binding("f3", "toggle_appearance", "", show=False),
         Binding("R", "review", "", show=False),
         Binding("f8", "next_step", "", show=False),
+        Binding("c", "calculate", "", show=False),
+        Binding("e", "export", "", show=False),
     ]
 
     def __init__(
@@ -180,13 +212,17 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
         id: str | None = None,
     ) -> None:
-        """Hold the ports this workbench reads and acts through, and how it opens another product area."""
+        """Hold the ports this workbench reads and acts through, and how it opens another product area.
+
+        Without ``navigate`` the workbench opens another area through the root
+        host it runs in, when that host can navigate.
+        """
         super().__init__(id=id)
         self._reader = reader
         self._actions = actions
         self._navigate = navigate
         self._operation_in_flight = False
-        self._load: WorkbenchLoadV1 | None = None
+        self._load: ModeloWorkFormLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
         self._page_index = 0
         self._filter = WorkbenchFilter.ALL
@@ -221,14 +257,43 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Fold the navigator away on narrow terminals and shorten the header to fit."""
         self._apply_width(event.size.width)
         self._render_header()
+        self._describe_keys()
         self.call_after_refresh(self._render_navigator)
 
     def _apply_width(self, width: int) -> None:
         self.set_class(width < _NARROW, "-narrow")
 
+    def _key_label(self, key: str, translation_key: str) -> str:
+        own = self._bindings.key_to_bindings.get(key)
+        binding = own[0] if own else self.query_one(CasillaList).binding_for(key)
+        display = key if binding is None else self.app.get_key_display(binding)
+        return f"{display} {tr(translation_key)}"
+
+    def _footer_keys(self, width: int) -> frozenset[str]:
+        """The keys the footer can show at ``width``, most needed first, without running past the edge."""
+        descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
+        others = [
+            active.binding
+            for key, active in self.active_bindings.items()
+            if active.binding.show and key not in descriptions
+        ]
+        budget = width - sum(
+            cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + _FOOTER_KEY_GAP
+            for binding in others
+        )
+        shown: set[str] = set()
+        for key in _FOOTER_PRIORITY:
+            cost = cell_len(self._key_label(key, descriptions[key])) + _FOOTER_KEY_GAP
+            if cost > budget:
+                break
+            shown.add(key)
+            budget -= cost
+        return frozenset(shown)
+
     def _describe_keys(self) -> None:
-        describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
-        self.query_one(CasillaList).describe_keys(_LIST_LOCALE_KEYS)
+        shown = self._footer_keys(self.size.width or self.app.size.width)
+        describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=shown)
+        self.query_one(CasillaList).describe_keys(_LIST_LOCALE_KEYS, shown=shown)
         self.refresh_bindings()
 
     # ── reading ─────────────────────────────────────────────────────────
@@ -249,7 +314,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         self.show_load(load)
 
-    def show_load(self, load: WorkbenchLoadV1) -> None:
+    def show_load(self, load: ModeloWorkFormLoadV1) -> None:
         """Show a fresh read, keeping the page and the casilla under the cursor where they still exist."""
         previous_page = self._pages[self._page_index].id if self._pages else None
         self._load = load
@@ -306,7 +371,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         key = _NEXT_KEYS[progress.next_action]
         action = next_action_text(progress)
         line = tr("tui.modelo.workbench.next_line", action=action, key=key) if key else action
-        self.query_one("#wb-next", Static).update(line)
+        advisory = defaults_text(progress)
+        self.query_one("#wb-next", Static).update(f"{line} · {advisory}" if advisory else line)
 
     def _render_navigator(self) -> None:
         navigator = self.query_one("#wb-sections", OptionList)
@@ -378,7 +444,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             card = self._cards.get((str(field.address.casilla_id), self._language))
         if card is not None:
             lines.extend(self._card_lines(card))
+        if band.has_class("-expanded"):
+            lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
         band.update("\n".join(lines))
+
+    def _all_keys_text(self) -> str:
+        descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
+        return " · ".join(self._key_label(key, descriptions[key]) for key in _FOOTER_PRIORITY)
 
     def _help_title(self, entry: CasillaListEntry) -> str:
         field = entry.field
@@ -450,8 +522,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         casilla_list.set_density(density)
 
     def action_toggle_help(self) -> None:
-        """Give the help band more room, or return it to its usual size."""
+        """Give the help band more room and every key's name, or return it to its usual size."""
         self.query_one("#wb-help", Static).toggle_class("-expanded")
+        self._render_help(self.query_one(CasillaList).highlighted)
 
     def action_leave(self) -> None:
         """Return to where the workbench was opened from, asking first when changes are staged."""
@@ -575,6 +648,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def _open_surface(self, choice: OpenSourceSurface) -> None:
         navigate = self._navigate
+        root = self.app
+        if navigate is None and isinstance(root, TuiSearchHostV1):
+            navigate = root.navigate_to
         target = surface_target(choice.surface)
         if navigate is None or target is None:
             self._notice(tr("tui.modelo.workbench.sources.not_here"))
@@ -616,11 +692,58 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         elif actions is None:
             self._notice(tr("tui.modelo.workbench.editability.no_admission"))
         elif action is NextAction.CALCULATE:
-            self._run_operation(actions.calculate)
+            self._calculate(actions)
         elif action is NextAction.VERIFY:
             self._run_operation(actions.verify)
         elif action is NextAction.FILE:
             self._confirm_file(actions.file)
+
+    def action_calculate(self) -> None:
+        """Recalculate the declaration now, keeping the filer's values."""
+        actions = self._actions
+        if actions is None:
+            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            return
+        if self._session.dirty:
+            self._notice(tr("tui.modelo.workbench.calculate.apply_first"))
+            return
+        self._calculate(actions)
+
+    def _calculate(self, actions: ModeloWorkbenchActionsV1) -> None:
+        need = actions.calculation_evidence()
+        if need is None:
+            self._run_operation(actions.calculate)
+            return
+
+        def answered(submission: OrdinaryM303FilingEvidenceSubmission | None) -> None:
+            if submission is None:
+                self._notice(tr("tui.modelo.m303_evidence.cancelled"))
+            elif submission.work_unit_id != need.work_unit_id:
+                self._notice(tr("tui.modelo.m303_evidence.stale_context"))
+            else:
+                self._run_operation(partial(actions.calculate, submission))
+
+        self.app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id=need.work_unit_id, asks_modelo_390=need.asks_modelo_390),
+            answered,
+        )
+
+    def action_export(self) -> None:
+        """Export the verified declaration where and how the filer asks."""
+        actions = self._actions
+        load = self._load
+        if actions is None or load is None:
+            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            return
+        if not load.verified:
+            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            return
+
+        def asked(request: WorkbenchExportRequest | None) -> None:
+            if request is not None:
+                self._run_operation(partial(actions.export, request))
+
+        self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
 
     def _confirm_file(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
         def closed(confirmed: bool | None) -> None:
@@ -656,6 +779,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         try:
             controller = await submit()
+        except CadrumoError as refusal:
+            self._operation_in_flight = False
+            self._notice(resolve_error_message(refusal))
+            return
         except Exception as failure:
             self._operation_in_flight = False
             get_logger(__name__).error(
@@ -684,7 +811,16 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if applies_changes:
             self._session.discard()
         self._notice(tr("tui.modelo.workbench.operation.done"))
+        projection = outcome.view_model.projection
+        actions = self._actions
+        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and actions is not None:
+            self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
         self.run_worker(self._read, group="workbench-read", exclusive=True)
+
+    async def _state_export_result(
+        self, actions: ModeloWorkbenchActionsV1, projection: OperationPublicProjectionV1
+    ) -> None:
+        self.app.push_screen(ModeloExportResultScreen(await actions.export_result(projection)))
 
     def action_toggle_appearance(self) -> None:
         """Switch between the two shipped appearances."""

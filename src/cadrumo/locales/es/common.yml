@@ -770,13 +770,8 @@ operation:
     status:
       running: En curso
     terminal:
-      cancelled: Cancelada
       failed: Fallida
-      interrupted: Interrumpida
-      refused: Rechazada
-      succeeded: Completada
       succeeded_partial: Completada en parte
-      timed_out: Tiempo agotado
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
@@ -1974,35 +1969,6 @@ tui:
     unreadable: No se ha podido leer el estado del lector.
     verify: Comprobar modelo
   modelo:
-    assertion:
-      matched: Coincide
-      mismatched: No coincide
-      not_present: Ninguna registrada
-    capability:
-      calculation_materialization: Valores calculados
-      filing_draft_readiness: Borrador de presentación
-      schema_inspection: Estructura del formulario
-      verification_readiness: Verificación
-    destination:
-      column: Página
-      filing: Presentación
-      heading: Páginas de esta declaración
-      inputs: Entradas
-      provenance: Procedencia
-      results: Resultados
-      verification: Verificación
-    disposition:
-      available: Disponible
-      not_applicable: No se aplica
-      refused: Rechazado
-      unmeasured: Sin medir
-    edit:
-      apply: Aplicar valores declarados
-      binding: Dato declarado {binding}
-      scalar: Casilla {casilla}
-    evidence_kind:
-      legal: Referencia legal
-      source: Referencia de origen
     export:
       artefact:
         calculation_report_csv: Informe de cálculo (CSV), solo registro local
@@ -2069,21 +2035,6 @@ tui:
           not_official: 'Este fichero no es evidencia oficial de presentación ante
             la AEAT. La evidencia oficial la emite la AEAT tras la presentación: justificante;
             consulta de declaraciones presentadas; o cotejo por CSV.'
-    finding_kind:
-      advisory: Consejo
-      blocking_rule: Regla no cumplida
-      cross_period_dependency_unclean: Un periodo anterior requiere atención
-      missing_required_casilla: Falta una casilla obligatoria
-      reconciliation_mismatch: Los totales no cuadran
-    finding_severity:
-      blocking: Impide presentar
-      warning: Aviso
-    input_kind:
-      bound: Se rellena con tus registros
-      computed: Calculado
-      informational: Solo informativo
-      manual: Lo introduces tú
-      projection_only: Se muestra, no se presenta
     m303_evidence:
       admission_unavailable: Aquí no se puede registrar una atestación nueva para
         esta declaración. No se ha calculado nada.
@@ -2107,36 +2058,13 @@ tui:
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelva a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
-    record_family:
-      bindings: Valores de tus registros
-      casillas: Casillas
-      formulas: Fórmulas
-      parameters: Parámetros
-      relations: Vínculos con otros modelos
-    recovery_action:
-      operator:
-        modelo:
-          work:
-            calculate: Calcule esta unidad de trabajo
-            create: Cree la unidad de trabajo de esta declaración
-            status: Revise el estado de esta unidad de trabajo
-            verify: Verifique esta unidad de trabajo
-    review_status:
-      agent_reviewed: Revisado automáticamente
-      operator_reviewed: Revisado por una persona
-      pending_review: Aún sin revisar
-    technical:
-      column:
-        field: Detalle
-        value: Identificador
-      finding_refs: Referencias legales, hallazgo {position}
-      producer_of: Origen de «{capability}»
-      record_family: Sección
-    technical_details: Detalles técnicos
     workbench:
       attention:
         blocked: Bloquea la presentación
         staged: Cambiada, sin aplicar
+      calculate:
+        apply_first: Aplica o descarta tus cambios antes de recalcular [R].
+      defaults_to_confirm: 'valores por defecto sin confirmar: {count} [n]'
       design_constant: '{column}: {value} · lo fija el diseño oficial'
       details_page: Detalles del cálculo
       disclosure:
@@ -2183,6 +2111,9 @@ tui:
         restore: Restaurar origen
         save: Guardar en cambios
         unreadable: No se ha podido leer este valor.
+      export:
+        title: Exportar la declaración
+        verify_first: Verifica la declaración antes de exportarla [F8].
       filter:
         all: todas las casillas
         attention: solo lo pendiente
@@ -2191,13 +2122,16 @@ tui:
         empty: No hay casillas en esta vista.
         feeds: 'Se usa en: {boxes}'
         formula: 'Cálculo: {formula}'
+        keys: 'Teclas: {keys}'
         legal: 'Base legal: {citations}'
         no_explanation: Aún no hay una explicación escrita para esta casilla.
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
       key:
         back: Volver
+        calculate: Calcular
         edit: Editar
+        export: Exportar
         filter: Filtro
         help: Ayuda
         next_attention: Siguiente pendiente
@@ -2334,34 +2268,9 @@ tui:
         fill: Rellenar
         review: Revisar
       value:
+        fixed_by_design: fijado
         not_applicable: no aplica
       was: 'antes: {value}'
-    workspace_refusal:
-      facts:
-        modelo: Modelo
-        period: Periodo
-        required_grade: Grado requerido
-        work_unit_id: Unidad de trabajo
-      reason:
-        authority_grade_unavailable: La autoridad de la revisión seleccionada todavía
-          no admite la vista calculada solicitada.
-        bucket_assertion_mismatch: La identidad almacenada de la declaración no coincide
-          con la solicitada.
-        calculation_unavailable: Esta declaración aún no se ha calculado, así que
-          no hay valores disponibles.
-        consistency_unavailable: No se pudo confirmar la coherencia de la declaración.
-        locale_unavailable: No se pudieron leer las etiquetas traducidas de la declaración.
-        schema_unavailable: No se pudo leer el esquema de la declaración.
-        static_inspection_unavailable: No se pudo leer el diseño del formulario de
-          esta declaración.
-        target_not_found: Todavía no existe trabajo para esta declaración, así que
-          no hay nada que calcular.
-        visible_target_ambiguous: Más de una declaración coincide con esta dirección,
-          así que ninguna puede abrirse como una sola.
-        workspace_changed: Esta declaración cambió mientras estaba abierta; vuelva
-          a abrirla para ver el estado actual.
-      static_fallback: Solo se muestra el diseño del formulario. No se muestran valores
-        calculados a continuación.
   root:
     account:
       appearance: Apariencia

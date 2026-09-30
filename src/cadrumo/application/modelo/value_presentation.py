@@ -30,6 +30,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.iban import normalise_iban
@@ -114,7 +115,7 @@ _PRESENTATION_BY_DATA_TYPE: Final[Mapping[str, ValuePresentationKind]] = Mapping
 """The presentation of each registry data type; total over ``CasillaDataType``."""
 
 
-class UnknownValuePresentationError(ValueError):
+class UnknownValuePresentationError(InternalInvariantError):
     """A data type has no declared presentation, so no figure is guessed for it."""
 
 
@@ -166,7 +167,7 @@ def _decimal_text(value: Decimal | int, *, minimum_places: int = 0) -> str:
     return f"-{text}" if sign and number != 0 else text
 
 
-class ValuePresentationCatalogueError(LookupError):
+class ValuePresentationCatalogueError(InternalInvariantError):
     """The catalogue carries no words for a value state the screen must show."""
 
 

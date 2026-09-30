@@ -290,6 +290,8 @@ class ModeloFormRepeatingBlock(_FormModel):
     kind: Literal["repeating"] = "repeating"
     id: str
     columns: tuple[ModeloFormGridColumn, ...]
+    #: The casilla each column shows, aligned with ``columns``; ``None`` for a column no casilla owns.
+    column_casilla_ids: tuple[str | None, ...]
     column_data_types: tuple[str, ...]
     min_rows: int = Field(ge=0)
     max_rows: int | None

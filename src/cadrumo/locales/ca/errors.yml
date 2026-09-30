@@ -742,6 +742,16 @@ errors:
       els seus textos de presentació.'
     internal_flow_validator_registry: 'Error intern: el registre de validadors del
       flux guiat ha rebutjat l''operació.'
+    internal_modelo_help_catalogue_gap: Falta al catàleg un text d'ajuda d'aquesta
+      casella.
+    internal_modelo_source_kind_unclassified: Un origen de valors no té família declarada,
+      així que no es pot explicar.
+    internal_modelo_value_presentation_catalogue_gap: Falta al catàleg una paraula
+      per mostrar un valor.
+    internal_modelo_value_presentation_unknown: El tipus de valor d'una casella no
+      té regla de presentació.
+    internal_modelo_work_form_layout: La distribució de l'imprès d'aquest model no
+      coincideix amb la seva revisió.
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
@@ -866,8 +876,6 @@ errors:
     canonical_tui_modelo_workspace_declaration_admission: La declaració de l'espai
       de treball del Model no es pot admetre en la generació actual de l'espai de
       treball.
-    canonical_tui_modelo_workspace_session_admission: La sessió de l'espai de treball
-      del Model no es pot admetre a partir de la projecció proporcionada.
     canonical_tui_module_argument: El mòdul TUI només admet els arguments compatibles.
     canonical_tui_navigation_contract: La petició de navegació del TUI infringeix
       el seu contracte.
@@ -1181,6 +1189,7 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
+    refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
     refused_modelo_export_prior_domiciliation_election_required: L'exportació del
       model 303 necessita una elecció sobre la domiciliació anterior (mantenir-la,
       o anul·lar-la o modificar-la); no se n'ha indicat cap, així que no s'ha escrit

@@ -20,6 +20,7 @@ Submodules
    cadrumo.domain.modelos.calculation_revision_identity
    cadrumo.domain.modelos.calculation_revision_m303_evidence
    cadrumo.domain.modelos.calculation_revision_m303_handoff
+   cadrumo.domain.modelos.calculation_revision_operator_layer
    cadrumo.domain.modelos.codes
    cadrumo.domain.modelos.dt12_reduccion
    cadrumo.domain.modelos.errors

@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.tui.modelo.routes import MODELO_WORKSPACE_DESTINATIONS
+from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.golden_store import golden_path, read_golden
 
@@ -81,10 +82,10 @@ def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(
     for item in captures:
         assert item.capture.svg_path.stat().st_size > 0
         assert item.capture.viewport == viewport
-    workspace_pages = [item for item in captures if item.page != DECLARATIONS_PAGE]
-    assert len(workspace_pages) == len(MODELO_WORKSPACE_DESTINATIONS)
-    for item in workspace_pages:
-        assert "modelo 303" in item.capture.frame_text, item.page
+    workbench_pages = [item for item in captures if item.page != DECLARATIONS_PAGE]
+    assert [item.page for item in workbench_pages] == ["workbench", "sources"]
+    for item in workbench_pages:
+        assert "303" in item.capture.frame_text, item.page
 
 
 @pytest.mark.integration
@@ -97,10 +98,7 @@ def test_the_walk_lands_on_the_screen_each_route_builds(tmp_path: Path) -> None:
     _, frames = capture_scenario(_FIRST_QUARTER, shots)
 
     painted = {frame.shot.page: frame.screen for frame in frames}
-    assert painted == {
-        destination.removeprefix("modelo.workspace."): _qualname(screen)
-        for destination, screen in MODELO_WORKSPACE_DESTINATIONS.items()
-    }
+    assert painted == {"workbench": _qualname(ModeloWorkbenchScreen), "sources": _qualname(WorkbenchSourcesScreen)}
 
 
 @pytest.mark.integration
@@ -109,6 +107,6 @@ def test_a_scenario_whose_sequence_leaves_no_such_declaration_is_refused(tmp_pat
     mismatched = SequenceScenario(_FIRST_QUARTER.sequence_id, "130", "a modelo this sequence never works")
 
     with pytest.raises(ScenarioError, match=r"0 declaration\(s\) of modelo 130.*303 2026 1T"):
-        capture_scenario(mismatched, (Shot("overview", 80, 24, "dark", tmp_path / "overview.svg"),))
+        capture_scenario(mismatched, (Shot("workbench", 80, 24, "dark", tmp_path / "workbench.svg"),))
 
     assert not (tmp_path / "overview.svg").exists()

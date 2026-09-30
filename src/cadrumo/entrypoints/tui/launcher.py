@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
     from ...application.ledger.models import ManualLedgerTransactionResult
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+    from ...application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
     from ...application.modelo.workspace_models import (
         ModeloWorkspaceRefusedResultV1,
         ModeloWorkspaceResultV1,
@@ -64,6 +66,8 @@ if TYPE_CHECKING:
         LedgerLinkSubmissionV1,
         LedgerLinkSubmitterV1,
     )
+    from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
+    from .modelo.workbench.installed import WorkbenchRepositories
     from .navigation import (
         TuiActionCandidateV1,
         TuiDestinationCatalogueV1,
@@ -418,20 +422,17 @@ def _modelo_projection_reader(
     from ...core.authority_grade import RegistryAuthorityGrade as _RegistryAuthorityGrade
     from ...core.external_constants import OutputLanguage as _OutputLanguage
     from ...core.i18n.render import output_language as resolve_output_language
-    from .modelo.view.controller import ModeloWorkspaceRefusedReadV1, admit_modelo_workspace_result
 
     def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
         for _attempt in range(MODELO_WORKSPACE_READ_ATTEMPTS):
             language = _OutputLanguage(resolve_output_language())
-            admission = admit_modelo_workspace_result(
-                resolve_modelo_workspace_graded_snapshot(
-                    unit,
-                    operation=operation,
-                    output_language=language,
-                    required_grade=_RegistryAuthorityGrade.CALCULATION,
-                )
+            admission = resolve_modelo_workspace_graded_snapshot(
+                unit,
+                operation=operation,
+                output_language=language,
+                required_grade=_RegistryAuthorityGrade.CALCULATION,
             )
-            if not isinstance(admission, ModeloWorkspaceRefusedReadV1):
+            if not isinstance(admission, ModeloWorkspaceRefusedResultV1):
                 return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
             if admission.refusal.code is ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
                 continue
@@ -976,26 +977,27 @@ def _declarations_generation_factory(
     from .declarations.routes import declarations_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
-        from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
+        from .modelo.workbench.installed import compose_installed_modelo_workbench_factory
 
-        modelo = current[0].modelo
+        declarations = _required_projection(current[0].declarations, "Declarations")
+        bucket_id = declarations.bucket_id
+        # A generation whose Modelo source could not be read offers no
+        # declaration a workbench: the workbench would read the same registry
+        # state and fail the same way, only later and behind a selection.
         modelo_workspace_factory = (
-            compose_installed_modelo_workspace_factory(
-                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
-                declarations=_required_projection(current[0].declarations, "Declarations").declarations,
-                projections=_required_projection(modelo, "Modelo"),
-                lifecycle_projections=_required_projection(current[0].modelo_lifecycle, "Modelo lifecycle")
-                if current[0].modelo_lifecycle.projection is not None
-                else (),
-                graded_refusals=current[0].modelo_graded_refusals.projection or {},
-                lifecycle_actions_factory=lambda lifecycle: _modelo_lifecycle_door(
+            compose_installed_modelo_workbench_factory(
+                bucket_id=bucket_id,
+                declarations=declarations.declarations,
+                operation=operation_runtime.authority_operation,
+                repositories=partial(_modelo_workbench_repositories, bucket_id, operation_runtime.authority_operation),
+                door=partial(
+                    _modelo_lifecycle_door,
                     operation_runtime,
-                    lifecycle,
-                    bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                    bucket_id=bucket_id,
                     refresh_after_success=refresh_generation,
                 ),
             )
-            if modelo.availability is WorkbenchGenerationAvailability.AVAILABLE and modelo.projection is not None
+            if current[0].modelo.availability is WorkbenchGenerationAvailability.AVAILABLE
             else None
         )
         calendar = current[0].declarations_calendar.projection
@@ -1022,14 +1024,30 @@ def _declarations_generation_factory(
     return create
 
 
+def _modelo_workbench_repositories(bucket_id: str, operation: PinnedAuthorityOperation) -> WorkbenchRepositories:
+    """Compose the repositories one declaration's workbench reads its form from."""
+    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ..adapter_composition import build_calculation_action_ports
+    from .modelo.workbench.installed import WorkbenchRepositories
+
+    ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+    return WorkbenchRepositories(
+        work_units=ports.work_unit_repository,
+        calculations=ports.calculation_repository,
+        verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
+    )
+
+
 def _modelo_lifecycle_door(
     operation_runtime: TuiOperationCompositionV1,
-    lifecycle: object,
+    declaration: DeclarationsWorkspaceDeclarationRefV1,
+    calculation_revision_id: str | None,
+    verification_report_id: str | None,
     *,
     bucket_id: str,
     refresh_after_success: Callable[[], object] | None = None,
-) -> object:
-    """Bind one lifecycle read to the session's operation services without repository access.
+) -> ModeloWorkspaceLifecycleDoor:
+    """Bind one declaration's calculation head to the session's operation services.
 
     Edit admission is not run here. The door receives admission, renewal and
     preflight as callables that read the catalogues when an edit session
@@ -1059,19 +1077,16 @@ def _modelo_lifecycle_door(
     )
     from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
     from ...application.modelo.work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
-    from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
     from ...domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
     from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
     from ..adapter_composition import build_attachment_store, build_calculation_action_ports
     from .modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
-    if not isinstance(lifecycle, ModeloWorkspaceLifecycleProjectionV1) or lifecycle.target.work_unit_id is None:
-        raise ValueError("Modelo lifecycle actions require an admitted work-unit lifecycle projection")
     ports = build_calculation_action_ports(
         bucket_id=bucket_id,
         operation=operation_runtime.authority_operation,
     )
-    edited_work_unit_id = str(lifecycle.target.work_unit_id)
+    edited_work_unit_id = str(declaration.work_unit_id)
 
     def admit_edit() -> ModeloEditAdmissionResultV1:
         return admit_modelo_edit_baseline(
@@ -1099,7 +1114,7 @@ def _modelo_lifecycle_door(
             tax_id_format=runtime_tax_id_format(authority=operation_runtime.authority_operation),
         )
 
-    target = lifecycle.target
+    target = declaration
 
     def admit_attestation(observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
         """Admit evidence only for the still-active selected M303 work coordinate."""
@@ -1135,9 +1150,9 @@ def _modelo_lifecycle_door(
 
     return ModeloWorkspaceLifecycleDoor(
         services=operation_runtime.services,
-        work_unit_id=str(lifecycle.target.work_unit_id),
-        calculation_revision_id=lifecycle.calculation_revision_id,
-        verification_report_id=lifecycle.verification_report_id,
+        work_unit_id=edited_work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        verification_report_id=verification_report_id,
         refresh_after_success=refresh_after_success,
         edit_admission=admit_edit,
         edit_renewal=renew_edit,
