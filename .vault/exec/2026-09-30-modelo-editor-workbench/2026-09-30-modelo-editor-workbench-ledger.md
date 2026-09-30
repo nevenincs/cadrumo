@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f0b32db9f8120a824f6a91edac939d00721e97d2d702bdc2e20608d7e6aa909'
+body_hash: 'sha256:f8bc709ac26654c1431ce707cd9d46200f663fefcc0bfd8d92ec61860b051484'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -48,3 +48,8 @@ related:
 - `S15` `verify:` `ruff check + format` -> `pass`
 - `S15` `verify:` `ty + basedpyright + pyrefly on touched files` -> `pass`
 - `S15` `by:` `orchestrator`
+- `S16` `A` `src/cadrumo/application/modelo/source_policy.py`
+- `S16` `A` `src/cadrumo/application/modelo/tests/test_source_policy.py`
+- `S16` `verify:` `pytest test_source_policy.py` -> `pass`
+- `S16` `verify:` `ruff + ty + basedpyright` -> `pass`
+- `S16` `by:` `orchestrator`
