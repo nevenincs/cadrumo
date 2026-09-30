@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:d8b7ebf6a889f8b19d9f553ccdb2c100870b964d046a630f6cd127e7fe9b0308'
+body_hash: 'sha256:829e95543e27af135ed03f38ec1a761eda2fed078e986f05fa1cf15bba91a2be'
 ---
 
 # `modelo-editor-workbench` plan
@@ -87,7 +87,7 @@ Replace the page-per-destination workspace with one workbench per declaration bu
 
 - [x] `P04.S20` - Retire shipped glyphs missing from the pinned font and add a gate that keeps every shipped glyph inside it; `src/cadrumo/entrypoints/tui/components`.
 - [x] `P04.S21` - Build the virtual casilla list widget with the state vocabulary mapping, cursor anchored by casilla id and a totality and uniqueness guard; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
-- [ ] `P04.S22` - Build the workbench screen: header with result and deadline, stepper and next action, section navigator, casilla list, help band and described footer keys; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
+- [x] `P04.S22` - Build the workbench screen: header with result and deadline, stepper and next action, section navigator, casilla list, help band and described footer keys; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
 - [ ] `P04.S23` - Add inline and detail editors over the parser grammar, the staged session, the review screen, the unsaved-change guard, apply through the operation modal, refresh in place and the result diff; `src/cadrumo/entrypoints/tui/modelo/workbench/editing.py`.
 - [ ] `P04.S24` - Add the sources view with family grouping, states, drill-down and deep links to the owning source surfaces; `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`.
 - [ ] `P04.S25` - Retire the page-per-destination workspace and its route factories atomically and route declarations to the workbench; `src/cadrumo/entrypoints/tui/modelo`.

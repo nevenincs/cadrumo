@@ -21,6 +21,7 @@ edit session answers it.
 from __future__ import annotations
 
 from bisect import bisect_right
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import ClassVar, Final, Literal, override
 
@@ -48,6 +49,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.app_access import TypedAppAccess
 from ...components.theme import tokenised
+from .keys import describe_bindings
 from .vocabulary import (
     ATTENTION_GLYPHS,
     ATTENTION_ROLES,
@@ -315,6 +317,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._layout()
         self._scroll_to_cursor()
         self.refresh()
+
+    def describe_keys(self, descriptions: Mapping[str, str]) -> None:
+        """Describe this list's own keys in the language now on screen."""
+        describe_bindings(self._bindings.key_to_bindings, descriptions)
+        self.refresh_bindings()
 
     def focus_address(self, key: AddressKey) -> bool:
         """Put the cursor on one address; ``False`` when this page does not show it."""

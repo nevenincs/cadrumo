@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:e060d49d22e6c62b19cf26d92861980643b3ebe90f3eaf2941493936ab8d0771'
+body_hash: 'sha256:19b5ead10c950783924575e4ca956f65d5889505f570eb2974c08d18d2ba7ed1'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -98,8 +98,26 @@ related:
 - `S21` `verify:` `ruff + ty + basedpyright` -> `pass`
 - `S21` `verify:` `rasterised captures at 80, 120 and 160 columns, missing glyphs none` -> `pass`
 - `S21` `by:` `orchestrator`
+- `S22` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/keys.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_screen.py`
+- `S22` `M` `src/cadrumo/locales/ca/common.yml`
+- `S22` `M` `src/cadrumo/locales/en/common.yml`
+- `S22` `M` `src/cadrumo/locales/es/common.yml`
+- `S22` `M` `src/cadrumo/locales/hu/common.yml`
+- `S22` `verify:` `pytest workbench tests (12)` -> `pass`
+- `S22` `verify:` `ruff + ty` -> `pass`
+- `S22` `verify:` `rasterised captures 80x24 en, 120x36 es and hu, 160x48 es, light and dark, missing glyphs none` -> `pass`
+- `S22` `by:` `orchestrator`
 
 ## Notes
 
 - `S20` 6 TUI tests errored at import on a concurrent session's uncommitted launcher.py edit (ModeloWorkspaceReadContendedError without an error-code entry); not caused by this Step
 - `S17` Builder consumes the declared layout types merged from the layout-family lane; integration over every published layout waits for that lane's generator
+- `S22` Screen reads through a port the composition root will supply; production wiring lands with the page retirement Step

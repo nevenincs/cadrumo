@@ -2125,6 +2125,12 @@ tui:
       attention:
         blocked: Bloqueja la presentació
         staged: Canviada, sense aplicar
+      design_constant: '{column}: {value} · el fixa el disseny oficial'
+      details_page: Detalls del càlcul
+      disclosure:
+        official_spanish: text oficial en castellà
+        spanish_fallback: text en castellà, encara sense traduir
+        technical: nom tècnic
       editability:
         calculated: Cadrumo la calcula a partir d'altres caselles.
         design_constant: El disseny oficial fixa aquest valor.
@@ -2139,6 +2145,42 @@ tui:
           el motiu.
         source_policy_undecided: Encara no s'ha decidit si aquest origen es pot substituir
           a mà.
+      filter:
+        all: totes les caselles
+        attention: només el que està pendent
+        mine: només els teus valors
+      help:
+        empty: No hi ha caselles en aquesta vista.
+        feeds: 'S''utilitza a: {boxes}'
+        formula: 'Càlcul: {formula}'
+        legal: 'Base legal: {citations}'
+        no_explanation: Encara no hi ha cap explicació escrita per a aquesta casella.
+        official: 'Text oficial ({source}): «{text}»'
+        origin: 'Origen: {origin}'
+      key:
+        back: Tornar
+        edit: Editar
+        filter: Filtre
+        help: Ajuda
+        next_attention: Següent pendent
+        next_page: Pàgina següent
+        previous_page: Pàgina anterior
+      layout:
+        generated: distribució sense revisar
+        inspection_only: 'sense distribució oficial: només consulta, per número de
+          casella'
+      loading: Carregant la declaració…
+      modelo_number: Model {modelo}
+      modelo_title: Model {modelo} · {title}
+      next:
+        apply: 'Revisa i aplica els teus canvis (pendents: {count})'
+        calculate: Calcula la declaració
+        done: Declaració presentada
+        file: Genera el fitxer i registra la presentació
+        fill: 'Completa les caselles marcades (pendents: {count})'
+        resolve: 'Resol el que impedeix presentar (pendents: {count})'
+        verify: Verifica la declaració
+      next_line: 'Següent: {action} [{key}]'
       origin:
         calculated: Calculada
         calculation_failed: No s'ha pogut calcular
@@ -2153,6 +2195,36 @@ tui:
         not_imported_yet: Encara sense importar
         optional_empty: Opcional, buida
         overrides_source: El teu valor substitueix l'origen
+      page_position: pàgina {current} de {total}
+      period:
+        annual: Anual {year}
+        month_01: gener {year}
+        month_02: febrer {year}
+        month_03: març {year}
+        month_04: abril {year}
+        month_05: maig {year}
+        month_06: juny {year}
+        month_07: juliol {year}
+        month_08: agost {year}
+        month_09: setembre {year}
+        month_10: octubre {year}
+        month_11: novembre {year}
+        month_12: desembre {year}
+        quarter_1: 1r trimestre {year}
+        quarter_2: 2n trimestre {year}
+        quarter_3: 3r trimestre {year}
+        quarter_4: 4t trimestre {year}
+      read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
+      repeating: 'Files de detall: {count}'
+      repeating_unknown: Aquestes files encara no es poden mostrar aquí.
+      result: 'Resultat [{box}]: {value}'
+      section:
+        pending: '{heading} · pendents: {count}'
+      step:
+        calculate: Calcular
+        file: Presentar
+        fill: Emplenar
+        review: Revisar
       value:
         not_applicable: no s'aplica
       was: 'abans: {value}'

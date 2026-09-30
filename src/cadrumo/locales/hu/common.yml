@@ -2106,6 +2106,12 @@ tui:
       attention:
         blocked: Akadályozza a benyújtást
         staged: Módosítva, még nem alkalmazva
+      design_constant: '{column}: {value} · a hivatalos terv rögzíti'
+      details_page: A számítás részletei
+      disclosure:
+        official_spanish: hivatalos spanyol szöveg
+        spanish_fallback: spanyol szöveg, még nincs lefordítva
+        technical: technikai név
       editability:
         calculated: A Cadrumo más rovatokból számítja ki.
         design_constant: Ezt az értéket a hivatalos terv rögzíti.
@@ -2119,6 +2125,42 @@ tui:
         not_writable: Ez a rovat itt nem szerkeszthető.
         overridable_source: Korábbi bevallásból származik; indoklással felülírhatja.
         source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
+      filter:
+        all: minden rovat
+        attention: csak a teendők
+        mine: csak az Ön értékei
+      help:
+        empty: Ebben a nézetben nincs rovat.
+        feeds: 'Felhasználva: {boxes}'
+        formula: 'Számítás: {formula}'
+        legal: 'Jogalap: {citations}'
+        no_explanation: Ehhez a rovathoz még nincs írott magyarázat.
+        official: 'Hivatalos szöveg ({source}): „{text}”'
+        origin: 'Forrás: {origin}'
+      key:
+        back: Vissza
+        edit: Szerkesztés
+        filter: Szűrő
+        help: Súgó
+        next_attention: Következő teendő
+        next_page: Következő oldal
+        previous_page: Előző oldal
+      layout:
+        generated: elrendezés még nem ellenőrzött
+        inspection_only: 'nincs hivatalos elrendezés: csak megtekintés, rovatszám
+          szerint'
+      loading: A bevallás betöltése…
+      modelo_number: '{modelo}-es nyomtatvány'
+      modelo_title: '{modelo}-es nyomtatvány · {title}'
+      next:
+        apply: 'Nézze át és alkalmazza a módosításait (függőben: {count})'
+        calculate: Számítsa ki a bevallást
+        done: A bevallás benyújtva
+        file: Hozza létre a fájlt és rögzítse a benyújtást
+        fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
+        resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
+        verify: Ellenőrizze a bevallást
+      next_line: 'Következő: {action} [{key}]'
       origin:
         calculated: Számított
         calculation_failed: Nem számítható ki
@@ -2133,6 +2175,36 @@ tui:
         not_imported_yet: Még nincs importálva
         optional_empty: Nem kötelező, üres
         overrides_source: Az Ön értéke felülírja a forrást
+      page_position: '{current}/{total}. oldal'
+      period:
+        annual: '{year}. éves'
+        month_01: '{year}. január'
+        month_02: '{year}. február'
+        month_03: '{year}. március'
+        month_04: '{year}. április'
+        month_05: '{year}. május'
+        month_06: '{year}. június'
+        month_07: '{year}. július'
+        month_08: '{year}. augusztus'
+        month_09: '{year}. szeptember'
+        month_10: '{year}. október'
+        month_11: '{year}. november'
+        month_12: '{year}. december'
+        quarter_1: '{year}. I. negyedév'
+        quarter_2: '{year}. II. negyedév'
+        quarter_3: '{year}. III. negyedév'
+        quarter_4: '{year}. IV. negyedév'
+      read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
+      repeating: 'Részletező sorok: {count}'
+      repeating_unknown: Ezek a sorok itt még nem jeleníthetők meg.
+      result: 'Eredmény [{box}]: {value}'
+      section:
+        pending: '{heading} · teendő: {count}'
+      step:
+        calculate: Számítás
+        file: Benyújtás
+        fill: Kitöltés
+        review: Ellenőrzés
       value:
         not_applicable: nem alk.
       was: 'korábban: {value}'

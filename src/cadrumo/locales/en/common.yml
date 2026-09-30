@@ -2078,6 +2078,12 @@ tui:
       attention:
         blocked: Blocks filing
         staged: Changed, not applied
+      design_constant: '{column}: {value} · fixed by the official design'
+      details_page: Calculation details
+      disclosure:
+        official_spanish: official Spanish text
+        spanish_fallback: Spanish text, not yet translated
+        technical: technical name
       editability:
         calculated: Cadrumo calculates it from other boxes.
         design_constant: The official design fixes this value.
@@ -2092,6 +2098,41 @@ tui:
           state why.
         source_policy_undecided: It is not yet decided whether this source may be
           replaced by hand.
+      filter:
+        all: all boxes
+        attention: only what needs attention
+        mine: only your values
+      help:
+        empty: There are no boxes in this view.
+        feeds: 'Used in: {boxes}'
+        formula: 'Calculation: {formula}'
+        legal: 'Legal basis: {citations}'
+        no_explanation: There is no written explanation for this box yet.
+        official: 'Official text ({source}): “{text}”'
+        origin: 'Source: {origin}'
+      key:
+        back: Back
+        edit: Edit
+        filter: Filter
+        help: Help
+        next_attention: Next to do
+        next_page: Next page
+        previous_page: Previous page
+      layout:
+        generated: layout not yet reviewed
+        inspection_only: 'no official layout: view only, in box order'
+      loading: Loading the declaration…
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
+      next:
+        apply: 'Review and apply your changes (pending: {count})'
+        calculate: Calculate the declaration
+        done: Declaration filed
+        file: Create the file and record the filing
+        fill: 'Complete the marked boxes (to do: {count})'
+        resolve: 'Resolve what blocks filing (to do: {count})'
+        verify: Verify the declaration
+      next_line: 'Next: {action} [{key}]'
       origin:
         calculated: Calculated
         calculation_failed: Could not be calculated
@@ -2106,6 +2147,36 @@ tui:
         not_imported_yet: Not imported yet
         optional_empty: Optional, empty
         overrides_source: Your value replaces the source
+      page_position: page {current} of {total}
+      period:
+        annual: Annual {year}
+        month_01: January {year}
+        month_02: February {year}
+        month_03: March {year}
+        month_04: April {year}
+        month_05: May {year}
+        month_06: June {year}
+        month_07: July {year}
+        month_08: August {year}
+        month_09: September {year}
+        month_10: October {year}
+        month_11: November {year}
+        month_12: December {year}
+        quarter_1: 1st quarter {year}
+        quarter_2: 2nd quarter {year}
+        quarter_3: 3rd quarter {year}
+        quarter_4: 4th quarter {year}
+      read_failed: The declaration could not be read. Go back and open it again.
+      repeating: 'Detail rows: {count}'
+      repeating_unknown: These rows cannot be shown here yet.
+      result: 'Result [{box}]: {value}'
+      section:
+        pending: '{heading} · to do: {count}'
+      step:
+        calculate: Calculate
+        file: File
+        fill: Fill in
+        review: Review
       value:
         not_applicable: n/a
       was: was {value}

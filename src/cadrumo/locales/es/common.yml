@@ -2137,6 +2137,12 @@ tui:
       attention:
         blocked: Bloquea la presentación
         staged: Cambiada, sin aplicar
+      design_constant: '{column}: {value} · lo fija el diseño oficial'
+      details_page: Detalles del cálculo
+      disclosure:
+        official_spanish: texto oficial
+        spanish_fallback: texto en español
+        technical: nombre técnico
       editability:
         calculated: Cadrumo la calcula a partir de otras casillas.
         design_constant: El diseño oficial fija este valor.
@@ -2151,6 +2157,41 @@ tui:
           indicando el motivo.
         source_policy_undecided: Aún no se ha decidido si este origen puede sustituirse
           a mano.
+      filter:
+        all: todas las casillas
+        attention: solo lo pendiente
+        mine: solo tus valores
+      help:
+        empty: No hay casillas en esta vista.
+        feeds: 'Se usa en: {boxes}'
+        formula: 'Cálculo: {formula}'
+        legal: 'Base legal: {citations}'
+        no_explanation: Aún no hay una explicación escrita para esta casilla.
+        official: 'Texto oficial ({source}): «{text}»'
+        origin: 'Origen: {origin}'
+      key:
+        back: Volver
+        edit: Editar
+        filter: Filtro
+        help: Ayuda
+        next_attention: Siguiente pendiente
+        next_page: Página siguiente
+        previous_page: Página anterior
+      layout:
+        generated: distribución sin revisar
+        inspection_only: 'sin distribución oficial: solo consulta, por número de casilla'
+      loading: Cargando la declaración…
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
+      next:
+        apply: 'Revisa y aplica tus cambios (pendientes: {count})'
+        calculate: Calcula la declaración
+        done: Declaración presentada
+        file: Genera el fichero y registra la presentación
+        fill: 'Completa las casillas marcadas (pendientes: {count})'
+        resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
+        verify: Verifica la declaración
+      next_line: 'Siguiente: {action} [{key}]'
       origin:
         calculated: Calculada
         calculation_failed: No se pudo calcular
@@ -2165,6 +2206,36 @@ tui:
         not_imported_yet: Aún sin importar
         optional_empty: Opcional, vacía
         overrides_source: Tu valor sustituye al origen
+      page_position: página {current} de {total}
+      period:
+        annual: Anual {year}
+        month_01: enero {year}
+        month_02: febrero {year}
+        month_03: marzo {year}
+        month_04: abril {year}
+        month_05: mayo {year}
+        month_06: junio {year}
+        month_07: julio {year}
+        month_08: agosto {year}
+        month_09: septiembre {year}
+        month_10: octubre {year}
+        month_11: noviembre {year}
+        month_12: diciembre {year}
+        quarter_1: 1.er trimestre {year}
+        quarter_2: 2.º trimestre {year}
+        quarter_3: 3.er trimestre {year}
+        quarter_4: 4.º trimestre {year}
+      read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
+      repeating: 'Filas de detalle: {count}'
+      repeating_unknown: Estas filas no se pueden mostrar aquí todavía.
+      result: 'Resultado [{box}]: {value}'
+      section:
+        pending: '{heading} · pendientes: {count}'
+      step:
+        calculate: Calcular
+        file: Presentar
+        fill: Rellenar
+        review: Revisar
       value:
         not_applicable: no aplica
       was: 'antes: {value}'
