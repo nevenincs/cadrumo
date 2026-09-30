@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0367d5a1ebee360a2513b68b909f95ef88e73d3289857c724d8b57539c51b735'
+body_hash: 'sha256:6e8eb82c21eeb129d3ab67e3dd8997699c198a3312e4b6caf04423ca2fbc2d48'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -492,6 +492,7 @@ related:
 - `S11` `M` `src/cadrumo/locales/es/modelo/schema/165.yml`
 - `S11` `M` `src/cadrumo/locales/hu/modelo/schema/165.yml`
 - `S11` `verify:` `165 and 210 candidate inspection publication_valid; 419 dev tests and 59 runtime tests passed` -> `pass`
+- `S11` `verify:` `registry_collapse_verification --modelo 202 against published 0b6bfacc (complete, rollout complete, 0 findings)` -> `pass`
 
 ## Notes
 
@@ -516,3 +517,4 @@ related:
 - `S23` busy refusal and persistence of the degradation fact for batch and TUI follow in P05.S37
 - `S17` moved: 0245-0247 marriage members to 2022, maternity 0611 to 2023 and 2025, guardería cap to 2022; restored 0604 refs; amending-law refs per incentive year; kept with evidence: 193 relation (other branch owns 0597), 0613, 0150, 0512, 184 and 190 relations, Madrid, maritime; ruling 8: product cannot represent a shortened period, documented only; my corrections: count pin 23 to 25, a phantom covering-test reference, maternity in the source mesh expected set
 - `S11` 165 2023 design authored at 2023-2025 (Orden HFP/1284/2023 applies from ejercicio 2023) with storage reuse; 210 payer-mode parameter opens at 2023; 151 and 390 candidates genuinely new; 165 converter apply blocked by the export scenario table rendering below the floor (P05.S32)
+- `S11` Correction to the preceding 202 verify row: the run reported complete=True with `registry_rollout=incomplete,` not rollout complete; `registry_rollout` is the registry-wide collapse state, which stays incomplete while other modelos are still being rectified
