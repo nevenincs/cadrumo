@@ -7,13 +7,14 @@ classifier — no mocks — and reds if the routing regresses.
 
 Covered:
 
-- INTRACOM ACQUISITION REVERSE CHARGE (LIVA art. 84.Uno.2 + art. 92): a single
-  ``iva.autorepercutido.intracomunitaria`` cuota self-assesses output IVA (it
-  feeds ``iva.cuota-devengada-total``) AND is simultaneously deductible (it feeds
-  ``iva.cuota-deducible-total``). The two legs net to zero in
-  ``iva.resultado-regimen-general`` for a fully-deductible acquisition — the
-  correct reverse-charge double-entry. This is the routing the foreign persona
-  could not reach behind the B1/B3 wall.
+- INTRACOM ACQUISITION REVERSE CHARGE (LIVA art. 84.Uno.2 + art. 92): one
+  self-assessed cuota is output IVA (it feeds ``iva.cuota-devengada-total``
+  through box [11]) AND is deductible (box [37], which box [45] sums into
+  ``iva.cuota-deducible-total``). The ledger reports that cuota under the
+  semantic selector and under both box selectors alike, so a fully-deductible
+  acquisition nets to zero in ``iva.resultado-regimen-general`` — the correct
+  reverse-charge double-entry. This is the routing the foreign persona could
+  not reach behind the B1/B3 wall.
 
 - RECARGO DE EQUIVALENCIA ANOMALY (LIVA arts. 148-163): a recargo-equivalencia
   retailer's input IVA is NON-deductible acquisition cost, so it must NOT silently
@@ -61,19 +62,23 @@ _MODELO = "303"
 _YEAR = 2025
 _PERIOD = "1T"
 
-#: The single intracom autorepercutido cuota leg + the engine bindings the M303
+#: The intracom autorepercutido cuota selectors + the engine bindings the M303
 #: régimen-general result drives off (each supplied as zero unless named below).
+#: The three intracom selectors read the same self-assessed ledger cuota: the
+#: semantic carrier, the devengado box [11] leg and, for a current acquisition
+#: whose deduction is recognised in full, the deducible box [37] leg.
 _INTRACOM_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
+_INTRACOM_DEVENGADO_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
+_INTRACOM_DEDUCIBLE_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
+_INTRACOM_CUOTA_BINDINGS = (_INTRACOM_BINDING, _INTRACOM_DEVENGADO_BINDING, _INTRACOM_DEDUCIBLE_BINDING)
 _LEDGER_CUOTA_BINDINGS = (
     "modelo-303-iva-repercutido-general-cuota",
     "modelo-303-iva-repercutido-reducido-cuota",
     "modelo-303-iva-repercutido-super-reducido-cuota",
     "modelo-303-iva-soportado-interiores-cuota",
     "modelo-303-iva-soportado-importaciones-cuota",
-    _INTRACOM_BINDING,
+    *_INTRACOM_CUOTA_BINDINGS,
     "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
     "modelo-303-iva-autorepercutido-interior-devengado-cuota",
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
     "modelo-303-casilla-59-entregas-intracomunitarias-base",
@@ -106,26 +111,33 @@ _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = validated_casilla_id
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_M303_BOX_11_CASILLA: CasillaId = validated_casilla_id("11")
+_M303_BOX_37_CASILLA: CasillaId = validated_casilla_id("37")
+
+
+def _intracom_binding_values(intracom_cuota: Decimal) -> dict[str, Decimal]:
+    """Bind one self-assessed intracom cuota to every selector the ledger reports it under."""
+    return {
+        _AUTOCONSUMO_BINDING: Decimal("0"),
+        _STATE_RATIO_BINDING: Decimal("100"),
+        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
+        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS},
+        **dict.fromkeys(_INTRACOM_CUOTA_BINDINGS, intracom_cuota),
+    }
 
 
 def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota() -> None:
     """A reverse-charge intracom cuota feeds BOTH devengada-total AND deducible-total.
 
     LIVA art. 84.Uno.2 makes the acquirer the sujeto pasivo (output IVA, devengada);
-    art. 92 makes that same self-assessed cuota deductible. The M303 engine wires the
-    single ``iva.autorepercutido.intracomunitaria`` casilla into both totals, so a
-    fully-deductible acquisition nets to zero régimen-general result. Reds if either
-    leg drops the intracom casilla.
+    art. 92 makes that same self-assessed cuota deductible. The cuota reaches the
+    devengada total and prints in box [11]; it prints again in box [37], which the
+    deducible total sums as the design's box [45] does, so a fully-deductible
+    acquisition nets to zero régimen-general result. Reds if either leg drops it.
     """
     intracom_cuota = Decimal("42.00")
     snapshot = published_snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-    binding_values = {
-        _INTRACOM_BINDING: intracom_cuota,
-        _AUTOCONSUMO_BINDING: Decimal("0"),
-        _STATE_RATIO_BINDING: Decimal("100"),
-        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
-        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
-    }
+    binding_values = _intracom_binding_values(intracom_cuota)
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
@@ -137,7 +149,9 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota() -> None
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
     assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
     assert result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] == intracom_cuota
+    assert result.values[_M303_BOX_11_CASILLA] == intracom_cuota
     # ...AND is deductible by the same amount (deducible leg, art. 92).
+    assert result.values[_M303_BOX_37_CASILLA] == intracom_cuota
     assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] == intracom_cuota
     # The reverse-charge double-entry nets to zero régimen-general result.
     assert result.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0.00")
@@ -151,13 +165,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible() -> None:
     — a net positive result that over-states the IVA payable on a neutral acquisition.
     """
     snapshot = published_snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-    binding_values = {
-        _INTRACOM_BINDING: Decimal("42.00"),
-        _AUTOCONSUMO_BINDING: Decimal("0"),
-        _STATE_RATIO_BINDING: Decimal("100"),
-        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
-        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
-    }
+    binding_values = _intracom_binding_values(Decimal("42.00"))
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,

@@ -98,6 +98,29 @@ origin = "seeded"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
 source_refs = ["aeat-dr-303-2023", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
+# The two internal carriers the 2022 edition states continue into 2023 as the
+# same concept: each 2023 design row they feed reads as its 2022 counterpart,
+# and neither design prints a box of their own.
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
+from_revision = "2022"
+to_revision = "2023"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md:78 (sha256 6648f6b31957) prints the adquisiciones intracomunitarias de bienes y servicios base [10] beside its cuota [11] at line 79; corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:84 (sha256 72e463cb2998) prints the same base [10] beside cuota [11] at line 85. Neither design prints a box for the aggregated base this row projects into [10], so the carrier continues unchanged."
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-autoconsumo-promotor-base"
+from_revision = "2022"
+to_revision = "2023"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md:69 (sha256 6648f6b31957) through line 77 lays out the regimen general devengado rows by rate, bases [01], [04] and [07] with cuotas [03], [06] and [09]; corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:72 (sha256 72e463cb2998) through line 83 lays out the same rows. Neither design prints a box for the promotor's autoconsumo, so this rate-less base, reconciled against the autoconsumo bases stated in those rows, continues unchanged."
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
 [[revisions.2023.casilla_overrides]]
 selector = { revision = "2022", id = "71" }
 fields = { additional_source_refs = ["aeat-modelo-303-procedure"], legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"] }
