@@ -10,6 +10,10 @@ modelo:
         official_name: Adóelőleg-levonások és -befizetések. Városi ingatlanok bérbeadásából
           vagy albérletbe adásából származó jövedelmek.
         title: IRPF városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások
+      form:
+        page:
+          dr-11501:
+            heading: 1. oldal · Városi ingatlanok bérleti díjainak visszatartásai
       revision:
         2019-y-siguientes:
           casilla:

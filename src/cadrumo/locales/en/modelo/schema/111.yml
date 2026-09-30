@@ -9,6 +9,36 @@ modelo:
         official_name: Personal Income Tax withholdings and payments on account. Employment
           and business income, prizes and certain capital gains and income attributions.
         title: IRPF withholdings and payments on account
+      form:
+        page:
+          dr-m11101:
+            heading: Page 1 · Withholdings and payments on account
+        row:
+          percep-dinerarias:
+            heading: Cash payments
+          percep-en-especie:
+            heading: Payments in kind
+          premios-dinerarios:
+            heading: Cash prizes
+          premios-en-especie:
+            heading: Prizes in kind
+          rendimientos-dinerarios:
+            heading: Cash income
+          rendimientos-en-especie:
+            heading: Income in kind
+        section:
+          contraprest-cesion-dchos-imagen:
+            heading: Consideration for image rights
+          ganancias-patrim-aprovecham-forestales:
+            heading: Capital gains from forestry use
+          premios:
+            heading: Prizes
+          rendim-actividades-economicas:
+            heading: Business income
+          rendim-del-trabajo:
+            heading: Employment income
+          total-liquidacion:
+            heading: Return total
       revision:
         2019-y-siguientes:
           casilla:

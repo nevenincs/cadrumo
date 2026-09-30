@@ -10,6 +10,36 @@ modelo:
           trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales
           e imputaciones de renta.
         title: IRPF retenciones e ingresos a cuenta
+      form:
+        page:
+          dr-m11101:
+            heading: Página 1 · Retenciones e ingresos a cuenta
+        row:
+          percep-dinerarias:
+            heading: Percepciones dinerarias
+          percep-en-especie:
+            heading: Percepciones en especie
+          premios-dinerarios:
+            heading: Premios dinerarios
+          premios-en-especie:
+            heading: Premios en especie
+          rendimientos-dinerarios:
+            heading: Rendimientos dinerarios
+          rendimientos-en-especie:
+            heading: Rendimientos en especie
+        section:
+          contraprest-cesion-dchos-imagen:
+            heading: Contraprestaciones por la cesión de derechos de imagen
+          ganancias-patrim-aprovecham-forestales:
+            heading: Ganancias patrimoniales derivadas de aprovechamientos forestales
+          premios:
+            heading: Premios
+          rendim-actividades-economicas:
+            heading: Rendimientos de actividades económicas
+          rendim-del-trabajo:
+            heading: Rendimientos del trabajo
+          total-liquidacion:
+            heading: Total liquidación
       revision:
         2019-y-siguientes:
           casilla:

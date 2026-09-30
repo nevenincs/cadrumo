@@ -98,7 +98,6 @@ def _review(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> 
 def _layout(
     snapshot: RegistrySnapshot, *, placements: tuple[FormPlacementDefinition, ...] | None = None
 ) -> FormLayoutDefinition:
-    first = snapshot.revision.casillas[0]
     grid = FormGridBlock(
         id="grid",
         columns=(
@@ -162,8 +161,6 @@ def _layout(
             ),
         ),
         placements=default_placements if placements is None else placements,
-        legal_refs=first.legal_refs,
-        source_refs=first.source_refs,
     )
 
 

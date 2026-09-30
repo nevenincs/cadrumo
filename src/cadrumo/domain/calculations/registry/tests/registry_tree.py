@@ -7,8 +7,14 @@ from functools import cache
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import SnapshotGlobalsComponentQuery
 from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, RegistryCatalogues, SnapshotGlobalCatalogues
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, SnapshotGlobalCatalogues
 from ..snapshot import collect_snapshot_ref_ids
+
+
+def _with_form_layout(operation: PinnedAuthorityOperation, modelo_id: str, revision: ModeloRevision) -> ModeloRevision:
+    """Restore the separately published form layout onto a revision view."""
+    layout = operation.form_layout(modelo_id, str(revision.id))
+    return revision.model_copy(update={"form_layouts": () if layout is None else (layout,)})
 
 
 def full_published_modelo(operation: PinnedAuthorityOperation, modelo_id: str) -> ModeloDefinition:
@@ -20,7 +26,11 @@ def full_published_modelo(operation: PinnedAuthorityOperation, modelo_id: str) -
     """
     directory = operation.modelo_directory(modelo_id)
     revisions = {
-        str(metadata.id): operation.revision_with_export_layouts(modelo_id, str(metadata.id))
+        str(metadata.id): _with_form_layout(
+            operation,
+            modelo_id,
+            operation.revision_with_export_layouts(modelo_id, str(metadata.id)),
+        )
         for metadata in directory.revisions
     }
     first_revision = next(iter(revisions.values()))

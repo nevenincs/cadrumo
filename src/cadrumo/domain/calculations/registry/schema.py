@@ -184,6 +184,7 @@ from .schema_deadlines import DeadlineWindowDefinition as _DeadlineWindowDefinit
 from .schema_deadlines import ModeloScheduleDefinition as _ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 from .schema_extraction import ExtractionProfileDefinition
+from .schema_form_layouts import FormLayoutDefinition
 from .schema_formula import (
     FormulaExpression,
     ParameterDefinition,
@@ -731,6 +732,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     bindings: Annotated[tuple[BindingDefinition, ...], SCHEMA_FAMILY] = ()
     projection_endpoints: Annotated[tuple[ProjectionEndpointDeclaration, ...], SCHEMA_FAMILY] = ()
     export_layouts: Annotated[tuple[ExportLayoutDefinition, ...], SCHEMA_FAMILY] = ()
+    form_layouts: Annotated[tuple[FormLayoutDefinition, ...], SCHEMA_FAMILY] = ()
     extraction_profiles: Annotated[tuple[ExtractionProfileDefinition, ...], SCHEMA_FAMILY] = ()
     live_cross_references: Annotated[tuple[LiveCrossReferenceDecision, ...], SCHEMA_FAMILY] = ()
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()

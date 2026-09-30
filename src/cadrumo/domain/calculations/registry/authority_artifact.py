@@ -63,6 +63,7 @@ from .schema import (
     SupportedFilingYearsCatalogue,
 )
 from .schema_exports import ExportLayoutDefinition
+from .schema_form_layouts import FormLayoutDefinition
 from .schema_references import TemporalSupportEnvelope
 from .tax_id_format import tax_id_format_from_catalogue
 from .temporal import ModeloRevisionDirectory
@@ -81,6 +82,7 @@ __all__ = [
     "AuthorityGenerationPin",
     "EvidenceComponentQuery",
     "ExportLayoutComponentQuery",
+    "FormLayoutComponentQuery",
     "GovernedFactComponentQuery",
     "ModeloDirectoryComponentQuery",
     "ModeloRevisionComponentQuery",
@@ -119,6 +121,7 @@ class AuthorityComponentKind(StrEnum):
     LEGAL_EVIDENCE = "legal_evidence"
     SOURCE_EVIDENCE = "source_evidence"
     EXPORT_LAYOUT = "export_layout"
+    FORM_LAYOUT = "form_layout"
     SNAPSHOT_GLOBALS = "snapshot_globals"
 
 
@@ -210,6 +213,15 @@ class ExportLayoutComponentQuery:
 
 
 @dataclass(frozen=True, slots=True)
+class FormLayoutComponentQuery:
+    """Retrieve the one declared form layout of a revision, separated from it."""
+
+    modelo_id: str
+    revision_id: str
+    kind: Final[AuthorityComponentKind] = AuthorityComponentKind.FORM_LAYOUT
+
+
+@dataclass(frozen=True, slots=True)
 class EvidenceComponentQuery:
     """Retrieve one legal or public-source evidence projection by canonical id."""
 
@@ -232,6 +244,7 @@ type AuthorityComponentQuery = (
     | ReferenceComponentQuery
     | EvidenceComponentQuery
     | ExportLayoutComponentQuery
+    | FormLayoutComponentQuery
 )
 
 
@@ -370,6 +383,8 @@ def decode_authority_component(
             )
         if isinstance(query, ExportLayoutComponentQuery):
             return ExportLayoutDefinition.model_validate(document, strict=False)
+        if isinstance(query, FormLayoutComponentQuery):
+            return FormLayoutDefinition.model_validate(document, strict=False)
         raise AuthorityComponentCodecError(f"unsupported authority component query {query!r}")
     except AuthorityComponentCodecError:
         raise
@@ -412,6 +427,8 @@ def authority_component_identity(query: AuthorityComponentQuery) -> tuple[Author
         return query.kind, query.reference_id
     if isinstance(query, ExportLayoutComponentQuery):
         return query.kind, f"{query.modelo_id}\x1f{query.revision_id}\x1f{query.layout_id}"
+    if isinstance(query, FormLayoutComponentQuery):
+        return query.kind, f"{query.modelo_id}\x1f{query.revision_id}"
     raise TypeError(f"unsupported authority component query {query!r}")
 
 
@@ -438,6 +455,9 @@ def authority_query_from_identity(kind: str, key: str) -> AuthorityComponentQuer
             return ReferenceComponentQuery(key, component_kind)
         if component_kind in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE):
             return EvidenceComponentQuery(key, component_kind)
+        if component_kind is AuthorityComponentKind.FORM_LAYOUT:
+            modelo_id, revision_id = key.split("\x1f", 1)
+            return FormLayoutComponentQuery(modelo_id, revision_id)
         else:
             modelo_id, revision_id, layout_id = key.split("\x1f", 2)
             return ExportLayoutComponentQuery(modelo_id, revision_id, layout_id)

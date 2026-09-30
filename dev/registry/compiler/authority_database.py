@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityComponentQuery,
     EvidenceComponentQuery,
     ExportLayoutComponentQuery,
+    FormLayoutComponentQuery,
     GovernedFactComponentQuery,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
@@ -193,7 +194,7 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
         components.append(_compiled_component(directory_query, directory))
         for revision_id, revision in sorted(modelo.revisions.items(), key=lambda item: str(item[0])):
             query = ModeloRevisionComponentQuery(str(modelo.id), str(revision_id))
-            base_revision = revision.model_copy(update={"export_layouts": ()})
+            base_revision = revision.model_copy(update={"export_layouts": (), "form_layouts": ()})
             payload = encode_authority_component(query, base_revision)
             legal_ids, source_ids = collect_snapshot_ref_ids(modelo, base_revision)
             reference_queries = tuple(
@@ -228,6 +229,13 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                     for reference_id in sorted(set(layout.source_refs))
                 )
                 components.append(_compiled_component(layout_query, layout, dependencies=layout_dependencies))
+            for form_layout in revision.form_layouts:
+                form_query = FormLayoutComponentQuery(str(modelo.id), str(revision_id))
+                form_dependencies = tuple(
+                    ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
+                    for reference_id in sorted({item.source_ref for item in form_layout.design_sources})
+                )
+                components.append(_compiled_component(form_query, form_layout, dependencies=form_dependencies))
     for item in artifact.evidence.legal:
         query = EvidenceComponentQuery(item.legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE)
         components.append(_compiled_component(query, item))

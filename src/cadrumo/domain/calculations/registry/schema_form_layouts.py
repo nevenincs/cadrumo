@@ -41,7 +41,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from .errors import RegistryValidationError
 from .ids import BindingId, RecordId, RevisionId, SourceRefId
-from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
+from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = [
     "FORM_LAYOUT_GENERATOR_VERSION",
@@ -218,7 +218,12 @@ class FormDesignSource(RegistryModel):
 
 
 class FormCell(RegistryModel):
-    """One grid cell: a casilla, a binding input, a design constant with its literal, or a blank."""
+    """One grid cell: a casilla, a binding input, a design constant with its literal, or a blank.
+
+    A design-constant cell may name the casilla printed at that box: the
+    official design fixes the value the fichero carries there, so the box is
+    shown with the design's literal and is never offered for editing.
+    """
 
     kind: FormCellKindField
     casilla_id: CasillaId | None = None
@@ -230,12 +235,12 @@ class FormCell(RegistryModel):
     def _kind_owns_its_payload(self) -> FormCell:
         """Refuse a cell whose payload disagrees with its kind."""
         expected = {
-            FormCellKind.CASILLA: (True, False),
-            FormCellKind.BINDING_INPUT: (False, True),
-            FormCellKind.DESIGN_CONSTANT: (False, False),
-            FormCellKind.BLANK: (False, False),
+            FormCellKind.CASILLA: ((True,), False),
+            FormCellKind.BINDING_INPUT: ((False,), True),
+            FormCellKind.DESIGN_CONSTANT: ((True, False), False),
+            FormCellKind.BLANK: ((False,), False),
         }[self.kind]
-        if (self.casilla_id is not None, self.binding_id is not None) != expected:
+        if (self.casilla_id is not None) not in expected[0] or (self.binding_id is not None) != expected[1]:
             raise RegistryValidationError(f"form cell of kind {self.kind.value!r} names the wrong address")
         if self.kind is FormCellKind.DESIGN_CONSTANT and self.literal is None:
             raise RegistryValidationError("a design-constant form cell must carry the design's literal")
@@ -262,18 +267,25 @@ class FormGridRow(RegistryModel):
 
 
 class FormFieldBlock(RegistryModel):
-    """One vertical label/value line addressing a casilla or a binding."""
+    """One vertical label/value line addressing a casilla or a binding.
+
+    ``design_constant`` carries the literal the official design fixes for the
+    casilla's box; such a field is shown, never edited.
+    """
 
     kind: Literal["field"] = "field"
     id: FormNodeId
     casilla_id: CasillaId | None = None
     binding_id: BindingId | None = None
+    design_constant: str | None = Field(default=None, min_length=1, max_length=64)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _one_address(self) -> FormFieldBlock:
         if (self.casilla_id is None) == (self.binding_id is None):
             raise RegistryValidationError(f"form field block {self.id!r} addresses exactly one casilla or binding")
+        if self.design_constant is not None and self.casilla_id is None:
+            raise RegistryValidationError(f"form field block {self.id!r} fixes a design constant on no casilla")
         return self
 
 
@@ -435,7 +447,11 @@ class FormLayoutDefinition(RegistryModel):
     generated from (its casillas, the bindings it places and the export
     structure it reads); a layout whose digest no longer matches its revision
     is stale and refused. ``design_sources`` pins the official files the
-    headings were quoted from.
+    headings were quoted from, and ``seed_source`` names the anchor family.
+
+    The layout carries no ``legal_refs`` or ``source_refs`` of its own. It is
+    derived presentation, and copying its revision's citations onto it would
+    make every manifest reference look cited by an authored child.
     """
 
     id: FormNodeId
@@ -447,8 +463,6 @@ class FormLayoutDefinition(RegistryModel):
     design_sources: tuple[FormDesignSource, ...] = ()
     pages: tuple[FormPageDefinition, ...] = ()
     placements: tuple[FormPlacementDefinition, ...] = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -469,3 +483,28 @@ class FormLayoutDefinition(RegistryModel):
                         f"{alias.page_id!r}/{alias.section_id!r}",
                     )
         return self
+
+    def casilla_sections(self) -> dict[str, tuple[str, str]]:
+        """Return each casilla shown on the form mapped to its ``(page id, section id)``.
+
+        Every casilla a block addresses -- a field, a grid cell (including a
+        design-constant cell) or a repeating-group column -- is listed once, at
+        the section that shows it; alias positions are not included.
+        """
+        found: dict[str, tuple[str, str]] = {}
+        for page in self.pages:
+            for section in page.sections:
+                for block in section.blocks:
+                    for casilla_id in _block_casilla_ids(block):
+                        found.setdefault(casilla_id, (page.id, section.id))
+        return found
+
+
+def _block_casilla_ids(block: FormBlockDefinition) -> tuple[str, ...]:
+    if isinstance(block, FormFieldBlock):
+        return () if block.casilla_id is None else (block.casilla_id,)
+    if isinstance(block, FormGridBlock):
+        return tuple(cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
+    if isinstance(block, FormRepeatingGroupBlock):
+        return tuple(column.casilla_id for column in block.columns if column.casilla_id is not None)
+    return ()

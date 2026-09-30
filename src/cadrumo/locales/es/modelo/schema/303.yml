@@ -642,6 +642,150 @@ modelo:
       field:
         official_name: Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.
         title: IVA. Autoliquidación (trimestral)
+      form:
+        column:
+          1t-2t-3t:
+            heading: 1T/2T/3T
+          4t:
+            heading: 4T
+          4t-2:
+            heading: 4T
+          adquisicion-o-importacion-de-activos-fijos:
+            heading: Adquisición o importación de activos fijos
+          adquisiciones-intracomunitarias-de-bienes:
+            heading: Adquisiciones intracomunitarias de bienes
+          entregas-de-activos-fijos:
+            heading: Entregas de activos fijos
+          iva-devengado-por-inversion-del-sujeto-pasivo:
+            heading: IVA devengado por inversión del sujeto pasivo
+          regularizacion-bienes-de-inversion:
+            heading: Regularización de bienes de inversión
+          regularizacion-de-bienes-de-inversion:
+            heading: Regularización de bienes de inversión
+          regularizacion-de-inversiones:
+            heading: Regularización de inversiones
+          resultado:
+            heading: Resultado
+          resultado-rs:
+            heading: Resultado del régimen simplificado
+          suma-de-deducciones:
+            heading: Suma de deducciones
+          total-cuota-resultante:
+            heading: Total cuota resultante
+          total-iva-deducible:
+            heading: Total IVA deducible
+        page:
+          dp30301:
+            heading: Página 1 · Liquidación del régimen general
+          dp30302:
+            heading: Página 2 · Régimen simplificado
+          dp30303:
+            heading: Página 3 · Información adicional y resultado
+          dp30304:
+            heading: Página 4 · Sujetos exonerados del modelo 390
+          dp30305:
+            heading: Página 5 · Prorratas y deducciones diferenciadas
+        row:
+          '1':
+            heading: Línea 1
+          '2':
+            heading: Línea 2
+          '3':
+            heading: Línea 3
+          '4':
+            heading: Línea 4
+          '5':
+            heading: Línea 5
+          adquisiciones-intracomunitarias-de-bienes-368e6a:
+            heading: Adquisiciones intracomunitarias de bienes y servicios
+          bienes-corrientes:
+            heading: Bienes corrientes
+          bienes-corrientes-y-servicios:
+            heading: Bienes corrientes y servicios
+          bienes-inversion:
+            heading: Bienes de inversión
+          bienes-y-servic:
+            heading: Bienes y servicios corrientes
+          bienes-y-servicios-corrientes:
+            heading: Bienes y servicios corrientes
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Compensaciones del régimen especial de agricultura, ganadería
+              y pesca
+          en-adquisiciones-intracomunitarias-de-bie-13bc2d:
+            heading: En adquisiciones intracomunitarias de bienes de inversión
+          en-adquisiciones-intracomunitarias-de-bie-1944dc:
+            heading: En adquisiciones intracomunitarias de bienes y servicios corrientes
+          importes-de-las-entregas-de-bienes-y-pres-c77f8b:
+            heading: Entregas y prestaciones del criterio de caja devengadas según
+              la regla general (art. 75 LIVA)
+          modificacion-bases-y-cuotas:
+            heading: Modificación de bases y cuotas
+          modificaciones-bases-y-cuotas-del-recargo-b27892:
+            heading: Modificación de bases y cuotas del recargo de equivalencia
+          otras-operaciones-con-inversion-del-sujet-951686:
+            heading: Otras operaciones con inversión del sujeto pasivo (excepto adquisiciones
+              intracomunitarias)
+          por-cuotas-soportadas-en-las-importacione-66dc6d:
+            heading: Por cuotas soportadas en importaciones de bienes de inversión
+          por-cuotas-soportadas-en-las-importacione-f35018:
+            heading: Por cuotas soportadas en importaciones de bienes corrientes
+          por-cuotas-soportadas-en-operaciones-inte-08f33c:
+            heading: Por cuotas soportadas en operaciones interiores corrientes
+          por-cuotas-soportadas-en-operaciones-inte-5598b4:
+            heading: Por cuotas soportadas en operaciones interiores con bienes de
+              inversión
+          recargo-equivalencia:
+            heading: Recargo de equivalencia
+          rectificacion-de-deducciones:
+            heading: Rectificación de deducciones
+          regimen-general:
+            heading: Régimen general
+        section:
+          13-reg-deducc-diferenc:
+            heading: Deducciones diferenciadas
+          13-reg-deducc-diferenc-1:
+            heading: Deducciones diferenciadas · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · IVA deducible en adquisiciones intracomunitarias
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · IVA deducible en importaciones
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · IVA deducible en operaciones interiores
+          13-reg-deducc-diferenc-2:
+            heading: Deducciones diferenciadas · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · IVA deducible en adquisiciones intracomunitarias
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · IVA deducible en importaciones
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · IVA deducible en operaciones interiores
+          exclusivamente-a-cumplimentar-en-el-ultim-974ccf:
+            heading: 'Solo en el último período: sujetos exonerados del resumen anual
+              (modelo 390)'
+          informacion-adicional:
+            heading: Información adicional
+          informacion-adicional-exclusivamente-a-cu-d26dc7:
+            heading: Información adicional · Solo en el último período para exonerados
+              del resumen anual
+          liquidacion-3:
+            heading: Liquidación
+          liquidacion-3-regimen-general:
+            heading: Régimen general · Totales
+          liquidacion-3-regimen-general-iva-deducible:
+            heading: Régimen general · IVA deducible
+          liquidacion-3-regimen-general-iva-devengado:
+            heading: Régimen general · IVA devengado
+          liquidacion-3-rs:
+            heading: Régimen simplificado
+          liquidacion-3-rs-a-b-actividades-en-rs:
+            heading: Régimen simplificado · Actividades en el régimen simplificado
+              (A+B)
+          prorratas:
+            heading: Prorratas
+          rectificativa:
+            heading: Autoliquidación rectificativa
+          resultado:
+            heading: Resultado
       revision:
         '2022':
           casilla:

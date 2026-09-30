@@ -13,6 +13,7 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._casilla_keys import is_delta_keyed_leaf
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from .._registry_scanner import scan_form_layout_heading_keys
 from ..cli import app
 from ..errors import LocaleError
 from ..manager import LocaleManager, LocaleNode, locale_catalogue_source
@@ -192,8 +193,14 @@ def locales_state(manager):
     sources = _committed_catalogues(manager)
     # Casilla leaves are stored only where a locale holds distinct text, so their key sets differ
     # by design; their coverage is judged through resolution by the casilla catalogue.
+    # Form layout headings are optional registry-declared translations, judged by the layout heading tests.
+    layout_headings = scan_form_layout_heading_keys()
     locale_keys_map = {
-        code: {key for key in manager.get_yaml_keys(manager.load_locale(path)) if not is_delta_keyed_leaf(key)}
+        code: {
+            key
+            for key in manager.get_yaml_keys(manager.load_locale(path))
+            if not is_delta_keyed_leaf(key) and key not in layout_headings
+        }
         for code, path in sources.items()
     }
     return codebase_keys, locale_keys_map, sources

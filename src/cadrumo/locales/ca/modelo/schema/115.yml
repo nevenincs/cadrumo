@@ -10,6 +10,10 @@ modelo:
         official_name: Retencions i ingressos a compte. Rendes o rendiments procedents
           de l'arrendament o subarrendament d'immobles urbans.
         title: IRPF retencions sobre arrendaments urbans
+      form:
+        page:
+          dr-11501:
+            heading: Pàgina 1 · Retencions per arrendaments d'immobles urbans
       revision:
         2019-y-siguientes:
           casilla:

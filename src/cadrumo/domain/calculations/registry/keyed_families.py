@@ -286,6 +286,15 @@ CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
         drop_eligible=True,
         scoped=True,
     ),
+    # A generated declaration of the edition's own printed form, pinned to
+    # that edition's source digest: a predecessor's layout describes other
+    # casillas and never carries forward.
+    KeyedFamilySpec(
+        section="form_layouts",
+        identity="id",
+        inheritance=FamilyInheritanceMode.PER_EDITION,
+        restatable=False,
+    ),
     # This is not a SCHEMA_FAMILY collection, but it is a deliberate
     # per-edition holdback in migration policy and belongs in the same census.
     KeyedFamilySpec(
