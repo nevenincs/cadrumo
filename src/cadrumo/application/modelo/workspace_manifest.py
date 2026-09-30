@@ -962,6 +962,27 @@ def capture_modelo_workspace_manifest_for_inspection(
     return _capture_for_manifest(manifest, _inspection_manifest_comparison_domain(inspection))
 
 
+def read_modelo_workspace_manifest_current_coordinate(
+    authority: RegistrySnapshot | RegistryRevisionInspection,
+) -> ModeloWorkspaceManifestCurrentCoordinate:
+    """Read the coordinate a later pass compares a manifest capture against.
+
+    The manifest is a pure function of the authority object, so the current
+    coordinate regenerates it and observes its digest exactly as the capture
+    did; an unchanged authority yields the capture's own generation.
+    """
+    if isinstance(authority, RegistrySnapshot):
+        manifest = generate_modelo_workspace_field_manifest(authority)
+        domain = _manifest_comparison_domain(authority)
+    else:
+        manifest = generate_modelo_workspace_field_manifest_for_inspection(authority)
+        domain = _inspection_manifest_comparison_domain(authority)
+    return ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
 __all__ = [
     "ModeloWorkspaceFieldManifestEntryV1",
     "ModeloWorkspaceFieldManifestV1",
@@ -972,4 +993,5 @@ __all__ = [
     "capture_modelo_workspace_manifest_for_inspection",
     "generate_modelo_workspace_field_manifest",
     "generate_modelo_workspace_field_manifest_for_inspection",
+    "read_modelo_workspace_manifest_current_coordinate",
 ]

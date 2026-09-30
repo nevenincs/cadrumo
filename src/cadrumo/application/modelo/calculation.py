@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.hashing import content_hash_hex
-from ..producer_capture import ProducerCapture, ProducerCaptureScope
+from ..producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 if TYPE_CHECKING:
@@ -83,6 +83,18 @@ def capture_modelo_calculation(
     )
 
 
+def read_modelo_calculation_current_coordinate(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a calculation capture against."""
+    return _CALCULATION_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate=_calculation_capture_coordinate(calculation_revision_id),
+        observe=lambda: _calculation_owner_observation(ports=ports),
+    )
+
+
 def visible_calculation_casilla_values(
     revision: CalculationRevision,
     *,
@@ -121,6 +133,7 @@ def visible_calculation_observations(
 
 __all__ = [
     "capture_modelo_calculation",
+    "read_modelo_calculation_current_coordinate",
     "visible_calculation_casilla_values",
     "visible_calculation_observations",
 ]

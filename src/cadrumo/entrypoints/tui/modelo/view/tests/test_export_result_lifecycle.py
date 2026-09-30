@@ -40,6 +40,7 @@ from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import (
     ModeloWorkspaceLifecycleProjectionV1,
+    ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ......core.external_constants import OutputLanguage
@@ -88,7 +89,7 @@ def verified_303(tmp_path: Path) -> Iterator[_VerifiedModelo303]:
 
 
 def _overview(verified: _VerifiedModelo303, door: ModeloWorkspaceLifecycleDoor) -> ModeloWorkspaceOverviewScreen:
-    projection = resolve_static_inspection_result(
+    result = resolve_static_inspection_result(
         ModeloWorkspaceVisibleFilingTargetV1(
             target=ModeloVisibleFilingTarget(modelo="303", filing_year=2026, period=_PERIOD)
         ),
@@ -96,7 +97,9 @@ def _overview(verified: _VerifiedModelo303, door: ModeloWorkspaceLifecycleDoor) 
         catalogue_repository=verified.work_repository,
         authority=verified.operation,
         output_language=OutputLanguage.ES,
-    ).projection
+    )
+    assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
+    projection = result.projection
     return ModeloWorkspaceOverviewScreen(
         open_workspace_read_session(
             projection,

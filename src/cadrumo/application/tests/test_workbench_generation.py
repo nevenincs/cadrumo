@@ -45,6 +45,7 @@ from ..modelo.workspace_models import (
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceStaticInspectionResultV1,
 )
 from ..operations.registry import OperationPublicContractSetV1
 from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
@@ -374,6 +375,7 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
         authority=authority_operation,
         output_language=OutputLanguage.ES,
     )
+    assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
     refusal = graded_snapshot_refusal(
         ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
         requested_target=exact_target,
@@ -451,6 +453,7 @@ def test_secure_profile_modelo_reader_with_no_refusal_leaves_the_refusal_map_emp
         authority=authority_operation,
         output_language=OutputLanguage.ES,
     )
+    assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
 
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,

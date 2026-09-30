@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:2b90a9b0c33d80f080909cf409d60402365260925167863c363390b5a32307a1'
+body_hash: 'sha256:ccc151a3d26a844e4457e2d5e213f3ab1d5988a7f2012a65437a0ea86ff505eb'
 ---
 
 # `tui-registry-api-gate` plan
@@ -58,19 +58,21 @@ pages must show the calculated boxes and the review's findings.
 - [x] `S04` - Assemble graded snapshot over all seven contributors so the work-review facet carries the canonical review, with work-review parity and capture-once conformance tests; `src/cadrumo/application/modelo/workspace.py`.
 - [x] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [x] `S07` - Read a persisted boolean-channel binding override as a truth value in the work review, with the truth tokens defined once beside the stored field the replay writer fills, because acceptance showed the review refusing every Modelo 100 revision; `src/cadrumo/domain/modelos/calculation_revision.py`.
+- [x] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
 - [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
-- [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
 
 ## Parallelization
 
 S01 precedes S03, because the port wraps the owner capture. S04 needs S03.
-S05 needs S04. S06 needs S05. S02 runs last: its second pass covers all seven
-contributors, the bounded review included, and it changes no rendered value,
-so the operator-visible proof is not held behind it. Measurement at S04 showed
-that the work, locale-catalogue and field-manifest owners define current
-coordinates that nothing constructs, and calculation and readiness define none,
-so S02 authors those owner reads before the second pass can use them. There is
-no parallel execution; one writer owns the whole sequence.
+S05 needs S04. S07 corrects the review producer the first acceptance render
+found refusing every Modelo 100 revision. S02 follows S07: its second pass
+covers all seven contributors, the bounded review included, and it changes no
+rendered value, so the operator-visible proof ran ahead of it. S06 closes last,
+so its acceptance render exercises the finished code. Measurement at S04
+showed that the work, locale-catalogue and field-manifest owners define
+current coordinates that nothing constructs, and calculation and readiness
+define none, so S02 authors those owner reads before the second pass can use
+them. There is no parallel execution; one writer owns the whole sequence.
 
 ## Verification
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f769bbd7cdb2ca53af2fbc4f96bee37b08cdcaf534d4e31d8a1c5d074c1ec0c2'
+body_hash: 'sha256:353e5da3eb9004314219630452d70acb014a8c3188802e25d599c363d8a85b6f'
 related:
   - "[[2026-09-23-tui-registry-api-gate-plan]]"
 ---
@@ -72,3 +72,23 @@ related:
 - `S07` `verify:` `harness-modelo-100-scenario` -> `pass`
 - `S07` `verify:` `ruff` -> `pass`
 - `S07` `verify:` `ty` -> `pass`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S02` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S02` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
+- `S02` `M` `src/cadrumo/application/modelo/workspace_producers.py`
+- `S02` `M` `src/cadrumo/application/state_projection.py`
+- `S02` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S02` `M` `src/cadrumo/core/i18n/locale_catalogue.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_modelo_projection_reader.py`
+- `S02` `verify:` `pytest-workspace-admission-module` -> `pass`
+- `S02` `verify:` `pytest-s02-wide-1952` -> `pass`
+- `S02` `verify:` `ruff` -> `pass`
+- `S02` `verify:` `ty-linux-win32` -> `pass`
+
+## Notes
+
+- `S02` Wide run: one failure, `test_exception_base_hygiene,` names exception classes in `value_presentation.py,` `source_policy.py` and `work_form.py,` which a concurrent session committed or holds untracked; not touched here. The schema-record determinism test in `test_workspace.py` failed once in a full-module run and passed in nine subsequent runs.

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.workspace_models import (
+        ModeloWorkspaceRefusedResultV1,
         ModeloWorkspaceResultV1,
         ModeloWorkspaceStaticInspectionResultV1,
     )
@@ -404,30 +405,50 @@ def _modelo_projection_reader(
     whichever destination later opens this exact work unit to render
     honestly -- reason, evidence, facts and the catalogued recovery action --
     instead of a plain, unexplained static page.
+
+    A read whose stored data moved between its captures and its currentness
+    pass refuses as ``WORKSPACE_CHANGED``; that is no answer about the
+    declaration, so the unit is read again, at most
+    :data:`MODELO_WORKSPACE_READ_ATTEMPTS` times, and a unit that never holds
+    still raises the contended :class:`ProducerCaptureError` rather than
+    retrying without limit.
     """
+    from ...application.modelo.workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
+    from ...application.producer_capture import ProducerCaptureError
     from ...core.authority_grade import RegistryAuthorityGrade as _RegistryAuthorityGrade
     from ...core.external_constants import OutputLanguage as _OutputLanguage
     from ...core.i18n.render import output_language as resolve_output_language
     from .modelo.view.controller import ModeloWorkspaceRefusedReadV1, admit_modelo_workspace_result
 
     def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
-        language = _OutputLanguage(resolve_output_language())
-        admission = admit_modelo_workspace_result(
-            resolve_modelo_workspace_graded_snapshot(
-                unit,
-                operation=operation,
-                output_language=language,
-                required_grade=_RegistryAuthorityGrade.CALCULATION,
+        for _attempt in range(MODELO_WORKSPACE_READ_ATTEMPTS):
+            language = _OutputLanguage(resolve_output_language())
+            admission = admit_modelo_workspace_result(
+                resolve_modelo_workspace_graded_snapshot(
+                    unit,
+                    operation=operation,
+                    output_language=language,
+                    required_grade=_RegistryAuthorityGrade.CALCULATION,
+                )
             )
-        )
-        if isinstance(admission, ModeloWorkspaceRefusedReadV1):
-            static_projection = resolve_modelo_workspace_static_inspection(
+            if not isinstance(admission, ModeloWorkspaceRefusedReadV1):
+                return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
+            if admission.refusal.code is ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
+                continue
+            static = resolve_modelo_workspace_static_inspection(
                 unit,
                 operation=operation,
                 output_language=language,
-            ).projection
-            return ModeloWorkspaceProjectedReadV1(projection=static_projection, graded_refusal=admission.refusal)
-        return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
+            )
+            if isinstance(static, ModeloWorkspaceRefusedResultV1):
+                if static.refusal.code is not ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
+                    raise InternalInvariantError(f"static inspection refused with {static.refusal.code.value}")
+                continue
+            return ModeloWorkspaceProjectedReadV1(projection=static.projection, graded_refusal=admission.refusal)
+        raise ProducerCaptureError(
+            translated_message="errors.refused.producer_capture_not_current",
+            context={"reason": "contended", "attempts": MODELO_WORKSPACE_READ_ATTEMPTS},
+        )
 
     return project
 
@@ -1225,7 +1246,7 @@ def _aeat_sync_generation_factory(
 
 def resolve_modelo_workspace_static_inspection(
     unit: WorkUnit, *, operation: PinnedAuthorityOperation, output_language: OutputLanguage
-) -> ModeloWorkspaceStaticInspectionResultV1:
+) -> ModeloWorkspaceStaticInspectionResultV1 | ModeloWorkspaceRefusedResultV1:
     """Assemble the workspace read result for one already-resolved unit.
 
     The unit is addressed by its exact identity rather than by its visible
@@ -1567,6 +1588,10 @@ TUI_SELF_TEST_FLAG = "--self-test"
 TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE = 2
 
 
+MODELO_WORKSPACE_READ_ATTEMPTS = 3
+"""Reads of one work unit before a declaration that keeps changing is reported."""
+
+
 class TuiModuleArgumentError(CadrumoError):
     """Arguments outside the independent TUI root's closed invocation surface."""
 
@@ -1636,6 +1661,7 @@ def main(
 
 
 __all__ = [
+    "MODELO_WORKSPACE_READ_ATTEMPTS",
     "TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE",
     "TUI_SELF_TEST_FLAG",
     "AuthenticatedSessionRecomposeDoorV1",

@@ -109,7 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
-from .producer_capture import ProducerCapture, ProducerCaptureScope
+from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -1427,6 +1427,19 @@ def capture_modelo_readiness(
     )
 
 
+def read_modelo_readiness_current_coordinate(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+    operation: PinnedAuthorityOperation,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a readiness capture against."""
+    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
+        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
+    )
+
+
 def _readiness_request_coordinate(requests: tuple[ModeloReadinessRequest, ...]) -> str:
     """Name the exact request set one readiness capture answers."""
     return content_hash_hex([request.model_dump(mode="json") for request in requests])
@@ -1450,4 +1463,5 @@ __all__ = [
     "build_operator_state_projection",
     "build_pending_obligations",
     "capture_modelo_readiness",
+    "read_modelo_readiness_current_coordinate",
 ]
