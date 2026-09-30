@@ -74,8 +74,8 @@ Who the taxpayer is, and the facts that decide what you owe.
 :link: profile-setup
 :link-type: doc
 
-Create, inspect, export, import, rename, or delete taxpayer profiles, and log
-in to the one you want active.
+Create, inspect, export, import, or delete taxpayer profiles, and log in to
+the one you want active.
 :::
 
 :::{grid-item-card} Authenticate with AEAT
@@ -166,7 +166,7 @@ Classify rows manually, in bulk, with allocation, or through the review queue.
 :link: classify-with-llm
 :link-type: doc
 
-Set up a provider, preview and apply suggestions, and classify from an
+Set up the local reader, preview and apply suggestions, and classify from an
 attached invoice.
 :::
 
@@ -211,7 +211,8 @@ The per-modelo work: prepare, review, verify, export, file, and reconcile.
 :link: filing-spine
 :link-type: doc
 
-Understand drafts, verification, export, filing markers, and history.
+Learn how work units and calculation revisions carry a filing through create,
+calculate, verify, file, and export.
 :::
 
 :::{grid-item-card} Fill in and file in the workbench
@@ -225,7 +226,7 @@ Fill in a declaration box by box in the full-screen interface, then calculate, r
 :link: modelo-036
 :link-type: doc
 
-Record an alta, modificacion, or baja you filed at AEAT's sede.
+Record an alta, modificación, or baja you filed at AEAT's sede.
 :::
 
 :::{grid-item-card} Modelo 100 (Renta)
@@ -295,7 +296,7 @@ Write a signed PDF of a verified calculation, and check a copy against your data
 :link: file-at-aeat
 :link-type: doc
 
-Export the file, upload it at the AEAT portal yourself, record, and reconcile.
+Present the modelo at the AEAT portal yourself, record the filing locally, and reconcile.
 :::
 
 :::{grid-item-card} Reconcile a filing

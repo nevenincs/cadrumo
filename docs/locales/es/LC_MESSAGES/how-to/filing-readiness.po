@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 21:18+0200\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -35,25 +35,35 @@ msgstr ""
 "cumplen las reglas del registro. La preparación plantea una pregunta "
 "anterior: ¿está en su sitio todo aquello de lo que depende el cálculo, es"
 " decir, los datos del perfil, los datos de transacciones y las "
-"presentaciones anteriores? Usa las órdenes de esta guía antes de "
+"presentaciones anteriores? Usa los comandos de esta guía antes de "
 "calcular, y de nuevo antes de exportar, para que no falte nada en "
 "silencio debajo de un borrador que parece limpio."
 
 #: ../../how-to/filing-readiness.md:9
 msgid ""
-"These commands read the active profile and prompt for your master-key "
-"passphrase. Create a profile first with [Set up your taxpayer profile"
-"](profile-setup.md) if you have none."
+"These commands read the active profile and prompt for your passphrase. If"
+" you have no profile, create one first with [Set up your taxpayer profile"
+"](profile-setup.md)."
 msgstr ""
-"Estas órdenes leen el perfil activo y piden la frase de contraseña de tu "
-"clave maestra. Crea primero un perfil con [Configurar tu perfil de "
-"contribuyente](profile-setup.md) si no tienes ninguno."
+"Estos comandos leen el perfil activo y te piden tu frase de contraseña. "
+"Si no tienes ningún perfil, crea primero uno con [Configurar tu perfil de"
+" contribuyente](profile-setup.md)."
 
 #: ../../how-to/filing-readiness.md:13
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"Los ejemplos de esta documentación están grabados en inglés. `aeat` "
+"muestra sus mensajes en español, salvo que [elijas otro idioma](profile-"
+"setup.md#choose-the-output-language)."
+
+#: ../../how-to/filing-readiness.md:17
 msgid "Run the readiness report"
 msgstr "Ejecuta el informe de preparación"
 
-#: ../../how-to/filing-readiness.md:15
+#: ../../how-to/filing-readiness.md:19
 msgid ""
 "Find the resolved revision id first, then report whether the active "
 "profile is ready for that modelo, year, and period:"
@@ -61,7 +71,7 @@ msgstr ""
 "Localiza primero el id de la revisión resuelta y luego informa de si el "
 "perfil activo está listo para ese modelo, año y periodo:"
 
-#: ../../how-to/filing-readiness.md:22
+#: ../../how-to/filing-readiness.md:26
 msgid ""
 "The command exits with status 2 while the target is not ready, so a "
 "script detects the gap from the exit status. In this example `ready` is "
@@ -70,34 +80,53 @@ msgstr ""
 "El comando termina con el estado 2 mientras el objetivo no esté listo, de"
 " modo que un script detecta la carencia por el estado de salida. En este "
 "ejemplo `ready` es `false` porque el perfil recién creado aún tiene "
-"bindings de origen pendientes."
+"vinculaciones de origen que faltan."
 
-#: ../../how-to/filing-readiness.md:26
-msgid "The report covers two things:"
-msgstr "El informe cubre dos cosas:"
+#: ../../how-to/filing-readiness.md:30
+msgid "The report covers four axes, each reported separately:"
+msgstr "El informe abarca cuatro ejes, cada uno indicado por separado:"
 
-#: ../../how-to/filing-readiness.md:28
+#: ../../how-to/filing-readiness.md:32
 msgid ""
-"**Profile readiness** - every profile fact the modelo requires. Each "
-"missing fact is listed by its section and field key, so you know exactly "
-"what to fill in with `aeat config profile edit`."
+"**Profile readiness** (`profile_ready`) - every profile fact the modelo "
+"requires. Each missing fact is listed by its section and field key, so "
+"you know exactly what to fill in with `aeat config profile edit`."
 msgstr ""
-"**Preparación del perfil**: todos los datos del perfil que el modelo "
-"requiere. Cada dato que falta se enumera por su sección y tu clave de "
-"campo, así que sabes exactamente qué rellenar con `aeat config profile "
-"edit`."
-
-#: ../../how-to/filing-readiness.md:31
-msgid ""
-"**Ledger readiness** - for ledger-fed modelos, the same source checks as "
-"`aeat app ledger preflight`, listing each transaction that blocks the "
-"period and why."
-msgstr ""
-"**Preparación del ledger**: para los modelos que se nutren del ledger, "
-"las mismas comprobaciones de origen que `aeat app ledger preflight`, "
-"enumerando cada transacción que bloquea el periodo y por qué."
+"**Preparación del perfil** (`profile_ready`): todos los datos del perfil "
+"que exige el modelo. Cada dato que falta se enumera con su sección y su "
+"clave de campo, así que sabes exactamente qué rellenar con `aeat config "
+"profile edit`."
 
 #: ../../how-to/filing-readiness.md:35
+msgid ""
+"**Registry readiness** (`registry_ready`) - whether a registry revision "
+"covers the modelo, year, and period."
+msgstr ""
+"**Preparación del registro** (`registry_ready`): si una revisión del "
+"registro cubre el modelo, el año y el periodo."
+
+#: ../../how-to/filing-readiness.md:37
+msgid ""
+"**Ledger readiness** (`ledger_ready`) - for ledger-fed modelos, the same "
+"source checks as `aeat app ledger preflight`, listing each transaction "
+"that blocks the period and why."
+msgstr ""
+"**Preparación del ledger** (`ledger_ready`): para los modelos que se "
+"nutren del ledger, las mismas comprobaciones de origen que `aeat app "
+"ledger preflight`, con cada transacción que bloquea el periodo y el "
+"motivo."
+
+#: ../../how-to/filing-readiness.md:40
+msgid ""
+"**Source bindings** (`binding_ready`) - the figures the form pulls from "
+"other sources. `missing_bindings` lists each binding that is not "
+"available yet."
+msgstr ""
+"**Vinculaciones de origen** (`binding_ready`): las cifras que el "
+"formulario toma de otras fuentes. `missing_bindings` enumera cada "
+"vinculación que aún no está disponible."
+
+#: ../../how-to/filing-readiness.md:43
 msgid ""
 "Readiness does not check box-level completeness of a draft. That is what "
 "`aeat app modelo work verify` does. See [Verify a filing](verification-"
@@ -107,11 +136,11 @@ msgstr ""
 "borrador. Eso es lo que hace `aeat app modelo work verify`. Consulta "
 "[Verificar una presentación](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:39
+#: ../../how-to/filing-readiness.md:47
 msgid "Check what this filing depends on"
 msgstr "Comprueba de qué depende esta presentación"
 
-#: ../../how-to/filing-readiness.md:41
+#: ../../how-to/filing-readiness.md:49
 msgid ""
 "Some modelos fold in values from other filings. An annual summary reads "
 "its quarters, and a cross-modelo box reads another form's result. List "
@@ -124,27 +153,27 @@ msgstr ""
 " un ejercicio de presentación y luego acótalo a un modelo, o a un modelo "
 "y periodo:"
 
-#: ../../how-to/filing-readiness.md:50
+#: ../../how-to/filing-readiness.md:58
 msgid ""
 "`--period` requires `--modelo`. With both set, the command also evaluates"
 " the current blockers for that exact filing (for example an earlier "
 "period whose official evidence is still missing), so you see what must be"
 " resolved before this period can safely build on the ones before it. For "
-"the background, see [Building on earlier filings](../explanation"
+"the background, see [How filings build on earlier ones](../explanation"
 "/building-on-earlier-filings.md)."
 msgstr ""
-"`--period` requiere `--modelo`. Con ambos establecidos, la orden también "
+"`--period` requiere `--modelo`. Si indicas ambos, el comando también "
 "evalúa los bloqueos actuales de esa presentación exacta (por ejemplo, un "
 "periodo anterior cuya evidencia oficial aún falta), así que ves qué hay "
 "que resolver antes de que este periodo pueda apoyarse con seguridad en "
-"los anteriores. Para el contexto, consulta [Apoyarse en presentaciones "
-"anteriores](../explanation/building-on-earlier-filings.md)."
+"los anteriores. Para el contexto, consulta [Cómo las presentaciones se "
+"apoyan en las anteriores](../explanation/building-on-earlier-filings.md)."
 
-#: ../../how-to/filing-readiness.md:56
+#: ../../how-to/filing-readiness.md:64
 msgid "See everything that happened to a filing"
 msgstr "Ver todo lo que le ha pasado a una presentación"
 
-#: ../../how-to/filing-readiness.md:58
+#: ../../how-to/filing-readiness.md:66
 msgid ""
 "Stream every recorded lifecycle event for one modelo (calculations, "
 "verification passes and refusals, filings, corrections, imports):"
@@ -153,7 +182,7 @@ msgstr ""
 " un modelo (cálculos, verificaciones superadas y rechazadas, "
 "presentaciones, correcciones, importaciones):"
 
-#: ../../how-to/filing-readiness.md:65
+#: ../../how-to/filing-readiness.md:73
 msgid ""
 "Add `--period` to narrow to one period. This is the modelo-wide audit "
 "trail; for the event stream of a single workspace, use `aeat app modelo "
@@ -164,33 +193,36 @@ msgstr ""
 "trabajo, usa `aeat app modelo work history`. Consulta [El flujo de "
 "presentación](filing-spine.md)."
 
-#: ../../how-to/filing-readiness.md:70
+#: ../../how-to/filing-readiness.md:78
 msgid "Compare two filing years"
 msgstr "Compara dos ejercicios de presentación"
 
-#: ../../how-to/filing-readiness.md:72
+#: ../../how-to/filing-readiness.md:80
 msgid "See how this year's figures moved against last year's, box by box:"
 msgstr ""
 "Comprueba cómo se movieron las cifras de este año frente a las del año "
 "pasado, casilla por casilla:"
 
-#: ../../how-to/filing-readiness.md:77
+#: ../../how-to/filing-readiness.md:85
 msgid ""
-"Pass `--year` exactly twice. Each row shows the box, its label and "
-"section, both values, the difference, and the percent change; all-zero "
-"rows are omitted from the text output. The comparison uses the most "
-"recent verified revision of each year and falls back to the latest draft "
-"when no verified revision exists. A year compared from a draft is flagged"
-" `BORRADOR` in the output."
+"Pass `--year` exactly twice. Each compared year needs a work unit with a "
+"calculated revision; the command refuses otherwise. Each row shows the "
+"box, its label and section, both values, the difference, and the percent "
+"change; all-zero rows are omitted from the text output. The comparison "
+"uses the most recent verified revision of each year and falls back to the"
+" latest draft when no verified revision exists. A year compared from a "
+"draft is flagged `BORRADOR` in the output."
 msgstr ""
-"Pasa `--year` exactamente dos veces. Cada fila muestra la casilla, su "
-"etiqueta y su sección, ambos valores, la diferencia y el cambio "
-"porcentual; las filas con todo ceros se omiten de la salida de texto. La "
-"comparación usa la revisión verificada más reciente de cada año y recurre"
-" al último borrador cuando no existe ninguna revisión verificada. Un año "
-"comparado a partir de un borrador se marca como `BORRADOR` en la salida."
+"Pasa `--year` exactamente dos veces. Cada año comparado necesita una "
+"unidad de trabajo con una revisión calculada; en caso contrario, el "
+"comando se niega a continuar. Cada fila muestra la casilla, su etiqueta y"
+" su sección, ambos valores, la diferencia y el cambio porcentual; las "
+"filas con todo ceros se omiten de la salida de texto. La comparación usa "
+"la revisión verificada más reciente de cada año y recurre al último "
+"borrador cuando no existe ninguna revisión verificada. Un año comparado a"
+" partir de un borrador se marca como `BORRADOR` en la salida."
 
-#: ../../how-to/filing-readiness.md:84
+#: ../../how-to/filing-readiness.md:93
 msgid ""
 "Use the comparison as a sanity check before filing: an unexpected jump in"
 " a box is worth tracing back to its transactions before you export."
@@ -199,11 +231,11 @@ msgstr ""
 " salto inesperado en una casilla vale la pena rastrearlo hasta sus "
 "transacciones antes de exportar."
 
-#: ../../how-to/filing-readiness.md:87
+#: ../../how-to/filing-readiness.md:96
 msgid "Look ahead to the year-end Renta"
 msgstr "Anticipa la Renta de fin de año"
 
-#: ../../how-to/filing-readiness.md:89
+#: ../../how-to/filing-readiness.md:98
 msgid ""
 "If you file quarterly Modelo 130 instalments, project what the year-end "
 "Modelo 100 would look like from the quarters filed so far:"
@@ -212,7 +244,7 @@ msgstr ""
 " aspecto tendría el Modelo 100 de fin de año a partir de los trimestres "
 "presentados hasta ahora:"
 
-#: ../../how-to/filing-readiness.md:95
+#: ../../how-to/filing-readiness.md:104
 msgid ""
 "`--ccaa` names your autonomous community of tax residence, which selects "
 "the regional scale for the Modelo 100 calculation."
@@ -220,21 +252,33 @@ msgstr ""
 "`--ccaa` nombra tu comunidad autónoma de residencia fiscal, que "
 "selecciona la escala autonómica para el cálculo del Modelo 100."
 
-#: ../../how-to/filing-readiness.md:98
+#: ../../how-to/filing-readiness.md:107
+msgid ""
+"The projection needs a registry revision of Modelo 100 for the year you "
+"project. Until that year's revision is published, `project` refuses and "
+"says that no registry revision covers the filing year. A covered year "
+"also needs the date-valued profile facts a Renta filer declares."
+msgstr ""
+"La proyección necesita una revisión del registro del Modelo 100 para el "
+"año que proyectas. Hasta que se publique la revisión de ese año, "
+"`project` se niega a continuar y dice que ninguna revisión del registro "
+"cubre el año de presentación. Un año cubierto necesita además los datos "
+"de perfil con valor de fecha que declara quien presenta la Renta."
+
+#: ../../how-to/filing-readiness.md:112
 msgid ""
 "The output shows the accumulated Modelo 130 figures (income, expenses, "
 "net result, instalments paid) and the projected Modelo 100 result: the "
-"taxable base, the state and regional gross tax (cuota íntegra), the net "
-"tax (cuota líquida), and the resulting balance after instalments (cuota "
+"taxable base, the state and regional gross tax (cuota íntegra), the state"
+" and regional net tax (cuota líquida), and the resulting tax (cuota "
 "resultante)."
 msgstr ""
 "La salida muestra las cifras acumuladas del Modelo 130 (ingresos, gastos,"
 " resultado neto, pagos fraccionados ingresados) y el resultado proyectado"
 " del Modelo 100: la base imponible, la cuota íntegra estatal y "
-"autonómica, la cuota líquida y el saldo resultante tras los pagos "
-"fraccionados (cuota resultante)."
+"autonómica, la cuota líquida estatal y autonómica y la cuota resultante."
 
-#: ../../how-to/filing-readiness.md:103
+#: ../../how-to/filing-readiness.md:117
 msgid ""
 "**Read the extrapolation flag before trusting the numbers.** With fewer "
 "than four quarters filed, the projection extrapolates a full year from "
@@ -251,7 +295,7 @@ msgstr ""
 "Renta: da por supuesto que los trimestres restantes se parecen a los "
 "presentados."
 
-#: ../../how-to/filing-readiness.md:110
+#: ../../how-to/filing-readiness.md:124
 msgid ""
 "Refine the projection with values the quarters cannot know: withholdings,"
 " personal circumstances, or specific boxes:"
@@ -259,7 +303,7 @@ msgstr ""
 "Afina la proyección con valores que los trimestres no pueden conocer: "
 "retenciones, circunstancias personales o casillas concretas:"
 
-#: ../../how-to/filing-readiness.md:116
+#: ../../how-to/filing-readiness.md:130
 msgid ""
 "Withholdings bindings default to zero when not supplied, so a projection "
 "without them overstates the balance due if you had retenciones. Each "
@@ -272,7 +316,7 @@ msgstr ""
 "proyectada lleva su fórmula y sus referencias legales en la salida JSON, "
 "el mismo fundamento que un cálculo real."
 
-#: ../../how-to/filing-readiness.md:121
+#: ../../how-to/filing-readiness.md:135
 msgid ""
 "For when the year-end filing actually happens, see [Period tokens and "
 "dates](filing-calendar.md#period-tokens-and-dates)."
@@ -280,33 +324,27 @@ msgstr ""
 "Para cuándo se produce realmente la presentación de fin de año, consulta "
 "[Tokens de periodo y fechas](filing-calendar.md#period-tokens-and-dates)."
 
-#: ../../how-to/filing-readiness.md:124
+#: ../../how-to/filing-readiness.md:138
 msgid "Trace a value to its legal basis"
 msgstr "Rastrea un valor hasta su base legal"
 
-#: ../../how-to/filing-readiness.md:126
+#: ../../how-to/filing-readiness.md:140
 msgid ""
-"Every computed value carries its grounding, and you can surface it at "
-"each review stage:"
-msgstr ""
-"Cada valor calculado lleva su fundamento, y puedes mostrarlo en cada "
-"etapa de revisión:"
-
-#: ../../how-to/filing-readiness.md:129
-msgid ""
-"The formula behind each computed box carries its legal and source "
-"references. See [Review and supply calculation inputs](review-"
+"Every computed value carries its grounding, and each review stage "
+"surfaces it. The formula behind each computed box carries its legal and "
+"source references. See [Review and supply calculation inputs](review-"
 "calculation-values.md):"
 msgstr ""
-"La fórmula que hay detrás de cada casilla calculada lleva sus referencias"
-" legales y de origen. Consulta [Revisar y aportar los datos de cálculo"
-"](review-calculation-values.md):"
+"Cada valor calculado lleva su fundamento, y cada fase de revisión lo pone"
+" a la vista. La fórmula que hay detrás de cada casilla calculada lleva "
+"sus referencias legales y de origen. Consulta [Revisar y aportar las "
+"entradas de cálculo](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:148
 msgid "Two more grounding surfaces round out the trace:"
 msgstr "Otras dos superficies de fundamento completan el rastreo:"
 
-#: ../../how-to/filing-readiness.md:138
+#: ../../how-to/filing-readiness.md:150
 msgid ""
 "Verification findings name the legal references behind each rule. See "
 "[Verify a filing](verification-reports.md)."
@@ -315,7 +353,7 @@ msgstr ""
 "detrás de cada regla. Consulta [Verificar una presentación](verification-"
 "reports.md)."
 
-#: ../../how-to/filing-readiness.md:140
+#: ../../how-to/filing-readiness.md:152
 msgid ""
 "`aeat app review queue --explain` - pending findings with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
@@ -325,11 +363,11 @@ msgstr ""
 "referencias legales. Consulta [la cola de revisión](classify-"
 "transactions.md#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:144
+#: ../../how-to/filing-readiness.md:156
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/filing-readiness.md:146
+#: ../../how-to/filing-readiness.md:158
 msgid ""
 "[Verify a filing](verification-reports.md) - box-level verification of "
 "the draft."
@@ -337,24 +375,25 @@ msgstr ""
 "[Verificar una presentación](verification-reports.md): verificación a "
 "nivel de casilla del borrador."
 
-#: ../../how-to/filing-readiness.md:148
+#: ../../how-to/filing-readiness.md:160
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values readiness or verification surfaced."
 msgstr ""
-"[Revisar y aportar los datos de cálculo](review-calculation-values.md): "
-"rellena los valores que faltan que hayan aflorado la preparación o la "
-"verificación."
+"[Revisar y aportar las entradas de cálculo](review-calculation-"
+"values.md): rellena los valores que faltan y que han salido a la luz en "
+"la preparación o la verificación."
 
-#: ../../how-to/filing-readiness.md:150
+#: ../../how-to/filing-readiness.md:162
 msgid ""
-"[Building on earlier filings](../explanation/building-on-earlier-"
+"[How filings build on earlier ones](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
 msgstr ""
-"[Apoyarse en presentaciones anteriores](../explanation/building-on-"
-"earlier-filings.md): cómo funcionan las dependencias entre periodos."
+"[Cómo las presentaciones se apoyan en las anteriores](../explanation"
+"/building-on-earlier-filings.md): cómo funcionan las dependencias entre "
+"periodos."
 
-#: ../../how-to/filing-readiness.md:152
+#: ../../how-to/filing-readiness.md:164
 msgid ""
 "[The filing workflow](filing-spine.md) - workspaces, revisions, and per-"
 "workspace history."
@@ -362,7 +401,169 @@ msgstr ""
 "[El flujo de presentación](filing-spine.md): espacios de trabajo, "
 "revisiones e historial por espacio de trabajo."
 
-#: ../../how-to/filing-readiness.md:154
+#: ../../how-to/filing-readiness.md:166
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."
+
+#~ msgid ""
+#~ "**Ledger readiness** - for ledger-fed"
+#~ " modelos, the same source checks as"
+#~ " `aeat app ledger preflight`, listing "
+#~ "each transaction that blocks the period"
+#~ " and why."
+#~ msgstr ""
+#~ "**Preparación del ledger**: para los "
+#~ "modelos que se nutren del ledger, "
+#~ "las mismas comprobaciones de origen que"
+#~ " `aeat app ledger preflight`, enumerando"
+#~ " cada transacción que bloquea el "
+#~ "periodo y por qué."
+
+#~ msgid ""
+#~ "**Profile readiness** - every profile "
+#~ "fact the modelo requires. Each missing"
+#~ " fact is listed by its section "
+#~ "and field key, so you know exactly"
+#~ " what to fill in with `aeat "
+#~ "config profile edit`."
+#~ msgstr ""
+#~ "**Preparación del perfil**: todos los "
+#~ "datos del perfil que el modelo "
+#~ "requiere. Cada dato que falta se "
+#~ "enumera por su sección y tu clave"
+#~ " de campo, así que sabes exactamente"
+#~ " qué rellenar con `aeat config "
+#~ "profile edit`."
+
+#~ msgid ""
+#~ "Every computed value carries its "
+#~ "grounding, and you can surface it "
+#~ "at each review stage:"
+#~ msgstr ""
+#~ "Cada valor calculado lleva su "
+#~ "fundamento, y puedes mostrarlo en cada"
+#~ " etapa de revisión:"
+
+#~ msgid ""
+#~ "Pass `--year` exactly twice. Each row"
+#~ " shows the box, its label and "
+#~ "section, both values, the difference, "
+#~ "and the percent change; all-zero "
+#~ "rows are omitted from the text "
+#~ "output. The comparison uses the most "
+#~ "recent verified revision of each year"
+#~ " and falls back to the latest "
+#~ "draft when no verified revision exists."
+#~ " A year compared from a draft "
+#~ "is flagged `BORRADOR` in the output."
+#~ msgstr ""
+#~ "Pasa `--year` exactamente dos veces. "
+#~ "Cada fila muestra la casilla, su "
+#~ "etiqueta y su sección, ambos valores,"
+#~ " la diferencia y el cambio "
+#~ "porcentual; las filas con todo ceros "
+#~ "se omiten de la salida de texto."
+#~ " La comparación usa la revisión "
+#~ "verificada más reciente de cada año "
+#~ "y recurre al último borrador cuando "
+#~ "no existe ninguna revisión verificada. "
+#~ "Un año comparado a partir de un"
+#~ " borrador se marca como `BORRADOR` en"
+#~ " la salida."
+
+#~ msgid ""
+#~ "Stream every recorded lifecycle event "
+#~ "for one modelo (calculations, verification "
+#~ "passes and refusals, filings, amendments, "
+#~ "imports):"
+#~ msgstr ""
+#~ "Muestra en secuencia todos los eventos"
+#~ " del ciclo de vida registrados para"
+#~ " un modelo (cálculos, verificaciones "
+#~ "superadas y rechazadas, presentaciones, "
+#~ "declaraciones complementarias, importaciones):"
+
+#~ msgid ""
+#~ "The formula behind each computed box "
+#~ "carries its legal and source references."
+#~ " See [Review and supply calculation "
+#~ "inputs](review-calculation-values.md):"
+#~ msgstr ""
+#~ "La fórmula que hay detrás de cada"
+#~ " casilla calculada lleva sus referencias"
+#~ " legales y de origen. Consulta "
+#~ "[Revisar y aportar los datos de "
+#~ "cálculo](review-calculation-values.md):"
+
+#~ msgid ""
+#~ "The output shows the accumulated Modelo"
+#~ " 130 figures (income, expenses, net "
+#~ "result, instalments paid) and the "
+#~ "projected Modelo 100 result: the taxable"
+#~ " base, the state and regional gross"
+#~ " tax (cuota íntegra), the net tax "
+#~ "(cuota líquida), and the resulting "
+#~ "balance after instalments (cuota resultante)."
+#~ msgstr ""
+#~ "La salida muestra las cifras acumuladas"
+#~ " del Modelo 130 (ingresos, gastos, "
+#~ "resultado neto, pagos fraccionados ingresados)"
+#~ " y el resultado proyectado del Modelo"
+#~ " 100: la base imponible, la cuota "
+#~ "íntegra estatal y autonómica, la cuota"
+#~ " líquida y el saldo resultante tras"
+#~ " los pagos fraccionados (cuota resultante)."
+
+#~ msgid "The report covers two things:"
+#~ msgstr "El informe cubre dos cosas:"
+
+#~ msgid ""
+#~ "These commands read the active profile"
+#~ " and prompt for your master-key "
+#~ "passphrase. Create a profile first with"
+#~ " [Set up your taxpayer profile](profile-"
+#~ "setup.md) if you have none."
+#~ msgstr ""
+#~ "Estas órdenes leen el perfil activo "
+#~ "y piden la frase de contraseña de"
+#~ " tu clave maestra. Crea primero un"
+#~ " perfil con [Configurar tu perfil de"
+#~ " contribuyente](profile-setup.md) si no "
+#~ "tienes ninguno."
+
+#~ msgid ""
+#~ "[Building on earlier filings](../explanation"
+#~ "/building-on-earlier-filings.md) - how "
+#~ "cross-period dependencies work."
+#~ msgstr ""
+#~ "[Apoyarse en presentaciones "
+#~ "anteriores](../explanation/building-on-earlier-"
+#~ "filings.md): cómo funcionan las dependencias"
+#~ " entre periodos."
+
+#~ msgid ""
+#~ "`--period` requires `--modelo`. With both "
+#~ "set, the command also evaluates the "
+#~ "current blockers for that exact filing"
+#~ " (for example an earlier period whose"
+#~ " official evidence is still missing), "
+#~ "so you see what must be resolved"
+#~ " before this period can safely build"
+#~ " on the ones before it. For the"
+#~ " background, see [Building on earlier "
+#~ "filings](../explanation/building-on-earlier-"
+#~ "filings.md)."
+#~ msgstr ""
+#~ "`--period` requiere `--modelo`. Con ambos "
+#~ "establecidos, la orden también evalúa "
+#~ "los bloqueos actuales de esa "
+#~ "presentación exacta (por ejemplo, un "
+#~ "periodo anterior cuya evidencia oficial "
+#~ "aún falta), así que ves qué hay"
+#~ " que resolver antes de que este "
+#~ "periodo pueda apoyarse con seguridad en"
+#~ " los anteriores. Para el contexto, "
+#~ "consulta [Apoyarse en presentaciones "
+#~ "anteriores](../explanation/building-on-earlier-"
+#~ "filings.md)."
 

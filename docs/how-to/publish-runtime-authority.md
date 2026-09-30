@@ -1,16 +1,22 @@
 # How to publish a validated runtime authority
 
+This guide is for Cadrumo contributors and release maintainers, not for
+taxpayers. It needs a source checkout of the Cadrumo repository with its
+`dev/` tooling, the `uv` tool, and the `just` runner. An installed package
+contains none of these commands, and an installed `aeat` needs no publication
+step.
+
 Use this guide when you change Cadrumo's tax-rule registry or its legal
 evidence. Publication turns validated Agencia Estatal de Administración
 Tributaria (AEAT) modelo rules into the authority the runtime reads for
 calculations and filing exports. It is a development and release operation,
-not an `aeat` command for taxpayers.
+not an `aeat` command.
 
 The publication is generated output. It consists of one small descriptor and
 one content-addressed SQLite database. The descriptor records the database
-byte count and digest plus the logical generation; the database manifest and
-component rows record the complete source/compiler receipts and dependency
-closure. The descriptor is the only cutover edge, so an installed process can
+byte count and digest plus the logical generation; the database manifest
+records the legal identity of the sources it was compiled from, and the
+component rows record their dependency closure. The descriptor is the only cutover edge, so an installed process can
 admit one exact generation and retain it for an in-flight operation.
 It is also the sole shipped runtime source: installed code does not open the
 authored registry tree, parse profile TOML, or maintain a parallel cache of
@@ -55,6 +61,9 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    ```powershell
    just registry-publish-authority-if-authority-stale
    ```
+
+   The identity names the sources only, so a compiler change never makes the
+   artifact stale. After changing the compiler, publish without `--if-stale`.
 3. Do not commit the result. The descriptor and its content-addressed
    database are generated output, and the directory they are published into
    is excluded from version control: the registry change is committed on its
@@ -139,7 +148,7 @@ silently admitted.
 
 Verify the descriptor-selected SQLite generation directly. The publication
 must admit every component through the indexed reader, match the current
-compiler receipt, and pass the packaging boundary checks. There is no eager
+source receipt, and pass the packaging boundary checks. There is no eager
 JSON runtime backend or runtime fallback.
 
 The packaging checks stage only the descriptor and its selected database into
@@ -147,12 +156,10 @@ their private cohort. Superseded content-addressed files retained by a source
 checkout are not members of the candidate package.
 
 The development-only paired benchmark accepts that same isolated descriptor
-and an explicit JSON baseline produced from the same validated
-`AuthorityArtifact` that produced the candidate database. The development
-baseline helper is
-`dev.registry.eager_authority_baseline.write_eager_authority_baseline`; invoke
-it from the checkpoint driver with that exact artifact and keep the resulting
-file outside shipped package resources. Run the paired measurement with:
+and an explicit JSON baseline produced from the same validated authority that
+produced the candidate database. Write the baseline while you publish, with
+`--eager-baseline <path>` on `publish-authority`, and keep the file outside
+shipped package resources. Run the paired measurement with:
 
 ```powershell
 uv run --no-sync python -m dev.registry.indexed_authority_benchmark `
@@ -166,9 +173,7 @@ validated in-memory authority, eagerly decodes the complete graph, and carries
 the candidate's logical identity. The runner verifies the descriptor's exact
 database bytes before either side is measured; it does not read the shipped
 package, discover a default JSON file, or become a runtime fallback. Each
-M100, M200, and M303 workload is reported independently; the ADR admission,
-incremental-memory, and warm-context thresholds remain pending until
-checkpoint C runs on one stable candidate cohort.
+workload (Modelo 100, 200, and 303) is reported independently.
 
 ## Check that the publication is current
 
@@ -185,14 +190,11 @@ live candidate. The refusal names the recorded and expected identity digests
 and the command that republishes the authority.
 
 The source receipt depends on file content and paths relative to the registry
-and source roots, including manually maintained evidence sidecars. The compiler
-receipt covers the compiler and relevant Cadrumo code, `pyproject.toml`,
-`uv.lock`, the Python major/minor version, and the installed `pydantic` and
-`pydantic-core` versions. A fresh clone in the same declared environment is
-stable; an incompatible interpreter, dependency set, manifest, or compiler
-change makes the publication stale and requires republication. The component
-receipt binds those source and compiler receipts to the complete-authority
-generation. The database digest independently protects all stored component
+and source roots, including manually maintained evidence sidecars, and on the
+profile schema. It is the publication's whole identity: the compiler, the
+Python version and the dependency set are not part of it, so only a change to
+those sources makes the publication stale, and a fresh clone of the same
+sources derives the same identity. The database digest independently protects all stored component
 bytes, while each on-demand component load checks its own payload digest and
 dependency closure.
 

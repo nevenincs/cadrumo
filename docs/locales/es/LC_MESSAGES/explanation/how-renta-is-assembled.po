@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-24 03:14+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -51,44 +51,48 @@ msgid ""
 "](../how-to/modelo-100.md)."
 msgstr ""
 "Los comandos se muestran para la declaración de 2025 (`--year 2025 "
-"--period 0A`); sustituye tu año de presentación. Dan por hecho un perfil "
-"de contribuyente activo, creado con `aeat config profile create` como "
-"explica [Configura tu perfil de contribuyente](../how-to/profile-"
-"setup.md). La preparación paso a paso está en [Preparar la declaración "
-"anual de la renta del modelo 100](../how-to/modelo-100.md)."
+"--period 0A`); sustituye el año por el de tu presentación. Dan por hecho "
+"un perfil de contribuyente activo, creado con `aeat config profile "
+"create` como explica [Configurar tu perfil de contribuyente](../how-to"
+"/profile-setup.md). La preparación paso a paso está en [Preparar la "
+"declaración anual de la Renta con el Modelo 100](../how-"
+"to/modelo-100.md)."
 
 #: ../../explanation/how-renta-is-assembled.md:18
-msgid "One declaration, four source routes used here"
-msgstr "Una declaración, cuatro tipos de origen"
+msgid "One declaration, five source routes"
+msgstr "Una declaración, cinco vías de origen"
 
 #: ../../explanation/how-renta-is-assembled.md:20
 msgid ""
 "Modelo 100 is the largest form the tool prepares - the 2025 revision "
 "defines over two thousand casillas and two hundred formulas. Every value "
 "on it arrives through a declared data source. The binding listing calls "
-"each contract a *binding*. The current Renta flow uses four broad routes."
+"each contract a *binding*. The current Renta flow uses five broad routes."
 " They are not the complete source-kind taxonomy for every modelo. List "
 "them for your filing year:"
 msgstr ""
 "El modelo 100 es el formulario más extenso que prepara la herramienta: la"
 " revisión de 2025 define más de dos mil casillas y doscientas fórmulas. "
-"Cada valor de él llega a través de un origen de datos declarado (el "
-"listado de abajo llama a cada uno *binding*) y cada origen es de uno de "
-"cuatro tipos. Enuméralos para tu año de presentación:"
+"Cada valor llega a través de un origen de datos declarado. El listado de "
+"vinculaciones llama *binding* a cada contrato. El flujo actual de la "
+"Renta usa cinco vías generales. No son la taxonomía completa de tipos de "
+"origen de todos los modelos. Enuméralas para tu año de presentación:"
 
 #: ../../explanation/how-renta-is-assembled.md:31
 msgid ""
 "**Profile facts.** Who you are: tax id, residence comunidad, marital "
 "status, spouse and descendant data, disability grades, declaration type. "
 "These come from your taxpayer profile, one binding per fact (the `renta-"
-"profile-*` rows in the listing)."
+"profile-*`, `renta-family-*`, and `renta-maritime-*` rows in the "
+"listing)."
 msgstr ""
 "**Datos del perfil.** Quién eres: NIF, comunidad de residencia, estado "
 "civil, datos del cónyuge y de los descendientes, grados de discapacidad, "
 "tipo de declaración. Proceden de tu perfil de contribuyente, un binding "
-"por dato (las filas `renta-profile-*` del listado)."
+"por dato (las filas `renta-profile-*`, `renta-family-*` y `renta-"
+"maritime-*` del listado)."
 
-#: ../../explanation/how-renta-is-assembled.md:35
+#: ../../explanation/how-renta-is-assembled.md:36
 msgid ""
 "**Ledger aggregations.** What your activity earned and spent: the year's "
 "classified income and deductible expense rows, aggregated per casilla and"
@@ -101,21 +105,23 @@ msgstr ""
 "ledger que leen tus presentaciones trimestrales; la renta lee todo el año"
 " de una vez."
 
-#: ../../explanation/how-renta-is-assembled.md:39
+#: ../../explanation/how-renta-is-assembled.md:40
 msgid ""
 "**Prior filings folded in.** What you already reported during the year: "
-"the Modelo 130 or 131 instalments you paid, and the retenciones reported "
-"on modelos 111, 123, 190, and 193 where they exist (the rows the listing "
-"labels `relation_prefill`). The tool reads these from your own filed "
-"records, not from AEAT."
+"the Modelo 130 or 131 instalments you paid, the retenciones reported on "
+"modelos 111, 123, 190, and 193, and the activity income attributed on "
+"Modelo 184, where they exist (the rows the listing labels "
+"`relation_prefill`). The tool reads these from your own filed records, "
+"not from AEAT."
 msgstr ""
 "**Presentaciones anteriores integradas.** Lo que ya declaraste durante el"
-" año: los pagos fraccionados del modelo 130 o 131 que pagaste, y las "
-"retenciones declaradas en los modelos 111, 123, 190 y 193 cuando existen "
-"(las filas que el listado etiqueta como `relation_prefill`). La "
-"herramienta las lee de tus propios registros presentados, no de la AEAT."
+" año: los pagos fraccionados de los modelos 130 o 131 que pagaste, las "
+"retenciones declaradas en los modelos 111, 123, 190 y 193 y las rentas de"
+" actividades atribuidas en el modelo 184, cuando existen (las filas que "
+"el listado etiqueta como `relation_prefill`). La herramienta las lee de "
+"tus propios registros presentados, no de la AEAT."
 
-#: ../../explanation/how-renta-is-assembled.md:44
+#: ../../explanation/how-renta-is-assembled.md:46
 msgid ""
 "**Last year's declaration.** What carries across years: a negative base "
 "liquidable from an earlier Renta carries forward from your own filed "
@@ -128,7 +134,18 @@ msgstr ""
 "como `previous_filing`), de modo que la declaración de este año pueda "
 "compensarla."
 
-#: ../../explanation/how-renta-is-assembled.md:49
+#: ../../explanation/how-renta-is-assembled.md:50
+msgid ""
+"**Stock inventory.** The closing-stock variation and stock purchases of "
+"an activity with stock. They come from your encrypted inventory ledger "
+"for the filing year, listed under the source `inventory`."
+msgstr ""
+"**Inventario de existencias.** La variación de existencias finales y las "
+"compras de existencias de una actividad con existencias. Proceden de tu "
+"ledger de inventario cifrado del ejercicio de presentación (el listado "
+"las etiqueta con el origen `inventory`)."
+
+#: ../../explanation/how-renta-is-assembled.md:54
 msgid ""
 "Everything else - employment income details, capital income, deductions "
 "the ledger cannot know about - is a manual casilla you supply when it "
@@ -138,29 +155,28 @@ msgstr ""
 "capital, deducciones que el ledger no puede conocer) es una casilla "
 "manual que aportas cuando te aplica. El inventario completo para tu año:"
 
-#: ../../explanation/how-renta-is-assembled.md:57
+#: ../../explanation/how-renta-is-assembled.md:62
 msgid ""
-"Stock inventory is one such current boundary. The encrypted inventory "
-"register can record movements and calculate valuations, but it is not "
-"enrolled in the Renta source mesh. For the 2025 revision, boxes 0177 "
-"(increase in stock variation), 0181 (stock purchases), and 0182 (decrease"
-" in stock variation) remain manual inputs. Box 0155 is not an inventory "
-"input and does not connect the inventory register to the declaration."
+"For the 2025 revision, the stock boxes 0177 (stock variation, increase), "
+"0181 (purchase of inventory), and 0182 (stock variation, decrease) are "
+"bound to the encrypted inventory ledger. Create and maintain it with "
+"`aeat app ledger inventory`. The calculation refuses a value for these "
+"boxes from `--casilla` or `--binding`. If the filing year has no "
+"inventory ledger, the calculation warns and the three boxes stay at 0."
 msgstr ""
-"El inventario de existencias es uno de esos límites actuales. El registro"
-" de inventario cifrado puede anotar movimientos y calcular valoraciones, "
-"pero no está inscrito en la malla de orígenes de Renta. En la revisión de"
-" 2025, las casillas 0177 (aumento de la variación de existencias), 0181 "
-"(compras de existencias) y 0182 (disminución de la variación de "
-"existencias) siguen siendo entradas manuales. La casilla 0155 no es una "
-"entrada de inventario ni conecta el registro de inventario con la "
-"declaración."
+"Para la revisión de 2025, las casillas de existencias 0177 (variación de "
+"existencias, aumento), 0181 (compra de existencias) y 0182 (variación de "
+"existencias, disminución) están vinculadas al ledger de inventario "
+"cifrado. Créalo y mantenlo con `aeat app ledger inventory`. El cálculo "
+"rechaza un valor para estas casillas procedente de `--casilla` o "
+"`--binding`. Si el ejercicio de presentación no tiene ledger de "
+"inventario, el cálculo avisa y las tres casillas se quedan en 0."
 
-#: ../../explanation/how-renta-is-assembled.md:64
+#: ../../explanation/how-renta-is-assembled.md:69
 msgid "How the quarterly filings fold in"
 msgstr "Cómo se integran las presentaciones trimestrales"
 
-#: ../../explanation/how-renta-is-assembled.md:66
+#: ../../explanation/how-renta-is-assembled.md:71
 msgid ""
 "Across the year you paid income tax in pieces: instalments on Modelo 130 "
 "(or 131 under módulos), and withholdings that clients or payers reported "
@@ -176,20 +192,23 @@ msgstr ""
 "encuentran. La declaración los contrasta con tu renta de todo el año y "
 "liquida la diferencia: lo que aún se debe o lo que se devuelve."
 
-#: ../../explanation/how-renta-is-assembled.md:73
+#: ../../explanation/how-renta-is-assembled.md:78
 msgid ""
 "The fold-in is evidence-gated. Before the annual verify passes, every "
-"prior filing the declaration depends on must be filed and evidenced on "
-"your record. See what the declaration expects and what currently blocks "
-"it:"
+"prior filing the declaration depends on must be filed on your record. A "
+"filing from an earlier year needs AEAT evidence. A same-year filing "
+"recorded only locally passes with a non-official advisory. See what the "
+"declaration expects and what currently blocks it:"
 msgstr ""
 "La integración está condicionada a la evidencia. Antes de que la "
 "verificación anual se supere, cada presentación anterior de la que "
-"depende la declaración debe estar presentada y evidenciada en tu "
-"registro. Consulta qué espera la declaración y qué la bloquea "
-"actualmente:"
+"depende la declaración debe constar como presentada en tu registro. Una "
+"presentación de un año anterior necesita evidencia de la AEAT. Una "
+"presentación del mismo año registrada solo en local se supera con una "
+"advertencia no oficial. Consulta qué espera la declaración y qué la "
+"bloquea actualmente:"
 
-#: ../../explanation/how-renta-is-assembled.md:81
+#: ../../explanation/how-renta-is-assembled.md:88
 msgid ""
 "Each dependency row names the source modelo and period and whether its "
 "clean-state evidence is satisfied. A dependency that does not apply to "
@@ -204,7 +223,7 @@ msgstr ""
 "de tu perfil y se muestra como no aplicable, nunca se omite de forma "
 "silenciosa."
 
-#: ../../explanation/how-renta-is-assembled.md:87
+#: ../../explanation/how-renta-is-assembled.md:94
 msgid ""
 "The tool never fabricates a missing prior period: a gap stays visible for"
 " you to resolve. [How filings build on earlier ones](building-on-earlier-"
@@ -215,11 +234,11 @@ msgstr ""
 "apoyan en las anteriores](building-on-earlier-filings.md) explica esta "
 "regla de diseño."
 
-#: ../../explanation/how-renta-is-assembled.md:91
+#: ../../explanation/how-renta-is-assembled.md:98
 msgid "What carries between years"
 msgstr "Qué se arrastra entre años"
 
-#: ../../explanation/how-renta-is-assembled.md:93
+#: ../../explanation/how-renta-is-assembled.md:100
 msgid ""
 "A Renta with a negative base liquidable does not just end: the negative "
 "carries forward, and a later year's declaration offsets it. The carry "
@@ -236,25 +255,25 @@ msgstr ""
 "coincide bloquea el arrastre en lugar de importar de forma silenciosa "
 "cifras calculadas bajo una ley distinta."
 
-#: ../../explanation/how-renta-is-assembled.md:100
+#: ../../explanation/how-renta-is-assembled.md:107
 msgid "Tracing any figure to its source and its law"
 msgstr "Rastrear cualquier cifra hasta su origen y su ley"
 
-#: ../../explanation/how-renta-is-assembled.md:102
+#: ../../explanation/how-renta-is-assembled.md:109
 msgid ""
 "After a calculation, every resolved value carries typed provenance: the "
 "binding or formula that produced it, its operands, and its legal and "
-"source references. The setup steps calculate an employee filer's draft. "
-"The read commands inspect that draft, and the final step looks up one "
-"box's definition:"
+"source references. The example starts from a calculated draft for an "
+"employee filer. The read commands inspect that draft, and the last "
+"command looks up one box's definition:"
 msgstr ""
 "Tras un cálculo, cada valor resuelto lleva una procedencia tipada: el "
 "binding o la fórmula que lo produjo, sus operandos y sus referencias "
-"legales y de origen. Léelas (los pasos de preparación calculan el "
-"borrador del declarante asalariado que inspeccionan las lecturas, y el "
-"último paso consulta la definición de una casilla):"
+"legales y de origen. El ejemplo parte de un borrador calculado para un "
+"declarante asalariado. Los comandos de lectura inspeccionan ese borrador "
+"y el último comando consulta la definición de una casilla:"
 
-#: ../../explanation/how-renta-is-assembled.md:111
+#: ../../explanation/how-renta-is-assembled.md:119
 msgid ""
 "The JSON output of any of these commands carries `legal_refs` and "
 "`source_refs` on every row. This is the property Cadrumo preserves end to"
@@ -269,11 +288,11 @@ msgstr ""
 "respaldan, la regla que los encaminó y el artículo de la ley que respalda"
 " la regla."
 
-#: ../../explanation/how-renta-is-assembled.md:117
+#: ../../explanation/how-renta-is-assembled.md:125
 msgid "Where this sits in the journey"
 msgstr "Dónde encaja esto en el recorrido"
 
-#: ../../explanation/how-renta-is-assembled.md:119
+#: ../../explanation/how-renta-is-assembled.md:127
 msgid ""
 "This page is part of the [how-it-works overview](index.md) cluster and "
 "goes one level deeper than [How filings build on earlier ones](building-"
@@ -288,7 +307,7 @@ msgstr ""
 "presentaciones se apoyan en las anteriores](building-on-earlier-"
 "filings.md), que explica la idea del cruce entre presentaciones en "
 "general. El flujo de preparación es [Preparar la declaración anual de la "
-"renta del modelo 100](../how-to/modelo-100.md); los pagos fraccionados "
-"trimestrales que la alimentan se tratan en [Preparar un pago fraccionado "
-"del IRPF del modelo 130](../how-to/modelo-130.md)."
+"Renta con el Modelo 100](../how-to/modelo-100.md); los pagos fraccionados"
+" trimestrales que la alimentan se tratan en [Preparar un pago fraccionado"
+" del IRPF con el Modelo 130](../how-to/modelo-130.md)."
 

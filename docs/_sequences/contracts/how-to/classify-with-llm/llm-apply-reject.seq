@@ -1,6 +1,6 @@
 @step Apply persists the reviewed suggestion.
-@static aeat app ledger classify <transaction-id> --llm claude --apply
-@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
+@static aeat app ledger classify <transaction-id> --llm --apply
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.
 @step Reject records the model as wrong, with your reason, in history.
-@static aeat app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"
-@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
+@static aeat app ledger classify <transaction-id> --llm --reject --reason "this is personal"
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.

@@ -8,8 +8,8 @@
 
 This is the documentation for Cadrumo and its `aeat` command-line interface
 (CLI). Cadrumo turns your records into checked modelo figures and an export
-file. You upload that file to the Agencia Estatal de Administración Tributaria
-(AEAT) yourself. For what Cadrumo is and who it is for, see the
+file. You file with the Agencia Estatal de Administración Tributaria (AEAT)
+yourself. For what Cadrumo is and who it is for, see the
 [product page](https://cadrumo.neve.md); the source is on
 [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is in beta -
 interfaces may still change between releases.
@@ -94,13 +94,13 @@ fields on each row.
 See which modelos are due and which period to prepare next.
 :::
 
-:::{grid-item-card} Prepare your filings
+:::{grid-item-card} Understand the filing workflow
 :link: how-to/filing-spine
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Prepare, verify, export, file at AEAT, and reconcile - with a recipe per
-modelo: 036, 100 (Renta), 130, 303, 349, and 390.
+Learn how work units and calculation revisions carry a filing through
+create, calculate, verify, file, and export. Each modelo has its own guide.
 :::
 
 ::::

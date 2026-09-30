@@ -262,6 +262,101 @@ docs:
       reviewed_at: Fecha de revisión
       reviewed_by: Revisado por
       title: Ficha del catálogo
+  site:
+    aria:
+      breadcrumb: Ruta de navegación
+      broadcast_links: Enlaces del aviso
+      dismiss_notice: Cerrar el aviso
+      footer_channels: Canales de novedades de la documentación
+      language: 'Idioma: {language}'
+      primary_navigation: Principal
+      repository: Repositorio del proyecto en GitHub
+      search_documentation: Buscar en la documentación
+      site_updates: Novedades del sitio
+      toggle_navigation: Mostrar u ocultar la barra de navegación
+      toggle_theme: Cambiar entre tema claro, oscuro y automático
+      toggle_toc: Mostrar u ocultar la barra del índice
+    breadcrumb:
+      home: Inicio
+    broadcast:
+      label: Beta
+      message: Se esperan cambios que rompen la compatibilidad. Comprueba los plazos
+        de la Agencia Estatal de Administración Tributaria (AEAT) antes de presentar.
+    class_label:
+      casilla: Casilla
+      cli: Comando
+      doc: Documentación
+      legal: Legal
+      modelo: Modelo
+      technical: Referencia
+    cli_help:
+      close: Cerrar la ayuda
+      required: obligatorio
+    download:
+      direct_heading: Descargas directas de la última versión
+    footer:
+      get_help: Obtén ayuda
+      kicker: Avisos del proyecto
+      note: Cadrumo es software beta y local. No es asesoramiento fiscal, no está
+        afiliado a la Agencia Estatal de Administración Tributaria (AEAT) y nunca
+        sustituye a las herramientas oficiales de la AEAT ni al consejo de un profesional
+        cualificado.
+      stay_current: Mantente al día
+      trust_and_responsibility: Confianza y responsabilidad
+    kind_label:
+      casilla: Casilla
+      cli: Comando
+      concept: Término
+      page: Página
+    link:
+      critical_updates: Actualizaciones críticas
+      disclaimer: Aviso legal
+      events_and_deadlines: Eventos y plazos
+      get_cadrumo: Consigue Cadrumo
+      release_notes: Notas de la versión
+      report_issue: Informa de un problema
+      repository: Repositorio
+      updates: Novedades
+    meta:
+      description: '{product} te ayuda a preparar, comprobar y exportar en local tus
+        ficheros de impuestos españoles. {product} nunca los presenta ni los envía
+        por ti.'
+      short_title: Documentación de {product}
+      title: 'Documentación de {product}: preparación local de impuestos españoles'
+    nav:
+      api: API
+      cli_reference: Referencia de la CLI
+      getting_started: Primeros pasos
+      how_it_works: Cómo funciona
+    search:
+      full_text_crumb: Búsqueda de texto completo
+      full_text_for: Buscar “{query}” en la documentación
+      hint_close: cerrar
+      hint_navigate: navegar
+      hint_open: abrir
+      noscript: La búsqueda necesita JavaScript. Navega por la documentación desde
+        la barra lateral o consulta el glosario para la terminología.
+      on_this_page: En esta página
+      open_full_text: Abrir la búsqueda de texto completo
+      page_title: Buscar
+      placeholder: Buscar en la documentación…
+      query_label: Consulta de búsqueda
+      result_fallback: Resultado
+      result_many: '{count} resultados'
+      result_one: 1 resultado
+      searching: Buscando…
+    sequence:
+      command_error_output: Salida de error del comando
+      command_output: Salida del comando
+      copied: Copiado
+      copy_command: Copiar el comando
+      copy_failed: No se pudo copiar
+      hide_output: Ocultar la salida
+      next_command: Comando siguiente
+      previous_command: Comando anterior
+      rundown: Repaso de comandos
+      shell: Intérprete de terminal
+      show_output: Mostrar la salida
   terminology:
     cli:
       authority: Autoridad de la fuente cuando el campo es «source».

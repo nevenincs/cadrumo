@@ -6,6 +6,8 @@ catalogue is derived from the executable :class:`AuthProviderKind` authority.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
 from ...core.auth_provider import AuthProviderKind
@@ -14,6 +16,16 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
+
+
+AuthProviderId = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")]
+"""The shape of a provider id wherever one is carried.
+
+Declared once so the operator-facing output row and this catalogue record
+refuse the same ids: the row used to nest this record and inherited the
+constraint by construction, and a hand-written ``str`` in its place would have
+accepted a blank or capitalised id that the catalogue rejects.
+"""
 
 
 class AuthProviderListing(BaseModel):
@@ -31,7 +43,7 @@ class AuthProviderListing(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
+    id: AuthProviderId
     label: tr
     description: tr
 
@@ -102,6 +114,7 @@ def get_auth_provider(provider_id: str) -> AuthProviderListing:
 
 __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
+    "AuthProviderId",
     "AuthProviderListing",
     "get_auth_provider",
     "known_auth_provider_ids",

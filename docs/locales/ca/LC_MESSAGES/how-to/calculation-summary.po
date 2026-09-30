@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 21:18+0200\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -29,57 +29,69 @@ msgid ""
 "calculation that an accountant can read, that carries its own data, and "
 "that anyone can check for changes. You write it with one command, hand it"
 " on, and later confirm that a copy still matches what your encrypted "
-"store holds."
+"store holds. The same command writes a plain CSV table instead when you "
+"choose `--document-format csv`."
 msgstr ""
 "Aquesta pàgina tracta del resum del càlcul: un PDF d'un càlcul verificat "
 "o presentat que un assessor pot llegir, que porta les seves pròpies dades"
 " i en què qualsevol pot comprovar si hi ha hagut canvis. L'escrius amb "
-"una sola ordre, el lliures i més endavant confirmes que una còpia encara "
-"coincideix amb el que conté el teu emmagatzematge xifrat."
+"una sola ordre, el passes a qui correspongui i, més endavant, confirmes "
+"que una còpia encara coincideix amb el que conté el teu magatzem xifrat. "
+"La mateixa ordre escriu una taula CSV simple en lloc del PDF quan tries "
+"`--document-format csv`."
 
-#: ../../how-to/calculation-summary.md:8
+#: ../../how-to/calculation-summary.md:10
 msgid ""
-"A summary is a local calculation, not an official AEAT value. The "
-"official proof of a filing is the AEAT receipt (justificante), the filed-"
-"declarations lookup, or the CSV check at the AEAT portal. The summary "
-"says so on its first page and in every footer."
+"A summary is a local calculation, not evidence from the Agencia Estatal "
+"de Administración Tributaria (AEAT). The official proof of a filing is "
+"the AEAT receipt (justificante), the filed-declarations lookup, or the "
+"Código Seguro de Verificación check at the AEAT portal. The summary says "
+"so on its first page and in every footer."
 msgstr ""
-"Un resum és un càlcul local, no un valor oficial de l'AEAT. La prova "
-"oficial d'una presentació és el justificant de l'AEAT, la consulta de "
-"declaracions presentades o la comprovació del CSV al portal de l'AEAT. El"
-" resum ho indica a la primera pàgina i a cada peu de pàgina."
+"Un resum és un càlcul local, no una prova de l'Agencia Estatal de "
+"Administración Tributaria (AEAT). La prova oficial d'una presentació és "
+"el rebut de l'AEAT (justificante), la consulta de declaracions "
+"presentades o la comprovació del Código Seguro de Verificación al portal "
+"de l'AEAT. El resum ho indica a la primera pàgina i a cada peu de pàgina."
 
-#: ../../how-to/calculation-summary.md:13
+#: ../../how-to/calculation-summary.md:16
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../how-to/calculation-summary.md:15
+#: ../../how-to/calculation-summary.md:18
 msgid ""
 "**Requirement:** a calculation that has passed verification or been "
-"filed. See [Verify a filing](verification-reports.md)."
+"filed. See [Verify a filing](verification-reports.md). The command "
+"refuses a calculation that is still a draft. The profile must also "
+"declare your NIF and name, because the report names the filer in full."
 msgstr ""
 "**Requisit:** un càlcul que hagi superat la verificació o que s'hagi "
-"presentat. Consulta [Verifica una presentació](verification-reports.md)."
+"presentat. Consulta [Verifica una presentació](verification-reports.md). "
+"L'ordre rebutja un càlcul que encara és un esborrany. El perfil també ha "
+"de declarar el teu NIF i nom, perquè l'informe anomena el declarant amb "
+"el nom complet."
 
-#: ../../how-to/calculation-summary.md:18
-msgid "Writing a summary needs the optional `pdf` extra. Checking one does not."
+#: ../../how-to/calculation-summary.md:23
+msgid ""
+"Writing a PDF summary needs the optional `pdf` extra. The CSV format and "
+"checking a summary do not."
 msgstr ""
-"Per escriure un resum cal el complement opcional `pdf`. Per comprovar-lo,"
-" no."
+"Per escriure un resum en PDF cal l'extra opcional `pdf`. El format CSV i "
+"la comprovació d'un resum no el necessiten."
 
-#: ../../how-to/calculation-summary.md:24
+#: ../../how-to/calculation-summary.md:30
 msgid ""
 "Without the extra, the command refuses before it reads your data and "
 "names the extra to install."
 msgstr ""
-"Sense el complement, l'ordre es nega a continuar abans de llegir les "
-"teves dades i indica quin complement cal instal·lar."
+"Sense l'extra, l'ordre es nega a continuar abans de llegir les teves "
+"dades i indica quin extra cal instal·lar."
 
-#: ../../how-to/calculation-summary.md:27
+#: ../../how-to/calculation-summary.md:33
 msgid "Write a summary"
 msgstr "Escriu un resum"
 
-#: ../../how-to/calculation-summary.md:29
+#: ../../how-to/calculation-summary.md:35
 msgid ""
 "Address the work unit the way `aeat app modelo work review` does, and "
 "choose the `pdf` document format:"
@@ -87,17 +99,29 @@ msgstr ""
 "Indica la unitat de treball de la mateixa manera que amb `aeat app modelo"
 " work review` i tria el format de document `pdf`:"
 
-#: ../../how-to/calculation-summary.md:36
+#: ../../how-to/calculation-summary.md:42
+msgid ""
+"`--output` is required. `--document-format` defaults to `csv`, which "
+"writes the same calculation as a table without pages or a signature. The "
+"`pdf` format writes the signed summary described on this page."
+msgstr ""
+"`--output` és obligatori. `--document-format` és `csv` per defecte, que "
+"escriu el mateix càlcul com una taula sense pàgines ni signatura. El "
+"format `pdf` escriu el resum signat que es descriu en aquesta pàgina."
+
+#: ../../how-to/calculation-summary.md:46
 msgid ""
 "The summary is written in the language the command runs in; add "
 "`--output-language en` (or `es`, `ca`, `hu`) to choose another. An "
-"existing file is never overwritten unless you add `--replace`."
+"existing file is never overwritten unless you add `--replace`, and the "
+"output's parent folder must already exist."
 msgstr ""
 "El resum s'escriu en l'idioma en què s'executa l'ordre; afegeix "
 "`--output-language en` (o `es`, `ca`, `hu`) per triar-ne un altre. Un "
-"fitxer existent no se sobreescriu mai tret que afegeixis `--replace`."
+"fitxer existent no se sobreescriu mai tret que afegeixis `--replace`, i "
+"la carpeta pare de la sortida ha d'existir ja."
 
-#: ../../how-to/calculation-summary.md:40
+#: ../../how-to/calculation-summary.md:51
 msgid ""
 "The result reports the file's SHA-256, the report's own SHA-256 and the "
 "fingerprint of the key the summary is signed with. Writing the same "
@@ -108,104 +132,111 @@ msgstr ""
 "mateix càlcul, en el mateix instant d'exportació, produeix els mateixos "
 "bytes."
 
-#: ../../how-to/calculation-summary.md:44
+#: ../../how-to/calculation-summary.md:55
 msgid "Read the summary"
 msgstr "Llegeix el resum"
 
-#: ../../how-to/calculation-summary.md:46
+#: ../../how-to/calculation-summary.md:57
 msgid ""
 "The first page states that the document is a local calculation and names "
 "the software identity the filing file would carry. For the development "
 "identity (program `0000`, developer NIF `00000000T`) it says that file "
-"cannot be presented at AEAT. A table then shows the calculation's state, "
-"its verification, whether a filing is recorded, the export instant, and "
-"your NIF and name."
+"cannot be presented at AEAT. For a modelo whose layout Cadrumo does not "
+"fill with a software identity, such as Modelo 130, it says so instead. A "
+"table then shows the calculation's state, its verification, whether a "
+"filing is recorded, the export instant, and your NIF and name."
 msgstr ""
 "La primera pàgina indica que el document és un càlcul local i esmenta la "
 "identitat de programari que portaria el fitxer de presentació. Amb la "
 "identitat de desenvolupament (programa `0000`, NIF del desenvolupador "
-"`00000000T`) indica que aquest fitxer no es pot presentar a l'AEAT. Tot "
-"seguit, una taula mostra l'estat del càlcul, la seva verificació, si hi "
-"ha una presentació registrada, l'instant d'exportació i el teu NIF i nom."
+"`00000000T`) indica que aquest fitxer no es pot presentar a l'AEAT. Per a"
+" un modelo el format del qual Cadrumo no emplena amb una identitat de "
+"programari, com el Modelo 130, ho indica així. Tot seguit, una taula "
+"mostra l'estat del càlcul, la seva verificació, si hi ha una presentació "
+"registrada, l'instant d'exportació i el teu NIF i nom."
 
-#: ../../how-to/calculation-summary.md:52
+#: ../../how-to/calculation-summary.md:64
 msgid ""
 "Each registry section follows as a table of casilla, concept and amount. "
 "Three states read differently:"
 msgstr ""
-"Tot seguit apareix cada secció del registre com una taula de casella, "
+"Tot seguit apareix cada secció del registre com una taula de casilla, "
 "concepte i import. Tres estats es llegeixen de manera diferent:"
 
-#: ../../how-to/calculation-summary.md:55
+#: ../../how-to/calculation-summary.md:67
 msgid "a figure, including a zero, is a calculated value;"
 msgstr "una xifra, fins i tot un zero, és un valor calculat;"
 
-#: ../../how-to/calculation-summary.md:56
+#: ../../how-to/calculation-summary.md:68
 msgid "`sin dato` (`no data`) means the calculation recorded no value;"
-msgstr ""
-"`sin dato` (`no data` en anglès; en un resum en català, «sense dada») "
-"significa que el càlcul no va registrar cap valor;"
+msgstr "`sin dato` (`no data`) significa que el càlcul no va registrar cap valor;"
 
-#: ../../how-to/calculation-summary.md:57
+#: ../../how-to/calculation-summary.md:69
 msgid ""
 "`n/a · no aplicable` (`n/a · not applicable`) means the registry proves "
 "the casilla does not apply to the period."
 msgstr ""
-"`n/a · no aplicable` (`n/a · not applicable` en anglès) significa que el "
-"registre demostra que la casella no s'aplica al període."
+"`n/a · no aplicable` (`n/a · not applicable`) significa que el registre "
+"demostra que la casilla no s'aplica al període."
 
-#: ../../how-to/calculation-summary.md:60
+#: ../../how-to/calculation-summary.md:72
 msgid ""
 "Subtotals are set in bold and the result row is shaded. The last section,"
 " Traceability and integrity, prints every identifier in full: the "
 "calculation revision, work unit, verification report, filing record, "
-"registry snapshot and authority generation, the report and CSV digests, "
-"and the signing key's fingerprint."
+"registry snapshot and authority generation, the ledger snapshot "
+"fingerprint, the report and CSV digests, and the signing key's "
+"fingerprint."
 msgstr ""
 "Els subtotals apareixen en negreta i la fila del resultat, ombrejada. "
 "L'última secció, Traçabilitat i integritat, imprimeix cada identificador "
 "sencer: la revisió de càlcul, la unitat de treball, l'informe de "
 "verificació, el registre de presentació, la instantània del registre i la"
-" generació de l'autoritat, els SHA-256 de l'informe i del CSV, i "
-"l'empremta de la clau de signatura."
+" generació de l'autoritat, l'empremta de la instantània del ledger, els "
+"resums criptogràfics de l'informe i del CSV, i l'empremta de la clau de "
+"signatura."
 
-#: ../../how-to/calculation-summary.md:66
+#: ../../how-to/calculation-summary.md:78
 msgid "What travels inside the file"
 msgstr "Què viatja dins del fitxer"
 
-#: ../../how-to/calculation-summary.md:68
+#: ../../how-to/calculation-summary.md:80
 msgid ""
 "The PDF is archival (PDF/A-3) and tagged for assistive technology "
 "(PDF/UA-1). It embeds four files, which any PDF viewer lists as "
 "attachments:"
 msgstr ""
-"El PDF és de fitxer (PDF/A-3) i està etiquetat per a tecnologies de "
-"suport (PDF/UA-1). Incorpora quatre fitxers, que qualsevol visor de PDF "
-"mostra com a adjunts:"
+"El PDF és d'arxiu (PDF/A-3) i està etiquetat per a tecnologies "
+"d'assistència (PDF/UA-1). Incorpora quatre fitxers, que qualsevol visor "
+"de PDF mostra com a adjunts:"
 
-#: ../../how-to/calculation-summary.md:71
+#: ../../how-to/calculation-summary.md:83
 msgid ""
 "`cadrumo-calculation-report.json`, the authoritative data the pages "
 "render;"
 msgstr ""
-"`cadrumo-calculation-report.json`, les dades de referència que mostren "
-"les pàgines;"
+"`cadrumo-calculation-report.json`, les dades de referència a partir de "
+"les quals es generen les pàgines;"
 
-#: ../../how-to/calculation-summary.md:72
-msgid "`cadrumo-calculation-report.csv`, the same table the CSV format writes;"
+#: ../../how-to/calculation-summary.md:84
+msgid ""
+"`cadrumo-calculation-report.csv`, the same table the CSV format writes, "
+"with one row per casilla and a `value_state` of `value`, `absent`, or "
+"`not_applicable`;"
 msgstr ""
 "`cadrumo-calculation-report.csv`, la mateixa taula que escriu el format "
-"CSV;"
+"CSV, amb una fila per casilla i un `value_state` que val `value`, "
+"`absent` o `not_applicable`;"
 
-#: ../../how-to/calculation-summary.md:73
+#: ../../how-to/calculation-summary.md:87
 msgid "`cadrumo-report-certification.json`, the signed integrity statement;"
 msgstr "`cadrumo-report-certification.json`, la declaració d'integritat signada;"
 
-#: ../../how-to/calculation-summary.md:74
+#: ../../how-to/calculation-summary.md:88
 msgid "`cadrumo-report-certification.sig`, its 64-byte Ed25519 signature."
 msgstr "`cadrumo-report-certification.sig`, la seva signatura Ed25519 de 64 bytes."
 
-#: ../../how-to/calculation-summary.md:76
+#: ../../how-to/calculation-summary.md:90
 msgid ""
 "Your NIF and name appear on the pages and in the embedded JSON and CSV, "
 "because the summary is your own document. They never appear in the "
@@ -214,19 +245,19 @@ msgid ""
 "withholding, appear only as keyed digests. The filing file and your "
 "evidence documents are not embedded."
 msgstr ""
-"El teu NIF i el teu nom apareixen a les pàgines i al JSON i al CSV "
+"El teu NIF i el teu nom apareixen a les pàgines i al JSON i el CSV "
 "incorporats, perquè el resum és el teu propi document. No apareixen mai a"
 " les metadades del document, que només porten identificadors, resums "
 "criptogràfics, codis i la clau pública de signatura. Els tercers, com els"
 " perceptors d'una retenció, només hi apareixen com a resums criptogràfics"
-" amb clau. El fitxer de presentació i els teus documents d'evidència no "
-"s'hi incorporen."
+" amb clau. El fitxer de presentació i els teus documents de prova no s'hi"
+" incorporen."
 
-#: ../../how-to/calculation-summary.md:82
+#: ../../how-to/calculation-summary.md:96
 msgid "What the signature means"
 msgstr "Què significa la signatura"
 
-#: ../../how-to/calculation-summary.md:84
+#: ../../how-to/calculation-summary.md:98
 msgid ""
 "The summary is signed with your profile's key, the same key that signs "
 "your review packages. A valid signature means that this key declared "
@@ -241,7 +272,7 @@ msgstr ""
 "l'autoritat indicats van produir exactament aquest informe, aquest CSV i "
 "aquestes pàgines."
 
-#: ../../how-to/calculation-summary.md:89
+#: ../../how-to/calculation-summary.md:103
 msgid ""
 "It does not mean that AEAT accepted or received a filing, that the "
 "calculation is legally correct, that the inputs were true, or that the "
@@ -258,76 +289,76 @@ msgstr ""
 "clau quan compara la seva empremta, impresa a l'última pàgina, amb una "
 "que hagi rebut de tu per un altre canal."
 
-#: ../../how-to/calculation-summary.md:96
+#: ../../how-to/calculation-summary.md:110
 msgid "Verify a summary with Cadrumo"
 msgstr "Verifica un resum amb Cadrumo"
 
-#: ../../how-to/calculation-summary.md:98
+#: ../../how-to/calculation-summary.md:112
 msgid ""
 "On the computer holding the profile that wrote it, check a summary "
 "against your encrypted store:"
 msgstr ""
 "A l'ordinador que conté el perfil que el va escriure, comprova un resum "
-"amb el teu emmagatzematge xifrat:"
+"amb el teu magatzem xifrat:"
 
-#: ../../how-to/calculation-summary.md:105
+#: ../../how-to/calculation-summary.md:119
 msgid ""
 "Cadrumo checks the signature, the embedded data, the metadata and the "
 "pages, then rebuilds the report from the store and compares it. The "
 "outcome is one of:"
 msgstr ""
 "Cadrumo comprova la signatura, les dades incorporades, les metadades i "
-"les pàgines; després reconstrueix l'informe a partir de l'emmagatzematge "
-"i el compara. El resultat és un d'aquests:"
+"les pàgines; després reconstrueix l'informe a partir del magatzem i el "
+"compara. El resultat és un d'aquests:"
 
-#: ../../how-to/calculation-summary.md:108
+#: ../../how-to/calculation-summary.md:122
 msgid "`verified`: the file is intact and still matches the store;"
-msgstr "`verified`: el fitxer és intacte i encara coincideix amb l'emmagatzematge;"
+msgstr "`verified`: el fitxer està intacte i encara coincideix amb el magatzem;"
 
-#: ../../how-to/calculation-summary.md:109
+#: ../../how-to/calculation-summary.md:123
 msgid ""
 "`verified_with_later_changes`: it matches the store as it was at export, "
 "and the calculation has since moved on, for example it was filed;"
 msgstr ""
-"`verified_with_later_changes`: coincideix amb l'emmagatzematge tal com "
-"era en l'exportació, i des d'aleshores el càlcul ha avançat; per exemple,"
-" s'ha presentat;"
+"`verified_with_later_changes`: coincideix amb el magatzem tal com era en "
+"l'exportació, i des d'aleshores el càlcul ha avançat; per exemple, s'ha "
+"presentat;"
 
-#: ../../how-to/calculation-summary.md:111
+#: ../../how-to/calculation-summary.md:125
 msgid ""
 "`valid_unpinned`: the file is internally consistent, but no key was "
 "trusted and the store was not consulted;"
 msgstr ""
 "`valid_unpinned`: el fitxer és coherent internament, però no s'ha indicat"
-" cap clau de confiança ni s'ha consultat l'emmagatzematge;"
+" cap clau de confiança ni s'ha consultat el magatzem;"
 
-#: ../../how-to/calculation-summary.md:113
+#: ../../how-to/calculation-summary.md:127
 msgid "`refused`: a check failed; each check row names its reason."
 msgstr ""
 "`refused`: una comprovació ha fallat; cada fila de comprovació n'indica "
 "el motiu."
 
-#: ../../how-to/calculation-summary.md:115
+#: ../../how-to/calculation-summary.md:129
 msgid "The command exits with status 1 when the outcome is `refused`."
 msgstr "L'ordre acaba amb l'estat 1 quan el resultat és `refused`."
 
-#: ../../how-to/calculation-summary.md:117
+#: ../../how-to/calculation-summary.md:131
 msgid ""
 "To check only the document, without opening your store, add `--document-"
 "only`. Anyone can forge a consistent document with their own key, so a "
 "document-only check is `valid_unpinned` unless you also name the key you "
 "trust:"
 msgstr ""
-"Per comprovar només el document, sense obrir el teu emmagatzematge, "
-"afegeix `--document-only`. Qualsevol pot falsificar un document coherent "
-"amb la seva pròpia clau, de manera que una comprovació només del document"
-" dona `valid_unpinned` tret que també indiquis la clau en què confies:"
+"Per comprovar només el document, sense obrir el teu magatzem, afegeix "
+"`--document-only`. Qualsevol pot falsificar un document coherent amb la "
+"seva pròpia clau, de manera que una comprovació només del document dona "
+"`valid_unpinned` tret que també indiquis la clau en què confies:"
 
-#: ../../how-to/calculation-summary.md:125
+#: ../../how-to/calculation-summary.md:139
 msgid "Verify a summary without Cadrumo"
 msgstr "Verifica un resum sense Cadrumo"
 
-#: ../../how-to/calculation-summary.md:127
+#: ../../how-to/calculation-summary.md:141
 msgid ""
 "A recipient with OpenSSL 3 can check the signature. First save the four "
 "embedded files into one folder, from the attachments panel of a PDF "
@@ -347,15 +378,15 @@ msgstr ""
 "SHA-256 amb l'empremta que et van donar abans de confiar-hi. Substitueix "
 "`PUBLIC_KEY_HEX` més avall per aquest valor."
 
-#: ../../how-to/calculation-summary.md:135
+#: ../../how-to/calculation-summary.md:149
 msgid "On Linux or macOS:"
 msgstr "A Linux o macOS:"
 
-#: ../../how-to/calculation-summary.md:145
+#: ../../how-to/calculation-summary.md:159
 msgid "In PowerShell 7:"
 msgstr "A PowerShell 7:"
 
-#: ../../how-to/calculation-summary.md:156
+#: ../../how-to/calculation-summary.md:170
 msgid ""
 "OpenSSL prints `Signature Verified Successfully` for an intact statement "
 "and `Signature Verification Failure` otherwise. The statement also lists "
@@ -365,12 +396,141 @@ msgid ""
 "capitals) and compare, to confirm the data was not changed. Checking that"
 " the pages themselves match the statement needs Cadrumo."
 msgstr ""
-"OpenSSL imprimeix `Signature Verified Successfully` si la declaració és "
-"intacta i `Signature Verification Failure` en cas contrari. La declaració"
-" també indica el SHA-256 del JSON i del CSV incorporats com a "
+"OpenSSL imprimeix `Signature Verified Successfully` si la declaració està"
+" intacta i `Signature Verification Failure` en cas contrari. La "
+"declaració també indica el SHA-256 del JSON i del CSV incorporats com a "
 "`report_sha256` i `csv_sha256`: calcula el SHA-256 d'aquests dos fitxers "
 "(`sha256sum`, `shasum -a 256` a macOS o `Get-FileHash` a PowerShell, que "
 "l'imprimeix en majúscules) i compara'ls per confirmar que les dades no "
 "s'han modificat. Per comprovar que les mateixes pàgines coincideixen amb "
 "la declaració cal Cadrumo."
+
+#~ msgid ""
+#~ "**Requirement:** a calculation that has "
+#~ "passed verification or been filed. See"
+#~ " [Verify a filing](verification-reports.md)."
+#~ msgstr ""
+#~ "**Requisit:** un càlcul que hagi superat"
+#~ " la verificació o que s'hagi "
+#~ "presentat. Consulta [Verifica una presentació"
+#~ "](verification-reports.md)."
+
+#~ msgid ""
+#~ "A summary is a local calculation, "
+#~ "not an official AEAT value. The "
+#~ "official proof of a filing is the"
+#~ " AEAT receipt (justificante), the filed-"
+#~ "declarations lookup, or the CSV check"
+#~ " at the AEAT portal. The summary "
+#~ "says so on its first page and "
+#~ "in every footer."
+#~ msgstr ""
+#~ "Un resum és un càlcul local, no"
+#~ " un valor oficial de l'AEAT. La "
+#~ "prova oficial d'una presentació és el"
+#~ " justificant de l'AEAT, la consulta "
+#~ "de declaracions presentades o la "
+#~ "comprovació del CSV al portal de "
+#~ "l'AEAT. El resum ho indica a la"
+#~ " primera pàgina i a cada peu de"
+#~ " pàgina."
+
+#~ msgid ""
+#~ "Subtotals are set in bold and the"
+#~ " result row is shaded. The last "
+#~ "section, Traceability and integrity, prints"
+#~ " every identifier in full: the "
+#~ "calculation revision, work unit, verification"
+#~ " report, filing record, registry snapshot"
+#~ " and authority generation, the report "
+#~ "and CSV digests, and the signing "
+#~ "key's fingerprint."
+#~ msgstr ""
+#~ "Els subtotals apareixen en negreta i "
+#~ "la fila del resultat, ombrejada. "
+#~ "L'última secció, Traçabilitat i integritat,"
+#~ " imprimeix cada identificador sencer: la"
+#~ " revisió de càlcul, la unitat de "
+#~ "treball, l'informe de verificació, el "
+#~ "registre de presentació, la instantània "
+#~ "del registre i la generació de "
+#~ "l'autoritat, els SHA-256 de l'informe i"
+#~ " del CSV, i l'empremta de la "
+#~ "clau de signatura."
+
+#~ msgid ""
+#~ "The first page states that the "
+#~ "document is a local calculation and "
+#~ "names the software identity the filing"
+#~ " file would carry. For the "
+#~ "development identity (program `0000`, "
+#~ "developer NIF `00000000T`) it says that"
+#~ " file cannot be presented at AEAT."
+#~ " A table then shows the calculation's"
+#~ " state, its verification, whether a "
+#~ "filing is recorded, the export instant,"
+#~ " and your NIF and name."
+#~ msgstr ""
+#~ "La primera pàgina indica que el "
+#~ "document és un càlcul local i "
+#~ "esmenta la identitat de programari que"
+#~ " portaria el fitxer de presentació. "
+#~ "Amb la identitat de desenvolupament "
+#~ "(programa `0000`, NIF del desenvolupador "
+#~ "`00000000T`) indica que aquest fitxer no"
+#~ " es pot presentar a l'AEAT. Tot "
+#~ "seguit, una taula mostra l'estat del "
+#~ "càlcul, la seva verificació, si hi "
+#~ "ha una presentació registrada, l'instant "
+#~ "d'exportació i el teu NIF i nom."
+
+#~ msgid ""
+#~ "The summary is written in the "
+#~ "language the command runs in; add "
+#~ "`--output-language en` (or `es`, `ca`, "
+#~ "`hu`) to choose another. An existing "
+#~ "file is never overwritten unless you "
+#~ "add `--replace`."
+#~ msgstr ""
+#~ "El resum s'escriu en l'idioma en "
+#~ "què s'executa l'ordre; afegeix `--output-"
+#~ "language en` (o `es`, `ca`, `hu`) "
+#~ "per triar-ne un altre. Un fitxer"
+#~ " existent no se sobreescriu mai tret"
+#~ " que afegeixis `--replace`."
+
+#~ msgid ""
+#~ "This page covers the calculation "
+#~ "summary: a PDF of a verified or"
+#~ " filed calculation that an accountant "
+#~ "can read, that carries its own "
+#~ "data, and that anyone can check "
+#~ "for changes. You write it with one"
+#~ " command, hand it on, and later "
+#~ "confirm that a copy still matches "
+#~ "what your encrypted store holds."
+#~ msgstr ""
+#~ "Aquesta pàgina tracta del resum del "
+#~ "càlcul: un PDF d'un càlcul verificat "
+#~ "o presentat que un assessor pot "
+#~ "llegir, que porta les seves pròpies "
+#~ "dades i en què qualsevol pot "
+#~ "comprovar si hi ha hagut canvis. "
+#~ "L'escrius amb una sola ordre, el "
+#~ "lliures i més endavant confirmes que "
+#~ "una còpia encara coincideix amb el "
+#~ "que conté el teu emmagatzematge xifrat."
+
+#~ msgid ""
+#~ "Writing a summary needs the optional "
+#~ "`pdf` extra. Checking one does not."
+#~ msgstr ""
+#~ "Per escriure un resum cal el "
+#~ "complement opcional `pdf`. Per comprovar-"
+#~ "lo, no."
+
+#~ msgid "`cadrumo-calculation-report.csv`, the same table the CSV format writes;"
+#~ msgstr ""
+#~ "`cadrumo-calculation-report.csv`, la mateixa"
+#~ " taula que escriu el format CSV;"
 

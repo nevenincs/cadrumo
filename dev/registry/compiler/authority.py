@@ -32,7 +32,7 @@ from .authority_state import (
     register_authoring_authority,
     source_evidence_receipt,
 )
-from .build_identity import compiler_source_tree_digest
+from .compiler_source_tree import compiler_source_tree_digest
 from .convenio import convenio_authority_from_facts
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
@@ -320,7 +320,7 @@ def compile_validated_authority(
             pair,
             registry_identity_digest=receipt.identity.digest,
             source_receipt=receipt.source_receipt,
-            compiler_identity_digest=receipt.compiler_source_tree_digest,
+            compiler_source_tree_digest=receipt.compiler_source_tree_digest,
             build=lambda: _compile_validated_authority_uncached(
                 pair.registry_root,
                 pair.source_root,
@@ -394,7 +394,7 @@ def compilation_receipt(
             registry_root=pair.registry_root,
             fingerprints=identity.fingerprints,
             source_receipt=source_receipt,
-            compiler_identity_digest=source_tree_digest,
+            compiler_source_tree_digest=source_tree_digest,
         )
         if identity.fingerprints
         else None

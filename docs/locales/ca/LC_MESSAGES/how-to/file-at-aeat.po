@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 08:27+0000\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -20,75 +20,82 @@ msgstr ""
 
 #: ../../how-to/file-at-aeat.md:1
 msgid "File your modelo at the AEAT portal"
-msgstr "Puja el teu model exportat al portal de l'AEAT"
+msgstr "Presenta el teu modelo al portal de l'AEAT"
 
 #: ../../how-to/file-at-aeat.md:3
 #, python-brace-format
 msgid ""
 "This page covers the handoff from a verified draft to a real filing at "
-"AEAT, as an ordered checklist: present the figures yourself at the "
-"portal, save the justificante, and record the filing locally. You prepare"
-" and check a {term}`modelo` with `aeat`, but the tool never submits "
-"anything to AEAT. You file at the portal yourself, signed with your own "
-"credentials. The `work file` command at the end records a local marker "
-"only; it does not and cannot file on your behalf."
+"the Agencia Estatal de Administración Tributaria (AEAT), as an ordered "
+"checklist: present the figures yourself at the portal, save the "
+"justificante, and record the filing locally. You prepare and check a "
+"{term}`modelo` with `aeat`, but the tool never submits anything to AEAT. "
+"You file at the portal yourself, signed with your own credentials. The "
+"`work file` command at the end records a local marker only; it does not "
+"and cannot file on your behalf."
 msgstr ""
 "Aquesta pàgina tracta el traspàs d'un esborrany verificat a una "
-"presentació real a l'AEAT, com una llista de comprovació ordenada: "
-"exporta el fitxer, puja'l tu mateix al portal, deses el justificante i "
-"registres la presentació localment. Prepara i exporta un {term}`modelo` "
-"amb `aeat`, però l'eina mai no envia res a l'AEAT. Puja el fitxer "
-"exportat al portal de l'AEAT tu mateix, signat amb les teves pròpies "
-"credencials. L'ordre `work file` del final només registra un marcador "
-"local; no presenta ni pot presentar en nom teu."
+"presentació real a l'Agencia Estatal de Administración Tributaria (AEAT),"
+" com una llista de comprovació ordenada: presenta tu mateix les xifres al"
+" portal, desa el justificante i registra la presentació localment. "
+"Prepares i comproves un {term}`modelo` amb `aeat`, però l'eina mai no "
+"envia res a l'AEAT. Presentes tu mateix al portal, signant amb les teves "
+"pròpies credencials. L'ordre `work file` del final només registra una "
+"marca local; no presenta ni pot presentar en nom teu."
 
-#: ../../how-to/file-at-aeat.md:11
+#: ../../how-to/file-at-aeat.md:12
 msgid ""
-"How you present depends on the modelo. Modelo 130 exports a local "
-"fichero-BOE file for upload. Modelo 303's export writes a file too, but "
-"Cadrumo holds no AEAT software-developer registration, so its envelope "
-"header carries an all-zero development identity and AEAT will not accept "
-"that file; key its calculated box values into the portal form instead."
+"How you present depends on the modelo. Cadrumo holds no AEAT software-"
+"developer registration, so the export of a modelo whose record design "
+"reserves a software identity, such as Modelo 303 or Modelo 390, carries "
+"an all-zero development identity in its header. The export warns that "
+"AEAT will not accept that file for presentation, so key the calculated "
+"box values into the portal form instead. For a modelo whose layout "
+"Cadrumo does not fill with a software identity, such as Modelo 130, the "
+"export leaves those fields blank and shows no such warning."
 msgstr ""
-"La manera de presentar depèn del model. El Modelo 130 exporta un fitxer-"
-"BOE local per pujar-lo. L'exportació del Modelo 303 també escriu un "
-"fitxer, però Cadrumo no té registre com a desenvolupador de programari "
-"davant l'AEAT, de manera que la capçalera del seu sobre porta una "
-"identitat de desenvolupament formada només per zeros i l'AEAT no "
-"acceptarà aquest fitxer; introdueix els valors calculats de les seves "
-"caselles al formulari del portal."
+"La manera de presentar depèn del modelo. Cadrumo no té cap registre de "
+"desenvolupador de programari davant l'AEAT, de manera que l'exportació "
+"d'un modelo el disseny de registre del qual reserva una identitat de "
+"programari, com el Modelo 303 o el Modelo 390, porta a la capçalera una "
+"identitat de desenvolupament formada només per zeros. L'exportació avisa "
+"que l'AEAT no acceptarà aquest fitxer per presentar-lo, així que "
+"introdueix a mà al formulari del portal els valors de casilla calculats. "
+"Per a un modelo el disseny del qual Cadrumo no omple amb una identitat de"
+" programari, com el Modelo 130, l'exportació deixa aquests camps en blanc"
+" i no mostra cap avís d'aquest tipus."
 
-#: ../../how-to/file-at-aeat.md:17
+#: ../../how-to/file-at-aeat.md:20
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../how-to/file-at-aeat.md:19
+#: ../../how-to/file-at-aeat.md:22
 msgid "You need:"
-msgstr "Necessita:"
+msgstr "Necessites:"
 
-#: ../../how-to/file-at-aeat.md:21
+#: ../../how-to/file-at-aeat.md:24
 msgid ""
 "An active taxpayer profile carrying `--name` and `--surnames`, or filing "
 "refuses because it cannot stamp the operator name. Create one with `aeat "
 "config profile create`; see [Set up your taxpayer profile](profile-"
 "setup.md)."
 msgstr ""
-"Un perfil de contribuent actiu que porti `--name` i `--surnames`, o bé "
-"l'exportació es nega perquè no pot estampar el nom de l'operador. Crea'n "
+"Un perfil de contribuent actiu que porti `--name` i `--surnames`, o la "
+"presentació es nega perquè no pot estampar el nom de l'operador. Crea'n "
 "un amb `aeat config profile create`; consulta [Configura el teu perfil de"
 " contribuent](profile-setup.md)."
 
-#: ../../how-to/file-at-aeat.md:25
+#: ../../how-to/file-at-aeat.md:28
 msgid ""
 "A verified saved calculation (work unit) for the modelo and period you "
 "want to file. If your draft isn't verified yet, see [verification reports"
 "](verification-reports.md)."
 msgstr ""
-"Un càlcul desat i verificat (unitat de treball) per al model i el període"
-" que vols presentar. Si el teu esborrany encara no està verificat, "
-"consulta [informes de verificació](verification-reports.md)."
+"Un càlcul desat i verificat (unitat de treball) per al modelo i el "
+"període que vols presentar. Si el teu esborrany encara no està verificat,"
+" consulta [informes de verificació](verification-reports.md)."
 
-#: ../../how-to/file-at-aeat.md:28
+#: ../../how-to/file-at-aeat.md:31
 msgid ""
 "Your own AEAT portal credentials, a digital certificate or Cl@ve. These "
 "are your credentials for AEAT's website, separate from anything "
@@ -101,99 +108,119 @@ msgstr ""
 "amb l'AEAT](authenticate-with-aeat.md) de l'eina és per a descàrregues de"
 " dades de només lectura, no per presentar."
 
-#: ../../how-to/file-at-aeat.md:33
-msgid ""
-"Every `aeat` command on this page needs your master-key passphrase; the "
-"tool prompts for it. The tool's messages are in Spanish."
-msgstr ""
-"Cada ordre d'`aeat` d'aquesta pàgina necessita la contrasenya de la clau "
-"mestra; l'eina te la demana. Els missatges de l'eina són en castellà."
-
 #: ../../how-to/file-at-aeat.md:36
+msgid ""
+"Every `aeat` command on this page needs your passphrase; the tool prompts"
+" for it."
+msgstr ""
+"Cada ordre d'`aeat` d'aquesta pàgina necessita la teva frase de "
+"contrasenya; l'eina te la demana."
+
+#: ../../how-to/file-at-aeat.md:39
+msgid ""
+"`aeat` prints its messages in Spanish unless you choose another language."
+" Add `--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one "
+"command, or store a default for your profile with `aeat config profile "
+"edit --output-language en`. The examples in this documentation are "
+"recorded in English."
+msgstr ""
+"`aeat` mostra els seus missatges en espanyol tret que triïs un altre "
+"idioma. Afegeix `--language en` (o `es`, `ca`, `hu`) just després "
+"d'`aeat` per a una sola ordre, o desa un valor per defecte per al teu "
+"perfil amb `aeat config profile edit --output-language en`. Els exemples "
+"d'aquesta documentació s'han enregistrat en anglès."
+
+#: ../../how-to/file-at-aeat.md:45
 msgid ""
 "If you're new to the workflow as a whole, start with the "
 "[quickstart](quickstart.md)."
 msgstr ""
-"Si sou nou en el flux de treball en conjunt, comences amb el [començament"
-" ràpid](quickstart.md)."
+"Si ets nou en el flux de treball en conjunt, comença amb l'[inici "
+"ràpid](quickstart.md)."
 
-#: ../../how-to/file-at-aeat.md:40
+#: ../../how-to/file-at-aeat.md:49
 msgid "The filing chain"
 msgstr "La cadena de presentació"
 
-#: ../../how-to/file-at-aeat.md:42
+#: ../../how-to/file-at-aeat.md:51
 msgid ""
-"The sequence below runs the machine half of the filing end to end: it "
-"prepares a classified, evidenced Modelo 303 for the first quarter of "
-"2026, verifies it, confirms the verified revision, exports a Modelo 303 "
-"file that AEAT will not accept because it carries the development "
-"identity, and records the local filed marker. Between the export and the "
-"marker, you present the figures at the AEAT portal yourself (steps 2 to 4"
-" below). The final frame is the reconcile command you run once you have "
-"AEAT's justificante on disk; it is shown but not run here, because it "
-"needs your real receipt:"
+"The sequence below runs the machine half of the filing. It starts from a "
+"classified, evidenced Modelo 303 for the first quarter of 2026 that is "
+"already calculated and verified. It confirms the verified revision, "
+"exports a Modelo 303 file that AEAT will not accept because it carries "
+"the development identity, and records the local filed marker. Between the"
+" export and the marker, you present the figures at the AEAT portal "
+"yourself (steps 2 and 3). The final frame is the reconcile command you "
+"run once you have AEAT's justificante on disk; it is shown but not run "
+"here, because it needs your real receipt:"
 msgstr ""
-"La seqüència següent executa de cap a cap la part automàtica de la "
-"presentació: prepara un Modelo 303 classificat i amb evidència per al "
-"primer trimestre de 2026, el verifica, confirma la revisió verificada, "
+"La seqüència següent executa la part automàtica de la presentació. "
+"Parteix d'un Modelo 303 classificat i documentat del primer trimestre de "
+"2026 que ja està calculat i verificat. Confirma la revisió verificada, "
 "exporta un fitxer del Modelo 303 que l'AEAT no acceptarà perquè porta la "
-"identitat de desenvolupament i registra el marcador local de presentat. "
-"Entre l'exportació i el marcador, presentes tu mateix les xifres al "
-"portal de l'AEAT (passos 2 a 4 de sota). L'últim bloc és l'ordre de "
-"conciliació que executes quan ja tens el justificant de l'AEAT al disc; "
-"es mostra però no s'executa aquí perquè necessita el teu rebut real:"
+"identitat de desenvolupament, i registra la marca local de presentació. "
+"Entre l'exportació i la marca, presentes tu mateix les xifres al portal "
+"de l'AEAT (passos 2 i 3). L'últim marc és l'ordre de conciliació que "
+"executes quan ja tens el justificante de l'AEAT al disc; es mostra però "
+"no s'executa aquí perquè necessita el teu rebut real:"
 
-#: ../../how-to/file-at-aeat.md:55
+#: ../../how-to/file-at-aeat.md:64
 msgid "The rest of this page walks each step of that chain in order."
-msgstr "La resta d'aquesta pàgina recorre cada pas d'aquella cadena en ordre."
+msgstr "La resta d'aquesta pàgina recorre per ordre cada pas d'aquella cadena."
 
-#: ../../how-to/file-at-aeat.md:57
+#: ../../how-to/file-at-aeat.md:66
 msgid "Step 1: confirm the draft is verified"
-msgstr "Pas 1: confirma que l'esborrany està verificat i, tot seguit, exportes"
+msgstr "Pas 1: confirma que l'esborrany està verificat"
 
-#: ../../how-to/file-at-aeat.md:59
+#: ../../how-to/file-at-aeat.md:68
 msgid ""
 "If no verified calculation exists, `work revision --select latest-"
 "verified` refuses; run verification first. See [verification reports"
 "](verification-reports.md)."
 msgstr ""
 "Si no existeix cap càlcul verificat, `work revision --select latest-"
-"verified` es nega; executa primer la verificació, perquè l'exportació "
-"rebutja un esborrany no verificat. Consulta [informes de verificació"
-"](verification-reports.md)."
+"verified` es nega; executa primer la verificació. Consulta [informes de "
+"verificació](verification-reports.md)."
 
-#: ../../how-to/file-at-aeat.md:63
+#: ../../how-to/file-at-aeat.md:72
 msgid ""
 "Read the verified figures back with `aeat app modelo work revision`. "
 "These are the values you present at the portal, box by box."
 msgstr ""
 "Torna a llegir les xifres verificades amb `aeat app modelo work "
-"revision`. Són els valors que presentes al portal, casella per casella."
+"revision`. Són els valors que presentes al portal, casilla per casilla."
 
-#: ../../how-to/file-at-aeat.md:66
+#: ../../how-to/file-at-aeat.md:75
 msgid ""
-"For a modelo that does carry a layout, `export` writes a `.boe` file: a "
-"fixed-width text file in the official BOE (Boletín Oficial del Estado) "
-"record layout, not a PDF or a spreadsheet. It runs entirely on your "
+"For a modelo that does carry a layout, `export` writes the file in the "
+"official layout, never a PDF or a spreadsheet: for most modelos a `.boe` "
+"file, a fixed-width text file in the BOE (Boletín Oficial del Estado) "
+"record layout, and for Modelo 100 an XML file. It runs entirely on your "
 "machine and never contacts AEAT, and it prints the file's path, size and "
 "SHA-256 checksum. Record that checksum: it fingerprints the file's exact "
 "contents, so if a question ever comes up about which version you filed, "
-"re-derive it from the file on disk and compare."
+"re-derive it from the file on disk and compare. Export refuses to "
+"overwrite an existing file unless you add `--replace`, and it refuses an "
+"`--output` path whose parent directory does not exist."
 msgstr ""
-"Per a un model que sí que té un disseny, `export` escriu un fitxer "
-"`.boe`: un fitxer de text d'amplada fixa amb el disseny oficial de "
-"registres del BOE (Boletín Oficial del Estado), no un PDF ni un full de "
-"càlcul. S'executa completament a la teva màquina i mai no contacta amb "
-"l'AEAT, i imprimeix la ruta, la mida i la suma de comprovació SHA-256 del"
-" fitxer. Anota aquesta suma: identifica el contingut exacte del fitxer, "
-"de manera que, si mai hi ha dubtes sobre quina versió vas presentar, la "
-"puguis tornar a derivar del fitxer del disc i comparar-la."
+"Per a un modelo que sí que té un disseny, `export` escriu el fitxer amb "
+"el disseny oficial, mai un PDF ni un full de càlcul: per a la majoria de "
+"modelos un fitxer `.boe`, un fitxer de text d'amplada fixa amb el disseny"
+" de registres del BOE (Boletín Oficial del Estado), i per al Modelo 100 "
+"un fitxer XML. S'executa completament a la teva màquina i mai no contacta"
+" amb l'AEAT, i imprimeix la ruta, la mida i la suma de comprovació "
+"SHA-256 del fitxer. Anota aquesta suma: identifica el contingut exacte "
+"del fitxer, de manera que, si mai hi ha dubtes sobre quina versió vas "
+"presentar, la puguis tornar a derivar del fitxer del disc i comparar-la. "
+"L'exportació es nega a sobreescriure un fitxer existent tret que "
+"afegeixis `--replace`, i es nega si el directori pare de la ruta "
+"`--output` no existeix."
 
-#: ../../how-to/file-at-aeat.md:74
+#: ../../how-to/file-at-aeat.md:85
 msgid "Step 2: present the figures at the AEAT portal yourself"
-msgstr "Pas 2: puja el fitxer al portal de l'AEAT tu mateix"
+msgstr "Pas 2: presenta tu mateix les xifres al portal de l'AEAT"
 
-#: ../../how-to/file-at-aeat.md:76
+#: ../../how-to/file-at-aeat.md:87
 msgid ""
 "This step happens entirely outside `aeat`, in your browser. Log in with "
 "your own certificate or Cl@ve. Do not expect the tool to do any part of "
@@ -203,36 +230,38 @@ msgstr ""
 "sessió amb el teu propi certificat o Cl@ve. No esperis que l'eina faci "
 "cap part d'aquest pas per tu."
 
-#: ../../how-to/file-at-aeat.md:80
+#: ../../how-to/file-at-aeat.md:91
 msgid "Log in at AEAT's Sede Electrónica."
 msgstr "Inicia la sessió a la Sede Electrónica de l'AEAT."
 
-#: ../../how-to/file-at-aeat.md:81
+#: ../../how-to/file-at-aeat.md:92
 msgid "Choose the presentation page for your modelo and period."
-msgstr ""
-"Tria la pàgina de presentació per pujada de fitxer per al teu model i "
-"període."
+msgstr "Tria la pàgina de presentació del teu modelo i període."
 
-#: ../../how-to/file-at-aeat.md:82
+#: ../../how-to/file-at-aeat.md:93
 msgid ""
-"Enter the calculated box values in the form. If your modelo carries a "
-"fichero-BOE layout and you exported one, import that file instead."
+"Enter the calculated box values in the form. If the export did not warn "
+"about the development identity and the portal offers a file import for "
+"your modelo, you can try importing the exported file instead. If the "
+"portal refuses it, enter the figures in the form."
 msgstr ""
-"Introdueix els valors calculats de les caselles al formulari. Si el teu "
-"model té un disseny fichero-BOE i n'has exportat un, importa aquest "
-"fitxer en lloc d'això."
+"Introdueix al formulari els valors de casilla calculats. Si l'exportació "
+"no ha avisat de la identitat de desenvolupament i el portal ofereix la "
+"importació de fitxers per al teu modelo, pots provar d'importar-hi el "
+"fitxer exportat. Si el portal el rebutja, introdueix les xifres al "
+"formulari."
 
-#: ../../how-to/file-at-aeat.md:84
+#: ../../how-to/file-at-aeat.md:97
 msgid "Review the figures the portal shows against your verified calculation."
 msgstr ""
 "Revisa les xifres que mostra el portal comparant-les amb el teu càlcul "
 "verificat."
 
-#: ../../how-to/file-at-aeat.md:85
+#: ../../how-to/file-at-aeat.md:98
 msgid "Sign and submit."
 msgstr "Signa i envia."
 
-#: ../../how-to/file-at-aeat.md:87
+#: ../../how-to/file-at-aeat.md:100
 msgid ""
 "Portal screens change over time, so the exact labels may differ. If you "
 "can't find the presentation page for your modelo, AEAT's own help or your"
@@ -240,14 +269,14 @@ msgid ""
 msgstr ""
 "Les pantalles del portal canvien amb el temps, de manera que les "
 "etiquetes exactes poden diferir. Si no trobes la pàgina de presentació "
-"per al teu model, l'ajuda pròpia de l'AEAT o el teu assessor és la font "
-"adequada. El portal és seu, no de l'eina."
+"del teu modelo, l'ajuda de l'AEAT o el teu assessor és la font adequada. "
+"El portal és seu, no de l'eina."
 
-#: ../../how-to/file-at-aeat.md:91
+#: ../../how-to/file-at-aeat.md:104
 msgid "Step 3: save the justificante"
 msgstr "Pas 3: desa el justificante"
 
-#: ../../how-to/file-at-aeat.md:93
+#: ../../how-to/file-at-aeat.md:106
 #, python-brace-format
 msgid ""
 "Immediately after submitting, download the {term}`justificante`. AEAT "
@@ -256,90 +285,90 @@ msgstr ""
 "Immediatament després d'enviar, descarrega el {term}`justificante`. "
 "L'AEAT normalment l'ofereix com a PDF."
 
-#: ../../how-to/file-at-aeat.md:95
+#: ../../how-to/file-at-aeat.md:108
 msgid ""
 "Keep it with your tax records. You'll use it in step 5 to reconcile "
 "AEAT's record against your local one."
 msgstr ""
 "Conserva'l amb els teus registres fiscals. L'utilitzaràs al pas 5 per "
-"reconciliar el registre de l'AEAT amb el teu registre local."
+"conciliar el registre de l'AEAT amb el teu registre local."
 
-#: ../../how-to/file-at-aeat.md:98
+#: ../../how-to/file-at-aeat.md:111
 msgid "Step 4: record the filing locally"
 msgstr "Pas 4: registra la presentació localment"
 
-#: ../../how-to/file-at-aeat.md:100
+#: ../../how-to/file-at-aeat.md:113
 msgid ""
 "Only after the portal submission succeeds, record the filing in `aeat` "
-"with the `work file` frame from [the filing chain](#the-filing-chain) "
-"above."
+"with the `work file` frame in [the filing chain](#the-filing-chain)."
 msgstr ""
-"Només després que l'enviament al portal tingui èxit, registres la "
+"Només després que l'enviament al portal hagi tingut èxit, registra la "
 "presentació a `aeat` amb el marc `work file` de [la cadena de presentació"
-"](#the-filing-chain) anterior."
+"](#the-filing-chain)."
 
-#: ../../how-to/file-at-aeat.md:103
+#: ../../how-to/file-at-aeat.md:116
 msgid ""
 "`work file` records a local \"filed\" marker and nothing more. It does "
 "not and cannot submit anything to AEAT. Add context with the optional "
 "flags `--notes TEXT` and `--by TEXT`, for example who filed and any "
 "portal reference you want to remember."
 msgstr ""
-"`work file` registra un marcador local de «presentat» i res més. No envia"
-" ni pot enviar res a l'AEAT. Afegeix context amb els indicadors opcionals"
-" `--notes TEXT` i `--by TEXT`, per exemple qui ha presentat i qualsevol "
+"`work file` registra una marca local de «presentat» i res més. No envia "
+"ni pot enviar res a l'AEAT. Afegeix context amb les opcions opcionals "
+"`--notes TEXT` i `--by TEXT`, per exemple qui ha presentat i qualsevol "
 "referència del portal que vulguis recordar."
 
-#: ../../how-to/file-at-aeat.md:108
+#: ../../how-to/file-at-aeat.md:121
 msgid "If the command refuses, the usual causes are:"
 msgstr "Si l'ordre es nega, les causes habituals són:"
 
-#: ../../how-to/file-at-aeat.md:110
+#: ../../how-to/file-at-aeat.md:123
 msgid ""
 "The filing window gate: the period's filing window isn't open. A window "
-"that has already closed cannot be reopened. The refusal message suggests "
-"what to do instead. See the [filing calendar](filing-calendar.md) for "
-"window dates."
+"that has already closed cannot be reopened. Recording is optional, and "
+"the refusal message names `aeat app modelo export` as the local finish "
+"line. See the [filing calendar](filing-calendar.md) for window dates."
 msgstr ""
-"La comprovació de la finestra de presentació: la finestra de presentació "
-"del període no està oberta. Una finestra que ja s'ha tancat no es pot "
-"tornar a obrir. El missatge de rebuig suggereix què fer en el seu lloc, i"
-" l'exportació continua funcionant igualment. Consulta el [calendari de "
-"presentacions](filing-calendar.md) per a les dates de les finestres."
+"La porta de la finestra de presentació: la finestra de presentació del "
+"període no està oberta. Una finestra que ja s'ha tancat no es pot tornar "
+"a obrir. Registrar és opcional, i el missatge de rebuig indica `aeat app "
+"modelo export` com a meta local. Consulta el [calendari de presentacions"
+"](filing-calendar.md) per a les dates de les finestres."
 
-#: ../../how-to/file-at-aeat.md:114
+#: ../../how-to/file-at-aeat.md:127
 msgid "The verification state: the saved calculation isn't verified."
 msgstr "L'estat de verificació: el càlcul desat no està verificat."
 
-#: ../../how-to/file-at-aeat.md:116
+#: ../../how-to/file-at-aeat.md:129
 msgid "Read the cause shown in the error message before retrying."
 msgstr ""
 "Llegeix la causa que mostra el missatge d'error abans de tornar-ho a "
 "provar."
 
-#: ../../how-to/file-at-aeat.md:118
+#: ../../how-to/file-at-aeat.md:131
 msgid "Step 5: reconcile the justificante against your local record"
-msgstr "Pas 5: reconcilia el justificante amb el teu registre local"
+msgstr "Pas 5: concilia el justificante amb el teu registre local"
 
-#: ../../how-to/file-at-aeat.md:120
+#: ../../how-to/file-at-aeat.md:133
 msgid ""
-"Compare AEAT's receipt against the figures you recorded locally with the "
-"`reconcile import` command shown as the final frame above. Run "
-"reconciliation after step 4 so the comparison is against your filed "
-"record. It reports a verdict of matches or mismatches; the command "
-"refuses a PDF it cannot read as invalid evidence. For reading verdicts "
-"and handling mismatches, see [reconcile a filing](reconcile.md)."
+"Compare AEAT's receipt against your local record with the `reconcile "
+"import` command shown as the final frame of [the filing chain](#the-"
+"filing-chain). Run reconciliation after step 4 so the comparison is "
+"against your filed record. It reports a verdict of matches or mismatches."
+" The command refuses a PDF it cannot read with `The PDF could not be "
+"read`. For reading verdicts and handling mismatches, see [reconcile a "
+"filing](reconcile.md)."
 msgstr ""
-"Compara el justificant de l'AEAT amb les xifres que has registrat "
-"localment mitjançant l'ordre `reconcile import`, que es mostra com a "
-"darrer marc més amunt. Executa la conciliació després del pas 4 perquè la"
-" comparació es faci amb el teu registre presentat. Informa d'un veredicte"
-" de coincidència o discrepància; l'ordre rebutja com a evidència no "
-"vàlida un PDF que no pot llegir. Per interpretar els veredictes i "
-"gestionar les discrepàncies, consulta [concilia una "
+"Compara el rebut de l'AEAT amb el teu registre local amb l'ordre "
+"`reconcile import`, que es mostra com a marc final de [la cadena de "
+"presentació](#the-filing-chain). Executa la conciliació després del pas 4"
+" perquè la comparació es faci amb el teu registre presentat. Informa d'un"
+" veredicte de coincidència o de discrepància. L'ordre rebutja un PDF que "
+"no pot llegir amb `The PDF could not be read`. Per interpretar els "
+"veredictes i gestionar les discrepàncies, consulta [concilia una "
 "presentació](reconcile.md)."
 
-#: ../../how-to/file-at-aeat.md:127
+#: ../../how-to/file-at-aeat.md:140
 msgid ""
 "With AEAT authentication configured, skip the manual download and let the"
 " tool fetch the receipt itself. `reconcile pull` pulls the justificante "
@@ -348,10 +377,10 @@ msgid ""
 msgstr ""
 "Amb l'autenticació de l'AEAT configurada, omet la descàrrega manual i "
 "deixa que l'eina obtingui el rebut ella mateixa. `reconcile pull` "
-"descarrega el justificante de l'AEAT, el desa com a evidència xifrada al "
-"teu perfil i reconcilia en un sol pas:"
+"descarrega el justificante de l'AEAT, el desa com a prova xifrada al teu "
+"perfil i concilia en un sol pas:"
 
-#: ../../how-to/file-at-aeat.md:135
+#: ../../how-to/file-at-aeat.md:148
 msgid ""
 "See [Pull and store the justificante](reconcile.md#pull-and-store-the-"
 "justificante)."
@@ -359,66 +388,65 @@ msgstr ""
 "Consulta [Descarrega i desa el justificante](reconcile.md#pull-and-store-"
 "the-justificante)."
 
-#: ../../how-to/file-at-aeat.md:137
+#: ../../how-to/file-at-aeat.md:150
 msgid "If something goes wrong at the portal"
 msgstr "Si alguna cosa va malament al portal"
 
-#: ../../how-to/file-at-aeat.md:139
+#: ../../how-to/file-at-aeat.md:152
 msgid ""
 "If the submission was rejected or interrupted, or you presented the wrong"
 " figures, do not record the local filed marker. The marker describes only"
 " a submission that succeeded at the portal."
 msgstr ""
-"Si la pujada s'ha rebutjat o interromput, o has pujat el fitxer "
-"incorrecte, no registres el marcador local de presentació. El marcador "
-"descriu només un enviament que ha tingut èxit al portal."
+"Si l'enviament s'ha rebutjat o interromput, o has presentat unes xifres "
+"incorrectes, no registris la marca local de presentació. La marca descriu"
+" només un enviament que ha tingut èxit al portal."
 
-#: ../../how-to/file-at-aeat.md:143
+#: ../../how-to/file-at-aeat.md:156
 msgid "Instead:"
 msgstr "En comptes d'això:"
 
-#: ../../how-to/file-at-aeat.md:145
+#: ../../how-to/file-at-aeat.md:158
 msgid "Fix the draft in `aeat`."
 msgstr "Corregeix l'esborrany a `aeat`."
 
-#: ../../how-to/file-at-aeat.md:146
+#: ../../how-to/file-at-aeat.md:159
 msgid "Re-verify the calculation."
 msgstr "Torna a verificar el càlcul."
 
-#: ../../how-to/file-at-aeat.md:147
+#: ../../how-to/file-at-aeat.md:160
 msgid "Read the corrected figures back with `aeat app modelo work revision`."
 msgstr "Torna a llegir les xifres corregides amb `aeat app modelo work revision`."
 
-#: ../../how-to/file-at-aeat.md:148
+#: ../../how-to/file-at-aeat.md:161
 msgid "Retry the presentation at the portal."
-msgstr "Torna a provar la pujada al portal."
+msgstr "Torna a provar la presentació al portal."
 
-#: ../../how-to/file-at-aeat.md:150
+#: ../../how-to/file-at-aeat.md:163
 msgid ""
-"If you filed by uploading a `.boe` file, re-export it and use the "
-"checksum printed at export to confirm which file is on disk. If it "
-"matches the one you recorded, you have the same file you presented "
-"before."
+"If you filed by uploading a `.boe` file, re-export it to a new path and "
+"compare the checksum it prints with the one you recorded. If they match, "
+"you have the same file you presented before."
 msgstr ""
-"Abans de tornar-ho a provar, utilitza la suma de verificació impresa en "
-"exportar per confirmar quin fitxer hi ha al disc. Si coincideix amb el "
-"que has registrat, tens el mateix fitxer que havies pujat abans."
+"Si has presentat pujant un fitxer `.boe`, torna'l a exportar a una ruta "
+"nova i compara la suma de comprovació que imprimeix amb la que vas "
+"anotar. Si coincideixen, tens el mateix fitxer que vas presentar abans."
 
-#: ../../how-to/file-at-aeat.md:154
+#: ../../how-to/file-at-aeat.md:167
 msgid ""
 "If the portal rejected the submission itself, consult AEAT or your "
 "advisor. The rejection happened on AEAT's side, and their message is the "
 "authoritative explanation."
 msgstr ""
-"Si el portal ha rebutjat el fitxer mateix, consultes l'AEAT o el teu "
+"Si el portal ha rebutjat l'enviament mateix, consulta l'AEAT o el teu "
 "assessor. El rebuig ha passat al costat de l'AEAT, i el seu missatge és "
 "l'explicació autoritzada."
 
-#: ../../how-to/file-at-aeat.md:158
+#: ../../how-to/file-at-aeat.md:171
 msgid "Where to get help"
 msgstr "On obtenir ajuda"
 
-#: ../../how-to/file-at-aeat.md:160
+#: ../../how-to/file-at-aeat.md:173
 #, python-brace-format
 msgid ""
 "For diagnosing problems on your machine (refused commands, export errors,"
@@ -434,53 +462,295 @@ msgstr ""
 "d'una ordre per demanar ajuda, elimina els identificadors fiscals "
 "personals com ara el teu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/file-at-aeat.md:166
+#: ../../how-to/file-at-aeat.md:179
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/file-at-aeat.md:168
+#: ../../how-to/file-at-aeat.md:181
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - distinguish the local upload file from official AEAT "
 "filing proof."
 msgstr ""
-"[Importació, exportació i evidència](../reference/import-export-and-"
-"evidence.md): distingeix el fitxer de pujada local de la prova de "
+"[Importació, exportació i proves](../reference/import-export-and-"
+"evidence.md) - distingeix el fitxer de pujada local de la prova de "
 "presentació oficial de l'AEAT."
 
-#: ../../how-to/file-at-aeat.md:170
+#: ../../how-to/file-at-aeat.md:183
 msgid "[Reconcile a filing](reconcile.md) - read verdicts and resolve mismatches."
 msgstr ""
-"[Reconcilia una presentació](reconcile.md): llegeix veredictes i resol "
-"discrepàncies."
+"[Concilia una presentació](reconcile.md) - llegeix els veredictes i resol"
+" les discrepàncies."
 
-#: ../../how-to/file-at-aeat.md:171
+#: ../../how-to/file-at-aeat.md:184
 msgid ""
 "[Verification reports](verification-reports.md) - understand what "
 "\"verified\" means before you file."
 msgstr ""
-"[Informes de verificació](verification-reports.md): entenguis què vol dir"
-" «verificat» abans d'exportar."
+"[Informes de verificació](verification-reports.md) - entén què vol dir "
+"«verificat» abans de presentar."
 
-#: ../../how-to/file-at-aeat.md:173
+#: ../../how-to/file-at-aeat.md:186
 msgid ""
 "[Filing calendar](filing-calendar.md) - see when each period's filing "
 "window opens and closes."
 msgstr ""
-"[Calendari de presentacions](filing-calendar.md): consulta quan s'obre i "
-"es tanca la finestra de presentació de cada període."
+"[Calendari de presentacions](filing-calendar.md) - consulta quan s'obre i"
+" es tanca la finestra de presentació de cada període."
 
-#: ../../how-to/file-at-aeat.md:175
+#: ../../how-to/file-at-aeat.md:188
 msgid ""
-"[Check AEAT notifications](check-aeat-notifications.md) - read AEAT's "
-"view after you file."
+"[Read AEAT notifications](check-aeat-notifications.md) - read AEAT's view"
+" after you file."
 msgstr ""
-"[Consulta les notificacions de l'AEAT](check-aeat-notifications.md): "
-"llegeix la visió de l'AEAT després de presentar."
+"[Llegeix les notificacions de l'AEAT](check-aeat-notifications.md): mira "
+"què veu l'AEAT després que presentis."
 
-#: ../../how-to/file-at-aeat.md:177
+#: ../../how-to/file-at-aeat.md:190
 msgid "[CLI reference](../cli/index.rst) - full command and flag details."
 msgstr ""
-"[Referència de la CLI](../cli/index.rst): detalls complets d'ordres i "
-"indicadors."
+"[Referència de la CLI](../cli/index.rst) - detalls complets d'ordres i "
+"opcions."
+
+#~ msgid ""
+#~ "Compare AEAT's receipt against the "
+#~ "figures you recorded locally with the"
+#~ " `reconcile import` command shown as "
+#~ "the final frame above. Run "
+#~ "reconciliation after step 4 so the "
+#~ "comparison is against your filed record."
+#~ " It reports a verdict of matches "
+#~ "or mismatches; the command refuses a "
+#~ "PDF it cannot read as invalid "
+#~ "evidence. For reading verdicts and "
+#~ "handling mismatches, see [reconcile a "
+#~ "filing](reconcile.md)."
+#~ msgstr ""
+#~ "Compara el justificant de l'AEAT amb "
+#~ "les xifres que has registrat localment"
+#~ " mitjançant l'ordre `reconcile import`, que"
+#~ " es mostra com a darrer marc "
+#~ "més amunt. Executa la conciliació "
+#~ "després del pas 4 perquè la "
+#~ "comparació es faci amb el teu "
+#~ "registre presentat. Informa d'un veredicte "
+#~ "de coincidència o discrepància; l'ordre "
+#~ "rebutja com a evidència no vàlida "
+#~ "un PDF que no pot llegir. Per "
+#~ "interpretar els veredictes i gestionar "
+#~ "les discrepàncies, consulta [concilia una "
+#~ "presentació](reconcile.md)."
+
+#~ msgid ""
+#~ "Enter the calculated box values in "
+#~ "the form. If your modelo carries a"
+#~ " fichero-BOE layout and you exported"
+#~ " one, import that file instead."
+#~ msgstr ""
+#~ "Introdueix els valors calculats de les"
+#~ " caselles al formulari. Si el teu "
+#~ "model té un disseny fichero-BOE i"
+#~ " n'has exportat un, importa aquest "
+#~ "fitxer en lloc d'això."
+
+#~ msgid ""
+#~ "Every `aeat` command on this page "
+#~ "needs your master-key passphrase; the"
+#~ " tool prompts for it. The tool's "
+#~ "messages are in Spanish."
+#~ msgstr ""
+#~ "Cada ordre d'`aeat` d'aquesta pàgina "
+#~ "necessita la contrasenya de la clau "
+#~ "mestra; l'eina te la demana. Els "
+#~ "missatges de l'eina són en castellà."
+
+#~ msgid ""
+#~ "For a modelo that does carry a "
+#~ "layout, `export` writes a `.boe` file:"
+#~ " a fixed-width text file in the"
+#~ " official BOE (Boletín Oficial del "
+#~ "Estado) record layout, not a PDF "
+#~ "or a spreadsheet. It runs entirely "
+#~ "on your machine and never contacts "
+#~ "AEAT, and it prints the file's "
+#~ "path, size and SHA-256 checksum. Record"
+#~ " that checksum: it fingerprints the "
+#~ "file's exact contents, so if a "
+#~ "question ever comes up about which "
+#~ "version you filed, re-derive it "
+#~ "from the file on disk and compare."
+#~ msgstr ""
+#~ "Per a un model que sí que té"
+#~ " un disseny, `export` escriu un "
+#~ "fitxer `.boe`: un fitxer de text "
+#~ "d'amplada fixa amb el disseny oficial"
+#~ " de registres del BOE (Boletín "
+#~ "Oficial del Estado), no un PDF ni"
+#~ " un full de càlcul. S'executa "
+#~ "completament a la teva màquina i "
+#~ "mai no contacta amb l'AEAT, i "
+#~ "imprimeix la ruta, la mida i la"
+#~ " suma de comprovació SHA-256 del "
+#~ "fitxer. Anota aquesta suma: identifica "
+#~ "el contingut exacte del fitxer, de "
+#~ "manera que, si mai hi ha dubtes"
+#~ " sobre quina versió vas presentar, la"
+#~ " puguis tornar a derivar del fitxer"
+#~ " del disc i comparar-la."
+
+#~ msgid ""
+#~ "How you present depends on the "
+#~ "modelo. Modelo 130 exports a local "
+#~ "fichero-BOE file for upload. Modelo "
+#~ "303's export writes a file too, "
+#~ "but Cadrumo holds no AEAT software-"
+#~ "developer registration, so its envelope "
+#~ "header carries an all-zero development"
+#~ " identity and AEAT will not accept"
+#~ " that file; key its calculated box"
+#~ " values into the portal form instead."
+#~ msgstr ""
+#~ "La manera de presentar depèn del "
+#~ "model. El Modelo 130 exporta un "
+#~ "fitxer-BOE local per pujar-lo. "
+#~ "L'exportació del Modelo 303 també escriu"
+#~ " un fitxer, però Cadrumo no té "
+#~ "registre com a desenvolupador de "
+#~ "programari davant l'AEAT, de manera que"
+#~ " la capçalera del seu sobre porta "
+#~ "una identitat de desenvolupament formada "
+#~ "només per zeros i l'AEAT no "
+#~ "acceptarà aquest fitxer; introdueix els "
+#~ "valors calculats de les seves caselles"
+#~ " al formulari del portal."
+
+#~ msgid ""
+#~ "If you filed by uploading a `.boe`"
+#~ " file, re-export it and use the"
+#~ " checksum printed at export to "
+#~ "confirm which file is on disk. If"
+#~ " it matches the one you recorded, "
+#~ "you have the same file you "
+#~ "presented before."
+#~ msgstr ""
+#~ "Abans de tornar-ho a provar, "
+#~ "utilitza la suma de verificació impresa"
+#~ " en exportar per confirmar quin "
+#~ "fitxer hi ha al disc. Si "
+#~ "coincideix amb el que has registrat, "
+#~ "tens el mateix fitxer que havies "
+#~ "pujat abans."
+
+#~ msgid ""
+#~ "Only after the portal submission "
+#~ "succeeds, record the filing in `aeat`"
+#~ " with the `work file` frame from "
+#~ "[the filing chain](#the-filing-chain) "
+#~ "above."
+#~ msgstr ""
+#~ "Només després que l'enviament al portal"
+#~ " tingui èxit, registres la presentació "
+#~ "a `aeat` amb el marc `work file`"
+#~ " de [la cadena de presentació](#the-"
+#~ "filing-chain) anterior."
+
+#~ msgid ""
+#~ "The filing window gate: the period's "
+#~ "filing window isn't open. A window "
+#~ "that has already closed cannot be "
+#~ "reopened. The refusal message suggests "
+#~ "what to do instead. See the "
+#~ "[filing calendar](filing-calendar.md) for "
+#~ "window dates."
+#~ msgstr ""
+#~ "La comprovació de la finestra de "
+#~ "presentació: la finestra de presentació "
+#~ "del període no està oberta. Una "
+#~ "finestra que ja s'ha tancat no es"
+#~ " pot tornar a obrir. El missatge "
+#~ "de rebuig suggereix què fer en el"
+#~ " seu lloc, i l'exportació continua "
+#~ "funcionant igualment. Consulta el [calendari"
+#~ " de presentacions](filing-calendar.md) per "
+#~ "a les dates de les finestres."
+
+#~ msgid ""
+#~ "The sequence below runs the machine "
+#~ "half of the filing end to end: "
+#~ "it prepares a classified, evidenced "
+#~ "Modelo 303 for the first quarter "
+#~ "of 2026, verifies it, confirms the "
+#~ "verified revision, exports a Modelo 303"
+#~ " file that AEAT will not accept "
+#~ "because it carries the development "
+#~ "identity, and records the local filed"
+#~ " marker. Between the export and the"
+#~ " marker, you present the figures at"
+#~ " the AEAT portal yourself (steps 2"
+#~ " to 4 below). The final frame "
+#~ "is the reconcile command you run "
+#~ "once you have AEAT's justificante on "
+#~ "disk; it is shown but not run "
+#~ "here, because it needs your real "
+#~ "receipt:"
+#~ msgstr ""
+#~ "La seqüència següent executa de cap "
+#~ "a cap la part automàtica de la "
+#~ "presentació: prepara un Modelo 303 "
+#~ "classificat i amb evidència per al "
+#~ "primer trimestre de 2026, el verifica,"
+#~ " confirma la revisió verificada, exporta"
+#~ " un fitxer del Modelo 303 que "
+#~ "l'AEAT no acceptarà perquè porta la "
+#~ "identitat de desenvolupament i registra "
+#~ "el marcador local de presentat. Entre"
+#~ " l'exportació i el marcador, presentes "
+#~ "tu mateix les xifres al portal de"
+#~ " l'AEAT (passos 2 a 4 de sota)."
+#~ " L'últim bloc és l'ordre de "
+#~ "conciliació que executes quan ja tens"
+#~ " el justificant de l'AEAT al disc;"
+#~ " es mostra però no s'executa aquí "
+#~ "perquè necessita el teu rebut real:"
+
+#~ msgid ""
+#~ "This page covers the handoff from "
+#~ "a verified draft to a real filing"
+#~ " at AEAT, as an ordered checklist:"
+#~ " present the figures yourself at the"
+#~ " portal, save the justificante, and "
+#~ "record the filing locally. You prepare"
+#~ " and check a {term}`modelo` with "
+#~ "`aeat`, but the tool never submits "
+#~ "anything to AEAT. You file at the"
+#~ " portal yourself, signed with your "
+#~ "own credentials. The `work file` command"
+#~ " at the end records a local "
+#~ "marker only; it does not and "
+#~ "cannot file on your behalf."
+#~ msgstr ""
+#~ "Aquesta pàgina tracta el traspàs d'un"
+#~ " esborrany verificat a una presentació "
+#~ "real a l'AEAT, com una llista de"
+#~ " comprovació ordenada: exporta el fitxer,"
+#~ " puja'l tu mateix al portal, deses"
+#~ " el justificante i registres la "
+#~ "presentació localment. Prepara i exporta "
+#~ "un {term}`modelo` amb `aeat`, però "
+#~ "l'eina mai no envia res a l'AEAT."
+#~ " Puja el fitxer exportat al portal"
+#~ " de l'AEAT tu mateix, signat amb "
+#~ "les teves pròpies credencials. L'ordre "
+#~ "`work file` del final només registra "
+#~ "un marcador local; no presenta ni "
+#~ "pot presentar en nom teu."
+
+#~ msgid ""
+#~ "[Check AEAT notifications](check-aeat-"
+#~ "notifications.md) - read AEAT's view "
+#~ "after you file."
+#~ msgstr ""
+#~ "[Consulta les notificacions de l'AEAT"
+#~ "](check-aeat-notifications.md): llegeix la "
+#~ "visió de l'AEAT després de presentar."
 

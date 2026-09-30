@@ -162,6 +162,15 @@ application:
           az aktív profil adóazonosítójával; törölje a hitelesítési munkameneteket,
           és hitelesítse az egyező profilt.
   calculations:
+    bienes_inversion_regularizacion:
+      register_advisory: '%{count} beruházási tárgyi eszköz a korrekciós időszakban
+        (LIVA 107-110. cikk) a %{year}. évre: %{computed} kiszámítva, %{pending} a
+        végleges arányosításra vár. Javasolt korrekció a %{casilla}. rubrikához: %{value}.
+        Benyújtás előtt hagyja jóvá az értéket.'
+      transmision_advisory: 'A %{year}-ben átadott %{count} beruházási tárgyi eszköz
+        esetében az értékesítésekre vonatkozó egyszeri korrekció szükséges (LIVA 110.
+        cikk). Javasolt korrekció a %{casilla}. rubrikához: %{value}. Benyújtás előtt
+        hagyja jóvá az értéket.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'Eltérő nyomtatvány-, év- vagy időszakkulcsú
@@ -320,6 +329,15 @@ application:
           évhez, {period} időszakhoz.
         taxpayer_nif_blank: Az adózó adóazonosítója (NIF) nem lehet üres, ha az IVA-tárca
           döntési kulcsát alkotja.
+    prorrata_regularizacion:
+      advisory: 'Arányosítás véglegesítése a végleges százalék alapján (LIVA 104-105.
+        cikk) a %{year}. évre: ideiglenes arány %{provisional}% → végleges %{definitiva}%
+        (%{sentido}). Javasolt korrekció ide: %{target}: %{value}. Benyújtás előtt
+        hagyja jóvá az értéket.'
+      sentido_deduccion: további levonás
+      sentido_ingreso: befizetés
+      target_casilla: '%{number}. rubrika'
+      target_declared: a bejelentett korrekciós rubrika
     row_set:
       errors:
         grouping_dispatch_fell_through: 'A(z) {grouping} sorhalmaz-csoportosítás olyan
@@ -557,7 +575,9 @@ application:
         invoice_id_required: Számlaazonosító megadása kötelező.
         invoice_not_found: 'A katalógusban nem található számla: %{invoice_id}.'
         remove_linked_invoice: 'A(z) %{invoice_id} számla nem törölhető, amíg tranzakciókhoz
-          kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
+          kapcsolódik: %{linked_transaction_ids}. Nincs kapcsolatbontó parancs: törölje
+          ezeket a tranzakciókat az `aeat app ledger remove` paranccsal, ami feloldja
+          a kapcsolatot, majd törölje a számlát.'
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -621,6 +641,11 @@ application:
       purchase_evidence_already_set: A beszerzési számla bizonylata a csatolás után
         nem módosítható. Törölje a főkönyvi tranzakciót, majd adja hozzá újra a helyes
         bizonylattal.
+      split_requires_image_evidence: A gépen futó olvasó a(z) %{transaction_id} tranzakcióhoz
+        csak beolvasott vagy kép alapú bizonyítékból tud felosztást javasolni, és
+        ehhez a tranzakcióhoz nincs ilyen, amit el tudna olvasni. Csatoljon beolvasott
+        vagy kép alapú számlát, és futtassa újra a --read-evidence kapcsolóval, vagy
+        adja meg maga a felosztást a --child-amount és --child-description kapcsolókkal.
       transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
         %{count} tranzakcióra illeszkedik: %{matches}'
       transaction_id_prefix_empty: a tranzakcióazonosító-előtag üres
@@ -1140,6 +1165,12 @@ application:
       m210_official_tipo_renta_selection_mismatch: 'Az M210-es modell %{official_tipo_renta_code}
         hivatalos tipo-renta kódjához a %{expected_tipo_renta} képletérték szükséges;
         kapott érték: %{tipo_renta}.'
+      m303_filing_evidence_exonerado_390_missing: 'A 303-as nyomtatvány bevallási
+        bizonyítéka nem felelt meg az érvényesítésnek: a %{period} időszak a(z) %{filing_year}
+        év utolsó elszámolási időszaka, és megköveteli a 390-es nyomtatvány alkalmazhatósági
+        nyilatkozatát. Futtassa a következő parancsot a rögzítéséhez: `aeat app modelo
+        work attest-m303-exonerado-390 --year %{filing_year} --period %{period} --observed-at
+        IDOBELYEG`, majd próbálja újra a számítást.'
       m303_filing_evidence_invalid: A 303-es nyomtatvány bevallási példányának bizonyítéka
         nem felelt meg az ellenőrzésnek.
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
@@ -1194,8 +1225,8 @@ application:
         a(z) %{modelo} modellhez. Adja meg külön: --year %{year}, és használja ezek
         egyikét: %{tokens}.'
       work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerhető. Adja
-        meg külön: --year %{year}, és használjon időszak-tokent, például 0A, Q1, 1T
-        vagy 01.'
+        meg külön: --year %{year}, és használjon időszak-tokent, például 0A, 1T vagy
+        01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_create_discarded: Ezt a bevallási célt elvetettek. Az ismételt létrehozás
         ugyanazt az elvetett munkaegységét adja vissza, igy nem folytatható.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 08:34+0200\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -51,12 +51,12 @@ msgid ""
 "terminology, use the {doc}`glossary </_generated/glossary>`; for exact "
 "options and refusals, the [command-line reference](../cli/index.rst)."
 msgstr ""
-"Empieza por la [guía de instalación](../workstation-setup.md) si la orden"
-" `aeat` no se ejecuta. Para un mapa de todo el recorrido, desde los "
-"registros bancarios hasta un modelo presentado, lee [el recorrido de "
+"Empieza por la [guía de instalación](../workstation-setup.md) si el "
+"comando `aeat` no se ejecuta. Para un mapa de todo el recorrido, desde "
+"los registros bancarios hasta un modelo presentado, lee [el recorrido de "
 "presentación](onboarding.md). Para la terminología, usa el {doc}`glosario"
 " </_generated/glossary>`; para las opciones exactas y los rechazos, la "
-"[referencia de línea de órdenes](../cli/index.rst)."
+"[referencia de la línea de comandos](../cli/index.rst)."
 
 #: ../../how-to/index.md:18
 msgid ""
@@ -82,7 +82,7 @@ msgid ""
 "workflow before running your own."
 msgstr ""
 "Dos recorridos basados en modelos llevan a un contribuyente de ejemplo a "
-"través de un año de presentaciones completo, orden por orden. Empieza "
+"través de un año de presentaciones completo, comando a comando. Empieza "
 "aquí para ver todo el flujo de trabajo antes de ejecutar el tuyo."
 
 #: ../../how-to/index.md:33
@@ -96,7 +96,7 @@ msgid ""
 msgstr ""
 "Cuatro pagos fraccionados trimestrales del Modelo 130, cada uno "
 "apoyándose en los anteriores, que cierran con la declaración anual de la "
-"Renta del Modelo 100."
+"Renta (Modelo 100)."
 
 #: ../../how-to/index.md:41
 msgid "The IVA year: Modelo 303 → 349 → 390"
@@ -113,7 +113,7 @@ msgstr ""
 
 #: ../../how-to/index.md:49
 msgid "Quickstart"
-msgstr "Inicio rápido"
+msgstr "Guía rápida"
 
 #: ../../how-to/index.md:53
 msgid ""
@@ -121,7 +121,7 @@ msgid ""
 "modelo, one period, copy-paste commands."
 msgstr ""
 "El camino más corto desde el perfil y el ledger hasta un fichero de "
-"modelo exportado: un modelo, un periodo, órdenes para copiar y pegar."
+"modelo exportado: un modelo, un periodo, comandos para copiar y pegar."
 
 #: ../../how-to/index.md:57
 msgid "Your first quarterly filing"
@@ -145,19 +145,19 @@ msgstr "Quién es el contribuyente y los datos que deciden lo que debes."
 
 #: ../../how-to/index.md:74
 msgid "Set up your taxpayer profile"
-msgstr "Configura tu perfil de contribuyente"
+msgstr "Configurar tu perfil de contribuyente"
 
 #: ../../how-to/index.md:78
 msgid ""
-"Create, inspect, export, import, rename, or delete taxpayer profiles, and"
-" log in to the one you want active."
+"Create, inspect, export, import, or delete taxpayer profiles, and log in "
+"to the one you want active."
 msgstr ""
-"Crea, inspecciona, cambia, exporta, importa, renombra o elimina perfiles "
-"de contribuyente."
+"Crea, inspecciona, exporta, importa o elimina perfiles de contribuyente e"
+" inicia sesión en el que quieras tener activo."
 
 #: ../../how-to/index.md:82
 msgid "Authenticate with AEAT"
-msgstr "Autentícate ante la AEAT"
+msgstr "Autenticarse con la AEAT"
 
 #: ../../how-to/index.md:86
 msgid "Configure read-only AEAT authentication for live-read workflows."
@@ -203,7 +203,7 @@ msgstr "Qué vence, y cuándo."
 
 #: ../../how-to/index.md:119
 msgid "Plan your filing calendar"
-msgstr "Planifica tu calendario de presentaciones"
+msgstr "Planificar tu calendario de presentaciones"
 
 #: ../../how-to/index.md:123
 msgid ""
@@ -249,7 +249,7 @@ msgstr ""
 
 #: ../../how-to/index.md:152
 msgid "Import and manage transactions"
-msgstr "Importa y gestiona transacciones"
+msgstr "Importar y gestionar transacciones"
 
 #: ../../how-to/index.md:156
 msgid "Import, add, edit, remove, and review ledger rows."
@@ -257,7 +257,7 @@ msgstr "Importa, añade, edita, elimina y revisa filas del ledger."
 
 #: ../../how-to/index.md:159
 msgid "Classify transactions"
-msgstr "Clasifica transacciones"
+msgstr "Clasificar transacciones"
 
 #: ../../how-to/index.md:163
 msgid ""
@@ -269,19 +269,19 @@ msgstr ""
 
 #: ../../how-to/index.md:166
 msgid "Classify with an LLM"
-msgstr "Clasifica con un LLM"
+msgstr "Clasificar con un LLM"
 
 #: ../../how-to/index.md:170
 msgid ""
-"Set up a provider, preview and apply suggestions, and classify from an "
-"attached invoice."
+"Set up the local reader, preview and apply suggestions, and classify from"
+" an attached invoice."
 msgstr ""
-"Configura un proveedor, previsualiza y aplica sugerencias, y clasifica a "
-"partir de una factura adjunta."
+"Configura el lector local, previsualiza y aplica sugerencias, y clasifica"
+" a partir de una factura adjunta."
 
 #: ../../how-to/index.md:174
 msgid "Attach invoices and receipts"
-msgstr "Adjunta facturas y recibos"
+msgstr "Adjuntar facturas y recibos"
 
 #: ../../how-to/index.md:178
 msgid ""
@@ -291,7 +291,7 @@ msgstr "Guarda facturas y recibos y vincúlalos a las transacciones que respalda
 
 #: ../../how-to/index.md:181
 msgid "Manage business invoices"
-msgstr "Gestiona las facturas de la actividad"
+msgstr "Gestionar facturas de la actividad"
 
 #: ../../how-to/index.md:185
 msgid ""
@@ -338,16 +338,19 @@ msgid "The filing workflow"
 msgstr "El flujo de presentación"
 
 #: ../../how-to/index.md:215
-msgid "Understand drafts, verification, export, filing markers, and history."
+msgid ""
+"Learn how work units and calculation revisions carry a filing through "
+"create, calculate, verify, file, and export."
 msgstr ""
-"Entiende los borradores, la verificación, la exportación, los marcadores "
-"de presentación y el historial."
+"Descubre cómo las unidades de trabajo y las revisiones de cálculo llevan "
+"una presentación por las fases de crear, calcular, verificar, presentar y"
+" exportar."
 
-#: ../../how-to/index.md:218
+#: ../../how-to/index.md:219
 msgid "Fill in and file in the workbench"
 msgstr "Rellenar y presentar en el banco de trabajo"
 
-#: ../../how-to/index.md:222
+#: ../../how-to/index.md:223
 msgid ""
 "Fill in a declaration box by box in the full-screen interface, then "
 "calculate, review, file and export it."
@@ -355,65 +358,65 @@ msgstr ""
 "Rellena una declaración casilla a casilla en la interfaz de pantalla "
 "completa y después calcúlala, revísala, preséntala y expórtala."
 
-#: ../../how-to/index.md:225
+#: ../../how-to/index.md:226
 msgid "Modelo 036"
 msgstr "Modelo 036"
 
-#: ../../how-to/index.md:229
-msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
+#: ../../how-to/index.md:230
+msgid "Record an alta, modificación, or baja you filed at AEAT's sede."
 msgstr ""
 "Registra un alta, una modificación o una baja que hayas presentado en la "
 "sede de la AEAT."
 
-#: ../../how-to/index.md:232
+#: ../../how-to/index.md:233
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta)"
 
-#: ../../how-to/index.md:236
+#: ../../how-to/index.md:237
 msgid "Prepare the annual Renta declaration that gathers the whole year."
 msgstr "Prepara la declaración anual de la Renta que reúne todo el año."
 
-#: ../../how-to/index.md:239
+#: ../../how-to/index.md:240
 msgid "Modelo 130"
 msgstr "Modelo 130"
 
-#: ../../how-to/index.md:243
+#: ../../how-to/index.md:244
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
 msgstr ""
 "Prepara el pago fraccionado trimestral del IRPF, acumulativo a lo largo "
 "del año."
 
-#: ../../how-to/index.md:246
+#: ../../how-to/index.md:247
 msgid "Modelo 303"
 msgstr "Modelo 303"
 
-#: ../../how-to/index.md:250
+#: ../../how-to/index.md:251
 msgid "Prepare, verify, and export a quarterly IVA return."
 msgstr "Prepara, verifica y exporta una declaración trimestral de IVA."
 
-#: ../../how-to/index.md:253
+#: ../../how-to/index.md:254
 msgid "Modelo 349"
 msgstr "Modelo 349"
 
-#: ../../how-to/index.md:257
+#: ../../how-to/index.md:258
 msgid "Declare intra-community operations from your invoice records."
 msgstr ""
 "Declara las operaciones intracomunitarias a partir de tus registros de "
 "factura."
 
-#: ../../how-to/index.md:260
+#: ../../how-to/index.md:261
 msgid "Modelo 390"
 msgstr "Modelo 390"
 
-#: ../../how-to/index.md:264
+#: ../../how-to/index.md:265
 msgid "Prepare the annual IVA summary."
 msgstr "Prepara el resumen anual de IVA."
 
-#: ../../how-to/index.md:267
+#: ../../how-to/index.md:268
 msgid "Review calculation inputs"
 msgstr "Revisa los datos de cálculo"
 
-#: ../../how-to/index.md:271
+#: ../../how-to/index.md:272
 msgid ""
 "Review which form boxes were filled, supply missing values, and handle "
 "offsets."
@@ -421,11 +424,11 @@ msgstr ""
 "Revisa qué casillas del formulario se rellenaron, aporta los valores que "
 "faltan y gestiona las compensaciones."
 
-#: ../../how-to/index.md:274
+#: ../../how-to/index.md:275
 msgid "Review with Google Sheets"
 msgstr "Revisa con Google Sheets"
 
-#: ../../how-to/index.md:278
+#: ../../how-to/index.md:279
 msgid ""
 "Export, edit, and pull back modelo calculations using a Google Sheets "
 "spreadsheet."
@@ -433,21 +436,21 @@ msgstr ""
 "Exporta, edita y vuelve a descargar los cálculos de un modelo usando una "
 "hoja de cálculo de Google Sheets."
 
-#: ../../how-to/index.md:281
+#: ../../how-to/index.md:282
 msgid "Verify a filing"
-msgstr "Verifica una presentación"
+msgstr "Verificar una presentación"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:286
 msgid "Run verification, read the report findings, and fix what blocks export."
 msgstr ""
 "Ejecuta la verificación, lee los hallazgos del informe y corrige lo que "
 "bloquea la exportación."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:289
 msgid "Share a calculation summary"
 msgstr "Comparte un resumen del cálculo"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:293
 msgid ""
 "Write a signed PDF of a verified calculation, and check a copy against "
 "your data."
@@ -455,23 +458,23 @@ msgstr ""
 "Escribe un PDF firmado de un cálculo verificado y comprueba una copia "
 "contra tus datos."
 
-#: ../../how-to/index.md:295
+#: ../../how-to/index.md:296
 msgid "File at AEAT"
-msgstr "Presenta ante la AEAT"
+msgstr "Presentar en la AEAT"
 
-#: ../../how-to/index.md:299
+#: ../../how-to/index.md:300
 msgid ""
-"Export the file, upload it at the AEAT portal yourself, record, and "
-"reconcile."
+"Present the modelo at the AEAT portal yourself, record the filing "
+"locally, and reconcile."
 msgstr ""
-"Exporta el fichero, súbelo tú mismo en el portal de la AEAT, regístralo y"
-" concilia."
+"Presenta el modelo tú mismo en el portal de la AEAT, registra la "
+"presentación en local y concilia."
 
-#: ../../how-to/index.md:302
+#: ../../how-to/index.md:303
 msgid "Reconcile a filing"
-msgstr "Concilia una presentación"
+msgstr "Conciliar una presentación"
 
-#: ../../how-to/index.md:306
+#: ../../how-to/index.md:307
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
@@ -479,15 +482,15 @@ msgstr ""
 "Descarga y guarda el justificante de la AEAT, y luego compáralo con tu "
 "registro de presentación local."
 
-#: ../../how-to/index.md:311
+#: ../../how-to/index.md:312
 msgid "Tools and help"
 msgstr "Herramientas y ayuda"
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:318
 msgid "Connect an agent (MCP)"
-msgstr "Conecta un agente (MCP)"
+msgstr "Conectar un agente (MCP)"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:322
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -495,23 +498,62 @@ msgstr ""
 "Expón el conjunto de herramientas a Claude o a cualquier cliente MCP, "
 "manteniendo intacto el límite de seguridad."
 
-#: ../../how-to/index.md:324
+#: ../../how-to/index.md:325
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../how-to/index.md:328
+#: ../../how-to/index.md:329
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Corrige problemas de perfil activo, almacenamiento, registro y "
 "autenticación."
 
-#: ../../how-to/index.md:331
+#: ../../how-to/index.md:332
 msgid "Publish runtime authority"
 msgstr "Publicar la autoridad de ejecución"
 
-#: ../../how-to/index.md:335
+#: ../../how-to/index.md:336
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
 "Publica y verifica una autoridad de registro firmada como operador de "
 "publicación."
+
+#~ msgid ""
+#~ "Create, inspect, export, import, rename, "
+#~ "or delete taxpayer profiles, and log "
+#~ "in to the one you want active."
+#~ msgstr ""
+#~ "Crea, inspecciona, cambia, exporta, importa,"
+#~ " renombra o elimina perfiles de "
+#~ "contribuyente."
+
+#~ msgid ""
+#~ "Export the file, upload it at the"
+#~ " AEAT portal yourself, record, and "
+#~ "reconcile."
+#~ msgstr ""
+#~ "Exporta el fichero, súbelo tú mismo "
+#~ "en el portal de la AEAT, "
+#~ "regístralo y concilia."
+
+#~ msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
+#~ msgstr ""
+#~ "Registra un alta, una modificación o "
+#~ "una baja que hayas presentado en "
+#~ "la sede de la AEAT."
+
+#~ msgid ""
+#~ "Set up a provider, preview and "
+#~ "apply suggestions, and classify from an"
+#~ " attached invoice."
+#~ msgstr ""
+#~ "Configura un proveedor, previsualiza y "
+#~ "aplica sugerencias, y clasifica a partir"
+#~ " de una factura adjunta."
+
+#~ msgid "Understand drafts, verification, export, filing markers, and history."
+#~ msgstr ""
+#~ "Entiende los borradores, la verificación, "
+#~ "la exportación, los marcadores de "
+#~ "presentación y el historial."
 

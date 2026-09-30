@@ -8,13 +8,13 @@ income figure or a compensation amount from an earlier period.
 
 You need:
 
-- A master-key passphrase. Cadrumo prompts for it.
+- Your passphrase. Cadrumo prompts for it.
 - An active profile. Create one with `aeat config profile create` (the
   `--quiet` form skips the wizard); see [Set up your profile](profile-setup.md)
   for the full options.
 - A work unit for the filing you want to review. Create it with `aeat app modelo
-  work create` before any review or calculate command (the review sequences
-  below open the work unit in their setup steps).
+  work create` before any review or calculate command. The examples on this
+  page start from a work unit that already exists.
 
 ## Inspect the modelo before entering values
 
@@ -27,37 +27,41 @@ manual ones), and inspect its formulas with their legal and source references:
 
 The `casillas` command shows the registry casilla id, printed form number,
 input kind, required flag, and label. Use this before providing any
-`--casilla` value so you know what the number means.
+`--casilla` value so you know what the number means. Modelo 130 has no required
+manual casilla, so the last filter lists nothing.
 
 ## Review a saved calculation
 
 These commands read a saved calculation, so run a calculation first. On a fresh
-work unit with no calculation yet, they refuse with `work unit has no selectable
-current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
+work unit with no calculation yet, `work revision` and `work verify` refuse with
+`No calculation revision matched the requested selector`. Run `aeat app modelo
+work calculate` (see
 [Supply manual casilla values](#supply-manual-casilla-values)) to produce a
 saved draft, then come back here.
 
 List the calculation revisions for one filing, show the current revision's
-persisted casilla values, then verify the current draft, which the setup steps
-above create and calculate for the reads below to inspect:
+persisted casilla values, then verify the current draft. The example starts from
+a calculated Modelo 130 draft for the first quarter of 2026:
 
 ```{cli-sequence} review-values-review-saved
 :verify: Confirm the saved calculation lists, shows values, and verifies.
 ```
 
-Verification output reports whether completeness was granted, how many casillas
-were resolved, how many required casillas are missing, and the findings that
-block verification. Missing required casillas are values you must resolve before
+Verification output reports whether verified-complete status was granted, lists
+the required casillas still missing, and lists the findings. A finding with
+severity `warning`, such as the two in this example, does not block
+verification. Missing required casillas are values you must resolve before
 export.
 
 (supply-manual-casilla-values)=
 ## Supply manual casilla values
 
-Use `--casilla` only for a box whose input kind is `manual`. Use the box number
-printed on the official Agencia Estatal de Administración Tributaria (AEAT) form.
-It is the same number you see on the paper or PDF
-version of the modelo. Run `aeat app modelo casillas 130` to see the list (the
-inspect sequence above shows this), and check the `input` column first.
+Use `--casilla` only for a box whose input kind is `manual`. Give the box's
+`casilla_id` from `aeat app modelo casillas 130`, and check the `input` column
+first. For Modelo 130 the `casilla_id` is the number printed on the official
+Agencia Estatal de Administración Tributaria (AEAT) form. For other modelos it
+can differ, and `--casilla` refuses a printed number that is not the
+`casilla_id`.
 
 `--casilla` works only on manual boxes. A `bound` box is filled through a
 registry binding contract from an enrolled source resolver, so `--casilla`
@@ -75,16 +79,19 @@ cuenta, a manual box) and seeds the three first-period bindings:
 ```
 
 Do not enter a box value without checking the list first. Read the label so
-you know which field you are filling.
+you know which field you are filling. If your value differs from the one Cadrumo
+derives, the calculation warns and keeps your value.
 
 (supply-a-missing-field-value)=
 ## Supply a missing field value
 
-When Cadrumo cannot fill a field automatically, the missing field appears in the
-bindings list. Use the list to see which fields need your input, then supply
-the value during calculation.
+When Cadrumo cannot fill a field automatically, the field appears in the
+bindings list. The `--missing` filter keeps the bindings still owed: it drops
+constant values and any your profile already resolves. Ledger and prior-filing
+fields stay listed, so read each `source` to see which fields need your input,
+then supply the value during calculation.
 
-List every field the modelo binds, focus on the ones with no value yet, preview
+List every field the modelo binds, keep only the bindings still owed, preview
 what a value would produce without saving, then supply the first-period bindings
 during calculation:
 
@@ -97,32 +104,32 @@ during calculation:
 
 The `bindings list` output shows, for each field, a `source` and a `readiness`
 label. The `source` tells you who supplies the value; the `readiness` label
-restates that source in plain language (for example, `ledger source` or `prior
-filed revision`). Use the `source` to decide how to supply the value. The
+restates that source in plain language (for example, `ledger data` or `prior
+filed declaration`). Use the `source` to decide how to supply the value. The
 common source categories are:
 
 - **Profile fact** - Cadrumo fills it from your taxpayer profile, such as
   residence, declaration type, or family composition. Update your profile instead
   of entering the value manually.
-- **Ledger source** - Cadrumo computes it by summing your classified transactions
+- **Ledger data** - Cadrumo computes it by summing your classified transactions
   and invoices. You cannot override these; fix the ledger instead.
-- **Prior filed revision** - carried forward from an earlier period you already
-  filed in Cadrumo.
-- **Relation** - folded in from another modelo's earlier figures. Supply it with
-  `--relation KEY=VALUE` only when the modelo's help names the relation.
-- **Manual** - this kind always needs you to type a value, with `--binding
+- **Prior filed declaration** - carried forward from an earlier period you
+  already filed in Cadrumo.
+- **Relation input** - folded in from another modelo's earlier figures. Supply it
+  with `--relation KEY=VALUE` only when the bindings list names the relation.
+- **Manual input** - this kind always needs you to type a value, with `--binding
   KEY=VALUE`, or `--casilla` for a box.
 
-This reader-oriented list is not the complete `BindingSourceKind` reference.
-Other modelos use additional typed sources, including invoice, withholding,
+This reader-oriented list is not the complete set of source kinds. Other
+modelos use additional typed sources, including invoice, withholding,
 counterparty, and repeating-record families. Consult the binding listing for
 the selected modelo instead of assuming that an unlisted source is manual.
 
-A manual field always needs a value you enter by hand. A **prior filed revision**
-field also needs one when there is no earlier filing yet to carry it forward.
-See the first-time-filing note that follows. Profile and ledger fields are
+A manual field always needs a value you enter by hand. A **prior filed
+declaration** field also needs one when there is no earlier filing yet to carry
+it forward. See the first-time-filing note that follows. Profile and ledger fields are
 filled from their sources. Relation fields may come from another filing or
-require `--relation`, as identified by the modelo's help.
+require `--relation`, as the bindings list identifies.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
@@ -162,14 +169,20 @@ compensation amount from earlier Modelo 303 filings prepared outside this local
 history.
 
 Seeding refuses if a record already exists for the period. The correction
-overwrites the seeded amount and records your `--reason` in an audit event. It refuses when no record exists for the period (seed it first) and
-when an already-filed Modelo 303 has consumed the seeded basis. Correcting it
-then would change a return you have already filed. In that case file a
-complementaria instead (see [Correct an already filed local record](#correct-an-already-filed-local-record)).
+overwrites the seeded amount and records your `--reason` in an audit event. It
+refuses when no record exists for the period (seed it first) and when an
+already-filed Modelo 303 has consumed the seeded basis. Correcting it then would
+change a return you have already filed. In that case file a complementaria
+instead (see [Correct an already filed local record](#correct-an-already-filed-local-record)).
+
+If your carry-in comes from evidence held outside Cadrumo, `aeat app modelo
+iva-wallet override` records it with a `--reason` and an `--evidence-locator`.
+It unblocks calculation only and does not satisfy the official-evidence check
+at verification.
 
 For registry relation values, calculation accepts repeatable
-`--relation KEY=VALUE` inputs. Use them only when the relevant modelo's
-registry/help text identifies the relation you need:
+`--relation KEY=VALUE` inputs. Use them only when the bindings list identifies
+the relation you need:
 
 ```{cli-sequence} review-values-relation
 :verify: Confirm the supplied relation value is recorded on the saved calculation.
@@ -182,7 +195,11 @@ attribution members (Modelo 184), related-party operations (Modelo 232),
 declared counterparties (Modelo 347), and intra-community operators (Modelo 349).
 Supply each record with a repeatable `--row` input.
 
-Each `--row` starts with the record type, followed by its fields:
+Each `--row` starts with the record type, followed by its fields. A modelo
+applies only to its matching taxpayer type. The example first sets the profile
+to an attribution entity with `aeat config profile edit --entity-type
+attribution_entity`. Without that, `work create` refuses unless you add
+`--allow-not-applicable`:
 
 ```{cli-sequence} review-values-rows
 :verify: Confirm the supplied member records save into the calculation.
@@ -223,8 +240,10 @@ For specialized calculations, the CLI provides evaluation and comparison command
 - **Joint vs. individual Impuesto sobre la Renta de las Personas Físicas (IRPF)
   comparison (`compare-taxation`)**: Compare filing
   jointly as a family unit against filing individually for an active Modelo
-  100. Create the Modelo 100 draft first, or the command refuses with
-  `Ninguna unidad de trabajo activa`:
+  100. Modelo 100 applies to a profile whose taxpayer type is natural person
+  (`aeat config profile edit --entity-type natural_person`). Create the Modelo
+  100 draft first, or the command refuses with
+  `No active work unit matches this modelo, year, and period`:
 
   ```{cli-sequence} review-values-m100-create
   :verify: Confirm the annual Modelo 100 draft exists for the filing year.
@@ -235,11 +254,15 @@ For specialized calculations, the CLI provides evaluation and comparison command
   ```
   
   This check does not save a draft. It shows the tax difference and a
-  recommendation so you can decide which filing option costs less.
+  recommendation. The individual figure reuses the family unit's combined
+  inputs, so it is reliable only for a single-earner household. For a
+  two-earner couple, treat it as directional. The command refuses when a
+  prior-year figure it needs, such as the negative-base carry, is missing, and
+  it takes no `--binding` flag to supply one.
 
 - **Maritime worker exemption preview (`preview-maritime-exemption`)**: Preview
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or the Registro
-  Especial de Buques y Empresas Navieras de Canarias (REBECA) 50% exemption):
+  Especial de Buques y Empresas Navieras de Canarias (REBECA) 50 percent exemption):
   
   ```{cli-sequence} review-values-maritime
   :verify: Confirm the preview reports the RETMAR registration state.
@@ -253,21 +276,24 @@ For specialized calculations, the CLI provides evaluation and comparison command
 (correct-an-already-filed-local-record)=
 ## Correct an already filed local record
 
-If a filing was already uploaded and later needs correction, use the correction
-command. Do not recalculate the same period. That would not create the
+If a filing was already filed at AEAT and later needs correction, use the
+amendment command. Do not recalculate the same period. That would not create the
 correct complementaria (supplementary return) record:
 
 ```{cli-sequence} review-values-amend
 ```
 
-Before using this command, import the {term}`justificante` for the filing you're
-correcting. The correction command does not submit anything to AEAT.
+The amendment starts from a filing record that carries imported AEAT evidence.
+A record made only with `work file` is refused. Before using this command,
+import the {term}`justificante` evidence for the filing you're correcting with
+`aeat app modelo filing-record import`, then pass its id to
+`--from-filing-record`. The amendment command does not submit anything to AEAT.
 
 ## Where to go next
 
-- [Quickstart: produce a modelo file](quickstart.md)
+- [Quickstart: prepare a modelo filing](quickstart.md)
 - [The filing workflow](filing-spine.md)
-- [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
-- [How to prepare the annual Modelo 390 summary](modelo-390.md)
+- [Prepare a Modelo 303 IVA filing](modelo-303.md)
+- [Prepare the annual Modelo 390 IVA summary](modelo-390.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [CLI reference](../cli/index.rst)

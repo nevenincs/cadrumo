@@ -78,12 +78,8 @@ _C0584 = validated_casilla_id("0584", surface="test_renta_chain_behaviour casill
 _C1585 = validated_casilla_id("1585", surface="test_renta_chain_behaviour casilla id")
 
 _RELATION_ZERO_VALUES_2025 = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-    "renta-modelo-190-retenciones-anuales": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
 }
 
 

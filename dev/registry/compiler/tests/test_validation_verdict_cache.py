@@ -29,7 +29,7 @@ def _scope(root: Path, rows: tuple[tuple[str, int, int, str], ...], *, compiler:
         registry_root=root,
         fingerprints=rows,
         source_receipt="evidence",
-        compiler_identity_digest=compiler,
+        compiler_source_tree_digest=compiler,
     )
 
 

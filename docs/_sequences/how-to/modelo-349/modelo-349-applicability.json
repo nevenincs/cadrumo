@@ -52,7 +52,7 @@
             "tax_id": "sha256:1c9f9632",
             "third_party_transactions_above_347_threshold": ""
           },
-          "rationale": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: realiza operaciones intracomunitarias.",
+          "rationale": "Applicability cannot be determined for this modelo from the declared taxpayer model: it depends on a fact the profile does not express with certainty. The modelo is asserted applicable only when that fact is positively declared; otherwise no obligation is presumed. Fact required for this modelo: carries out intra-community transactions.",
           "scheduling_rationale": null,
           "verdict": "incomplete",
           "year": 2026

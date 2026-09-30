@@ -17,6 +17,8 @@ modelo:
             label: Amount of the compensation [09]
           codigo-cuenta-cliente:
             label: Customer account code (C.C.C.)
+          filing-period:
+            label: Settlement period to which the self-assessment relates
           filing-year:
             label: Filing year to which the self-assessment relates
           letras-etiqueta-persona-fisica:
@@ -31,8 +33,6 @@ modelo:
             label: Amount of the operations [01]
           reagp-porcentaje-compensacion:
             label: Compensation percentage [04]
-          tipo-declaracion-resultado:
-            label: Settlement period to which the self-assessment relates
       construct:
         modelo-341-autoliquidacion:
           field:

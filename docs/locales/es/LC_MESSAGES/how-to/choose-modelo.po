@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-26 15:14+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -55,57 +55,67 @@ msgid ""
 msgstr ""
 "Un perfil activo con tu tipo de contribuyente, tu actividad y tus datos "
 "de régimen rellenados. Consulta la [guía de configuración del perfil"
-"](profile-setup.md), o la [guía de inicio rápido](quickstart.md) si "
-"empiezas desde cero."
+"](profile-setup.md) o la [guía rápida](quickstart.md) si empiezas desde "
+"cero."
 
 #: ../../how-to/choose-modelo.md:10
 msgid ""
-"Your master-key passphrase. Every profile-scoped command needs it; the "
-"tool prompts for it."
+"Your passphrase. Every profile-scoped command needs it; the tool prompts "
+"for it."
 msgstr ""
-"La frase de contraseña de tu clave maestra. Todas las órdenes vinculadas "
-"al perfil la necesitan; la herramienta te la pide."
+"Tu frase de contraseña. Todos los comandos asociados al perfil la "
+"necesitan; la herramienta te la pide."
 
 #: ../../how-to/choose-modelo.md:12
 msgid ""
 "Check the profile first with `aeat config profile status`. It confirms "
 "the profile exists and carries the basics. If a fact is missing, the "
-"verdict says so. The CLI emits the rationale, legal references, and "
-"refusals in Spanish."
+"verdict says so."
 msgstr ""
 "Comprueba primero el perfil con `aeat config profile status`. Confirma "
-"que el perfil existe y que lleva lo básico. Si falta un dato, el "
-"veredicto lo indica. La CLI emite el razonamiento, las referencias "
-"legales y los rechazos en español."
+"que el perfil existe y que incluye lo básico. Si falta un dato, el "
+"veredicto lo indica."
 
 #: ../../how-to/choose-modelo.md:14
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language). The verdict rationale comes from "
+"the official rules and stays in Spanish."
+msgstr ""
+"Los ejemplos de esta documentación están grabados en inglés. `aeat` "
+"muestra sus mensajes en español, salvo que [elijas otro idioma](profile-"
+"setup.md#choose-the-output-language). El razonamiento del veredicto "
+"procede de las reglas oficiales y se mantiene en español."
+
+#: ../../how-to/choose-modelo.md:16
 msgid "Ask whether one modelo applies"
 msgstr "Preguntar si un modelo corresponde"
 
-#: ../../how-to/choose-modelo.md:16
+#: ../../how-to/choose-modelo.md:18
 msgid ""
 "Run `overview explain` with the modelo code. By default the tool answers "
 "for the current year; to ask about a different year, add `--year`. The "
-"card below confirms the profile, asks whether Modelo 303 applies for "
-"2026, then checks readiness for the first quarter, the whole diagnostic "
-"flow in order."
+"following example confirms the profile, asks whether Modelo 303 applies "
+"for 2026, then checks readiness for the first quarter, the whole "
+"diagnostic flow in order."
 msgstr ""
 "Ejecuta `overview explain` con el código del modelo. De forma "
 "predeterminada, la herramienta responde para el año en curso; para "
-"preguntar por otro año, añade `--year`. La tarjeta de abajo confirma el "
-"perfil, pregunta si el Modelo 303 corresponde para 2026 y luego comprueba"
-" la preparación para el primer trimestre: todo el flujo de diagnóstico en"
+"preguntar por otro año, añade `--year`. El ejemplo siguiente confirma el "
+"perfil, pregunta si el Modelo 303 corresponde en 2026 y luego comprueba "
+"la preparación para el primer trimestre: todo el flujo de diagnóstico, en"
 " orden."
 
-#: ../../how-to/choose-modelo.md:22
+#: ../../how-to/choose-modelo.md:24
 msgid "The explain answer has four parts:"
 msgstr "La respuesta de explain tiene cuatro partes:"
 
-#: ../../how-to/choose-modelo.md:24
+#: ../../how-to/choose-modelo.md:26
 msgid "**The verdict** - whether the modelo applies to you for that year."
 msgstr "**El veredicto**: si el modelo te corresponde para ese año."
 
-#: ../../how-to/choose-modelo.md:25
+#: ../../how-to/choose-modelo.md:27
 msgid ""
 "**The rationale** - a plain-language explanation derived from the "
 "official rules."
@@ -113,7 +123,7 @@ msgstr ""
 "**El razonamiento**: una explicación en lenguaje llano derivada de las "
 "reglas oficiales."
 
-#: ../../how-to/choose-modelo.md:26
+#: ../../how-to/choose-modelo.md:28
 msgid ""
 "**The legal references** - the provisions the decision rests on. Use them"
 " to check the verdict or share it with an advisor."
@@ -121,7 +131,7 @@ msgstr ""
 "**Las referencias legales**: las disposiciones en las que se apoya la "
 "decisión. Úsalas para comprobar el veredicto o compartirlo con un asesor."
 
-#: ../../how-to/choose-modelo.md:27
+#: ../../how-to/choose-modelo.md:29
 msgid ""
 "**The profile facts used** - exactly which of your saved facts the "
 "decision read. If one of those facts is wrong, the verdict is wrong too."
@@ -130,7 +140,7 @@ msgstr ""
 "guardados leyó la decisión. Si uno de esos datos está mal, el veredicto "
 "también lo estará."
 
-#: ../../how-to/choose-modelo.md:29
+#: ../../how-to/choose-modelo.md:31
 msgid ""
 "Some answers also include a scheduling note. Treat it as a pointer, not a"
 " calendar - the [filing calendar guide](filing-calendar.md) is the place "
@@ -140,11 +150,11 @@ msgstr ""
 "como una orientación, no como un calendario: la [guía del calendario de "
 "presentaciones](filing-calendar.md) es el lugar para los plazos."
 
-#: ../../how-to/choose-modelo.md:31
+#: ../../how-to/choose-modelo.md:33
 msgid "What each verdict means"
 msgstr "Qué significa cada veredicto"
 
-#: ../../how-to/choose-modelo.md:33
+#: ../../how-to/choose-modelo.md:35
 msgid ""
 "**Applicable** - the form applies to you for that year. Plan to prepare "
 "and file it."
@@ -152,7 +162,7 @@ msgstr ""
 "**Corresponde**: el formulario te corresponde para ese año. Planifica "
 "prepararlo y presentarlo."
 
-#: ../../how-to/choose-modelo.md:34
+#: ../../how-to/choose-modelo.md:36
 msgid ""
 "**Not applicable** - your taxpayer situation excludes it. The rationale "
 "tells you which fact rules it out."
@@ -160,21 +170,23 @@ msgstr ""
 "**No corresponde**: tu situación como contribuyente lo excluye. El "
 "razonamiento te dice qué dato lo descarta."
 
-#: ../../how-to/choose-modelo.md:35
+#: ../../how-to/choose-modelo.md:37
 msgid ""
 "**Attribution pass-through** - your entity is in régimen de atribución de"
 " rentas, such as a comunidad de bienes or a sociedad civil without a "
 "commercial object (sin objeto mercantil). The entity passes its income "
-"through to its members, so it doesn't file this self-assessment form "
-"itself. The members declare the attributed income on their own returns."
+"through to its members, so it doesn't file the income-tax self-assessment"
+" itself (Modelo 100, 130, 200, or 202). The members declare the "
+"attributed income on their own returns."
 msgstr ""
 "**Atribución de rentas**: tu entidad está en régimen de atribución de "
 "rentas, como una comunidad de bienes o una sociedad civil sin objeto "
-"mercantil. La entidad atribuye sus rentas a sus miembros, así que no "
-"presenta ella misma esta autoliquidación. Los miembros declaran las "
-"rentas atribuidas en tus propias declaraciones."
+"mercantil. La entidad atribuye sus rentas a sus miembros, así que ella "
+"misma no presenta la autoliquidación del impuesto sobre la renta (Modelo "
+"100, 130, 200 o 202). Los miembros declaran las rentas atribuidas en sus "
+"propias declaraciones."
 
-#: ../../how-to/choose-modelo.md:36
+#: ../../how-to/choose-modelo.md:38
 msgid ""
 "**Incomplete** - the tool cannot decide and refuses to guess. Usually "
 "your profile is missing the facts needed; see [When the verdict is "
@@ -189,11 +201,11 @@ msgstr ""
 "aplicabilidad. El razonamiento lo indica, y en ese caso ningún cambio en "
 "el perfil altera el veredicto."
 
-#: ../../how-to/choose-modelo.md:39
+#: ../../how-to/choose-modelo.md:41
 msgid "When the verdict is incomplete"
 msgstr "Cuando el veredicto es incompleto"
 
-#: ../../how-to/choose-modelo.md:41
+#: ../../how-to/choose-modelo.md:43
 msgid ""
 "An incomplete verdict usually means the decision depends on facts your "
 "profile doesn't declare yet. The main groups:"
@@ -201,17 +213,17 @@ msgstr ""
 "Un veredicto incompleto suele significar que la decisión depende de datos"
 " que tu perfil aún no declara. Los grupos principales:"
 
-#: ../../how-to/choose-modelo.md:43
+#: ../../how-to/choose-modelo.md:45
 msgid ""
 "**Who you are** - your taxpayer type and entity form (an individual "
-"identified by NIF; a company identified by NIF or CIF; an entity in "
+"identified by NIF; a legal entity identified by its NIF; an entity in "
 "atribución de rentas)."
 msgstr ""
 "**Quién eres**: tu tipo de contribuyente y tu forma jurídica (una persona"
-" física identificada por NIF; una sociedad identificada por NIF o CIF; "
-"una entidad en atribución de rentas)."
+" física identificada por NIF; una persona jurídica identificada por su "
+"NIF; una entidad en atribución de rentas)."
 
-#: ../../how-to/choose-modelo.md:44
+#: ../../how-to/choose-modelo.md:46
 msgid ""
 "**Your income-tax situation** - your IRPF estimation regime and which "
 "income categories you receive."
@@ -219,7 +231,7 @@ msgstr ""
 "**Tu situación en el IRPF**: tu régimen de estimación del IRPF y qué "
 "categorías de renta percibes."
 
-#: ../../how-to/choose-modelo.md:45
+#: ../../how-to/choose-modelo.md:47
 msgid ""
 "**Your IVA situation** - your IVA regime and any special enrolments, such"
 " as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop"
@@ -229,7 +241,7 @@ msgstr ""
 "como el ROI (Registro de Operadores Intracomunitarios), la OSS "
 "(ventanilla única) o las operaciones intracomunitarias."
 
-#: ../../how-to/choose-modelo.md:46
+#: ../../how-to/choose-modelo.md:48
 msgid ""
 "**Whether you employ or withhold** - employees on payroll, or "
 "withholdings on professional fees, rent, or capital payments."
@@ -238,7 +250,7 @@ msgstr ""
 "retenciones sobre honorarios profesionales, alquileres o pagos de "
 "capital."
 
-#: ../../how-to/choose-modelo.md:47
+#: ../../how-to/choose-modelo.md:49
 msgid ""
 "**Informative-declaration thresholds** - facts such as third-party "
 "transaction volume or assets held abroad, which gate the informative "
@@ -248,7 +260,7 @@ msgstr ""
 "operaciones con terceros o los bienes en el extranjero, que condicionan "
 "los formularios informativos."
 
-#: ../../how-to/choose-modelo.md:49
+#: ../../how-to/choose-modelo.md:51
 msgid ""
 "Fix the missing facts by hand with the [profile setup guide](profile-"
 "setup.md). For your censo - your AEAT census record, the registration "
@@ -263,27 +275,36 @@ msgstr ""
 " censo](censo-update.md). Después vuelve a ejecutar `overview explain` y "
 "lee el nuevo veredicto."
 
-#: ../../how-to/choose-modelo.md:51
+#: ../../how-to/choose-modelo.md:53
 msgid "Check readiness for one filing"
 msgstr "Comprobar la preparación para una presentación"
 
-#: ../../how-to/choose-modelo.md:53
+#: ../../how-to/choose-modelo.md:55
 msgid ""
 "When you already know which modelo, year, and period you're aiming at, "
-"ask for a readiness check with `aeat app modelo readiness`, the closing "
-"frame of the card above."
-msgstr "Cuando ya sepas a qué modelo, año y periodo apuntas, pide una comprobación de preparación con `aeat app modelo readiness`, el panel final de la tarjeta de arriba."
+"ask for a readiness check with `aeat app modelo readiness`, the final "
+"command in the applicability example."
+msgstr ""
+"Cuando ya sepas a qué modelo, año y periodo apuntas, pide una "
+"comprobación de preparación con `aeat app modelo readiness`, el último "
+"comando del ejemplo de aplicabilidad."
 
-#: ../../how-to/choose-modelo.md:55
+#: ../../how-to/choose-modelo.md:57
 msgid ""
 "Readiness reports what still stands between you and working on that "
 "specific filing: the profile facts still missing, the registry revision "
 "that applies, and any ledger rows that would block a calculation. Where "
 "`overview explain` answers whether the form applies, readiness answers "
 "whether you're ready to work on it."
-msgstr "La comprobación de preparación informa de lo que aún se interpone entre tú y el trabajo en esa presentación concreta: los datos de perfil que faltan, la revisión del registro que corresponde y las filas del libro que bloquearían un cálculo. Mientras que `overview explain` responde si el formulario corresponde, la preparación responde si estás listo para trabajar en él."
+msgstr ""
+"La comprobación de preparación informa de lo que aún se interpone entre "
+"tú y el trabajo en esa presentación concreta: los datos de perfil que "
+"faltan, la revisión del registro que corresponde y las filas del ledger "
+"que bloquearían un cálculo. Mientras que `overview explain` responde si "
+"el formulario corresponde, la preparación responde si estás listo para "
+"trabajar en él."
 
-#: ../../how-to/choose-modelo.md:57
+#: ../../how-to/choose-modelo.md:59
 msgid ""
 "These two commands read different facts, so they can disagree for the "
 "same profile and modelo, and that is expected. `overview explain` checks "
@@ -294,9 +315,19 @@ msgid ""
 "period. A `ready` result is not a confirmation that the form applies to "
 "you - read `overview explain` for applicability and `modelo readiness` "
 "for filing readiness, not one as a proxy for the other."
-msgstr "Estas dos órdenes leen datos distintos, así que pueden discrepar para el mismo perfil y modelo, y eso es lo esperable. `overview explain` comprueba los datos de aplicabilidad (tipo de contribuyente, régimen, categorías de renta); en un perfil que no ha declarado su tipo de contribuyente devuelve `applicable false / verdict incomplete` (\"el tipo de contribuyente no está declarado\"). `modelo readiness` comprueba si puedes trabajar en ese periodo. Un resultado `ready` no confirma que el formulario te corresponda: lee `overview explain` para la aplicabilidad y `modelo readiness` para la preparación de la presentación, y no uses una como sustituto de la otra."
+msgstr ""
+"Estos dos comandos leen datos distintos, así que pueden discrepar para el"
+" mismo perfil y modelo, y eso es lo esperable. `overview explain` "
+"comprueba los datos de aplicabilidad (tipo de contribuyente, régimen, "
+"categorías de renta); en un perfil que no ha declarado su tipo de "
+"contribuyente devuelve `applicable false / verdict incomplete` (\"el tipo"
+" de contribuyente no está declarado\"). `modelo readiness` comprueba si "
+"puedes trabajar en ese periodo. Un resultado `ready` no confirma que el "
+"formulario te corresponda: lee `overview explain` para la aplicabilidad y"
+" `modelo readiness` para la preparación de la presentación, y no uses uno"
+" como sustituto del otro."
 
-#: ../../how-to/choose-modelo.md:59
+#: ../../how-to/choose-modelo.md:61
 msgid ""
 "Readiness reports several axes separately, and a complete profile is only"
 " one of them. A freshly set up profile commonly returns `profile_ready "
@@ -305,21 +336,34 @@ msgid ""
 "`missing_bindings` - are not yet available. Readiness exits with status "
 "`2` while any axis is unready, so read the axis that is `False` rather "
 "than the single overall verdict."
-msgstr "La comprobación de preparación informa de varios ejes por separado, y un perfil completo es solo uno de ellos. Un perfil recién configurado suele devolver `profile_ready True` junto a `binding_ready False`: tus propios datos están en su sitio, pero las cifras de las que se nutre el formulario -las fuentes listadas en `missing_bindings`- todavía no están disponibles. La comprobación termina con estado `2` mientras algún eje no esté listo, así que lee el eje que aparece como `False` en lugar del veredicto global."
+msgstr ""
+"La comprobación de preparación informa de varios ejes por separado, y un "
+"perfil completo es solo uno de ellos. Un perfil recién configurado suele "
+"devolver `profile_ready True` junto a `binding_ready False`: tus propios "
+"datos están en su sitio, pero las cifras de las que se nutre el "
+"formulario -las fuentes listadas en `missing_bindings`- todavía no están "
+"disponibles. La comprobación termina con estado `2` mientras algún eje no"
+" esté listo, así que lee el eje que aparece como `False` en lugar del "
+"veredicto global."
 
-#: ../../how-to/choose-modelo.md:61
+#: ../../how-to/choose-modelo.md:63
 msgid ""
 "Readiness picks the active revision for that modelo, year, and period "
 "automatically. Add `--revision-id` only when you need to pin an exact "
 "past revision for replay; it is accepted only when it names the same "
 "revision the year and period already select."
-msgstr "La comprobación de preparación elige automáticamente la revisión activa para ese modelo, año y periodo. Añade `--revision-id` solo cuando necesites fijar una revisión pasada exacta para reproducirla; solo se acepta si nombra la misma revisión que el año y el periodo ya seleccionan."
+msgstr ""
+"La comprobación de preparación elige automáticamente la revisión activa "
+"para ese modelo, año y periodo. Añade `--revision-id` solo cuando "
+"necesites fijar una revisión pasada exacta para reproducirla; solo se "
+"acepta si nombra la misma revisión que el año y el periodo ya "
+"seleccionan."
 
-#: ../../how-to/choose-modelo.md:63
+#: ../../how-to/choose-modelo.md:65
 msgid "Browse the catalogue"
 msgstr "Explorar el catálogo"
 
-#: ../../how-to/choose-modelo.md:65
+#: ../../how-to/choose-modelo.md:67
 msgid ""
 "To see every form the tool knows, list the catalogue with `aeat app "
 "modelo list`, add `--year` to narrow it to one fiscal year, then look one"
@@ -330,7 +374,7 @@ msgstr ""
 "ejercicio fiscal y luego consulta un formulario en detalle con `aeat app "
 "modelo describe 303`:"
 
-#: ../../how-to/choose-modelo.md:71
+#: ../../how-to/choose-modelo.md:73
 msgid ""
 "The list shows each modelo's code, official Spanish title, cadence, tax "
 "domain, and revision count. Cadence values include `quarterly`, `annual`,"
@@ -352,7 +396,7 @@ msgstr ""
 "formulario te corresponda: el catálogo abarca todo lo que la herramienta "
 "entiende."
 
-#: ../../how-to/choose-modelo.md:73
+#: ../../how-to/choose-modelo.md:75
 msgid ""
 "The description shows the form's official name (Spanish), domain, "
 "cadence, active revision ID, the full list of revision IDs, the valid "
@@ -365,15 +409,15 @@ msgstr ""
 "ámbito, su cadencia, el ID de la revisión activa, la lista completa de "
 "IDs de revisión, los tokens de periodo válidos y tres recuentos de "
 "estructura -casillas, vinculaciones (data bindings) y fórmulas- que "
-"describen lo complejo que es el formulario. Conserva ambas órdenes como "
+"describen lo complejo que es el formulario. Conserva ambos comandos como "
 "ayudas de consulta. La aplicabilidad siempre procede de `overview "
 "explain`."
 
-#: ../../how-to/choose-modelo.md:75
-msgid "What these commands don't tell you"
-msgstr "Lo que estas órdenes no te dicen"
-
 #: ../../how-to/choose-modelo.md:77
+msgid "What these commands don't tell you"
+msgstr "Lo que estos comandos no te dicen"
+
+#: ../../how-to/choose-modelo.md:79
 msgid ""
 "These commands read your local profile and the built-in rules only. They "
 "do not file, submit, or contact AEAT, and they cannot tell you what AEAT "
@@ -381,13 +425,13 @@ msgid ""
 "statement about the rules and your facts - not a confirmation that a "
 "filing exists or is pending."
 msgstr ""
-"Estas órdenes leen únicamente tu perfil local y las reglas integradas. No"
-" presentan, no envían ni contactan con la AEAT, y no pueden decirte qué "
-"ha recibido realmente la AEAT de tu parte. Un veredicto de "
+"Estos comandos leen únicamente tu perfil local y las reglas integradas. "
+"No presentan, no envían ni contactan con la AEAT, y no pueden decirte qué"
+" ha recibido realmente la AEAT de tu parte. Un veredicto de "
 "**Corresponde** es una afirmación sobre las reglas y tus datos, no una "
 "confirmación de que exista o esté pendiente una presentación."
 
-#: ../../how-to/choose-modelo.md:79
+#: ../../how-to/choose-modelo.md:81
 msgid ""
 "For AEAT's own view of your situation, see the [notifications guide"
 "](check-aeat-notifications.md)."
@@ -395,7 +439,7 @@ msgstr ""
 "Para la propia visión de la AEAT sobre tu situación, consulta la [guía de"
 " notificaciones](check-aeat-notifications.md)."
 
-#: ../../how-to/choose-modelo.md:80
+#: ../../how-to/choose-modelo.md:82
 msgid ""
 "For deadlines and what's due when, see the [filing calendar guide"
 "](filing-calendar.md)."
@@ -403,54 +447,53 @@ msgstr ""
 "Para plazos y qué vence cuándo, consulta la [guía del calendario de "
 "presentaciones](filing-calendar.md)."
 
-#: ../../how-to/choose-modelo.md:82
+#: ../../how-to/choose-modelo.md:84
 msgid "Where to get help"
 msgstr "Dónde conseguir ayuda"
 
-#: ../../how-to/choose-modelo.md:84
+#: ../../how-to/choose-modelo.md:86
 #, python-brace-format
 msgid ""
 "If a verdict looks wrong or a command fails, see the [troubleshooting "
 "guide](troubleshooting.md). Unfamiliar terms are defined in the "
 "{doc}`glossary </_generated/glossary>`. Before you share command output "
-"to ask for help, remove personal tax identifiers such as your NIF, CIF, "
-"DNI, NIE, or NII."
+"to ask for help, remove personal tax identifiers such as your NIF or NIE."
 msgstr ""
-"Si un veredicto parece incorrecto o una orden falla, consulta la [guía de"
-" resolución de problemas](troubleshooting.md). Los términos que no "
+"Si un veredicto parece incorrecto o un comando falla, consulta la [guía "
+"de resolución de problemas](troubleshooting.md). Los términos que no "
 "conozcas están definidos en el {doc}`glosario </_generated/glossary>`. "
-"Antes de compartir la salida de una orden para pedir ayuda, elimina los "
-"identificadores fiscales personales como tu NIF, CIF, DNI, NIE o NII."
+"Antes de compartir la salida de un comando para pedir ayuda, elimina los "
+"identificadores fiscales personales, como tu NIF o NIE."
 
-#: ../../how-to/choose-modelo.md:86
+#: ../../how-to/choose-modelo.md:88
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/choose-modelo.md:88
-msgid "[Plan your filing deadlines](filing-calendar.md)"
-msgstr "[Planificar tus plazos de presentación](filing-calendar.md)"
+#: ../../how-to/choose-modelo.md:90
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/choose-modelo.md:89
+#: ../../how-to/choose-modelo.md:91
 msgid "[Set up or correct your profile](profile-setup.md)"
 msgstr "[Configurar o corregir tu perfil](profile-setup.md)"
 
-#: ../../how-to/choose-modelo.md:90
+#: ../../how-to/choose-modelo.md:92
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/choose-modelo.md:91
+#: ../../how-to/choose-modelo.md:93
 msgid "[Start from nothing with the quickstart](quickstart.md)"
-msgstr "[Empezar desde cero con la guía de inicio rápido](quickstart.md)"
+msgstr "[Empezar desde cero con la guía rápida](quickstart.md)"
 
-#: ../../how-to/choose-modelo.md:92
+#: ../../how-to/choose-modelo.md:94
 msgid "[Prepare Modelo 303](modelo-303.md)"
 msgstr "[Preparar el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/choose-modelo.md:93
+#: ../../how-to/choose-modelo.md:95
 msgid "[Prepare Modelo 390](modelo-390.md)"
 msgstr "[Preparar el Modelo 390](modelo-390.md)"
 
-#: ../../how-to/choose-modelo.md:94
+#: ../../how-to/choose-modelo.md:96
 msgid "[Browse the full CLI reference](../cli/index.rst)"
 msgstr "[Explorar la referencia completa de la CLI](../cli/index.rst)"
 

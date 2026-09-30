@@ -12,13 +12,17 @@ your registered census facts current in your profile, see
 You need:
 
 - An active profile - see [set up your taxpayer profile](profile-setup.md). The
-  commands below refuse without one (`No hay un perfil activo`).
-- Your master-key passphrase. These commands open the encrypted store, so
+  commands below refuse without one.
+- Your passphrase. These commands open the encrypted store, so
   they prompt for the passphrase.
 - The date you filed the declaration at the sede.
 - Optional: the justificante - the receipt number the sede shows after you file.
 
-The runtime emits help, prompts, and messages in Spanish.
+`aeat` prints its messages in Spanish unless you choose another language. Add
+`--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one command, or
+store a default for your profile with
+`aeat config profile edit --output-language en`. The examples in this
+documentation are recorded in English.
 
 ## Record the declaration
 
@@ -28,14 +32,17 @@ Pick the command that matches what you filed:
 - If you changed registered facts, record a modificacion.
 - If you deregistered, record a baja.
 
+Record the declarations in the order you filed them. A modificacion or baja is
+refused until the profile has an alta on record. After a baja, no further
+declaration is accepted, not even an alta.
+
 Record an alta:
 
 ```{cli-sequence} modelo-036-record-alta
 :verify: Confirm the recorded alta is saved and readable by its id.
 ```
 
-Record a modificacion (the same record-and-view flow as the alta above, with a
-different event kind):
+Record a modificacion (the same flow as the alta, with a different event kind):
 
 ```{cli-sequence} modelo-036-record-modificacion
 ```
@@ -64,7 +71,7 @@ That printed output is your confirmation. Save it with your records.
 ## List and view recorded declarations
 
 List the declarations you have recorded in the active profile, then open one by
-its id (the setup step records the same alta shown above so the list has a row):
+its id (the example starts with an alta already recorded, so the list has a row):
 
 ```{cli-sequence} modelo-036-list-view
 :verify: Confirm the recorded declaration appears in the list and opens by its id.
@@ -107,5 +114,5 @@ hand to match what you filed - see
 
 - [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Set up your taxpayer profile](profile-setup.md)
-- [Check your filing calendar](filing-calendar.md)
+- [Plan your filing calendar](filing-calendar.md)
 - [CLI reference](../cli/index.rst)

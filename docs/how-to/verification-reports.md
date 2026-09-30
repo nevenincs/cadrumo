@@ -3,16 +3,18 @@
 This page covers the verification of a draft filing: running the check,
 reading the saved report, and acting on each kind of finding. Verification
 checks your saved calculation locally against the official form rules and
-saves a report of what it found. Nothing is sent to AEAT; everything happens
-on your computer. The order is always the same: calculate, then verify, then
+saves a report of what it found. Nothing is sent to the Agencia Estatal de
+Administración Tributaria (AEAT); everything happens on your computer. The
+order is always the same: calculate, then verify, then
 record the filing.
 
 The check asks three things: does every required box have a value; do the
 sums add up consistently, with no box contradicting another; and does
 anything block the form from being treated as complete. It also checks
 conditions outside the draft itself: that any earlier period this form
-builds on is filed and evidenced, that the running IVA balance carried
-between periods reconciles, and that every carried-forward figure still
+builds on is filed and evidenced, that the running Impuesto sobre el Valor
+Añadido (IVA) balance carried between periods reconciles, and that every
+carried-forward figure still
 points at the revision it was filed under.
 
 A passed check is a local check. Treat it as "my draft is complete and
@@ -31,10 +33,10 @@ activity-start date matters for a first filing: it scopes out the dependency on
 a prior period you never filed, so verification can pass. See
 [Set up your profile](profile-setup.md).
 
-You also need a master-key passphrase (Cadrumo prompts for it). For a
+You also need your passphrase (Cadrumo prompts for it). For a
 first-period Modelo 303, record some business activity in the ledger, then
-create and calculate the draft. The sequence below does all of this from the
-seed ledger.
+create and calculate the draft. The example in [Run verification](#run-verification)
+starts from a profile and ledger that already hold business activity.
 
 If you want to understand how filings and saved calculations fit together,
 read [The filing workflow](filing-spine.md) first.
@@ -53,9 +55,12 @@ reopens it by id:
 Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12`
 for months - see [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
 
-With the profile and draft above, this first-period Modelo 303 passes: the
-report reads `granted_verificado_completo` `true` and a `completeness_status`
-of `complete` - the saved calculation is now verified and ready to file.
+With this profile and draft, the first-period Modelo 303 passes: the report
+reads `granted_verificado_completo` `true` and a `completeness_status` of
+`complete` - the saved calculation is now verified and ready to file. The report
+still lists two `warning` findings, which do not block. One notes that an earlier
+period is scoped out by the activity-start date. The other notes an output
+transaction with no supporting evidence.
 
 When the draft does not pass, the report reads `granted_verificado_completo`
 `false` and a `completeness_status` of `incomplete` or `blocked`, and the saved
@@ -77,35 +82,37 @@ To narrow the list to the reports for one saved calculation, add
 ## View a report and read the findings
 
 Open one report by its ID with `aeat app modelo verification-report view
-<verification-report-id>` (the sequence above did exactly this on the report it
-had just produced).
+<verification-report-id>` (the sequence in [Run verification](#run-verification)
+did exactly this on the report it had just produced).
 
 The report shows:
 
 - The completeness status: `complete`, `incomplete`, or `blocked`.
 - Whether the draft became verified (`granted_verificado_completo`).
 - When the run happened and who ran it.
-- How many casillas the calculation resolved.
-- Which required casillas are still missing.
+- The casillas the calculation resolved (`resolved_casilla_ids`).
+- Which required casillas are still missing (`missing_required_casilla_ids`).
 - The list of findings.
 
 Each finding carries:
 
 - A severity: **blocking** or **warning**.
+- A kind: `missing_required_casilla`, `reconciliation_mismatch`,
+  `cross_period_dependency_unclean`, `blocking_rule`, or `advisory`.
 - The affected casilla, where one applies.
 - A message describing what the rule checked.
-- A suggested next action.
-- The legal references behind the rule, where the rule has them.
+- A suggested next action, where one applies.
+- The legal references behind the rule.
 
 For the legal references in machine-readable form, render the report as JSON.
 `--format json` is a global flag, so it goes before the command. The card in
 [Run verification](#run-verification) does exactly this: its closing frame is the
 JSON `verification-report view` of the report it just produced.
 
-Each finding in the JSON output carries `legal_refs` and `source_refs`. Most
-findings name a legal reference - a cross-period dependency, for example, cites
-the law behind the prior-filing carry. A few purely structural checks, such as
-an unresolved registry snapshot, have none, so those fields are empty for them.
+Each finding in the JSON output carries at least one entry in `legal_refs` - a
+cross-period dependency, for example, cites the law behind the prior-filing
+carry. It also carries `source_refs`, which name the official form or
+instruction and can be empty.
 
 Blocking findings prevent the draft from becoming verified, and filing needs a
 verified calculation. Warnings do not block; read them, decide whether they
@@ -143,10 +150,11 @@ Those boxes come from your invoice records, so record the intra-community
 invoices and recalculate rather than typing the values in. See
 [Prepare a Modelo 349 recapitulative declaration](modelo-349.md).
 
-`--casilla` works only on boxes whose input kind is `manual`. A box filled from
-your ledger or another source is `bound`, and `--casilla` refuses it with
+`--casilla` works only on boxes whose input kind is `manual`, and it takes the
+box's `casilla_id`. A box filled from your ledger or another source is `bound`,
+and `--casilla` refuses it with
 `cannot override bucket-derived source-bound casillas`. Fix the source for those.
-See [Review your calculation values](review-calculation-values.md). Check which
+See [Review and supply calculation inputs](review-calculation-values.md). Check which
 kind a box is, then supply the value for a manual one and recalculate. The
 example supplies box 44, the prorrata regularisation, and the recalculation
 carries it into the deductible total:
@@ -157,7 +165,7 @@ carries it into the deductible total:
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full
 input workflow, including where values come from and how to check them, see
-[Review your calculation values](review-calculation-values.md).
+[Review and supply calculation inputs](review-calculation-values.md).
 
 ## The report says blocked
 
@@ -190,8 +198,8 @@ expects you to do. The common kinds of blocking finding:
   earlier period that is missing or unconfirmed. Record or confirm that earlier
   filing first. If you had no obligation in that earlier period because you had
   not started your activity yet, set your activity-start date on the profile so
-  the dependency is scoped out. Name your own profile in place of
-  `docs-sequence-sandbox`:
+  the dependency is scoped out. Without a profile name, the edit applies to
+  the active profile:
 
   ```{cli-sequence} verification-reports-scope-dependency
   :verify: Confirm setting the activity-start date on the profile succeeds.
@@ -201,10 +209,14 @@ After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
 ## Export refuses
 
-Export refuses a plain draft, with a message such as "current revision is still
-draft; verify it before exporting" or "no exportable verified or filed revision
-exists". Verify the draft first, as in
-[After any fix: re-run verification](#after-any-fix-re-run-verification).
+Export refuses a plain draft. When the current calculation is a draft, the
+message reads `The selected calculation revision is not in a usable state for
+this operation`. When no verified or filed calculation exists, it reads `No
+calculation revision matched the requested selector`. Verify the draft first, as
+in [After any fix: re-run verification](#after-any-fix-re-run-verification).
+
+Export also refuses an `--output` path that already exists, unless you add
+`--replace`, and a path whose parent directory does not exist.
 
 Verified-complete is what export requires. The Modelo 303 file it writes
 carries Cadrumo's all-zero development software identity, which AEAT does not
@@ -243,11 +255,13 @@ or an advisor about any surcharges that may apply.
 
 ## Where to get help
 
-Command labels and messages display in Spanish to match the official AEAT forms,
-while this guide is in English. The field names this guide names -
-`granted_verificado_completo`, `completeness_status`, `finding_legal_refs` -
-match the output exactly, so you can map a Spanish line back to the step that
-describes it.
+`aeat` prints its messages in Spanish unless you choose another language. Add
+`--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one command, or
+store a default for your profile with
+`aeat config profile edit --output-language en`. The examples in this
+documentation are recorded in English. The field names this guide names -
+`granted_verificado_completo`, `completeness_status`, `legal_refs` - match the
+output exactly, so you can map any line back to the step that describes it.
 
 If a report or an error message does not match what this guide describes, see
 [Diagnose and repair](troubleshooting.md). Unfamiliar terms are defined in the
@@ -258,6 +272,6 @@ NII.
 ## Next steps
 
 - [File at AEAT](file-at-aeat.md): enter the verified figures at the AEAT portal.
-- [Review your calculation values](review-calculation-values.md): check and correct the inputs behind each casilla.
+- [Review and supply calculation inputs](review-calculation-values.md): check and correct the inputs behind each casilla.
 - [The filing workflow](filing-spine.md): how filings, saved calculations, and reports fit together.
 - [CLI reference](../cli/index.rst): every command and option.

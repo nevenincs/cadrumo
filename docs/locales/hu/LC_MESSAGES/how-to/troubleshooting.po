@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-29 21:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -20,31 +20,32 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:1
 msgid "Diagnose and repair your local setup"
-msgstr "Diagnosztizálja és javítsa a helyi beállítását"
+msgstr "Diagnosztizáld és javítsd a helyi beállításodat"
 
 #: ../../how-to/troubleshooting.md:3
 msgid ""
 "Every check on this page runs locally unless it explicitly says "
-"otherwise. The optional connectivity probe opens the public AEAT Sede "
-"landing page and checks reachability. It does not submit taxpayer data."
+"otherwise. The optional connectivity probe opens the public Sede landing "
+"page of the Agencia Estatal de Administración Tributaria (AEAT) and "
+"checks reachability. It does not submit taxpayer data."
 msgstr ""
 "Az oldalon szereplő minden ellenőrzés helyben fut, hacsak kifejezetten "
-"mást nem mond. Az opcionális kapcsolatvizsgálat megnyitja a nyilvános "
-"AEAT Sede kezdőoldalát, és ellenőrzi az elérhetőséget. Nem nyújt be "
-"adózói adatokat."
+"mást nem mond. Az opcionális kapcsolatvizsgálat megnyitja az Agencia "
+"Estatal de Administración Tributaria (AEAT) nyilvános Sede nyitóoldalát, "
+"és ellenőrzi az elérhetőséget. Nem nyújt be adózói adatokat."
 
-#: ../../how-to/troubleshooting.md:7
+#: ../../how-to/troubleshooting.md:8
 msgid ""
 "Find the error in the headings below and follow its steps. If it is not "
 "listed, jump to [Prepare a privacy-safe support request](#prepare-a"
 "-privacy-safe-support-request)."
 msgstr ""
-"Keresse meg a hibát az alábbi címsorok között, és kövesse a lépéseit. Ha "
-"nincs felsorolva, ugorjon az [Adatvédelmi szempontból biztonságos "
+"Keresd meg a hibát az alábbi címsorok között, és kövesd a lépéseit. Ha "
+"nincs felsorolva, ugorj az [Adatvédelmi szempontból biztonságos "
 "támogatási kérés előkészítése](#prepare-a-privacy-safe-support-request) "
-"oldalra."
+"szakaszra."
 
-#: ../../how-to/troubleshooting.md:10
+#: ../../how-to/troubleshooting.md:11
 msgid ""
 "Profile-scoped commands need an active taxpayer profile and may ask for "
 "that profile's passphrase to unwrap its independent encryption key. See "
@@ -52,15 +53,15 @@ msgid ""
 " can be English, Spanish, Catalan, or Hungarian."
 msgstr ""
 "A profilhoz kötött parancsoknak aktív adózói profilra van szükségük, és "
-"kérhetik annak jelmondatát az önálló titkosítási kulcs kibontásához. Ha "
-"nincs ilyened, lásd: [Adózói profil beállítása](profile-setup.md). A "
-"kimenet angol, spanyol, katalán vagy magyar lehet."
+"kérhetik annak jelmondatát az önálló titkosítási kulcs feloldásához. Ha "
+"nincs ilyened, lásd: [Állítsd be az adózói profilodat](profile-setup.md)."
+" A kimenet angol, spanyol, katalán vagy magyar lehet."
 
-#: ../../how-to/troubleshooting.md:15
+#: ../../how-to/troubleshooting.md:16
 msgid "\"This operation requires an active profile\""
 msgstr "\"A művelethez aktív profil szükséges\""
 
-#: ../../how-to/troubleshooting.md:17
+#: ../../how-to/troubleshooting.md:18
 msgid ""
 "The command needs a taxpayer profile and none is active. First inspect "
 "what the tool thinks is active, then run the repair check without "
@@ -68,21 +69,21 @@ msgid ""
 "pointer reports the repair action you can take:"
 msgstr ""
 "A parancsnak adózói profilra van szüksége, és egyik sem aktív. Előbb "
-"vizsgálja meg, mit tart az eszköz aktívnak, majd futtassa a javító "
-"ellenőrzést anélkül, hogy bármit módosítana. Egy egészséges profil "
-"`ready` értéket jelent; egy hibás helyi mutató jelenti a javító "
-"műveletet, amelyet megtehet:"
+"vizsgáld meg, mit tart az eszköz aktívnak, majd futtasd a javító "
+"ellenőrzést anélkül, hogy bármit módosítanál. Egy egészséges profil "
+"`ready` értéket jelez; egy hibás helyi mutató a javító műveletet jelzi, "
+"amelyet megtehetsz:"
 
-#: ../../how-to/troubleshooting.md:26
+#: ../../how-to/troubleshooting.md:27
 msgid ""
 "If the repair check says the active setting points at unreadable profile "
 "state, clear that broken local pointer, then switch to a good profile:"
 msgstr ""
 "Ha a javító ellenőrzés azt mondja, hogy az aktív beállítás olvashatatlan "
-"profilállapotra mutat, törölje azt a hibás helyi mutatót, majd váltson "
-"egy jó profilra:"
+"profilállapotra mutat, töröld azt a hibás helyi mutatót, majd válts egy "
+"jó profilra:"
 
-#: ../../how-to/troubleshooting.md:33
+#: ../../how-to/troubleshooting.md:34
 msgid ""
 "The clear command is destructive repair and is appropriate only after the"
 " inspection reports an unreadable active pointer. Login then asks for "
@@ -90,113 +91,113 @@ msgid ""
 " secret channel instead of placing the passphrase on the command line."
 msgstr ""
 "A törlési parancs romboló javítás, és csak akkor megfelelő, ha az "
-"ellenőrzés olvashatatlan aktív mutatót jelent. A bejelentkezés ezután "
+"ellenőrzés olvashatatlan aktív mutatót jelez. A bejelentkezés ezután "
 "elkéri a profil jelmondatát; a felügyelet nélküli hívónak kifejezett "
 "géptitok-csatornát kell használnia ahelyett, hogy a jelmondatot a "
 "parancssorba írná."
 
-#: ../../how-to/troubleshooting.md:38
+#: ../../how-to/troubleshooting.md:39
 msgid ""
 "If no profile exists yet, create one first - see [Set up your taxpayer "
 "profile](profile-setup.md)."
 msgstr ""
-"Ha még nem létezik profil, előbb hozzon létre egyet, lásd: [Állítsa be "
-"adózói profilját](profile-setup.md)."
+"Ha még nem létezik profil, előbb hozz létre egyet, lásd: [Állítsd be az "
+"adózói profilodat](profile-setup.md)."
 
-#: ../../how-to/troubleshooting.md:40
+#: ../../how-to/troubleshooting.md:41
 msgid "If a profile loads but the numbers look wrong, see the next symptom."
 msgstr ""
 "Ha egy profil betöltődik, de a számok hibásnak tűnnek, lásd a következő "
 "tünetet."
 
-#: ../../how-to/troubleshooting.md:42
+#: ../../how-to/troubleshooting.md:43
 msgid "The numbers or facts look like someone else's"
 msgstr "A számok vagy tények valaki máséinak tűnnek"
 
-#: ../../how-to/troubleshooting.md:44
+#: ../../how-to/troubleshooting.md:45
 msgid ""
 "The wrong profile is active. Each profile keeps its own ledger, "
 "calculations, and filings, so a command run under the wrong one shows "
 "someone else's data. See which profile is active:"
 msgstr ""
-"A rossz profil aktív. Minden profil a saját főkönyvét, számításait és "
+"A rossz profil aktív. Minden profil a saját ledgerét, számításait és "
 "benyújtásait tartja, így egy rossz profil alatt futtatott parancs valaki "
-"más adatait mutatja. Nézze meg, melyik profil aktív:"
+"más adatait mutatja. Nézd meg, melyik profil aktív:"
 
-#: ../../how-to/troubleshooting.md:50
+#: ../../how-to/troubleshooting.md:51
 msgid ""
 "Log in to the right profile with `aeat config login <profile-name>` - "
 "[Set up your taxpayer profile](profile-setup.md) covers creating profiles"
 " and moving between them."
 msgstr ""
-"Jelentkezzen be a megfelelő profilba az `aeat config login <profile-"
-"name>` paranccsal: az [Állítsa be adózói profilját](profile-setup.md) "
-"oldal tárgyalja a profilok létrehozását és a köztük való váltást."
+"Jelentkezz be a megfelelő profilba az `aeat config login <profile-name>` "
+"paranccsal: az [Állítsd be az adózói profilodat](profile-setup.md) oldal "
+"tárgyalja a profilok létrehozását és a köztük való váltást."
 
-#: ../../how-to/troubleshooting.md:52
+#: ../../how-to/troubleshooting.md:53
 msgid "A calculation refuses because the ledger is not ready"
-msgstr "Egy számítás elutasít, mert a főkönyv nem áll készen"
+msgstr "Egy számítás elutasít, mert a ledger nem áll készen"
 
-#: ../../how-to/troubleshooting.md:54
+#: ../../how-to/troubleshooting.md:55
 msgid "The refusal looks like this:"
 msgstr "Az elutasítás így néz ki:"
 
-#: ../../how-to/troubleshooting.md:60
+#: ../../how-to/troubleshooting.md:61
 msgid ""
 "The calculation reads your imported transactions, and some rows aren't "
 "ready. Run the preflight check for the period you're calculating - "
 "`ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and "
-"also requires `--year`, so add it even though the message above omits it:"
+"also requires `--year`:"
 msgstr ""
-"A számítás beolvassa az importált tranzakcióit, és néhány sor nem áll "
-"készen. Futtassa az előellenőrzést a számított időszakra: a `ledger "
-"preflight` egy AEAT-jelzőt vesz fel (`1T`-`4T`, `0A`, `01`-`12`), és "
-"`--year` értéket is igényel, ezért adja hozzá, még ha a fenti üzenet ki "
-"is hagyja:"
+"A számítás beolvassa az importált tranzakcióidat, és néhány sor nem áll "
+"készen. Futtasd az előellenőrzést a számított időszakra - a `ledger "
+"preflight` egy AEAT-jelzőt vár (`1T`-`4T`, `0A`, `01`-`12`), és a "
+"`--year` kapcsolót is megköveteli:"
 
-#: ../../how-to/troubleshooting.md:66
+#: ../../how-to/troubleshooting.md:67
 msgid ""
 "The preflight report names the rows that block the calculation. Fix them "
 "by completing the import and review steps in [Import and manage "
 "transactions](import-bank-statements.md), then run the calculation again."
 msgstr ""
 "Az előellenőrzési jelentés megnevezi a számítást blokkoló sorokat. "
-"Javítsa őket az import és a felülvizsgálati lépések befejezésével a "
+"Javítsd őket az import és az áttekintési lépések befejezésével a "
 "[Tranzakciók importálása és kezelése](import-bank-statements.md) oldalon,"
-" majd futtassa újra a számítást."
+" majd futtasd újra a számítást."
 
-#: ../../how-to/troubleshooting.md:68
+#: ../../how-to/troubleshooting.md:69
 msgid "A required value is missing"
 msgstr "Egy kötelező érték hiányzik"
 
-#: ../../how-to/troubleshooting.md:70
-msgid "The refusal names the missing item:"
-msgstr "Az elutasítás megnevezi a hiányzó elemet:"
+#: ../../how-to/troubleshooting.md:71
+msgid "The refusal or the verification finding names the missing item:"
+msgstr "Az elutasítás vagy az ellenőrzési észrevétel megnevezi a hiányzó elemet:"
 
-#: ../../how-to/troubleshooting.md:77
+#: ../../how-to/troubleshooting.md:78
 msgid ""
 "A casilla is a numbered box on the official form. A binding is a rule "
 "that fills one. List which values are still missing for your form:"
 msgstr ""
-"A casilla egy számozott rovat a hivatalos űrlapon. A kötés egy szabály, "
-"amely kitölt egyet. Listázza, mely értékek hiányoznak még az űrlapjához:"
+"A casilla a hivatalos nyomtatvány egy számozott mezője. A kötés egy "
+"szabály, amely kitölt egyet. Listázd, mely értékek hiányoznak még a "
+"nyomtatványodhoz:"
 
-#: ../../how-to/troubleshooting.md:83
+#: ../../how-to/troubleshooting.md:84
 msgid ""
 "Replace the modelo, year, and period with your own. The full workflow for"
 " supplying and reviewing values lives in [Review and supply calculation "
 "inputs](review-calculation-values.md)."
 msgstr ""
-"Cserélje a modelót, az évet és az időszakot a sajátjaira. Az értékek "
-"megadásának és felülvizsgálatának teljes munkafolyamata a [Számítási "
-"bemenetek felülvizsgálata és megadása](review-calculation-values.md) "
-"oldalon él."
+"Cseréld a modelót, az évet és az időszakot a sajátodra. Az értékek "
+"megadásának és áttekintésének teljes munkafolyamata a [A számítási "
+"bemenetek áttekintése és megadása](review-calculation-values.md) oldalon "
+"található."
 
-#: ../../how-to/troubleshooting.md:85
+#: ../../how-to/troubleshooting.md:86
 msgid "The period token is rejected"
 msgstr "Az időszakjelzőt elutasítja a rendszer"
 
-#: ../../how-to/troubleshooting.md:87
+#: ../../how-to/troubleshooting.md:88
 msgid ""
 "Use one period grammar everywhere: the AEAT tokens. `0A` is the annual "
 "period, `1T` through `4T` are the quarters, and `01` through `12` are the"
@@ -204,180 +205,221 @@ msgid ""
 "tokens and dates](filing-calendar.md#period-tokens-and-dates) explains "
 "which form uses which period."
 msgstr ""
-"Használjon egy időszak-nyelvtant mindenhol: az AEAT-jelzőket. A `0A` az "
-"éves időszak, az `1T`-től `4T`-ig a negyedévek, és a `01`-től `12`-ig a "
-"hónapok. Minden parancs az évet külön veszi a `--year` opcióval. Az "
-"[Időszakjelzők és dátumok](filing-calendar.md#period-tokens-and-dates) "
-"elmagyarázza, melyik űrlap melyik időszakot használja."
+"Egy időszak-nyelvtant használj mindenhol: az AEAT-jelzőket. A `0A` az "
+"éves időszak, az `1T`-től a `4T`-ig a negyedévek, és a `01`-től a `12`-ig"
+" a hónapok. Minden parancs az évet külön veszi a `--year` kapcsolóval. Az"
+" [Időszakjelzők és dátumok](filing-calendar.md#period-tokens-and-dates) "
+"elmagyarázza, melyik nyomtatvány melyik időszakot használja."
 
-#: ../../how-to/troubleshooting.md:89
+#: ../../how-to/troubleshooting.md:90
 msgid ""
 "Modelo and ledger commands share the same shape - the AEAT token with "
 "`--year`:"
 msgstr ""
-"A modelo- és a főkönyvi parancsok ugyanazt az alakot használják: az AEAT-"
-"jelzőt a `--year` opcióval:"
+"A modelo- és a ledger-parancsok ugyanazt az alakot használják: az AEAT-"
+"jelzőt a `--year` kapcsolóval:"
 
-#: ../../how-to/troubleshooting.md:95
+#: ../../how-to/troubleshooting.md:96
 msgid ""
-"The ledger `--period` commands are `ledger preflight`, `ledger status`, "
-"`ledger export`, `ledger import`, and `overview status`. Where the year "
-"is optional, a bare period token is refused with a correction:"
+"The ledger `--period` commands include `ledger preflight`, `ledger "
+"status`, `ledger export`, `ledger import`, and `overview status`. Where "
+"the year is optional, a bare period token is refused with a correction:"
 msgstr ""
-"A főkönyvi `--period` parancsok a `ledger preflight`, `ledger status`, "
+"A ledger `--period` parancsai: `ledger preflight`, `ledger status`, "
 "`ledger export`, `ledger import` és `overview status`. Ahol az év "
-"opcionális, egy puszta időszakjelzőt elutasít egy javítással:"
+"opcionális, a puszta időszakjelzőt javítási javaslattal utasítja el:"
 
-#: ../../how-to/troubleshooting.md:103
+#: ../../how-to/troubleshooting.md:104
 msgid ""
-"On `ledger preflight` and `ledger export`, `--year` is a required option,"
-" so omitting it is refused before the token is read:"
+"On `ledger preflight`, `overview pipeline`, and `overview prepare`, "
+"`--year` is a required option, so omitting it is refused before the token"
+" is read:"
 msgstr ""
-"A `ledger preflight` és a `ledger export` parancsnál a `--year` kötelező "
-"opció, ezért az elhagyását a jelző beolvasása előtt elutasítja:"
+"A `ledger preflight`, az `overview pipeline` és az `overview prepare` "
+"parancsnál a `--year` kötelező kapcsoló, ezért az elhagyását a jelző "
+"beolvasása előtt elutasítja:"
 
-#: ../../how-to/troubleshooting.md:109
+#: ../../how-to/troubleshooting.md:110
 msgid "A modelo token that is not valid for the form lists the accepted tokens:"
 msgstr ""
-"Egy, az űrlaphoz nem érvényes modelo-jelző felsorolja az elfogadott "
+"Egy, a nyomtatványhoz nem érvényes modelo-jelző felsorolja az elfogadott "
 "jelzőket:"
 
-#: ../../how-to/troubleshooting.md:115
+#: ../../how-to/troubleshooting.md:116
 msgid ""
 "Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; "
 "use the AEAT token with `--year`."
 msgstr ""
 "A naptári alakokat, mint a `2026Q1`, `2026-03` vagy `2026`, nem fogadja "
-"el a rendszer; használja az AEAT-jelzőt a `--year` opcióval."
+"el a rendszer; használd az AEAT-jelzőt a `--year` kapcsolóval."
 
-#: ../../how-to/troubleshooting.md:117
+#: ../../how-to/troubleshooting.md:118
 msgid "An export refuses because no verified calculation exists"
 msgstr "Egy export elutasít, mert nem létezik ellenőrzött számítás"
 
-#: ../../how-to/troubleshooting.md:119
+#: ../../how-to/troubleshooting.md:120
 msgid ""
 "Exports only work from a calculation that passed verification. Run the "
-"verification first - [Verify a draft filing](verification-reports.md) "
-"owns that workflow and explains what the report tells you."
+"verification first - [Verify a filing](verification-reports.md) owns that"
+" workflow and explains what the report tells you. The refusal reads `No "
+"calculation revision matched the requested selector`, or `The selected "
+"calculation revision is not in a usable state for this operation` when "
+"the current calculation is still a draft."
 msgstr ""
-"Az exportok csak egy ellenőrzésen átment számításból működnek. Előbb "
-"futtassa az ellenőrzést: az [Ellenőrizzen egy piszkozati benyújtást"
-"](verification-reports.md) oldal birtokolja azt a munkafolyamatot, és "
-"elmagyarázza, mit mond a jelentés."
+"Az exportok csak olyan számításból működnek, amely átment az "
+"ellenőrzésen. Előbb futtasd az ellenőrzést - az [Egy piszkozat "
+"ellenőrzése és a megállapítások kezelése](verification-reports.md) oldal "
+"tárgyalja ezt a munkafolyamatot, és elmagyarázza, mit mond a jelentés. Az"
+" elutasítás szövege `No calculation revision matched the requested "
+"selector`, vagy `The selected calculation revision is not in a usable "
+"state for this operation`, ha a jelenlegi számítás még piszkozat."
 
-#: ../../how-to/troubleshooting.md:121
+#: ../../how-to/troubleshooting.md:122
+msgid "An export refuses the output path"
+msgstr "Egy export elutasítja a kimeneti útvonalat"
+
+#: ../../how-to/troubleshooting.md:124
+msgid ""
+"A local export refuses to overwrite an existing file unless you add "
+"`--replace`. It also refuses an `--output` path whose parent directory "
+"does not exist. This applies to `aeat app modelo export`, `aeat app "
+"modelo spreadsheet export`, and `aeat app modelo work report`. The "
+"message reads `The export output path is not valid` and ends with the "
+"reason, such as `path is an existing file` or `parent directory does not "
+"exist`. Add `--replace`, or create the folder first."
+msgstr ""
+"Egy helyi export nem ír felül meglévő fájlt, hacsak nem adod hozzá a "
+"`--replace` kapcsolót. Elutasít minden olyan `--output` útvonalat is, "
+"amelynek szülőkönyvtára nem létezik. Ez az `aeat app modelo export`, az "
+"`aeat app modelo spreadsheet export` és az `aeat app modelo work report` "
+"parancsra vonatkozik. Az üzenet `The export output path is not valid`, és"
+" az ok követi, például `path is an existing file` vagy `parent directory "
+"does not exist`. Add hozzá a `--replace` kapcsolót, vagy előbb hozd létre"
+" a mappát."
+
+#: ../../how-to/troubleshooting.md:126
 msgid "Recording a filing refuses because the filing window is not open"
 msgstr "Egy benyújtás rögzítése elutasít, mert a benyújtási ablak nincs nyitva"
 
-#: ../../how-to/troubleshooting.md:123
+#: ../../how-to/troubleshooting.md:128
 msgid ""
 "This refusal applies to `aeat app modelo work file` only - exporting "
-"works at any time. See [File your modelo at the AEAT portal](file-at-"
-"aeat.md) for the recording workflow and [Plan your filing calendar"
-"](filing-calendar.md) for when each window opens."
+"works at any time, and the refusal message names `aeat app modelo export`"
+" as the local finish line. See [File your modelo at the AEAT portal"
+"](file-at-aeat.md) for the recording workflow and [Plan your filing "
+"calendar](filing-calendar.md) for when each window opens."
 msgstr ""
 "Ez az elutasítás csak az `aeat app modelo work file` parancsra "
-"vonatkozik: az exportálás bármikor működik. A rögzítési munkafolyamathoz "
-"lásd: [Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md),"
-" és arról, mikor nyílik meg az egyes ablakok, lásd: [Tervezze meg a "
-"benyújtási naptárát](filing-calendar.md)."
+"vonatkozik: az exportálás bármikor működik, és az elutasító üzenet az "
+"`aeat app modelo export` parancsot nevezi meg helyi célegyenesként. A "
+"rögzítési munkafolyamathoz lásd: [Nyújtsd be a modelódat az AEAT-portálon"
+"](file-at-aeat.md), arról pedig, hogy mikor nyílik meg az egyes ablak, "
+"lásd: [Tervezd meg a benyújtási naptáradat](filing-calendar.md)."
 
-#: ../../how-to/troubleshooting.md:125
+#: ../../how-to/troubleshooting.md:130
 msgid "Output appears in the wrong language"
 msgstr "A kimenet rossz nyelven jelenik meg"
 
-#: ../../how-to/troubleshooting.md:127
+#: ../../how-to/troubleshooting.md:132
 msgid ""
-"Add `--language` to the command. Accepted values are `en`, `es`, `ca`, "
-"and `hu`. The flag changes both command output and help text:"
+"`aeat` prints its messages in Spanish unless you choose another language."
+" Add `--language` straight after `aeat`. Accepted values are `en`, `es`, "
+"`ca`, and `hu`. The flag changes both command output and help text:"
 msgstr ""
-"Adja hozzá a `--language` opciót a parancshoz. Az elfogadott értékek: "
-"`en`, `es`, `ca` és `hu`. A jelző megváltoztatja a parancskimenetet és a "
-"súgószöveget is:"
+"Az `aeat` az üzeneteit spanyolul írja ki, hacsak nem választasz másik "
+"nyelvet. Add hozzá a `--language` kapcsolót közvetlenül az `aeat` után. "
+"Az elfogadott értékek: `en`, `es`, `ca` és `hu`. A kapcsoló a "
+"parancskimenetet és a súgószöveget is megváltoztatja:"
 
-#: ../../how-to/troubleshooting.md:133
+#: ../../how-to/troubleshooting.md:138
 msgid ""
-"The `--language` flag applies to that one command. A profile also carries"
-" a default output language - set it with `--output-language` at profile "
-"creation, as described in [Set up your taxpayer profile](profile-"
-"setup.md)."
+"The `--language` flag applies to that one command. Without it, the "
+"`CADRUMO_OUTPUT_LANGUAGE` environment variable applies, then the default "
+"output language stored on your profile. Set the profile default with "
+"`aeat config profile edit --output-language en`, as described in [Set up "
+"your taxpayer profile](profile-setup.md). The examples in this "
+"documentation are recorded in English."
 msgstr ""
-"A `--language` jelző arra az egy parancsra vonatkozik. Egy profil egy "
-"alapértelmezett kimeneti nyelvet is hordoz: állítsa be az `--output-"
-"language` opcióval a profil létrehozásakor, ahogy az [Állítsa be adózói "
-"profilját](profile-setup.md) oldal leírja."
+"A `--language` kapcsoló arra az egy parancsra vonatkozik. Nélküle a "
+"`CADRUMO_OUTPUT_LANGUAGE` környezeti változó érvényes, majd a profilodon "
+"tárolt alapértelmezett kimeneti nyelv. A profil alapértelmezését az `aeat"
+" config profile edit --output-language en` paranccsal állíthatod be, "
+"ahogy az [Állítsd be az adózói profilodat](profile-setup.md) oldal "
+"leírja. A dokumentációban szereplő példák angol nyelven készültek."
 
-#: ../../how-to/troubleshooting.md:137
+#: ../../how-to/troubleshooting.md:145
 msgid "A live read from AEAT refuses"
 msgstr "Egy élő olvasás az AEAT-ból elutasít"
 
-#: ../../how-to/troubleshooting.md:139
+#: ../../how-to/troubleshooting.md:147
 msgid ""
 "Live reads need a registered digital certificate, Cl@ve Móvil, or Cl@ve "
 "Permanente. Check your authentication:"
 msgstr ""
 "Az élő olvasásokhoz regisztrált digitális tanúsítvány, Cl@ve Móvil vagy "
-"Cl@ve Permanente szükséges. Ellenőrizze a hitelesítését:"
+"Cl@ve Permanente szükséges. Ellenőrizd a hitelesítésedet:"
 
-#: ../../how-to/troubleshooting.md:146
+#: ../../how-to/troubleshooting.md:154
 msgid ""
-"`auth test` checks stored credentials without contacting AEAT. An expired"
-" certificate, or one within the 14-day critical window, blocks "
-"authenticated work. The earlier 60-day warning is advisory. If expiry is "
-"close, follow [Renew your certificate before it expires](authenticate-"
-"with-aeat.md#renew-your-certificate-before-it-expires)."
+"`auth test` checks stored credentials without contacting AEAT. By "
+"default, an expired certificate, or one within the 14-day critical "
+"window, blocks authenticated work. The earlier 60-day warning is "
+"advisory. If expiry is close, follow [Renew your certificate before it "
+"expires](authenticate-with-aeat.md#renew-your-certificate-before-it-"
+"expires)."
 msgstr ""
 "Az `auth test` a tárolt hitelesítő adatokat ellenőrzi az AEAT-tal való "
-"kapcsolatfelvétel nélkül. Egy lejárt tanúsítvány, vagy egy 14 napos "
-"kritikus ablakon belüli, blokkolja a hitelesített munkát. A korábbi 60 "
-"napos figyelmeztetés tájékoztató jellegű. Ha a lejárat közel van, kövesse"
-" a [Újítsa meg a tanúsítványát, mielőtt lejár](authenticate-with-aeat.md"
-"#renew-your-certificate-before-it-expires) oldalt."
+"kapcsolatfelvétel nélkül. Alapértelmezés szerint egy lejárt tanúsítvány, "
+"vagy egy a 14 napos kritikus ablakon belüli, blokkolja a hitelesített "
+"munkát. A korábbi 60 napos figyelmeztetés tájékoztató jellegű. Ha a "
+"lejárat közel van, kövesd az [Újítsd meg a tanúsítványodat, mielőtt lejár"
+"](authenticate-with-aeat.md#renew-your-certificate-before-it-expires) "
+"szakaszt."
 
-#: ../../how-to/troubleshooting.md:151
+#: ../../how-to/troubleshooting.md:160
 msgid "Check that the tool can reach the AEAT website:"
-msgstr "Ellenőrizze, hogy az eszköz el tudja érni az AEAT-webhelyet:"
+msgstr "Ellenőrizd, hogy az eszköz eléri-e az AEAT webhelyét:"
 
-#: ../../how-to/troubleshooting.md:156
+#: ../../how-to/troubleshooting.md:165
 msgid ""
 "If authentication was never set up, follow [Authenticate with AEAT"
 "](authenticate-with-aeat.md)."
 msgstr ""
-"Ha a hitelesítés soha nem lett beállítva, kövesse a [Hitelesítés az AEAT-"
+"Ha a hitelesítés soha nem lett beállítva, kövesd a [Hitelesítés az AEAT-"
 "nál](authenticate-with-aeat.md) oldalt."
 
-#: ../../how-to/troubleshooting.md:158
+#: ../../how-to/troubleshooting.md:167
 msgid ""
 "When a live login fails, the tool captures an encrypted diagnostic of the"
 " failure. List and inspect them:"
 msgstr ""
 "Amikor egy élő bejelentkezés meghiúsul, az eszköz egy titkosított "
-"diagnosztikát rögzít a hibáról. Listázza és vizsgálja meg őket:"
+"diagnosztikát rögzít a hibáról. Listázd és vizsgáld meg őket:"
 
-#: ../../how-to/troubleshooting.md:164
+#: ../../how-to/troubleshooting.md:173
 msgid ""
 "`list` shows when each failure happened, the reason, and which login "
-"method and profile were involved. `show` prints one diagnostic with "
+"method and profile were involved. `view` prints one diagnostic with "
 "sensitive content redacted. Configured credentials appear only as "
 "present/absent flags and fingerprints, never as values."
 msgstr ""
-"A `list` megmutatja, mikor történt az egyes hibák, az okot, valamint "
-"melyik bejelentkezési mód és profil volt érintve. A `show` egy "
-"diagnosztikát ír ki érzékeny tartalom kitakarásával. A beállított "
+"A `list` megmutatja, mikor történt az egyes hiba, az okot, valamint "
+"melyik bejelentkezési mód és profil volt érintve. A `view` egy "
+"diagnosztikát ír ki az érzékeny tartalom kitakarásával. A beállított "
 "hitelesítő adatok csak jelen/hiányzik jelzőkként és ujjlenyomatokként "
 "jelennek meg, soha nem értékként."
 
-#: ../../how-to/troubleshooting.md:166
+#: ../../how-to/troubleshooting.md:175
 msgid ""
 "For Cl@ve failures, the missing piece is often what happened on your "
 "phone, something the tool cannot see. Record what you observed so the "
 "diagnostic is complete:"
 msgstr ""
-"A Cl@ve-hibáknál a hiányzó darab gyakran az, ami a telefonján történt, "
-"amit az eszköz nem lát. Rögzítse, amit megfigyelt, hogy a diagnosztika "
+"A Cl@ve-hibáknál a hiányzó darab gyakran az, ami a telefonodon történt, "
+"amit az eszköz nem lát. Rögzítsd, amit megfigyeltél, hogy a diagnosztika "
 "teljes legyen:"
 
-#: ../../how-to/troubleshooting.md:171
+#: ../../how-to/troubleshooting.md:180
 msgid ""
 "Accepted states are `app_prompted_and_accepted`, "
 "`app_prompted_not_accepted`, `app_did_not_prompt`, and "
@@ -387,51 +429,57 @@ msgstr ""
 "`app_prompted_not_accepted`, `app_did_not_prompt` és "
 "`operator_did_not_check`."
 
-#: ../../how-to/troubleshooting.md:173
+#: ../../how-to/troubleshooting.md:182
 msgid "The diagnostic toolbox"
 msgstr "A diagnosztikai eszköztár"
 
-#: ../../how-to/troubleshooting.md:175
+#: ../../how-to/troubleshooting.md:184
 msgid ""
 "Use these when no single symptom matches, or before asking for help. Run "
 "the read-only diagnostics in order: overall status, active profile, "
-"recent logs, and both integrity checks."
+"recent logs, the full local report, and the secure-object integrity "
+"check."
 msgstr ""
-"Ezeket akkor használja, amikor egyetlen tünet sem illeszkedik, vagy "
-"mielőtt segítséget kér. Futtassa a csak olvasható diagnosztikákat "
-"sorrendben: általános státusz, aktív profil, legutóbbi naplók és mindkét "
-"integritási ellenőrzés."
+"Ezeket akkor használd, ha egyetlen tünet sem illeszkedik, vagy mielőtt "
+"segítséget kérsz. Futtasd a csak olvasható diagnosztikákat sorrendben: "
+"általános állapot, aktív profil, legutóbbi naplók, a teljes helyi "
+"jelentés és a biztonságosobjektum-integritás ellenőrzése."
 
-#: ../../how-to/troubleshooting.md:183
+#: ../../how-to/troubleshooting.md:192
 msgid ""
 "`overview status` reports your profile, ledger, and modelo readiness; "
 "`profile status` reports the active profile. Together they tell you "
 "whether the problem is your setup or your data. `repair logs` prints the "
 "log file path and the most recent lines. Use `--lines` to control how "
 "many. `integrity objects` checks the security seals on your encrypted "
-"records, and `integrity registry` checks the tax rule definitions. If "
-"either fails, the report names the affected item. Take that report to the"
-" issue tracker rather than editing stored data by hand."
+"records. `aeat config repair` with no subcommand prints the full local "
+"report: package and Python versions, profile and authentication state, "
+"the tax rule definitions, and the same secure-object check. If a check "
+"fails, the report names the affected item. Take that report to the issue "
+"tracker rather than editing stored data by hand."
 msgstr ""
-"Az `overview status` jelenti a profilja, főkönyve és modelója "
-"készenlétét; a `profile status` jelenti az aktív profilt. Együtt "
-"megmondják, hogy a probléma a beállítása vagy az adatai. A `repair logs` "
-"kiírja a naplófájl útvonalát és a legutóbbi sorokat. Használja a "
-"`--lines` opciót annak szabályozásához, hányat. Az `integrity objects` "
-"ellenőrzi a titkosított rekordjain lévő biztonsági pecséteket, az "
-"`integrity registry` pedig az adószabály-definíciókat. Ha bármelyik "
-"meghiúsul, a jelentés megnevezi az érintett elemet. Vigye azt a jelentést"
-" a hibakövetőhöz, ahelyett hogy kézzel szerkesztené a tárolt adatokat."
+"Az `overview status` jelzi a profilod, a ledgered és a modelo "
+"készenlétét; a `profile status` az aktív profilt jelzi. Együtt "
+"megmondják, hogy a probléma a beállításod vagy az adataid körül van. A "
+"`repair logs` kiírja a naplófájl útvonalát és a legutóbbi sorokat. A "
+"`--lines` kapcsolóval szabályozhatod, hányat. Az `integrity objects` "
+"ellenőrzi a titkosított rekordjaid biztonsági pecsétjeit. Az `aeat config"
+" repair` alparancs nélkül kiírja a teljes helyi jelentést: a csomag és a "
+"Python verzióját, a profil- és hitelesítési állapotot, az adószabály-"
+"definíciókat és ugyanezt a biztonságosobjektum-ellenőrzést. Ha egy "
+"ellenőrzés meghiúsul, a jelentés megnevezi az érintett elemet. Vidd azt a"
+" jelentést a hibakövetőhöz, ahelyett hogy kézzel szerkesztenéd a tárolt "
+"adatokat."
 
-#: ../../how-to/troubleshooting.md:185
+#: ../../how-to/troubleshooting.md:194
 msgid ""
 "When unreadable encrypted records block other commands, move them aside. "
 "Preview first, then apply:"
 msgstr ""
 "Amikor olvashatatlan titkosított rekordok más parancsokat blokkolnak, "
-"tegye őket félre. Előbb tekintse meg, majd alkalmazza:"
+"tedd őket félre. Előbb nézd meg előnézetben, majd alkalmazd:"
 
-#: ../../how-to/troubleshooting.md:191
+#: ../../how-to/troubleshooting.md:200
 msgid ""
 "The preview lists how many records would move, per storage area, without "
 "changing anything. The real run requires `--yes`. Quarantine does not "
@@ -442,25 +490,25 @@ msgid ""
 "data-access.md)."
 msgstr ""
 "Az előnézet felsorolja, hány rekord mozdulna el tárolási területenként, "
-"anélkül hogy bármit módosítana. A valódi futtatás `--yes` értéket "
-"igényel. A karantén nem töröl semmit: minden olvashatatlan rekord, "
-"továbbra is titkosítva, egy karanténarchívumba kerül ugyanazon a tárolón "
-"belül, az olvasható rekordok pedig érintetlenek maradnak. Ha az ok egy "
-"hiányzó kulcs volt, amelyet később visszaszerez (például a helyreállítási"
-" kulccsal, lásd: [Védje az adataihoz való hozzáférést](protect-data-"
-"access.md)), az archivált rekordok továbbra is léteznek."
+"anélkül hogy bármit módosítana. A valódi futtatáshoz `--yes` kell. A "
+"karantén nem töröl semmit: minden olvashatatlan rekord, továbbra is "
+"titkosítva, egy karanténarchívumba kerül ugyanazon a tárolón belül, az "
+"olvasható rekordok pedig érintetlenek maradnak. Ha az ok egy hiányzó "
+"kulcs volt, amelyet később visszaállítasz, az archivált rekordok továbbra"
+" is léteznek. Lásd: [Védd az adataidhoz való hozzáférést](protect-data-"
+"access.md)."
 
-#: ../../how-to/troubleshooting.md:193
+#: ../../how-to/troubleshooting.md:202
 msgid ""
 "To find which finalized calculations and filings used a transaction, "
 "query the participation index. Rebuild it first if the lookup appears "
 "incomplete:"
 msgstr ""
 "Annak megtalálásához, mely véglegesített számítások és benyújtások "
-"használtak egy tranzakciót, kérdezze le a részvételi indexet. Előbb "
-"építse újra, ha a keresés hiányosnak tűnik:"
+"használtak egy tranzakciót, kérdezd le a részvételi indexet. Ha a keresés"
+" hiányosnak tűnik, előbb építsd újra:"
 
-#: ../../how-to/troubleshooting.md:200
+#: ../../how-to/troubleshooting.md:209
 msgid ""
 "The index is a derived cross-reference, safe to regenerate at any time: "
 "`rebuild` rescans the finalized calculation records and rewrites it. Run "
@@ -469,146 +517,147 @@ msgid ""
 msgstr ""
 "Az index egy származtatott kereszthivatkozás, bármikor biztonságosan "
 "újragenerálható: a `rebuild` újraszkenneli a véglegesített számítási "
-"rekordokat, és újraírja. Futtassa, ha egy részvételi keresés hiányosnak "
-"tűnik. Az újraépítés nem változtat meg semmilyen főkönyvi vagy benyújtási"
-" adatot."
+"rekordokat, és újraírja. Futtasd, ha egy részvételi keresés hiányosnak "
+"tűnik. Az újraépítés nem változtat meg semmilyen ledger- vagy benyújtási "
+"adatot."
 
-#: ../../how-to/troubleshooting.md:202
+#: ../../how-to/troubleshooting.md:211
 msgid ""
 "Both `participation` verbs read the active profile's encrypted bucket, so"
-" they need an unlocked profile session. If either refuses with `No hay "
-"una sesion de bucket activa`, log in to the profile first with `aeat "
-"config login <profile-name>`."
+" they need an unlocked profile session. If either refuses because the "
+"profile is locked or none is active, log in to the profile first with "
+"`aeat config login <profile-name>`."
 msgstr ""
-"Mindkét `participation` ige az aktív profil titkosított bucketjét "
-"olvassa, ezért feloldott profil-munkamenetet igényel. Ha bármelyik "
-"elutasít a `No hay una sesion de bucket activa` üzenettel, előbb "
-"jelentkezzen be a profilba az `aeat config login <profile-name>` "
-"paranccsal."
+"Mindkét `participation` parancs az aktív profil titkosított bucketjét "
+"olvassa, ezért feloldott profilmunkamenet kell hozzájuk. Ha bármelyik "
+"elutasít, mert a profil zárolt vagy egyik sem aktív, előbb jelentkezz be "
+"a profilba az `aeat config login <profile-name>` paranccsal."
 
-#: ../../how-to/troubleshooting.md:204
+#: ../../how-to/troubleshooting.md:213
 msgid ""
 "When nothing else recovers the problem, and only then, clear the saved "
 "progress of interrupted commands. This command is destructive:"
 msgstr ""
-"Amikor semmi más nem oldja meg a problémát, és csak akkor, törölje a "
+"Amikor semmi más nem oldja meg a problémát, és csak akkor, töröld a "
 "megszakított parancsok mentett folyamatát. Ez a parancs romboló:"
 
-#: ../../how-to/troubleshooting.md:210
+#: ../../how-to/troubleshooting.md:219
 msgid ""
 "It removes saved interrupted-command progress and requires `--yes`. Like "
-"the participation verbs, it reads the active profile's bucket, so switch "
-"to the profile first if it refuses with `No hay una sesion de bucket "
-"activa`."
+"the participation verbs, it reads the active profile's bucket, so log in "
+"to the profile first if it refuses because the profile is locked or none "
+"is active."
 msgstr ""
 "Eltávolítja a megszakított parancsok mentett folyamatát, és `--yes` "
-"értéket igényel. A participation igékhez hasonlóan az aktív profil "
-"bucketjét olvassa, ezért előbb váltson a profilra, ha a `No hay una "
-"sesion de bucket activa` üzenettel utasít el."
+"kapcsoló kell hozzá. A participation parancsokhoz hasonlóan az aktív "
+"profil bucketjét olvassa, ezért ha elutasít, mert a profil zárolt vagy "
+"egyik sem aktív, előbb jelentkezz be a profilba."
 
-#: ../../how-to/troubleshooting.md:213
+#: ../../how-to/troubleshooting.md:222
 msgid "Prepare a privacy-safe support request"
 msgstr "Adatvédelmi szempontból biztonságos támogatási kérés előkészítése"
 
-#: ../../how-to/troubleshooting.md:215
+#: ../../how-to/troubleshooting.md:224
 msgid ""
 "When the steps on this page don't resolve the problem, gather this before"
 " asking for help:"
 msgstr ""
-"Amikor az oldalon szereplő lépések nem oldják meg a problémát, gyűjtse "
-"össze ezt, mielőtt segítséget kér:"
+"Amikor az oldalon szereplő lépések nem oldják meg a problémát, gyűjtsd "
+"össze ezeket, mielőtt segítséget kérsz:"
 
-#: ../../how-to/troubleshooting.md:217
+#: ../../how-to/troubleshooting.md:226
 msgid "The exact command you ran."
-msgstr "A pontos parancsot, amelyet futtatott."
+msgstr "A pontos parancsot, amelyet futtattál."
 
-#: ../../how-to/troubleshooting.md:218
+#: ../../how-to/troubleshooting.md:227
 msgid "The error lines the command printed."
 msgstr "A hibasorokat, amelyeket a parancs kiírt."
 
-#: ../../how-to/troubleshooting.md:219
+#: ../../how-to/troubleshooting.md:228
 msgid "The log path and the relevant recent lines from `aeat config repair logs`."
 msgstr ""
 "A naplóútvonalat és a releváns legutóbbi sorokat az `aeat config repair "
 "logs` parancsból."
 
-#: ../../how-to/troubleshooting.md:220
+#: ../../how-to/troubleshooting.md:229
 msgid "Any report or work-unit IDs the output shows."
 msgstr "Bármely jelentés- vagy munkaegység-azonosítót, amelyet a kimenet mutat."
 
-#: ../../how-to/troubleshooting.md:222
+#: ../../how-to/troubleshooting.md:231
 msgid ""
 "Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), "
 "names, addresses, and file paths that embed your user name. Log lines can"
 " contain personal data - read them before pasting."
 msgstr ""
-"Előbb távolítsa el a személyes adatokat: adóazonosítók (NIF, CIF, DNI, "
+"Előbb távolítsd el a személyes adatokat: adóazonosítók (NIF, CIF, DNI, "
 "NIE, NII), nevek, címek és olyan fájlútvonalak, amelyek a "
-"felhasználónevét tartalmazzák. A naplósorok személyes adatokat "
-"tartalmazhatnak: olvassa el őket, mielőtt beilleszti."
+"felhasználónevedet tartalmazzák. A naplósorok személyes adatokat "
+"tartalmazhatnak: olvasd el őket, mielőtt beilleszted."
 
-#: ../../how-to/troubleshooting.md:224
+#: ../../how-to/troubleshooting.md:233
 msgid ""
 "Take the request to the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues)."
 msgstr ""
-"Vigye a kérést a [projekt "
+"Vidd a kérést a [projekt "
 "hibakövetőjéhez](https://github.com/nevenincs/cadrumo/issues)."
 
-#: ../../how-to/troubleshooting.md:226
+#: ../../how-to/troubleshooting.md:235
 #, python-brace-format
 msgid ""
 "If a term in an error message is unfamiliar, look it up in the "
 "{doc}`glossary </_generated/glossary>`."
 msgstr ""
-"Ha egy hibaüzenetben lévő kifejezés ismeretlen, keresse ki a "
+"Ha egy hibaüzenetben lévő kifejezés ismeretlen, keresd ki a "
 "{doc}`szójegyzékben </_generated/glossary>`."
 
-#: ../../how-to/troubleshooting.md:228
+#: ../../how-to/troubleshooting.md:237
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/troubleshooting.md:230
+#: ../../how-to/troubleshooting.md:239
 msgid ""
-"[Quickstart: produce a modelo file](quickstart.md) - follow the first "
+"[Quickstart: prepare a modelo filing](quickstart.md) - follow the first "
 "local filing path."
 msgstr ""
-"[Gyorsindító: állítson elő egy modelo-fájlt](quickstart.md): kövesse az "
+"[Gyorsindító: modelo-benyújtás előkészítése](quickstart.md) - kövesd az "
 "első helyi benyújtási utat."
 
-#: ../../how-to/troubleshooting.md:231
+#: ../../how-to/troubleshooting.md:240
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create and switch "
 "profiles."
 msgstr ""
-"[Állítsa be adózói profilját](profile-setup.md): profilok létrehozása és "
-"váltása."
+"[Állítsd be az adózói profilodat](profile-setup.md): profilok létrehozása"
+" és váltása."
 
-#: ../../how-to/troubleshooting.md:232
+#: ../../how-to/troubleshooting.md:241
 msgid ""
 "[Authenticate with AEAT](authenticate-with-aeat.md) - check read-only "
 "live access setup."
 msgstr ""
-"[Hitelesítés az AEAT-nál](authenticate-with-aeat.md): ellenőrizze a csak "
+"[Hitelesítés az AEAT-nál](authenticate-with-aeat.md): ellenőrizd a csak "
 "olvasható élő hozzáférés beállítását."
 
-#: ../../how-to/troubleshooting.md:233
+#: ../../how-to/troubleshooting.md:242
 msgid ""
-"[Check AEAT notifications](check-aeat-notifications.md) - inspect saved "
-"DEHu notification snapshots."
+"[Read AEAT notifications](check-aeat-notifications.md) - inspect saved "
+"DEHú notification snapshots."
 msgstr ""
-"[AEAT-értesítések ellenőrzése](check-aeat-notifications.md): vizsgálja "
-"meg a mentett DEHu értesítési pillanatképeket."
+"[AEAT-értesítések és egyéb élő adatok beolvasása](check-aeat-"
+"notifications.md): vizsgáld meg a mentett DEHú értesítési "
+"pillanatképeket."
 
-#: ../../how-to/troubleshooting.md:234
+#: ../../how-to/troubleshooting.md:243
 msgid ""
-"[Pipeline explanation](../explanation/index.md) - what the registry, "
-"secure storage, and workflow state are."
+"[How Cadrumo turns your records into a tax file](../explanation/index.md)"
+" - what the registry, secure storage, and workflow state are."
 msgstr ""
-"[A folyamat magyarázata](../explanation/index.md): mi a nyilvántartás, a "
-"biztonságos tároló és a munkafolyamat-állapot."
+"[Hogyan alakítja a Cadrumo a nyilvántartásaidat "
+"adófájllá](../explanation/index.md): mi a registry, a biztonságos tároló "
+"és a munkafolyamat-állapot."
 
-#: ../../how-to/troubleshooting.md:235
+#: ../../how-to/troubleshooting.md:244
 msgid ""
 "[CLI reference](../cli/index.rst) - every repair command, flag, and exit "
 "code."

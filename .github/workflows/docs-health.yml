@@ -14,7 +14,9 @@ jobs:
   check:
     name: "Check: Documentation availability (Linux)"
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    env:
+      CI_EXEC_BUDGET_MINUTES: 5
+    timeout-minutes: 125
     permissions:
       contents: read
       issues: write

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-08 07:52+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -30,7 +30,7 @@ msgid ""
 msgstr ""
 "La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
 "tributaria externa a la que se refieren los límites de presentación y de "
-"lectura en vivo de esta página."
+"lectura en directo de esta página."
 
 #: ../../reference/filesystem-state-and-safety.md:6
 msgid "Local state layout"
@@ -85,7 +85,7 @@ msgid ""
 msgstr ""
 "La raíz es la misma tanto si Cadrumo se ejecuta desde un repositorio de "
 "código como desde una distribución instalada. Ejecutarlo desde un "
-"repositorio no la cambia: defina `CADRUMO_LOCAL_STORAGE_ROOT` para situar"
+"repositorio no la cambia: define `CADRUMO_LOCAL_STORAGE_ROOT` para situar"
 " el árbol dentro del repositorio."
 
 #: ../../reference/filesystem-state-and-safety.md:21
@@ -103,21 +103,25 @@ msgstr ""
 #: ../../reference/filesystem-state-and-safety.md:26
 msgid ""
 "Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. The "
-"bucket contains `db/cadrumo.db`, encrypted blobs, audit material, "
-"`manifest.toml`, `.lock`, and an output-language hint. Key material is "
-"rooted under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
+"bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, the "
+"`custody/` envelopes that hold the wrapped data key for the passphrase "
+"and the recovery code, `manifest.toml`, `profile.commit.v1.json`, "
+"`.lock`, and an `output-language.hint` file. Session and login-throttle "
+"state live under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
 "blobs, and audit paths derive from the same product root unless an "
 "explicit Cadrumo setting overrides them."
 msgstr ""
 "El estado del perfil está delimitado por bucket en `<root>/buckets"
-"/<bucket-id>/`. El bucket contiene `db/cadrumo.db`, blobs cifrados, "
-"material de auditoría, `manifest.toml`, `.lock` y una pista del idioma de"
-" salida. El material de claves se aloja en `<root>/keystore/<bucket-"
-"id>/`. Los tokens, los registros, los secretos, los blobs y las rutas de "
-"auditoría derivan de la misma raíz del producto, salvo que un ajuste "
-"explícito de Cadrumo los sobrescriba."
+"/<bucket-id>/`. El bucket contiene `db/cadrumo.db`, blobs cifrados en "
+"`data/`, los sobres `custody/` que guardan la clave de datos envuelta "
+"para la frase de contraseña y el código de recuperación, `manifest.toml`,"
+" `profile.commit.v1.json`, `.lock` y un fichero `output-language.hint`. "
+"El estado de sesión y de limitación de inicios de sesión se aloja en "
+"`<root>/keystore/<bucket-id>/`. Los tokens, los registros, los secretos, "
+"los blobs y las rutas de auditoría derivan de la misma raíz del producto,"
+" salvo que un ajuste explícito de Cadrumo los sobrescriba."
 
-#: ../../reference/filesystem-state-and-safety.md:33
+#: ../../reference/filesystem-state-and-safety.md:35
 msgid ""
 "Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A "
 "former `aeat-vault/` folder is not adopted."
@@ -125,11 +129,11 @@ msgstr ""
 "La réplica en Google Drive usa una carpeta `cadrumo-vault/` propiedad de "
 "Cadrumo. Una antigua carpeta `aeat-vault/` no se adopta."
 
-#: ../../reference/filesystem-state-and-safety.md:36
+#: ../../reference/filesystem-state-and-safety.md:38
 msgid "Old `aeat`-named storage is refused, not migrated"
 msgstr "El almacenamiento antiguo con nombre `aeat` se rechaza, no se migra"
 
-#: ../../reference/filesystem-state-and-safety.md:38
+#: ../../reference/filesystem-state-and-safety.md:40
 msgid ""
 "Cadrumo refuses recognizable former product state. This includes a "
 "sibling `aeat` application-state directory, an `aeat.db` database, "
@@ -142,7 +146,7 @@ msgstr ""
 "`aeat-test.*` o `aeat-tests.*`, y antiguos nombres de bundle o de carpeta"
 " de Drive."
 
-#: ../../reference/filesystem-state-and-safety.md:43
+#: ../../reference/filesystem-state-and-safety.md:45
 msgid ""
 "The refusal is non-destructive. Cadrumo does not read, connect to, copy, "
 "move, re-key, delete, migrate, or adopt that state. Detection leaves the "
@@ -154,7 +158,7 @@ msgstr ""
 "detección deja intactos los bytes antiguos y exige que el operador elija "
 "una disposición aparte y explícita."
 
-#: ../../reference/filesystem-state-and-safety.md:47
+#: ../../reference/filesystem-state-and-safety.md:49
 msgid "Safety and filing scope"
 msgstr "Alcance de seguridad y de presentación"
 
@@ -183,15 +187,21 @@ msgstr "Exportación"
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
-"evidence gates pass; portal acceptance is not guaranteed"
+"evidence gates pass; refuses to overwrite an existing file without "
+"`--replace`; portal acceptance is not guaranteed, and files for modelos "
+"whose record design reserves a software identity, such as Modelo 303 and "
+"390, carry a development identity that AEAT does not accept"
 msgstr ""
 "Escribe un fichero local compatible con la AEAT después de que se superen"
-" la verificación y las comprobaciones de evidencia obligatorias; no se "
-"garantiza la aceptación en el portal"
+" la verificación y las comprobaciones de evidencia obligatorias; se niega"
+" a sobrescribir un fichero existente sin `--replace`; no se garantiza la "
+"aceptación en el portal, y los ficheros de los modelos cuyo diseño de "
+"registro reserva una identidad de software, como el modelo 303 y el 390, "
+"llevan una identidad de desarrollo que la AEAT no acepta"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
-msgstr "Acceso en vivo a la AEAT"
+msgstr "Acceso en directo a la AEAT"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Separately invoked, authenticated, and read-only"
@@ -210,8 +220,14 @@ msgid "Official filing"
 msgstr "Presentación oficial"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "Performed by a human through an official AEAT channel"
-msgstr "La realiza una persona a través de un canal oficial de la AEAT"
+msgid ""
+"Performed by a human through an official AEAT channel; for modelos whose "
+"file AEAT does not accept, the human keys the calculated values into the "
+"portal form"
+msgstr ""
+"Lo realiza una persona por un canal oficial de la AEAT; en los modelos "
+"cuyo fichero la AEAT no acepta, la persona teclea los valores calculados "
+"en el formulario del portal"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Filing history"
@@ -219,12 +235,14 @@ msgstr "Historial de presentaciones"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
-"Recorded locally after the human filing; reconciliation compares totals "
-"and, for enrolled modelos, captured per-casilla values"
+"Recorded locally after the human filing; reconciliation compares header "
+"fields, the result total where the modelo declares its result box, and, "
+"for enrolled modelos, casilla values from a filed declaration"
 msgstr ""
 "Se registra localmente después de la presentación por la persona; la "
-"conciliación compara los totales y, para los modelos inscritos, los "
-"valores capturados por casilla"
+"conciliación compara los campos de cabecera, el total de resultado cuando"
+" el modelo declara su casilla de resultado y, para los modelos inscritos,"
+" los valores por casilla de una declaración presentada"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Responsibility"
@@ -238,14 +256,14 @@ msgstr ""
 "El contribuyente o el presentador autorizado revisa las cifras, cumple "
 "los plazos, sube el fichero y conserva el justificante"
 
-#: ../../reference/filesystem-state-and-safety.md:59
+#: ../../reference/filesystem-state-and-safety.md:61
 msgid ""
 "See [Protect access to your data](../how-to/protect-data-access.md) for "
 "recovery, locking, export, and reset tasks. The [filing-boundary "
 "explanation](../explanation/recording-a-filing-and-the-boundary.md) "
 "explains why submission stays outside Cadrumo."
 msgstr ""
-"Consulta [Protege el acceso a tus datos](../how-to/protect-data-"
+"Consulta [Proteger el acceso a tus datos](../how-to/protect-data-"
 "access.md) para las tareas de recuperación, bloqueo, exportación y "
 "restablecimiento. La [explicación del límite de "
 "presentación](../explanation/recording-a-filing-and-the-boundary.md) "

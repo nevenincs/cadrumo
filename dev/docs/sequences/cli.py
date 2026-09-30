@@ -13,6 +13,10 @@ Two modes over one engine:
   post-mask differing paths or unified text diff, and the exact ``refresh``
   invocation that updates the golden.
 
+Every mode that executes a sequence first confirms the registry authority the
+runner reads is current, and exits 1 naming the republish command when it is
+not (:mod:`dev.docs.sequences.authority_currency`).
+
 Both the Sphinx ``builder-inited`` hook and the ``dev/docs/tests`` pytest gate
 call the same :func:`check_sequences` engine function this module's
 ``check`` mode wraps, so neither surface re-implements execution or
@@ -58,12 +62,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.mode == "refresh":
-        written, problems, advisories = refresh_sequences(
-            docs_root=args.docs_root,
-            goldens_root=args.goldens_root,
-            page=args.page,
-            sequence_id=args.sequence,
-        )
+        try:
+            written, problems, advisories = refresh_sequences(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                page=args.page,
+                sequence_id=args.sequence,
+            )
+        except SequenceEngineError as exc:
+            print(f"problem: {exc}", file=sys.stderr)
+            return 1
         for target in written:
             print(f"refreshed: {target}")
         for advisory in advisories:

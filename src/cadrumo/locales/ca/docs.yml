@@ -258,6 +258,100 @@ docs:
       reviewed_at: Data de revisió
       reviewed_by: Revisat per
       title: Fitxa del catàleg
+  site:
+    aria:
+      breadcrumb: Ruta de navegació
+      broadcast_links: Enllaços de l'avís
+      dismiss_notice: Tancar l'avís
+      footer_channels: Canals de novetats de la documentació
+      language: 'Idioma: {language}'
+      primary_navigation: Principal
+      repository: Repositori del projecte a GitHub
+      search_documentation: Cercar a la documentació
+      site_updates: Novetats del lloc
+      toggle_navigation: Mostrar o amagar la barra de navegació
+      toggle_theme: Canviar entre tema clar, fosc i automàtic
+      toggle_toc: Mostrar o amagar la barra de l'índex
+    breadcrumb:
+      home: Inici
+    broadcast:
+      label: Beta
+      message: S'esperen canvis que trenquen la compatibilitat. Comprova els terminis
+        de l'Agencia Estatal de Administración Tributaria (AEAT) abans de presentar.
+    class_label:
+      casilla: Casella
+      cli: Ordre
+      doc: Documentació
+      legal: Legal
+      modelo: Model
+      technical: Referència
+    cli_help:
+      close: Tancar l'ajuda
+      required: obligatori
+    download:
+      direct_heading: Baixades directes de l'última versió
+    footer:
+      get_help: Obtén ajuda
+      kicker: Avisos del projecte
+      note: Cadrumo és programari beta i local. No és assessorament fiscal, no està
+        afiliat a l'Agencia Estatal de Administración Tributaria (AEAT) i mai no substitueix
+        les eines oficials de l'AEAT ni el consell d'un professional qualificat.
+      stay_current: Mantén-te al dia
+      trust_and_responsibility: Confiança i responsabilitat
+    kind_label:
+      casilla: Casella
+      cli: Ordre
+      concept: Terme
+      page: Pàgina
+    link:
+      critical_updates: Actualitzacions crítiques
+      disclaimer: Avís legal
+      events_and_deadlines: Esdeveniments i terminis
+      get_cadrumo: Aconsegueix Cadrumo
+      release_notes: Notes de la versió
+      report_issue: Informa d'un problema
+      repository: Repositori
+      updates: Novetats
+    meta:
+      description: '{product} t''ajuda a preparar, comprovar i exportar en local els
+        teus fitxers d''impostos espanyols. {product} no els presenta ni els envia
+        mai per tu.'
+      short_title: Documentació de {product}
+      title: 'Documentació de {product}: preparació local d''impostos espanyols'
+    nav:
+      api: API
+      cli_reference: Referència de la CLI
+      getting_started: Primers passos
+      how_it_works: Com funciona
+    search:
+      full_text_crumb: Cerca de text complet
+      full_text_for: Cercar “{query}” a la documentació
+      hint_close: tancar
+      hint_navigate: navegar
+      hint_open: obrir
+      noscript: La cerca necessita JavaScript. Navega per la documentació des de la
+        barra lateral o consulta el glossari per a la terminologia.
+      on_this_page: En aquesta pàgina
+      open_full_text: Obrir la cerca de text complet
+      page_title: Cerca
+      placeholder: Cercar a la documentació…
+      query_label: Consulta de cerca
+      result_fallback: Resultat
+      result_many: '{count} resultats'
+      result_one: 1 resultat
+      searching: Cercant…
+    sequence:
+      command_error_output: Sortida d'error de l'ordre
+      command_output: Sortida de l'ordre
+      copied: Copiat
+      copy_command: Copiar l'ordre
+      copy_failed: No s'ha pogut copiar
+      hide_output: Amagar la sortida
+      next_command: Ordre següent
+      previous_command: Ordre anterior
+      rundown: Repàs d'ordres
+      shell: Intèrpret de terminal
+      show_output: Mostrar la sortida
   terminology:
     cli:
       authority: Autoritat de la font quan el camp és «source».

@@ -29,7 +29,6 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.frozen_mapping import FrozenMapping
 from ....core.hashing import (
     canonical_json_bytes,
-    content_hash_hex,
     reject_duplicate_json_members,
     reject_json_constant,
     sha256_hex,
@@ -41,7 +40,6 @@ from ....core.type_guards import (
     is_object_set_or_frozenset,
     is_str_keyed_dict,
 )
-from .authority_compiler_closure import AuthorityCompilerClosure
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
@@ -73,7 +71,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "AuthorityArtifact",
-    "AuthorityBuildIdentity",
     "AuthorityComponentCodecError",
     "AuthorityComponentKind",
     "AuthorityComponentQuery",
@@ -580,69 +577,13 @@ class AuthorityEvidenceProjection:
 
 
 @dataclass(frozen=True, slots=True)
-class AuthorityBuildIdentity:
-    """Distinct source, compiler, and whole-generation dependency receipts."""
-
-    source_identity_digest: str
-    compiler_identity_digest: str
-    component_dependency_digest: str
-
-    def __post_init__(self) -> None:
-        """Refuse malformed receipts or a dependency receipt for other inputs."""
-        if any(
-            _IDENTITY_DIGEST.fullmatch(value) is None
-            for value in (
-                self.source_identity_digest,
-                self.compiler_identity_digest,
-                self.component_dependency_digest,
-            )
-        ):
-            raise ValueError("authority build identities must be lowercase SHA-256 digests")
-        if self.component_dependency_digest != self._component_digest():
-            raise ValueError("authority component dependency identity does not match its complete inputs")
-
-    def _component_digest(self) -> str:
-        return content_hash_hex(
-            {
-                "schema": "authority-component-dependencies/v1",
-                "component": "complete-authority",
-                "source_identity_digest": self.source_identity_digest,
-                "compiler_identity_digest": self.compiler_identity_digest,
-            }
-        )
-
-    @classmethod
-    def from_inputs(cls, source_identity_digest: str, compiler_identity_digest: str) -> AuthorityBuildIdentity:
-        """Create the dependency receipt for a full canonical compilation."""
-        component = content_hash_hex(
-            {
-                "schema": "authority-component-dependencies/v1",
-                "component": "complete-authority",
-                "source_identity_digest": source_identity_digest,
-                "compiler_identity_digest": compiler_identity_digest,
-            }
-        )
-        return cls(source_identity_digest, compiler_identity_digest, component)
-
-    @property
-    def identity_digest(self) -> str:
-        """Combine the distinct receipts into the runtime generation identity."""
-        return content_hash_hex(
-            {
-                "schema": "authority-generation/v1",
-                "source_identity_digest": self.source_identity_digest,
-                "compiler_identity_digest": self.compiler_identity_digest,
-                "component_dependency_digest": self.component_dependency_digest,
-            }
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class AuthorityArtifact:
     """Complete typed authority payload emitted only after registry validation.
 
-    ``identity_digest`` is the content-addressed identity of the registry and
-    source-evidence inputs development validated to produce this authority.
+    ``identity_digest`` is the content-addressed identity of the legal inputs
+    development validated to produce this authority: the registry sources, the
+    source evidence and the profile schema. It names the law the authority
+    encodes, so nothing about the compiler or its environment enters it.
     The graph is deeply immutable: its models are frozen and its mappings are
     frozen mappings, so a consumer cannot change what any other holder of the
     same instance observes.
@@ -651,8 +592,6 @@ class AuthorityArtifact:
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
     identity_digest: str
-    build_identity: AuthorityBuildIdentity
-    compiler_closure: AuthorityCompilerClosure
     profile_schema: ProfileSchemaDefinition
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
 
@@ -666,14 +605,6 @@ class AuthorityArtifact:
             raise TypeError("authority artifact catalogues must be a RegistryCatalogues instance")
         if _IDENTITY_DIGEST.fullmatch(self.identity_digest) is None:
             raise ValueError("authority artifact identity_digest must be a lowercase SHA-256 hexadecimal digest")
-        if not isinstance(self.build_identity, AuthorityBuildIdentity):
-            raise TypeError("authority artifact requires typed build identity")
-        if self.identity_digest != self.build_identity.identity_digest:
-            raise ValueError("authority generation identity does not match its build receipts")
-        if not isinstance(self.compiler_closure, AuthorityCompilerClosure):
-            raise TypeError("authority artifact requires a typed compiler closure")
-        if self.compiler_closure.identity_digest != self.build_identity.compiler_identity_digest:
-            raise ValueError("authority compiler closure does not recompute its compiler identity receipt")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
         from ...user_profile.schema import ProfileSchemaDefinition

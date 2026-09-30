@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"POT-Creation-Date: 2026-09-29 18:34+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -28,8 +28,8 @@ msgid ""
 "footer point here so important project status is available from every "
 "documentation page."
 msgstr ""
-"Használja ezt az oldalt a projekt központi felületeként a kiadási "
-"jegyzetekhez, a kritikus közleményekhez, a letöltési hivatkozásokhoz, az "
+"Ez az oldal a projekt központi felülete a kiadási jegyzetekhez, a "
+"kritikus közleményekhez, a letöltési hivatkozásokhoz, az "
 "eseményjegyzetekhez és a támogatási útvonalakhoz. A fejléc és a lábléc "
 "ide mutat, így a projekt fontos állapota minden dokumentációs oldalról "
 "elérhető."
@@ -41,90 +41,84 @@ msgid ""
 "rules with the Agencia Estatal de Administración Tributaria (AEAT) before"
 " you file."
 msgstr ""
-"A Cadrumo béta állapotú. Frissítés előtt tekintsen minden kiadási "
-"jegyzetet potenciálisan lényegesnek, benyújtás előtt pedig ellenőrizze a "
-"benyújtási határidőket, űrlapokat és benyújtási szabályokat az Agencia "
-"Estatal de Administración Tributariánál (AEAT)."
+"A Cadrumo béta állapotban van. Frissítés előtt minden kiadási jegyzetet "
+"tekints potenciálisan fontosnak, benyújtás előtt pedig ellenőrizd a "
+"benyújtási határidőket, az űrlapokat és a benyújtási szabályokat az "
+"Agencia Estatal de Administración Tributariánál (AEAT)."
 
 #: ../../updates.md:18
-msgid "Latest download"
-msgstr "Legfrissebb letöltés"
+msgid "Get Cadrumo"
+msgstr "A Cadrumo beszerzése"
 
 #: ../../updates.md:23
 msgid ""
-"Start with the latest release when a packaged download is available. "
-"Record the installed version before preparing any filing records."
+"Install the latest release with pip or uv. Record the installed version "
+"before preparing any filing records."
 msgstr ""
-"Kezdje a legfrissebb kiadással, ha elérhető csomagolt letöltés. Jegyezze "
-"fel a telepített verziót, mielőtt bármilyen benyújtási nyilvántartást "
-"előkészít."
+"Telepítsd a legfrissebb kiadást pip-pel vagy uv-vel. Jegyezd fel a "
+"telepített verziót, mielőtt bármilyen benyújtási nyilvántartást "
+"előkészítesz."
 
-#: ../../updates.md:27 ../../updates.md:65
+#: ../../updates.md:27 ../../updates.md:64
 msgid "Critical updates"
 msgstr "Kritikus frissítések"
 
 #: ../../updates.md:32
-msgid ""
-"Use release notes to check breaking changes, migration notes, supported "
-"workflows, and known limitations before changing versions."
-msgstr ""
-"A kiadási jegyzetek segítségével ellenőrizze a kompatibilitást megtörő "
-"változásokat, a migrációs jegyzeteket, a támogatott munkafolyamatokat és "
-"az ismert korlátozásokat, mielőtt verziót vált."
+msgid "Read each release's changes on GitHub before you change versions."
+msgstr "Verzióváltás előtt olvasd el a GitHubon az egyes kiadások változásait."
 
-#: ../../updates.md:36
+#: ../../updates.md:35
 msgid "Report an issue"
 msgstr "Hiba bejelentése"
 
-#: ../../updates.md:41
+#: ../../updates.md:40
 msgid ""
 "Open an issue for defects, confusing documentation, missing workflow "
 "coverage, or release notes that need clarification."
 msgstr ""
-"Nyisson hibajegyet hibák, félreérthető dokumentáció, hiányzó "
-"munkafolyamat-lefedettség vagy pontosításra szoruló kiadási jegyzetek "
-"esetén."
+"Nyiss hibajegyet hibák, félreérthető dokumentáció, hiányzó munkafolyamat-"
+"lefedettség vagy pontosításra szoruló kiadási jegyzetek esetén."
 
-#: ../../updates.md:45
+#: ../../updates.md:44
 msgid "Source repository"
 msgstr "Forráskódtár"
 
-#: ../../updates.md:50
+#: ../../updates.md:49
 msgid ""
 "Use the repository for source code, development history, project "
 "metadata, and links to release and issue activity."
 msgstr ""
 "A kódtárat a forráskódhoz, a fejlesztési előzményekhez, a projekt "
 "metaadataihoz, valamint a kiadási és hibajegy-tevékenységre mutató "
-"hivatkozásokhoz használja."
+"hivatkozásokhoz használhatod."
 
-#: ../../updates.md:55
+#: ../../updates.md:54
 msgid "Current status"
 msgstr "Jelenlegi állapot"
 
-#: ../../updates.md:57
+#: ../../updates.md:56
 msgid ""
 "Cadrumo is local-first beta software for preparing Spanish tax filing "
 "records ([read the full disclaimer](disclaimer.md))."
 msgstr ""
-"A Cadrumo helyi-elsődleges, béta szoftver spanyol adóbevallási "
-"nyilvántartások előkészítéséhez ([olvassa el a teljes jogi "
+"A Cadrumo helyi működésű, béta állapotú szoftver spanyol adóbevallási "
+"nyilvántartások előkészítéséhez ([olvasd el a teljes jogi "
 "nyilatkozatot](disclaimer.md))."
 
-#: ../../updates.md:60
+#: ../../updates.md:59
 msgid ""
 "Expect breaking changes while the command-line interface (CLI) workflows,"
 " generated documentation, and modelo coverage are still being hardened. "
 "Before relying on a version for a filing period, read the release notes "
 "and keep a record of the installed version used to prepare the export."
 msgstr ""
-"Számítson kompatibilitást megtörő változásokra, amíg a parancssori "
-"felület (CLI) munkafolyamatai, a generált dokumentáció és a modelo "
-"lefedettség még megszilárdítás alatt állnak. Mielőtt egy verzióra "
-"támaszkodna egy benyújtási időszakban, olvassa el a kiadási jegyzeteket, "
-"és jegyezze fel az export előkészítéséhez használt telepített verziót."
+"Számíts visszafelé nem kompatibilis változásokra, amíg a parancssori "
+"felület (CLI) munkafolyamatai, a generált dokumentáció és a modelók "
+"lefedettsége még megszilárdulóban van. Mielőtt egy benyújtási időszakban "
+"egy verzióra támaszkodnál, olvasd el a kiadási jegyzeteket, és jegyezd "
+"fel az export előkészítéséhez használt telepített verziót."
 
-#: ../../updates.md:67
+#: ../../updates.md:66
 msgid ""
 "Critical updates are published through the release notes and highlighted "
 "through the site banner when the documentation needs to draw attention to"
@@ -134,64 +128,67 @@ msgstr ""
 "webhely fejlécében emeljük ki, amikor a dokumentációnak fel kell hívnia a"
 " figyelmet egy változásra."
 
-#: ../../updates.md:70
+#: ../../updates.md:69
 msgid "Check this section when you need to know whether a release affects:"
 msgstr ""
-"Ezt a szakaszt akkor tekintse meg, amikor tudnia kell, hogy egy kiadás "
+"Ezt a szakaszt akkor nézd meg, amikor tudnod kell, hogy egy kiadás "
 "érinti-e a következőket:"
 
-#: ../../updates.md:72
+#: ../../updates.md:71
 msgid "filing workflow order;"
-msgstr "a benyújtási munkafolyamat sorrendje;"
+msgstr "a benyújtási munkafolyamat sorrendjét;"
+
+#: ../../updates.md:72
+msgid "taxpayer profile setup;"
+msgstr "az adózói profil beállítását;"
 
 #: ../../updates.md:73
-msgid "taxpayer profile setup;"
-msgstr "az adózói profil beállítása;"
+msgid "ledger import or classification behavior;"
+msgstr "a ledger importálásának vagy besorolásának működését;"
 
 #: ../../updates.md:74
-msgid "ledger import or classification behavior;"
-msgstr "a ledger importálásának vagy besorolásának viselkedése;"
+msgid "modelo calculation, verification, or export behavior;"
+msgstr "a modelók számításának, ellenőrzésének vagy exportálásának működését;"
 
 #: ../../updates.md:75
-msgid "modelo calculation, verification, or export behavior;"
-msgstr "a modelo számításának, ellenőrzésének vagy exportálásának viselkedése;"
-
-#: ../../updates.md:76
 msgid "storage, receipts, or reconciliation steps."
-msgstr "a tárolás, a bizonylatok vagy az egyeztetés lépései."
+msgstr "a tárolás, a justificantek vagy az egyeztetés lépéseit."
 
-#: ../../updates.md:78
+#: ../../updates.md:77
 msgid "Download guidance"
 msgstr "Letöltési útmutató"
 
-#: ../../updates.md:80
+#: ../../updates.md:79
 msgid ""
-"Use the latest release link when you need the current packaged version, "
-"and follow the [installation guide](workstation-setup.md) to install it. "
-"If no packaged artifact is available for your environment, open an issue "
-"so the gap is recorded."
+"Follow [Get Cadrumo](download.md) to install the current version, and the"
+" [installation guide](workstation-setup.md) to add optional extras. The "
+"[latest release](https://github.com/nevenincs/cadrumo/releases/latest) on"
+" GitHub carries its release notes. If no install channel covers your "
+"platform, open an issue so the gap is recorded."
 msgstr ""
-"Használja a legfrissebb kiadás hivatkozását, ha az aktuális csomagolt "
-"verzióra van szüksége, és kövesse a [telepítési útmutatót](workstation-"
-"setup.md) a telepítéshez. Ha a környezetéhez nem érhető el csomagolt "
-"artefaktum, nyisson hibajegyet, hogy a hiányosság rögzítésre kerüljön."
+"A jelenlegi verzió telepítéséhez kövesd a [Cadrumo "
+"beszerzése](download.md) oldalt, az opcionális extrák hozzáadásához pedig"
+" a [telepítési útmutatót](workstation-setup.md). A GitHubon a "
+"[legfrissebb "
+"kiadás](https://github.com/nevenincs/cadrumo/releases/latest) tartalmazza"
+" a kiadási jegyzeteit. Ha egyik telepítési csatorna sem fedi le a "
+"platformodat, nyiss hibajegyet, hogy a hiány rögzítésre kerüljön."
 
 #: ../../updates.md:85
 msgid "After installing or upgrading, run:"
-msgstr "Telepítés vagy frissítés után futtassa:"
+msgstr "Telepítés vagy frissítés után futtasd:"
 
 #: ../../updates.md:91
 msgid ""
-"Keep that version with the local export, AEAT submission receipt, and any"
-" reconciliation notes for the filing period."
+"Keep that version with the local export, the AEAT receipt (justificante),"
+" and any reconciliation notes for the filing period."
 msgstr ""
-"Tárolja ezt a verziót a helyi exporttal, az AEAT benyújtási "
-"justificantéval és a benyújtási időszakhoz tartozó bármely egyeztetési "
-"jegyzettel együtt."
+"Tartsd meg ezt a verziót a helyi exporttal, az AEAT-justificantéval és a "
+"benyújtási időszakhoz tartozó egyeztetési jegyzetekkel együtt."
 
 #: ../../updates.md:94
-msgid "Deadlines and project announcements"
-msgstr "Határidők és projektbejelentések"
+msgid "Events and deadlines"
+msgstr "Események és határidők"
 
 #: ../../updates.md:96
 msgid ""
@@ -202,16 +199,16 @@ msgid ""
 msgstr ""
 "Ez a dokumentáció leírhat benyújtási munkafolyamatokat és előkészítési "
 "sorrendet, de nem tesz közzé hiteles adónaptárt. Benyújtás előtt mindig "
-"erősítse meg a határidőket, űrlapokat és hivatalos változásokat az AEAT-"
-"nál vagy egy képzett szakembernél."
+"erősítsd meg a határidőket, az űrlapokat és a hivatalos változásokat az "
+"AEAT-nál vagy egy képzett szakembernél."
 
 #: ../../updates.md:100
 msgid ""
 "Project events that affect documentation readers should be announced "
 "through:"
 msgstr ""
-"A dokumentáció olvasóit érintő projekteseményeket a következőkön "
-"keresztül kell bejelenteni:"
+"A dokumentáció olvasóit érintő projekteseményeket a következő csatornákon"
+" kell közzétenni:"
 
 #: ../../updates.md:102
 msgid "the site banner for short-lived notices;"

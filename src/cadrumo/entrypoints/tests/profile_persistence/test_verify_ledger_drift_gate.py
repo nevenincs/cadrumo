@@ -45,9 +45,9 @@ from cadrumo.application.ledger.actions_manual import (
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
-from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -279,9 +279,7 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         ]
         assert blocking, "a reclassified-away deduction must not leave the stale draft grantable"
         # The refusal resolves the operator's position instead of restating it.
-        drift = next(
-            finding for finding in blocking if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
-        )
+        drift = next(finding for finding in blocking if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION)
         # Only entries changed, so the sentence names only them.
         assert drift.message_locale_key == "application.modelo.findings.ledger_snapshot_drift_changed"
         assert dict(drift.message_facts) == {

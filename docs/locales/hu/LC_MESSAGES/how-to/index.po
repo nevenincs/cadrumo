@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 08:34+0200\n"
+"POT-Creation-Date: 2026-09-30 21:28+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -32,15 +32,14 @@ msgid ""
 "or acts as AEAT - read [how records become filing-ready "
 "figures](../explanation/from-records-to-figures.md) for that boundary."
 msgstr ""
-"Ez az oldal a megfelelő útmutatóhoz irányítja. Az útmutatók úgy vannak "
-"csoportosítva, ahogy egy benyújtási év ténylegesen zajlik: állítsa be, ki"
-" az adózó, tekintse meg, mi és mikor esedékes, vezesse a ledgert arról, "
-"mi történt, és készítse elő az egyes benyújtásokat. A Cadrumo a termék; "
-"az Agencia Estatal de Administración Tributaria (AEAT) a külső "
-"adóhatóság, és a Cadrumo soha nem nyújt be bevallást, és nem lép fel "
-"AEAT-ként - erről a határról olvassa el a [hogyan válnak a "
-"nyilvántartások benyújtásra kész számokká](../explanation/from-records-"
-"to-figures.md) oldalt."
+"Ez az oldal a megfelelő útmutatóhoz irányít. Az útmutatók úgy vannak "
+"csoportosítva, ahogyan egy benyújtási év valójában zajlik: állítsd be, ki"
+" az adózó, nézd meg, mi és mikor esedékes, vezesd a ledgert arról, mi "
+"történt, és készítsd elő az egyes benyújtásokat. A Cadrumo a termék; az "
+"Agencia Estatal de Administración Tributaria (AEAT) a külső adóhatóság, "
+"és a Cadrumo soha nem nyújt be bevallást, és nem az AEAT nevében jár el. "
+"Erről a határról a [hogyan lesznek a nyilvántartásból benyújtásra kész "
+"számok](../explanation/from-records-to-figures.md) oldalon olvashatsz."
 
 #: ../../how-to/index.md:12
 #, python-brace-format
@@ -51,12 +50,12 @@ msgid ""
 "terminology, use the {doc}`glossary </_generated/glossary>`; for exact "
 "options and refusals, the [command-line reference](../cli/index.rst)."
 msgstr ""
-"Kezdje a [telepítési útmutatóval](../workstation-setup.md), ha az `aeat` "
-"parancs nem fut. A banki nyilvántartásoktól a benyújtott modelóig tartó "
-"teljes út térképéért olvassa el [a benyújtási utat](onboarding.md). A "
-"terminológiához használja a {doc}`szójegyzéket </_generated/glossary>`; a"
-" pontos kapcsolókhoz és elutasításokhoz a [parancssori "
-"referenciát](../cli/index.rst)."
+"Ha az `aeat` parancs nem fut, kezdd a [telepítési útmutatóval"
+"](../workstation-setup.md). A banki nyilvántartásoktól a benyújtott "
+"modelóig vezető teljes út térképéért olvasd el [a benyújtás "
+"útját](onboarding.md). A terminológiához használd a {doc}`szójegyzéket "
+"</_generated/glossary>`; a pontos kapcsolókhoz és elutasításokhoz a "
+"[parancssori referenciát](../cli/index.rst)."
 
 #: ../../how-to/index.md:18
 msgid ""
@@ -65,16 +64,15 @@ msgid ""
 "with redacted output if the problem remains. Never publish taxpayer data,"
 " credentials, or a vulnerability in an issue."
 msgstr ""
-"Egy hétköznapi hibánál kövesse a [Diagnosztizálás és "
-"javítás](troubleshooting.md) útmutatót, és ha a probléma megmarad, "
-"nyisson egy [nyilvános "
-"hibajegyet](https://github.com/nevenincs/cadrumo/issues) szerkesztett "
-"kimenettel. Soha ne tegyen közzé adózói adatokat, hitelesítő adatokat "
-"vagy sebezhetőséget egy hibajegyben."
+"Hétköznapi hiba esetén kövesd a [Diagnosztizálás és "
+"javítás](troubleshooting.md) útmutatót, és ha a probléma megmarad, nyiss "
+"egy [nyilvános hibajegyet](https://github.com/nevenincs/cadrumo/issues) "
+"kitakart kimenettel. Soha ne tegyél közzé adózói adatokat, hitelesítő "
+"adatokat vagy sebezhetőséget hibajegyben."
 
 #: ../../how-to/index.md:23
 msgid "Run through a filing year"
-msgstr "Menjen végig egy benyújtási éven"
+msgstr "Menj végig egy benyújtási éven"
 
 #: ../../how-to/index.md:25
 msgid ""
@@ -82,9 +80,9 @@ msgid ""
 "complete filing year, command by command. Start here to see the whole "
 "workflow before running your own."
 msgstr ""
-"Két modelóalapú végigfutás egy példaadózót vezet végig egy teljes "
-"benyújtási éven, parancsról parancsra. Itt kezdje, hogy lássa a teljes "
-"munkafolyamatot, mielőtt a sajátját futtatná."
+"Két modelóra épülő végigvezetés egy példaadózót visz végig egy teljes "
+"benyújtási éven, parancsról parancsra. Itt kezdd, hogy lásd a teljes "
+"munkafolyamatot, mielőtt a sajátodat futtatnád."
 
 #: ../../how-to/index.md:33
 msgid "The income-tax year: Modelo 130 → 100"
@@ -95,8 +93,8 @@ msgid ""
 "Four quarterly Modelo 130 instalments, each building on the ones before "
 "it, closing with the annual Modelo 100 Renta declaration."
 msgstr ""
-"Négy negyedéves Modelo 130 előleg, mindegyik az előzőekre épül, az éves "
-"Modelo 100 Renta-bevallással zárva."
+"Négy negyedéves Modelo 130 előleg, mindegyik az előzőkre épül, és az éves"
+" Modelo 100 Renta-bevallással zárul."
 
 #: ../../how-to/index.md:41
 msgid "The IVA year: Modelo 303 → 349 → 390"
@@ -107,8 +105,8 @@ msgid ""
 "Four quarterly Modelo 303 returns with the IVA credit carrying between "
 "them, a Modelo 349 branch, and the annual Modelo 390 summary."
 msgstr ""
-"Négy negyedéves Modelo 303 bevallás, közöttük átvitt IVA-követeléssel, "
-"egy Modelo 349 ággal és az éves Modelo 390 összesítővel."
+"Négy negyedéves Modelo 303 bevallás, amelyek között az IVA-követelés "
+"átvihető, egy Modelo 349 ág és az éves Modelo 390 összesítő."
 
 #: ../../how-to/index.md:49
 msgid "Quickstart"
@@ -119,41 +117,41 @@ msgid ""
 "Shortest path from profile and ledger to an exported modelo file: one "
 "modelo, one period, copy-paste commands."
 msgstr ""
-"A legrövidebb út a profiltól és a ledgertől egy exportált modelo-fájlig: "
-"egy modelo, egy időszak, másolható-beilleszthető parancsok."
+"A legrövidebb út a profiltól és a ledgertől az exportált modelofájlig: "
+"egy modelo, egy időszak, másolható parancsok."
 
 #: ../../how-to/index.md:57
 msgid "Your first quarterly filing"
-msgstr "Az első negyedéves benyújtása"
+msgstr "Az első negyedéves benyújtásod"
 
 #: ../../how-to/index.md:61
 msgid ""
 "First-time walk-through of one Modelo 130 quarter: import a statement, "
 "classify the rows, prepare the draft, and confirm it verifies."
 msgstr ""
-"Első alkalmas végigvezetés egy Modelo 130 negyedéven: importáljon egy "
-"kivonatot, osztályozza a sorokat, készítse el a piszkozatot, és erősítse "
-"meg, hogy ellenőrzésen átmegy."
+"Első végigvezetés egy Modelo 130 negyedéven: importálj egy kivonatot, "
+"sorold be a sorokat, készítsd el a piszkozatot, és győződj meg róla, hogy"
+" átmegy az ellenőrzésen."
 
 #: ../../how-to/index.md:66
 msgid "Your profile"
-msgstr "A profilja"
+msgstr "A profilod"
 
 #: ../../how-to/index.md:68
 msgid "Who the taxpayer is, and the facts that decide what you owe."
-msgstr "Ki az adózó, és azok az adatok, amelyek eldöntik, mennyivel tartozik."
+msgstr "Ki az adózó, és mely adatok döntik el, mivel tartozol."
 
 #: ../../how-to/index.md:74
 msgid "Set up your taxpayer profile"
-msgstr "Állítsa be az adózói profilját"
+msgstr "Állítsd be az adózói profilodat"
 
 #: ../../how-to/index.md:78
 msgid ""
-"Create, inspect, export, import, rename, or delete taxpayer profiles, and"
-" log in to the one you want active."
+"Create, inspect, export, import, or delete taxpayer profiles, and log in "
+"to the one you want active."
 msgstr ""
-"Hozzon létre, vizsgáljon meg, váltson, exportáljon, importáljon, nevezzen"
-" át vagy töröljön adózói profilokat."
+"Hozz létre, vizsgálj meg, exportálj, importálj vagy törölj adózói "
+"profilokat, és jelentkezz be abba, amelyiket aktívvá szeretnéd tenni."
 
 #: ../../how-to/index.md:82
 msgid "Authenticate with AEAT"
@@ -162,40 +160,40 @@ msgstr "Hitelesítés az AEAT-nál"
 #: ../../how-to/index.md:86
 msgid "Configure read-only AEAT authentication for live-read workflows."
 msgstr ""
-"Állítson be csak olvasható AEAT-hitelesítést az élő olvasási "
+"Állíts be csak olvasásra szolgáló AEAT-hitelesítést az élő lekérdezéses "
 "munkafolyamatokhoz."
 
 #: ../../how-to/index.md:89
 msgid "Maintain Modelo 036 census facts"
-msgstr "Tartsa karban a Modelo 036 censo-adatokat"
+msgstr "Tartsd karban a Modelo 036 censo-adatait"
 
 #: ../../how-to/index.md:93
 msgid "Keep AEAT census facts correct in the active profile."
-msgstr "Tartsa helyesen az AEAT censo-adatait az aktív profilban."
+msgstr "Tartsd helyesen az AEAT censo-adatait az aktív profilban."
 
 #: ../../how-to/index.md:96
 msgid "Find out which modelos apply"
-msgstr "Tudja meg, mely modelók vonatkoznak Önre"
+msgstr "Tudd meg, mely modelók vonatkoznak rád"
 
 #: ../../how-to/index.md:100
 msgid "Ask which modelos apply to you and why, from your saved profile facts."
 msgstr ""
-"Kérdezze meg az elmentett profiladataiból, mely modelók vonatkoznak Önre,"
-" és miért."
+"Kérdezd meg a mentett profiladataid alapján, mely modelók vonatkoznak "
+"rád, és miért."
 
 #: ../../how-to/index.md:103
 msgid "Protect access to your data"
-msgstr "Védje az adataihoz való hozzáférést"
+msgstr "Védd az adataidhoz való hozzáférést"
 
 #: ../../how-to/index.md:107
 msgid "Store your passphrase safely, log out, or reset local state."
 msgstr ""
-"Biztonságosan tárold a jelszó-mondatodat, jelentkezz ki, vagy állítsd "
-"vissza a helyi állapotot."
+"Tárold biztonságosan a jelmondatodat, jelentkezz ki, vagy állítsd vissza "
+"a helyi állapotot."
 
 #: ../../how-to/index.md:111
 msgid "Your calendar"
-msgstr "A naptára"
+msgstr "A naptárad"
 
 #: ../../how-to/index.md:113
 msgid "What is due, and when."
@@ -203,15 +201,15 @@ msgstr "Mi esedékes, és mikor."
 
 #: ../../how-to/index.md:119
 msgid "Plan your filing calendar"
-msgstr "Tervezze meg a benyújtási naptárát"
+msgstr "Tervezd meg a benyújtási naptáradat"
 
 #: ../../how-to/index.md:123
 msgid ""
 "See what may be due, when filing windows open and close, and which period"
 " tokens address them."
 msgstr ""
-"Tekintse meg, mi lehet esedékes, mikor nyílnak és zárnak be a benyújtási "
-"időablakok, és mely időszak-tokenek szólítják meg őket."
+"Nézd meg, mi lehet esedékes, mikor nyílnak és záródnak a benyújtási "
+"időszakok, és mely időszak-tokenekkel lehet őket megcímezni."
 
 #: ../../how-to/index.md:127
 msgid "Read AEAT notifications"
@@ -220,32 +218,32 @@ msgstr "AEAT-értesítések beolvasása"
 #: ../../how-to/index.md:131
 msgid "Capture official notifications and read live AEAT data, view-only."
 msgstr ""
-"Rögzítsen hivatalos értesítéseket, és olvasson élő AEAT-adatokat, csak "
+"Rögzíts hivatalos értesítéseket, és olvass élő AEAT-adatokat, csak "
 "megtekintésre."
 
 #: ../../how-to/index.md:134
 msgid "Check that a filing is ready"
-msgstr "Ellenőrizze, hogy egy benyújtás készen áll-e"
+msgstr "Ellenőrizd, hogy egy benyújtás készen áll-e"
 
 #: ../../how-to/index.md:138
 msgid ""
 "Check readiness, what a filing depends on, its full history, and year-"
 "over-year changes."
 msgstr ""
-"Ellenőrizze a felkészültséget, azt, hogy mitől függ egy benyújtás, a "
-"teljes előzményeit és az évről évre bekövetkező változásokat."
+"Ellenőrizd a készenlétet, azt, hogy mitől függ egy benyújtás, a teljes "
+"előzményeit és az évről évre bekövetkező változásokat."
 
 #: ../../how-to/index.md:143
 msgid "Your ledger"
-msgstr "A ledgere"
+msgstr "A ledgered"
 
 #: ../../how-to/index.md:145
 msgid ""
 "The record of what happened: bring transactions in, classify them, and "
 "keep the evidence."
 msgstr ""
-"A nyilvántartás arról, mi történt: hozza be a tranzakciókat, osztályozza "
-"őket, és tartsa meg a bizonyítékokat."
+"A nyilvántartás arról, mi történt: hozd be a tranzakciókat, sorold be "
+"őket, és őrizd meg a bizonyítékokat."
 
 #: ../../how-to/index.md:152
 msgid "Import and manage transactions"
@@ -253,33 +251,31 @@ msgstr "Tranzakciók importálása és kezelése"
 
 #: ../../how-to/index.md:156
 msgid "Import, add, edit, remove, and review ledger rows."
-msgstr ""
-"Importáljon, adjon hozzá, szerkesszen, távolítson el és tekintsen át "
-"ledger-sorokat."
+msgstr "Importálj, adj hozzá, szerkessz, távolíts el és nézz át ledgersorokat."
 
 #: ../../how-to/index.md:159
 msgid "Classify transactions"
-msgstr "Tranzakciók osztályozása"
+msgstr "Tranzakciók besorolása"
 
 #: ../../how-to/index.md:163
 msgid ""
 "Classify rows manually, in bulk, with allocation, or through the review "
 "queue."
 msgstr ""
-"Osztályozzon sorokat kézzel, tömegesen, felosztással vagy az ellenőrzési "
+"Sorold be a sorokat kézzel, tömegesen, felosztással vagy az áttekintési "
 "soron keresztül."
 
 #: ../../how-to/index.md:166
 msgid "Classify with an LLM"
-msgstr "Osztályozás LLM-mel"
+msgstr "Besorolás LLM-mel"
 
 #: ../../how-to/index.md:170
 msgid ""
-"Set up a provider, preview and apply suggestions, and classify from an "
-"attached invoice."
+"Set up the local reader, preview and apply suggestions, and classify from"
+" an attached invoice."
 msgstr ""
-"Állítson be egy szolgáltatót, tekintsen meg előnézetben és alkalmazzon "
-"javaslatokat, és osztályozzon egy csatolt számlából."
+"Állítsd be a helyi olvasót, nézd meg előnézetben és alkalmazd a "
+"javaslatokat, és sorolj be egy csatolt számla alapján."
 
 #: ../../how-to/index.md:174
 msgid "Attach invoices and receipts"
@@ -290,7 +286,7 @@ msgid ""
 "Store invoices and receipts and link them to the transactions they "
 "support."
 msgstr ""
-"Tároljon számlákat és bizonylatokat, és kapcsolja őket az általuk "
+"Tárolj számlákat és bizonylatokat, és kapcsold őket az általuk "
 "alátámasztott tranzakciókhoz."
 
 #: ../../how-to/index.md:181
@@ -302,34 +298,34 @@ msgid ""
 "Record issued and received invoices and feed intra-community operations "
 "to Modelo 349."
 msgstr ""
-"Rögzítsen kiállított és beérkezett számlákat, és táplálja a közösségen "
-"belüli ügyleteket a Modelo 349-be."
+"Rögzíts kiállított és kapott számlákat, és add át a közösségen belüli "
+"ügyleteket a Modelo 349-nek."
 
 #: ../../how-to/index.md:188
 msgid "Correct mistakes in your ledger"
-msgstr "Javítsa ki a hibákat a ledgerében"
+msgstr "Javítsd ki a hibákat a ledgeredben"
 
 #: ../../how-to/index.md:192
 msgid "Update, remove, split, merge, stash, or archive transactions safely."
 msgstr ""
-"Biztonságosan frissítsen, távolítson el, osszon fel, vonjon össze, tegyen"
-" félre vagy archiváljon tranzakciókat."
+"Biztonságosan frissíts, távolíts el, oszd fel, vonj össze, tegyél félre "
+"vagy archiválj tranzakciókat."
 
 #: ../../how-to/index.md:195
 msgid "Apply IVA prorrata deductions"
-msgstr "IVA prorrata levonások alkalmazása"
+msgstr "IVA-prorrata levonások alkalmazása"
 
 #: ../../how-to/index.md:199
 msgid ""
 "Deduct input IVA under general or especial prorrata and declare "
 "differentiated sectors."
 msgstr ""
-"Vonja le az előzetes IVA-t általános vagy especial prorrata alatt, és "
-"vallja be a differenciált szektorokat."
+"Vond le a beszámítható IVA-t általános vagy especial prorrata szerint, és"
+" vallj be differenciált tevékenységi ágakat."
 
 #: ../../how-to/index.md:203
 msgid "Your filings"
-msgstr "A benyújtásai"
+msgstr "A benyújtásaid"
 
 #: ../../how-to/index.md:205
 msgid "The per-modelo work: prepare, review, verify, export, file, and reconcile."
@@ -342,16 +338,19 @@ msgid "The filing workflow"
 msgstr "A benyújtási munkafolyamat"
 
 #: ../../how-to/index.md:215
-msgid "Understand drafts, verification, export, filing markers, and history."
+msgid ""
+"Learn how work units and calculation revisions carry a filing through "
+"create, calculate, verify, file, and export."
 msgstr ""
-"Értse meg a piszkozatokat, az ellenőrzést, az exportot, a benyújtási "
-"jelölőket és az előzményeket."
+"Ismerd meg, hogyan viszik végig a munkaegységek és a számítási revíziók a"
+" benyújtást a létrehozáson, a számításon, az ellenőrzésen, a benyújtáson "
+"és az exporton."
 
-#: ../../how-to/index.md:218
+#: ../../how-to/index.md:219
 msgid "Fill in and file in the workbench"
 msgstr "Kitöltés és benyújtás a munkafelületen"
 
-#: ../../how-to/index.md:222
+#: ../../how-to/index.md:223
 msgid ""
 "Fill in a declaration box by box in the full-screen interface, then "
 "calculate, review, file and export it."
@@ -359,133 +358,135 @@ msgstr ""
 "Töltsön ki egy bevallást rovatról rovatra a teljes képernyős felületen, "
 "majd számítsa ki, ellenőrizze, nyújtsa be és exportálja."
 
-#: ../../how-to/index.md:225
+#: ../../how-to/index.md:226
 msgid "Modelo 036"
-msgstr "Modelo 036-os űrlap"
+msgstr "Modelo 036"
 
-#: ../../how-to/index.md:229
-msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
-msgstr "Rögzítsen egy AEAT sedéjén benyújtott altát, modificaciont vagy baját."
+#: ../../how-to/index.md:230
+msgid "Record an alta, modificación, or baja you filed at AEAT's sede."
+msgstr ""
+"Rögzíts egy alta, modificación vagy baja bejelentést, amelyet az AEAT "
+"sedéjén nyújtottál be."
 
-#: ../../how-to/index.md:232
+#: ../../how-to/index.md:233
 msgid "Modelo 100 (Renta)"
-msgstr "Modelo 100-as (Renta) űrlap"
+msgstr "Modelo 100 (Renta)"
 
-#: ../../how-to/index.md:236
+#: ../../how-to/index.md:237
 msgid "Prepare the annual Renta declaration that gathers the whole year."
-msgstr "Készítse el az éves Renta-bevallást, amely az egész évet összegyűjti."
+msgstr "Készítsd el az éves Renta-bevallást, amely az egész évet összefogja."
 
-#: ../../how-to/index.md:239
+#: ../../how-to/index.md:240
 msgid "Modelo 130"
-msgstr "Modelo 130-as űrlap"
+msgstr "Modelo 130"
 
-#: ../../how-to/index.md:243
+#: ../../how-to/index.md:244
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
-msgstr "Készítse el a negyedéves IRPF-előleget, az év során halmozottan."
+msgstr "Készítsd el a negyedéves IRPF-előleget, amely az év során halmozódik."
 
-#: ../../how-to/index.md:246
+#: ../../how-to/index.md:247
 msgid "Modelo 303"
-msgstr "Modelo 303-as űrlap"
+msgstr "Modelo 303"
 
-#: ../../how-to/index.md:250
+#: ../../how-to/index.md:251
 msgid "Prepare, verify, and export a quarterly IVA return."
-msgstr "Készítsen elő, ellenőrizzen és exportáljon egy negyedéves IVA-bevallást."
+msgstr "Készíts elő, ellenőrizz és exportálj egy negyedéves IVA-bevallást."
 
-#: ../../how-to/index.md:253
+#: ../../how-to/index.md:254
 msgid "Modelo 349"
-msgstr "Modelo 349-es űrlap"
+msgstr "Modelo 349"
 
-#: ../../how-to/index.md:257
+#: ../../how-to/index.md:258
 msgid "Declare intra-community operations from your invoice records."
-msgstr "Vallja be a közösségen belüli ügyleteket a számlanyilvántartásaiból."
+msgstr "Vallj be közösségen belüli ügyleteket a számlanyilvántartásaidból."
 
-#: ../../how-to/index.md:260
+#: ../../how-to/index.md:261
 msgid "Modelo 390"
-msgstr "Modelo 390-es űrlap"
+msgstr "Modelo 390"
 
-#: ../../how-to/index.md:264
+#: ../../how-to/index.md:265
 msgid "Prepare the annual IVA summary."
-msgstr "Készítse el az éves IVA-összesítőt."
+msgstr "Készítsd el az éves IVA-összesítőt."
 
-#: ../../how-to/index.md:267
+#: ../../how-to/index.md:268
 msgid "Review calculation inputs"
 msgstr "Számítási bemenetek áttekintése"
 
-#: ../../how-to/index.md:271
+#: ../../how-to/index.md:272
 msgid ""
 "Review which form boxes were filled, supply missing values, and handle "
 "offsets."
 msgstr ""
-"Tekintse át, mely nyomtatványrovatok voltak kitöltve, adja meg a hiányzó "
-"értékeket, és kezelje a beszámításokat."
+"Nézd át, mely casillák lettek kitöltve, add meg a hiányzó értékeket, és "
+"kezeld a beszámításokat."
 
-#: ../../how-to/index.md:274
+#: ../../how-to/index.md:275
 msgid "Review with Google Sheets"
-msgstr "Áttekintés Google Táblázatokkal"
+msgstr "Áttekintés Google Sheets segítségével"
 
-#: ../../how-to/index.md:278
+#: ../../how-to/index.md:279
 msgid ""
 "Export, edit, and pull back modelo calculations using a Google Sheets "
 "spreadsheet."
 msgstr ""
-"Exportáljon, szerkesszen és húzzon vissza modelo-számításokat egy Google "
-"Táblázatok táblázat használatával."
+"Exportálj, szerkessz és húzz vissza modelószámításokat egy Google Sheets-"
+"táblázat segítségével."
 
-#: ../../how-to/index.md:281
+#: ../../how-to/index.md:282
 msgid "Verify a filing"
-msgstr "Egy benyújtás ellenőrzése"
+msgstr "Benyújtás ellenőrzése"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:286
 msgid "Run verification, read the report findings, and fix what blocks export."
 msgstr ""
-"Futtasson ellenőrzést, olvassa el a jelentés észrevételeit, és javítsa "
-"ki, ami blokkolja az exportot."
+"Futtass ellenőrzést, olvasd el a jelentés megállapításait, és javítsd ki,"
+" ami akadályozza az exportot."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:289
 msgid "Share a calculation summary"
 msgstr "Számítási összesítő megosztása"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:293
 msgid ""
 "Write a signed PDF of a verified calculation, and check a copy against "
 "your data."
 msgstr ""
-"Készítsen aláírt PDF-et egy ellenőrzött számításról, és vesse össze egy "
-"példányát az adataival."
+"Írj aláírt PDF-et egy ellenőrzött számításról, és vesd össze egy "
+"példányát az adataiddal."
 
-#: ../../how-to/index.md:295
+#: ../../how-to/index.md:296
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
-#: ../../how-to/index.md:299
+#: ../../how-to/index.md:300
 msgid ""
-"Export the file, upload it at the AEAT portal yourself, record, and "
-"reconcile."
+"Present the modelo at the AEAT portal yourself, record the filing "
+"locally, and reconcile."
 msgstr ""
-"Exportálja a fájlt, töltse fel maga az AEAT-portálon, rögzítse és "
-"egyeztesse."
+"Nyújtsd be te magad a modelót az AEAT-portálon, rögzítsd helyben a "
+"benyújtást, és egyeztesd."
 
-#: ../../how-to/index.md:302
+#: ../../how-to/index.md:303
 msgid "Reconcile a filing"
-msgstr "Egy benyújtás egyeztetése"
+msgstr "Benyújtás egyeztetése"
 
-#: ../../how-to/index.md:306
+#: ../../how-to/index.md:307
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
 msgstr ""
-"Húzza le és tárolja az AEAT justificantéját, majd hasonlítsa össze a "
-"helyi benyújtási nyilvántartásával."
+"Töltsd le és tárold az AEAT justificantéját, majd hasonlítsd össze a "
+"helyi benyújtási nyilvántartásoddal."
 
-#: ../../how-to/index.md:311
+#: ../../how-to/index.md:312
 msgid "Tools and help"
 msgstr "Eszközök és segítség"
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:318
 msgid "Connect an agent (MCP)"
 msgstr "Ügynök csatlakoztatása (MCP)"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:322
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -493,23 +494,59 @@ msgstr ""
 "Tedd elérhetővé az eszközkészletet Claude vagy bármely MCP-kliens "
 "számára, a biztonsági határ megtartásával."
 
-#: ../../how-to/index.md:324
+#: ../../how-to/index.md:325
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../how-to/index.md:328
+#: ../../how-to/index.md:329
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
-"Javítsa az aktív profil, a tároló, a nyilvántartás és a hitelesítés "
+"Javítsd az aktív profil, a tárolás, a nyilvántartás és a hitelesítés "
 "problémáit."
 
-#: ../../how-to/index.md:331
+#: ../../how-to/index.md:332
 msgid "Publish runtime authority"
 msgstr "Futásidejű hatóság közzététele"
 
-#: ../../how-to/index.md:335
+#: ../../how-to/index.md:336
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
-"Kiadáskezelőként tegyen közzé és ellenőrizzen egy aláírt nyilvántartási "
+"Kiadáskezelőként tedd közzé és ellenőrizz egy aláírt nyilvántartási "
 "hatóságot."
+
+#~ msgid ""
+#~ "Create, inspect, export, import, rename, "
+#~ "or delete taxpayer profiles, and log "
+#~ "in to the one you want active."
+#~ msgstr ""
+#~ "Hozzon létre, vizsgáljon meg, váltson, "
+#~ "exportáljon, importáljon, nevezzen át vagy "
+#~ "töröljön adózói profilokat."
+
+#~ msgid ""
+#~ "Set up a provider, preview and "
+#~ "apply suggestions, and classify from an"
+#~ " attached invoice."
+#~ msgstr ""
+#~ "Állítson be egy szolgáltatót, tekintsen "
+#~ "meg előnézetben és alkalmazzon javaslatokat,"
+#~ " és osztályozzon egy csatolt számlából."
+
+#~ msgid "Understand drafts, verification, export, filing markers, and history."
+#~ msgstr ""
+#~ "Értse meg a piszkozatokat, az "
+#~ "ellenőrzést, az exportot, a benyújtási "
+#~ "jelölőket és az előzményeket."
+
+#~ msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
+#~ msgstr "Rögzítsen egy AEAT sedéjén benyújtott altát, modificaciont vagy baját."
+
+#~ msgid ""
+#~ "Export the file, upload it at the"
+#~ " AEAT portal yourself, record, and "
+#~ "reconcile."
+#~ msgstr ""
+#~ "Exportálja a fájlt, töltse fel maga "
+#~ "az AEAT-portálon, rögzítse és "
+#~ "egyeztesse."
 

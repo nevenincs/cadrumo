@@ -218,7 +218,7 @@ cli:
           pl. 2026-01-15.
         invoice_number_help: Szállítói számlaszám.
         iva_amount_help: Számla IVA-összege.
-        iva_rate_help: Alkalmazott IVA-kulcs tizedes törtként.
+        iva_rate_help: Alkalmazott IVA-kulcs százalékban, például 21.
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         pull_actor_help: Operátor címke.
@@ -873,11 +873,12 @@ cli:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
           output_required: Adja meg a --output PATH értékét a fichero-BOE artefaktumhoz.
-        help: Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis
-          fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal, és
-          a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték. Benyújtás után
-          használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy
-          a CSV cotejo bizonyítékot.
+        help: 'Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis
+          fájlba, a modell saját hivatalos szerkezetében: a legtöbb modell esetén
+          fichero-BOE, a Modelo 100 esetén XML. Csak helyi; soha nem lép kapcsolatba
+          az AEAT-tal, és a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték.
+          Benyújtás után használja az AEAT justificante-t, a benyújtott bevallások
+          lekérdezését vagy a CSV cotejo bizonyítékot.'
         output_help: A fichero-BOE artefakt írásának elérési útja.
         replace_help: Lecseréli a --output helyén már meglévő fájlt. Enélkül a meglévő
           exportfájlt a program elutasítja, hogy egy korábbi export ne vesszen el.
@@ -1921,7 +1922,7 @@ cli:
       no_active_bucket: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV` a hitelesítés konfigurálása előtt.'
       output_language_help: A válasz szövegének nyelve (es, en, ca, hu).
-      provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico).
+      provider_help: Hitelesítési szolgáltató azonosítója (pl. certificate).
       providers_help: Támogatott hitelesítési szolgáltatók listázása.
       reset_all_help: Minden ismert hitelesítési szolgáltató visszaállítása
       reset_help: A helyi szolgáltatóbeállítások, munkamenetek, zárolások, tanúsítvány-regisztrációk
@@ -2556,8 +2557,10 @@ cli:
       profile_name_help: Konkrét regisztrált profil vizsgálata.
       profile_requires_yes: Adja meg a --yes kapcsolót az aktív-profil javítás alkalmazásához.
       quarantine_dry_run_help: A karanténba kerülő sorok előnézete mozgatás nélkül.
-      quarantine_help: Visszafejthető sorok előnézete; az aktív karantén le van tiltva
-        a megőrzés-elsőbbségű javítási szabályzat miatt.
+      quarantine_help: A nem visszafejthető biztonságos objektumsorokat az auditálható
+        karanténarchívumba helyezi; --yes szükséges. A titkosított tartalom megmarad,
+        soha nem törlődik. A --dry-run kapcsolóval előnézheti a sorokat anélkül, hogy
+        bármi átkerülne.
       quarantine_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
@@ -2594,9 +2597,11 @@ cli:
         colegio concertado-e a Modelo 111 fejlécéhez.
       help: Az aktív adóprofil inicializálása.
       profile_name_help: Az adat írásának profilneve.
-      quiet_help: Csak a megadott kapcsolóértékek alapján fut interakció nélkül; a
-        megadatlan kötelező kapcsolók hibát okoznak. Önmagában elegendő; kombinálja
-        az --accept-defaults kapcsolóval a többi alapértékből való kitöltéséhez.
+      quiet_help: Csak a megadott kapcsolóértékek alapján fut interakció nélkül, kérdés
+        nélkül. A megadatlan kapcsoló nem íródik ki, és nem okoz hibát, így az új
+        profil beállítása befejezetlen marad; az `aeat config profile complete-setup`
+        megmutatja, mely adatok hiányoznak még. Önmagában elegendő; kombinálja az
+        --accept-defaults kapcsolóval a többi alapértékből való kitöltéséhez.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
@@ -3367,7 +3372,8 @@ cli:
         előtag).
       llm_exclusive: --llm nem kombinálható a --child-amount/--child-description kapcsolókkal;
         a kézi út a kezelő explicit felülbírálása.
-      llm_help: Javasolj bizonyíték-alapú N-részes felosztást a megadott LLM szolgáltatóval.
+      llm_help: A gépen futó helyi olvasóval javasol bizonyíték-alapú N-részes felosztást;
+        alapértelmezetten előnézet, --apply kapcsolóval menti.
       read_evidence_help: Olvasd be a tranzakcióhoz csatolt számlát helyben, és add
         át a --llm felosztásjavaslónak.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
@@ -3766,6 +3772,7 @@ cli:
       review és futási diagnosztika.'
     app_help: Alkalmazásszintű parancsok elérése.
     app_help_help: Súgó megjelenítése az alkalmazásparancsokhoz.
+    app_tui_help: Megnyitja a teljes képernyős munkafelületet a helyi nyilvántartásokon.
     debug_help: Részletes hibakeresési kimenet engedélyezése.
     detail_help: Részletes kimenet engedélyezése.
     errors:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import json
 import sys
 import zipfile
@@ -48,6 +49,7 @@ class WheelArtifact:
     path: Path
     sha256: str
     requirements: tuple[str, ...]
+    console_scripts: tuple[str, ...]
 
 
 def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> WheelArtifact:
@@ -62,6 +64,7 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
         if len(metadata_names) != 1:
             raise SystemExit(f"expected one METADATA member in {wheel}: {metadata_names!r}")
         metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
+        console_scripts = _console_scripts(archive, wheel)
     observed_name = metadata.get("Name")
     version = metadata.get("Version")
     if not observed_name or not version:
@@ -76,7 +79,30 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
         path=wheel,
         sha256=sha256_path(wheel),
         requirements=tuple(metadata.get_all("Requires-Dist", [])),
+        console_scripts=console_scripts,
     )
+
+
+def _console_scripts(archive: zipfile.ZipFile, wheel: Path) -> tuple[str, ...]:
+    """Return the console-script names the wheel installs, in declared order.
+
+    Read from the wheel rather than restated here, because a shim list written
+    by hand drifts the moment a new entry point is declared: the distribution
+    shipped ``cadrumo-mcp`` while the manifest exposed only ``aeat``, so the
+    server was installed into the venv and reachable from nowhere on PATH.
+
+    An empty result is legitimate and not decided here -- the two data
+    companions declare no entry points at all -- so the emptiness check
+    belongs to the caller that knows which artifact must supply the commands.
+    """
+    entry_point_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/entry_points.txt"))
+    if len(entry_point_names) > 1:
+        raise SystemExit(f"expected at most one entry_points.txt member in {wheel}: {entry_point_names!r}")
+    if not entry_point_names:
+        return ()
+    parser = configparser.ConfigParser()
+    parser.read_string(archive.read(entry_point_names[0]).decode("utf-8"))
+    return tuple(parser["console_scripts"]) if parser.has_section("console_scripts") else ()
 
 
 def _validate_companion_pins(
@@ -137,6 +163,12 @@ def generate_manifest(
         )
     root, manuals, official = artifacts
     _validate_companion_pins(root, manuals, official)
+    # The command distribution is the only cohort member that installs
+    # commands; a build that stopped declaring them would otherwise produce a
+    # manifest exposing nothing on PATH, silently.
+    console_scripts = root.console_scripts
+    if not console_scripts:
+        raise SystemExit(f"command distribution declares no console scripts: {root.path}")
     constraints_body = "\n".join(export_runtime_constraints(repo_root=_REPO_ROOT))
     python_path = "(Join-Path $dir 'venv\\Scripts\\python.exe')"
     pre_install = [
@@ -163,7 +195,7 @@ def generate_manifest(
         f"'cadrumo=={version}'; "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",
         f"& uv pip check --python {python_path}; if ($LASTEXITCODE -ne 0) {{ throw 'uv pip check failed' }}",
-        _wrapper_script("aeat"),
+        *(_wrapper_script(executable) for executable in console_scripts),
     ]
     return {
         "version": version,
@@ -176,9 +208,7 @@ def generate_manifest(
         "license": "Apache-2.0",
         "depends": ["python", "uv"],
         "pre_install": pre_install,
-        "bin": [
-            ["aeat.cmd", "aeat"],
-        ],
+        "bin": [[f"{executable}.cmd", executable] for executable in console_scripts],
         "persist": ["state"],
         "notes": [
             "Cadrumo state persists across Scoop updates.",

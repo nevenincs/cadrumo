@@ -252,6 +252,99 @@ docs:
       reviewed_at: Date reviewed
       reviewed_by: Reviewed by
       title: Catalogue record
+  site:
+    aria:
+      breadcrumb: Breadcrumb
+      broadcast_links: Broadcast links
+      dismiss_notice: Dismiss notice
+      footer_channels: Documentation update channels
+      language: 'Language: {language}'
+      primary_navigation: Primary
+      repository: Project repository on GitHub
+      search_documentation: Search documentation
+      site_updates: Site updates
+      toggle_navigation: Toggle site navigation sidebar
+      toggle_theme: Toggle Light / Dark / Auto color theme
+      toggle_toc: Toggle table of contents sidebar
+    breadcrumb:
+      home: Home
+    broadcast:
+      label: Beta
+      message: Breaking changes are expected. Verify Agencia Estatal de Administración
+        Tributaria (AEAT) deadlines before filing.
+    class_label:
+      casilla: Casilla
+      cli: Command
+      doc: Docs
+      legal: Legal
+      modelo: Modelo
+      technical: Reference
+    cli_help:
+      close: Close help
+      required: required
+    download:
+      direct_heading: Direct downloads for the latest release
+    footer:
+      get_help: Get help
+      kicker: Project notices
+      note: Cadrumo is beta, local-first software. It is not tax advice, is not affiliated
+        with the Agencia Estatal de Administración Tributaria (AEAT), and never replaces
+        official AEAT tools or advice from a qualified professional.
+      stay_current: Stay current
+      trust_and_responsibility: Trust and responsibility
+    kind_label:
+      casilla: Casilla
+      cli: Command
+      concept: Term
+      page: Page
+    link:
+      critical_updates: Critical updates
+      disclaimer: Disclaimer
+      events_and_deadlines: Events and deadlines
+      get_cadrumo: Get Cadrumo
+      release_notes: Release notes
+      report_issue: Report an issue
+      repository: Repository
+      updates: Updates
+    meta:
+      description: '{product} helps you prepare, check, and export Spanish tax files
+        locally. {product} never files or submits them for you.'
+      short_title: '{product} documentation'
+      title: '{product} documentation - local Spanish tax preparation'
+    nav:
+      api: API
+      cli_reference: CLI reference
+      getting_started: Getting started
+      how_it_works: How it works
+    search:
+      full_text_crumb: Full-text search
+      full_text_for: Search the docs for “{query}”
+      hint_close: close
+      hint_navigate: navigate
+      hint_open: open
+      noscript: Search requires JavaScript. Browse the documentation from the navigation
+        sidebar, or use the glossary for terminology.
+      on_this_page: On this page
+      open_full_text: Open full-text search
+      page_title: Search
+      placeholder: Search docs…
+      query_label: Search query
+      result_fallback: Result
+      result_many: '{count} results'
+      result_one: 1 result
+      searching: Searching…
+    sequence:
+      command_error_output: Command error output
+      command_output: Command output
+      copied: Copied
+      copy_command: Copy command
+      copy_failed: Copy failed
+      hide_output: Hide output
+      next_command: Next command
+      previous_command: Previous command
+      rundown: Command rundown
+      shell: Terminal shell
+      show_output: Show output
   terminology:
     cli:
       authority: Source authority when the field is ‘source’.

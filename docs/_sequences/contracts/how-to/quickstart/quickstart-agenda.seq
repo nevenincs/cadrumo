@@ -1,7 +1,10 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Declare that your income comes from an economic activity, the fact that decides Modelo 130.
+aeat config profile edit --quiet --irpf-income-categories actividad_economica
 @step Show what may be due for the active profile.
 aeat app overview agenda --allow-incomplete
 @step Explain why Modelo 130 applies this year.
 @result aeat --format json app overview explain 130 --year 2026
 @expect result.modelo == "130"
+@expect result.applicable == true
 @expect exit_code == 0

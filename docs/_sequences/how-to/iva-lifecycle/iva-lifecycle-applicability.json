@@ -70,7 +70,7 @@
             "tax_id": "sha256:1c9f9632",
             "third_party_transactions_above_347_threshold": ""
           },
-          "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso, las categorías de renta del IRPF.",
+          "rationale": "Applicability cannot be determined: the taxpayer type is not declared. The entity type is missing, and with it the IRPF income categories where they apply.",
           "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
           "verdict": "incomplete",
           "year": 2026

@@ -1,8 +1,9 @@
 # Diagnose and repair your local setup
 
 Every check on this page runs locally unless it explicitly says otherwise.
-The optional connectivity probe opens the public AEAT Sede landing page and
-checks reachability. It does not submit taxpayer data.
+The optional connectivity probe opens the public Sede landing page of the
+Agencia Estatal de Administración Tributaria (AEAT) and checks reachability. It
+does not submit taxpayer data.
 
 Find the error in the headings below and follow its steps. If it is not listed,
 jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
@@ -54,10 +55,10 @@ Log in to the right profile with `aeat config login <profile-name>` - [Set up yo
 The refusal looks like this:
 
 ```text
-ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>. Run `aeat app ledger preflight --period <TOKEN>` before calculating.
+ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>. Run the ledger preflight for period <period> and resolve its findings before calculating.
 ```
 
-The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, so add it even though the message above omits it:
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`:
 
 ```{cli-sequence} troubleshooting-ledger-ready
 :verify: Confirm the ledger preflight and status run for the period you are calculating.
@@ -67,11 +68,11 @@ The preflight report names the rows that block the calculation. Fix them by comp
 
 ## A required value is missing
 
-The refusal names the missing item:
+The refusal or the verification finding names the missing item:
 
 ```text
-Binding <id> has no supplied value
-Required casilla <id> is not present in the calculation revision inputs
+Binding <id> has no supplied value.
+Required casilla <id> carries no value.
 ```
 
 A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still missing for your form:
@@ -92,15 +93,15 @@ Modelo and ledger commands share the same shape - the AEAT token with `--year`:
 :verify: Confirm the AEAT token plus --year is accepted across ledger and modelo commands.
 ```
 
-The ledger `--period` commands are `ledger preflight`, `ledger status`,
+The ledger `--period` commands include `ledger preflight`, `ledger status`,
 `ledger export`, `ledger import`, and `overview status`. Where the year is
 optional, a bare period token is refused with a correction:
 
 ```text
-El token de periodo '1T' necesita un año en este comando. Añada --year (e.g. --period 1T --year 2024).
+Period token '1T' needs a year on this command. Add --year (e.g. --period 1T --year 2024).
 ```
 
-On `ledger preflight` and `ledger export`, `--year` is a required option, so omitting it is refused before the token is read:
+On `ledger preflight`, `overview pipeline`, and `overview prepare`, `--year` is a required option, so omitting it is refused before the token is read:
 
 ```text
 Missing option '--year'.
@@ -116,23 +117,30 @@ Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the
 
 ## An export refuses because no verified calculation exists
 
-Exports only work from a calculation that passed verification. Run the verification first - [Verify a draft filing](verification-reports.md) owns that workflow and explains what the report tells you.
+Exports only work from a calculation that passed verification. Run the verification first - [Verify a filing](verification-reports.md) owns that workflow and explains what the report tells you. The refusal reads `No calculation revision matched the requested selector`, or `The selected calculation revision is not in a usable state for this operation` when the current calculation is still a draft.
+
+## An export refuses the output path
+
+A local export refuses to overwrite an existing file unless you add `--replace`. It also refuses an `--output` path whose parent directory does not exist. This applies to `aeat app modelo export`, `aeat app modelo spreadsheet export`, and `aeat app modelo work report`. The message reads `The export output path is not valid` and ends with the reason, such as `path is an existing file` or `parent directory does not exist`. Add `--replace`, or create the folder first.
 
 ## Recording a filing refuses because the filing window is not open
 
-This refusal applies to `aeat app modelo work file` only - exporting works at any time. See [File your modelo at the AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when each window opens.
+This refusal applies to `aeat app modelo work file` only - exporting works at any time, and the refusal message names `aeat app modelo export` as the local finish line. See [File your modelo at the AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when each window opens.
 
 ## Output appears in the wrong language
 
-Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
+`aeat` prints its messages in Spanish unless you choose another language. Add `--language` straight after `aeat`. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
 
 ```{cli-sequence} troubleshooting-language
 :verify: Confirm the --language flag renders a command's output in the chosen language.
 ```
 
-The `--language` flag applies to that one command. A profile also carries
-a default output language - set it with `--output-language` at profile
-creation, as described in [Set up your taxpayer profile](profile-setup.md).
+The `--language` flag applies to that one command. Without it, the
+`CADRUMO_OUTPUT_LANGUAGE` environment variable applies, then the default output
+language stored on your profile. Set the profile default with
+`aeat config profile edit --output-language en`, as described in [Set up your
+taxpayer profile](profile-setup.md). The examples in this documentation are
+recorded in English.
 
 ## A live read from AEAT refuses
 
@@ -143,9 +151,10 @@ Permanente. Check your authentication:
 :verify: Confirm the tool reports what authentication is configured and probes it locally.
 ```
 
-`auth test` checks stored credentials without contacting AEAT. An expired
-certificate, or one within the 14-day critical window, blocks authenticated
-work. The earlier 60-day warning is advisory. If expiry is close, follow
+`auth test` checks stored credentials without contacting AEAT. By default, an
+expired certificate, or one within the 14-day critical window, blocks
+authenticated work. The earlier 60-day warning is advisory. If expiry is close,
+follow
 [Renew your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires).
 
 Check that the tool can reach the AEAT website:
@@ -161,7 +170,7 @@ When a live login fails, the tool captures an encrypted diagnostic of the failur
 :verify: Confirm the tool lists saved login diagnostics.
 ```
 
-`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and fingerprints, never as values.
+`list` shows when each failure happened, the reason, and which login method and profile were involved. `view` prints one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and fingerprints, never as values.
 
 For Cl@ve failures, the missing piece is often what happened on your phone, something the tool cannot see. Record what you observed so the diagnostic is complete:
 
@@ -174,13 +183,13 @@ Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `a
 
 Use these when no single symptom matches, or before asking for help. Run the
 read-only diagnostics in order: overall status, active profile, recent logs,
-and both integrity checks.
+the full local report, and the secure-object integrity check.
 
 ```{cli-sequence} troubleshooting-toolbox
 :verify: Confirm the read-only diagnostics all run and report on your setup and data.
 ```
 
-`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records. `aeat config repair` with no subcommand prints the full local report: package and Python versions, profile and authentication state, the tax rule definitions, and the same secure-object check. If a check fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
@@ -199,7 +208,7 @@ participation index. Rebuild it first if the lookup appears incomplete:
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
 
-Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses with `No hay una sesion de bucket activa`, log in to the profile first with `aeat config login <profile-name>`.
+Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses because the profile is locked or none is active, log in to the profile first with `aeat config login <profile-name>`.
 
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
@@ -207,7 +216,7 @@ When nothing else recovers the problem, and only then, clear the saved progress 
 :verify: Confirm the saved interrupted-command progress is cleared for the unlocked profile.
 ```
 
-It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.
+It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so log in to the profile first if it refuses because the profile is locked or none is active.
 
 (prepare-a-privacy-safe-support-request)=
 ## Prepare a privacy-safe support request
@@ -227,9 +236,9 @@ If a term in an error message is unfamiliar, look it up in the {doc}`glossary </
 
 ## Next steps
 
-- [Quickstart: produce a modelo file](quickstart.md) - follow the first local filing path.
+- [Quickstart: prepare a modelo filing](quickstart.md) - follow the first local filing path.
 - [Set up your taxpayer profile](profile-setup.md) - create and switch profiles.
 - [Authenticate with AEAT](authenticate-with-aeat.md) - check read-only live access setup.
-- [Check AEAT notifications](check-aeat-notifications.md) - inspect saved DEHu notification snapshots.
-- [Pipeline explanation](../explanation/index.md) - what the registry, secure storage, and workflow state are.
+- [Read AEAT notifications](check-aeat-notifications.md) - inspect saved DEHú notification snapshots.
+- [How Cadrumo turns your records into a tax file](../explanation/index.md) - what the registry, secure storage, and workflow state are.
 - [CLI reference](../cli/index.rst) - every repair command, flag, and exit code.

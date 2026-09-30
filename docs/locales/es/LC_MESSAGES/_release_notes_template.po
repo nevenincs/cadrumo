@@ -65,8 +65,8 @@ msgid ""
 "None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking "
 "changes in a minor bump; state the migration step for each.)_"
 msgstr ""
-"Ninguno. _(o bien: enumérelos explícitamente - las versiones anteriores a"
-" la 1.0 pueden incluir cambios incompatibles en un incremento menor; "
+"Ninguno. _(o bien: enuméralos explícitamente; las versiones anteriores a "
+"la 1.0 pueden incluir cambios incompatibles en un incremento menor; "
 "indica el paso de migración de cada uno.)_"
 
 #: ../../_release_notes_template.md:37

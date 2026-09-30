@@ -1,0 +1,8 @@
+@step Record a private transfer you reviewed and want kept out of every filing.
+aeat --format json app ledger add --date 2026-03-18 --amount 200.00 --direction OUTGOING --description "Private transfer" --classification PERSONAL --idempotency-key correct-exclude
+@capture transaction_id result.transaction_id
+@step Exclude it from filing, with the reason.
+aeat app ledger exclude {transaction_id} --reason "private transfer" --yes
+@step Confirm the row is still active and now carries the excluded state.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.business_classification == "REVIEWED_EXCLUDED"

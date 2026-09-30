@@ -34,10 +34,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records
+from ..site_chrome import site_chrome
 from ._http_serve_support import serve_directory
 from .test_palette_ranking import _approved_concept_records
 
@@ -45,6 +47,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
+#: The chrome strings the shipped templates render and the search controller
+#: reads; resolved through the same catalogue authority the real build uses.
+_ENGLISH_CHROME = site_chrome(OutputLanguage.EN, language_endonym="English")
 
 _MOUNT = "#pagefind-search"
 _INPUT_SELECTOR = f"{_MOUNT} input"
@@ -74,7 +79,11 @@ def _build_search_site(out: Path) -> Path:
         f"templates_path = [r'{_DOCS / '_templates'}']\n"
         "html_static_path = ['_static']\n"
         "html_js_files = ['cadrumo-docs.js']\n"
-        "html_css_files = ['cadrumo-docs.css']\n",
+        "html_css_files = ['cadrumo-docs.css']\n"
+        # The shipped templates read this root's chrome strings by name and
+        # serialise them for the controller, so the context the production
+        # conf.py resolves is supplied here too rather than stubbed.
+        f"html_context = {{'cadrumo_chrome': {_ENGLISH_CHROME!r}}}\n",
         encoding="utf-8",
     )
     (src / "index.rst").write_text(

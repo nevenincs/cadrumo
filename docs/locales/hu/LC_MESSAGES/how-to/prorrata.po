@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-23 17:16+0200\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -31,11 +31,11 @@ msgid ""
 "prorrata choice once and the tool applies it to Modelo 303 and Modelo 390"
 " automatically."
 msgstr ""
-"Használja ezt az útmutatót, amikor az adózó nem vonhatja le a teljes "
-"előzetes áfát. Ez akkor fordul elő, amikor a tevékenység levonásra "
+"Akkor használd ezt az útmutatót, ha az adózó nem vonhatja le a teljes "
+"beszerzési IVA-t. Ez akkor fordul elő, ha a tevékenység levonásra "
 "jogosító ügyleteket kever levonásra nem jogosítókkal (levonási jog "
 "nélküli mentesített ügyletek). A spanyol IVA ezt *prorratának* nevezi. "
-"Rögzítse egyszer az adózó prorrata-választását, és az eszköz "
+"Rögzítsd egyszer az adózó prorrata-választását, és az eszköz "
 "automatikusan alkalmazza a Modelo 303-ra és a Modelo 390-re."
 
 #: ../../how-to/prorrata.md:9
@@ -47,8 +47,8 @@ msgstr ""
 "helyi, profilra korlátozott adózói állapot, nem AEAT-benyújtási felület."
 
 #: ../../how-to/prorrata.md:12
-msgid "The tool needs a master-key passphrase and prompts for it."
-msgstr "Az eszköznek szüksége van egy mesterkulcs-jelmondatra, és be is kéri azt."
+msgid "The tool needs your passphrase and prompts for it."
+msgstr "Az eszköznek szüksége van a jelmondatodra, és be is kéri."
 
 #: ../../how-to/prorrata.md:14
 msgid ""
@@ -56,9 +56,10 @@ msgid ""
 "profile create <name>` before you start. [Set up your taxpayer profile"
 "](profile-setup.md) walks through it."
 msgstr ""
-"**Követelmény:** egy érvényes adózói profil. Hozzon létre egyet az `aeat "
-"config profile create <name>` paranccsal, mielőtt hozzákezd. Az [Állítsa "
-"be adózói profilját](profile-setup.md) oldal végigvezeti ezen."
+"**Követelmény:** egy érvényes adózói profil. Hozz létre egyet az `aeat "
+"config profile create <name>` paranccsal, mielőtt hozzákezdesz. Az "
+"[Állítsd be az adózói profilodat](profile-setup.md) oldal végigvezet "
+"rajta."
 
 #: ../../how-to/prorrata.md:18
 msgid "Which prorrata applies"
@@ -67,26 +68,26 @@ msgstr "Melyik prorrata alkalmazható"
 #: ../../how-to/prorrata.md:20
 msgid ""
 "**General prorrata** (LIVA art. 104): one deduction percentage applies to"
-" every deductible input for the year. Use it when the taxpayer has no "
-"reason to separate inputs."
+" every deductible input for the year. It applies unless the taxpayer opts"
+" for especial or the law requires especial (LIVA art. 103.Dos)."
 msgstr ""
 "**Általános prorrata** (LIVA art. 104): egyetlen levonási százalék "
-"vonatkozik az év minden levonható előzetes áfájára. Akkor használja, "
-"amikor az adózónak nincs oka az előzetes áfák szétválasztására."
+"vonatkozik az év minden levonható beszerzési IVA-jára. Akkor "
+"alkalmazandó, ha az adózó nem az especialt választja, vagy a jog nem írja"
+" elő az especialt (LIVA art. 103.Dos)."
 
 #: ../../how-to/prorrata.md:23
 msgid ""
-"**Especial prorrata** (LIVA art. 103): each input deducts by its own use."
-" Fully deductible inputs deduct in full, inputs used only for non-"
-"deducting operations deduct nothing, and shared (\"common\") inputs "
+"**Especial prorrata** (LIVA arts. 103 and 106): each input deducts by its"
+" own use. Fully deductible inputs deduct in full, inputs used only for "
+"non-deducting operations deduct nothing, and shared (\"common\") inputs "
 "deduct at the general percentage. Tag each input with its use."
 msgstr ""
-"**Especial (különleges) prorrata** (LIVA art. 103): minden előzetes IVA a"
-" saját használata szerint vonódik le. A teljesen levonható előzetes áfák "
-"teljesen levonódnak, a kizárólag nem levonó ügyletekhez használtak semmit"
-" nem vonnak le, a megosztott („közös”) előzetes áfák pedig az általános "
-"százalékon vonódnak le. Címkézze meg minden előzetes áfát a "
-"használatával."
+"**Especial prorrata** (LIVA art. 103 és 106): minden beszerzési IVA a "
+"saját használata szerint vonódik le. A teljesen levonható tételek teljes "
+"egészében levonódnak, a kizárólag nem levonó ügyletekhez használtak "
+"semmit sem vonnak le, a megosztott („közös”) tételek pedig az általános "
+"százalékon vonódnak le. Címkézd meg minden tételt a használatával."
 
 #: ../../how-to/prorrata.md:28
 msgid ""
@@ -94,18 +95,18 @@ msgid ""
 "own settlement already produces. Use this guide only when the taxpayer "
 "elects a percentage or splits the business into differentiated sectors."
 msgstr ""
-"Ha semmit nem választ, az eszköz megtartja a teljes egységre vonatkozó "
-"általános kezelést, amelyet a saját elszámolása már előállít. Ezt az "
-"útmutatót csak akkor használja, amikor az adózó egy százalékot választ, "
-"vagy differenciált szektorokra osztja a vállalkozást."
+"Ha semmit sem választasz, az eszköz megtartja a teljes egységre vonatkozó"
+" általános kezelést, amelyet a saját elszámolása már előállít. Ezt az "
+"útmutatót csak akkor használd, ha az adózó egy százalékot választ, vagy "
+"differenciált szektorokra osztja a vállalkozást."
 
 #: ../../how-to/prorrata.md:32
 msgid "Elect general prorrata"
-msgstr "Válassza az általános prorratát"
+msgstr "Az általános prorrata választása"
 
 #: ../../how-to/prorrata.md:34
 msgid "Elect the year's general percentage:"
-msgstr "Válassza az év általános százalékát:"
+msgstr "Válaszd ki az év általános százalékát:"
 
 #: ../../how-to/prorrata.md:40
 msgid "`--ejercicio` is the filing year the election covers."
@@ -136,95 +137,117 @@ msgstr ""
 msgid ""
 "To carry the prior year's definitive percentage (LIVA art. 105.Uno), run "
 "`aeat app ledger prorrata seed --ejercicio <year>` instead. It reads the "
-"percentage from the filed prior-year Modelo 303 settlement."
+"percentage from the stored prior-year Modelo 303 settlement, and refuses "
+"when no stored settlement carries a definitive percentage."
 msgstr ""
 "Az előző év végleges százalékának átviteléhez (LIVA art. 105.Uno) inkább "
-"az `aeat app ledger prorrata seed --ejercicio <year>` parancsot futtassa."
-" Ez a benyújtott előző évi Modelo 303 elszámolásból olvassa ki a "
+"futtasd az `aeat app ledger prorrata seed --ejercicio <year>` parancsot. "
+"Ez a tárolt előző évi Modelo 303 elszámolásból olvassa ki a százalékot, "
+"és elutasít, ha egyetlen tárolt elszámolás sem tartalmaz végleges "
 "százalékot."
 
-#: ../../how-to/prorrata.md:51
+#: ../../how-to/prorrata.md:52
 msgid "Elect especial prorrata and classify inputs"
-msgstr "Válassza az especial prorratát, és osztályozza az előzetes áfákat"
+msgstr "Az especial prorrata választása és a beszerzések besorolása"
 
-#: ../../how-to/prorrata.md:53
+#: ../../how-to/prorrata.md:54
 msgid "Elect especial for the year:"
-msgstr "Válassza az especialt az évre:"
+msgstr "Válaszd az especialt az évre:"
 
-#: ../../how-to/prorrata.md:59
+#: ../../how-to/prorrata.md:60
 msgid ""
 "Here `--percentage` is the common-use percentage, the rate applied to "
 "shared inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same "
-"`--provenance` and `--reference` options apply."
+"`--provenance` and `--reference` options apply. `--evidence-reference` "
+"names the document behind an option you exercise this year. Omit it to "
+"record that the regime already in force continues."
 msgstr ""
-"Itt a `--percentage` a közös használatú százalék, a megosztott előzetes "
-"áfákra alkalmazott kulcs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). "
-"Ugyanazok a `--provenance` és `--reference` opciók vonatkoznak rá."
+"Itt a `--percentage` a közös használatú százalék, a megosztott tételekre "
+"alkalmazott kulcs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). Ugyanazok"
+" a `--provenance` és `--reference` kapcsolók vonatkoznak rá. Az "
+"`--evidence-reference` az ebben az évben gyakorolt választás mögötti "
+"dokumentumot nevezi meg. Hagyd el, ha azt rögzíted, hogy a már hatályos "
+"rendszer folytatódik."
 
-#: ../../how-to/prorrata.md:63
+#: ../../how-to/prorrata.md:66
 msgid "Then tag each input row with its use when you add it:"
 msgstr ""
-"Ezután címkézzen meg minden előzetes IVA sort a használatával, amikor "
-"hozzáadja:"
+"Ezután a sor hozzáadásakor címkézd meg minden beszerzési sort a "
+"használatával:"
 
-#: ../../how-to/prorrata.md:69
+#: ../../how-to/prorrata.md:72
 msgid "`--input-classification` takes one value:"
 msgstr "Az `--input-classification` egy értéket vesz fel:"
 
-#: ../../how-to/prorrata.md:71
+#: ../../how-to/prorrata.md:74
 msgid ""
 "`exclusively_deductible` - the input serves only operations that grant "
 "the right to deduct; it deducts in full."
 msgstr ""
-"`exclusively_deductible`: az előzetes IVA csak levonásra jogosító "
-"ügyleteket szolgál; teljesen levonódik."
+"`exclusively_deductible`: a beszerzés csak levonásra jogosító ügyleteket "
+"szolgál; teljes egészében levonódik."
 
-#: ../../how-to/prorrata.md:73
+#: ../../how-to/prorrata.md:76
 msgid ""
 "`exclusively_non_deductible` - the input serves only operations that do "
 "not; it deducts nothing."
 msgstr ""
-"`exclusively_non_deductible`: az előzetes IVA csak nem jogosító "
-"ügyleteket szolgál; semmit nem von le."
+"`exclusively_non_deductible`: a beszerzés csak nem jogosító ügyleteket "
+"szolgál; semmi sem vonódik le belőle."
 
-#: ../../how-to/prorrata.md:75
+#: ../../how-to/prorrata.md:78
 msgid "`common` - the input is shared; it deducts at the common-use percentage."
 msgstr ""
-"`common`: az előzetes IVA megosztott; a közös használatú százalékon "
-"vonódik le."
+"`common`: a beszerzés megosztott; a közös használatú százalékon vonódik "
+"le."
 
-#: ../../how-to/prorrata.md:77
+#: ../../how-to/prorrata.md:80
 msgid ""
 "Tag an input but elect no especial for that year and the tool warns the "
-"tag is inert: the input deducts under the general percentage. Elect "
-"especial to make the tag take effect."
+"tag is inert: the input deducts under the general percentage. The "
+"recorded example starts without an election, so it prints that warning. "
+"Elect especial to make the tag take effect."
 msgstr ""
-"Ha megcímkéz egy előzetes áfát, de arra az évre nem választ especialt, az"
-" eszköz figyelmeztet, hogy a címke hatástalan: az előzetes IVA az "
-"általános százalék szerint vonódik le. Válassza az especialt, hogy a "
-"címke érvénybe lépjen."
+"Ha megcímkézel egy beszerzést, de arra az évre nem választasz especialt, "
+"az eszköz figyelmeztet, hogy a címke hatástalan: a beszerzés az általános"
+" százalék szerint vonódik le. A rögzített példa választás nélkül indul, "
+"ezért kiírja ezt a figyelmeztetést. Válaszd az especialt, hogy a címke "
+"érvénybe lépjen."
 
-#: ../../how-to/prorrata.md:81
+#: ../../how-to/prorrata.md:85
+msgid ""
+"The tag only sets how much of a deductible input deducts. An input "
+"deducts only when its row also carries `--deduction-kind` on `ledger add`"
+" or `classify`. The kind `domestic_current` requires linked purchase "
+"invoice evidence. See [Attach invoices and receipts](ledger-evidence.md)."
+msgstr ""
+"A címke csak azt szabja meg, hogy egy levonható beszerzésből mennyi "
+"vonódik le. Egy beszerzés csak akkor vonódik le, ha a sora a `ledger add`"
+" vagy a `classify` parancson `--deduction-kind` értéket is hordoz. A "
+"`domestic_current` típushoz kapcsolt beszerzési számla bizonyítéka "
+"szükséges. Lásd: [Számlák és bizonylatok csatolása](ledger-evidence.md)."
+
+#: ../../how-to/prorrata.md:90
 msgid "Declare a differentiated sector"
-msgstr "Deklaráljon egy differenciált szektort"
+msgstr "Differenciált szektor deklarálása"
 
-#: ../../how-to/prorrata.md:83
+#: ../../how-to/prorrata.md:92
 msgid ""
 "Declare a differentiated sector when part of the activity has its own "
 "deduction regime (LIVA arts. 9.1.c / 101):"
 msgstr ""
-"Deklaráljon egy differenciált szektort, amikor a tevékenység egy részének"
-" saját levonási rendszere van (LIVA art. 9.1.c / 101):"
+"Deklarálj egy differenciált szektort, ha a tevékenység egy részének saját"
+" levonási rendszere van (LIVA art. 9.1.c / 101):"
 
-#: ../../how-to/prorrata.md:90
+#: ../../how-to/prorrata.md:99
 msgid ""
 "`--sector-id` is a stable id the register entries and ledger rows "
 "reference."
 msgstr ""
 "A `--sector-id` egy stabil azonosító, amelyre a nyilvántartási "
-"bejegyzések és a főkönyvi sorok hivatkoznak."
+"bejegyzések és a ledger-sorok hivatkoznak."
 
-#: ../../how-to/prorrata.md:91
+#: ../../how-to/prorrata.md:100
 msgid ""
 "`--letra` is the LIVA art. 9.1.c letra that makes the sector "
 "differentiated: `a`, `b`, `c`, or `d`."
@@ -232,117 +255,285 @@ msgstr ""
 "A `--letra` a LIVA art. 9.1.c betűje, amely a szektort differenciálttá "
 "teszi: `a`, `b`, `c` vagy `d`."
 
-#: ../../how-to/prorrata.md:93
+#: ../../how-to/prorrata.md:102
 msgid ""
 "`--activity-code` is a CNAE or IAE code grouped into the sector. Repeat "
 "it for each code; give at least one."
 msgstr ""
 "Az `--activity-code` egy CNAE- vagy IAE-kód, amely a szektorba "
-"csoportosul. Ismételje meg minden kódnál; adjon meg legalább egyet."
+"csoportosul. Ismételd meg minden kódnál; adj meg legalább egyet."
 
-#: ../../how-to/prorrata.md:96
+#: ../../how-to/prorrata.md:105
 msgid ""
 "Scope an election to a sector with `--sector`, and tag a row's sector "
 "with `--sector` on `ledger add`:"
 msgstr ""
-"Korlátozzon egy választást egy szektorra a `--sector` opcióval, és "
-"címkézze meg egy sor szektorát a `--sector` opcióval a `ledger add` "
+"Korlátozz egy választást egy szektorra a `--sector` kapcsolóval, és "
+"címkézd meg egy sor szektorát a `--sector` kapcsolóval a `ledger add` "
 "parancson:"
 
-#: ../../how-to/prorrata.md:103
+#: ../../how-to/prorrata.md:112
 msgid ""
 "Tag a row with a sector you have not declared and the tool warns the tag "
 "is unmatched: the input deducts at the common-use percentage until you "
-"declare the sector. Declare the sector first, or fix the id."
+"declare the sector. The recorded example starts without a declared "
+"sector, so it prints that warning. Declare the sector first, or fix the "
+"id."
 msgstr ""
-"Ha megcímkéz egy sort egy szektorral, amelyet nem deklarált, az eszköz "
-"figyelmeztet, hogy a címke nem talál párt: az előzetes IVA a közös "
-"használatú százalékon vonódik le, amíg nem deklarálja a szektort. Előbb "
-"deklarálja a szektort, vagy javítsa az azonosítót."
+"Ha megcímkézel egy sort egy olyan szektorral, amelyet nem deklaráltál, az"
+" eszköz figyelmeztet, hogy a címke nem talál párt: a beszerzés a közös "
+"használatú százalékon vonódik le, amíg nem deklarálod a szektort. A "
+"rögzített példa deklarált szektor nélkül indul, ezért kiírja ezt a "
+"figyelmeztetést. Előbb deklaráld a szektort, vagy javítsd az azonosítót."
 
-#: ../../how-to/prorrata.md:107
+#: ../../how-to/prorrata.md:117
+msgid ""
+"Three more commands manage a sector's percentage. `prorrata seed-sector` "
+"seeds a sector's provisional percentage from its own prior-year "
+"definitive one. `prorrata settle-sector` settles the year-end definitive "
+"percentage from the sector's annual volumes of operations with and "
+"without the right to deduct. `prorrata revoke-especial` revokes especial "
+"for a year after a prior-year especial state, and requires `--evidence-"
+"reference`. Run each with `--help` for its options."
+msgstr ""
+"Három további parancs egy szektor százalékát kezeli. A `prorrata seed-"
+"sector` egy szektor ideiglenes százalékát a szektor saját előző évi "
+"végleges százalékából tölti fel. A `prorrata settle-sector` az év végi "
+"végleges százalékot a szektor levonásra jogosító és nem jogosító "
+"ügyleteinek éves forgalmából számolja el. A `prorrata revoke-especial` "
+"egy előző évi especial állapot után visszavonja az especialt egy évre, és"
+" megköveteli az `--evidence-reference` kapcsolót. Mindegyiket futtasd "
+"`--help` kapcsolóval a lehetőségeihez."
+
+#: ../../how-to/prorrata.md:125
 msgid "Read the settlement advisories"
-msgstr "Olvassa el az elszámolási figyelmeztetéseket"
+msgstr "Olvasd el az elszámolási figyelmeztetéseket"
 
-#: ../../how-to/prorrata.md:109
+#: ../../how-to/prorrata.md:127
 msgid ""
 "When you calculate the year-end Modelo 303 for the 4T settlement, the "
-"tool may surface non-blocking advisories:"
+"tool may surface a non-blocking advisory:"
 msgstr ""
-"Amikor kiszámítja az év végi Modelo 303-at (a 4T elszámolást), az eszköz "
-"nem blokkoló figyelmeztetéseket jeleníthet meg:"
+"Amikor kiszámítod az év végi Modelo 303-at a 4T elszámoláshoz, az eszköz "
+"nem blokkoló figyelmeztetést jeleníthet meg:"
 
-#: ../../how-to/prorrata.md:112
-#, python-format
+#: ../../how-to/prorrata.md:130
 msgid ""
 "**Especial may be mandatory** - when the taxpayer computes under general "
-"prorrata and especial would deduct at least 10% less, the law (LIVA art. "
-"103.Dos.2) makes especial mandatory. Classify every input of the year so "
-"the tool can run this check; until then it prompts you to classify."
+"prorrata and the deduction under general exceeds the deduction under "
+"especial by 10 percent or more, the law (LIVA art. 103.Dos.2) makes "
+"especial mandatory. Classify every input of the year so the tool can run "
+"this check; until then it prompts you to classify. The check does not run"
+" for a register with declared sectors."
 msgstr ""
-"**Az especial kötelező lehet**: amikor az adózó általános prorrata "
-"szerint számol, és az especial legalább 10%-kal kevesebbet vonna le, a "
-"törvény (LIVA art. 103.Dos.2) kötelezővé teszi az especialt. Osztályozza "
-"az év minden előzetes áfáját, hogy az eszköz lefuttathassa ezt az "
-"ellenőrzést; addig felszólítja Önt az osztályozásra."
+"**Az especial kötelező lehet** - amikor az adózó általános prorrata "
+"szerint számol, és az általános szerinti levonás legalább 10 százalékkal "
+"meghaladja az especial szerinti levonást, a törvény (LIVA art. 103.Dos.2)"
+" kötelezővé teszi az especialt. Sorold be az év minden bemenetét, hogy az"
+" eszköz lefuttathassa ezt az ellenőrzést; addig felszólít a besorolásra. "
+"Az ellenőrzés nem fut le olyan nyilvántartásra, amelyben deklarált "
+"szektorok vannak."
 
-#: ../../how-to/prorrata.md:116
+#: ../../how-to/prorrata.md:137
+msgid "Two more warnings appear when you add a row, not at settlement:"
+msgstr ""
+"Két további figyelmeztetés a sor hozzáadásakor jelenik meg, nem az "
+"elszámoláskor:"
+
+#: ../../how-to/prorrata.md:139
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
 msgstr ""
-"**Hatástalan osztályozás**: egy `--input-classification` címke, amely "
-"arra az évre nincs especial-választással beállítva."
+"**Hatástalan besorolás** - egy `--input-classification` címke, amely arra"
+" az évre nincs especial-választással beállítva."
 
-#: ../../how-to/prorrata.md:118
+#: ../../how-to/prorrata.md:141
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
 "**Párját nem lelő szektor**: egy `--sector` címke, amely egy még nem "
 "deklarált szektort nevez meg."
 
-#: ../../how-to/prorrata.md:120
+#: ../../how-to/prorrata.md:143
 msgid ""
 "These are advisories, not refusals. Read them alongside the [calculation "
 "inputs](review-calculation-values.md) before you [verify the filing"
 "](verification-reports.md)."
 msgstr ""
-"Ezek figyelmeztetések, nem elutasítások. Olvassa el őket a [számítási "
-"bemenetek](review-calculation-values.md) mellett, mielőtt [ellenőrzi a "
+"Ezek figyelmeztetések, nem elutasítások. Olvasd el őket a [számítási "
+"bemenetek](review-calculation-values.md) mellett, mielőtt [ellenőrzöd a "
 "benyújtást](verification-reports.md)."
 
-#: ../../how-to/prorrata.md:124
+#: ../../how-to/prorrata.md:147
 msgid "Review the register"
 msgstr "A nyilvántartás felülvizsgálata"
 
-#: ../../how-to/prorrata.md:126
+#: ../../how-to/prorrata.md:149
 msgid "List every election and declared sector on the active profile:"
-msgstr "Listázza az aktív profil minden választását és deklarált szektorát:"
+msgstr "Listázd az aktív profil minden választását és deklarált szektorát:"
 
-#: ../../how-to/prorrata.md:132
+#: ../../how-to/prorrata.md:155
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/prorrata.md:134
+#: ../../how-to/prorrata.md:157
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
 msgstr ""
-"[Tranzakciók osztályozása](classify-transactions.md), hogy minden "
-"előzetes IVA hordozza a prorratához szükséges adatokat."
+"[Tranzakciók besorolása](classify-transactions.md), hogy minden beszerzés"
+" hordozza a prorratához szükséges adatokat."
 
-#: ../../how-to/prorrata.md:136
+#: ../../how-to/prorrata.md:159
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
 msgstr ""
-"[Számítási bemenetek felülvizsgálata](review-calculation-values.md) a "
-"levont összegek megtekintéséhez."
+"[Számítási bemenetek áttekintése](review-calculation-values.md) a levont "
+"összegek megtekintéséhez."
 
-#: ../../how-to/prorrata.md:138
+#: ../../how-to/prorrata.md:161
 msgid ""
 "[Prepare a Modelo 303 IVA filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."
 msgstr ""
 "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) és [az éves Modelo"
 " 390 összesítő](modelo-390.md)."
+
+#~ msgid ""
+#~ "**Especial may be mandatory** - when "
+#~ "the taxpayer computes under general "
+#~ "prorrata and especial would deduct at"
+#~ " least 10% less, the law (LIVA "
+#~ "art. 103.Dos.2) makes especial mandatory. "
+#~ "Classify every input of the year "
+#~ "so the tool can run this check;"
+#~ " until then it prompts you to "
+#~ "classify."
+#~ msgstr ""
+#~ "**Az especial kötelező lehet**: amikor "
+#~ "az adózó általános prorrata szerint "
+#~ "számol, és az especial legalább 10%-kal"
+#~ " kevesebbet vonna le, a törvény (LIVA"
+#~ " art. 103.Dos.2) kötelezővé teszi az "
+#~ "especialt. Osztályozza az év minden "
+#~ "előzetes áfáját, hogy az eszköz "
+#~ "lefuttathassa ezt az ellenőrzést; addig "
+#~ "felszólítja Önt az osztályozásra."
+
+#~ msgid ""
+#~ "**Especial prorrata** (LIVA art. 103): "
+#~ "each input deducts by its own use."
+#~ " Fully deductible inputs deduct in "
+#~ "full, inputs used only for non-"
+#~ "deducting operations deduct nothing, and "
+#~ "shared (\"common\") inputs deduct at the"
+#~ " general percentage. Tag each input "
+#~ "with its use."
+#~ msgstr ""
+#~ "**Especial (különleges) prorrata** (LIVA art."
+#~ " 103): minden előzetes IVA a saját"
+#~ " használata szerint vonódik le. A "
+#~ "teljesen levonható előzetes áfák teljesen "
+#~ "levonódnak, a kizárólag nem levonó "
+#~ "ügyletekhez használtak semmit nem vonnak "
+#~ "le, a megosztott („közös”) előzetes áfák"
+#~ " pedig az általános százalékon vonódnak "
+#~ "le. Címkézze meg minden előzetes áfát"
+#~ " a használatával."
+
+#~ msgid ""
+#~ "**General prorrata** (LIVA art. 104): "
+#~ "one deduction percentage applies to "
+#~ "every deductible input for the year. "
+#~ "Use it when the taxpayer has no"
+#~ " reason to separate inputs."
+#~ msgstr ""
+#~ "**Általános prorrata** (LIVA art. 104): "
+#~ "egyetlen levonási százalék vonatkozik az "
+#~ "év minden levonható előzetes áfájára. "
+#~ "Akkor használja, amikor az adózónak "
+#~ "nincs oka az előzetes áfák "
+#~ "szétválasztására."
+
+#~ msgid ""
+#~ "Here `--percentage` is the common-use"
+#~ " percentage, the rate applied to "
+#~ "shared inputs (LIVA art. 106.Uno regla"
+#~ " 3.ª / art. 104.Dos). The same "
+#~ "`--provenance` and `--reference` options "
+#~ "apply."
+#~ msgstr ""
+#~ "Itt a `--percentage` a közös használatú"
+#~ " százalék, a megosztott előzetes áfákra "
+#~ "alkalmazott kulcs (LIVA art. 106.Uno "
+#~ "regla 3.ª / art. 104.Dos). Ugyanazok "
+#~ "a `--provenance` és `--reference` opciók "
+#~ "vonatkoznak rá."
+
+#~ msgid ""
+#~ "Tag a row with a sector you "
+#~ "have not declared and the tool "
+#~ "warns the tag is unmatched: the "
+#~ "input deducts at the common-use "
+#~ "percentage until you declare the sector."
+#~ " Declare the sector first, or fix "
+#~ "the id."
+#~ msgstr ""
+#~ "Ha megcímkéz egy sort egy szektorral,"
+#~ " amelyet nem deklarált, az eszköz "
+#~ "figyelmeztet, hogy a címke nem talál "
+#~ "párt: az előzetes IVA a közös "
+#~ "használatú százalékon vonódik le, amíg "
+#~ "nem deklarálja a szektort. Előbb "
+#~ "deklarálja a szektort, vagy javítsa az"
+#~ " azonosítót."
+
+#~ msgid ""
+#~ "Tag an input but elect no especial"
+#~ " for that year and the tool "
+#~ "warns the tag is inert: the input"
+#~ " deducts under the general percentage. "
+#~ "Elect especial to make the tag "
+#~ "take effect."
+#~ msgstr ""
+#~ "Ha megcímkéz egy előzetes áfát, de "
+#~ "arra az évre nem választ especialt, "
+#~ "az eszköz figyelmeztet, hogy a címke "
+#~ "hatástalan: az előzetes IVA az általános"
+#~ " százalék szerint vonódik le. Válassza "
+#~ "az especialt, hogy a címke érvénybe "
+#~ "lépjen."
+
+#~ msgid "The tool needs a master-key passphrase and prompts for it."
+#~ msgstr ""
+#~ "Az eszköznek szüksége van egy "
+#~ "mesterkulcs-jelmondatra, és be is kéri "
+#~ "azt."
+
+#~ msgid ""
+#~ "To carry the prior year's definitive "
+#~ "percentage (LIVA art. 105.Uno), run "
+#~ "`aeat app ledger prorrata seed "
+#~ "--ejercicio <year>` instead. It reads "
+#~ "the percentage from the filed prior-"
+#~ "year Modelo 303 settlement."
+#~ msgstr ""
+#~ "Az előző év végleges százalékának "
+#~ "átviteléhez (LIVA art. 105.Uno) inkább "
+#~ "az `aeat app ledger prorrata seed "
+#~ "--ejercicio <year>` parancsot futtassa. Ez "
+#~ "a benyújtott előző évi Modelo 303 "
+#~ "elszámolásból olvassa ki a százalékot."
+
+#~ msgid ""
+#~ "When you calculate the year-end "
+#~ "Modelo 303 for the 4T settlement, "
+#~ "the tool may surface non-blocking "
+#~ "advisories:"
+#~ msgstr ""
+#~ "Amikor kiszámítja az év végi Modelo "
+#~ "303-at (a 4T elszámolást), az eszköz "
+#~ "nem blokkoló figyelmeztetéseket jeleníthet "
+#~ "meg:"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-30 21:54+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -33,8 +33,8 @@ msgstr ""
 "Autentica Cadrumo amb l'Agència Tributària d'Espanya, l'Agencia Estatal "
 "de Administración Tributaria (AEAT), perquè l'ordre `aeat` de Cadrumo "
 "pugui llegir la informació que la teva identitat davant l'AEAT autoritzi."
-" L'autenticació només ofereix accés de només lectura. Mai no presenta una"
-" declaració, ni fa un pagament, ni acusa recepció d'una notificació, ni "
+" L'autenticació només dona accés de lectura. Mai no presenta una "
+"declaració, ni fa un pagament, ni acusa recepció d'una notificació, ni "
 "duu a terme accions d'escriptura com a representant."
 
 #: ../../how-to/authenticate-with-aeat.md:9
@@ -45,24 +45,22 @@ msgid ""
 "the failure with the Cadrumo version and redacted output."
 msgstr ""
 "Executa `aeat --help` abans de continuar. Si falla, atura't abans de "
-"configurar l'autenticació i segueixes la [guia de resolució de problemes "
-"de la CLI](troubleshooting.md). Si això no restableix l'ordre, comuniques"
-" la fallada amb la versió de Cadrumo i la sortida amb les dades sensibles"
-" ocultades."
+"configurar l'autenticació i segueix la [guia de resolució de problemes de"
+" la CLI](troubleshooting.md). Si això no restableix l'ordre, informa de "
+"la fallada amb la versió de Cadrumo i la sortida amb les dades sensibles "
+"ocultades."
 
 #: ../../how-to/authenticate-with-aeat.md:14
 msgid ""
 "When available to your identity, the command-line interface (CLI) can "
 "read filed declarations, expedientes, notifications, and filed "
-"justificantes. For Modelo 036/Censo profile facts, use the [profile/Censo"
-" facts guide](censo-update.md). Cadrumo no longer retrieves these facts "
-"live."
+"justificantes. To pull your census address into your profile, use the "
+"[census facts guide](censo-update.md)."
 msgstr ""
 "Quan la teva identitat hi tingui accés, la interfície de línia d'ordres "
-"(CLI) pot llegir declaracions presentades, expedients, notificacions i "
-"justificants presentats. Per a les dades censals del perfil (Modelo "
-"036/Cens), usa la [guia de dades del perfil/Cens](censo-update.md). "
-"Cadrumo ja no recupera aquestes dades en directe."
+"(CLI) pot llegir declaracions presentades, expedientes, notificacions i "
+"justificantes presentats. Per portar al teu perfil el domicili censal, "
+"usa la [guia de dades censals](censo-update.md)."
 
 #: ../../how-to/authenticate-with-aeat.md:19
 msgid "Before you start"
@@ -70,89 +68,92 @@ msgstr "Abans de començar"
 
 #: ../../how-to/authenticate-with-aeat.md:21
 msgid "You need:"
-msgstr "Necessita:"
+msgstr "Necessites:"
 
 #: ../../how-to/authenticate-with-aeat.md:23
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
-"`aeat config auth configure` refuses with `No hay un perfil activo` until"
-" you create one. Start the interactive wizard (a NIF, CIF, DNI, or NIE is"
-" a Spanish tax identifier); it prompts for the profile passphrase and "
-"offers an optional recovery code once the profile exists:"
+"`aeat config auth configure` refuses with `No active profile.` until you "
+"create one. Start the interactive wizard (it asks for your NIF or NIE; "
+"for a Spanish citizen, the NIF is the DNI number plus letter). It prompts"
+" for the profile passphrase and offers an optional recovery code once the"
+" profile exists:"
 msgstr ""
 "un [perfil actiu](profile-setup.md#what-the-active-profile-means). `aeat "
-"config auth configure` es nega amb `No hay un perfil activo` fins que en "
-"creeu un. Inicieu l'assistent interactiu (un NIF, CIF, DNI o NIE és un "
-"identificador fiscal espanyol); demana la frase de contrasenya del perfil"
-" i ofereix un codi de recuperació opcional un cop el perfil existeix:"
+"config auth configure` es nega amb `No active profile.` fins que en crees"
+" un. Inicia l'assistent interactiu (et demana el NIF o NIE; per a un "
+"ciutadà espanyol, el NIF és el número del DNI més la lletra). Et demana "
+"la frase de contrasenya del perfil i, un cop el perfil existeix, "
+"t'ofereix un codi de recuperació opcional:"
 
-#: ../../how-to/authenticate-with-aeat.md:33
-msgid ""
-"the master-key passphrase that protects your local store; the tool "
-"prompts for it."
+#: ../../how-to/authenticate-with-aeat.md:34
+msgid "the passphrase that protects your local store; the tool prompts for it."
 msgstr ""
-"la contrasenya de la clau mestra que protegeix el teu magatzem local; "
-"l'eina te la demana."
+"la frase de contrasenya que protegeix el teu magatzem local; l'eina te la"
+" demana."
 
-#: ../../how-to/authenticate-with-aeat.md:36
+#: ../../how-to/authenticate-with-aeat.md:35
+msgid ""
+"the `browser` extra, because `aeat config auth login` and every live read"
+" drive a browser. Install it with `pip install \"cadrumo[browser]\"`, or "
+"follow [Install Cadrumo](../workstation-setup.md)."
+msgstr ""
+"l'extra `browser`, perquè `aeat config auth login` i cada lectura en "
+"directe fan servir un navegador. Instal·la'l amb `pip install "
+"\"cadrumo[browser]\"` o segueix [Instal·la Cadrumo](../workstation-"
+"setup.md)."
+
+#: ../../how-to/authenticate-with-aeat.md:39
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"Els exemples d'aquesta documentació estan enregistrats en anglès. `aeat` "
+"mostra els seus missatges en espanyol tret que [triïs un altre idioma"
+"](profile-setup.md#choose-the-output-language)."
+
+#: ../../how-to/authenticate-with-aeat.md:43
 msgid "See supported providers"
 msgstr "Consulta els proveïdors admesos"
 
-#: ../../how-to/authenticate-with-aeat.md:38
+#: ../../how-to/authenticate-with-aeat.md:45
 msgid "List providers:"
 msgstr "Llista els proveïdors:"
 
-#: ../../how-to/authenticate-with-aeat.md:44
-msgid ""
-"The list marks each provider as `disponible` (available now) or "
-"`reservado (no disponible aún)` (reserved, not available yet). Three are "
-"available:"
-msgstr ""
-"La llista marca cada proveïdor com a `disponible` (disponible ara) o "
-"`reservado (no disponible aún)` (reservat, encara no disponible). N'hi ha"
-" tres de disponibles:"
+#: ../../how-to/authenticate-with-aeat.md:51
+msgid "Cadrumo supports three providers:"
+msgstr "Cadrumo admet tres proveïdors:"
 
-#: ../../how-to/authenticate-with-aeat.md:47
+#: ../../how-to/authenticate-with-aeat.md:53
 msgid "`certificate`: your digital certificate file (certificado digital)."
 msgstr "`certificate`: el fitxer del teu certificat digital (certificado digital)."
 
-#: ../../how-to/authenticate-with-aeat.md:48
+#: ../../how-to/authenticate-with-aeat.md:54
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
-msgstr "`clave_movil`: Cl@ve basat en el mòbil, confirmat al telèfon."
+msgstr "`clave_movil`: Cl@ve basada en el mòbil, confirmada al telèfon."
 
-#: ../../how-to/authenticate-with-aeat.md:49
+#: ../../how-to/authenticate-with-aeat.md:55
 msgid "`clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login."
 msgstr "`clave_permanente`: Cl@ve Permanente, un accés amb DNI/NIE i contrasenya."
 
-#: ../../how-to/authenticate-with-aeat.md:51
-msgid "Two more are listed but reserved, so you cannot configure them yet:"
+#: ../../how-to/authenticate-with-aeat.md:57
+msgid ""
+"Pass the identifier to `--provider`. Cl@ve PIN and the electronic "
+"national ID card (DNI electrónico) are not supported."
 msgstr ""
-"N'hi ha dos més a la llista, però reservats, de manera que encara no els "
-"pots configurar:"
+"Passa l'identificador a `--provider`. No s'admeten Cl@ve PIN ni el "
+"document nacional d'identitat electrònic (DNI electrónico)."
 
-#: ../../how-to/authenticate-with-aeat.md:53
-msgid "`clave_pin`: Cl@ve PIN, a one-time code system from AEAT. Reserved."
-msgstr ""
-"`clave_pin`: Cl@ve PIN, un sistema de codi d'un sol ús de l'AEAT. "
-"Reservat."
-
-#: ../../how-to/authenticate-with-aeat.md:54
-msgid "`dnie_pkcs`: the national ID card (DNI electrónico). Reserved."
-msgstr "`dnie_pkcs`: el document nacional d'identitat (DNI electrónico). Reservat."
-
-#: ../../how-to/authenticate-with-aeat.md:56
-msgid "Configure one of the available providers."
-msgstr "Configura un dels proveïdors disponibles."
-
-#: ../../how-to/authenticate-with-aeat.md:58
+#: ../../how-to/authenticate-with-aeat.md:60
 msgid "Configure a provider"
 msgstr "Configura un proveïdor"
 
-#: ../../how-to/authenticate-with-aeat.md:60
+#: ../../how-to/authenticate-with-aeat.md:62
 msgid "Configure the provider you use:"
 msgstr "Configura el proveïdor que utilitzes:"
 
-#: ../../how-to/authenticate-with-aeat.md:65
+#: ../../how-to/authenticate-with-aeat.md:67
 msgid ""
 "Use `--file` for providers that need a file, such as your digital "
 "certificate. Keep credential files private and do not share them."
@@ -161,27 +162,65 @@ msgstr ""
 "certificat digital. Mantén privats els fitxers de credencials i no els "
 "comparteixis."
 
-#: ../../how-to/authenticate-with-aeat.md:68
+#: ../../how-to/authenticate-with-aeat.md:70
+msgid ""
+"The command stores the provider choice and the certificate path, never a "
+"secret. Supply the secrets separately:"
+msgstr ""
+"L'ordre desa l'elecció del proveïdor i el camí del certificat, mai un "
+"secret. Aporta els secrets per separat:"
+
+#: ../../how-to/authenticate-with-aeat.md:73
+msgid ""
+"`certificate`: bind the passphrase to a registered certificate source "
+"with `aeat config auth certificate secret set`, or set the "
+"`CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable."
+msgstr ""
+"`certificate`: vincula la frase de contrasenya a un origen de certificat "
+"registrat amb `aeat config auth certificate secret set`, o defineix la "
+"variable d'entorn `CADRUMO_CERTIFICATE_PASSWORD_SECRET`."
+
+#: ../../how-to/authenticate-with-aeat.md:76
+msgid ""
+"`clave_permanente`: set `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` and "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD`."
+msgstr ""
+"`clave_permanente`: defineix `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` i "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD`."
+
+#: ../../how-to/authenticate-with-aeat.md:78
+msgid "`clave_movil`: set `CADRUMO_CLAVE_MOVIL_DNI_NIE`."
+msgstr "`clave_movil`: defineix `CADRUMO_CLAVE_MOVIL_DNI_NIE`."
+
+#: ../../how-to/authenticate-with-aeat.md:80
+msgid ""
+"The [environment overrides reference](../reference/environment-"
+"overrides.md) describes these variables."
+msgstr ""
+"La [referència de substitucions d'entorn](../reference/environment-"
+"overrides.md) descriu aquestes variables."
+
+#: ../../how-to/authenticate-with-aeat.md:83
 msgid "Check local readiness"
 msgstr "Comprova la preparació local"
 
-#: ../../how-to/authenticate-with-aeat.md:70
+#: ../../how-to/authenticate-with-aeat.md:85
 msgid "Check what is configured:"
 msgstr "Comprova què hi ha configurat:"
 
-#: ../../how-to/authenticate-with-aeat.md:76
+#: ../../how-to/authenticate-with-aeat.md:91
 msgid ""
 "If you want to inspect a specific provider, use `--provider` with either "
 "command."
 msgstr ""
-"Si vols inspeccionar un proveïdor concret, uses `--provider` amb "
-"qualsevol de les dues ordres."
+"Si vols inspeccionar un proveïdor concret, usa `--provider` amb qualsevol"
+" de les dues ordres."
 
-#: ../../how-to/authenticate-with-aeat.md:80
+#: ../../how-to/authenticate-with-aeat.md:95
 msgid "Renew your certificate before it expires"
 msgstr "Renova el certificat abans que caduqui"
 
-#: ../../how-to/authenticate-with-aeat.md:82
+#: ../../how-to/authenticate-with-aeat.md:97
 msgid ""
 "A digital certificate has an expiry date. The tool reads that date from "
 "the certificate file and warns you as it approaches. This helps you avoid"
@@ -192,15 +231,15 @@ msgstr ""
 "t'ajuda a evitar una lectura en directe fallida per un certificat "
 "caducat."
 
-#: ../../how-to/authenticate-with-aeat.md:86
+#: ../../how-to/authenticate-with-aeat.md:101
 msgid "Check the remaining validity:"
 msgstr "Comprova la validesa restant:"
 
-#: ../../how-to/authenticate-with-aeat.md:92
+#: ../../how-to/authenticate-with-aeat.md:107
 msgid "The report tells you how the certificate stands:"
 msgstr "L'informe et diu en quin estat es troba el certificat:"
 
-#: ../../how-to/authenticate-with-aeat.md:94
+#: ../../how-to/authenticate-with-aeat.md:109
 msgid ""
 "More than 60 days left: the certificate is valid and reports the days "
 "remaining."
@@ -208,7 +247,7 @@ msgstr ""
 "Més de 60 dies restants: el certificat és vàlid i informa dels dies que "
 "queden."
 
-#: ../../how-to/authenticate-with-aeat.md:96
+#: ../../how-to/authenticate-with-aeat.md:111
 msgid ""
 "60 days or fewer left: a warning appears: `The certificate expires in N "
 "days. Plan the renewal.` Start the renewal now."
@@ -216,7 +255,7 @@ msgstr ""
 "60 dies o menys restants: apareix un avís: `The certificate expires in N "
 "days. Plan the renewal.` Comença la renovació ara."
 
-#: ../../how-to/authenticate-with-aeat.md:98
+#: ../../how-to/authenticate-with-aeat.md:113
 msgid ""
 "14 days or fewer left: the warning is critical. Renew before your next "
 "live read."
@@ -224,16 +263,16 @@ msgstr ""
 "14 dies o menys restants: l'avís és crític. Renova'l abans de la propera "
 "lectura en directe."
 
-#: ../../how-to/authenticate-with-aeat.md:100
+#: ../../how-to/authenticate-with-aeat.md:115
 msgid ""
 "Already expired: `The certificate expired N days ago. Renew it before "
 "authenticating.` A live read is refused until you replace it."
 msgstr ""
 "Ja caducat: `The certificate expired N days ago. Renew it before "
 "authenticating.` Es rebutja una lectura en directe fins que el "
-"substitueixes."
+"substitueixis."
 
-#: ../../how-to/authenticate-with-aeat.md:103
+#: ../../how-to/authenticate-with-aeat.md:118
 msgid ""
 "Renew the certificate with the body that issued it, such as the Fábrica "
 "Nacional de Moneda y Timbre (FNMT) or AEAT. This happens outside the "
@@ -245,63 +284,73 @@ msgstr ""
 "Descarrega el fitxer del certificat renovat (`.p12` o `.pfx`) a la teva "
 "màquina."
 
-#: ../../how-to/authenticate-with-aeat.md:107
+#: ../../how-to/authenticate-with-aeat.md:122
 msgid "Point the tool at the renewed file:"
 msgstr "Apunta l'eina cap al fitxer renovat:"
 
-#: ../../how-to/authenticate-with-aeat.md:112
+#: ../../how-to/authenticate-with-aeat.md:127
+#, python-brace-format
 msgid ""
-"If the renewed certificate uses a new password, rotate the stored "
-"passphrase for its source:"
+"If the renewed file uses a new password, register it as a [named "
+"certificate source](#manage-several-certificates) if it is not one yet, "
+"then rotate the stored passphrase for that source. `secret set` refuses a"
+" name that is not registered. It prompts without echo, or reads "
+"`{\"certificate_passphrase\": \"...\"}` from `--secrets-stdin` or "
+"`--secrets-fd`:"
 msgstr ""
-"Si el certificat renovat utilitza una contrasenya nova, canvies la "
-"contrasenya emmagatzemada per a la seva font:"
+"Si el fitxer renovat té una contrasenya nova, registra'l com a [origen de"
+" certificat amb nom](#manage-several-certificates) si encara no ho és i, "
+"tot seguit, actualitza la frase de contrasenya desada per a aquest "
+"origen. `secret set` rebutja un nom que no estigui registrat. Demana la "
+"frase sense mostrar-la en pantalla, o llegeix "
+"`{\"certificate_passphrase\": \"...\"}` de `--secrets-stdin` o "
+"`--secrets-fd`:"
 
-#: ../../how-to/authenticate-with-aeat.md:118
+#: ../../how-to/authenticate-with-aeat.md:137
 msgid "Confirm the new expiry:"
 msgstr "Confirma la nova data de caducitat:"
 
-#: ../../how-to/authenticate-with-aeat.md:124
+#: ../../how-to/authenticate-with-aeat.md:143
 msgid "The report now shows the renewed certificate's later expiry date."
 msgstr ""
 "Ara l'informe mostra la data de caducitat posterior del certificat "
 "renovat."
 
-#: ../../how-to/authenticate-with-aeat.md:126
+#: ../../how-to/authenticate-with-aeat.md:145
 msgid "Manage several certificates"
 msgstr "Gestiona diversos certificats"
 
-#: ../../how-to/authenticate-with-aeat.md:128
+#: ../../how-to/authenticate-with-aeat.md:147
 msgid ""
 "If you act for several entities, register one certificate per entity. Do "
 "not reconfigure `aeat config auth configure --file` every time you "
 "switch."
 msgstr ""
-"Si actues per a diverses entitats, registres un certificat per entitat. "
-"No tornis a executar `aeat config auth configure --file` cada vegada que "
-"en canvies."
+"Si actues per a diverses entitats, registra un certificat per a "
+"cadascuna. No tornis a executar `aeat config auth configure --file` cada "
+"cop que canvies."
 
-#: ../../how-to/authenticate-with-aeat.md:131
+#: ../../how-to/authenticate-with-aeat.md:150
 msgid "Register each certificate under a name:"
 msgstr "Registra cada certificat sota un nom:"
 
-#: ../../how-to/authenticate-with-aeat.md:136
+#: ../../how-to/authenticate-with-aeat.md:155
 msgid "List every registered certificate:"
 msgstr "Llista tots els certificats registrats:"
 
-#: ../../how-to/authenticate-with-aeat.md:142
+#: ../../how-to/authenticate-with-aeat.md:161
 msgid "Select the one you want active:"
 msgstr "Selecciona el que vols activar:"
 
-#: ../../how-to/authenticate-with-aeat.md:147
+#: ../../how-to/authenticate-with-aeat.md:166
 msgid "Remove a registered certificate you no longer need:"
 msgstr "Elimina un certificat registrat que ja no necessites:"
 
-#: ../../how-to/authenticate-with-aeat.md:153
+#: ../../how-to/authenticate-with-aeat.md:172
 msgid "Check every registered certificate's expiry"
 msgstr "Comprova la caducitat de cada certificat registrat"
 
-#: ../../how-to/authenticate-with-aeat.md:155
+#: ../../how-to/authenticate-with-aeat.md:174
 msgid ""
 "Each registered certificate has its own expiry date. Check all registered"
 " certificates in one pass, not only the active one:"
@@ -309,15 +358,15 @@ msgstr ""
 "Cada certificat registrat té la seva pròpia data de caducitat. Comprova "
 "tots els certificats registrats en una sola passada, no només l'actiu:"
 
-#: ../../how-to/authenticate-with-aeat.md:162
+#: ../../how-to/authenticate-with-aeat.md:181
 msgid "The report lists each registered certificate with its status:"
 msgstr "L'informe llista cada certificat registrat amb el seu estat:"
 
-#: ../../how-to/authenticate-with-aeat.md:164
+#: ../../how-to/authenticate-with-aeat.md:183
 msgid "`ok`: valid, with the days remaining."
 msgstr "`ok`: vàlid, amb els dies que queden."
 
-#: ../../how-to/authenticate-with-aeat.md:165
+#: ../../how-to/authenticate-with-aeat.md:184
 msgid ""
 "`expiring`: within the renewal window (60 days or fewer by default, or 14"
 " days or fewer for the critical window). A warning names the certificate."
@@ -326,11 +375,19 @@ msgstr ""
 "defecte, o 14 dies o menys per a la finestra crítica). Un avís anomena el"
 " certificat."
 
-#: ../../how-to/authenticate-with-aeat.md:167
+#: ../../how-to/authenticate-with-aeat.md:186
 msgid "`expired`: already expired. A warning names the certificate."
 msgstr "`expired`: ja caducat. Un avís anomena el certificat."
 
-#: ../../how-to/authenticate-with-aeat.md:169
+#: ../../how-to/authenticate-with-aeat.md:187
+msgid ""
+"`file_missing`, `unreadable`, or `corrupt`: Cadrumo cannot read the file,"
+" or cannot open it with the stored passphrase."
+msgstr ""
+"`file_missing`, `unreadable` o `corrupt`: Cadrumo no pot llegir el fitxer"
+" o no pot obrir-lo amb la frase de contrasenya desada."
+
+#: ../../how-to/authenticate-with-aeat.md:190
 msgid ""
 "Renew an expiring or expired certificate with the body that issued it, "
 "then re-register it under its existing name:"
@@ -338,7 +395,7 @@ msgstr ""
 "Renova un certificat que caduca o que ja ha caducat amb l'organisme que "
 "el va emetre i, tot seguit, torna'l a registrar amb el seu nom existent:"
 
-#: ../../how-to/authenticate-with-aeat.md:175
+#: ../../how-to/authenticate-with-aeat.md:196
 msgid ""
 "Re-run `aeat config auth certificate check` to confirm the new expiry "
 "date."
@@ -346,35 +403,35 @@ msgstr ""
 "Torna a executar `aeat config auth certificate check` per confirmar la "
 "nova data de caducitat."
 
-#: ../../how-to/authenticate-with-aeat.md:177
+#: ../../how-to/authenticate-with-aeat.md:198
 msgid "Acquire or verify a live session"
 msgstr "Obtén o verifica una sessió en directe"
 
-#: ../../how-to/authenticate-with-aeat.md:179
+#: ../../how-to/authenticate-with-aeat.md:200
 msgid "When you are ready to use a live-read command:"
 msgstr "Quan estiguis a punt per utilitzar una ordre de lectura en directe:"
 
-#: ../../how-to/authenticate-with-aeat.md:184
+#: ../../how-to/authenticate-with-aeat.md:205
 msgid "If you need to intentionally reauthenticate, force a fresh authentication:"
 msgstr ""
-"Si necessites tornar a autenticar-te intencionadament, forces una "
-"autenticació nova:"
+"Si necessites tornar a autenticar-te expressament, força una autenticació"
+" nova:"
 
-#: ../../how-to/authenticate-with-aeat.md:189
+#: ../../how-to/authenticate-with-aeat.md:210
 msgid ""
 "If a previous login was interrupted and left the authentication step "
 "stuck, use `--reset-lock`. Run it when `login` reports another login is "
 "in progress but it is not."
 msgstr ""
 "Si un inici de sessió anterior es va interrompre i va deixar encallat el "
-"pas d'autenticació, uses `--reset-lock`. Executa-ho quan `login` informi "
-"que hi ha un altre inici de sessió en curs però de fet no n'hi ha cap."
+"pas d'autenticació, usa `--reset-lock`. Fes-lo servir quan `login` "
+"informi que hi ha un altre inici de sessió en curs, però no és així."
 
-#: ../../how-to/authenticate-with-aeat.md:193
+#: ../../how-to/authenticate-with-aeat.md:214
 msgid "End sessions or reset authentication"
 msgstr "Finalitza sessions o restableix l'autenticació"
 
-#: ../../how-to/authenticate-with-aeat.md:195
+#: ../../how-to/authenticate-with-aeat.md:216
 msgid ""
 "To end the local certificate-provider session without removing its "
 "configuration:"
@@ -382,7 +439,7 @@ msgstr ""
 "Per finalitzar la sessió local del proveïdor de certificat sense "
 "eliminar-ne la configuració:"
 
-#: ../../how-to/authenticate-with-aeat.md:202
+#: ../../how-to/authenticate-with-aeat.md:223
 msgid ""
 "To remove one provider's local configuration, sessions, acquisition lock,"
 " registered certificates, and stored certificate secrets:"
@@ -391,15 +448,15 @@ msgstr ""
 "bloqueig d'obtenció, els certificats registrats i els secrets de "
 "certificat emmagatzemats:"
 
-#: ../../how-to/authenticate-with-aeat.md:209
+#: ../../how-to/authenticate-with-aeat.md:230
 msgid "To remove local authentication state for every configured provider:"
 msgstr "Per eliminar l'estat d'autenticació local de cada proveïdor configurat:"
 
-#: ../../how-to/authenticate-with-aeat.md:215
+#: ../../how-to/authenticate-with-aeat.md:236
 msgid "Act for someone else (apoderado)"
 msgstr "Actua en nom d'una altra persona (apoderado)"
 
-#: ../../how-to/authenticate-with-aeat.md:217
+#: ../../how-to/authenticate-with-aeat.md:238
 msgid ""
 "If you act as an authorized tax representative for another taxpayer, "
 "record locally who you represent and the relevant AEAT apoderamiento "
@@ -407,11 +464,11 @@ msgid ""
 " asesor."
 msgstr ""
 "Si actues com a representant fiscal autoritzat d'un altre contribuent, "
-"registres localment qui representes i els àmbits d'apoderamiento de "
-"l'AEAT corresponents. Un apoderado és un representant autoritzat, com ara"
-" un gestor o assessor."
+"registra localment qui representes i els àmbits d'apoderamiento de l'AEAT"
+" corresponents. Un apoderado és un representant autoritzat, com ara un "
+"gestor o assessor."
 
-#: ../../how-to/authenticate-with-aeat.md:221
+#: ../../how-to/authenticate-with-aeat.md:242
 msgid ""
 "The apoderamiento itself is granted at AEAT. The represented party "
 "authorizes you through AEAT's own apoderamiento procedures. The commands "
@@ -428,35 +485,35 @@ msgstr ""
 "apoderamiento a l'AEAT. Cap ordre no escriu l'estat de representació a "
 "l'AEAT."
 
-#: ../../how-to/authenticate-with-aeat.md:227
+#: ../../how-to/authenticate-with-aeat.md:248
 msgid "See the accepted scopes"
 msgstr "Consulta els àmbits admesos"
 
-#: ../../how-to/authenticate-with-aeat.md:229
+#: ../../how-to/authenticate-with-aeat.md:250
 msgid "List the scope codes the tool accepts:"
 msgstr "Llista els codis d'àmbit que accepta l'eina:"
 
-#: ../../how-to/authenticate-with-aeat.md:235
+#: ../../how-to/authenticate-with-aeat.md:256
 msgid "Each scope is an AEAT apoderamiento area. Examples include:"
 msgstr "Cada àmbit és una àrea d'apoderamiento de l'AEAT. Alguns exemples són:"
 
-#: ../../how-to/authenticate-with-aeat.md:237
+#: ../../how-to/authenticate-with-aeat.md:258
 msgid "`RENT` for modelos 100 and 714."
-msgstr "`RENT` per als models 100 i 714."
+msgstr "`RENT` per als modelos 100 i 714."
 
-#: ../../how-to/authenticate-with-aeat.md:238
+#: ../../how-to/authenticate-with-aeat.md:259
 msgid "`IVA` for modelos 303 and 390."
-msgstr "`IVA` per als models 303 i 390."
+msgstr "`IVA` per als modelos 303 i 390."
 
-#: ../../how-to/authenticate-with-aeat.md:239
+#: ../../how-to/authenticate-with-aeat.md:260
 msgid "`PAGOSF` for modelos 130 and 131."
-msgstr "`PAGOSF` per als models 130 i 131."
+msgstr "`PAGOSF` per als modelos 130 i 131."
 
-#: ../../how-to/authenticate-with-aeat.md:240
+#: ../../how-to/authenticate-with-aeat.md:261
 msgid "`RETEN` for withholding modelos."
-msgstr "`RETEN` per als models de retencions."
+msgstr "`RETEN` per als modelos de retencions."
 
-#: ../../how-to/authenticate-with-aeat.md:241
+#: ../../how-to/authenticate-with-aeat.md:262
 msgid ""
 "`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC`, and `EXPED` for their "
 "respective authority areas."
@@ -464,31 +521,32 @@ msgstr ""
 "`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC` i `EXPED` per a les seves àrees"
 " d'autoritat respectives."
 
-#: ../../how-to/authenticate-with-aeat.md:244
+#: ../../how-to/authenticate-with-aeat.md:265
 msgid "Record who you represent"
-msgstr "Registra qui representa"
+msgstr "Registra qui representes"
 
-#: ../../how-to/authenticate-with-aeat.md:246
+#: ../../how-to/authenticate-with-aeat.md:267
 msgid ""
-"Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) "
-"and the scopes that match the grant at AEAT:"
+"Set the represented party's tax identifier (a NIF or NIE) and the scopes "
+"that match the grant at AEAT:"
 msgstr ""
-"Indica l'identificador fiscal de la part representada (NIF, CIF, DNI, NIE"
-" o NII) i els àmbits que corresponen a la concessió a l'AEAT:"
+"Indica l'identificador fiscal de la part representada (un NIF o NIE) i "
+"els àmbits que coincideixen amb la concessió a l'AEAT:"
 
-#: ../../how-to/authenticate-with-aeat.md:253
+#: ../../how-to/authenticate-with-aeat.md:274
 msgid ""
 "Repeat `--scope` for each code. The CLI rejects a comma-separated list. "
 "Scope codes are uppercase. Use `--scope ALL` to record every catalogue "
-"scope at once. The CLI rejects unknown codes and lists the accepted "
-"codes."
+"scope at once. The CLI rejects unknown codes. Without any `--scope`, it "
+"refuses with a message that lists the accepted codes."
 msgstr ""
 "Repeteix `--scope` per a cada codi. La CLI rebutja una llista separada "
 "per comes. Els codis d'àmbit van en majúscules. Usa `--scope ALL` per "
 "registrar tots els àmbits del catàleg alhora. La CLI rebutja els codis "
-"desconeguts i llista els codis admesos."
+"desconeguts. Si no indiques cap `--scope`, es nega amb un missatge que "
+"llista els codis admesos."
 
-#: ../../how-to/authenticate-with-aeat.md:257
+#: ../../how-to/authenticate-with-aeat.md:279
 msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
@@ -497,32 +555,32 @@ msgstr ""
 "tornes a configurar, el substitueixes. L'identificador representat "
 "s'emmagatzema xifrat."
 
-#: ../../how-to/authenticate-with-aeat.md:260
+#: ../../how-to/authenticate-with-aeat.md:282
 msgid "Review or retire the configuration"
 msgstr "Revisa o retira la configuració"
 
-#: ../../how-to/authenticate-with-aeat.md:262
+#: ../../how-to/authenticate-with-aeat.md:284
 msgid "Show what is recorded for the active profile:"
 msgstr "Mostra què hi ha registrat per al perfil actiu:"
 
-#: ../../how-to/authenticate-with-aeat.md:268
+#: ../../how-to/authenticate-with-aeat.md:290
 msgid ""
 "`aeat config auth apoderado check` is the live-verification verb, but the"
-" live AEAT read path is sealed. It refuses with a \"live verification "
-"unavailable\" message and points you back to `status`. Use `aeat config "
-"auth apoderado status` for the offline configuration read."
+" live check is not available. It refuses with `The live check of "
+"representatives is unavailable, or contact with the AEAT failed.` Use "
+"`aeat config auth apoderado status` for the offline configuration read."
 msgstr ""
 "`aeat config auth apoderado check` és el verb de verificació en directe, "
-"però la via de lectura en directe de l'AEAT està segellada. Es nega amb "
-"un missatge de «verificació en directe no disponible» i et remet de nou a"
-" `status`. Usa `aeat config auth apoderado status` per a la lectura de la"
-" configuració fora de línia."
+"però la comprovació en directe no està disponible. Es nega amb `The live "
+"check of representatives is unavailable, or contact with the AEAT "
+"failed.` Usa `aeat config auth apoderado status` per a la lectura de la "
+"configuració fora de línia."
 
-#: ../../how-to/authenticate-with-aeat.md:273
+#: ../../how-to/authenticate-with-aeat.md:295
 msgid "Remove the configuration when the representation ends:"
 msgstr "Elimina la configuració quan finalitzi la representació:"
 
-#: ../../how-to/authenticate-with-aeat.md:279
+#: ../../how-to/authenticate-with-aeat.md:301
 msgid ""
 "Clearing removes only the local record. The apoderamiento at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
@@ -531,23 +589,23 @@ msgstr ""
 "l'AEAT no es veu afectat. Revoca'l mitjançant els procediments de la "
 "mateixa AEAT."
 
-#: ../../how-to/authenticate-with-aeat.md:282
+#: ../../how-to/authenticate-with-aeat.md:304
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/authenticate-with-aeat.md:284
+#: ../../how-to/authenticate-with-aeat.md:306
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:285
+#: ../../how-to/authenticate-with-aeat.md:307
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configura el teu perfil de contribuent](profile-setup.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:286
+#: ../../how-to/authenticate-with-aeat.md:308
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
-msgstr "[Diagnostica i repara la configuració local](troubleshooting.md)"
+msgstr "[Diagnostica i repara la teva configuració local](troubleshooting.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:288
+#: ../../how-to/authenticate-with-aeat.md:310
 msgid ""
 "Run `aeat config auth test` before each live-read task. Follow [Renew "
 "your certificate before it expires](#renew-your-certificate-before-it-"
@@ -557,4 +615,145 @@ msgstr ""
 "directe. Segueix [Renova el certificat abans que caduqui](#renew-your-"
 "certificate-before-it-expires) quan l'ordre informi d'un avís de "
 "caducitat."
+
+#~ msgid "Configure one of the available providers."
+#~ msgstr "Configura un dels proveïdors disponibles."
+
+#~ msgid ""
+#~ "If the renewed certificate uses a "
+#~ "new password, rotate the stored "
+#~ "passphrase for its source:"
+#~ msgstr ""
+#~ "Si el certificat renovat utilitza una"
+#~ " contrasenya nova, canvies la contrasenya"
+#~ " emmagatzemada per a la seva font:"
+
+#~ msgid ""
+#~ "Repeat `--scope` for each code. The "
+#~ "CLI rejects a comma-separated list. "
+#~ "Scope codes are uppercase. Use `--scope"
+#~ " ALL` to record every catalogue scope"
+#~ " at once. The CLI rejects unknown "
+#~ "codes and lists the accepted codes."
+#~ msgstr ""
+#~ "Repeteix `--scope` per a cada codi. "
+#~ "La CLI rebutja una llista separada "
+#~ "per comes. Els codis d'àmbit van "
+#~ "en majúscules. Usa `--scope ALL` per "
+#~ "registrar tots els àmbits del catàleg"
+#~ " alhora. La CLI rebutja els codis "
+#~ "desconeguts i llista els codis admesos."
+
+#~ msgid ""
+#~ "Set the represented party's tax "
+#~ "identifier (NIF, CIF, DNI, NIE, or "
+#~ "NII) and the scopes that match the"
+#~ " grant at AEAT:"
+#~ msgstr ""
+#~ "Indica l'identificador fiscal de la part"
+#~ " representada (NIF, CIF, DNI, NIE o"
+#~ " NII) i els àmbits que corresponen"
+#~ " a la concessió a l'AEAT:"
+
+#~ msgid ""
+#~ "The list marks each provider as "
+#~ "`disponible` (available now) or `reservado "
+#~ "(no disponible aún)` (reserved, not "
+#~ "available yet). Three are available:"
+#~ msgstr ""
+#~ "La llista marca cada proveïdor com "
+#~ "a `disponible` (disponible ara) o "
+#~ "`reservado (no disponible aún)` (reservat, "
+#~ "encara no disponible). N'hi ha tres "
+#~ "de disponibles:"
+
+#~ msgid "Two more are listed but reserved, so you cannot configure them yet:"
+#~ msgstr ""
+#~ "N'hi ha dos més a la llista, "
+#~ "però reservats, de manera que encara "
+#~ "no els pots configurar:"
+
+#~ msgid ""
+#~ "When available to your identity, the "
+#~ "command-line interface (CLI) can read"
+#~ " filed declarations, expedientes, notifications,"
+#~ " and filed justificantes. For Modelo "
+#~ "036/Censo profile facts, use the "
+#~ "[profile/Censo facts guide](censo-update.md). "
+#~ "Cadrumo no longer retrieves these facts"
+#~ " live."
+#~ msgstr ""
+#~ "Quan la teva identitat hi tingui "
+#~ "accés, la interfície de línia d'ordres"
+#~ " (CLI) pot llegir declaracions presentades,"
+#~ " expedients, notificacions i justificants "
+#~ "presentats. Per a les dades censals "
+#~ "del perfil (Modelo 036/Cens), usa la "
+#~ "[guia de dades del perfil/Cens](censo-"
+#~ "update.md). Cadrumo ja no recupera "
+#~ "aquestes dades en directe."
+
+#~ msgid ""
+#~ "`aeat config auth apoderado check` is"
+#~ " the live-verification verb, but the"
+#~ " live AEAT read path is sealed. "
+#~ "It refuses with a \"live verification"
+#~ " unavailable\" message and points you "
+#~ "back to `status`. Use `aeat config "
+#~ "auth apoderado status` for the offline"
+#~ " configuration read."
+#~ msgstr ""
+#~ "`aeat config auth apoderado check` és"
+#~ " el verb de verificació en directe,"
+#~ " però la via de lectura en "
+#~ "directe de l'AEAT està segellada. Es "
+#~ "nega amb un missatge de «verificació "
+#~ "en directe no disponible» i et "
+#~ "remet de nou a `status`. Usa `aeat"
+#~ " config auth apoderado status` per a"
+#~ " la lectura de la configuració fora"
+#~ " de línia."
+
+#~ msgid "`clave_pin`: Cl@ve PIN, a one-time code system from AEAT. Reserved."
+#~ msgstr ""
+#~ "`clave_pin`: Cl@ve PIN, un sistema de"
+#~ " codi d'un sol ús de l'AEAT. "
+#~ "Reservat."
+
+#~ msgid "`dnie_pkcs`: the national ID card (DNI electrónico). Reserved."
+#~ msgstr ""
+#~ "`dnie_pkcs`: el document nacional d'identitat"
+#~ " (DNI electrónico). Reservat."
+
+#~ msgid ""
+#~ "an [active profile](profile-setup.md#what-"
+#~ "the-active-profile-means). `aeat config "
+#~ "auth configure` refuses with `No hay "
+#~ "un perfil activo` until you create "
+#~ "one. Start the interactive wizard (a "
+#~ "NIF, CIF, DNI, or NIE is a "
+#~ "Spanish tax identifier); it prompts for"
+#~ " the profile passphrase and offers an"
+#~ " optional recovery code once the "
+#~ "profile exists:"
+#~ msgstr ""
+#~ "un [perfil actiu](profile-setup.md#what-"
+#~ "the-active-profile-means). `aeat config "
+#~ "auth configure` es nega amb `No "
+#~ "hay un perfil activo` fins que en"
+#~ " creeu un. Inicieu l'assistent interactiu"
+#~ " (un NIF, CIF, DNI o NIE és "
+#~ "un identificador fiscal espanyol); demana "
+#~ "la frase de contrasenya del perfil "
+#~ "i ofereix un codi de recuperació "
+#~ "opcional un cop el perfil existeix:"
+
+#~ msgid ""
+#~ "the master-key passphrase that protects"
+#~ " your local store; the tool prompts"
+#~ " for it."
+#~ msgstr ""
+#~ "la contrasenya de la clau mestra "
+#~ "que protegeix el teu magatzem local; "
+#~ "l'eina te la demana."
 

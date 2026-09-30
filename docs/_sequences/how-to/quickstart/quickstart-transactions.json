@@ -56,6 +56,71 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
+        "--idempotency-key",
+        "qs-factura"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "7e97611149e2fb25"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "2d55cc40b2058663bc8c36b0f8bc94e5af9f090f9478bd0dc9b142f854642acb"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "7e97611149e2fb25",
+          "invoice_date": "2026-02-11",
+          "invoice_number": "C-2026-0087",
+          "iva_amount": "105",
+          "iva_rate": "21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "app",
         "ledger",
         "add",
@@ -77,6 +142,8 @@
         "0.21",
         "--iva-amount",
         "105",
+        "--purchase-invoice-evidence-id",
+        "7e97611149e2fb25",
         "--idempotency-key",
         "qs-compra"
       ],
@@ -182,7 +249,7 @@
               "modified_at": "2026-04-01T09:00:00+00:00",
               "notes": "",
               "prorrata_reference": null,
-              "purchase_invoice_evidence_id": null,
+              "purchase_invoice_evidence_id": "7e97611149e2fb25",
               "review_status": "reviewed",
               "source_jurisdiction": "ES",
               "taxable_base": "500",

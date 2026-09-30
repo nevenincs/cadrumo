@@ -150,9 +150,9 @@ modelo:
             label: Deductible VAT on intra-Community acquisitions of capital goods
               - Tax amount
           dr303-40:
-            label: Correction of deductions - Tax base
+            label: Adjustment of deductions - Tax base
           dr303-41:
-            label: Correction of deductions - Tax amount
+            label: Adjustment of deductions - Tax amount
           dr303-42:
             label: Flat-rate compensation under the special scheme for agriculture,
               livestock farming and fishing - Tax amount
@@ -316,22 +316,22 @@ modelo:
           iva-prorrata-volumen-total:
             label: Total annual turnover
           iva-rectificacion-deducciones-importaciones-base:
-            label: Correction of deductions on imports - Base (part of official box
+            label: Adjustment of deductions on imports - Base (part of official box
               40)
           iva-rectificacion-deducciones-importaciones-cuota:
-            label: Correction of deductions on imports - Tax amount (part of official
+            label: Adjustment of deductions on imports - Tax amount (part of official
               box 41)
           iva-rectificacion-deducciones-interiores-base:
-            label: Correction of deductions on domestic transactions - Base (part
+            label: Adjustment of deductions on domestic transactions - Base (part
               of official box 40)
           iva-rectificacion-deducciones-interiores-cuota:
-            label: Correction of deductions on domestic transactions - Tax amount
+            label: Adjustment of deductions on domestic transactions - Tax amount
               (part of official box 41)
           iva-rectificacion-deducciones-inversion-sujeto-pasivo-base:
-            label: Correction of deductions on reverse-charge transactions, domestic
+            label: Adjustment of deductions on reverse-charge transactions, domestic
               and intra-Community - Base (part of official box 40)
           iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota:
-            label: Correction of deductions on reverse-charge transactions, domestic
+            label: Adjustment of deductions on reverse-charge transactions, domestic
               and intra-Community - Tax amount (part of official box 41)
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
@@ -401,11 +401,11 @@ modelo:
               regime for agriculture, livestock and fishing - Deductible amount
           m303-deducciones-sector-1-rectification-base:
             help: Box 714 of modelo 303, tax year 2022.
-            label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+            label: 13. Differentiated deduction regimes - 1 - Adjustment of deductions
               - Taxable base
           m303-deducciones-sector-1-rectification-cuota:
             help: Box 715 of modelo 303, tax year 2022.
-            label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+            label: 13. Differentiated deduction regimes - 1 - Adjustment of deductions
               - Deductible amount
           m303-deducciones-sector-1-total:
             help: Box 717 of modelo 303, tax year 2022.
@@ -472,11 +472,11 @@ modelo:
               regime for agriculture, livestock and fishing - Deductible amount
           m303-deducciones-sector-2-rectification-base:
             help: Box 732 of modelo 303, tax year 2022.
-            label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+            label: 13. Differentiated deduction regimes - 2 - Adjustment of deductions
               - Taxable base
           m303-deducciones-sector-2-rectification-cuota:
             help: Box 733 of modelo 303, tax year 2022.
-            label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+            label: 13. Differentiated deduction regimes - 2 - Adjustment of deductions
               - Deductible amount
           m303-deducciones-sector-2-total:
             help: Box 735 of modelo 303, tax year 2022.

@@ -268,3 +268,12 @@ def test_work_calculate_refuses_the_last_quarter_without_an_attestation(request:
 
     assert refused.exit_code == 2, refused.output
     assert "m303_filing_evidence.missing" in refused.output
+    error = require_error_document(refused.output)["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "REFUSED_MODELO_M303_FILING_EVIDENCE"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["period"] == "4T"
+    assert context["exonerado_390_attestation_present"] == "false"
+    assert context["filing_year"] == str(_EXERCISE)
+    assert "attest-m303-exonerado-390" in error["message"]

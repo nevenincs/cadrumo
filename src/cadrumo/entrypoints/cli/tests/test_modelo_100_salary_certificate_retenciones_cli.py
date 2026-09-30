@@ -1,0 +1,153 @@
+"""CLI reproduction for the M100 work-retention credit the payee keys."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from .cli_runner import invoke_cached_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The newest Modelo 100 edition the registry authors; its prior-year carry reads the
+# edition before it.
+_REVIEWED_EDITION = newest_authored_edition("100")
+
+_PROFILE_ID = "568d7ee0-33e4-4efb-8bae-5c4e97d9a1b7"
+_CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_PROFILE_ID,
+        label="M100 salary certificate retenciones CLI profile",
+    ) as profile:
+        yield profile
+
+
+def _seed_m100_profile(runtime_profile: TestRuntimeProfile) -> None:
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
+        profile_id=_PROFILE_ID,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Ana"),
+            UserProfileFact(path="identity.surnames", value="Retenciones"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.sex", value="H"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+        ),
+    )
+    seed_test_profile_record(
+        record, root=runtime_profile.storage_root, label="M100 salary certificate retenciones CLI profile"
+    )
+
+
+def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
+    CalculationObservationRepository(objects=runtime_profile.repository).save(
+        CalculationObservationRepository(objects=runtime_profile.repository).prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="100",
+                filing_year=_REVIEWED_EDITION - 1,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_REVIEWED_EDITION - 1,
+                    period="0A",
+                    casilla_values={"1391": Decimal("0")},
+                ),
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_CAPTURED_AT,
+            stamped_revision_id=str(
+                published_snapshot("100", filing_year=_REVIEWED_EDITION - 1, period="0A").revision.id
+            ),
+        )
+    )
+
+
+def test_m100_cli_salary_certificate_retenciones_populates_0596(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Real CLI reproduction: the payee salary-certificate binding affects 0596."""
+    _seed_m100_profile(runtime_profile)
+    _seed_prior_year_zero_carry(runtime_profile)
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100",
+        filing_year=_REVIEWED_EDITION,
+        period="0A",
+        revision=str(_REVIEWED_EDITION),
+    )
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--casilla",
+            "0003=32000",
+            "--casilla",
+            "0102=9600",
+            "--binding",
+            "renta-modelo-100-estimacion-directa-es-normal=1",
+            "--binding",
+            "renta-modelo-184-atribucion-actividades-economicas=0",
+            "--binding",
+            "renta-certificado-trabajo-retenciones=4200",
+            "--relation",
+            "renta-modelo-130-pagos-fraccionados=0",
+            "--relation",
+            "renta-modelo-131-pagos-fraccionados=0",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert Decimal(payload["casilla_values"]["0596"]) == Decimal("4200")
+    assert Decimal(payload["casilla_values"]["0609"]) == Decimal("4200")

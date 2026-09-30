@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
-    synthetic_build_receipts,
+    synthetic_legal_identity,
 )
 from cadrumo.domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -90,13 +90,10 @@ def _artifact(value: str) -> AuthorityArtifact:
         source_refs=(source_id,),
     )
     revision = minimal_revision().model_copy(update={"parameters": (parameter,)})
-    build_identity, compiler_closure = synthetic_build_receipts(f"fixture-source:{value}")
     return AuthorityArtifact(
         modelos=(minimal_modelo(revision),),
         catalogues=catalogues,
-        identity_digest=build_identity.identity_digest,
-        build_identity=build_identity,
-        compiler_closure=compiler_closure,
+        identity_digest=synthetic_legal_identity(f"fixture-source:{value}"),
         profile_schema=_profile_schema(),
         evidence=AuthorityEvidenceProjection(),
     )
@@ -133,10 +130,6 @@ def test_read_parameter_sees_a_registry_edit_under_a_new_generation(tmp_path: Pa
             )
             assert first_artifact.identity_digest == first_descriptor.logical_generation
             assert second_artifact.identity_digest == second_descriptor.logical_generation
-            assert (
-                second_artifact.build_identity.source_identity_digest
-                != first_artifact.build_identity.source_identity_digest
-            )
             assert second_descriptor.logical_generation != first_descriptor.logical_generation
 
             held = read_parameter(

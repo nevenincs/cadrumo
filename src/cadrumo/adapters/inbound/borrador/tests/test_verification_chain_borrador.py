@@ -140,8 +140,6 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
     """
     return {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero for a childless profile.
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
