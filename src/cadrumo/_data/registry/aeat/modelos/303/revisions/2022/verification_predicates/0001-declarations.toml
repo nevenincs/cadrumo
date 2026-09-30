@@ -14,7 +14,11 @@
 # across the regularised quarters (art. 105.Seis). Neither is a casilla of this
 # revision, so the value is not expressible as a single-period registry
 # formula, and the cross-period carry is owned by the binding + resolver
-# mechanism alone - adding a formula would model one value twice.
+# mechanism alone - adding a formula would model one value twice. Whether the
+# casilla should therefore DECLARE `input_kind = "bound"` against
+# `modelo-303-prorrata-regularizacion-casilla-44`, so the registry states the
+# linkage that the resolver currently makes in application code, is an open
+# mechanism-ownership question and not a defect in this predicate.
 #
 # When annual prorrata volumes are declared, a zero/absent casilla 44 would
 # otherwise let the verify gate grant verified_complete with no finding even
@@ -34,13 +38,45 @@
 # (art. 5.5 of Ley 14/2000, BOE-A-2000-24357, in force 2001-01-01) and that
 # amendment modifies apartado Tres only, leaving apartados Uno, Cuatro and Seis
 # - the three this guard rests on - untouched since the original 1992 text.
-# This revision's window opens in 2009, after that amendment, so both windows
-# are governed by identical wording. Without this mirror, an amended filing for
-# any year from 2009 to 2022 that declares annual prorrata volumes and leaves
-# casilla 44 blank passes verify with zero findings.
+# This revision's window opens in 2022, long after that amendment, so every
+# window is governed by identical wording and the predicate keeps one identity
+# across them. Without it, a 2022 filing that declares annual prorrata volumes
+# and leaves casilla 44 blank passes verify with zero findings.
 [[revisions.2022.verification_predicates]]
 id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
-predicate_id = "modelo-303-2009-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
+predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
 expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]
+
+# Box-equals-source consistency for the official boxes this revision projects
+# from a single semantic carrier: [27] from the devengado total, [33] and [37]
+# from their deducible carriers and [45] from the deducible total. The 2022
+# design prints each box with the same content as every later design, so the
+# projection and its guard hold from this revision on. A projection cannot
+# drift from its source within one evaluation; the predicate catches a future
+# mis-edit that re-flips a box to manual or points it at the wrong source. [29]
+# is not guarded this way: it projects the sum of two carriers.
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-27-equals-iva-cuota-devengada-total"
+predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
+expression = 'equals(["27", "iva.cuota-devengada-total"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-33-equals-iva-soportado-importaciones"
+predicate_id = "modelo-303-dr303-33-equals-iva-soportado-importaciones"
+expression = 'equals(["33", "iva.soportado.importaciones"])'
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
+predicate_id = "modelo-303-dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
+expression = 'equals(["37", "iva.autorepercutido.intracomunitaria.deducible"])'
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.verification_predicates]]
+id = "equals:dr303-45-equals-iva-cuota-deducible-total"
+predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
+expression = 'equals(["45", "iva.cuota-deducible-total"])'
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

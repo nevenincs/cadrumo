@@ -15197,7 +15197,7 @@
               "value": "2400"
             },
             {
-              "absent_by_design": true,
+              "absent_by_design": false,
               "casilla_id": "0597",
               "formula_id": null,
               "legal_refs": [
@@ -47497,13 +47497,13 @@
             "code": "modelo.work.verify.finding.advisory",
             "context": {
               "kind": "advisory",
-              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-99, orden-hac-277-2026:art-3, rd-439-2007:art-108, orden-eha-3435-2007:anexo-ii, orden-hac-56-2024:art-1, orden-eha-672-2007:art-1, rd-439-2007:art-109, orden-eha-672-2007:art-3, ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89, orden-hap-2250-2015:art-1, orden-hap-2250-2015:art-3, orden-eha-3127-2009:art-1, orden-hac-1431-2025:art-2, orden-eha-3377-2011:art-1",
+              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, orden-eha-672-2007:art-1, orden-hac-277-2026:art-3, rd-439-2007:art-109, orden-eha-672-2007:art-3, ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89, orden-hap-2250-2015:art-1, orden-hap-2250-2015:art-3",
               "severity": "warning",
-              "source_modelo_count": "7",
-              "source_modelos": "111|123|130|131|184|190|193",
-              "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-dr-184-2025, aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form, aeat-modelo-193-296-note-2025, boe-modelo-193-2011-form"
+              "source_modelo_count": "3",
+              "source_modelos": "130|131|184",
+              "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-dr-184-2025"
             },
-            "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
+            "message": "3 source modelo(s) are not applicable to this taxpayer: 130|131|184.",
             "severity": "warning"
           }
         ],
@@ -47554,12 +47554,8 @@
               "legal_refs": [
                 "ley-58-2003:art-119",
                 "ley-58-2003:art-120",
-                "ley-35-2006:art-99",
-                "orden-hac-277-2026:art-3",
-                "rd-439-2007:art-108",
-                "orden-eha-3435-2007:anexo-ii",
-                "orden-hac-56-2024:art-1",
                 "orden-eha-672-2007:art-1",
+                "orden-hac-277-2026:art-3",
                 "rd-439-2007:art-109",
                 "orden-eha-672-2007:art-3",
                 "ley-35-2006:art-86",
@@ -47567,21 +47563,14 @@
                 "ley-35-2006:art-88",
                 "ley-35-2006:art-89",
                 "orden-hap-2250-2015:art-1",
-                "orden-hap-2250-2015:art-3",
-                "orden-eha-3127-2009:art-1",
-                "orden-hac-1431-2025:art-2",
-                "orden-eha-3377-2011:art-1"
+                "orden-hap-2250-2015:art-3"
               ],
-              "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
+              "message": "3 source modelo(s) are not applicable to this taxpayer: 130|131|184.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form",
-                "aeat-dr-184-2025",
-                "aeat-modelo-190-instructions-2025",
-                "boe-modelo-190-2025-form",
-                "aeat-modelo-193-296-note-2025",
-                "boe-modelo-193-2011-form"
+                "aeat-dr-184-2025"
               ]
             }
           ],
@@ -47596,7 +47585,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "00b45d96e701f341eef1c78212dd164b895c15b395958d75898a76d1db01a562",
+          "verification_report_id": "65ebcd4f60b4a69766b2d10340402567e983bd604bdb1a2adb2c9a538cd3fa41",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

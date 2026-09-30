@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
-_DECIMAL_BINDING: BindingId = "renta-modelo-111-retenciones-periodicas"
+_DECIMAL_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 

@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import LedgerIncomeGrounding
+from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ..ledger_renta_income_bindings import (
     unrouted_ledger_renta_income_quantities,
     unsupported_ledger_renta_income_observations,
@@ -52,6 +52,17 @@ class _Row:
         self.grounding = (
             LedgerIncomeGrounding.CASH_FALLBACK if base is None else LedgerIncomeGrounding.SUBSTRATE_DECLARED
         )
+        # Derived from the same substrate, for the same reason: no base leaves
+        # the retencion undeterminable rather than absent, and a figure a base
+        # made determinable was reconstructed rather than read off a document.
+        # This screen reads the quantity whatever its marker, so the marker is
+        # here to keep the row a legitimate observation, not to steer the result.
+        if base is None:
+            self.withheld_derivation = LedgerWithholdingDerivation.NO_SUBSTRATE
+        elif self.withheld_amount == Decimal("0"):
+            self.withheld_derivation = LedgerWithholdingDerivation.NONE_WITHHELD
+        else:
+            self.withheld_derivation = LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA
 
 
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
@@ -81,7 +92,7 @@ def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
 
 def test_a_dropped_retenciones_binding_is_surfaced() -> None:
     """Removing the retenciones binding surfaces the whole suffered credit."""
-    revision = _revision_without_fact(modelo_130_revision(), "withheld_amount_sum")
+    revision = _revision_without_fact(modelo_130_revision(), "declared_withheld_amount_sum")
     rows = [
         _Row(gross="1000.00", withheld="150.00", base="1000.00"),
         _Row(gross="2000.00", withheld="300.00", base="2000.00"),
@@ -90,7 +101,7 @@ def test_a_dropped_retenciones_binding_is_surfaced() -> None:
     unrouted = unrouted_ledger_renta_income_quantities(revision, rows)
 
     assert len(unrouted) == 1
-    assert unrouted[0].fact == "withheld_amount_sum"
+    assert unrouted[0].fact == "declared_withheld_amount_sum"
     assert unrouted[0].total == Decimal("450.00")
     assert len(unrouted[0].observations) == 2
 
@@ -103,7 +114,7 @@ def test_the_row_screen_stays_silent_on_the_same_defect() -> None:
     ``target_casilla_id = "01"`` -- so without the quantity screen the dropped
     retención has a clean screen on both sides.
     """
-    revision = _revision_without_fact(modelo_130_revision(), "withheld_amount_sum")
+    revision = _revision_without_fact(modelo_130_revision(), "declared_withheld_amount_sum")
     rows = [_Row(gross="1000.00", withheld="150.00", base="1000.00")]
 
     assert unsupported_ledger_renta_income_observations(revision, rows) == ()
@@ -118,7 +129,7 @@ def test_a_taxpayer_who_suffered_no_retencion_raises_nothing() -> None:
     screen could fire on every taxpayer who is simply not subject to
     withholding.
     """
-    revision = _revision_without_fact(modelo_130_revision(), "withheld_amount_sum")
+    revision = _revision_without_fact(modelo_130_revision(), "declared_withheld_amount_sum")
     rows = [_Row(gross="1000.00", withheld="0.00", base="1000.00")]
 
     assert unrouted_ledger_renta_income_quantities(revision, rows) == ()
@@ -141,12 +152,12 @@ def test_an_omitted_alternative_income_measure_raises_nothing(fact: str) -> None
 def test_the_screen_reads_the_revision_it_is_given() -> None:
     """Guards against a screen that ignores its revision argument.
 
-    An implementation hardcoding "M130 draws withheld_amount_sum" would pass
+    An implementation hardcoding "M130 draws declared_withheld_amount_sum" would pass
     every test above. This one fails it: the same rows must report differently
     against a revision that draws the fact and one that does not.
     """
     committed = modelo_130_revision()
-    stripped = _revision_without_fact(committed, "withheld_amount_sum")
+    stripped = _revision_without_fact(committed, "declared_withheld_amount_sum")
     rows = [_Row(gross="1000.00", withheld="150.00", base="1000.00")]
 
     assert unrouted_ledger_renta_income_quantities(committed, rows) == ()

@@ -107,12 +107,8 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
 )
 
 _ZERO_RELATIONS = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-    "renta-modelo-190-retenciones-anuales": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
 }
 
 _BASE_BINDINGS = {

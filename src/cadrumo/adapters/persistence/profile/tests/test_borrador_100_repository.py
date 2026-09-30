@@ -88,7 +88,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
-        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
     )
 
     repository.save(snapshot)
