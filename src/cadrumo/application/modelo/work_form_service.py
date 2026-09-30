@@ -35,6 +35,8 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import today_madrid
+from ...domain.buckets.event import BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines.errors import DeadlineValidationError
 from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage, shift_deadline
 from ...domain.deadlines.plazo import resolve_filing_window
@@ -52,6 +54,7 @@ from .work_form import build_modelo_work_form
 from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormDeadline,
+    ModeloFormExport,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
@@ -192,6 +195,7 @@ def load_modelo_work_form(
     borrador_snapshots: Borrador100SnapshotRepository | None = None,
     holiday_territory: CalendarCCAA | None = None,
     reference_on: date | None = None,
+    bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
@@ -204,7 +208,9 @@ def load_modelo_work_form(
     draft feeds the declaration, with no import time. ``holiday_territory`` is
     the filer's autonomous community for the deadline's holiday shift, and
     ``reference_on`` the day the days left are counted from, today in Madrid by
-    default.
+    default. ``bucket_events`` is the profile's event history, read only for
+    the latest file exported for this declaration; without it the form states
+    no export.
     """
     review = build_modelo_work_review(
         bucket_id,
@@ -248,8 +254,38 @@ def load_modelo_work_form(
             str(review.work_unit_id), review.calculation_revision_id
         ),
     )
+    form = form.model_copy(
+        update={
+            "last_export": _last_export(
+                bucket_events, bucket_id, str(review.work_unit_id), review.calculation_revision_id
+            )
+        }
+    )
     state = review.lifecycle_state
     return ModeloWorkFormLoadV1(form=form, verified=state in _VERIFIED_STATES, filed=state in _FILED_STATES)
+
+
+def _last_export(
+    bucket_events: BucketEventHistoryRepositoryProtocol | None,
+    bucket_id: BucketId,
+    work_unit_id: str,
+    current_revision_id: str | None,
+) -> ModeloFormExport | None:
+    """The latest export of this declaration, from its durable event, whatever calculation it was made from."""
+    if bucket_events is None:
+        return None
+    exported = [
+        event
+        for event in bucket_events.load().for_bucket(str(bucket_id), event_types=(BucketEventType.MODELO_EXPORTED,))
+        if event.payload.get("work_unit_id") == work_unit_id and event.payload.get("calculation_revision_id")
+    ]
+    if not exported:
+        return None
+    latest = exported[-1]
+    revision_id = str(latest.payload["calculation_revision_id"])
+    return ModeloFormExport(
+        exported_at=latest.occurred_at, calculation_revision_id=revision_id, current=revision_id == current_revision_id
+    )
 
 
 def modelo_work_form_changes(before: ModeloWorkForm, after: ModeloWorkForm) -> tuple[ModeloFormValueChangeV1, ...]:

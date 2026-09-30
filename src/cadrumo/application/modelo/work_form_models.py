@@ -873,6 +873,19 @@ class ModeloFormFiling(_FormModel):
     recorded_at: datetime | None = None
 
 
+class ModeloFormExport(_FormModel):
+    """The latest file exported for this declaration, and whether it was made from the current calculation.
+
+    A file made from an earlier calculation no longer matches the declaration:
+    changes applied or a recalculation since then created a newer one, so that
+    file must not be uploaded.
+    """
+
+    exported_at: datetime
+    calculation_revision_id: str = Field(min_length=1)
+    current: bool
+
+
 class ModeloFormEditClosure(StrEnum):
     """Why nothing on the form may be edited, whatever the edit admission says."""
 
@@ -918,6 +931,8 @@ class ModeloWorkForm(_FormModel):
     aeat_data: ModeloFormAeatData | None = None
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
+    #: The latest file exported for this declaration, or ``None`` when none was ever exported.
+    last_export: ModeloFormExport | None = None
     #: Why nothing may be edited, when something other than the admission closes the form.
     edit_closure: ModeloFormEditClosure | None = None
 
@@ -985,6 +1000,7 @@ __all__ = [
     "ModeloFormEarlierFiling",
     "ModeloFormEditClosure",
     "ModeloFormEditability",
+    "ModeloFormExport",
     "ModeloFormField",
     "ModeloFormFieldBlock",
     "ModeloFormFiling",
