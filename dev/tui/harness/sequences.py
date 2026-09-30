@@ -35,7 +35,8 @@ from typing import Final, Protocol, cast
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
-from textual.widgets import Button, DataTable
+from textual.widgets import Button, DataTable, Static
+from textual.worker import WorkerCancelled
 
 from cadrumo.application.user_profile.login_interaction import profile_login_choices
 from cadrumo.core.config_support import TuiAppearance
@@ -66,9 +67,12 @@ from dev.docs.sequences.runner import SANDBOX_PROFILE_LABEL, SequenceSandbox, ex
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
 ISSUES_PAGE: Final[str] = "issues"
-REFUSED_REVIEW_PAGE: Final[str] = "review-refused"
+REVIEW_PAGE: Final[str] = "review"
+RECALCULATE_PAGE: Final[str] = "recalculate"
 _DECLARATIONS_DESTINATION: Final = "workbench.declarations"
 _GOLDEN_PROBLEMS_KEPT: Final[int] = 5
+_SETTLE_ROUNDS: Final[int] = 20
+"""How many times settling waits again after an exclusive worker was replaced by a newer one."""
 _PAGES_SEARCHED: Final[int] = 64
 """How many workbench pages the review walk turns through looking for a box it can stage."""
 _TYPED_SAMPLES: Final[Mapping[str, str]] = {
@@ -103,21 +107,20 @@ class SequenceScenario:
     """Names the declaration when the sequence leaves more than one of this modelo."""
     verified: bool = True
     """Whether the sequence verifies the declaration, so its workbench lists what verification found."""
-    refuses_a_clear: bool = False
-    """Whether the application's check refuses emptying the first box the workbench lets the filer empty,
-    so a review of that change lists a finding that keeps Apply unavailable."""
+    filed: bool = False
+    """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
 
 
 SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
     scenario.sequence_id: scenario
     for scenario in (
-        SequenceScenario("modelo-303-first-quarter", "303", "Modelo 303, first quarter, verified and filed"),
+        SequenceScenario(
+            "modelo-303-first-quarter", "303", "Modelo 303, first quarter, verified and filed", filed=True
+        ),
         SequenceScenario(
             "verification-reports-incomplete", "303", "Modelo 303 calculated but not complete", verified=False
         ),
-        SequenceScenario(
-            "modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified", refuses_a_clear=True
-        ),
+        SequenceScenario("modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified"),
         SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified"),
         SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
@@ -139,11 +142,11 @@ async def _open_sources(_scenario: SequenceScenario, pilot: Pilot[object]) -> No
     await _settle(pilot)
 
 
-type _Stager = Callable[[SequenceScenario, Pilot[object], CasillaList, CasillaListEntry], Awaitable[bool]]
+type _BoxAction = Callable[[SequenceScenario, Pilot[object], CasillaList, CasillaListEntry], Awaitable[bool]]
 
 
-async def _review_first(scenario: SequenceScenario, pilot: Pilot[object], stage: _Stager, wanted: str) -> None:
-    """Stage one change on the first box, page by page, that takes it, then ask for the review, which checks it."""
+async def _first_box(scenario: SequenceScenario, pilot: Pilot[object], act: _BoxAction, wanted: str) -> None:
+    """Try ``act`` on each box, page by page, until one answers as ``wanted``."""
     workbench = _workbench(scenario, pilot.app)
     listed: tuple[object, ...] | None = None
     for _ in range(_PAGES_SEARCHED):
@@ -153,39 +156,41 @@ async def _review_first(scenario: SequenceScenario, pilot: Pilot[object], stage:
             break
         listed = items
         for entry in items:
-            if isinstance(entry, CasillaListEntry) and await stage(scenario, pilot, casilla_list, entry):
-                await pilot.press("R")
-                await _settle(pilot)
+            if isinstance(entry, CasillaListEntry) and await act(scenario, pilot, casilla_list, entry):
                 return
         await pilot.press("right_square_bracket")
         await _settle(pilot)
-    raise ScenarioError(f"{scenario.sequence_id}: no box on the workbench accepted {wanted} to review")
+    raise ScenarioError(f"{scenario.sequence_id}: no box on the workbench {wanted}")
 
 
 async def _open_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
-    """Review one typed value the application reads cleanly."""
-    await _review_first(scenario, pilot, _stage, "a typed value")
+    """Stage one typed value the application reads cleanly, then ask for the review, which checks it first."""
+    await _first_box(scenario, pilot, _stage, "accepted a typed value to review")
+    await pilot.press("R")
+    await _settle(pilot)
 
 
-async def _open_refused_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
-    """Review emptying a box, where the application's check refuses it and says why."""
-    await _review_first(scenario, pilot, _stage_clear, "emptying")
-    review = pilot.app.screen
-    if isinstance(review, EditReviewScreen) and not review.query("#review-findings"):
-        raise ScenarioError(f"{scenario.sequence_id}: the check found nothing to say about emptying that box")
+async def _refuse_an_edit(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press Enter on the first box that opens no editor, so the workbench says why it cannot be edited."""
+    await _first_box(scenario, pilot, _press_enter_without_editor, "refused an edit")
+    if not str(_workbench(scenario, pilot.app).query_one("#wb-notice", Static).content).strip():
+        raise ScenarioError(f"{scenario.sequence_id}: Enter on a box that cannot be edited said nothing")
 
 
-async def _stage_clear(
+async def _press_enter_without_editor(
     _scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
 ) -> bool:
-    """Press ``x`` on one box, as a filer empties it; the workbench stages it only where emptying is allowed."""
+    """Press Enter on one box; close any editor it opens and report whether the workbench refused instead."""
     if not casilla_list.focus_address(entry.key):
         return False
     casilla_list.focus()
-    await pilot.press("x")
+    await pilot.press("enter")
     await _settle(pilot)
-    workbench = pilot.app.screen
-    return isinstance(workbench, ModeloWorkbenchScreen) and bool(workbench.staged_changes)
+    if isinstance(pilot.app.screen, ModeloWorkbenchScreen):
+        return True
+    await pilot.press("escape")
+    await _settle(pilot)
+    return False
 
 
 async def _stage(
@@ -218,10 +223,10 @@ async def _stage(
 async def _ask_to_recalculate(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
     """Press ``c`` only where the workbench asks first; anywhere else it would recalculate the shared sandbox."""
     form = _workbench(scenario, pilot.app).form
-    if form is None or form.calculation_revision_id is None or form.operator_entries_known:
+    if form is None or not form.edit_admitted or form.calculation_revision_id is None or form.operator_entries_known:
         raise ScenarioError(
-            f"{scenario.sequence_id}: the declaration records which values the filer typed, so recalculating "
-            "would run at once instead of asking"
+            f"{scenario.sequence_id}: the declaration does not both admit changes and leave unknown which values "
+            "the filer typed, so pressing c would not stop at the question"
         )
     await pilot.press("c")
     await _settle(pilot)
@@ -242,18 +247,18 @@ async def _stay(_scenario: SequenceScenario, _pilot: Pilot[object]) -> None:
 _PAGE_SCREENS: Final[dict[str, type[object]]] = {
     "workbench": ModeloWorkbenchScreen,
     "sources": WorkbenchSourcesScreen,
-    "review": EditReviewScreen,
-    REFUSED_REVIEW_PAGE: EditReviewScreen,
-    "recalculate": ConfirmScreen,
+    "not-editable": ModeloWorkbenchScreen,
+    REVIEW_PAGE: EditReviewScreen,
+    RECALCULATE_PAGE: ConfirmScreen,
     ISSUES_PAGE: WorkbenchIssuesScreen,
 }
 """Each page past Declarations, by the short name a scenario uses, to the screen the filer lands on."""
 _PAGE_WALKS: Final[dict[str, _Walk]] = {
     "workbench": _stay,
     "sources": _open_sources,
-    "review": _open_review,
-    REFUSED_REVIEW_PAGE: _open_refused_review,
-    "recalculate": _ask_to_recalculate,
+    "not-editable": _refuse_an_edit,
+    REVIEW_PAGE: _open_review,
+    RECALCULATE_PAGE: _ask_to_recalculate,
     ISSUES_PAGE: _open_issues,
 }
 """What the filer does on the workbench to reach each page."""
@@ -262,10 +267,15 @@ _PAGE_WALKS: Final[dict[str, _Walk]] = {
 def scenario_pages(scenario: SequenceScenario) -> tuple[str, ...]:
     """The Declarations list, then the declaration's workbench and the views it opens.
 
-    The findings list is a page only of a declaration its sequence verified,
-    and the refused review only of one whose first clearable box a source fills.
+    The findings list is a page only of a declaration its sequence verified.
+    A filed declaration accepts no change, so it offers neither a review nor a
+    recalculation.
     """
-    offered = {ISSUES_PAGE: scenario.verified, REFUSED_REVIEW_PAGE: scenario.refuses_a_clear}
+    offered = {
+        ISSUES_PAGE: scenario.verified,
+        REVIEW_PAGE: not scenario.filed,
+        RECALCULATE_PAGE: not scenario.filed,
+    }
     return (DECLARATIONS_PAGE, *(page for page in _PAGE_SCREENS if offered.get(page, True)))
 
 
@@ -461,15 +471,24 @@ async def _select(pilot: Pilot[object], selector: str, key: str) -> None:
 
 
 async def _settle(pilot: Pilot[object]) -> None:
+    """Wait until no worker is running; a worker superseded by an exclusive successor is not a failure."""
     await pilot.pause()
-    await cast("_WorkerCompletion", pilot.app.workers).wait_for_complete()
+    for _ in range(_SETTLE_ROUNDS):
+        try:
+            await cast("_WorkerCompletion", pilot.app.workers).wait_for_complete()
+        except WorkerCancelled:
+            continue
+        break
+    else:
+        raise ScenarioError(f"workers were still being replaced after {_SETTLE_ROUNDS} rounds of waiting")
     await pilot.pause()
 
 
 __all__ = [
     "DECLARATIONS_PAGE",
     "ISSUES_PAGE",
-    "REFUSED_REVIEW_PAGE",
+    "RECALCULATE_PAGE",
+    "REVIEW_PAGE",
     "SEQUENCE_SCENARIOS",
     "ScenarioError",
     "ScenarioFrame",
