@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:52d168330ee34b39a389543bd2e22bd527a34860fcd05e0386af6084a9c1c7dd'
+body_hash: 'sha256:3ef533bc06162e16528fff6375678084d7d33994a1fd719b3f0ba4c239d1ac41'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -832,6 +832,36 @@ related:
 - `S47` `verify:` `0525 moved off by the maritime formula, 184 relation withdrawn, stored revisions with the withdrawn 131 relation proven through the encrypted store; detector test failed 3/3 before` -> `pass`
 - `S48` `verify:` `0531 reads 0523 in every edition; 0512 computed from 2022 with law-grounded dates; manual Valencia example reproduces in every edition; publish-if-stale current, runtime 1570 passed` -> `pass`
 - `S11` `verify:` `merge 6e46559590 of origin/main PR 704: candidate inspection 0 findings; converter proofs clean for 100, 130, 131, 303, 341, 390; republished dfa0ef6e; check-registry-gate valid, runtime-load and integrity passed; runtime adoption tests 11 passed` -> `pass`
+- `S51` `M` `dev/registry/tests/test_modelo_capability.py`
+- `S51` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S51` `M` `src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py`
+- `S51` `A` `src/cadrumo/domain/deadlines/tests/withdrawn_deadline_window_authority.py`
+- `S51` `M` `dev/registry/tests/test_modelo_capability.py`
+- `S51` `M` `src/cadrumo/domain/deadlines/tests/withdrawn_deadline_window_authority.py`
+- `S51` `verify:` `three tests pass on synthetic withdrawn windows and fail against a borrowing resolver or a silent screen` -> `pass`
+- `S46` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`
+- `S46` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_review_label_reading_cli.py`
+- `S46` `verify:` `review view shows the stored degradation for each cause in text and JSON, none for full or old-shape drafts; CLI suite 5494 passed with one failure in modelo requires (P05.S56)` -> `pass`
+- `S32` `M` `dev/registry/compiler/loader.py`
+- `S32` `M` `dev/registry/compiler/loader_materialisation.py`
+- `S32` `M` `dev/registry/compiler/validate_inherited_family_pairing.py`
+- `S32` `M` `dev/registry/edition_delta_migration.py`
+- `S32` `M` `dev/registry/edition_family_delta.py`
+- `S32` `A` `dev/registry/pipeline/tests/test_target_currentness_grade.py`
+- `S32` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S32` `M` `dev/registry/tests/test_edition_delta_migration_assessment.py`
+- `S32` `A` `dev/registry/tests/test_edition_family_delta.py`
+- `S32` `M` `dev/registry/tests/test_inherited_family_pairing.py`
+- `S32` `M` `dev/registry/tests/test_keyed_family_storage_delta.py`
+- `S32` `M` `dev/registry/compiler/_validate_revision_sections.py`
+- `S32` `A` `dev/registry/compiler/tests/test_bracket_coverage_support_floor.py`
+- `S32` `M` `dev/registry/compiler/validate_parameter_temporal.py`
+- `S32` `M` `dev/registry/compiler/validate_revision_closure.py`
+- `S32` `M` `dev/registry/compiler/validator.py`
+- `S32` `M` `dev/registry/pipeline/cli.py`
+- `S32` `M` `dev/registry/edition_export_scenarios.py`
+- `S32` `M` `dev/registry/tests/test_edition_export_scenario_periods.py`
+- `S32` `verify:` `ten fixes each with defect and normal-path tests, focused 75 passed; dev/registry lane 6851 passed with 15 failures in other steps' data (P05.S54, P05.S56); hydrated digests of all 58 modelos unchanged by the loader window rule` -> `pass`
 
 ## Notes
 
@@ -870,3 +900,4 @@ related:
 - `S11` 303 boxes 03, 06 and 09 revert to per-year keying on the 2022 design's free rate field; box 10's 2022 projection kept; an unattributed working-tree edit removing the 303 bindings test's 120 and 122 expectations was left out of the merge
 - `S30` main's 66402446 fixed the same defect; the merge keeps main's reader as the single definition and this branch's extra test cases
 - `S31` main's 8f4b8306 moved the same check; the merge keeps main's validator as the single definition
+- `S32` converter now proposes stated layouts for 123, 131, 190, 193, 270, 490 and 714 and flags roots 216, 309 and 604 as not minimal (P05.S55); forward storage baselines stay refused
