@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:243870f5d8ebb88b7e020a61f1b0e361de49da543c56e43460dc36ea28c0a87e'
+body_hash: 'sha256:85f0a974e224b87cc2bde41b9cfb1655c748b9214828a157a6c8cbd0aa4443dc'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -158,6 +158,79 @@ related:
 - `S24` `verify:` `ruff + ty` -> `pass`
 - `S24` `verify:` `rasterised sources, editor and review captures at 80x24, 120x36, 160x48` -> `pass`
 - `S24` `by:` `orchestrator`
+- `S01` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S01` `M` `src/cadrumo/domain/modelos/calculation_revision_identity.py`
+- `S01` `A` `src/cadrumo/domain/modelos/calculation_revision_operator_layer.py`
+- `S01` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_operator_layer.py`
+- `S01` `verify:` `domain/modelos/tests` -> `pass`
+- `S01` `by:` `lane-a`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S02` `A` `src/cadrumo/application/modelo/caller_context.py`
+- `S02` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/test_modelo_operator_layer_recording.py`
+- `S02` `verify:` `operator layer recording on real encrypted storage` -> `pass`
+- `S02` `by:` `lane-a`
+- `S03` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S03` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S03` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S03` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S03` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S03` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S03` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/test_modelo_edit_operator_work.py`
+- `S03` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S03` `M` `src/cadrumo/locales/en/errors.yml`
+- `S03` `M` `src/cadrumo/locales/es/errors.yml`
+- `S03` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S03` `verify:` `edit operator work on real storage, 130 and 303` -> `pass`
+- `S03` `by:` `lane-a`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_m303_calculate_evidence_admission.py`
+- `S04` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py`
+- `S04` `A` `src/cadrumo/entrypoints/tests/test_modelo_recalculation_keeps_operator_work.py`
+- `S04` `verify:` `recalculation keeps operator work` -> `pass`
+- `S04` `by:` `lane-a`
+- `S05` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S05` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S05` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S05` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S05` `A` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S05` `A` `src/cadrumo/application/modelo/edit_value_grammar.py`
+- `S05` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_edit_refusal_errors.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_edit_value_grammar.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_operator_work.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S05` `verify:` `edit grammar and parser tests` -> `pass`
+- `S05` `by:` `lane-a`
+- `S06` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S06` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S06` `M` `src/cadrumo/application/modelo/edit_services.py`
+- `S06` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/test_modelo_edit_admission_scope.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S06` `verify:` `application, entrypoint and adapter suites (2368)` -> `pass`
+- `S06` `by:` `lane-a`
+- `S07` `A` `src/cadrumo/application/modelo/edit_preflight.py`
+- `S07` `A` `src/cadrumo/entrypoints/tests/test_modelo_edit_preflight.py`
+- `S07` `verify:` `edit preflight tests` -> `pass`
+- `S07` `by:` `lane-a`
+- `S08` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_lifecycle_edit_door.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S08` `verify:` `TUI tests (745)` -> `pass`
+- `S08` `by:` `lane-a`
 
 ## Notes
 
@@ -168,3 +241,13 @@ related:
 - `S23` Result diff after apply deferred to acceptance phase
 - `S24` Corrects earlier Steps: list headings and notes rendered unstyled (a span-less rich Text drops its style); workbench CSS pinned measures outside the design tokens; dynamic catalogue keys were invisible to the locale scanner; a test imported CasillaDataType through a non-defining module
 - `S24` D6 asks for an override reason; the operator-layer contract carries none, so the view offers no reason input; recorded for the plan-close review
+- `S01` Implemented on the edit-correctness lane as commit a4a73787cd; merged into the feature branch
+- `S02` Implemented on the edit-correctness lane as commit daa7232d0b; merged into the feature branch
+- `S03` Implemented on the edit-correctness lane as commit 3b01a2e654; merged into the feature branch
+- `S04` Implemented on the edit-correctness lane as commit a5512e18ba; merged into the feature branch
+- `S05` Implemented on the edit-correctness lane as commit 4e117f036f; merged into the feature branch
+- `S06` Implemented on the edit-correctness lane as commit bfbae74b26; merged into the feature branch
+- `S07` Implemented on the edit-correctness lane as commit 2cc0eace7c; merged into the feature branch
+- `S08` Implemented on the edit-correctness lane as commit f240889d37; merged into the feature branch
+- `S04` The CLI's own help does not yet state that its recalculation differs from the TUI's, as the operator-layer decision requires; the change regenerates the CLI reference and is open
+- `S07` Preflight's `operator_layer_unknown` finding for a head stored before the layer must reach the workbench review before apply; owned by the production adapter wiring

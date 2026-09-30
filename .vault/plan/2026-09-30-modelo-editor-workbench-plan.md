@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:b20ee6cc024723475889b74338750a8a27d38823afcbcfe628834320cd03309b'
+body_hash: 'sha256:6350039c8aba10247109690fc02719152e9b02c512e1b1c6d857a0088d7bf650'
 ---
 
 # `modelo-editor-workbench` plan
@@ -51,14 +51,14 @@ its files (`workspace.py`, `workspace_producers.py`, `work_review.py`) are not e
 
 Make every edit and recalculation keep the operator's values, give every value a typed parser, and admit edits lazily with a renewable, work-unit-scoped baseline.
 
-- [ ] `P01.S01` - Add the typed operator layer to the calculation revision as an optional identity axis that leaves every stored revision id unchanged, with forward-only load of revisions that lack it; `src/cadrumo/domain/modelos/calculation_revision.py`.
-- [ ] `P01.S02` - Persist the caller tier as the operator layer when a revision is calculated from operator inputs, and add the one caller-context helper that reads operator layer, detail rows, filing-instance evidence, Modelo 210 fields and borrador snapshot from a revision; `src/cadrumo/application/modelo/calculation_actions.py`.
-- [ ] `P01.S03` - Rebuild the edit executor on the current head's caller context so absent intents keep their values, clear and restore become real, 303 evidence is replayed, refusals are typed and execution leaves the event loop; `src/cadrumo/application/modelo/_edit_execution.py`.
-- [ ] `P01.S04` - Replay the current head's caller context in the TUI calculate operation so recalculation keeps the operator's values and detail rows; `src/cadrumo/application/modelo/operation_definitions.py`.
-- [ ] `P01.S05` - Author the typed edit value grammar and locale-aware parser, project the grammar onto writable admission entries, route booleans through the decimal channel, and bound only money addresses on the wire; `src/cadrumo/application/modelo/edit_parsing.py`.
-- [ ] `P01.S06` - Correct admission: lazy admission with silent renewal, work-unit-scoped coordinates, refusal instead of raise below filing grade, non-writable row-field templates and channel-less types, and writable carry-source overrides; `src/cadrumo/application/modelo/edit_admission.py`.
-- [ ] `P01.S07` - Add the in-process edit preflight that names addresses for required-empty warnings, override warnings and source-fed clear refusals; `src/cadrumo/application/modelo/edit_preflight.py`.
-- [ ] `P01.S08` - Give the lifecycle door typed set, clear and restore intents, a lazy admission callable and a surfaced admission refusal, updating its composition in the launcher; `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`.
+- [x] `P01.S01` - Add the typed operator layer to the calculation revision as an optional identity axis that leaves every stored revision id unchanged, with forward-only load of revisions that lack it; `src/cadrumo/domain/modelos/calculation_revision.py`.
+- [x] `P01.S02` - Persist the caller tier as the operator layer when a revision is calculated from operator inputs, and add the one caller-context helper that reads operator layer, detail rows, filing-instance evidence, Modelo 210 fields and borrador snapshot from a revision; `src/cadrumo/application/modelo/calculation_actions.py`.
+- [x] `P01.S03` - Rebuild the edit executor on the current head's caller context so absent intents keep their values, clear and restore become real, 303 evidence is replayed, refusals are typed and execution leaves the event loop; `src/cadrumo/application/modelo/_edit_execution.py`.
+- [x] `P01.S04` - Replay the current head's caller context in the TUI calculate operation so recalculation keeps the operator's values and detail rows; `src/cadrumo/application/modelo/operation_definitions.py`.
+- [x] `P01.S05` - Author the typed edit value grammar and locale-aware parser, project the grammar onto writable admission entries, route booleans through the decimal channel, and bound only money addresses on the wire; `src/cadrumo/application/modelo/edit_parsing.py`.
+- [x] `P01.S06` - Correct admission: lazy admission with silent renewal, work-unit-scoped coordinates, refusal instead of raise below filing grade, non-writable row-field templates and channel-less types, and writable carry-source overrides; `src/cadrumo/application/modelo/edit_admission.py`.
+- [x] `P01.S07` - Add the in-process edit preflight that names addresses for required-empty warnings, override warnings and source-fed clear refusals; `src/cadrumo/application/modelo/edit_preflight.py`.
+- [x] `P01.S08` - Give the lifecycle door typed set, clear and restore intents, a lazy admission callable and a surfaced admission refusal, updating its composition in the launcher; `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`.
 
 ### Phase `P02` - declared form layout family
 
