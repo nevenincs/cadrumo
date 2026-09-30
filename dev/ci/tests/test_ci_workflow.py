@@ -447,6 +447,39 @@ def test_product_integration_parallel_recipe_carries_the_canonical_selection() -
     assert "not perf and not external_tool and not os_keychain" in body
 
 
+def test_the_merge_gate_runs_the_goldens_gate_as_its_own_step_with_a_persistent_verdict_cache() -> None:
+    """The goldens gate reaches pull requests, in a step of its own, keeping its verdicts.
+
+    Inside the scoped-tests step a cache miss would share that step's budget.
+    Without a runner-persistent cache root every run starts from a wiped
+    `.cache`, so the verdict cache could never reuse anything and every
+    selected pull request would pay the full execution.
+    """
+    job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["gate"]
+    names = [step.get("name") for step in job["steps"]]
+    step = next((step for step in job["steps"] if step.get("name") == "Committed sequence goldens"), None)
+    assert step is not None, "the merge gate no longer runs the committed-goldens gate"
+
+    assert step["run"].split()[:2] == ["just", "test-sequence-goldens-gate"]
+    assert '"$GATE_BASE"' in step["run"], "the gate must select from the same base as the scoped tests"
+    assert names.index("Set up toolchain") < names.index("Committed sequence goldens"), (
+        "the goldens gate reads the published authority the setup step provides"
+    )
+    assert "steps.setup.outcome == 'success'" in step["if"]
+    assert step.get("continue-on-error") is not True
+    assert step["env"]["CADRUMO_DEV_CACHE_ROOT"].startswith("${{ runner.tool_cache }}/"), (
+        "the verdict cache must live in runner-owned storage that survives the checkout"
+    )
+    assert "CADRUMO_DEV_CACHE_ROOT" not in job.get("env", {}), (
+        "the persistent root is scoped to the goldens step, not every cache the job's other steps keep"
+    )
+
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-sequence-goldens-gate")
+    assert any("python -m dev.ci.sequence_goldens_gate --base" in command for command in commands), (
+        f"the recipe the step delegates to must run the goldens gate entry point: {commands}"
+    )
+
+
 #: Below these the lanes have stopped carrying a surface to inspect. Floors,
 #: not pinned counts.
 _MINIMUM_LANE_JOBS = 1

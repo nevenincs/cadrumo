@@ -41,7 +41,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
-    synthetic_build_receipts,
+    synthetic_legal_identity,
 )
 from cadrumo.domain.modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
@@ -184,7 +184,6 @@ def test_publication_foreign_key_check_refuses_an_unenforced_dangling_dependency
 
 
 def _artifact() -> AuthorityArtifact:
-    build_identity, compiler_closure = synthetic_build_receipts("source")
     profile_schema = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1]
     catalogues = minimal_catalogues()
     # Snapshot validation resolves this declaration even when the miniature
@@ -260,9 +259,7 @@ def _artifact() -> AuthorityArtifact:
     return AuthorityArtifact(
         modelos=(minimal_modelo(minimal_revision()),),
         catalogues=catalogues,
-        identity_digest=build_identity.identity_digest,
-        build_identity=build_identity,
-        compiler_closure=compiler_closure,
+        identity_digest=synthetic_legal_identity("source"),
         evidence=AuthorityEvidenceProjection(),
         profile_schema=profile_schema,
     )
@@ -543,13 +540,10 @@ def test_promotion_copies_the_exact_accepted_bytes_without_recompiling(tmp_path:
 
 def test_public_installers_serialize_different_generations(tmp_path: Path) -> None:
     first = _artifact()
-    second_build, second_closure = synthetic_build_receipts("second source", "second compiler")
     second = first.__class__(
         modelos=first.modelos,
         catalogues=first.catalogues,
-        identity_digest=second_build.identity_digest,
-        build_identity=second_build,
-        compiler_closure=second_closure,
+        identity_digest=synthetic_legal_identity("second source"),
         profile_schema=first.profile_schema,
         evidence=first.evidence,
     )

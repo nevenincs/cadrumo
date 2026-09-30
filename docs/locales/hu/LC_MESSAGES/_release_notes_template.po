@@ -36,7 +36,7 @@ msgstr "Kiemelt változások"
 #: ../../_release_notes_template.md:22
 msgid "One or two sentences on the most user-visible change in this release."
 msgstr ""
-"Egy-két mondat a kiadás leginkább felhasználó számára látható "
+"Egy-két mondat a kiadás felhasználók számára leginkább látható "
 "változásáról."
 
 #: ../../_release_notes_template.md:24
@@ -57,16 +57,16 @@ msgstr "(a `CHANGELOG.md` `### Bug Fixes` szakaszából ehhez a verzióhoz)"
 
 #: ../../_release_notes_template.md:32
 msgid "Breaking Changes"
-msgstr "Kompatibilitást megtörő változások"
+msgstr "Visszafelé nem kompatibilis változások"
 
 #: ../../_release_notes_template.md:34
 msgid ""
 "None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking "
 "changes in a minor bump; state the migration step for each.)_"
 msgstr ""
-"Nincs. _(vagy: sorolja fel őket tételesen - az 1.0 előtti kiadások minor "
-"verzióváltásnál is tartalmazhatnak kompatibilitást megtörő változásokat; "
-"adja meg mindegyikhez a migrációs lépést.)_"
+"Nincs. _(vagy: sorold fel őket tételesen - az 1.0 előtti kiadások minor "
+"verzióváltásnál is tartalmazhatnak visszafelé nem kompatibilis "
+"változásokat; add meg mindegyikhez a migrációs lépést.)_"
 
 #: ../../_release_notes_template.md:37
 msgid "Upgrade"

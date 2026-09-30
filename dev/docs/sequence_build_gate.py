@@ -34,8 +34,7 @@ __all__ = [
     "should_emit_cli_tree",
 ]
 
-#: Force a fresh ``cli-tree.json`` regardless of build mode (mirrors the CLI
-#: reference hook's ``CADRUMO_DOCS_FORCE_CLI_REFERENCE`` seam).
+#: Force a fresh ``cli-tree.json`` regardless of build mode.
 _FORCE_EMIT_ENV = "CADRUMO_DOCS_FORCE_CLI_TREE"
 #: Skip the ``cli-tree.json`` projection unconditionally.
 _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
@@ -144,42 +143,40 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
+    from .sequences.authority_currency import require_current_authority
     from .sequences.checks import check_sequences_in_subprocess
+    from .sequences.errors import SequenceEngineError
     from .sequences.golden_store import refresh_invocation
 
     if not should_check_sequences():
         return
     docs_root = Path(app.srcdir)
     goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
+    # Ahead of verdict reuse: a clean verdict recorded under a generation that has
+    # since gone stale would otherwise pass the build without executing anything.
+    try:
+        require_current_authority()
+    except SequenceEngineError as exc:
+        raise SphinxError(str(exc)) from exc
 
     problems: list[str] = []
-    key: str | None = None
     if pages is None:
-        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+        from .sequences.verdict_cache import check_reusing_verdict, published_verdict_key
 
-        from .sequences.verdict_cache import reused_verdict, verdict_key
-
-        with bundled_indexed_authority().operation() as operation:
-            generation = str(operation.generation)
-        key = verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
-        reused = reused_verdict(key)
-        if reused is not None:
-            print(f"cli-sequence goldens: clean ({reused})", flush=True)
-            return
-    if pages is None:
         # A full build checks every enrolled page; shard the pages across a
         # BOUNDED pool of child interpreters (each sequence keeps its own fresh
         # hermetic sandbox, so execution is unchanged — only the scheduling
         # is). Width 4 is the same bounded-not-auto footprint the gate builds
         # use for Sphinx ``-j``: sized for co-residency on a shared machine,
         # never for the whole box.
-        problems.extend(
-            check_sequences_in_subprocess(
-                docs_root=docs_root,
-                goldens_root=goldens_root,
-                jobs=4,
-            ),
+        full_problems, reused = check_reusing_verdict(
+            published_verdict_key(docs_root=docs_root, goldens_root=goldens_root),
+            lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=4),
         )
+        if reused is not None:
+            print(f"cli-sequence goldens: clean ({reused})", flush=True)
+            return
+        problems.extend(full_problems)
     else:
         for page in pages:
             problems.extend(
@@ -196,7 +193,3 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             f"{len(problems)} cli-sequence divergence(s) from committed goldens:\n{detail}\n"
             f"If the new behaviour is intended, update the golden(s) with: {refresh_invocation()}",
         )
-    if key is not None:
-        from .sequences.verdict_cache import record_clean_verdict
-
-        record_clean_verdict(key)

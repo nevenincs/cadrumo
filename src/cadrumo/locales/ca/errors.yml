@@ -295,6 +295,9 @@ errors:
       forma.
     error_observation_key: Un component de la clau d'observació no compleix el contracte
       del repositori.
+    error_optional_extra_missing: Aquesta instal·lació no té el complement opcional
+      «{extra}», necessari per a {feature}. Instal·leu-lo amb pip install cadrumo[{extra}]
+      i torneu a executar la comanda.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el

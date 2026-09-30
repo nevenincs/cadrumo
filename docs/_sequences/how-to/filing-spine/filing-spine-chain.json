@@ -110,15 +110,17 @@
         "--taxable-base",
         "500",
         "--iva-rate",
-        "0.21",
+        "21",
         "--iva-amount",
-        "105"
+        "105",
+        "--idempotency-key",
+        "fq-factura"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
           "name": "evidence_id",
-          "value": "9a075f52dad08e80"
+          "value": "02f887c6ff8a69c5"
         }
       ],
       "envelope": null,
@@ -136,7 +138,7 @@
         "attach",
         "e3eeac5e",
         "--purchase-invoice-evidence-id",
-        "9a075f52dad08e80"
+        "02f887c6ff8a69c5"
       ],
       "captures": [],
       "envelope": null,

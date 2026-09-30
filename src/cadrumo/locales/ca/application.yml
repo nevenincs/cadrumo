@@ -171,6 +171,14 @@ application:
           amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
           i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
   calculations:
+    bienes_inversion_regularizacion:
+      register_advisory: '%{count} bé(ns) d''inversió en període de regularització
+        (LIVA arts. 107-110) per a %{year}: %{computed} computat(s), %{pending} pendent(s)
+        de prorrata definitiva. Regularització proposada per a la casella %{casilla}:
+        %{value}. Confirmeu el valor abans de presentar.'
+      transmision_advisory: '%{count} bé(ns) d''inversió transmès(os) el %{year} requereixen
+        la regularització única d''entregues (LIVA art. 110). Regularització proposada
+        per a la casella %{casilla}: %{value}. Confirmeu el valor abans de presentar.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No es poden fusionar observacions amb clau
@@ -328,6 +336,15 @@ application:
           {filing_year}, període {period}.
         taxpayer_nif_blank: El NIF del contribuent no pot estar en blanc quan forma
           la clau de decisió de la cartera d'IVA.
+    prorrata_regularizacion:
+      advisory: 'Regularització de prorrata per percentatge definitiu (LIVA arts.
+        104-105) per a %{year}: prorrata provisional %{provisional}% → definitiva
+        %{definitiva}% (%{sentido}). Regularització proposada per a %{target}: %{value}.
+        Confirmeu el valor abans de presentar.'
+      sentido_deduccion: deducció complementària
+      sentido_ingreso: ingrés
+      target_casilla: casella %{number}
+      target_declared: la casella de regularització declarada
     row_set:
       errors:
         grouping_dispatch_fell_through: 'L''agrupació de conjunt de files {grouping}
@@ -575,8 +592,9 @@ application:
         invoice_id_required: Cal un identificador de factura.
         invoice_not_found: 'Factura del catàleg no trobada: %{invoice_id}.'
         remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
-          continuï vinculada a transaccions: %{linked_transaction_ids}. Desvinculeu-les
-          primer.'
+          continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
+          comanda de desvinculació: elimineu aquestes transaccions amb `aeat app ledger
+          remove`, cosa que allibera el vincle, i elimineu després la factura.'
     linking:
       errors:
         linked_invoice_not_found: No s ha trobat la factura %{invoice_id} després
@@ -641,6 +659,11 @@ application:
       purchase_evidence_already_set: L'evidència de la factura de compra és immutable
         un cop adjuntada. Elimineu la transacció del llibre i torneu a afegir-la amb
         l'evidència correcta.
+      split_requires_image_evidence: El lector on-host només pot proposar una divisió
+        per a la transacció %{transaction_id} a partir d'evidència escanejada o en
+        imatge, i aquesta transacció no en té cap que pugui llegir. Adjunteu una factura
+        escanejada o en imatge i torneu a executar amb --read-evidence, o indiqueu
+        vós mateix la divisió amb --child-amount i --child-description.
       transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
         amb %{count} transaccions: %{matches}'
       transaction_id_prefix_empty: el prefix d'id de transacció és buit
@@ -1216,7 +1239,7 @@ application:
         vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
         %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
-        %{year} per separat i usa un token de període com 0A, Q1, 1T o 01.
+        %{year} per separat i usa un token de període com 0A, 1T o 01.
       work_unit_already_discarded: La unitat de treball ja està descartada.
       work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
         a crear-lo retorna la mateixa unitat de treball descartada, de manera que

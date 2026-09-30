@@ -643,6 +643,45 @@ entries:
     label: AEAT Sede Electrónica
     purpose: Página de inicio de la Sede Electrónica de la AEAT.
 filing:
+  applicability:
+    impatriado_m100_suppressed: 'Modelo 100 no aplica: el contribuyente tiene activo
+      el régimen especial de trabajadores, profesionales, emprendedores e inversores
+      desplazados a territorio español (LIRPF Art. 93) dentro de la ventana de seis
+      ejercicios. Durante esa ventana tributa por las reglas del IRNR manteniendo
+      la condición de contribuyente IRPF, y la declaración anual correspondiente es
+      el Modelo 151, no el Modelo 100.'
+    impatriado_m151_applicable: 'Modelo 151 aplica: el contribuyente tiene activo
+      el régimen especial de impatriados del Art. 93 LIRPF dentro de la ventana de
+      seis ejercicios del año de opción y los cinco siguientes; la declaración anual
+      del régimen se presenta por Modelo 151.'
+    impatriado_m151_not_applicable: 'Modelo 151 no aplica: el perfil no tiene activo
+      el régimen especial de impatriados del Art. 93 LIRPF dentro de su ventana de
+      seis ejercicios. Fuera de esa ventana, o sin opción por el régimen, la persona
+      física residente vuelve a la ruta ordinaria del IRPF y al Modelo 100 cuando
+      proceda.'
+    incomplete_no_rule: 'No se puede determinar la aplicabilidad de este modelo: todavía
+      no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas
+      es deliberadamente reducida (el conjunto inicial de personas) y la expansión
+      por entidad y régimen está pendiente. No es una afirmación sobre su perfil:
+      su tipo de contribuyente puede estar correctamente declarado.'
+    incomplete_undeclared_taxpayer: 'No se puede determinar la aplicabilidad: el tipo
+      de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso,
+      las categorías de renta del IRPF.'
+    incomplete_undetermined_fact: 'No se puede determinar la aplicabilidad de este
+      modelo desde el modelo de contribuyente declarado: depende de un hecho que el
+      perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese
+      hecho se declara positivamente; en otro caso no se conjetura una obligación.'
+    incomplete_undetermined_fact_required: 'Hecho requerido para este modelo: %{fact}.'
+    incomplete_undetermined_periods_missing: 'Periodos sin declarar: %{periods}.'
+    payer_fact:
+      iva_group_dominant_entity: está inscrito como entidad dominante de un grupo
+        de IVA
+      iva_group_member: está inscrito como entidad miembro de un grupo de IVA
+      oss_enrolled: está inscrito en un régimen de ventanilla única (OSS/IOSS) del
+        IVA
+      pays_rent_with_retencion: paga alquileres sujetos a retención
+      pays_withheld_income: paga retribuciones sujetas a retención
+      trades_intracommunity: realiza operaciones intracomunitarias
   validation:
     deadline_missed: Plazo de presentación vencido
     formula_divergence: Divergencia en el cálculo de la fórmula

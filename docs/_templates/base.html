@@ -3,3 +3,13 @@
 {# Cloudflare declines prefetch requests on route-based static hosting. The
    visible brand loads normally; speculative logo requests add only failures. #}
 {% block logo_prefetch_links %}{% endblock logo_prefetch_links %}
+
+{# The interaction layer writes text into the DOM (search status, result
+   categories, the sequence widget's controls, copy feedback). Those strings
+   cannot come from gettext, which only substitutes page content, so this root's
+   resolved chrome rides along as one inline JSON payload and cadrumo-docs.js
+   reads its labels from it. Emitted here rather than in page.html so every
+   rendered template inherits it, the search page included. #}
+{% block extrahead %}
+    <script type="application/json" id="cadrumo-chrome-strings">{{ cadrumo_chrome | tojson }}</script>
+{% endblock extrahead %}

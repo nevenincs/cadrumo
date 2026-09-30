@@ -113,11 +113,12 @@ class MissingOptionalExtraError(CoreError):
     :class:`application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
 
-    Carries the extra's machine identity and nothing else. The operator-facing
-    text is the registered error code's own translation key, so this refusal
-    renders through the same catalogue every other registered error does, and
-    the recovery is resolved downstream from the facts rather than rendered
-    here as an install command.
+    The operator-facing text is the registered error code's own translation
+    key, so this refusal renders through the same catalogue every other
+    registered error does. The context carries the extra's machine identity
+    AND its feature label, because the key names both: an operator told only
+    that "an internal application error occurred" cannot tell which capability
+    is missing, let alone install it.
 
     Attributes:
         extra: Optional-extra registry record that failed the spec-only probe.
@@ -128,7 +129,12 @@ class MissingOptionalExtraError(CoreError):
         self.extra = extra
         super().__init__(
             translated_message=type(self).code.message_key,
-            context={"extra": extra.extra, "import_name": extra.import_name, "importable": False},
+            context={
+                "extra": extra.extra,
+                "feature": extra.feature,
+                "import_name": extra.import_name,
+                "importable": False,
+            },
         )
         self.name = extra.import_name
         self.path = None

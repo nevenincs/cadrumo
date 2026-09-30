@@ -13,28 +13,6 @@ class ApiDocsError(RuntimeError):
     """Raised on API documentation stub management errors."""
 
 
-class StubRemovalRefusedError(ApiDocsError):
-    """Raised when one scaffold run would delete more stubs than its declared bound.
-
-    The refusal exists because the drift gate and its remedy pull in opposite
-    directions. :meth:`ApiStubManager.check` compares a live population (the
-    modules :meth:`ApiStubManager.excludes_source` admits) against a committed
-    artefact (the ``docs/api/*.rst`` tree), and the documented remedy for any
-    orphan it reports is :meth:`ApiStubManager.scaffold`, which DELETES the
-    orphan. So a defect that narrows the live population is detected exactly
-    once: the gate reds, the prescribed fix removes the pages rather than the
-    cause, and every later run is green over a smaller tree with no record that
-    the pages ever existed.
-
-    The blast radius is not hypothetical. Measured against the committed tree,
-    adding one segment to :data:`_EXCLUDED_PACKAGES` makes ``scaffold`` delete
-    118 stubs for ``entrypoints``, 257 for ``core``, 296 for ``adapters``, 486
-    for ``domain``, and 651 for ``application``; a rule that admitted nothing
-    would delete 1829 of the 1830 stubs on disk. Ordinary churn removes one or
-    two.
-    """
-
-
 @dataclass(frozen=True)
 class ScaffoldResult:
     """Summary of a scaffold operation.
@@ -82,31 +60,26 @@ API_SOURCE_PACKAGE: str = "cadrumo"
 #: reference instead of autodoc.
 CLI_REFERENCE_SUBTREE: tuple[str, ...] = ("entrypoints", "cli")
 
-# Module segments that exclude an entire subtree.
-_EXCLUDED_PACKAGES: frozenset[str] = frozenset({"tests", "_data"})
-
-# Subtree path-prefixes (relative to the package root) excluded from autodoc
-# stubs.  The CLI is documented through the generated command reference rather
-# than autodoc; importing the cli command/payload modules under autodoc also
-# fails on pydantic model construction, so the cli implementation is not stubbed.
-_EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTREE})
-
-# Individual filenames excluded from stub coverage even inside included packages.
-_EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
-
-#: Stubs one :meth:`ApiStubManager.scaffold` run may delete before it refuses.
+#: Module path segments that exclude every module beneath them.
 #:
-#: A declaration on the artefact, not a speed or tidiness budget. It separates
-#: ordinary churn — a rename or a retired module, one or two stubs — from every
-#: measured collapse: excluding one top-level package under ``src/cadrumo/``
-#: removes 31 stubs for ``llm``, 118 for ``entrypoints``, 257 for ``core``, 296
-#: for ``adapters``, 486 for ``domain``, and 651 for ``application``. The value
-#: sits below the smallest of those, and
-#: ``dev/docs/tests/test_pruning_remedies_are_bounded.py`` re-derives the figure
-#: against the live tree so a layout change cannot leave it stale. A run above
-#: the bound is asking to delete published API reference pages because a filter
-#: changed, and must say so out loud through ``removal_allowance``.
-MAX_STUB_REMOVALS_PER_RUN: int = 25
+#: The four ``EXCLUDED_*`` declarations are the whole eligibility rule, read as
+#: data by the test that re-derives the admitted module set independently of
+#: :meth:`ApiStubManager.excludes_source`. Widening one is therefore a visible
+#: one-line change here, and a defect in the filter code that applies them is
+#: caught by that derivation rather than by a committed copy of the output.
+EXCLUDED_PACKAGE_SEGMENTS: frozenset[str] = frozenset({"tests", "_data"})
+
+#: Package-relative subtrees excluded from autodoc stubs. The CLI is documented
+#: through the generated command reference rather than autodoc; importing the
+#: cli command/payload modules under autodoc also fails on pydantic model
+#: construction, so the cli implementation is not stubbed.
+EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTREE})
+
+#: Filenames excluded from stub coverage even inside included packages.
+EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
+
+#: Filename prefixes that mark a test module wherever it sits.
+EXCLUDED_FILENAME_PREFIXES: tuple[str, ...] = ("test_", "_test_")
 
 _UTF_8: str = UTF_8_ENCODING
 
@@ -169,6 +142,11 @@ def _public_function_aliases(module_name: str) -> list[str]:
     return lines
 
 
+def stub_filename(module_name: str) -> str:
+    """Return the ``docs/api`` stub filename that documents *module_name*."""
+    return f"{module_name}.rst"
+
+
 def _stub_is_current(path: Path, content: str) -> bool:
     """Return True when *path* holds exactly the bytes *content* serialises to.
 
@@ -180,11 +158,13 @@ def _stub_is_current(path: Path, content: str) -> bool:
     diff`` is silent on the same file. A text comparison therefore leaves the
     translated stub invisible to every reader there is.
 
-    That was not hypothetical. Measured on 2026-07-28 against the committed
-    tree: 60 of 1240 stubs under ``docs/api/`` carried CRLF on disk while
-    ``python -m dev.docs.apidocs scaffold --check`` reported the tree
-    conformant. The writer that translated them was this module's own, so the
-    check could not see the drift it was itself introducing.
+    That was not hypothetical. Measured on 2026-07-28, when the stubs were
+    still committed: 60 of 1240 stubs under ``docs/api/`` carried CRLF on disk
+    while the drift check reported the tree conformant. The writer that
+    translated them was this module's own, so the check could not see the drift
+    it was itself introducing. The same comparison decides which stubs a build
+    rewrites, and an unwritten stub keeps its mtime, so Sphinx does not re-read
+    a page whose bytes did not change.
 
     Args:
         path: An existing stub file.
@@ -199,13 +179,15 @@ def _stub_is_current(path: Path, content: str) -> bool:
 class ApiStubManager:
     """Manage Sphinx ``automodule`` RST stubs under ``docs/api/``.
 
-    Provides three entry points used by the developer CLI:
+    The stubs are build output, not source: a full-scope documentation build
+    calls :meth:`scaffold` at ``builder-inited`` to write them into the source
+    tree it is about to read (see ``docs/conf.py``), and they are never
+    committed.
 
     - :meth:`scaffold` — write/sync ``docs/api/*.rst`` to match the current
       source tree, removing stale stubs and creating missing ones.
     - :meth:`check` — compute the drift between source modules and stubs
       without writing anything.
-    - :meth:`audit` — return a human-readable health report.
     """
 
     def __init__(self, src_cadrumo: Path, docs_api: Path) -> None:
@@ -239,16 +221,16 @@ class ApiStubManager:
         parts = relative.parts
 
         filename = path.name
-        if filename.startswith("test_") or filename.startswith("_test_"):
+        if filename.startswith(EXCLUDED_FILENAME_PREFIXES):
             return True
-        if filename in _EXCLUDED_FILENAMES:
+        if filename in EXCLUDED_FILENAMES:
             return True
 
-        for prefix in _EXCLUDED_SUBTREES:
+        for prefix in EXCLUDED_SUBTREES:
             if parts[: len(prefix)] == prefix:
                 return True
 
-        return any(part in _EXCLUDED_PACKAGES for part in parts)
+        return any(part in EXCLUDED_PACKAGE_SEGMENTS for part in parts)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
         """Walk ``src_cadrumo`` and collect ``(dotted_module_name, is_package)`` pairs.
@@ -448,60 +430,35 @@ class ApiStubManager:
                 content = self._package_stub(name, sub_pkgs, sub_mods)
             else:
                 content = self._module_stub(name)
-            expected[f"{name}.rst"] = content
+            expected[stub_filename(name)] = content
         return expected
 
     # ── Public API ───────────────────────────────────────────────────────────
 
-    def scaffold(self, *, removal_allowance: int | None = None) -> ScaffoldResult:
+    def scaffold(self) -> ScaffoldResult:
         """Write and sync ``docs/api/*.rst`` to match the current source tree.
 
-        Creates missing stubs, regenerates all existing stubs with canonical
-        content, and removes stale stubs that no longer correspond to a source
-        module.
+        Creates missing stubs, rewrites stubs whose bytes are not canonical,
+        leaves current stubs untouched, and removes stubs that no longer
+        correspond to a source module.
 
-        Removals are bounded. The orphan set is computed first and compared
-        against *removal_allowance* BEFORE anything is unlinked, so a refused
-        run leaves the tree exactly as it found it; see
-        :class:`StubRemovalRefusedError` for why an unbounded prune is the wrong
-        remedy for the drift the gate detects.
-
-        Args:
-            removal_allowance: Stubs this run may delete. Defaults to
-                :data:`MAX_STUB_REMOVALS_PER_RUN`. Pass a larger value to
-                authorise a deliberate bulk retirement; the number is then a
-                reviewable claim in the diff rather than a silent consequence.
+        Removal is unbounded because the tree is disposable build output that
+        the next build regenerates in full. What a narrowed eligibility rule
+        would silently drop is guarded instead by the test that re-derives the
+        admitted module set from the source tree and the declared exclusions.
 
         Returns:
             A :class:`ScaffoldResult` summarising what changed.
 
         Raises:
             ApiDocsError: When the docs API directory cannot be created.
-            StubRemovalRefusedError: When the run would delete more stubs than
-                *removal_allowance* permits. Nothing is written or removed.
         """
-        allowance = MAX_STUB_REMOVALS_PER_RUN if removal_allowance is None else removal_allowance
         try:
             self.docs_api.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             raise ApiDocsError(f"Cannot create docs/api directory: {exc}") from exc
 
         expected_contents = self._expected_stub_contents()
-        expected = set(expected_contents)
-
-        # Decided before the first write: a refusal must leave the tree
-        # untouched, not half-regenerated with the deletions skipped.
-        on_disk = scan_directory(self.docs_api, pattern="*.rst")
-        doomed = [path for path in on_disk if path.name not in expected]
-        if len(doomed) > allowance:
-            listed = ", ".join(sorted(path.name for path in doomed)[:10])
-            raise StubRemovalRefusedError(
-                f"scaffold would delete {len(doomed)} of the {len(on_disk)} committed stub(s), over the declared "
-                f"bound of {allowance}. Nothing was written or removed. A prune this size means the module "
-                "eligibility rule stopped admitting a subtree, not that the pages became unwanted: fix the rule, "
-                f"or pass removal_allowance to authorise the retirement explicitly. First removals: {listed}"
-            )
-
         written = 0
         unchanged = 0
 
@@ -511,18 +468,14 @@ class ApiStubManager:
                 unchanged += 1
                 continue
             # newline="\n" pins the terminator. The default translates every
-            # "\n" to the platform separator on write, which is what put CRLF
-            # into 60 committed stubs; sibling generators under dev/docs/
-            # already write this way.
+            # "\n" to the platform separator on write, which put CRLF into 60
+            # stubs; sibling generators under dev/docs/ write the same way.
             path.write_text(content, encoding=_UTF_8, newline="\n")
             written += 1
 
         removed_names: list[str] = []
-        for existing in doomed:
-            # Re-checked rather than trusted: the bound was measured against
-            # this exact list, so unlinking anything outside it would delete a
-            # file the allowance never covered.
-            if existing.exists():
+        for existing in scan_directory(self.docs_api, pattern="*.rst"):
+            if existing.name not in expected_contents:
                 existing.unlink()
                 removed_names.append(existing.name)
 
@@ -558,45 +511,3 @@ class ApiStubManager:
             if (self.docs_api / filename).is_file() and not _stub_is_current(self.docs_api / filename, expected)
         )
         return DriftResult(missing_stubs=missing, orphan_stubs=orphans, stale_stubs=stale)
-
-    def audit(self) -> str:
-        """Return a human-readable health report for the stub tree.
-
-        Returns:
-            A multi-line report string describing stub coverage.
-        """
-        all_modules = self.discover_modules()
-        drift = self.check()
-
-        total_modules = len(all_modules)
-        total_stubs = len(scan_directory(self.docs_api, pattern="*.rst")) - (
-            1 if (self.docs_api / "modules.rst").exists() else 0
-        )
-
-        lines: list[str] = [
-            "API stub health report",
-            f"  Source modules : {total_modules}",
-            f"  Stub files     : {total_stubs}",
-            f"  Missing stubs  : {len(drift.missing_stubs)}",
-            f"  Orphan stubs   : {len(drift.orphan_stubs)}",
-            f"  Stale stubs    : {len(drift.stale_stubs)}",
-        ]
-        if drift.missing_stubs:
-            lines.append("")
-            lines.append("Missing stubs (no .rst for this module):")
-            for name in drift.missing_stubs:
-                lines.append(f"  {name}")
-        if drift.orphan_stubs:
-            lines.append("")
-            lines.append("Orphan stubs (no matching source module):")
-            for name in drift.orphan_stubs:
-                lines.append(f"  {name}")
-        if drift.stale_stubs:
-            lines.append("")
-            lines.append("Stale stubs (content differs from generator output):")
-            for name in drift.stale_stubs:
-                lines.append(f"  {name}")
-        if drift.is_conformant:
-            lines.append("")
-            lines.append("Stub tree is conformant.")
-        return "\n".join(lines)

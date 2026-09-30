@@ -18,8 +18,9 @@ persona and the same ledger continue in
 [The IVA year](iva-lifecycle.md) - the two run-throughs describe the same
 business from two tax angles.
 
-The CLI prints help, labels, and messages in Spanish. This page keeps the
-explanations in English and quotes real Spanish output where it shows one.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you
+[choose another language](profile-setup.md#choose-the-output-language).
 
 ## Prerequisites
 
@@ -41,7 +42,9 @@ The `--name` and `--surnames` are required: filing refuses without an
 operator name. The `--activity-start-date` marks when the activity began,
 so `aeat` does not look for a filing from before your first period. The
 sample `--tax-id` has the shape of a Spanish citizen's NIF; use your own
-NIF, CIF, DNI, or NIE for a real profile.
+NIF or NIE for a real profile. `--irpf-income-categories actividad_economica`
+declares that your income comes from an economic activity, which is what makes
+Modelo 130 apply.
 
 Confirm what the year will ask of Ana:
 
@@ -49,9 +52,11 @@ Confirm what the year will ask of Ana:
 :verify: Confirm the year's filing calendar and Modelo 130 applicability read back.
 ```
 
-The calendar lists the four Modelo 130 windows (April, July, October,
-January) and the annual Renta window the following spring. `explain` shows
-why Modelo 130 applies: an activity under estimación directa.
+The calendar covers 2026, so it lists the Modelo 130 windows for the first
+three quarters (April, July, and October) next to the Modelo 303 windows.
+The January window for the fourth quarter and the annual Renta window open
+in the following year, outside that range. `explain` shows why Modelo 130
+applies: an activity under estimación directa.
 
 ## Stage 2: the first quarter
 
@@ -59,39 +64,36 @@ Record the first quarter's activity - one sale, one expense. The `--amount`
 is the gross total (taxable base plus IVA), and an expense row needs a
 `--category-id` (list the valid ids with `aeat app ledger categories`).
 
-Register the supplier's invoice for that expense, and link it to the expense
-row before you calculate. An expense row that claims deductible IVA cannot be
-filed without its invoice. A draft bundles its evidence at the
-moment you verify it, so an invoice linked after that never reaches the
-filing. The invoice registration and the two `ledger add` commands appear as
-the collapsed preparation of the sequence below.
+Register the supplier's invoice for that expense first. It takes its IVA rate
+as a percentage (`--iva-rate 21`), while `ledger add` takes a decimal (`0.21`).
+Then link it to the expense row with `--purchase-invoice-evidence-id` before
+you calculate. An
+expense row that claims deductible IVA cannot be filed without its invoice. A
+draft bundles its evidence at the moment you verify it, so an invoice linked
+after that never reaches the filing.
 
 Create and calculate the first instalment. Modelo 130 is cumulative, and a
 true first period has no history, so the three prior-period carries are
 passed as zeros - this is the only quarter where you do this. The sequence
-below records the quarter's two rows, creates and calculates the draft,
-verifies it, and exports it; the file and reconcile commands
-that close the quarter are shown after it:
+below registers the invoice, records the quarter's two rows, creates and
+calculates the draft, verifies it, and exports it. The file and reconcile
+commands that close the quarter follow as display frames:
 
 ```{cli-sequence} irpf-lifecycle-q1
 :verify: Confirm the first instalment verifies and exports locally.
 ```
 
-The key figures show the year so far: 1000 earned, 500 spent, and an
-instalment of 20 percent on the net:
-
-```
-key_figure	03	500.00	Rendimiento neto
-key_figure	04	100.00	Importe del pago fraccionado
-key_figure	19	0.00	Resultado final
-```
-
-(The final result is 0.00 here because the minoración for low net income
-absorbs the whole instalment - casilla 13 in the output shows it.)
+The figures show the year so far: 1000 earned, 500 spent, and an instalment
+of 20 percent on the net. Casilla `03` (rendimiento neto) is 500.00 and
+casilla `04` (the instalment) is 100.00. Casilla `19` (the final result) is
+0.00 because the minoración for low net income, casilla `13` (100.00),
+absorbs the whole instalment.
 
 Verify reports `completeness_status complete` and
 `granted_verificado_completo true` (the sequence above asserts this). `export`
-writes the fichero-BOE upload artefact and reports its checksum.
+writes the fichero-BOE upload artefact and reports its checksum. It refuses to
+overwrite an existing file unless you add `--replace`; see
+[The filing workflow](filing-spine.md).
 
 Enter the calculated figures at the AEAT portal (the checklist is
 [File your modelo at the AEAT portal](file-at-aeat.md)), then record
@@ -99,18 +101,18 @@ the filing locally with `aeat app modelo work file` while the presentation
 window is open. `work file` saves a local marker only - it does not submit
 anything. The marker is what lets the next quarter's carries resolve from this
 one. Finally, pull the justificante with `aeat app modelo reconcile pull` so the
-official receipt is on record. Both commands (file, reconcile pull) are shown
-after the refusal in the sequence above.
+official receipt is on record. Both commands close the sequence above as
+display frames.
 
 ## Stage 3: the second and third quarters
 
 The year continues; record each quarter's activity as it happens. For the
-second quarter, say Ana invoices twice and buys once. Link the purchase
-invoice to that expense row here too, before you calculate. Now the cumulative
-behaviour shows itself: the second-quarter draft calculates with NO `--binding`
-zeros, resolving the carries from the filed first quarter. The sequence below
-prepares and files that first quarter in its collapsed preparation, then runs
-the whole second quarter through to its filed marker:
+second quarter, say Ana invoices twice and buys once. Register the purchase
+invoice and link it to that expense row here too, before you calculate. Now
+the cumulative behaviour shows itself: the second-quarter draft calculates with
+NO `--binding` zeros, resolving the carries from the filed first quarter. The
+sequence below starts from a filed first quarter, then runs the whole second
+quarter through to its export:
 
 ```{cli-sequence} irpf-lifecycle-q2
 :verify: Confirm the second quarter verifies with its carries resolved from the filed first quarter.

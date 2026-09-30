@@ -228,7 +228,7 @@ cli:
           p. ej. 2026-01-15.
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
-        iva_rate_help: Tipo de IVA aplicado como decimal
+        iva_rate_help: Tipo de IVA aplicado como porcentaje, por ejemplo 21
         label_reading_busy_refused: 'Otra lectura local ya estaba usando la inferencia
           de este equipo, así que no se ejecutó el modelo de lectura. Los {count}
           campos que las reglas de etiquetas no leyeron quedan vacíos: {fields}. La
@@ -901,11 +901,12 @@ cli:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
           output_required: Proporcione --output PATH para el artefacto fichero-BOE.
-        help: Exporta una revisión de modelo verificada o presentada a un fichero
-          local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT,
-          y el fichero generado no es evidencia oficial de presentación ante AEAT.
-          Use el justificante AEAT, la consulta de declaraciones presentadas o el
-          cotejo CSV tras presentar.
+        help: 'Exporta una revisión de modelo verificada o presentada a un fichero
+          local compatible con AEAT, en el diseño oficial propio del modelo: fichero-BOE
+          para la mayoría de modelos, XML para el Modelo 100. Local; nunca contacta
+          con AEAT, y el fichero generado no es evidencia oficial de presentación
+          ante AEAT. Use el justificante AEAT, la consulta de declaraciones presentadas
+          o el cotejo CSV tras presentar.'
         output_help: Ruta donde escribir el artefacto fichero-BOE.
         replace_help: Sustituye un archivo ya existente en --output. Sin esta opción
           se rechaza un archivo de exportación existente para no destruir una exportación
@@ -1954,7 +1955,7 @@ cli:
       no_active_bucket: No hay un perfil activo. Ejecuta 'aeat config profile create
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
-      provider_help: Identificador del proveedor (p.ej. certificado-electrónico)
+      provider_help: Identificador del proveedor (p.ej. certificate)
       providers_help: Listar proveedores de autenticación soportados
       reset_all_help: Restablecer todos los proveedores de autenticación conocidos
       reset_help: Retirar la configuración local del proveedor, las sesiones, los
@@ -2599,8 +2600,9 @@ cli:
       profile_requires_yes: Pasa --yes para aplicar la reparación del perfil activo.
       quarantine_dry_run_help: Previsualizar las filas que se pondrían en cuarentena
         sin mover nada
-      quarantine_help: Previsualizar filas no descifrables; la cuarentena activa está
-        desactivada por la política de reparación preserve-first
+      quarantine_help: Mueve las filas de objetos seguros no descifrables al archivo
+        de cuarentena auditable; requiere --yes. La carga cifrada se conserva, nunca
+        se elimina. Use --dry-run para previsualizar las filas sin mover nada.
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
@@ -2637,10 +2639,12 @@ cli:
         concertado para la cabecera del Modelo 111.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
-      quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
-        los flags requeridos sin valor provocan un error. Suficiente por sí solo;
-        combínalo con --accept-defaults para rellenar el resto con los valores por
-        defecto.
+      quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados,
+        sin preguntar nada. Un flag sin valor no se escribe en lugar de provocar un
+        error, por lo que un perfil nuevo queda con la configuración incompleta; `aeat
+        config profile complete-setup` indica los datos que aún le faltan. Suficiente
+        por sí solo; combínalo con --accept-defaults para rellenar el resto con los
+        valores por defecto.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
@@ -3415,8 +3419,8 @@ cli:
       id_help: Id de la transacción que quieres dividir
       llm_exclusive: --llm no puede combinarse con --child-amount/--child-description;
         la vía manual es la anulación explícita del operador.
-      llm_help: Propón una división en N partes basada en evidencia con el proveedor
-        LLM indicado.
+      llm_help: Pide al lector local on-host que proponga una división en N partes
+        basada en evidencia; vista previa por defecto, persiste con --apply.
       read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
@@ -3827,6 +3831,8 @@ cli:
       registry, review y diagnósticos de ejecución.'
     app_help: Acceder a los comandos de nivel de aplicación.
     app_help_help: Mostrar la ayuda de los comandos de la aplicación.
+    app_tui_help: Abre el banco de trabajo a pantalla completa sobre sus registros
+      locales.
     debug_help: Habilitar salida detallada de depuración.
     detail_help: Habilitar salida detallada.
     errors:

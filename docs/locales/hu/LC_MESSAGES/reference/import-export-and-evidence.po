@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -30,19 +30,19 @@ msgid ""
 "Estatal de Administración Tributaria (AEAT),” and “evidence that AEAT "
 "actually received it.”"
 msgstr ""
-"Magas szinten az architektúra a forrásdokumentumokat és az operátori "
+"Magas szinten az architektúra a forrásdokumentumokat és a kezelői "
 "bemeneteket nyomon követhető adóügyi pozícióvá alakítja. Szándékosan "
-"elkülöníti a „kapott adatokat”, a „kiszámított értékeket”, az „az Agencia"
-" Estatal de Administración Tributaria (AEAT) számára előkészített fájlt” "
-"és „a bizonyítékot, hogy az AEAT ténylegesen megkapta”."
+"elkülöníti a „kapott adatokat”, a „kiszámított értékeket”, az „Agencia "
+"Estatal de Administración Tributaria (AEAT) számára előkészített fájlt” "
+"és „a bizonyítékot arra, hogy az AEAT ténylegesen megkapta”."
 
 #: ../../reference/import-export-and-evidence.md:9
 msgid ""
 "`source documents → typed financial facts → registry-grounded calculation"
-" → AEAT upload file → official filing evidence`"
+" → AEAT export file → official filing evidence`"
 msgstr ""
-"Az adatfolyam: `source documents → typed financial facts → registry-"
-"grounded calculation → AEAT upload file → official filing evidence`"
+"`source documents → typed financial facts → registry-grounded calculation"
+" → AEAT export file → official filing evidence`"
 
 #: ../../reference/import-export-and-evidence.md:11
 msgid "What the data actually represents"
@@ -58,7 +58,7 @@ msgstr "Tényleges adat"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Meaning for you"
-msgstr "Jelentése az Ön számára"
+msgstr "Mit jelent ez neked"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Source evidence"
@@ -69,8 +69,8 @@ msgid ""
 "Taxpayer document bytes, provenance, and content digests; separately, "
 "official source material grounds the registry"
 msgstr ""
-"Adózói dokumentumbájtok, provenienciájuk és tartalmi lenyomataik; ettől "
-"függetlenül a hivatalos forrásanyag alapozza meg a registryt"
+"Adózói dokumentumbájtok, eredetadataik és tartalmi lenyomataik; ettől "
+"függetlenül hivatalos forrásanyag alapozza meg a registryt"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -109,8 +109,8 @@ msgid ""
 "Typed invoice catalogues and stock-inventory ledgers in encrypted "
 "repositories; typed foreign-asset observations supplied by the caller"
 msgstr ""
-"Tipizált számlakatalógusok és készlet-ledgerek titkosított tárolókban; a "
-"hívó által átadott tipizált külföldi-eszköz megfigyelések"
+"Típusos számlakatalógusok és készlet-ledgerek titkosított tárolókban; a "
+"hívó által átadott típusos külföldi-eszköz megfigyelések"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -130,7 +130,7 @@ msgid ""
 "{term}`modelo` revision, numbered {term}`casilla` fields, formulas, "
 "bindings, legal references, and export layout"
 msgstr ""
-"{term}`modelo`-revízió, számozott {term}`casilla`-mezők, formulák, "
+"{term}`modelo`-revízió, számozott {term}`casilla`-mezők, képletek, "
 "bindingok, jogi hivatkozások és exportelrendezés"
 
 #: ../../reference/import-export-and-evidence.md
@@ -143,7 +143,9 @@ msgstr "Számítási revízió"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Inputs, observations, overrides, calculated casillas, and provenance"
-msgstr "Bemenetek, megfigyelések, felülírások, kiszámított casillák és provenancia"
+msgstr ""
+"Bemenetek, megfigyelések, felülírások, kiszámított casillák és "
+"eredetadatok"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "A reproducible attempt at calculating one return"
@@ -151,7 +153,7 @@ msgstr "Egy bevallás kiszámításának reprodukálható próbálkozása"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Filing record"
-msgstr "Bevallási nyilvántartás"
+msgstr "Benyújtási nyilvántartás"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -190,12 +192,12 @@ msgid ""
 "values.md), then follow the full revision workflow in [Prepare and manage"
 " filings](../how-to/filing-spine.md)."
 msgstr ""
-"Minden kiszámított casilla hordozhat formula-, jogi és "
-"forrásprovenienciát. A ledger-bizonyíték rögzíti, mely pénzügyi tények "
-"járultak hozzá. Tekintse át az értékeket a [Számítási értékek áttekintése"
-"](../how-to/review-calculation-values.md) oldalon, majd kövesse a teljes "
-"revíziós munkafolyamatot a [Bevallások előkészítése és kezelése](../how-"
-"to/filing-spine.md) oldalon."
+"Minden kiszámított casilla hordozhat képlet-, jogi és forráseredetet. A "
+"ledger-bizonyíték rögzíti, mely pénzügyi tények járultak hozzá. Az "
+"értékeket itt tekintheted át: [A számítási bemenetek áttekintése és "
+"megadása](../how-to/review-calculation-values.md), majd a teljes revíziós"
+" munkafolyamatot itt követheted: [A benyújtási munkafolyamat](../how-to"
+"/filing-spine.md)."
 
 #: ../../reference/import-export-and-evidence.md:28
 msgid ""
@@ -204,46 +206,51 @@ msgid ""
 "Transactions, invoice catalogues, and stock inventory remain in their "
 "owning typed repositories. Modelo 720 instead accepts typed foreign-asset"
 " observations from the caller. An enrolled resolver projects only the "
-"scalar or repeating-row fields requested by the registry. Stock "
-"`InventoryLedger` records are encrypted and usable for valuation, but "
-"they are not currently enrolled as a calculation source and do not flow "
-"into a calculation revision."
+"scalar or repeating-row fields requested by the registry. The encrypted "
+"stock `InventoryLedger` is enrolled for the Modelo 100 2025 revision: it "
+"projects casillas 0177, 0181, and 0182 for each activity with an "
+"inventory ledger for the filing year. `--casilla` and `--binding` refuse "
+"values for those casillas. Without an inventory ledger for the year, "
+"calculation warns and the casillas stay 0."
 msgstr ""
-"A nyilvántartási kötés tipizált vetítési szerződés, nem forrásrekord "
-"csatolási helye. A bináris dokumentumok a titkosított csatolási útvonalat"
-" követik. A tranzakciók, a számlakatalógusok és a készletnyilvántartás "
-"saját tipizált tárolóikban maradnak. A Modelo 720 ezzel szemben a hívótól"
-" tipizált külföldi-eszköz megfigyeléseket fogad. A bejegyzett feloldó "
-"csak a nyilvántartás által kért skaláris vagy ismétlődő sormezőket "
-"vetíti. A `InventoryLedger` készletrekordjai titkosítottak és "
-"értékeléshez használhatók, de jelenleg nincsenek számítási forrásként "
-"bejegyezve, és nem kerülnek számítási felülvizsgálatba."
+"A registry binding típusos vetítési szerződés, nem forrásrekord csatolási"
+" helye. A bináris dokumentumok a titkosított csatolmányútvonalat követik."
+" A tranzakciók, a számlakatalógusok és a készletnyilvántartás saját "
+"típusos tárolóikban maradnak. A Modelo 720 ezzel szemben a hívótól "
+"típusos külföldi-eszköz megfigyeléseket fogad el. A bejegyzett feloldó "
+"csak azokat a skaláris vagy ismétlődő sormezőket vetíti, amelyeket a "
+"registry kér. A titkosított készlet-`InventoryLedger` be van jegyezve a "
+"Modelo 100 2025-ös revíziójához: minden olyan tevékenységhez, amelyhez "
+"van készletledger a benyújtási évre, a 0177, 0181 és 0182 casillát "
+"vetíti. A `--casilla` és a `--binding` elutasít értéket ezekre a "
+"casillákra. Ha nincs készletledger az évre, a számítás figyelmeztet, és a"
+" casillák 0 maradnak."
 
-#: ../../reference/import-export-and-evidence.md:37
+#: ../../reference/import-export-and-evidence.md:39
 msgid "What can be imported"
 msgstr "Mit lehet importálni"
 
-#: ../../reference/import-export-and-evidence.md:39
+#: ../../reference/import-export-and-evidence.md:41
 msgid "**Bank and financial transactions:**"
 msgstr "**Banki és pénzügyi tranzakciók:**"
 
-#: ../../reference/import-export-and-evidence.md:41
+#: ../../reference/import-export-and-evidence.md:43
 msgid "CSV or TXT containing supported delimited bank data"
 msgstr "CSV vagy TXT, amely támogatott, tagolt banki adatokat tartalmaz"
 
-#: ../../reference/import-export-and-evidence.md:42
+#: ../../reference/import-export-and-evidence.md:44
 msgid "XLSX, but not legacy XLS"
 msgstr "XLSX, de nem a régi XLS"
 
-#: ../../reference/import-export-and-evidence.md:43
+#: ../../reference/import-export-and-evidence.md:45
 msgid "OFX or QFX when the optional OFX dependency is installed"
 msgstr "OFX vagy QFX, ha az opcionális OFX-függőség telepítve van"
 
-#: ../../reference/import-export-and-evidence.md:44
+#: ../../reference/import-export-and-evidence.md:46
 msgid "Recognized German-language N26 monthly statement PDFs"
 msgstr "Felismert, német nyelvű N26 havi kivonat PDF-ek"
 
-#: ../../reference/import-export-and-evidence.md:46
+#: ../../reference/import-export-and-evidence.md:48
 msgid ""
 "These become normalized ledger transactions, not tax-return values "
 "directly. File detection also uses content signatures to avoid trusting "
@@ -257,26 +264,26 @@ msgstr ""
 "hogy ne bízzon a félrevezető kiterjesztésekben. Egy sor importálása nem "
 "következtet üzleti használatra, kategóriára, adóalapra, Impuesto sobre el"
 " Valor Añadido (IVA) vagy Impuesto sobre la Renta de las Personas Físicas"
-" (IRPF) kezelésre. Lásd [Bankszámlakivonatok importálása és kezelése"
-"](../how-to/import-bank-statements.md)."
-
-#: ../../reference/import-export-and-evidence.md:53
-msgid "**Purchase invoices and receipts:**"
-msgstr "**Beszerzési számlák és nyugták:**"
+" (IRPF) kezelésre. Lásd: [Tranzakciók importálása és kezelése](../how-to"
+"/import-bank-statements.md)."
 
 #: ../../reference/import-export-and-evidence.md:55
+msgid "**Purchase invoices and receipts:**"
+msgstr "**Beszerzési számlák és bizonylatok:**"
+
+#: ../../reference/import-export-and-evidence.md:57
 msgid "PDF"
 msgstr "PDF-dokumentum"
 
-#: ../../reference/import-export-and-evidence.md:56
+#: ../../reference/import-export-and-evidence.md:58
 msgid "PNG or JPEG image evidence"
 msgstr "PNG vagy JPEG képbizonyíték"
 
-#: ../../reference/import-export-and-evidence.md:57
+#: ../../reference/import-export-and-evidence.md:59
 msgid "CSV or XLSX for structured invoice-catalogue rows"
 msgstr "CSV vagy XLSX strukturált számlakatalógus-sorokhoz"
 
-#: ../../reference/import-export-and-evidence.md:59
+#: ../../reference/import-export-and-evidence.md:61
 msgid ""
 "Document bytes are stored as evidence and can then be linked to ledger "
 "facts. Structured invoice rows, document evidence, and bank transactions "
@@ -288,17 +295,18 @@ msgid ""
 msgstr ""
 "A dokumentumbájtok bizonyítékként tárolódnak, majd ledger-tényekhez "
 "köthetők. A strukturált számlasorok, a dokumentumbizonyíték és a banki "
-"tranzakciók külön nyilvántartások maradnak, amíg össze nem kapcsolja "
-"őket. Alátámasztanak egy tranzakciót vagy IVA-kezelést; pusztán egy "
-"számla importálása nem teszi automatikusan levonhatóvá. Lásd [Csatoljon "
-"számlákat és nyugtákat](../how-to/ledger-evidence.md) és [Kezelje az "
-"üzleti számlákat](../how-to/manage-invoices.md)."
+"tranzakciók külön nyilvántartások maradnak, amíg össze nem kapcsolod "
+"őket. Ezek a nyilvántartások alátámaszthatnak egy tranzakciót vagy IVA-"
+"kezelést. Egy számla importálása nem teszi automatikusan levonhatóvá. "
+"Lásd: [Számlák és bizonylatok csatolása a ledger-tranzakciókhoz](../how-"
+"to/ledger-evidence.md) és [Vállalkozási számlák kezelése](../how-to"
+"/manage-invoices.md)."
 
-#: ../../reference/import-export-and-evidence.md:67
+#: ../../reference/import-export-and-evidence.md:69
 msgid "**AEAT declaration copies:**"
 msgstr "**AEAT-bevallásmásolatok:**"
 
-#: ../../reference/import-export-and-evidence.md:69
+#: ../../reference/import-export-and-evidence.md:71
 msgid ""
 "PDF, but only where the relevant Modelo and revision have an exact "
 "extraction profile"
@@ -306,7 +314,7 @@ msgstr ""
 "PDF, de csak ott, ahol az adott modelo és revízió pontos kinyerési "
 "profillal rendelkezik"
 
-#: ../../reference/import-export-and-evidence.md:72
+#: ../../reference/import-export-and-evidence.md:74
 msgid ""
 "These produce observed casilla values with document digest and registry "
 "revision provenance. They are observations, not automatically trusted "
@@ -314,23 +322,23 @@ msgid ""
 "100, 111, 130, 190, 303, and 390."
 msgstr ""
 "Ezek megfigyelt casillaértékeket állítanak elő dokumentumlenyomattal és "
-"registry-revízió-provenienciával. Ezek megfigyelések, nem automatikusan "
-"megbízható számítási hivatkozás. A casilla-egyeztetés jelenleg a 100, "
-"111, 130, 190, 303 és 390 modelókra terjed ki."
+"registry-revízió-eredetadattal. Ezek megfigyelések, nem automatikusan "
+"megbízható számítási autoritás. A casilla-egyeztetés jelenleg a 100, 111,"
+" 130, 190, 303 és 390 modelókra terjed ki."
 
-#: ../../reference/import-export-and-evidence.md:77
+#: ../../reference/import-export-and-evidence.md:79
 msgid "**AEAT submitted-data files:**"
 msgstr "**AEAT beküldött adatfájlok:**"
 
-#: ../../reference/import-export-and-evidence.md:79
+#: ../../reference/import-export-and-evidence.md:81
 msgid "Fixed-width “Diseño de Registros” files"
 msgstr "Rögzített szélességű „Diseño de Registros” fájlok"
 
-#: ../../reference/import-export-and-evidence.md:80
+#: ../../reference/import-export-and-evidence.md:82
 msgid "XML-dictionary layouts"
 msgstr "XML-szótár elrendezések"
 
-#: ../../reference/import-export-and-evidence.md:82
+#: ../../reference/import-export-and-evidence.md:84
 msgid ""
 "These can be parsed into casilla observations where a complete registry "
 "layout exists. Support is revision-specific, not universal. This surface "
@@ -342,15 +350,15 @@ msgstr ""
 "AEAT-archívumbájtokat elemez; a beküldöttadat-importáló nem általános "
 "CSV-importáló."
 
-#: ../../reference/import-export-and-evidence.md:86
-msgid "**AEAT justificantes:**"
-msgstr "**AEAT justificantes:** hivatalos bizonylatok"
-
 #: ../../reference/import-export-and-evidence.md:88
-msgid "Justificante PDF or a receipt read from AEAT"
-msgstr "Justificante PDF vagy az AEAT-tól kiolvasott nyugta"
+msgid "**AEAT justificantes:**"
+msgstr "**AEAT-justificanték:**"
 
 #: ../../reference/import-export-and-evidence.md:90
+msgid "Justificante PDF or a receipt read from AEAT"
+msgstr "Justificante PDF vagy az AEAT-tól kiolvasott igazolás"
+
+#: ../../reference/import-export-and-evidence.md:92
 msgid ""
 "The parser extracts receipt metadata such as Modelo, period, taxpayer, "
 "submission time, verification code, and totals. A justificante supports "
@@ -359,18 +367,19 @@ msgid ""
 " not prove that the tax answer is correct. See [Reconcile a filing"
 "](../how-to/reconcile.md)."
 msgstr ""
-"Az elemző kinyeri a nyugta metaadatait, például a modelót, az időszakot, "
-"az adózót, a beküldés idejét, a verifikációs kódot és az összegeket. Egy "
-"justificante alátámasztja azt az állítást, hogy az AEAT konkrét "
-"nyugtainformációt adott vissza. Nem feltétlenül teljes ábrázolása minden "
-"benyújtott casillának, és nem bizonyítja, hogy az adóügyi válasz helyes. "
-"Lásd [Egyeztessen egy bevallást](../how-to/reconcile.md)."
+"Az elemző kinyeri az igazolás metaadatait, például a modelót, az "
+"időszakot, az adózót, a beküldés idejét, a verifikációs kódot és az "
+"összegeket. Egy justificante alátámasztja azt az állítást, hogy az AEAT "
+"konkrét igazolási információt adott vissza. Nem feltétlenül teljes "
+"ábrázolása minden benyújtott casillának, és nem bizonyítja, hogy az "
+"adóügyi válasz helyes. Lásd: [Egy benyújtott modelo egyeztetése a "
+"justificantéjével](../how-to/reconcile.md)."
 
-#: ../../reference/import-export-and-evidence.md:96
+#: ../../reference/import-export-and-evidence.md:98
 msgid "**Google Drive and Sheets:**"
 msgstr "**Google Drive és Sheets:**"
 
-#: ../../reference/import-export-and-evidence.md:98
+#: ../../reference/import-export-and-evidence.md:100
 msgid ""
 "Drive links and folder pulls acquire supported PDF, PNG, and JPEG bytes "
 "through the normal encrypted attachment path."
@@ -378,16 +387,16 @@ msgstr ""
 "A Drive-hivatkozások és a mappalekérések a normál titkosított "
 "csatolmányútvonalon szereznek be támogatott PDF-, PNG- és JPEG-bájtokat."
 
-#: ../../reference/import-export-and-evidence.md:100
+#: ../../reference/import-export-and-evidence.md:102
 msgid ""
 "Sheets can provide typed operator, binding, and relation edits for "
 "calculation. Pull can also assemble row-set observations in its output."
 msgstr ""
-"A Sheets típusos operátori, binding- és relációszerkesztéseket "
-"biztosíthat a számításhoz. A lekérés a kimenetében sorhalmaz-"
-"megfigyeléseket is összeállíthat."
+"A Sheets típusos kezelői, binding- és relációszerkesztéseket biztosíthat "
+"a számításhoz. A lekérés a kimenetében sorhalmaz-megfigyeléseket is "
+"összeállíthat."
 
-#: ../../reference/import-export-and-evidence.md:102
+#: ../../reference/import-export-and-evidence.md:104
 msgid ""
 "Sheet-based computation uses the canonical local calculation engine and "
 "is explicitly non-persistent until another canonical workflow accepts the"
@@ -397,7 +406,7 @@ msgstr ""
 "kifejezetten nem perzisztens, amíg egy másik kanonikus munkafolyamat el "
 "nem fogadja az eredményt."
 
-#: ../../reference/import-export-and-evidence.md:106
+#: ../../reference/import-export-and-evidence.md:108
 msgid ""
 "Google is an optional acquisition and review adapter, not the tax "
 "database, ledger authority, calculation authority, or recovery system. "
@@ -405,11 +414,11 @@ msgid ""
 "google-sheets.md)."
 msgstr ""
 "A Google opcionális beszerzési és áttekintési adapter, nem az "
-"adóadatbázis, a ledger-hivatkozás, a számítási hivatkozás vagy a "
-"helyreállítási rendszer. Lásd [Számítások áttekintése a Google Sheetsszel"
-"](../how-to/review-with-google-sheets.md)."
+"adóadatbázis, a ledger-autoritás, a számítási autoritás vagy a "
+"helyreállítási rendszer. Lásd: [Számítások áttekintése Google Sheets "
+"segítségével](../how-to/review-with-google-sheets.md)."
 
-#: ../../reference/import-export-and-evidence.md:110
+#: ../../reference/import-export-and-evidence.md:112
 msgid "What each export actually means"
 msgstr "Mit jelent valójában az egyes exportok"
 
@@ -431,13 +440,19 @@ msgstr "AEAT fichero- vagy XML-export"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
-"Produces the local payload you can upload through AEAT’s official "
-"interface where the selected Modelo revision has a complete registry "
-"export layout"
+"Produces the local payload where the selected Modelo revision has a "
+"complete registry export layout: fixed-width fichero-BOE for most "
+"modelos, XML for Modelo 100. Files for modelos whose record design "
+"reserves a software identity, such as Modelo 303 and 390, carry a "
+"development identity that AEAT does not accept; key their values into the"
+" portal form"
 msgstr ""
-"Előállítja azt a helyi hasznos terhet, amelyet feltölthet az AEAT "
-"hivatalos felületén keresztül, ahol a kiválasztott modelo-revízió teljes "
-"registry-exportelrendezéssel rendelkezik"
+"Előállítja a helyi adatcsomagot, ha a kiválasztott modelo-revíziónak "
+"teljes registry-exportelrendezése van: a legtöbb modelónál fix szélességű"
+" fichero-BOE-t, a Modelo 100-nál XML-t. Azoknak a modelóknak a fájljai, "
+"amelyek rekordleírása szoftveridentitást foglal le (például a Modelo 303 "
+"és a 390), fejlesztői identitást hordoznak, amelyet az AEAT nem fogad el;"
+" az értékeiket a portál űrlapjába kell beírni"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It does not prove submission or acceptance"
@@ -445,7 +460,7 @@ msgstr "Nem bizonyítja a beküldést vagy az elfogadást"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Google Sheet export"
-msgstr "Google Sheet-fájl exportja"
+msgstr "Google Sheet-export"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Human review, reconciliation, parity checking, and what-if editing"
@@ -455,7 +470,7 @@ msgstr ""
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not a filing artefact or authoritative calculation record"
-msgstr "Nem bevallási műtárgy vagy hitelesített számítási nyilvántartás"
+msgstr "Nem benyújtási artefaktum vagy hiteles számítási nyilvántartás"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Accountant review package"
@@ -466,9 +481,8 @@ msgid ""
 "Shares the draft, calculation revision, provenance, and ledger evidence "
 "when present in a checksum-verifiable ZIP"
 msgstr ""
-"Megosztja a piszkozatot, a számítási revíziót, a provenienciát és a "
-"ledger-bizonyítékot, ha jelen van, egy ellenőrzőösszeggel igazolható ZIP-"
-"ben"
+"Megosztja a piszkozatot, a számítási revíziót, az eredetadatokat és a "
+"ledger-bizonyítékot (ha van) egy ellenőrzőösszeggel igazolható ZIP-ben"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Checksums alone do not identify who created or approved it"
@@ -486,7 +500,7 @@ msgid ""
 "addressed manifest"
 msgstr ""
 "Törvényszéki csomag, amely hivatkozott nyilvántartásbájtokat és egy "
-"tartalomcímzett kéziratot tartalmaz"
+"tartalom alapján címzett manifestet tartalmaz"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not itself AEAT-issued evidence"
@@ -504,24 +518,28 @@ msgstr "A biztosított profil biztonsági mentése és teljes helyreállítása"
 msgid "It is not the same thing as an audit or accountant package"
 msgstr "Nem ugyanaz, mint egy audit- vagy könyvelői csomag"
 
-#: ../../reference/import-export-and-evidence.md:120
+#: ../../reference/import-export-and-evidence.md:122
 msgid ""
 "The filing exporter explicitly writes a local file and never contacts "
-"AEAT. It can reread the output and detect drift from the approved draft "
-"for parser-covered casillas. It reports any unchecked casillas "
+"AEAT. It refuses to overwrite an existing file unless you pass "
+"`--replace`, and refuses an output path whose parent directory is "
+"missing. It can reread the output and detect drift from the approved "
+"draft for parser-covered casillas. It reports any unchecked casillas "
 "separately. This remains pre-filing verification. Follow [File your "
 "modelo at the AEAT portal](../how-to/file-at-aeat.md) to complete the "
 "operator-controlled filing steps."
 msgstr ""
-"A bevallás-exportáló kifejezetten helyi fájlt ír, és sosem lép "
-"kapcsolatba az AEAT-tal. Újraolvashatja a kimenetet, és felismerheti a "
-"jóváhagyott piszkozattól való eltérést az elemzővel lefedett casillák "
-"esetében. A nem ellenőrzött casillákat külön jelenti. Ez bevallás előtti "
-"verifikáció marad. Kövesse [Töltse fel az exportált modelóját az AEAT "
-"portálján](../how-to/file-at-aeat.md) az operátor által vezérelt "
-"bevallási lépések elvégzéséhez."
+"A benyújtási exportáló kifejezetten helyi fájlt ír, és sosem lép "
+"kapcsolatba az AEAT-tal. Nem ír felül egy meglévő fájlt, hacsak nem adod "
+"meg a `--replace` kapcsolót, és elutasít egy olyan kimeneti útvonalat, "
+"amelynek a szülőkönyvtára hiányzik. Újraolvashatja a kimenetet, és "
+"felismerheti a jóváhagyott piszkozattól való eltérést az elemzővel "
+"lefedett casillák esetében. A nem ellenőrzött casillákat külön jelenti. "
+"Ez benyújtás előtti verifikáció marad. A kezelő által vezérelt benyújtási"
+" lépések elvégzéséhez kövesd ezt: [Nyújtsd be a modelódat az AEAT-"
+"portálon](../how-to/file-at-aeat.md)."
 
-#: ../../reference/import-export-and-evidence.md:127
+#: ../../reference/import-export-and-evidence.md:130
 msgid ""
 "The application labels local exports as "
 "`local_export_not_official_aeat_filing_evidence`. Official proof must "
@@ -534,7 +552,7 @@ msgstr ""
 "benyújtott bevallások előzménye, verifikációs nyilvántartás vagy "
 "rögzített benyújtott másolat formájában."
 
-#: ../../reference/import-export-and-evidence.md:132
+#: ../../reference/import-export-and-evidence.md:135
 msgid ""
 "The base accountant review ZIP is plaintext and checksum-verifiable. "
 "Separate operations can add an Ed25519 signature envelope or encrypt the "
@@ -546,12 +564,12 @@ msgstr ""
 "Az alap könyvelői áttekintési ZIP egyszerű szöveg és ellenőrzőösszeggel "
 "igazolható. Külön műveletek hozzáadhatnak egy Ed25519-aláírásborítékot, "
 "vagy titkosíthatják a csomagot egy bejegyzett címzett számára. Az "
-"aláírásokat egy megbízható nyilvános kulccsal szemben ellenőrizze. Az "
+"aláírásokat egy megbízható nyilvános kulccsal szemben ellenőrizd. Az "
 "aláírás, az ellenaláírás, a nyugtaellenőrzés és a címzett-titkosítás "
 "különálló műveletek. Egy csak áttekintésre szánt átadás nem hordoz "
-"bevallási hivatkozást."
+"benyújtási jogosultságot."
 
-#: ../../reference/import-export-and-evidence.md:138
+#: ../../reference/import-export-and-evidence.md:141
 msgid ""
 "Signing and counter-signing leave the ZIP plaintext. Creating a counter-"
 "signature does not verify the operator signature or archive; receipt "
@@ -561,13 +579,13 @@ msgid ""
 "signatures separately."
 msgstr ""
 "Az aláírás és az ellenaláírás egyszerű szövegben hagyja a ZIP-et. Egy "
-"ellenaláírás létrehozása nem ellenőrzi az operátor aláírását vagy az "
+"ellenaláírás létrehozása nem ellenőrzi a kezelő aláírását vagy az "
 "archívumot; a nyugtaellenőrzés végzi el ezeket az ellenőrzéseket. A "
-"címzett-titkosítás titkosítja a neki átadott bájtokat, de nem követel meg"
-" előbb ellenőrzőösszeg- vagy aláírás-ellenőrzést. Visszafejtés után "
-"ellenőrizze külön a helyreállított csomagot és az aláírásokat."
+"címzett-titkosítás titkosítja a neki átadott bájtokat, de nem követeli "
+"meg előbb az ellenőrzőösszeg- vagy aláírás-ellenőrzést. Visszafejtés után"
+" ellenőrizd külön a helyreállított csomagot és az aláírásokat."
 
-#: ../../reference/import-export-and-evidence.md:145
+#: ../../reference/import-export-and-evidence.md:148
 msgid ""
 "No command writes a portable profile bundle or a data-subject right-of-"
 "access response in this version. The commands that produced them were "
@@ -578,7 +596,7 @@ msgstr ""
 "parancsokat visszavonták, amikor a profil tárolása lezárt kapszulába "
 "költözött."
 
-#: ../../reference/import-export-and-evidence.md:149
+#: ../../reference/import-export-and-evidence.md:152
 msgid ""
 "The profile manager can still write a portable bundle: run `aeat config "
 "profile edit` with no other arguments to open it, then choose the export "
@@ -589,14 +607,15 @@ msgid ""
 "until an import surface returns."
 msgstr ""
 "A profilkezelő továbbra is tud hordozható csomagot írni: futtasd más "
-"argumentum nélkül a `aeat config profile edit` parancsot, majd válaszd az"
-" exportálást. Ne használd a profilt gépek vagy tárolási gyökerek közötti "
-"áthelyezésére. Ez a verzió nem olvas vissza ilyen csomagot, mert az "
-"importálási felületet a parancssori igékkel együtt visszavonták, ezért a "
-"ma írt csomag nem tölthető be ebbe a verzióba. Az importfelület "
-"visszatéréséig kezeld a fájlt átláthatatlan adatként."
+"argumentum nélkül az `aeat config profile edit` parancsot a "
+"megnyitásához, majd válaszd az exportálási műveletet. Ne használd a "
+"profilt gépek vagy tárolási gyökerek közötti áthelyezésére. Ez a verzió "
+"nem olvas vissza ilyen csomagot, mert az importálási felületet a "
+"parancssori igékkel együtt visszavonták, ezért a ma írt csomag nem "
+"tölthető be ebbe a verzióba. Az importfelület visszatéréséig kezeld a "
+"fájlt átláthatatlan adatként."
 
-#: ../../reference/import-export-and-evidence.md:156
+#: ../../reference/import-export-and-evidence.md:159
 msgid ""
 "This is a portability gap, not a recovery one. Backup and recovery are "
 "unaffected and run through `aeat config profile archive export` and `aeat"
@@ -604,11 +623,11 @@ msgid ""
 "capsule."
 msgstr ""
 "Ez hordozhatósági rés, nem helyreállítási hiba. A mentés és a "
-"helyreállítás változatlanul a `aeat config profile archive export` és "
-"`aeat config profile archive import` parancsokon keresztül működik, "
+"helyreállítás változatlanul az `aeat config profile archive export` és az"
+" `aeat config profile archive import` parancsokon keresztül működik, "
 "amelyek a lezárt profil-kapszulán dolgoznak."
 
-#: ../../reference/import-export-and-evidence.md:160
+#: ../../reference/import-export-and-evidence.md:163
 msgid ""
 "The sealed custody archive is an encrypted profile backup, not a "
 "structured, readable copy of one profile's records. It excludes recovery "
@@ -616,18 +635,18 @@ msgid ""
 "with the profile passphrase. A restored profile starts without a recovery"
 " code; enable one again afterwards if you want it."
 msgstr ""
-"A lezárt megőrzési archívum titkosított profilmentés, nem pedig egy "
-"profil rekordjainak strukturált, olvasható másolata. Nem tartalmazza a "
+"A lezárt letéti archívum titkosított profilmentés, nem pedig egy profil "
+"rekordjainak strukturált, olvasható másolata. Nem tartalmazza a "
 "helyreállítási anyagot, a folyamat helyi állapotát és az újraépíthető "
-"származtatott adatokat. A profil jelmondatával állítsa vissza. A "
-"visszaállított profil helyreállítási kód nélkül indul; utána engedélyezze"
-" újra, ha szeretné."
+"származtatott adatokat. A profil jelmondatával állítsd vissza. A "
+"visszaállított profil helyreállítási kód nélkül indul; utána engedélyezd "
+"újra, ha szeretnéd."
 
-#: ../../reference/import-export-and-evidence.md:166
+#: ../../reference/import-export-and-evidence.md:169
 msgid "What an audit export is for"
 msgstr "Mire való egy auditexport"
 
-#: ../../reference/import-export-and-evidence.md:168
+#: ../../reference/import-export-and-evidence.md:171
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
@@ -635,33 +654,33 @@ msgstr ""
 "Amikor auditot vagy szakmai áttekintést kérnek, az auditbizonyíték-csomag"
 " arra szolgál, hogy a címzett megállapíthassa:"
 
-#: ../../reference/import-export-and-evidence.md:171
+#: ../../reference/import-export-and-evidence.md:174
 msgid "Which original records supported the return."
 msgstr "Mely eredeti nyilvántartások támasztották alá a bevallást."
 
-#: ../../reference/import-export-and-evidence.md:172
+#: ../../reference/import-export-and-evidence.md:175
 msgid "Whether those bytes still match their recorded SHA-256 digests."
 msgstr ""
 "Hogy azok a bájtok még mindig egyeznek-e a rögzített SHA-256 "
 "lenyomataikkal."
 
-#: ../../reference/import-export-and-evidence.md:173
+#: ../../reference/import-export-and-evidence.md:176
 msgid "Which ledger facts contributed to which casillas."
 msgstr "Mely ledger-tények járultak hozzá mely casillákhoz."
 
-#: ../../reference/import-export-and-evidence.md:174
+#: ../../reference/import-export-and-evidence.md:177
 msgid "Which registry and legal references governed the calculation."
 msgstr "Mely registry- és jogi hivatkozások szabályozták a számítást."
 
-#: ../../reference/import-export-and-evidence.md:175
+#: ../../reference/import-export-and-evidence.md:178
 msgid "Which calculation revision and filing record were involved."
 msgstr "Mely számítási revízió és bevallási nyilvántartás volt érintett."
 
-#: ../../reference/import-export-and-evidence.md:176
+#: ../../reference/import-export-and-evidence.md:179
 msgid "Whether later revisions superseded the original position."
 msgstr "Hogy későbbi revíziók felülírták-e az eredeti pozíciót."
 
-#: ../../reference/import-export-and-evidence.md:178
+#: ../../reference/import-export-and-evidence.md:181
 msgid ""
 "The audit evidence bundle ZIP file contains reachable record bytes "
 "followed by `manifest.json`. Failed verification prevents export; "
@@ -677,9 +696,9 @@ msgstr ""
 "sosem lép kapcsolatba az AEAT-tal, és nem számolja újra az adóügyi "
 "eredményt. A jelenlegi parancssori felületen keresztül a `check` nem "
 "tudja ellenőrizni a hivatkozott nyilvántartásbájtokat, mert nincs megadva"
-" hasznosteher-betöltő."
+" adatcsomag-betöltő."
 
-#: ../../reference/import-export-and-evidence.md:185
+#: ../../reference/import-export-and-evidence.md:188
 msgid ""
 "The current audit commands do not yet provide a complete one-command "
 "audit handoff. The command-line audit surface has no payload-loader "
@@ -689,29 +708,30 @@ msgid ""
 " not treat that output as a complete evidence package."
 msgstr ""
 "A jelenlegi auditparancsok még nem biztosítanak teljes, egyparancsos "
-"auditátadást. Nincs hasznosteher-betöltő registryje vagy csomagépítő "
-"parancsa. Minden nem üres auditbizonyíték-csomag ezért hiányosnak tűnik a"
-" parancssori felületen keresztül. Egy kényszerített hiányos export "
-"elhagyhat nyilvántartásokat, és tartalmazhatja csak a kéziratot. Ne "
-"kezelje azt a kimenetet teljes bizonyítékcsomagként."
+"auditátadást. A parancssori auditfelületnek nincs adatcsomag-betöltő "
+"registryje vagy csomagépítő parancsa. Minden nem üres auditbizonyíték-"
+"csomag ezért hiányosnak tűnik a parancssori felületen keresztül. Egy "
+"kényszerített hiányos export elhagyhat nyilvántartásokat, és csak a "
+"manifestet tartalmazhatja. Ne kezeld azt a kimenetet teljes "
+"bizonyítékcsomagként."
 
-#: ../../reference/import-export-and-evidence.md:192
+#: ../../reference/import-export-and-evidence.md:195
 msgid "What a complete audit handoff means"
 msgstr "Mit jelent egy teljes auditátadás"
 
-#: ../../reference/import-export-and-evidence.md:194
+#: ../../reference/import-export-and-evidence.md:197
 msgid "A genuinely complete audit handoff would normally combine:"
 msgstr "Egy valóban teljes auditátadás rendszerint egyesítené:"
 
-#: ../../reference/import-export-and-evidence.md:196
+#: ../../reference/import-export-and-evidence.md:199
 msgid "Official AEAT evidence proving submission."
 msgstr "A beküldést bizonyító hivatalos AEAT-bizonyítékot."
 
-#: ../../reference/import-export-and-evidence.md:197
+#: ../../reference/import-export-and-evidence.md:200
 msgid "The exact submitted-file digest or captured filed copy."
 msgstr "A pontos beküldöttfájl-lenyomatot vagy a rögzített benyújtott másolatot."
 
-#: ../../reference/import-export-and-evidence.md:198
+#: ../../reference/import-export-and-evidence.md:201
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
@@ -719,7 +739,7 @@ msgstr ""
 "Egy ellenőrzött auditbizonyíték-csomagot, amely minden hivatkozott "
 "alátámasztó nyilvántartást tartalmaz."
 
-#: ../../reference/import-export-and-evidence.md:199
+#: ../../reference/import-export-and-evidence.md:202
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared casillas."
@@ -727,7 +747,7 @@ msgstr ""
 "A számítási vagy áttekintési csomagot, amely elmagyarázza, hogyan "
 "állították elő azok a nyilvántartások a bevallott casillákat."
 
-#: ../../reference/import-export-and-evidence.md:202
+#: ../../reference/import-export-and-evidence.md:205
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
@@ -736,23 +756,23 @@ msgstr ""
 "ténylegesen benyújtották?” és „Mely tények, szabályok és számítások "
 "állították elő?”"
 
-#: ../../reference/import-export-and-evidence.md:205
+#: ../../reference/import-export-and-evidence.md:208
 msgid ""
-"The audit evidence bundle does not currently include every item listed "
-"above. Assemble and verify the missing items separately; a bundle is "
-"complete only when every referenced supporting record and payload is "
+"The audit evidence bundle does not currently include every item in that "
+"combination. Assemble and verify the missing items separately; a bundle "
+"is complete only when every referenced supporting record and payload is "
 "present."
 msgstr ""
-"Az auditbizonyíték-csomag jelenleg nem tartalmazza a fent felsorolt "
-"minden elemet. Állítsa össze és ellenőrizze külön a hiányzó elemeket; egy"
-" csomag csak akkor teljes, ha minden hivatkozott alátámasztó "
-"nyilvántartás és hasznos teher jelen van."
+"Az auditbizonyíték-csomag jelenleg nem tartalmazza ennek a kombinációnak "
+"minden elemét. Állítsd össze és ellenőrizd külön a hiányzó elemeket; egy "
+"csomag csak akkor teljes, ha minden hivatkozott alátámasztó nyilvántartás"
+" és adatcsomag jelen van."
 
-#: ../../reference/import-export-and-evidence.md:209
+#: ../../reference/import-export-and-evidence.md:212
 msgid "Important limitations"
 msgstr "Fontos korlátozások"
 
-#: ../../reference/import-export-and-evidence.md:211
+#: ../../reference/import-export-and-evidence.md:214
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
@@ -761,7 +781,7 @@ msgstr ""
 "amelyeket bejegyzett, hiteles elrendezések és valós bizonyíték támaszt "
 "alá. Ennek következtében:"
 
-#: ../../reference/import-export-and-evidence.md:214
+#: ../../reference/import-export-and-evidence.md:217
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
@@ -769,45 +789,45 @@ msgstr ""
 "Az import- és exporttámogatás nem írható le úgy, mintha minden modelóra "
 "és időszakra általánosan érvényes lenne."
 
-#: ../../reference/import-export-and-evidence.md:216
+#: ../../reference/import-export-and-evidence.md:219
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr "A benyújtott declaración-PDF kinyerése pontos, bejegyzett profilt igényel."
 
-#: ../../reference/import-export-and-evidence.md:217
+#: ../../reference/import-export-and-evidence.md:220
 msgid ""
 "An operator-supplied local observation, local export, checksum, Google "
 "Sheet, or review ZIP cannot prove AEAT acceptance. A locally held AEAT "
 "justificante can become official evidence. Import it through the "
 "external-evidence workflow."
 msgstr ""
-"Egy operátor által megadott helyi megfigyelés, helyi export, "
+"Egy kezelő által megadott helyi megfigyelés, helyi export, "
 "ellenőrzőösszeg, Google Sheet vagy áttekintési ZIP nem bizonyíthatja az "
 "AEAT általi elfogadást. Egy helyben tartott AEAT-justificante hivatalos "
-"bizonyítékká válhat. Importálja a külső bizonyíték munkafolyamatán "
+"bizonyítékká válhat. Importáld a külső bizonyíték munkafolyamatán "
 "keresztül."
 
-#: ../../reference/import-export-and-evidence.md:221
+#: ../../reference/import-export-and-evidence.md:224
 msgid ""
 "Integrity proves that bytes have not changed; it does not establish "
 "signer identity or independent legal authenticity. Use the separate "
 "review-package signing workflow when author identity matters."
 msgstr ""
 "Az integritás bizonyítja, hogy a bájtok nem változtak; nem állapítja meg "
-"az aláíró azonosságát vagy a független jogi hitelességet. Használja a "
+"az aláíró azonosságát vagy a független jogi hitelességet. Használd a "
 "külön áttekintéscsomag-aláírási munkafolyamatot, ha a szerző azonossága "
 "számít."
 
-#: ../../reference/import-export-and-evidence.md:224
+#: ../../reference/import-export-and-evidence.md:227
 msgid ""
 "Evidence is encrypted in normal custody. Base review and audit ZIPs are "
 "deliberate plaintext exports, so secure delivery becomes your "
 "responsibility."
 msgstr ""
 "A bizonyíték normál letétben titkosított. Az alap áttekintési és audit-"
-"ZIP-ek szándékos nyílt szöveges exportok, így a biztonságos kézbesítés az"
-" Ön felelőssége lesz."
+"ZIP-ek szándékos nyílt szöveges exportok, így a biztonságos kézbesítés a "
+"te felelősséged lesz."
 
-#: ../../reference/import-export-and-evidence.md:226
+#: ../../reference/import-export-and-evidence.md:229
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
@@ -815,7 +835,7 @@ msgstr ""
 "Egy kényszerített hiányos auditbizonyíték-csomag exportja nem teljes "
 "átadás."
 
-#: ../../reference/import-export-and-evidence.md:227
+#: ../../reference/import-export-and-evidence.md:230
 msgid ""
 "`audit check` reruns bundle checks. Through the current command-line "
 "interface, it cannot verify referenced bytes, and it does not reproduce "
@@ -825,14 +845,13 @@ msgstr ""
 "parancssori felületen keresztül nem tudja ellenőrizni a hivatkozott "
 "bájtokat, és nem reprodukálja vagy számolja újra az adóügyi döntést."
 
-#: ../../reference/import-export-and-evidence.md:231
+#: ../../reference/import-export-and-evidence.md:234
 msgid ""
 "For storage, recovery, and external-access boundaries, see [Protect "
 "access to taxpayer data](../how-to/protect-data-access.md) and "
 "[Filesystem, state, and safety](filesystem-state-and-safety.md)."
 msgstr ""
-"A tárolási, helyreállítási és külső hozzáférési határokhoz lásd [Védje "
-"meg az adózói adatokhoz való hozzáférést](../how-to/protect-data-"
-"access.md) és [Fájlrendszer, állapot és biztonság](filesystem-state-and-"
-"safety.md)."
+"A tárolási, helyreállítási és külső hozzáférési határokhoz lásd: [Védd az"
+" adataidhoz való hozzáférést](../how-to/protect-data-access.md) és "
+"[Fájlrendszer, állapot és biztonság](filesystem-state-and-safety.md)."
 

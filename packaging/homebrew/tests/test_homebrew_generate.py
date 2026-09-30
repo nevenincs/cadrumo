@@ -212,8 +212,10 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'libexec/"bin/python"' in post_install
     assert 'libexec/"lib"' in post_install
     assert 'assert_predicate bin/"aeat", :executable?' in formula
-    # The formula exposes only the product CLI.
     assert 'shell_output("#{bin}/aeat --version")' in formula
+    # `pip_install_and_link` links every declared console script, so the test
+    # block checks each one arrived rather than only the product CLI.
+    assert 'assert_predicate bin/"cadrumo-mcp", :executable?' in formula
 
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
     assert resources["cadrumo-data-manuals"] == (

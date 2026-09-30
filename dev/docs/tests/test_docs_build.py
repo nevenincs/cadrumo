@@ -23,11 +23,22 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
-from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager
-from ..build import planned_doc_targets
+from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
+from ..build import (
+    PREVIEW_SEQUENCE_NOTICE,
+    DocBuildPlan,
+    _generated_api_stub_names,
+    _targets_for_docs_root,
+    planned_doc_targets,
+    preview_doctree_dir,
+    resolve_preview_targets,
+    sphinx_build_environment,
+)
+from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
 #: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
@@ -342,6 +353,219 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
     assert "--single-page does not support generated API/CLI pages" in result.stderr
 
 
+_ENVIRONMENT_UPDATE = re.compile(r"(\d+) added, (\d+) changed, (\d+) removed")
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
+    """A changed module's API page is built from the stub the build itself writes.
+
+    No stub exists before the build: the changed-page check copies ``docs/``
+    and ``docs/conf.py`` generates the stubs into that copy at
+    ``builder-inited``, the same hook a full build uses.
+    """
+    changed = Path("src", API_SOURCE_PACKAGE, "core", "casilla_id.py")
+    stub = f"api/{stub_filename(f'{API_SOURCE_PACKAGE}.core.casilla_id').removesuffix('.rst')}"
+    generated_before = _generated_docs_snapshot()
+
+    result = subprocess.run(
+        [sys.executable, "-m", "dev.docs.build", changed.as_posix()],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
+    )
+
+    output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
+    assert result.returncode == 0, output[-6000:]
+    assert "No existing documentation targets remained" not in output, output[-3000:]
+    assert f"writing output... [100%] {stub}" in output, output[-3000:]
+    # The other generated stubs exist only after conf.py lists what to exclude,
+    # so reading exactly one source proves they stayed out of the read set.
+    assert _environment_update(output)[0] == 1, output[-3000:]
+    assert _generated_docs_snapshot() == generated_before, "the stubs belong in the temporary copy, not docs/api"
+
+
+def test_a_changed_page_check_keeps_only_the_api_stubs_its_build_generates(tmp_path: Path) -> None:
+    """Planned stubs survive the existence filter only when the build will write them."""
+    original = tmp_path / "docs"
+    copied = tmp_path / "copy"
+    (copied / "how-to").mkdir(parents=True)
+    (copied / "how-to" / "page.md").write_text("# Page\n", encoding="utf-8")
+    generated = _generated_api_stub_names(_REPO_ROOT)
+    kept_stub = stub_filename(f"{API_SOURCE_PACKAGE}.core")
+    assert kept_stub in generated, "the real generator must admit the stub this case keeps"
+
+    mapped = _targets_for_docs_root(
+        original,
+        copied,
+        [
+            original / "api" / kept_stub,
+            original / "api" / stub_filename(f"{API_SOURCE_PACKAGE}.retired_module"),
+            original / "how-to" / "page.md",
+            original / "how-to" / "missing.md",
+        ],
+        generated_api_stubs=generated,
+    )
+
+    assert mapped == [copied / "api" / kept_stub, copied / "how-to" / "page.md"]
+
+
+def _preview_docs_tree(repo_root: Path) -> Path:
+    """Materialise an isolated ``docs/`` tree carrying every preview-resolution case."""
+    docs_root = repo_root / "docs"
+    for relative in (
+        "index.md",
+        "architecture.md",
+        "architecture/overview.md",
+        "how-to/first.md",
+        "how-to/second.rst",
+        "how-to/nested/third.md",
+        "how-to/_draft.md",
+        "api/index.md",
+        "api/cadrumo.rst",
+        "cli/index.rst",
+        "_generated/glossary.rst",
+    ):
+        path = docs_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {path.stem}\n", encoding="utf-8")
+    return docs_root
+
+
+def test_a_preview_resolves_a_page_in_every_spelling(tmp_path: Path) -> None:
+    """A page is named relative to the repository or to docs/, with or without its suffix."""
+    docs_root = _preview_docs_tree(tmp_path)
+    page = [docs_root / "how-to" / "first.md"]
+
+    assert resolve_preview_targets(tmp_path, "how-to/first") == page
+    assert resolve_preview_targets(tmp_path, "how-to/first.md") == page
+    assert resolve_preview_targets(tmp_path, "docs/how-to/first.md") == page
+    assert resolve_preview_targets(tmp_path, "docs/how-to/first") == page
+    assert resolve_preview_targets(tmp_path, "how-to/second") == [docs_root / "how-to" / "second.rst"]
+
+
+def test_a_preview_of_a_directory_builds_every_authored_page_under_it(tmp_path: Path) -> None:
+    """A directory expands to its pages recursively, leaving drafts and generated trees out."""
+    docs_root = _preview_docs_tree(tmp_path)
+    section = [
+        docs_root / "how-to" / "first.md",
+        docs_root / "how-to" / "nested" / "third.md",
+        docs_root / "how-to" / "second.rst",
+    ]
+
+    assert resolve_preview_targets(tmp_path, "how-to") == section
+    assert resolve_preview_targets(tmp_path, "docs/how-to/") == section
+    assert resolve_preview_targets(tmp_path, "docs") == sorted(
+        [
+            docs_root / "index.md",
+            docs_root / "architecture.md",
+            docs_root / "architecture" / "overview.md",
+            *section,
+        ]
+    )
+
+
+def test_a_preview_refuses_an_ambiguous_generated_or_missing_target(tmp_path: Path) -> None:
+    """A name that is both a page and a directory is refused; each spelling that disambiguates works."""
+    docs_root = _preview_docs_tree(tmp_path)
+
+    with pytest.raises(SystemExit, match=r"names both the page architecture.md and a directory"):
+        resolve_preview_targets(tmp_path, "architecture")
+    assert resolve_preview_targets(tmp_path, "architecture.md") == [docs_root / "architecture.md"]
+    assert resolve_preview_targets(tmp_path, "architecture/") == [docs_root / "architecture" / "overview.md"]
+
+    for generated in ("api/cadrumo.rst", "api", "cli/index", "docs/cli"):
+        with pytest.raises(SystemExit, match="does not support generated API/CLI pages"):
+            resolve_preview_targets(tmp_path, generated)
+    with pytest.raises(SystemExit, match="requires an existing documentation page or directory"):
+        resolve_preview_targets(tmp_path, "how-to/absent")
+
+
+def test_previews_skip_sequence_execution_and_full_builds_keep_it() -> None:
+    """Only a preview renders from goldens unexecuted; the full build and the changed-page check run them."""
+    page = DocBuildPlan(targets=[_DOCS / "index.md"], full_build_required=False)
+    full = DocBuildPlan(targets=[], full_build_required=True)
+
+    preview_env = sphinx_build_environment(_REPO_ROOT, page, strict=False, single_page=True, scope="user", base={})
+    full_env = sphinx_build_environment(_REPO_ROOT, full, strict=True, single_page=False, scope="full", base={})
+    changed_env = sphinx_build_environment(_REPO_ROOT, page, strict=False, single_page=False, scope="full", base={})
+
+    assert preview_env[SEQUENCE_CHECK_SKIP_ENV] == "1"
+    assert SEQUENCE_CHECK_SKIP_ENV not in full_env
+    assert SEQUENCE_CHECK_SKIP_ENV not in changed_env
+
+
+def test_the_preview_doctree_cache_is_stable_and_outside_the_build_root() -> None:
+    """The cache path depends only on its inputs, sits under var/, and separates configurations."""
+    english_user = preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
+
+    assert english_user == preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
+    assert english_user.relative_to(_REPO_ROOT).parts[0] == "var"
+    assert english_user != preview_doctree_dir(_REPO_ROOT, scope="full", language=OutputLanguage.EN)
+    assert english_user != preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.ES)
+
+
+def _environment_update(output: str) -> tuple[int, int, int]:
+    """Return Sphinx's ``added, changed, removed`` counts from one build's output."""
+    update = _ENVIRONMENT_UPDATE.search(output)
+    assert update is not None, f"the build reported no environment update:\n{output[-3000:]}"
+    return (int(update.group(1)), int(update.group(2)), int(update.group(3)))
+
+
+def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
+    """Run the real preview build over an isolated fixture repository and return its output."""
+    script = (
+        "import sys;"
+        "from pathlib import Path;"
+        "from dev.docs.build import DocBuildPlan, build_docs;"
+        "repo = Path(sys.argv[1]);"
+        "plan = DocBuildPlan(targets=[repo / 'docs' / 'guide' / 'one.rst'], full_build_required=False);"
+        "build_docs(repo, plan, strict=False, single_page=True, scope='user')"
+    )
+    env = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
+    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage)
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(repo_root)],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
+    )
+    output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
+    assert result.returncode == 0, output
+    return output
+
+
+def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) -> None:
+    """The preview keeps its doctree cache between runs, so an unchanged tree reads nothing."""
+    repo_root = tmp_path / "repo"
+    docs_root = repo_root / "docs"
+    (docs_root / "guide").mkdir(parents=True)
+    (docs_root / "conf.py").write_text('project = "fixture"\n', encoding="utf-8")
+    (docs_root / "index.rst").write_text("Home\n====\n\n.. toctree::\n\n   guide/one\n   guide/two\n", encoding="utf-8")
+    (docs_root / "guide" / "one.rst").write_text("One\n===\n", encoding="utf-8")
+    (docs_root / "guide" / "two.rst").write_text("Two\n===\n", encoding="utf-8")
+    storage = tmp_path / "storage"
+
+    first = _run_fixture_preview(repo_root, storage)
+    cache = preview_doctree_dir(repo_root, scope="user", language=OutputLanguage.EN)
+    assert (cache / "environment.pickle").is_file(), f"no persistent environment under {cache}"
+    assert PREVIEW_SEQUENCE_NOTICE in first
+    assert _environment_update(first) == (3, 0, 0), first
+
+    second = _run_fixture_preview(repo_root, storage)
+    assert _environment_update(second) == (0, 0, 0), second
+
+    (docs_root / "guide" / "two.rst").write_text("Two\n===\n\nEdited.\n", encoding="utf-8")
+    third = _run_fixture_preview(repo_root, storage)
+    assert _environment_update(third) == (0, 1, 0), third
+    assert (docs_root / "_build" / "html" / "guide" / "one.html").is_file()
+
+
 def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
     """Tracked code must not introduce preview/test output roots under ``docs/_build``."""
     violations: list[str] = []
@@ -433,25 +657,22 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     assert full["resolves_deferred"] is True
 
 
-def _generation_read_set(tmp_path: Path, *source_tails: str) -> dict[str, bool]:
-    """Evaluate ``docs/conf.py``'s generated-output read-set guard for one argv shape.
+def _conf_read_set(tmp_path: Path, argv: list[str], *, scope: str = "full") -> dict[str, bool]:
+    """Evaluate ``docs/conf.py``'s generated-output read-set guard for one command line.
 
     Runs the module-level ``conf.py`` code (never ``setup()``) in a subprocess
-    with ``sys.argv`` shaped like the Sphinx invocation under test, then asks the
+    with ``sys.argv`` set to the Sphinx invocation under test, then asks the
     guard whether each generated surface can influence that build.
 
     Args:
         tmp_path: Isolated storage root for the evaluation.
-        source_tails: Docs-root-relative source filenames the invocation names
-            after ``sourcedir`` and ``outputdir``. Empty means a normal build,
-            which names no filenames at all.
+        argv: The ``sys.argv`` the Sphinx process would see.
+        scope: The ``CADRUMO_DOCS_SCOPE`` the build runs under.
 
     Returns:
         A ``surface -> reads it`` mapping, one entry per generated surface.
     """
     conf = _DOCS / "conf.py"
-    argv = ["sphinx-build", "-b", "dummy", str(_DOCS), str(tmp_path / "out")]
-    argv += [str(_DOCS / tail) for tail in source_tails]
     script = (
         "import json, runpy, sys;"
         f"sys.argv = {argv!r};"
@@ -460,11 +681,13 @@ def _generation_read_set(tmp_path: Path, *source_tails: str) -> dict[str, bool]:
         "'cli': ns['_should_generate_cli_reference'](),"
         "'glossary': ns['_build_reads']('_generated/glossary.rst'),"
         "'casillas': ns['_build_reads']('_generated/casillas'),"
-        "'legal': ns['_build_reads']('_generated/legal')}))"
+        "'legal': ns['_build_reads']('_generated/legal'),"
+        "'api': ns['_should_generate_api_stubs']()}))"
     )
     env = {
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_DOCS_SCOPE": scope,
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-read-set-store"),
     }
     result = subprocess.run(
@@ -484,32 +707,95 @@ def _generation_read_set(tmp_path: Path, *source_tails: str) -> dict[str, bool]:
     return {str(key): bool(value) for key, value in payload.items()}
 
 
+def _generation_read_set(tmp_path: Path, *source_tails: str, scope: str = "full") -> dict[str, bool]:
+    """Evaluate the read-set guard for a ``sphinx-build`` naming ``source_tails``.
+
+    Args:
+        tmp_path: Isolated storage root for the evaluation.
+        source_tails: Docs-root-relative source filenames the invocation names
+            after ``sourcedir`` and ``outputdir``. Empty means a normal build,
+            which names no filenames at all.
+        scope: The ``CADRUMO_DOCS_SCOPE`` the build runs under.
+
+    Returns:
+        A ``surface -> reads it`` mapping, one entry per generated surface.
+    """
+    argv = ["sphinx-build", "-b", "dummy", str(_DOCS), str(tmp_path / "out")]
+    argv += [str(_DOCS / tail) for tail in source_tails]
+    return _conf_read_set(tmp_path, argv, scope=scope)
+
+
+_EVERY_SURFACE = {"cli": True, "glossary": True, "casillas": True, "legal": True, "api": True}
+_NO_SURFACE = {"cli": False, "glossary": False, "casillas": False, "legal": False, "api": False}
+
+
 def test_generated_surfaces_are_produced_exactly_when_the_build_reads_them(tmp_path: Path) -> None:
     """The generated-output guard skips an unread surface and keeps a read one.
 
-    Every generated surface (CLI reference, glossary, casilla pages, legal pages)
-    compiles a registry authority or the Handbook before writing a line, which on
-    a one-page build is nearly the whole build. The guard drops that work for a
-    surface the invocation cannot read -- a specific-source build parses only the
-    filenames it names -- and that is precisely the kind of narrowing that
-    silently turns into "generates nothing", so both directions are asserted:
+    Every generated surface (CLI reference, glossary, casilla pages, legal pages,
+    API stubs) costs a registry compile, a Handbook load or a module walk before
+    writing a line, which on a one-page build is nearly the whole build. The
+    guard drops that work for a surface the invocation cannot read -- a
+    specific-source build parses only the filenames it names -- and that is
+    precisely the kind of narrowing that silently turns into "generates
+    nothing", so both directions are asserted:
 
     * a normal build (no filenames) produces every surface;
     * a one-page build produces none of them;
     * a build that DOES name a generated page produces that surface and still
-      skips its siblings.
+      skips its siblings;
+    * a user-scope build never produces the API stubs, which it does not read.
     """
     full_build = _generation_read_set(tmp_path)
-    assert full_build == {"cli": True, "glossary": True, "casillas": True, "legal": True}, full_build
+    assert full_build == _EVERY_SURFACE, full_build
 
     one_page = _generation_read_set(tmp_path, "index.md")
-    assert one_page == {"cli": False, "glossary": False, "casillas": False, "legal": False}, one_page
+    assert one_page == _NO_SURFACE, one_page
 
     casilla_page = _generation_read_set(tmp_path, "_generated/casillas/303.rst")
-    assert casilla_page == {"cli": False, "glossary": False, "casillas": True, "legal": False}, casilla_page
+    assert casilla_page == {**_NO_SURFACE, "casillas": True}, casilla_page
 
     cli_page = _generation_read_set(tmp_path, "cli/index.rst")
-    assert cli_page == {"cli": True, "glossary": False, "casillas": False, "legal": False}, cli_page
+    assert cli_page == {**_NO_SURFACE, "cli": True}, cli_page
+
+    api_page = _generation_read_set(tmp_path, "api/cadrumo.core.rst")
+    assert api_page == {**_NO_SURFACE, "api": True}, api_page
+
+    user_build = _generation_read_set(tmp_path, scope="user")
+    assert user_build == {**_EVERY_SURFACE, "api": False}, user_build
+
+
+def test_options_after_the_directories_are_not_read_as_filenames(tmp_path: Path) -> None:
+    """``sphinx-build`` accepts options anywhere; a trailing option value is not a source file."""
+    argv = ["sphinx-build", str(_DOCS), str(tmp_path / "out"), "-b", "html", "-j", "auto"]
+    assert _conf_read_set(tmp_path, argv) == _EVERY_SURFACE
+
+    named = ["sphinx-build", "-b", "html", "-j", "auto", str(_DOCS), str(tmp_path / "out"), str(_DOCS / "index.md")]
+    assert _conf_read_set(tmp_path, named) == _NO_SURFACE
+
+
+@pytest.mark.parametrize("scope", ["user", "full"])
+def test_the_live_preview_build_is_classified_as_a_whole_site_build(tmp_path: Path, scope: str) -> None:
+    """Every rebuild the docs server runs regenerates the references it serves.
+
+    The Sphinx command line is derived from the real server command: the
+    ``sphinx-autobuild`` argument split separates its own options from the
+    ones it hands Sphinx, and its builder runs ``python -m sphinx build`` with
+    them. That shape puts ``-b html -j auto`` after the directories, which the
+    guard once read as two source filenames, so no generated reference was
+    regenerated while serving.
+    """
+    from sphinx_autobuild.__main__ import _parse_args
+
+    from ..serve import serve_command
+
+    command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope=scope)
+    _autobuild_options, sphinx_arguments = _parse_args(command[command.index("sphinx_autobuild") + 1 :])
+    argv = ["sphinx", "build", *sphinx_arguments]
+
+    read_set = _conf_read_set(tmp_path, argv, scope=scope)
+
+    assert read_set == {**_EVERY_SURFACE, "api": scope == "full"}, (argv, read_set)
 
 
 def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:

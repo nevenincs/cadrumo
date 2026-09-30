@@ -27,10 +27,11 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
-from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager
+from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix
+from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 if TYPE_CHECKING:
     from .pagefind_index import InjectCallback
@@ -116,7 +117,7 @@ def _api_stub_targets(module_name: str, docs_api: Path, *, include_parents: bool
     if include_parents:
         parts = module_name.split(".")
         modules = [".".join(parts[:idx]) for idx in range(1, len(parts) + 1)]
-    return [docs_api / f"{name}.rst" for name in modules]
+    return [docs_api / stub_filename(name) for name in modules]
 
 
 def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
@@ -192,6 +193,98 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
         cli_reference_required=cli_reference_required,
         download_matrix_required=download_matrix_required,
     )
+
+
+#: The one line every preview prints, naming the gate it does not replace.
+PREVIEW_SEQUENCE_NOTICE: Final[str] = (
+    "Preview renders cli-sequences from their committed goldens without executing them; "
+    "verify them with `just docs-sequences-check`."
+)
+
+
+def preview_doctree_dir(repo_root: Path, *, scope: str, language: OutputLanguage) -> Path:
+    """Return the doctree cache a page or section preview keeps between runs.
+
+    A stable directory lets Sphinx reload its pickled environment and re-read
+    only the sources that changed, where a fresh directory re-read every page
+    on every preview. It lives under the gitignored ``var/`` tree because
+    ``docs/_build`` may hold nothing but the canonical HTML root. Scope and
+    language change the Sphinx configuration, and a changed configuration
+    invalidates the whole environment, so each keeps its own cache.
+    """
+    return repo_root / "var" / "docs-preview" / f"{scope}-{language.value}" / "doctrees"
+
+
+def _is_previewable_page(docs_root: Path, source: Path) -> bool:
+    """Return whether a directory preview includes ``source``.
+
+    Generated trees, underscore-prefixed build and support trees, and the
+    translation catalogues are not authored pages.
+    """
+    if source.suffix not in DOC_SUFFIXES or not source.is_file() or _is_generated_doc(docs_root, source):
+        return False
+    relative = source.relative_to(docs_root)
+    return not any(part.startswith("_") or part == "locales" for part in relative.parts)
+
+
+def resolve_preview_targets(repo_root: Path, requested: str) -> list[Path]:
+    """Resolve a preview argument to the documentation pages it names.
+
+    ``requested`` is a page or a directory, relative to the repository root or
+    to ``docs/``; a page may omit its ``.md``/``.rst`` suffix. A directory
+    names every authored page beneath it. When a bare name matches both a
+    directory and a page (``architecture`` and ``architecture.md``), the
+    preview refuses rather than guessing; a trailing separator selects the
+    directory and the suffix selects the page.
+
+    Args:
+        repo_root: Repository root containing ``docs/``.
+        requested: The page or directory argument as the operator typed it.
+
+    Returns:
+        The absolute source paths to build, sorted.
+
+    Raises:
+        SystemExit: When the argument names a generated page, is ambiguous,
+            or resolves to no page.
+    """
+    docs_root = (repo_root / "docs").resolve()
+    names_directory = requested.endswith(("/", "\\"))
+    stripped = requested.rstrip("/\\")
+    for base in (repo_root.resolve(), docs_root):
+        candidate = (base / stripped).resolve()
+        if candidate != docs_root and docs_root not in candidate.parents:
+            continue
+        if _is_generated_doc(docs_root, candidate):
+            raise SystemExit(
+                "--single-page does not support generated API/CLI pages; use the full docs build.",
+            )
+        is_directory = candidate.is_dir()
+        page = next(
+            (
+                path
+                for path in (candidate, *(candidate.parent / f"{candidate.name}{suffix}" for suffix in (".md", ".rst")))
+                if path.suffix in DOC_SUFFIXES and docs_root in path.parents and path.is_file()
+            ),
+            None,
+        )
+        if is_directory and page is not None and not names_directory:
+            raise SystemExit(
+                f"{requested!r} names both the page {page.relative_to(docs_root).as_posix()} and a directory; "
+                f"pass {page.name!r} for the page or {stripped + '/'!r} for every page under the directory.",
+            )
+        if is_directory:
+            pages = sorted(
+                source
+                for source in scan_directory(candidate, recursive=True)
+                if _is_previewable_page(docs_root, source)
+            )
+            if not pages:
+                raise SystemExit(f"--single-page found no documentation page under {requested!r}.")
+            return pages
+        if page is not None and not names_directory:
+            return [page]
+    raise SystemExit(f"--single-page requires an existing documentation page or directory under docs/: {requested}")
 
 
 def _single_page_source_set(docs_root: Path, targets: list[Path]) -> list[str]:
@@ -404,8 +497,19 @@ def remove_noncanonical_build_entries(docs_root: Path) -> None:
             entry.unlink()
 
 
-def _targets_for_docs_root(original_docs_root: Path, copied_docs_root: Path, targets: list[Path]) -> list[Path]:
-    """Map repository documentation targets into a copied documentation root."""
+def _targets_for_docs_root(
+    original_docs_root: Path,
+    copied_docs_root: Path,
+    targets: list[Path],
+    *,
+    generated_api_stubs: frozenset[str],
+) -> list[Path]:
+    """Map repository documentation targets into a copied documentation root.
+
+    An API stub does not exist before the build that reads it: ``docs/conf.py``
+    writes the stubs at ``builder-inited``. A planned stub is therefore kept
+    when the build will generate it, and every other target must exist.
+    """
     mapped: list[Path] = []
     for target in targets:
         try:
@@ -413,9 +517,58 @@ def _targets_for_docs_root(original_docs_root: Path, copied_docs_root: Path, tar
         except ValueError:
             continue
         copied = copied_docs_root / relative
-        if copied.is_file():
+        if relative.parent == Path("api") and relative.suffix == ".rst":
+            if relative.name in generated_api_stubs:
+                mapped.append(copied)
+        elif copied.is_file():
             mapped.append(copied)
     return mapped
+
+
+def _generated_api_stub_names(repo_root: Path) -> frozenset[str]:
+    """Return the filenames of every stub a full-scope build generates."""
+    manager = ApiStubManager(
+        src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
+        docs_api=repo_root / "docs" / "api",
+    )
+    return frozenset(stub_filename(name) for name, _ in manager.discover_modules())
+
+
+def sphinx_build_environment(
+    repo_root: Path,
+    plan: DocBuildPlan,
+    *,
+    strict: bool,
+    single_page: bool,
+    scope: str,
+    base: Mapping[str, str],
+) -> dict[str, str]:
+    """Compose the environment one ``sphinx-build`` child runs under.
+
+    A preview (``single_page``) renders cli-sequences from their committed
+    goldens and skips executing them; the full build keeps the check, and
+    anything the caller already set passes through unchanged.
+    """
+    docs_root = repo_root / "docs"
+    env = {**base, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
+    if strict:
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
+        if (docs_root / "_build" / "html" / "objects.inv").is_file():
+            env["CADRUMO_DOCS_SELF_INVENTORY"] = "1"
+    if not plan.full_build_required:
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
+        if single_page:
+            relative_sources = _single_page_source_set(docs_root, plan.targets)
+            master_source = "index.md"
+        else:
+            relative_sources = [target.relative_to(docs_root).as_posix() for target in plan.targets]
+            master_source = relative_sources[0]
+        env["CADRUMO_DOCS_ONLY"] = os.pathsep.join(relative_sources)
+        env["CADRUMO_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
+        if single_page:
+            env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
+            env[SEQUENCE_CHECK_SKIP_ENV] = "1"
+    return env
 
 
 def docs_build_jobs(env: Mapping[str, str]) -> str:
@@ -660,14 +813,19 @@ def build_docs(
     Full builds write the actual documentation output under ``docs/_build/html``.
     Targeted changed-page checks copy ``docs/`` to an OS temporary source tree
     and write temporary output there, so generated API/CLI sources and preview
-    artifacts never pollute the repository. Single-page builds are an explicit
-    exception: they write the requested page into the canonical HTML output
-    directory while excluding generated API/CLI/autodoc surfaces.
+    artifacts never pollute the repository. Previews (``single_page``, one page
+    or every page under a directory) are an explicit exception: they write the
+    requested pages into the canonical HTML output directory while excluding
+    generated API/CLI/autodoc surfaces, render cli-sequences from committed
+    goldens without executing them, and keep their doctree cache in
+    :func:`preview_doctree_dir` so a repeat preview re-reads only what changed.
 
     ``scope`` selects the documentation surface (``full`` | ``user``). Under
     ``user`` scope the API autodoc tree is excluded and the app is never imported
-    for rendering (see ``CADRUMO_DOCS_SCOPE`` in ``docs/conf.py``), so the
-    apidocs scaffold is skipped — a user-scope build never regenerates API stubs.
+    for rendering (see ``CADRUMO_DOCS_SCOPE`` in ``docs/conf.py``), so no API
+    stub is generated. Under ``full`` scope the stubs are generated by
+    ``docs/conf.py`` at ``builder-inited`` into whichever source tree the build
+    reads, including the temporary copy a changed-page check builds from.
 
     ``output_root`` redirects a full build's HTML output (and its per-build
     Pagefind index, orphan sweep, and sitemap) to a chosen directory instead of
@@ -686,24 +844,16 @@ def build_docs(
     html_output_root = output_root if output_root is not None else canonical_html_root
     ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
-    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
     if strict:
         command.extend(["-n", "-W"])
-        env["CADRUMO_DOCS_OFFLINE"] = "1"
-        if (docs_root / "_build" / "html" / "objects.inv").is_file():
-            env["CADRUMO_DOCS_SELF_INVENTORY"] = "1"
-    if not plan.full_build_required:
-        env["CADRUMO_DOCS_OFFLINE"] = "1"
-        if single_page:
-            relative_sources = _single_page_source_set(docs_root, targets)
-            master_source = "index.md"
-        else:
-            relative_sources = [target.relative_to(docs_root).as_posix() for target in targets]
-            master_source = relative_sources[0]
-        env["CADRUMO_DOCS_ONLY"] = os.pathsep.join(relative_sources)
-        env["CADRUMO_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
-        if single_page:
-            env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
+    env = sphinx_build_environment(
+        repo_root,
+        plan,
+        strict=strict,
+        single_page=single_page,
+        scope=scope,
+        base=os.environ,
+    )
 
     if plan.full_build_required:
         if output_root is None:
@@ -721,33 +871,37 @@ def build_docs(
                 remove_orphan_pages(source_root, html_output_root, repo_root)
     elif single_page:
         remove_noncanonical_build_entries(docs_root)
-        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-doctrees-") as tmp:
-            out_dir = docs_root / "_build" / "html"
-            command.extend(
-                [
-                    "-d",
-                    str(Path(tmp) / "doctrees"),
-                    str(docs_root),
-                    str(out_dir),
-                    *(target.relative_to(repo_root).as_posix() for target in targets),
-                ],
-            )
-            result = subprocess.run(command, cwd=repo_root, env=env, check=False)
+        doctree_dir = preview_doctree_dir(repo_root, scope=scope, language=docs_build_language(env))
+        doctree_dir.mkdir(parents=True, exist_ok=True)
+        print(PREVIEW_SEQUENCE_NOTICE, flush=True)
+        command.extend(
+            [
+                "-d",
+                str(doctree_dir),
+                str(docs_root),
+                str(docs_root / "_build" / "html"),
+                *(target.relative_to(repo_root).as_posix() for target in targets),
+            ],
+        )
+        result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     else:
+        generated_api_stubs = (
+            _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
+        )
         with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
             temp_root = Path(tmp)
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
-            if plan.api_scaffold_required and scope != "user":
-                ApiStubManager(
-                    src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
-                    docs_api=temp_docs_root / "api",
-                ).scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
             if plan.download_matrix_required:
                 inject_download_matrix(temp_docs_root)
-            temp_targets = _targets_for_docs_root(docs_root, temp_docs_root, targets)
+            temp_targets = _targets_for_docs_root(
+                docs_root,
+                temp_docs_root,
+                targets,
+                generated_api_stubs=generated_api_stubs,
+            )
             if not temp_targets:
                 print("No existing documentation targets remained after temporary generation.", flush=True)
                 return
@@ -863,7 +1017,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--single-page",
         metavar="PATH",
-        help=("Build one documentation source into docs/_build/html without rebuilding generated API/autodoc pages."),
+        help=(
+            "Preview one documentation page, or every page under a directory, into the canonical HTML output. "
+            "PATH is relative to the repository or to docs/, and a page may omit its suffix. The preview "
+            "renders cli-sequences from committed goldens without executing them, skips generated "
+            "API/autodoc pages, and keeps a doctree cache under var/docs-preview so a repeat run re-reads "
+            "only changed sources."
+        ),
     )
     parser.add_argument(
         "--scope",
@@ -928,22 +1088,14 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
     if args.single_page and args.paths:
         raise SystemExit("--single-page cannot be combined with positional paths")
-    if not args.single_page and not args.paths:
+    if args.single_page:
+        plan = DocBuildPlan(targets=resolve_preview_targets(repo_root, args.single_page), full_build_required=False)
+    elif args.paths:
+        plan = planned_doc_targets(repo_root, [Path(path) for path in args.paths])
+    else:
         # No target named: build everything (docs/conf.py is the full-build
         # trigger), scoped by CADRUMO_DOCS_SCOPE/--scope.
-        paths = [Path("docs") / "conf.py"]
-    else:
-        paths = [Path(args.single_page)] if args.single_page else [Path(path) for path in args.paths]
-    if args.single_page and _is_generated_doc(
-        repo_root / "docs",
-        (repo_root / args.single_page).resolve(),
-    ):
-        raise SystemExit(
-            "--single-page does not support generated API/CLI pages; use the explicit generator or full docs build.",
-        )
-    plan = planned_doc_targets(repo_root, paths)
-    if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
-        raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
+        plan = planned_doc_targets(repo_root, [Path("docs") / "conf.py"])
     if not plan.full_build_required and not plan.targets:
         print("No documentation targets resolved from the given paths.", flush=True)
         if args.rag_index:
@@ -953,8 +1105,9 @@ def main(argv: list[str] | None = None) -> int:
     if plan.full_build_required:
         print("Configuration changed; running an incremental full Sphinx build.", flush=True)
     elif args.single_page:
-        print("Building canonical documentation page:", flush=True)
-        print(f"  {plan.targets[0].relative_to(repo_root)}", flush=True)
+        print(f"Previewing {len(plan.targets)} documentation page(s):", flush=True)
+        for target in plan.targets:
+            print(f"  {target.relative_to(repo_root)}", flush=True)
     else:
         print("Building named documentation targets:", flush=True)
         for target in plan.targets:

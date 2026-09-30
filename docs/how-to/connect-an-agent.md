@@ -24,7 +24,7 @@ construction, exactly like the CLI.
 cadrumo-mcp --help
 ```
 
-If the command is not found, install Cadrumo first — see
+If the command is not found, install Cadrumo first - see
 [Get Cadrumo](../download.md).
 
 ## Register the server
@@ -56,9 +56,10 @@ passphrase for unattended runs first - see
 ## What the agent can and cannot do
 
 The agent can import and classify records, run calculations, verify drafts, and
-prepare exports, because those are local operations. It cannot file, notify, or
-submit anything to AEAT, and it cannot invent a figure: calculations always run
-inside the deterministic engine, and every value keeps its legal references.
-You review and file yourself, exactly as in the
+prepare exports, because those are local operations. Commands that write an
+export file or record a filing marker ask you to confirm first. The agent
+cannot submit anything to AEAT, and it cannot invent a figure: calculations
+always run inside the deterministic engine, and every value keeps its legal
+references. You review and file yourself, exactly as in the
 [Quickstart](quickstart.md) and the
 [filing guide](file-at-aeat.md).

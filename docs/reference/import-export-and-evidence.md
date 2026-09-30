@@ -6,7 +6,7 @@ into a traceable tax position. It deliberately separates “data we received,”
 Administración Tributaria (AEAT),” and “evidence that AEAT actually received
 it.”
 
-`source documents → typed financial facts → registry-grounded calculation → AEAT upload file → official filing evidence`
+`source documents → typed financial facts → registry-grounded calculation → AEAT export file → official filing evidence`
 
 ## What the data actually represents
 
@@ -30,9 +30,11 @@ source record. Binary documents follow the encrypted attachment path.
 Transactions, invoice catalogues, and stock inventory remain in their owning
 typed repositories. Modelo 720 instead accepts typed foreign-asset observations
 from the caller. An enrolled resolver projects only the scalar or repeating-row
-fields requested by the registry. Stock `InventoryLedger` records are encrypted
-and usable for valuation, but they are not currently enrolled as a calculation
-source and do not flow into a calculation revision.
+fields requested by the registry. The encrypted stock `InventoryLedger` is
+enrolled for the Modelo 100 2025 revision: it projects casillas 0177, 0181,
+and 0182 for each activity with an inventory ledger for the filing year.
+`--casilla` and `--binding` refuse values for those casillas. Without an
+inventory ledger for the year, calculation warns and the casillas stay 0.
 
 ## What can be imported
 
@@ -111,14 +113,15 @@ source and do not flow into a calculation revision.
 
 | Export | Purpose | What it does not prove |
 | --- | --- | --- |
-| AEAT fichero or XML export | Produces the local payload you can upload through AEAT’s official interface where the selected Modelo revision has a complete registry export layout | It does not prove submission or acceptance |
+| AEAT fichero or XML export | Produces the local payload where the selected Modelo revision has a complete registry export layout: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
 | Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a filing artefact or authoritative calculation record |
 | Accountant review package | Shares the draft, calculation revision, provenance, and ledger evidence when present in a checksum-verifiable ZIP | Checksums alone do not identify who created or approved it |
 | Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued evidence |
 | Sealed custody archive | Backup and full recovery of the secured profile | It is not the same thing as an audit or accountant package |
 
 The filing exporter explicitly writes a local file and never contacts AEAT. It
-can reread the output and detect drift from the approved draft for
+refuses to overwrite an existing file unless you pass `--replace`, and refuses
+an output path whose parent directory is missing. It can reread the output and detect drift from the approved draft for
 parser-covered casillas. It reports any unchecked casillas separately. This
 remains pre-filing verification. Follow
 [File your modelo at the AEAT portal](../how-to/file-at-aeat.md) to
@@ -202,7 +205,7 @@ A genuinely complete audit handoff would normally combine:
 That combination supports both halves of the audit question: “Was this actually
 filed?” and “What facts, rules, and calculations produced it?”
 
-The audit evidence bundle does not currently include every item listed above.
+The audit evidence bundle does not currently include every item in that combination.
 Assemble and verify the missing items separately; a bundle is complete only
 when every referenced supporting record and payload is present.
 

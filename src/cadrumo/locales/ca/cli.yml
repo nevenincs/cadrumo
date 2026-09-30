@@ -227,7 +227,7 @@ cli:
           p. ex. 2026-01-15.
         invoice_number_help: Número de factura del proveïdor
         iva_amount_help: Import d'IVA de la factura
-        iva_rate_help: Tipus d'IVA aplicat com a decimal
+        iva_rate_help: Tipus d'IVA aplicat com a percentatge, per exemple 21
         label_reading_busy_refused: 'Una altra lectura local ja estava fent servir
           la inferència d''aquest equip, de manera que no s''ha executat el model
           de lectura. Els {count} camps que les regles d''etiquetes no han llegit
@@ -891,11 +891,12 @@ cli:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
           output_required: Proporcioneu --output PATH per a l artefacte fichero-BOE.
-        help: Exporta una revisió de model verificada o presentada a un fitxer local
-          compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT, i el fitxer
-          generat no és evidència oficial de presentació davant AEAT. Useu el justificant
-          AEAT, la consulta de declaracions presentades o el coteig CSV després de
-          presentar.
+        help: 'Exporta una revisió de model verificada o presentada a un fitxer local
+          compatible amb AEAT, en el disseny oficial propi del model: fichero-BOE
+          per a la majoria de models, XML per al Model 100. Local; mai contacta amb
+          AEAT, i el fitxer generat no és evidència oficial de presentació davant
+          AEAT. Useu el justificant AEAT, la consulta de declaracions presentades
+          o el coteig CSV després de presentar.'
         output_help: Ruta on escriure l'artefacte fichero-BOE.
         replace_help: Substitueix un fitxer que ja existeix a --output. Sense aquesta
           opció es rebutja un fitxer d'exportació existent per no destruir una exportació
@@ -1943,7 +1944,7 @@ cli:
       no_active_bucket: No hi ha un perfil actiu. Executa 'aeat config profile create
         NAME' abans de configurar l'autenticació.
       output_language_help: Idioma del text de sortida (es, en, ca, hu).
-      provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
+      provider_help: Identificador del proveïdor (p.ex. certificate)
       providers_help: Llistar proveïdors d'autenticació suportats
       reset_all_help: Restablir tots els proveïdors d autenticació coneguts
       reset_help: Retirar la configuració local del proveïdor, les sessions, els bloquejos,
@@ -2577,8 +2578,9 @@ cli:
       profile_requires_yes: Passa --yes per aplicar la reparació del perfil actiu.
       quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
         sense moure res
-      quarantine_help: Previsualitza les files no desxifrables; la quarantena activa
-        està desactivada per la política de reparació preserve-first
+      quarantine_help: Mou les files d'objectes segurs no desxifrables a l'arxiu de
+        quarantena auditable; requereix --yes. La càrrega xifrada es conserva, mai
+        no s'elimina. Useu --dry-run per previsualitzar les files sense moure res.
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
@@ -2615,9 +2617,12 @@ cli:
         concertat per a la capçalera del Model 111.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
-      quiet_help: Executa sense interacció usant només els valors dels flags indicats;
-        els flags requerits sense valor provoquen un error. Suficient per si sol;
-        combina amb --accept-defaults per omplir la resta amb els valors per defecte.
+      quiet_help: Executa sense interacció usant només els valors dels flags indicats,
+        sense preguntar res. Un flag sense valor no s'escriu en lloc de provocar un
+        error, de manera que un perfil nou queda amb la configuració incompleta; `aeat
+        config profile complete-setup` indica les dades que encara li falten. Suficient
+        per si sol; combina amb --accept-defaults per omplir la resta amb els valors
+        per defecte.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
         per començar.
@@ -3392,8 +3397,8 @@ cli:
       id_help: Id de la transacció que vols dividir
       llm_exclusive: --llm no es pot combinar amb --child-amount/--child-description;
         la via manual es l'anul.lació explícita de l'operador.
-      llm_help: Proposa una divisió en N parts basada en evidència amb el proveïdor
-        LLM indicat.
+      llm_help: Demana al lector local on-host que proposi una divisió en N parts
+        basada en evidència; vista prèvia per defecte, persisteix amb --apply.
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
       yes_help: Confirma la divisió de la transacció
@@ -3796,6 +3801,8 @@ cli:
       registry, review i diagnòstics d''execució.'
     app_help: Accedir als comandos de nivell d'aplicació.
     app_help_help: Mostra l'ajuda dels comandos de l'aplicació.
+    app_tui_help: Obre el banc de treball a pantalla completa sobre els vostres registres
+      locals.
     debug_help: Habilita la sortida detallada de depuració.
     detail_help: Habilita la sortida detallada.
     errors:

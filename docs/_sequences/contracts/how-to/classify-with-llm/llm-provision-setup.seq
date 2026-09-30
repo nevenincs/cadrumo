@@ -1,0 +1,3 @@
+@step Set up the local reader in one run.
+@static aeat config provision setup --confirm
+@blocked external-service Installs the model runtime with the platform package manager and downloads the reader models, which the hermetic sandbox must not do.

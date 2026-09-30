@@ -20,14 +20,9 @@ from cadrumo.core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
-)
-from cadrumo.domain.calculations.registry.authority_compiler_closure import (
-    AuthorityCompilerClosure,
-    AuthorityCompilerEnvironment,
 )
 from cadrumo.domain.calculations.registry.facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
@@ -47,7 +42,7 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from dev.registry.pipeline.authority_publication import require_evidence_closure
 
-_FORMAT = "cadrumo-development-eager-authority-v2"
+_FORMAT = "cadrumo-development-eager-authority-v3"
 _TAGGED_CONTEXT = {TAGGED_FACT_ATOM_CONTEXT: True}
 _FACT_ATOM_VALIDATORS = frozenset((get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]))
 
@@ -116,21 +111,6 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
         "modelos": [_json_value(modelo) for modelo in artifact.modelos],
         "catalogues": _json_value(artifact.catalogues),
         "identity_digest": artifact.identity_digest,
-        "build_identity": {
-            "source_identity_digest": artifact.build_identity.source_identity_digest,
-            "compiler_identity_digest": artifact.build_identity.compiler_identity_digest,
-            "component_dependency_digest": artifact.build_identity.component_dependency_digest,
-        },
-        "compiler_closure": {
-            "sources": [[path, digest] for path, digest in artifact.compiler_closure.sources],
-            "environment": {
-                "python": artifact.compiler_closure.environment.python,
-                "pyproject_sha256": artifact.compiler_closure.environment.pyproject_sha256,
-                "uv_lock_sha256": artifact.compiler_closure.environment.uv_lock_sha256,
-                "pydantic": artifact.compiler_closure.environment.pydantic,
-                "pydantic_core": artifact.compiler_closure.environment.pydantic_core,
-            },
-        },
         "evidence": {
             "legal": [
                 {
@@ -159,8 +139,6 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         "modelos",
         "catalogues",
         "identity_digest",
-        "build_identity",
-        "compiler_closure",
         "evidence",
         "profile_schema",
     }
@@ -169,7 +147,6 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
     modelos_document = _sequence(payload, "modelos")
     catalogues_document = _mapping(payload, "catalogues")
     identity_digest = _string(payload, "identity_digest")
-    build_document = _mapping(payload, "build_identity")
     evidence_document = _mapping(payload, "evidence")
     facts = GovernedFactCatalogue.model_validate_json(
         canonical_json_bytes(_mapping(catalogues_document, "facts")), context=_TAGGED_CONTEXT
@@ -209,39 +186,12 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         modelos=modelos,
         catalogues=catalogues,
         identity_digest=identity_digest,
-        build_identity=AuthorityBuildIdentity(
-            _string(build_document, "source_identity_digest"),
-            _string(build_document, "compiler_identity_digest"),
-            _string(build_document, "component_dependency_digest"),
-        ),
-        compiler_closure=_compiler_closure(_mapping(payload, "compiler_closure")),
         evidence=AuthorityEvidenceProjection(legal=legal, sources=sources),
         profile_schema=ProfileSchemaDefinition.model_validate_json(canonical_json_bytes(payload["profile_schema"])),
     )
     artifact.catalogues.runtime.require_complete()
     require_evidence_closure(artifact)
     return artifact
-
-
-def _compiler_closure(document: Mapping[str, object]) -> AuthorityCompilerClosure:
-    environment = _mapping(document, "environment")
-    return AuthorityCompilerClosure(
-        tuple(_source_row(row) for row in _sequence(document, "sources")),
-        AuthorityCompilerEnvironment(
-            python=_string(environment, "python"),
-            pyproject_sha256=_string(environment, "pyproject_sha256"),
-            uv_lock_sha256=_string(environment, "uv_lock_sha256"),
-            pydantic=_string(environment, "pydantic"),
-            pydantic_core=_string(environment, "pydantic_core"),
-        ),
-    )
-
-
-def _source_row(row: object) -> tuple[str, str]:
-    if not isinstance(row, list) or len(row) != 2 or not all(isinstance(item, str) for item in row):
-        raise ValueError("expected a [path, sha256] compiler source row")
-    path, digest = cast(list[str], row)
-    return path, digest
 
 
 def _json_value(value: object) -> object:

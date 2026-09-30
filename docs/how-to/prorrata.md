@@ -9,7 +9,7 @@ it to Modelo 303 and Modelo 390 automatically.
 Cadrumo does not submit anything to AEAT. The prorrata register is local,
 profile-scoped taxpayer state, not an AEAT filing surface.
 
-The tool needs a master-key passphrase and prompts for it.
+The tool needs your passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile. Create one with
 `aeat config profile create <name>` before you start. [Set up your taxpayer
@@ -18,9 +18,9 @@ profile](profile-setup.md) walks through it.
 ## Which prorrata applies
 
 - **General prorrata** (LIVA art. 104): one deduction percentage applies to
-  every deductible input for the year. Use it when the taxpayer has no reason to
-  separate inputs.
-- **Especial prorrata** (LIVA art. 103): each input deducts by its own use.
+  every deductible input for the year. It applies unless the taxpayer opts for
+  especial or the law requires especial (LIVA art. 103.Dos).
+- **Especial prorrata** (LIVA arts. 103 and 106): each input deducts by its own use.
   Fully deductible inputs deduct in full, inputs used only for non-deducting
   operations deduct nothing, and shared ("common") inputs deduct at the general
   percentage. Tag each input with its use.
@@ -46,7 +46,8 @@ Elect the year's general percentage:
   tool refuses a typed-in percentage without both.
 - To carry the prior year's definitive percentage (LIVA art. 105.Uno), run
   `aeat app ledger prorrata seed --ejercicio <year>` instead. It reads the
-  percentage from the filed prior-year Modelo 303 settlement.
+  percentage from the stored prior-year Modelo 303 settlement, and refuses when
+  no stored settlement carries a definitive percentage.
 
 ## Elect especial prorrata and classify inputs
 
@@ -58,7 +59,9 @@ Elect especial for the year:
 
 Here `--percentage` is the common-use percentage, the rate applied to shared
 inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same `--provenance` and
-`--reference` options apply.
+`--reference` options apply. `--evidence-reference` names the document behind an
+option you exercise this year. Omit it to record that the regime already in
+force continues.
 
 Then tag each input row with its use when you add it:
 
@@ -75,8 +78,14 @@ Then tag each input row with its use when you add it:
 - `common` - the input is shared; it deducts at the common-use percentage.
 
 Tag an input but elect no especial for that year and the tool warns the tag is
-inert: the input deducts under the general percentage. Elect especial to make
+inert: the input deducts under the general percentage. The recorded example
+starts without an election, so it prints that warning. Elect especial to make
 the tag take effect.
+
+The tag only sets how much of a deductible input deducts. An input deducts
+only when its row also carries `--deduction-kind` on `ledger add` or
+`classify`. The kind `domestic_current` requires linked purchase invoice
+evidence. See [Attach invoices and receipts](ledger-evidence.md).
 
 ## Declare a differentiated sector
 
@@ -102,17 +111,31 @@ Scope an election to a sector with `--sector`, and tag a row's sector with
 
 Tag a row with a sector you have not declared and the tool warns the tag is
 unmatched: the input deducts at the common-use percentage until you declare the
-sector. Declare the sector first, or fix the id.
+sector. The recorded example starts without a declared sector, so it prints
+that warning. Declare the sector first, or fix the id.
+
+Three more commands manage a sector's percentage. `prorrata seed-sector` seeds
+a sector's provisional percentage from its own prior-year definitive one.
+`prorrata settle-sector` settles the year-end definitive percentage from the
+sector's annual volumes of operations with and without the right to deduct.
+`prorrata revoke-especial` revokes especial for a year after a prior-year
+especial state, and requires `--evidence-reference`. Run each with `--help` for
+its options.
 
 ## Read the settlement advisories
 
 When you calculate the year-end Modelo 303 for the 4T settlement, the tool may
-surface non-blocking advisories:
+surface a non-blocking advisory:
 
 - **Especial may be mandatory** - when the taxpayer computes under general
-  prorrata and especial would deduct at least 10% less, the law (LIVA
-  art. 103.Dos.2) makes especial mandatory. Classify every input of the year so
-  the tool can run this check; until then it prompts you to classify.
+  prorrata and the deduction under general exceeds the deduction under
+  especial by 10 percent or more, the law (LIVA art. 103.Dos.2) makes especial
+  mandatory. Classify every input of the year so the tool can run this check;
+  until then it prompts you to classify. The check does not run for a register
+  with declared sectors.
+
+Two more warnings appear when you add a row, not at settlement:
+
 - **Inert classification** - an `--input-classification` tag set with no especial
   election for that year.
 - **Unmatched sector** - a `--sector` tag naming a sector not yet declared.

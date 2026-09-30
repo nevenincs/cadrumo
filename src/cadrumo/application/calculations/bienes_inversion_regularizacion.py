@@ -31,6 +31,7 @@ from typing import ClassVar
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
+from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import (
@@ -503,13 +504,14 @@ def build_bienes_inversion_regularizacion_advisory(
     target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
     target_casilla_id = target[1] if target is not None else None
 
-    message = (
-        f"{in_window} bien(es) de inversión en periodo de regularización "
-        f"(LIVA arts. 107-110) para {regularizacion_year}: "
-        f"{projection.computed_count} computado(s), "
-        f"{projection.pending_percentage_count} pendiente(s) de prorrata definitiva. "
-        f"Regularización propuesta para casilla {target_casilla_id}: "
-        f"{projection.proposed_casilla_43}. Confirme el valor antes de presentar."
+    message = tr(
+        "application.calculations.bienes_inversion_regularizacion.register_advisory",
+        count=in_window,
+        year=regularizacion_year,
+        computed=projection.computed_count,
+        pending=projection.pending_percentage_count,
+        casilla=target_casilla_id,
+        value=projection.proposed_casilla_43,
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",
@@ -576,11 +578,12 @@ def build_bienes_inversion_transmision_advisory(
     target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
     target_casilla_id = target[1] if target is not None else None
 
-    message = (
-        f"{projection.computed_count} bien(es) de inversión transmitido(s) en {disposal_year} "
-        "requieren la regularización única de entregas (LIVA art. 110). "
-        f"Regularización propuesta para casilla {target_casilla_id}: "
-        f"{projection.proposed_casilla_43}. Confirme el valor antes de presentar."
+    message = tr(
+        "application.calculations.bienes_inversion_regularizacion.transmision_advisory",
+        count=projection.computed_count,
+        year=disposal_year,
+        casilla=target_casilla_id,
+        value=projection.proposed_casilla_43,
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",

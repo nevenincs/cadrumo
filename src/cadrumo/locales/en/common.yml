@@ -617,6 +617,41 @@ entries:
     label: AEAT Electronic Office
     purpose: Landing page of the AEAT Electronic Office.
 filing:
+  applicability:
+    impatriado_m100_suppressed: 'Modelo 100 does not apply: the taxpayer has the special
+      regime for workers, professionals, entrepreneurs and investors posted to Spanish
+      territory (LIRPF Art. 93) active within the six-year window. During that window
+      they are taxed under the IRNR rules while keeping IRPF taxpayer status, and
+      the corresponding annual declaration is Modelo 151, not Modelo 100.'
+    impatriado_m151_applicable: 'Modelo 151 applies: the taxpayer has the Art. 93
+      LIRPF impatriado regime active within the six-year window of the year of election
+      and the five following years; the regime''s annual declaration is filed on Modelo
+      151.'
+    impatriado_m151_not_applicable: 'Modelo 151 does not apply: the profile does not
+      have the Art. 93 LIRPF impatriado regime active within its six-year window.
+      Outside that window, or without electing the regime, a resident natural person
+      returns to the ordinary IRPF route and to Modelo 100 where applicable.'
+    incomplete_no_rule: 'Applicability cannot be determined for this modelo: no applicability
+      rule has been derived for it yet. Rule coverage is deliberately narrow (the
+      initial set of individuals) and the expansion by entity and regime is pending.
+      This is not a statement about your profile: your taxpayer type may be correctly
+      declared.'
+    incomplete_undeclared_taxpayer: 'Applicability cannot be determined: the taxpayer
+      type is not declared. The entity type is missing, and with it the IRPF income
+      categories where they apply.'
+    incomplete_undetermined_fact: 'Applicability cannot be determined for this modelo
+      from the declared taxpayer model: it depends on a fact the profile does not
+      express with certainty. The modelo is asserted applicable only when that fact
+      is positively declared; otherwise no obligation is presumed.'
+    incomplete_undetermined_fact_required: 'Fact required for this modelo: %{fact}.'
+    incomplete_undetermined_periods_missing: 'Undeclared periods: %{periods}.'
+    payer_fact:
+      iva_group_dominant_entity: is registered as the dominant entity of an IVA group
+      iva_group_member: is registered as a member entity of an IVA group
+      oss_enrolled: is registered in an IVA one-stop-shop scheme (OSS/IOSS)
+      pays_rent_with_retencion: pays rent subject to withholding
+      pays_withheld_income: pays income subject to withholding
+      trades_intracommunity: carries out intra-community transactions
   validation:
     deadline_missed: Submission deadline has passed
     formula_divergence: Divergence in formula calculation

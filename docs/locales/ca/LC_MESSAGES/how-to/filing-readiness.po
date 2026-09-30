@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-23 17:16+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -31,210 +31,255 @@ msgid ""
 "before you export, so nothing silent is missing underneath a clean-"
 "looking draft."
 msgstr ""
-"La verificació et diu si els valors de les caselles d'un esborrany passen"
+"La verificació et diu si els valors de les casillas d'un esborrany passen"
 " les regles del registre. La preparació planteja una pregunta anterior: "
-"hi ha tot allò de què depèn el càlcul: dades del perfil, dades de "
-"moviments i presentacions anteriors? Utilitza les ordres d'aquesta guia "
-"abans de calcular, i de nou abans d'exportar, perquè no falti res de "
-"manera silenciosa sota un esborrany d'aspecte net."
+"hi ha tot allò de què depèn el càlcul (dades del perfil, dades de "
+"transaccions i presentacions anteriors)? Utilitza les ordres d'aquesta "
+"guia abans de calcular, i de nou abans d'exportar, perquè no falti res de"
+" manera silenciosa sota un esborrany d'aspecte net."
 
 #: ../../how-to/filing-readiness.md:9
 msgid ""
-"These commands read the active profile and prompt for your master-key "
-"passphrase. Create a profile first with [Set up your taxpayer profile"
-"](profile-setup.md) if you have none."
+"These commands read the active profile and prompt for your passphrase. If"
+" you have no profile, create one first with [Set up your taxpayer profile"
+"](profile-setup.md)."
 msgstr ""
-"Aquestes ordres llegeixen el perfil actiu i et demanen la contrasenya de "
-"la clau mestra. Crea primer un perfil amb [Configura el teu perfil de "
-"contribuent](profile-setup.md) si no en tens cap."
+"Aquestes ordres llegeixen el perfil actiu i et demanen la frase de "
+"contrasenya. Si no tens cap perfil, crea'n un primer amb [Configura el "
+"teu perfil de contribuent](profile-setup.md)."
 
 #: ../../how-to/filing-readiness.md:13
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"Els exemples d'aquesta documentació estan enregistrats en anglès. `aeat` "
+"mostra els seus missatges en espanyol tret que [triïs un altre idioma"
+"](profile-setup.md#choose-the-output-language)."
+
+#: ../../how-to/filing-readiness.md:17
 msgid "Run the readiness report"
 msgstr "Executa l'informe de preparació"
 
-#: ../../how-to/filing-readiness.md:15
+#: ../../how-to/filing-readiness.md:19
 msgid ""
 "Find the resolved revision id first, then report whether the active "
 "profile is ready for that modelo, year, and period:"
 msgstr ""
 "Troba primer l'id de la revisió resolta i, tot seguit, informa de si el "
-"perfil actiu està a punt per a aquell model, any i període:"
+"perfil actiu està a punt per a aquell modelo, any i període:"
 
-#: ../../how-to/filing-readiness.md:22
+#: ../../how-to/filing-readiness.md:26
 msgid ""
 "The command exits with status 2 while the target is not ready, so a "
 "script detects the gap from the exit status. In this example `ready` is "
 "`false` because the fresh profile still has missing source bindings."
 msgstr ""
-"L'ordre acaba amb l'estat 2 mentre l'objectiu no estigui llest, de manera"
-" que un script detecta la mancança per l'estat de sortida. En aquest "
-"exemple `ready` és `false` perquè el perfil acabat de crear encara té "
-"bindings d'origen pendents."
+"L'ordre acaba amb l'estat 2 mentre l'objectiu no estigui a punt, de "
+"manera que un script detecta la mancança per l'estat de sortida. En "
+"aquest exemple `ready` és `false` perquè el perfil acabat de crear encara"
+" té bindings d'origen pendents."
 
-#: ../../how-to/filing-readiness.md:26
-msgid "The report covers two things:"
-msgstr "L'informe cobreix dues coses:"
+#: ../../how-to/filing-readiness.md:30
+msgid "The report covers four axes, each reported separately:"
+msgstr "L'informe cobreix quatre eixos, cadascun informat per separat:"
 
-#: ../../how-to/filing-readiness.md:28
+#: ../../how-to/filing-readiness.md:32
 msgid ""
-"**Profile readiness** - every profile fact the modelo requires. Each "
-"missing fact is listed by its section and field key, so you know exactly "
-"what to fill in with `aeat config profile edit`."
+"**Profile readiness** (`profile_ready`) - every profile fact the modelo "
+"requires. Each missing fact is listed by its section and field key, so "
+"you know exactly what to fill in with `aeat config profile edit`."
 msgstr ""
-"**Preparació del perfil**: cada dada del perfil que requereix el model. "
-"Cada dada que falta es llista per la seva secció i clau de camp, de "
-"manera que saps exactament què has d'emplenar amb `aeat config profile "
-"edit`."
-
-#: ../../how-to/filing-readiness.md:31
-msgid ""
-"**Ledger readiness** - for ledger-fed modelos, the same source checks as "
-"`aeat app ledger preflight`, listing each transaction that blocks the "
-"period and why."
-msgstr ""
-"**Preparació del ledger**: per als models alimentats pel ledger, les "
-"mateixes comprovacions de font que `aeat app ledger preflight`, llistant "
-"cada moviment que bloqueja el període i per què."
+"**Preparació del perfil** (`profile_ready`): cada dada del perfil que "
+"requereix el modelo. Cada dada que falta es llista amb la seva secció i "
+"clau de camp, de manera que saps exactament què has d'emplenar amb `aeat "
+"config profile edit`."
 
 #: ../../how-to/filing-readiness.md:35
+msgid ""
+"**Registry readiness** (`registry_ready`) - whether a registry revision "
+"covers the modelo, year, and period."
+msgstr ""
+"**Preparació del registre** (`registry_ready`): si una revisió del "
+"registre cobreix el modelo, l'any i el període."
+
+#: ../../how-to/filing-readiness.md:37
+msgid ""
+"**Ledger readiness** (`ledger_ready`) - for ledger-fed modelos, the same "
+"source checks as `aeat app ledger preflight`, listing each transaction "
+"that blocks the period and why."
+msgstr ""
+"**Preparació del ledger** (`ledger_ready`): per als modelos alimentats "
+"pel ledger, les mateixes comprovacions d'origen que `aeat app ledger "
+"preflight`, amb la llista de cada transacció que bloqueja el període i "
+"per què."
+
+#: ../../how-to/filing-readiness.md:40
+msgid ""
+"**Source bindings** (`binding_ready`) - the figures the form pulls from "
+"other sources. `missing_bindings` lists each binding that is not "
+"available yet."
+msgstr ""
+"**Bindings d'origen** (`binding_ready`): les xifres que el formulari obté"
+" d'altres fonts. `missing_bindings` llista cada binding que encara no "
+"està disponible."
+
+#: ../../how-to/filing-readiness.md:43
 msgid ""
 "Readiness does not check box-level completeness of a draft. That is what "
 "`aeat app modelo work verify` does. See [Verify a filing](verification-"
 "reports.md)."
 msgstr ""
-"La preparació no comprova la completesa a nivell de casella d'un "
+"La preparació no comprova la completesa a nivell de casilla d'un "
 "esborrany. D'això se n'encarrega `aeat app modelo work verify`. Consulta "
 "[Verifica una presentació](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:39
+#: ../../how-to/filing-readiness.md:47
 msgid "Check what this filing depends on"
 msgstr "Comprova de què depèn aquesta presentació"
 
-#: ../../how-to/filing-readiness.md:41
+#: ../../how-to/filing-readiness.md:49
 msgid ""
 "Some modelos fold in values from other filings. An annual summary reads "
 "its quarters, and a cross-modelo box reads another form's result. List "
 "the registry-declared dependencies for a filing year, then narrow to one "
 "modelo, or to one modelo and period:"
 msgstr ""
-"Alguns models incorporen valors d'altres presentacions. Un resum anual "
-"llegeix els seus trimestres, i una casella entre models llegeix el "
+"Alguns modelos incorporen valors d'altres presentacions. Un resum anual "
+"llegeix els seus trimestres, i una casilla entre modelos llegeix el "
 "resultat d'un altre formulari. Llista les dependències declarades al "
-"registre per a un any de presentació i, tot seguit, acota a un model, o a"
-" un model i període:"
+"registre per a un any de presentació i, tot seguit, limita-ho a un "
+"modelo, o a un modelo i període:"
 
-#: ../../how-to/filing-readiness.md:50
+#: ../../how-to/filing-readiness.md:58
 msgid ""
 "`--period` requires `--modelo`. With both set, the command also evaluates"
 " the current blockers for that exact filing (for example an earlier "
 "period whose official evidence is still missing), so you see what must be"
 " resolved before this period can safely build on the ones before it. For "
-"the background, see [Building on earlier filings](../explanation"
+"the background, see [How filings build on earlier ones](../explanation"
 "/building-on-earlier-filings.md)."
 msgstr ""
 "`--period` requereix `--modelo`. Amb tots dos establerts, l'ordre també "
-"avalua els blocadors actuals per a aquella presentació exacta (per "
-"exemple, un període anterior l'evidència oficial del qual encara falta), "
-"de manera que veus què s'ha de resoldre abans que aquest període es pugui"
-" construir amb seguretat sobre els anteriors. Per al context, consulta "
-"[Construir sobre presentacions anteriors](../explanation/building-on-"
+"avalua els bloquejos actuals d'aquella presentació exacta (per exemple, "
+"un període anterior la prova oficial del qual encara falta), de manera "
+"que veus què s'ha de resoldre abans que aquest període es pugui construir"
+" amb seguretat sobre els anteriors. Per al context, consulta [Com les "
+"presentacions es basen en les anteriors](../explanation/building-on-"
 "earlier-filings.md)."
 
-#: ../../how-to/filing-readiness.md:56
+#: ../../how-to/filing-readiness.md:64
 msgid "See everything that happened to a filing"
 msgstr "Consulta tot allò que ha passat a una presentació"
 
-#: ../../how-to/filing-readiness.md:58
+#: ../../how-to/filing-readiness.md:66
 msgid ""
 "Stream every recorded lifecycle event for one modelo (calculations, "
 "verification passes and refusals, filings, amendments, imports):"
 msgstr ""
-"Emet en flux cada esdeveniment del cicle de vida registrat per a un model"
-" (càlculs, verificacions passades i rebutjades, presentacions, "
+"Emet en flux cada esdeveniment del cicle de vida registrat per a un "
+"modelo (càlculs, verificacions superades i rebutjades, presentacions, "
 "rectificacions, importacions):"
 
-#: ../../how-to/filing-readiness.md:65
+#: ../../how-to/filing-readiness.md:73
 msgid ""
 "Add `--period` to narrow to one period. This is the modelo-wide audit "
 "trail; for the event stream of a single workspace, use `aeat app modelo "
 "work history`. See [The filing workflow](filing-spine.md)."
 msgstr ""
-"Afegeix `--period` per acotar a un període. Aquest és el rastre "
-"d'auditoria de tot el model; per al flux d'esdeveniments d'un sol espai "
+"Afegeix `--period` per limitar-ho a un període. Aquest és el rastre "
+"d'auditoria de tot el modelo; per al flux d'esdeveniments d'un sol espai "
 "de treball, utilitza `aeat app modelo work history`. Consulta [El flux de"
 " treball de presentació](filing-spine.md)."
 
-#: ../../how-to/filing-readiness.md:70
+#: ../../how-to/filing-readiness.md:78
 msgid "Compare two filing years"
 msgstr "Compara dos anys de presentació"
 
-#: ../../how-to/filing-readiness.md:72
+#: ../../how-to/filing-readiness.md:80
 msgid "See how this year's figures moved against last year's, box by box:"
 msgstr ""
 "Consulta com han variat les xifres d'aquest any respecte a les de l'any "
-"passat, casella per casella:"
+"passat, casilla per casilla:"
 
-#: ../../how-to/filing-readiness.md:77
+#: ../../how-to/filing-readiness.md:85
 msgid ""
-"Pass `--year` exactly twice. Each row shows the box, its label and "
-"section, both values, the difference, and the percent change; all-zero "
-"rows are omitted from the text output. The comparison uses the most "
-"recent verified revision of each year and falls back to the latest draft "
-"when no verified revision exists. A year compared from a draft is flagged"
-" `BORRADOR` in the output."
+"Pass `--year` exactly twice. Each compared year needs a work unit with a "
+"calculated revision; the command refuses otherwise. Each row shows the "
+"box, its label and section, both values, the difference, and the percent "
+"change; all-zero rows are omitted from the text output. The comparison "
+"uses the most recent verified revision of each year and falls back to the"
+" latest draft when no verified revision exists. A year compared from a "
+"draft is flagged `BORRADOR` in the output."
 msgstr ""
-"Passa `--year` exactament dues vegades. Cada fila mostra la casella, la "
-"seva etiqueta i secció, tots dos valors, la diferència i el canvi "
-"percentual; les files totalment a zero s'ometen de la sortida de text. La"
-" comparació utilitza la revisió verificada més recent de cada any i "
-"recorre a l'últim esborrany quan no existeix cap revisió verificada. Un "
-"any comparat a partir d'un esborrany es marca `BORRADOR` a la sortida."
+"Passa `--year` exactament dues vegades. Cada any comparat necessita una "
+"unitat de treball amb una revisió calculada; l'ordre es nega en cas "
+"contrari. Cada fila mostra la casilla, la seva etiqueta i secció, tots "
+"dos valors, la diferència i el canvi percentual; les files totalment a "
+"zero s'ometen de la sortida de text. La comparació utilitza la revisió "
+"verificada més recent de cada any i recorre a l'últim esborrany quan no "
+"existeix cap revisió verificada. Un any comparat a partir d'un esborrany "
+"es marca `BORRADOR` a la sortida."
 
-#: ../../how-to/filing-readiness.md:84
+#: ../../how-to/filing-readiness.md:93
 msgid ""
 "Use the comparison as a sanity check before filing: an unexpected jump in"
 " a box is worth tracing back to its transactions before you export."
 msgstr ""
 "Utilitza la comparació com a comprovació de coherència abans de "
-"presentar: un salt inesperat en una casella val la pena resseguir-lo fins"
-" als seus moviments abans d'exportar."
+"presentar: un salt inesperat en una casilla val la pena resseguir-lo fins"
+" a les seves transaccions abans d'exportar."
 
-#: ../../how-to/filing-readiness.md:87
+#: ../../how-to/filing-readiness.md:96
 msgid "Look ahead to the year-end Renta"
-msgstr "Anticipa la Renda de final d'any"
+msgstr "Anticipa la Renta de final d'any"
 
-#: ../../how-to/filing-readiness.md:89
+#: ../../how-to/filing-readiness.md:98
 msgid ""
 "If you file quarterly Modelo 130 instalments, project what the year-end "
 "Modelo 100 would look like from the quarters filed so far:"
 msgstr ""
-"Si presentes pagaments fraccionats trimestrals del Model 130, projectes "
-"quin aspecte tindria el Model 100 de final d'any a partir dels trimestres"
-" presentats fins ara:"
+"Si presentes pagaments fraccionats trimestrals del Modelo 130, projecta "
+"quin aspecte tindria el Modelo 100 de final d'any a partir dels "
+"trimestres presentats fins ara:"
 
-#: ../../how-to/filing-readiness.md:95
+#: ../../how-to/filing-readiness.md:104
 msgid ""
 "`--ccaa` names your autonomous community of tax residence, which selects "
 "the regional scale for the Modelo 100 calculation."
 msgstr ""
-"`--ccaa` anomena la teva comunitat autònoma de residència fiscal, que "
-"selecciona l'escala autonòmica per al càlcul del Model 100."
+"`--ccaa` indica la teva comunitat autònoma de residència fiscal, que "
+"selecciona l'escala autonòmica per al càlcul del Modelo 100."
 
-#: ../../how-to/filing-readiness.md:98
+#: ../../how-to/filing-readiness.md:107
+msgid ""
+"The projection needs a registry revision of Modelo 100 for the year you "
+"project. Until that year's revision is published, `project` refuses and "
+"says that no registry revision covers the filing year. A covered year "
+"also needs the date-valued profile facts a Renta filer declares."
+msgstr ""
+"La projecció necessita una revisió del registre del Modelo 100 per a "
+"l'any que projectes. Mentre no es publiqui la revisió d'aquell any, "
+"`project` es nega i indica que cap revisió del registre cobreix l'any de "
+"presentació. Un any cobert també necessita les dades del perfil amb valor"
+" de data que declara qui presenta la Renta."
+
+#: ../../how-to/filing-readiness.md:112
 msgid ""
 "The output shows the accumulated Modelo 130 figures (income, expenses, "
 "net result, instalments paid) and the projected Modelo 100 result: the "
-"taxable base, the state and regional gross tax (cuota íntegra), the net "
-"tax (cuota líquida), and the resulting balance after instalments (cuota "
+"taxable base, the state and regional gross tax (cuota íntegra), the state"
+" and regional net tax (cuota líquida), and the resulting tax (cuota "
 "resultante)."
 msgstr ""
-"La sortida mostra les xifres acumulades del Model 130 (ingressos, "
+"La sortida mostra les xifres acumulades del Modelo 130 (ingressos, "
 "despeses, resultat net, pagaments fraccionats ingressats) i el resultat "
-"projectat del Model 100: la base imposable, la quota íntegra estatal i "
-"autonòmica (cuota íntegra), la quota líquida (cuota líquida) i el saldo "
-"resultant després dels pagaments fraccionats (cuota resultante)."
+"projectat del Modelo 100: la base imposable, la quota íntegra estatal i "
+"autonòmica (cuota íntegra), la quota líquida estatal i autonòmica (cuota "
+"líquida) i la quota resultant (cuota resultante)."
 
-#: ../../how-to/filing-readiness.md:103
+#: ../../how-to/filing-readiness.md:117
 msgid ""
 "**Read the extrapolation flag before trusting the numbers.** With fewer "
 "than four quarters filed, the projection extrapolates a full year from "
@@ -243,35 +288,35 @@ msgid ""
 "estimate, not a draft Renta: it assumes the remaining quarters look like "
 "the filed ones."
 msgstr ""
-"**Llegeix l'indicador d'extrapolació abans de confiar en els números.** "
-"Amb menys de quatre trimestres presentats, la projecció extrapola un any "
+"**Llegeix la marca d'extrapolació abans de confiar en els números.** Amb "
+"menys de quatre trimestres presentats, la projecció extrapola un any "
 "complet a partir dels trimestres disponibles i marca la sortida, per "
 "exemple `quarters_filed 2/4 (extrapolated from 2Q)`. Una projecció "
-"extrapolada és una estimació de planificació, no un esborrany de Renda: "
-"assumeix que els trimestres restants s'assemblen als presentats."
+"extrapolada és una estimació de planificació, no un esborrany de la "
+"Renta: assumeix que els trimestres restants s'assemblen als presentats."
 
-#: ../../how-to/filing-readiness.md:110
+#: ../../how-to/filing-readiness.md:124
 msgid ""
 "Refine the projection with values the quarters cannot know: withholdings,"
 " personal circumstances, or specific boxes:"
 msgstr ""
 "Refina la projecció amb valors que els trimestres no poden conèixer: "
-"retencions, circumstàncies personals o caselles concretes:"
+"retencions, circumstàncies personals o casillas concretes:"
 
-#: ../../how-to/filing-readiness.md:116
+#: ../../how-to/filing-readiness.md:130
 msgid ""
 "Withholdings bindings default to zero when not supplied, so a projection "
 "without them overstates the balance due if you had retenciones. Each "
 "projected box carries its formula and legal references in the JSON "
 "output, the same grounding as a real calculation."
 msgstr ""
-"Les vinculacions de retencions valen zero per defecte quan no es "
-"proporcionen, de manera que una projecció sense elles sobreestima el "
-"saldo a pagar si tenies retenciones. Cada casella projectada porta la "
-"seva fórmula i les seves referències legals a la sortida JSON, la mateixa"
-" fonamentació que un càlcul real."
+"Els bindings de retencions valen zero per defecte quan no es "
+"proporcionen, de manera que una projecció sense ells sobreestima el saldo"
+" a pagar si tenies retenciones. Cada casilla projectada porta la seva "
+"fórmula i les seves referències legals a la sortida JSON, la mateixa "
+"fonamentació que un càlcul real."
 
-#: ../../how-to/filing-readiness.md:121
+#: ../../how-to/filing-readiness.md:135
 msgid ""
 "For when the year-end filing actually happens, see [Period tokens and "
 "dates](filing-calendar.md#period-tokens-and-dates)."
@@ -279,33 +324,27 @@ msgstr ""
 "Per a quan la presentació de final d'any passa realment, consulta [Tokens"
 " de període i dates](filing-calendar.md#period-tokens-and-dates)."
 
-#: ../../how-to/filing-readiness.md:124
+#: ../../how-to/filing-readiness.md:138
 msgid "Trace a value to its legal basis"
 msgstr "Traça un valor fins a la seva base legal"
 
-#: ../../how-to/filing-readiness.md:126
+#: ../../how-to/filing-readiness.md:140
 msgid ""
-"Every computed value carries its grounding, and you can surface it at "
-"each review stage:"
-msgstr ""
-"Cada valor calculat porta la seva fonamentació, i la pots fer aflorar a "
-"cada etapa de revisió:"
-
-#: ../../how-to/filing-readiness.md:129
-msgid ""
-"The formula behind each computed box carries its legal and source "
-"references. See [Review and supply calculation inputs](review-"
+"Every computed value carries its grounding, and each review stage "
+"surfaces it. The formula behind each computed box carries its legal and "
+"source references. See [Review and supply calculation inputs](review-"
 "calculation-values.md):"
 msgstr ""
-"La fórmula darrere de cada casella calculada porta les seves referències "
-"legals i de font. Consulta [Revisa i proporciona les dades de càlcul"
-"](review-calculation-values.md):"
+"Cada valor calculat porta la seva fonamentació, i cada etapa de revisió "
+"la fa aflorar. La fórmula darrere de cada casilla calculada porta les "
+"seves referències legals i d'origen. Consulta [Revisa i aporta entrades "
+"de càlcul](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:148
 msgid "Two more grounding surfaces round out the trace:"
 msgstr "Dues superfícies de fonamentació més completen la traça:"
 
-#: ../../how-to/filing-readiness.md:138
+#: ../../how-to/filing-readiness.md:150
 msgid ""
 "Verification findings name the legal references behind each rule. See "
 "[Verify a filing](verification-reports.md)."
@@ -313,7 +352,7 @@ msgstr ""
 "Les troballes de verificació anomenen les referències legals darrere de "
 "cada regla. Consulta [Verifica una presentació](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:140
+#: ../../how-to/filing-readiness.md:152
 msgid ""
 "`aeat app review queue --explain` - pending findings with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
@@ -323,36 +362,37 @@ msgstr ""
 "referències legals. Consulta [la cua de revisió](classify-transactions.md"
 "#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:144
+#: ../../how-to/filing-readiness.md:156
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/filing-readiness.md:146
+#: ../../how-to/filing-readiness.md:158
 msgid ""
 "[Verify a filing](verification-reports.md) - box-level verification of "
 "the draft."
 msgstr ""
 "[Verifica una presentació](verification-reports.md): verificació a nivell"
-" de casella de l'esborrany."
+" de casilla de l'esborrany."
 
-#: ../../how-to/filing-readiness.md:148
+#: ../../how-to/filing-readiness.md:160
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values readiness or verification surfaced."
 msgstr ""
-"[Revisa i proporciona les dades de càlcul](review-calculation-values.md):"
-" emplena els valors que falten que la preparació o la verificació han fet"
-" aflorar."
+"[Revisa i aporta entrades de càlcul](review-calculation-values.md): "
+"emplena els valors que falten que la preparació o la verificació han fet "
+"aflorar."
 
-#: ../../how-to/filing-readiness.md:150
+#: ../../how-to/filing-readiness.md:162
 msgid ""
-"[Building on earlier filings](../explanation/building-on-earlier-"
+"[How filings build on earlier ones](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
 msgstr ""
-"[Construir sobre presentacions anteriors](../explanation/building-on-"
-"earlier-filings.md): com funcionen les dependències entre períodes."
+"[Com les presentacions es basen en les anteriors](../explanation"
+"/building-on-earlier-filings.md): com funcionen les dependències entre "
+"períodes."
 
-#: ../../how-to/filing-readiness.md:152
+#: ../../how-to/filing-readiness.md:164
 msgid ""
 "[The filing workflow](filing-spine.md) - workspaces, revisions, and per-"
 "workspace history."
@@ -360,7 +400,7 @@ msgstr ""
 "[El flux de treball de presentació](filing-spine.md): espais de treball, "
 "revisions i historial per espai de treball."
 
-#: ../../how-to/filing-readiness.md:154
+#: ../../how-to/filing-readiness.md:166
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referència de la CLI](../cli/index.rst): referència completa d'opcions."
 

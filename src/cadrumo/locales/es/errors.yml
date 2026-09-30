@@ -292,6 +292,9 @@ errors:
     error_modelos_validation: Un código de modelo infringe sus invariantes de forma.
     error_observation_key: Un componente de la clave de observación no cumple el contrato
       del repositorio.
+    error_optional_extra_missing: Esta instalación no tiene el complemento opcional
+      «{extra}», necesario para {feature}. Instálelo con pip install cadrumo[{extra}]
+      y vuelva a ejecutar el comando.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
       solicitado.
     error_outbound_storage_path_too_long: La ruta de almacenamiento resuelta supera
