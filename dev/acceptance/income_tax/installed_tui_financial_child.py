@@ -34,19 +34,24 @@ from .scenario import ExpenseInvoice, IncomeTaxScenario, IssuedInvoice, Quarterl
 from .tui_journey import (
     WORKBENCH_LIST,
     WORKBENCH_NOTICE,
-    TuiOperationBinding,
+    TuiJourneyError,
     acknowledge_export_result,
     activate_tui_operation,
     canonical_financial_value_fingerprint,
+    confirm_assumed_values,
     installed_lifecycle_contract,
+    open_review_ready_to_apply,
     open_workbench_export,
     validate_modelo_100_xsd,
     wait_for_tui_refresh,
     wait_for_workbench,
+    workbench_notice,
 )
 
 if TYPE_CHECKING:
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+
+    from .tui_journey import InstalledTuiContract
 
 _SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
@@ -512,10 +517,12 @@ async def _run_lifecycle(
     work_unit_id: str,
     calculate: bool = True,
 ) -> tuple[str, ...]:
-    """Run calculate, verify, local filing and export through the declaration's workbench.
+    """Run calculate, verify, recording the filing and export through the declaration's workbench.
 
     Each action opens the declaration afresh, so its result is read from a
-    workbench notice no earlier action wrote.
+    workbench notice no earlier action wrote.  When the workbench offers to
+    confirm assumed values before verifying, they are confirmed, reviewed and
+    applied first, as a filer must.
     """
     contract = installed_lifecycle_contract(
         profile_selection_id="#manager-status",
@@ -533,6 +540,9 @@ async def _run_lifecycle(
         completed.append(contract.calculate.operation_id)
     for binding in (contract.verify, contract.local_file):
         await _open_work(pilot, work_unit_id=work_unit_id)
+        if binding is contract.verify and await _confirm_assumed_values(pilot, contract=contract):
+            completed.append(contract.apply.operation_id)
+            await _open_work(pilot, work_unit_id=work_unit_id)
         terminal = await activate_tui_operation(pilot, binding=binding)
         if terminal.outcome.value != "proven":
             raise InstalledTuiChildError(f"{binding.operation_id} did not reach a succeeded terminal")
@@ -651,51 +661,20 @@ async def _stage_workbench_value(
         )
 
 
-async def _open_review_ready_to_apply(pilot: Any, *, workbench: ModeloWorkbenchScreen) -> None:
-    """Open the review of the staged changes and, when it asks, acknowledge it before applying.
-
-    The workbench checks the changes with the application before the review
-    opens; a finding that would refuse them keeps Apply unavailable, and is
-    reported as the review states it.
-    """
-    import time
-
-    from textual.css.query import NoMatches
-    from textual.widgets import Button, Checkbox, Static
-
-    await pilot.press("R")
-    deadline = time.monotonic() + _EDIT_SECONDS
-    while True:
-        try:
-            apply = pilot.app.screen.query_one("#review-apply", Button)
-        except NoMatches:
-            if time.monotonic() > deadline:
-                raise InstalledTuiChildError(
-                    f"the annual workbench opened no review of its changes: {_workbench_notice(workbench)[:200]}",
-                    diagnostic=public_surface_diagnostic(pilot),
-                ) from None
-            await pilot.pause()
-            continue
-        break
-    review = pilot.app.screen
+async def _confirm_assumed_values(pilot: Any, *, contract: InstalledTuiContract) -> bool:
+    """Confirm, review and apply the assumed values the workbench offers to confirm; whether it offered any."""
     try:
-        acknowledge = review.query_one("#review-acknowledge", Checkbox)
-    except NoMatches:
-        acknowledge = None
-    if acknowledge is not None and not acknowledge.value:
-        acknowledge.focus()
-        await pilot.press("space")
-        await pilot.pause()
-        if not acknowledge.value:
-            raise InstalledTuiChildError("the annual review's acknowledgement did not take")
-    while apply.disabled:
-        if time.monotonic() > deadline:
-            try:
-                findings = str(review.query_one("#review-findings", Static).render()).strip()
-            except NoMatches:
-                findings = ""
-            raise InstalledTuiChildError(f"the annual review never allowed applying the changes: {findings[:300]}")
-        await pilot.pause()
+        terminal = await confirm_assumed_values(pilot, binding=contract.apply, seconds=_EDIT_SECONDS)
+    except TuiJourneyError as error:
+        raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
+    if terminal is None:
+        return False
+    if terminal.outcome.value != "proven":
+        raise InstalledTuiChildError(
+            f"confirming the assumed values ended {terminal.terminal_condition}: {workbench_notice(pilot)[:200]!r}",
+            diagnostic=public_surface_diagnostic(pilot),
+        )
+    return True
 
 
 async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
@@ -712,14 +691,13 @@ async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
         raise InstalledTuiChildError(
             f"the annual workbench staged {len(workbench.staged_changes)} changes, expected {len(_ANNUAL_EDITS)}"
         )
-    await _open_review_ready_to_apply(pilot, workbench=workbench)
-    binding = TuiOperationBinding(
-        "modelo.edit.apply",
-        activation_id="#review-apply",
-        terminal_result_id="#operation-modal-status",
-        refresh_result_id=WORKBENCH_LIST,
-        refusal_notice_id=WORKBENCH_NOTICE,
-    )
+    try:
+        await open_review_ready_to_apply(pilot, seconds=_EDIT_SECONDS)
+    except TuiJourneyError as error:
+        raise InstalledTuiChildError(
+            f"the annual workbench could not apply its changes: {error}", diagnostic=public_surface_diagnostic(pilot)
+        ) from error
+    binding = installed_lifecycle_contract().apply
     terminal = await activate_tui_operation(pilot, binding=binding)
     if terminal.outcome.value != "proven":
         try:

@@ -101,10 +101,12 @@ def test_installed_lifecycle_contract_uses_the_real_actions_without_claiming_ent
     assert contract.verify.activation_key == "f8"
     assert contract.verify.offered_step == "verify"
     assert contract.local_file.activation_key == "f8"
-    assert contract.local_file.offered_step == "file"
+    assert contract.local_file.offered_step == "record"
     assert contract.local_file.confirmation_id == "#btn-confirm-accept"
     assert contract.export.activation_id == "#export-submit"
     assert contract.export.activation_key is None
+    assert contract.apply.activation_id == "#review-apply"
+    assert contract.apply.activation_key is None
     assert {binding.refusal_notice_id for binding in (contract.calculate, contract.verify, contract.export)} == {
         "#wb-notice"
     }
@@ -262,6 +264,173 @@ def test_the_next_step_key_is_refused_while_the_workbench_offers_another_step() 
         async with app.run_test() as pilot:
             with pytest.raises(TuiJourneyError, match="does not offer verify"):
                 await activate_tui_operation(pilot, binding=installed_lifecycle_contract().verify)
+
+    asyncio.run(scenario())
+
+
+def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
+    """The fixture form, calculated and complete, with its withholding box holding a value nobody entered."""
+    from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, ModeloFormOrigin
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
+
+    form = synthetic_form(needs_input=False)
+
+    def swap(block: object) -> object:
+        if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06":
+            field = block.field.model_copy(update={"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM})
+            return block.model_copy(update={"field": field})
+        return block
+
+    pages = tuple(
+        page.model_copy(
+            update={
+                "sections": tuple(
+                    section.model_copy(update={"blocks": tuple(swap(block) for block in section.blocks)})
+                    for section in page.sections
+                )
+            }
+        )
+        for page in form.pages
+    )
+    counts = form.counts.model_copy(update={"entered": form.counts.entered - 1, "default_to_confirm": 1})
+    return form.model_copy(update={"pages": pages, "counts": counts, "operator_entries_known": entries_known})
+
+
+@pytest.mark.parametrize("entries_known", [True, False])
+def test_assumed_values_are_confirmed_reviewed_and_submitted_for_apply_through_the_workbench(
+    entries_known: bool,
+) -> None:
+    """While an assumed value remains, verifying is not offered; the journey confirms it as a filer does.
+
+    A declaration that does not record which values the filer typed makes the
+    review ask for an acknowledgement before Apply; the journey gives it.  The
+    fixture's operation service is absent, so the apply is reported as not
+    completed, but only after the confirmed value was submitted.
+    """
+    from decimal import Decimal
+
+    from cadrumo.application.modelo.work_form_models import ModeloFormCasillaAddressV1
+    from cadrumo.core.config import override_settings
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader
+
+    from ..tui_journey import confirm_assumed_values, wait_for_workbench, workbench_offers
+
+    actions = FakeActions()
+    reader = FakeReader(form=_form_with_assumed_withholding(entries_known=entries_known))
+
+    async def scenario() -> tuple[bool, bool, TuiTerminalEvidence | None]:
+        with override_settings(cadrumo_output_language="en"):
+            app = ScreenHostApp(ModeloWorkbenchScreen(cast("Any", reader), actions=cast("Any", actions)))
+            async with app.run_test(size=(140, 40)) as pilot:
+                await wait_for_workbench(pilot, seconds=10)
+                offered = (workbench_offers(pilot, "confirm"), workbench_offers(pilot, "verify"))
+                terminal = await confirm_assumed_values(
+                    pilot, binding=installed_lifecycle_contract().apply, seconds=10, maximum_polls=200
+                )
+                return (*offered, terminal)
+
+    confirm_offered, verify_offered, terminal = asyncio.run(scenario())
+
+    assert (confirm_offered, verify_offered) == (True, False)
+    assert terminal is not None
+    assert terminal.operation_id == "modelo.edit.apply"
+    assert terminal.outcome is not AcceptanceOutcome.PROVEN
+    assert len(actions.checked) == 1
+    (submitted,) = actions.applied
+    assert [(change.address, change.value) for change in submitted] == [
+        (ModeloFormCasillaAddressV1(casilla_id="06"), Decimal("300.00"))
+    ]
+
+
+def test_nothing_is_confirmed_when_the_workbench_offers_another_step() -> None:
+    from cadrumo.core.config import override_settings
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
+
+    from ..tui_journey import confirm_assumed_values, wait_for_workbench, workbench_offers
+
+    actions = FakeActions()
+    reader = FakeReader(form=synthetic_form(needs_input=False))
+
+    async def scenario() -> tuple[bool, TuiTerminalEvidence | None]:
+        with override_settings(cadrumo_output_language="en"):
+            app = ScreenHostApp(ModeloWorkbenchScreen(cast("Any", reader), actions=cast("Any", actions)))
+            async with app.run_test(size=(140, 40)) as pilot:
+                await wait_for_workbench(pilot, seconds=10)
+                verify_offered = workbench_offers(pilot, "verify")
+                return verify_offered, await confirm_assumed_values(
+                    pilot, binding=installed_lifecycle_contract().apply, seconds=10
+                )
+
+    verify_offered, terminal = asyncio.run(scenario())
+
+    assert verify_offered
+    assert terminal is None
+    assert actions.applied == []
+    assert actions.checked == []
+
+
+def test_a_verified_declaration_offers_the_export_file_then_records_the_filing_with_f8() -> None:
+    """The local-file binding runs only on the record offer, and F8 there asks, then submits the filing record."""
+    from cadrumo.core.config import override_settings
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+    from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import FakeActions, FakeReader, synthetic_form
+
+    from ..tui_journey import wait_for_workbench, workbench_offers
+
+    actions = FakeActions()
+    reader = FakeReader(form=synthetic_form(needs_input=False), verified=True)
+
+    async def scenario() -> tuple[bool, bool, TuiTerminalEvidence]:
+        with override_settings(cadrumo_output_language="es"):
+            app = ScreenHostApp(ModeloWorkbenchScreen(cast("Any", reader), actions=cast("Any", actions)))
+            async with app.run_test(size=(140, 40)) as pilot:
+                await wait_for_workbench(pilot, seconds=10)
+                offered = (workbench_offers(pilot, "record"), workbench_offers(pilot, "verify"))
+                terminal = await activate_tui_operation(
+                    pilot, binding=installed_lifecycle_contract().local_file, maximum_polls=200
+                )
+                return (*offered, terminal)
+
+    record_offered, verify_offered, terminal = asyncio.run(scenario())
+
+    assert (record_offered, verify_offered) == (True, False)
+    assert actions.requested == ["file"]
+    assert terminal.operation_id == "modelo.work.file"
+
+
+def test_the_first_open_greeting_is_no_earlier_notice() -> None:
+    """The greeting a session's first workbench shows reports nothing, so an operation may start under it."""
+    from cadrumo.core.i18n.render import tr
+
+    from ..tui_journey import workbench_notice
+
+    greeting = tr("tui.modelo.workbench.legend.first_open")
+
+    async def scenario() -> str:
+        app = _WidgetsApp(Static(greeting, id="wb-notice"))
+        async with app.run_test() as pilot:
+            with pytest.raises(TuiJourneyError, match="does not offer verify"):
+                await activate_tui_operation(pilot, binding=installed_lifecycle_contract().verify)
+            return workbench_notice(pilot)
+
+    assert asyncio.run(scenario()) == ""
+
+
+def test_the_record_step_is_refused_while_the_workbench_offers_verifying() -> None:
+    from cadrumo.core.i18n.render import tr
+
+    verify_offered = tr("tui.modelo.workbench.next_line", action=tr("tui.modelo.workbench.next.verify"), key="F8")
+
+    async def scenario() -> None:
+        app = _WidgetsApp(Static("", id="wb-notice"), Static(verify_offered, id="wb-next"))
+        async with app.run_test() as pilot:
+            with pytest.raises(TuiJourneyError, match="does not offer record"):
+                await activate_tui_operation(pilot, binding=installed_lifecycle_contract().local_file)
 
     asyncio.run(scenario())
 

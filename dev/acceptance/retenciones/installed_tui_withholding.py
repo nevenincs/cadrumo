@@ -1985,11 +1985,15 @@ async def _run_work_operation(
     """Run one lifecycle action in one addressed declaration's workbench and require a succeeded terminal.
 
     Each action opens the declaration afresh, so its result is read from a
-    workbench notice no earlier action wrote.
+    workbench notice no earlier action wrote.  Before verifying, assumed
+    values the workbench offers to confirm are confirmed, reviewed and
+    applied, as a filer must.
     """
     from dev.acceptance.income_tax.tui_journey import (
+        TuiJourneyError,
         acknowledge_export_result,
         activate_tui_operation,
+        confirm_assumed_values,
         installed_lifecycle_contract,
         open_workbench_export,
         wait_for_tui_refresh,
@@ -2004,12 +2008,24 @@ async def _run_work_operation(
         "export": contract.export,
     }[operation]
     await _open_work_address(pilot, modelo=modelo, year=year, period=period)
+    token = _address_token(modelo=modelo, year=year, period=period)
+    if operation == "verify":
+        try:
+            confirmed = await confirm_assumed_values(pilot, binding=contract.apply, maximum_polls=20000)
+        except TuiJourneyError as error:
+            raise RetencionesInstalledTuiError(f"{token}:{contract.apply.operation_id}:{error}") from error
+        if confirmed is not None:
+            if confirmed.outcome.value != "proven":
+                raise RetencionesInstalledTuiError(
+                    f"{token}:{contract.apply.operation_id}:{confirmed.terminal_condition}:"
+                    f"{workbench_notice(pilot)[:240]}"
+                )
+            await _open_work_address(pilot, modelo=modelo, year=year, period=period)
     if operation == "export":
         if export_path is None:
             raise RetencionesInstalledTuiError("tui_only_export_requires_a_destination")
         await open_workbench_export(pilot, output_path=str(export_path), maximum_polls=20000)
     terminal = await activate_tui_operation(pilot, binding=binding, maximum_polls=20000)
-    token = _address_token(modelo=modelo, year=year, period=period)
     if terminal.outcome.value != "proven":
         notice = workbench_notice(pilot)
         raise RetencionesInstalledTuiError(

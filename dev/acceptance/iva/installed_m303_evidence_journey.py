@@ -71,6 +71,7 @@ from dev.acceptance.income_tax.tui_journey import (
     TuiTerminalEvidence,
     acknowledge_export_result,
     activate_tui_operation,
+    confirm_assumed_values,
     installed_lifecycle_contract,
     open_workbench_export,
     wait_for_tui_refresh,
@@ -717,8 +718,21 @@ def _visible_refusal(pilot: Any) -> str:
 
 
 async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
-    verify = installed_lifecycle_contract().verify
+    """Verify from the workbench, first confirming, reviewing and applying any assumed values it offers to confirm."""
+    contract = installed_lifecycle_contract()
+    verify = contract.verify
     await _open_work(pilot, work_unit_id=work_unit_id)
+    try:
+        confirmed = await confirm_assumed_values(pilot, binding=contract.apply, maximum_polls=6000)
+    except TuiJourneyError as error:
+        raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
+    if confirmed is not None:
+        if confirmed.terminal_condition != "succeeded":
+            raise InstalledTuiChildError(
+                f"installed TUI M303 confirmation of assumed values ended {confirmed.terminal_condition}: "
+                f"{_visible_refusal(pilot)}"
+            )
+        await _open_work(pilot, work_unit_id=work_unit_id)
     terminal = await activate_tui_operation(pilot, binding=verify)
     if terminal.terminal_condition != "succeeded":
         raise InstalledTuiChildError(

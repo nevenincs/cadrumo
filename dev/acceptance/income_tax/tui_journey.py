@@ -26,6 +26,7 @@ from .scenario import BRIEF_ID, BRIEF_REVISION, SCENARIO_VERSION, AcceptanceOutc
 if TYPE_CHECKING:
     from textual.pilot import Pilot
     from textual.widget import Widget
+    from textual.widgets import Checkbox
 
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 
@@ -40,7 +41,7 @@ _XSD_NORMALIZATION: Final = (
 WORKBENCH_NOTICE: Final = "#wb-notice"
 #: The workbench's casilla list, present whenever the workbench is the top screen.
 WORKBENCH_LIST: Final = "#wb-list"
-#: The workbench's line naming the next step its F8 key runs.
+#: The workbench's line naming the next step and the key that performs it.
 WORKBENCH_NEXT: Final = "#wb-next"
 #: The accept control of the shared confirmation dialog, which the workbench shows
 #: before recalculating a declaration last calculated elsewhere that holds values
@@ -50,6 +51,29 @@ _EXPORT_PATH: Final = "#export-path"
 _EXPORT_RESULT_CLOSE: Final = "#modelo-export-result-close"
 #: The close control of the statement of which boxes a recalculation changed.
 _RESULT_STATEMENT_CLOSE: Final = "#result-close"
+#: The workbench key that runs the step it offers next.
+_NEXT_STEP_KEY: Final = "f8"
+#: The workbench key that opens the review of the staged changes.
+_REVIEW_KEY: Final = "R"
+#: The key the next-step line shows beside each step a journey waits on.  A
+#: verified declaration is offered its export file first, and recording the
+#: filing with the next-step key after it.
+_OFFERED_STEP_KEYS: Final[Mapping[str, str]] = {
+    "apply": "R",
+    "confirm": "n",
+    "export": "e",
+    "record": "F8",
+    "verify": "F8",
+}
+#: Stands in for a count while the next-step line is turned into a pattern.
+_COUNT_PLACEHOLDER: Final = "\ue000"
+_BULK_TICK: Final = "#bulk-tick"
+_BULK_CONFIRM: Final = "#bulk-confirm"
+_REVIEW_APPLY: Final = "#review-apply"
+_REVIEW_ACKNOWLEDGE: Final = "#review-acknowledge"
+_REVIEW_FINDINGS: Final = "#review-findings"
+#: The greeting the first workbench of a session shows on its notice line.
+_FIRST_OPEN_GREETING: Final = "tui.modelo.workbench.legend.first_open"
 
 type TerminalCondition = Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled", "not_completed"]
 
@@ -77,7 +101,7 @@ class TuiOperationBinding:
     from a button on a dialog the journey has already opened
     (``activation_id``), never both.  A key that runs whatever step the
     workbench offers next names that step in ``offered_step`` (``verify``,
-    ``file``), and the driver refuses to press it while the workbench offers
+    ``record``), and the driver refuses to press it while the workbench offers
     another one.  ``at_risk_proceed_id`` is pressed only while the
     workbench's pre-recalculation confirmation is the top screen.
     """
@@ -125,6 +149,7 @@ class InstalledTuiContract:
     verify: TuiOperationBinding = TuiOperationBinding("modelo.work.verify")
     local_file: TuiOperationBinding = TuiOperationBinding("modelo.work.file")
     export: TuiOperationBinding = TuiOperationBinding("modelo.export")
+    apply: TuiOperationBinding = TuiOperationBinding("modelo.edit.apply")
 
     def missing_controls(self) -> tuple[str, ...]:
         """Return every missing user-facing control in deterministic order."""
@@ -145,6 +170,7 @@ class InstalledTuiContract:
             *self.verify.missing(label="verify"),
             *self.local_file.missing(label="local_file"),
             *self.export.missing(label="export"),
+            *self.apply.missing(label="apply"),
         )
 
 
@@ -292,9 +318,9 @@ def installed_lifecycle_contract(
 
     Every lifecycle action runs in the declaration's workbench, opened from
     the Declarations list: ``c`` calculates, ``F8`` runs the verification or
-    the local filing the stepper offers next (filing through its
-    confirmation dialog), and the export dialog opened with ``e`` submits the
-    export.
+    the recording of the filing the next-step line offers (recording through
+    its confirmation dialog), the export dialog opened with ``e`` submits the
+    export, and the review opened with ``R`` applies staged changes.
     """
     modal_terminal = "#operation-modal-status"
     return InstalledTuiContract(
@@ -322,7 +348,7 @@ def installed_lifecycle_contract(
         local_file=TuiOperationBinding(
             "modelo.work.file",
             activation_key="f8",
-            offered_step="file",
+            offered_step="record",
             confirmation_id="#btn-confirm-accept",
             confirmation_required=True,
             terminal_result_id=modal_terminal,
@@ -332,6 +358,13 @@ def installed_lifecycle_contract(
         export=TuiOperationBinding(
             "modelo.export",
             activation_id="#export-submit",
+            terminal_result_id=modal_terminal,
+            refresh_result_id=WORKBENCH_LIST,
+            refusal_notice_id=WORKBENCH_NOTICE,
+        ),
+        apply=TuiOperationBinding(
+            "modelo.edit.apply",
+            activation_id=_REVIEW_APPLY,
             terminal_result_id=modal_terminal,
             refresh_result_id=WORKBENCH_LIST,
             refusal_notice_id=WORKBENCH_NOTICE,
@@ -437,7 +470,7 @@ async def activate_tui_operation(
     _require_fresh_notice(pilot, label=binding.operation_id, selector=binding.refusal_notice_id)
     if binding.activation_key is not None:
         if binding.offered_step is not None:
-            _require_offered_step(pilot, step=binding.offered_step, key=binding.activation_key)
+            _require_offered_step(pilot, step=binding.offered_step)
         await pilot.press(binding.activation_key)
     elif binding.activation_id is not None:
         activation = _query_visible_tui_control(pilot, binding.activation_id)
@@ -479,6 +512,104 @@ async def activate_tui_operation(
         binding=binding,
         maximum_polls=maximum_polls,
     )
+
+
+def workbench_offers(pilot: Pilot[Any], step: str) -> bool:
+    """Whether the workbench on top offers ``step`` on its next-step line, with the key it shows for it."""
+    return _offered_step_pattern(step).match(_offered_line(pilot)) is not None
+
+
+async def open_review_ready_to_apply(pilot: Pilot[Any], *, seconds: float = 300.0) -> None:
+    """Open the review of the staged changes with its key and, when it asks, acknowledge it.
+
+    The workbench checks the changes with the application before the review
+    opens; a finding that would refuse them keeps Apply unavailable, and is
+    reported as the review states it.  Apply itself is left to the caller.
+    """
+    from textual.css.query import NoMatches
+    from textual.widgets import Button, Checkbox
+
+    await pilot.press(_REVIEW_KEY)
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            apply = pilot.app.screen.query_one(_REVIEW_APPLY, Button)
+        except NoMatches:
+            if time.monotonic() > deadline:
+                raise TuiJourneyError(
+                    f"the workbench opened no review of its changes (notice {workbench_notice(pilot)[:200]!r})"
+                ) from None
+            await pilot.pause()
+            continue
+        break
+    review = pilot.app.screen
+    acknowledge = next(iter(review.query(_REVIEW_ACKNOWLEDGE).results(Checkbox)), None)
+    if acknowledge is not None and not acknowledge.value and not await _tick(pilot, acknowledge):
+        raise TuiJourneyError("the review's acknowledgement did not take")
+    while apply.disabled:
+        if time.monotonic() > deadline:
+            findings = _stack_text(pilot, _REVIEW_FINDINGS)
+            raise TuiJourneyError(f"the review never allowed applying the changes (findings {findings[:300]!r})")
+        await pilot.pause()
+
+
+async def confirm_assumed_values(
+    pilot: Pilot[Any],
+    *,
+    binding: TuiOperationBinding,
+    seconds: float = 300.0,
+    maximum_polls: int = 600,
+) -> TuiTerminalEvidence | None:
+    """Confirm the assumed values the workbench offers to confirm, then review and apply them.
+
+    An assumed value is one the calculation holds that nobody is recorded as
+    having entered; while any remain the workbench offers confirming them
+    before it offers verifying.  Nothing is done, and ``None`` returned, when
+    the workbench on top offers another step.  Otherwise the next-step key
+    opens the confirmation dialog, which is ticked and confirmed; the values
+    it keeps are staged, reviewed with ``R`` and applied through ``binding``,
+    whose operation recalculates the declaration.  The applied terminal is
+    returned; after a succeeded one the workbench is back on top with its
+    re-read settled, but still showing the operation's notice, so the caller
+    opens the declaration afresh before its next operation.
+    """
+    from textual.widgets import Button, Checkbox
+
+    if not workbench_offers(pilot, "confirm"):
+        return None
+    _require_fresh_notice(pilot, label="confirming the assumed values")
+    await pilot.press(_NEXT_STEP_KEY)
+    tick = await _wait_for_dialog_control(
+        pilot, _BULK_TICK, seconds=seconds, label="its confirmation of assumed values"
+    )
+    if not isinstance(tick, Checkbox):
+        raise TuiJourneyError(f"{_BULK_TICK} is not a checkbox ({type(tick).__name__})")
+    if tick.disabled:
+        raise TuiJourneyError(
+            "the workbench offered to confirm assumed values but its dialog lists none it can confirm"
+        )
+    if not await _tick(pilot, tick):
+        raise TuiJourneyError("the confirmation of assumed values did not take the tick")
+    confirm = pilot.app.screen.query_one(_BULK_CONFIRM, Button)
+    if confirm.disabled:
+        raise TuiJourneyError("the confirmation of assumed values kept Confirm unavailable once ticked")
+    confirm.focus()
+    await pilot.press("enter")
+    deadline = time.monotonic() + seconds
+    while not workbench_offers(pilot, "apply"):
+        notice = workbench_notice(pilot)
+        if notice:
+            raise TuiJourneyError(f"the workbench did not keep the confirmed values (notice {notice[:240]!r})")
+        if time.monotonic() > deadline:
+            raise TuiJourneyError(
+                f"the workbench did not offer to apply the confirmed values (it offers {_offered_line(pilot)[:200]!r})"
+            )
+        await pilot.pause()
+    await open_review_ready_to_apply(pilot, seconds=seconds)
+    terminal = await activate_tui_operation(pilot, binding=binding, maximum_polls=maximum_polls)
+    if terminal.outcome is AcceptanceOutcome.PROVEN:
+        await wait_for_tui_refresh(pilot, binding=binding, maximum_polls=maximum_polls)
+    return terminal
 
 
 async def wait_for_tui_refresh(
@@ -833,23 +964,76 @@ def _require_fresh_notice(pilot: Pilot[Any], *, label: str, selector: str | None
         )
 
 
-def _require_offered_step(pilot: Pilot[Any], *, step: str, key: str) -> None:
+def _require_offered_step(pilot: Pilot[Any], *, step: str) -> None:
     """Require the workbench to offer ``step`` as the one its next-step key runs."""
+    if not workbench_offers(pilot, step):
+        raise TuiJourneyError(
+            f"the workbench does not offer {step} as its next step (it offers {_offered_line(pilot)[:200]!r})"
+        )
+
+
+def _offered_line(pilot: Pilot[Any]) -> str:
+    """Read the next-step line of the workbench on top, or nothing while another screen is on top."""
     from textual.css.query import NoMatches
 
+    try:
+        return _rendered_text(pilot.app.screen.query_one(WORKBENCH_NEXT))
+    except NoMatches:
+        return ""
+
+
+def _offered_step_pattern(step: str) -> re.Pattern[str]:
+    """The next-step line that offers ``step``, from the catalogue, with any count left open.
+
+    Recording the filing is offered after the export file, on the same line,
+    with the next-step key; the line must end with it.
+    """
     from cadrumo.core.i18n.render import tr
 
-    expected = tr(
+    key = _OFFERED_STEP_KEYS.get(step)
+    if key is None:
+        raise TuiJourneyError(f"the workbench offers no step named {step!r}")
+    if step == "record":
+        record = re.escape(f"{tr('tui.modelo.workbench.next.record')} [{key}]")
+        return re.compile(f"{_next_line_source('export', _OFFERED_STEP_KEYS['export'])}.*{record}$")
+    return re.compile(_next_line_source(step, key))
+
+
+def _next_line_source(step: str, key: str) -> str:
+    """The regular expression for the next-step line offering ``step``, matching any count."""
+    from cadrumo.core.i18n.render import tr
+
+    line = tr(
         "tui.modelo.workbench.next_line",
-        action=tr(f"tui.modelo.workbench.next.{step}", count=0),
-        key=key.upper(),
+        action=tr(f"tui.modelo.workbench.next.{step}", count=_COUNT_PLACEHOLDER),
+        key=key,
     )
-    try:
-        offered = _rendered_text(pilot.app.screen.query_one(WORKBENCH_NEXT))
-    except NoMatches:
-        offered = ""
-    if not offered.startswith(expected):
-        raise TuiJourneyError(f"the workbench does not offer {step} as its next step (it offers {offered[:200]!r})")
+    return re.escape(line).replace(_COUNT_PLACEHOLDER, r"\d+")
+
+
+async def _tick(pilot: Pilot[Any], box: Checkbox) -> bool:
+    """Tick a checkbox as a filer does, with the space bar on it, and say whether it is ticked."""
+    box.focus()
+    await pilot.press("space")
+    await pilot.pause()
+    return box.value
+
+
+async def _wait_for_dialog_control(pilot: Pilot[Any], selector: str, *, seconds: float, label: str) -> Widget:
+    """Wait for a dialog's control on the top screen, refusing at once if the workbench reports a refusal instead."""
+    from textual.css.query import NoMatches
+
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            return _query_visible_tui_control(pilot, selector)
+        except NoMatches:
+            notice = workbench_notice(pilot)
+            if notice:
+                raise TuiJourneyError(f"the workbench did not open {label}: {notice[:240]!r}") from None
+            if time.monotonic() > deadline:
+                raise TuiJourneyError(f"the workbench did not open {label}") from None
+            await pilot.pause()
 
 
 async def _wait_for_visible_tui_control(pilot: Pilot[Any], selector: str, *, maximum_polls: int) -> Widget:
@@ -1040,15 +1224,21 @@ def _stack_text(pilot: Pilot[Any], selector: str) -> str:
 
     The workbench's notice stays on the workbench while a dialog it opened
     sits above it, so it is read from the nearest screen down the stack that
-    has it.
+    has it.  The greeting the first workbench of a session shows there, until
+    the filer's first key, reports nothing, so it reads as no notice.
     """
     from textual.css.query import NoMatches
 
+    from cadrumo.core.i18n.render import tr
+
     for screen in reversed(pilot.app.screen_stack):
         try:
-            return _rendered_text(screen.query_one(selector))
+            text = _rendered_text(screen.query_one(selector))
         except NoMatches:
             continue
+        if selector == WORKBENCH_NOTICE and text == tr(_FIRST_OPEN_GREETING):
+            return ""
+        return text
     return ""
 
 
@@ -1148,8 +1338,10 @@ __all__ = [
     "blocked_tui_journey_evidence",
     "build_tui_journey_evidence",
     "canonical_financial_value_fingerprint",
+    "confirm_assumed_values",
     "create_continuation_checkpoint",
     "installed_lifecycle_contract",
+    "open_review_ready_to_apply",
     "open_workbench_export",
     "prove_continuation",
     "settled_notice_terminal",
@@ -1158,5 +1350,6 @@ __all__ = [
     "wait_for_tui_refresh",
     "wait_for_workbench",
     "workbench_notice",
+    "workbench_offers",
     "write_tui_journey_receipt",
 ]
