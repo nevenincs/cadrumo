@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b8643d1053605de2fdd12055792c82182c16b203cf9474f353ec1313d86b5d9'
+body_hash: 'sha256:d479df3c9a93842007ffc5769076615282aff80cb9eff2732f8427ae69dc848b'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -327,6 +327,32 @@ The nitpicky docs build also reports `summary_layout` failing to import under th
 `reportlab`, and an unterminated inline literal at a docstring's line 16 that no module changed
 on this branch carries (checked by a napoleon-aware scan shown to catch a planted case). The
 phase's own warning, a rate unit read as a type, is fixed in aaec46451a. Open for their owners.
+
+### main-stale-tests | medium | five tests fail on main itself after its registry changes
+
+Measured on a detached copy of origin/main at cb6cd50ad8 on 2026-10-01: the same five tests fail
+there as on this branch, whose test files are identical and whose only registry difference is
+added form layouts. `test_modelo_303_special_case_casilla_routing` feeds 42 into a binding no
+ledger can drive alone while the registry correctly sums the deduction boxes into [45] (the 2025
+record design and the AEAT IVA manual's worked example); `test_cross_period_clean_state` still
+encodes the Modelo 100 withholding dependencies an accepted decision removed;
+`test_modelo_requires_data_inventory` expects bindings that only a computed casilla reads; and
+`test_unrouted_iva_quantity_screen` predates the import base binding. Open for main, through a
+pull request.
+
+### intra-eu-deduction-hold-back | high | an intra-community acquisition may accrue without deducting
+
+`docs/how-to/ledger-evidence.md:98` says an `intra_eu_current` deduction row cannot be
+substantiated from the ledger and is held back. If so, its self-assessed VAT reaches 303 box [11]
+while [37] stays at zero, overstating the VAT payable, unless the filer is told. Being checked in
+the producer step; on main as well.
+
+### concurrent-checkpoints | low | an integration session commits the shared tree while lanes work
+
+Checkpoints 421f48dd30, 4a9190c8fc, 19eecd8355 and eaac53fd5b and the merges of main swept
+lanes' uncommitted work into history, one of them while a file was mid-edit. Nothing was lost;
+lanes verify their files against HEAD before each commit and report which commit holds their
+work.
 
 ## Recommendations
 
