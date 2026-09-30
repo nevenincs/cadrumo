@@ -41,6 +41,7 @@ from ..workflow.run_models import WorkflowResult
 from .edit_models import (
     ModeloEditCompatibilityRefusalV1,
     ModeloEditDomainRefusalV1,
+    ModeloEditParseRefusalV1,
     ModeloEditRefusalV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditUnsupportedIntentRefusalV1,
@@ -523,7 +524,7 @@ def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefused
             return ModeloEditIntentUnsupportedError()
         case ModeloEditVersionRefusalV1() | ModeloEditCompatibilityRefusalV1():
             return ModeloEditContractIncompatibleError()
-        case ModeloEditDomainRefusalV1():
+        case ModeloEditDomainRefusalV1() | ModeloEditParseRefusalV1():
             return ModeloEditRefusedError()
 
 

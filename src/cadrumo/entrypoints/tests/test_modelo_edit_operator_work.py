@@ -119,7 +119,7 @@ def test_clearing_a_casilla_a_source_feeds_is_refused_and_writes_nothing(tmp_pat
         _refused_without_effect(work, applied, head_before=head.calculation_revision_id)
 
 
-@pytest.mark.parametrize("lexeme", ["1.234,56", "1e3", "12,5", "abc"])
+@pytest.mark.parametrize("lexeme", ["1.234,56", "1e3", "NaN", "12,5", "abc", "12.345"])
 @pytest.mark.timeout(180)
 def test_a_malformed_amount_is_a_typed_refusal_not_a_raw_error(tmp_path: Path, lexeme: str) -> None:
     with seeded_operator_work(tmp_path) as work:
@@ -155,3 +155,29 @@ def test_a_modelo_303_edit_replays_its_filing_evidence_and_keeps_earlier_values(
 
     assert head.filing_instance_evidence == first.filing_instance_evidence
     assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={one: "10", two: "20"})
+
+
+@pytest.mark.timeout(240)
+def test_a_ratio_is_not_held_to_the_money_scale_on_its_way_to_the_engine(tmp_path: Path) -> None:
+    """A three-decimal ratio crosses the wire and the executor; the money bound once refused it."""
+    with seeded_operator_work(tmp_path, modelo="303") as work:
+        first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work.work_unit_id,
+            ports=work.ports,
+            filing_instance_evidence=work.m303_filing_evidence(),
+            record_operator_layer=True,
+            clock=SEEDED_AT,
+        ).revision
+        ratio = next(
+            entry.casilla_id
+            for entry in work.baseline().permitted_surface
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
+            and entry.data_type == "ratio"
+            and entry.grammar.minimum_value() in {None, Decimal(0)}
+            and entry.grammar.maximum_value() in {None, Decimal(1), Decimal(100)}
+            and entry.casilla_id not in first.input_values_by_casilla_id
+        )
+        _updated(work.apply(scalar=(_set(ratio, "0.125"),)))
+        head = work.require_head()
+
+    assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={ratio: "0.125"})

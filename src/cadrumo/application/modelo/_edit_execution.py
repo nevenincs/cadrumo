@@ -37,14 +37,14 @@ from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
+from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -58,7 +58,6 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
-    ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
@@ -68,6 +67,8 @@ from .edit_models import (
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,
+    ModeloEditParseReason,
+    ModeloEditParseRefusalV1,
     ModeloEditRefusalCode,
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
@@ -75,8 +76,10 @@ from .edit_models import (
     ModeloEditSubmissionV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
+    ModeloEditValueAddressV1,
     ModeloScalarEditIntentV1,
 )
+from .edit_parsing import modelo_edit_address_grammar, validate_modelo_edit_value
 from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
 from .edit_services import RESPONSIBLE_OWNER as _RESPONSIBLE_OWNER
 from .edit_services import (
@@ -84,8 +87,8 @@ from .edit_services import (
     reconfirm_modelo_edit_baseline,
     validate_binding_intent,
     validate_scalar_intent,
-    writable_scalar_entry,
 )
+from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -98,14 +101,6 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
     ModeloEditRowIntentKind.DELETE_ROW: ModeloEditUnsupportedIntentReason.DELETE_ROW_NOT_YET_WIRED,
     ModeloEditRowIntentKind.MOVE_ROW: ModeloEditUnsupportedIntentReason.MOVE_ROW_NOT_YET_WIRED,
 }
-
-#: Casilla data types the engine reads on its decimal channel. A boolean casilla
-#: answers on the same channel encoded 0 / 1; date and year have no engine
-#: channel at all yet, so an edit of one is refused rather than guessed.
-_DECIMAL_CHANNEL_DATA_TYPES = frozenset({"decimal", "money", "integer", "ratio"})
-_BOOLEAN_DATA_TYPE = "boolean"
-_CHANNEL_UNAVAILABLE_DATA_TYPES = frozenset({"date", "year"})
-_BOOLEAN_TOKENS: dict[str, str] = {"0": "0", "1": "1"}
 
 #: A typed application refusal raised before the calculation boundary built its
 #: commit is a precondition the submission cannot satisfy: nothing was written,
@@ -146,13 +141,32 @@ def _domain_refusal(
     )
 
 
-def _value_refusal(address: ModeloEditAddressV1, fact: str) -> ModeloEditExecutionNoEffectV1:
-    return _domain_refusal(
-        ModeloEditRefusalCode.VALIDATION_FAILED,
-        address=address,
-        facts=(fact,),
-        condition="submit a value the address's declared type and channel accept",
-    )
+def _parse_refusal(outcome: ModeloEditParseRefusalV1) -> ModeloEditExecutionNoEffectV1:
+    return ModeloEditExecutionNoEffectV1(refusal=outcome)
+
+
+def _channel_value(
+    value: ModeloScalar,
+    *,
+    address: ModeloEditValueAddressV1,
+    grammar: ModeloEditValueGrammarV1,
+    tax_id_format: SpanishTaxIdFormat | None,
+) -> str | ModeloEditParseRefusalV1:
+    """Re-apply the parser's typed validation and render the value for its engine channel.
+
+    A boolean travels the decimal channel encoded 0 / 1; a decimal as its
+    canonical string; text as the canonical text the registry validator
+    returned. The executor never trusts that a frontend ran the parser.
+    """
+    outcome = validate_modelo_edit_value(value, address=address, grammar=grammar, tax_id_format=tax_id_format)
+    if isinstance(outcome, ModeloEditParseRefusalV1):
+        return outcome
+    parsed = outcome.value
+    if isinstance(parsed, bool):
+        return "1" if parsed else "0"
+    if isinstance(parsed, Decimal):
+        return canonical_decimal_string(parsed)
+    return str(parsed)
 
 
 @dataclass(slots=True)
@@ -189,58 +203,23 @@ class _OperatorState:
         )
 
 
-def _canonical_decimal_value(value: ModeloScalar) -> Decimal | None:
-    """Read a typed or wire-carried amount through the canonical decimal grammar, never coercing."""
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, Decimal):
-        return value if value.is_finite() else None
-    if isinstance(value, int):
-        return Decimal(value)
-    if isinstance(value, str):
-        return try_parse_canonical_decimal(value)
-    return None
-
-
-def _boolean_token(value: ModeloScalar) -> str | None:
-    """Encode a boolean answer on the engine's 0 / 1 decimal channel."""
-    if isinstance(value, bool):
-        return "1" if value else "0"
-    if isinstance(value, Decimal | int):
-        return _BOOLEAN_TOKENS.get(canonical_decimal_string(Decimal(value)))
-    if isinstance(value, str):
-        return _BOOLEAN_TOKENS.get(value.strip())
-    return None
-
-
 def _apply_set_scalar(
     state: _OperatorState,
     intent: ModeloScalarEditIntentV1,
     *,
-    data_type: str,
+    grammar: ModeloEditValueGrammarV1,
+    tax_id_format: SpanishTaxIdFormat | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
-    """Route one SET value onto the channel its casilla's declared type reaches."""
+    """Validate one SET value and place it on the channel its grammar reaches."""
     casilla_id = intent.address.casilla_id
-    value = intent.value
-    if data_type in _CHANNEL_UNAVAILABLE_DATA_TYPES:
-        return _value_refusal(intent.address, "value_channel_unavailable")
-    if data_type == _BOOLEAN_DATA_TYPE:
-        token = _boolean_token(value)
-        if token is None:
-            return _value_refusal(intent.address, "not_a_boolean")
-        state.withdraw(casilla_id)
-        state.decimal_casilla_inputs[casilla_id] = token
-    elif data_type in _DECIMAL_CHANNEL_DATA_TYPES:
-        amount = _canonical_decimal_value(value)
-        if amount is None:
-            return _value_refusal(intent.address, "not_a_number")
-        state.withdraw(casilla_id)
-        state.decimal_casilla_inputs[casilla_id] = canonical_decimal_string(amount)
+    value = _channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
+    if isinstance(value, ModeloEditParseRefusalV1):
+        return _parse_refusal(value)
+    state.withdraw(casilla_id)
+    if grammar.channel is ModeloEditValueChannel.DECIMAL:
+        state.decimal_casilla_inputs[casilla_id] = value
     else:
-        if not isinstance(value, str):
-            return _value_refusal(intent.address, "not_text")
-        state.withdraw(casilla_id)
-        state.text_casilla_inputs[casilla_id] = value.strip()
+        state.text_casilla_inputs[casilla_id] = value
     state.cleared_casilla_ids.discard(casilla_id)
     return None
 
@@ -259,15 +238,18 @@ def _apply_scalar_intents(
     submission: ModeloEditSubmissionV1,
     *,
     head: CalculationRevision | None,
+    tax_id_format: SpanishTaxIdFormat | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Apply every scalar intent to the operator state, refusing the first invalid one."""
     for intent in submission.scalar_intents:
         casilla_id = intent.address.casilla_id
         if intent.kind is ModeloEditScalarIntentKind.SET_TYPED_VALUE:
-            entry = writable_scalar_entry(submission.baseline, casilla_id)
-            if entry is None:
-                return _value_refusal(intent.address, "address_not_writable")
-            refusal = _apply_set_scalar(state, intent, data_type=str(entry.data_type))
+            grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
+            if grammar is None:
+                return _parse_refusal(
+                    ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
+                )
+            refusal = _apply_set_scalar(state, intent, grammar=grammar, tax_id_format=tax_id_format)
             if refusal is not None:
                 return refusal
         elif intent.kind is ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE:
@@ -287,34 +269,11 @@ def _apply_scalar_intents(
     return None
 
 
-def _operator_binding_value(
-    intent: ModeloBindingEditIntentV1,
-    *,
-    revision: ModeloRevision,
-) -> str | ModeloEditExecutionNoEffectV1:
-    """Canonicalise one SET override for the channel its binding declares."""
-    binding_id = intent.address.binding_id
-    value = intent.value
-    if binding_id in revision_date_binding_ids(revision):
-        return _value_refusal(intent.address, "value_channel_unavailable")
-    if binding_id in enum_consumed_binding_ids(revision):
-        if not isinstance(value, str) or not value.strip():
-            return _value_refusal(intent.address, "not_a_choice")
-        return value.strip()
-    token = _boolean_token(value) if isinstance(value, bool) else None
-    if token is not None:
-        return token
-    amount = _canonical_decimal_value(value)
-    if amount is None:
-        return _value_refusal(intent.address, "not_a_number")
-    return canonical_decimal_string(amount)
-
-
 def _apply_binding_intents(
     state: _OperatorState,
     submission: ModeloEditSubmissionV1,
     *,
-    revision: ModeloRevision,
+    tax_id_format: SpanishTaxIdFormat | None,
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Apply every binding intent to the operator state, refusing the first invalid one."""
     for intent in submission.binding_intents:
@@ -322,9 +281,14 @@ def _apply_binding_intents(
         if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
             state.binding_overrides.pop(binding_id, None)
             continue
-        value = _operator_binding_value(intent, revision=revision)
-        if isinstance(value, ModeloEditExecutionNoEffectV1):
-            return value
+        grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
+        if grammar is None:
+            return _parse_refusal(
+                ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
+            )
+        value = _channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
+        if isinstance(value, ModeloEditParseRefusalV1):
+            return _parse_refusal(value)
         state.binding_overrides[binding_id] = value
     return None
 
@@ -569,9 +533,10 @@ def _prepare_edit(
         )
     context = caller_context_of(head)
     state = _OperatorState.from_context(context)
-    refusal = _apply_scalar_intents(state, submission, head=head) or _apply_binding_intents(
-        state, submission, revision=snapshot.revision
-    )
+    tax_id_format = runtime_tax_id_format(authority=operation)
+    refusal = _apply_scalar_intents(
+        state, submission, head=head, tax_id_format=tax_id_format
+    ) or _apply_binding_intents(state, submission, tax_id_format=tax_id_format)
     if refusal is not None:
         return refusal
     detail_rows = _reconstruct_detail_rows(

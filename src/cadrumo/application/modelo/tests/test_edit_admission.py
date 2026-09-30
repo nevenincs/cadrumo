@@ -11,6 +11,11 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
@@ -78,16 +83,23 @@ def _recording_operation(prepared: RegistrySnapshot) -> tuple[PinnedAuthorityOpe
     return _RecordingOperation.__new__(_RecordingOperation), calls
 
 
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
+
+
 def _casilla(casilla_id: str, input_kind: InputKind, data_type: CasillaDataType) -> CasillaDefinition:
     return CasillaDefinition.model_construct(id=casilla_id, input_kind=input_kind, data_type=data_type)
 
 
 def _manual_binding(binding_id: str) -> BindingDefinition:
-    return BindingDefinition.model_construct(id=binding_id, provider=ManualInputProvider.model_construct())
+    return BindingDefinition.model_construct(
+        id=binding_id, provider=ManualInputProvider.model_construct(), value=_MONEY_VALUE
+    )
 
 
 def _ledger_binding(binding_id: str) -> BindingDefinition:
-    return BindingDefinition.model_construct(id=binding_id, provider=LedgerRentaIncomeProvider.model_construct())
+    return BindingDefinition.model_construct(
+        id=binding_id, provider=LedgerRentaIncomeProvider.model_construct(), value=_MONEY_VALUE
+    )
 
 
 def _modelo_100_snapshot(

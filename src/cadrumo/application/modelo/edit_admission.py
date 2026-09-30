@@ -45,6 +45,7 @@ from .edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .edit_value_grammar import binding_value_grammar, casilla_value_grammar
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -146,6 +147,7 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
                         ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
                         ModeloEditScalarIntentKind.RESTORE_SOURCE_VALUE,
                     ),
+                    grammar=casilla_value_grammar(casilla),
                 )
             )
             continue
@@ -168,6 +170,7 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
                         ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
                         ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
                     ),
+                    grammar=binding_value_grammar(binding, revision=revision),
                 )
             )
             continue

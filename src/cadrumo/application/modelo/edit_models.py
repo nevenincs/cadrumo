@@ -52,6 +52,7 @@ from .edit_contract import (
 from .edit_contract import (
     ModeloEditMutationResultReceiptV1 as _ModeloEditMutationResultReceiptV1,
 )
+from .edit_value_grammar import ModeloEditValueGrammarV1
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
@@ -141,11 +142,24 @@ class ModeloEditBindingIntentKind(StrEnum):
 
 
 class ModeloEditNonWritableReason(StrEnum):
-    """Why one permitted-surface address is not writable in this baseline."""
+    """Why one permitted-surface address is not writable in this baseline.
+
+    ``ROW_FIELD_TEMPLATE`` is a casilla that stands for a field of a repeated
+    row, not one scalar value; ``VALUE_CHANNEL_UNAVAILABLE`` is an address whose
+    value type has no engine input channel yet (date and year casillas,
+    date-consumed and row-set bindings). ``SOURCE_LOCKED`` is a binding a
+    deterministic source owns, whose override would make the declaration stop
+    reflecting the records it adds up; ``OVERRIDE_POLICY_UNDECIDED`` is a
+    binding whose source kind has no grounded override policy yet.
+    """
 
     COMPUTED_BY_FORMULA = "computed_by_formula"
     SCHEMA_DECLARED_READ_ONLY = "schema_declared_read_only"
     CAPABILITY_UNAVAILABLE = "capability_unavailable"
+    ROW_FIELD_TEMPLATE = "row_field_template"
+    VALUE_CHANNEL_UNAVAILABLE = "value_channel_unavailable"
+    SOURCE_LOCKED = "source_locked"
+    OVERRIDE_POLICY_UNDECIDED = "override_policy_undecided"
 
 
 class ModeloEditFindingSeverity(StrEnum):
@@ -275,6 +289,7 @@ class ModeloEditWritableScalarSurfaceEntryV1(EditModel):
     casilla_id: CasillaId
     data_type: CasillaDataTypeValue
     allowed_intents: Annotated[tuple[ModeloEditScalarIntentKind, ...], Field(min_length=1, max_length=3)]
+    grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
     @classmethod
@@ -340,6 +355,7 @@ class ModeloEditWritableBindingOverrideSurfaceEntryV1(EditModel):
     kind: Literal["writable_binding_override"] = "writable_binding_override"
     binding_id: BindingId
     allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=2)]
+    grammar: ModeloEditValueGrammarV1
 
     @field_validator("allowed_intents")
     @classmethod
@@ -504,15 +520,72 @@ class ModeloEditAdmittedV1(EditModel):
     baseline: ModeloEditBaselineV1
 
 
-class ModeloEditParsedValueV1(EditModel):
-    """A successfully parsed canonical typed value for one scalar address.
+class ModeloEditNormalisation(StrEnum):
+    """How the parser read an entry, reported so an editor can show its reading back."""
 
-    Never echoes the transient raw lexeme that produced it.
+    FOREIGN_DECIMAL_MARK_READ = "foreign_decimal_mark_read"
+    SEPARATORS_REMOVED = "separators_removed"
+    UPPER_CASED = "upper_cased"
+    CASE_MATCHED = "case_matched"
+    TRIMMED = "trimmed"
+
+
+type ModeloEditValueAddressV1 = Annotated[
+    ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1,
+    Field(discriminator="kind"),
+]
+"""An address that takes one typed value: a casilla or a binding override."""
+
+
+class ModeloEditParsedValueV1(EditModel):
+    """A successfully parsed canonical typed value for one casilla or binding address.
+
+    Locale-free: a decimal is a :class:`~decimal.Decimal`, a boolean a ``bool``
+    and text its canonical string. Never echoes the transient raw lexeme that
+    produced it; ``normalisations`` says how it was read.
     """
 
     outcome: Literal["parsed"] = "parsed"
-    address: ModeloEditScalarAddressV1
+    address: ModeloEditValueAddressV1
     value: ModeloScalar
+    normalisations: Annotated[tuple[ModeloEditNormalisation, ...], Field(max_length=4)] = ()
+
+
+class ModeloEditParseReason(StrEnum):
+    """The closed reasons one entry cannot be read as its address's value.
+
+    Each is a stable code with message arguments (a bound, a scale, a count),
+    never the refused lexeme itself.
+    """
+
+    EMPTY = "empty"
+    NOT_A_NUMBER = "not_a_number"
+    AMBIGUOUS_SEPARATOR = "ambiguous_separator"
+    BAD_GROUPING = "bad_grouping"
+    SCIENTIFIC_NOTATION = "scientific_notation"
+    NON_FINITE = "non_finite"
+    EXPLICIT_PLUS = "explicit_plus"
+    TOO_MANY_DECIMALS = "too_many_decimals"
+    NOT_AN_INTEGER = "not_an_integer"
+    NEGATIVE_NOT_ALLOWED = "negative_not_allowed"
+    POSITIVE_NOT_ALLOWED = "positive_not_allowed"
+    BELOW_MINIMUM = "below_minimum"
+    ABOVE_MAXIMUM = "above_maximum"
+    OUT_OF_OPERAND_RANGE = "out_of_operand_range"
+    NOT_A_BOOLEAN = "not_a_boolean"
+    NOT_TEXT = "not_text"
+    NOT_IN_CHOICES = "not_in_choices"
+    TOO_SHORT = "too_short"
+    TOO_LONG = "too_long"
+    PATTERN_MISMATCH = "pattern_mismatch"
+    NIF_LENGTH = "nif_length"
+    NIF_LEADER = "nif_leader"
+    NIF_CHECKSUM = "nif_checksum"
+    IBAN_SHAPE = "iban_shape"
+    IBAN_CHECKSUM = "iban_checksum"
+    INVALID_CODE = "invalid_code"
+    CHANNEL_UNAVAILABLE = "channel_unavailable"
+    ADDRESS_NOT_WRITABLE = "address_not_writable"
 
 
 class ModeloEditPreflightEvaluatedV1(EditModel):
@@ -605,6 +678,21 @@ class ModeloEditUnsupportedIntentReason(StrEnum):
     RECALCULATE_NOT_YET_WIRED = "recalculate_not_yet_wired"
 
 
+class ModeloEditParseRefusalV1(EditModel):
+    """One entry that cannot be read as its address's value; carries no lexeme.
+
+    Produced by the parser for a typed lexeme and by the executor when a
+    submitted value fails the same typed validation, so an address-level reason
+    is available wherever the refusal is seen in process.
+    """
+
+    kind: Literal["parse"] = "parse"
+    edit_contract_version: Literal[1] = 1
+    address: ModeloEditValueAddressV1
+    reason: ModeloEditParseReason
+    message_arguments: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_MESSAGE_ARGUMENTS)] = ()
+
+
 class ModeloEditUnsupportedIntentRefusalV1(EditModel):
     """A syntactically admitted intent this V1 executor cannot yet execute.
 
@@ -629,7 +717,8 @@ type ModeloEditRefusalV1 = Annotated[
     | ModeloEditCompatibilityRefusalV1
     | ModeloEditStaleBaselineRefusalV1
     | ModeloEditDomainRefusalV1
-    | ModeloEditUnsupportedIntentRefusalV1,
+    | ModeloEditUnsupportedIntentRefusalV1
+    | ModeloEditParseRefusalV1,
     Field(discriminator="kind"),
 ]
 
@@ -897,6 +986,9 @@ __all__ = [
     "ModeloEditNonWritableReason",
     "ModeloEditNonWritableRowGroupSurfaceEntryV1",
     "ModeloEditNonWritableScalarSurfaceEntryV1",
+    "ModeloEditNormalisation",
+    "ModeloEditParseReason",
+    "ModeloEditParseRefusalV1",
     "ModeloEditParseResultV1",
     "ModeloEditParsedValueV1",
     "ModeloEditPermittedSurfaceEntryV1",
@@ -914,6 +1006,7 @@ __all__ = [
     "ModeloEditSubmissionV1",
     "ModeloEditUnsupportedIntentReason",
     "ModeloEditUnsupportedIntentRefusalV1",
+    "ModeloEditValueAddressV1",
     "ModeloEditVersionRefusalV1",
     "ModeloEditWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditWritableDetailRowSurfaceEntryV1",

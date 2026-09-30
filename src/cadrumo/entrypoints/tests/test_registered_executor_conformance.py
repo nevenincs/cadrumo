@@ -667,6 +667,11 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
         ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
+    from ...application.modelo.edit_value_grammar import (
+        ModeloEditValueChannel,
+        ModeloEditValueFamily,
+        ModeloEditValueGrammarV1,
+    )
     from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
     from ...application.operations.registry import OperationSchemaIdentityV1
     from ...core.casilla_id import validated_casilla_id
@@ -711,6 +716,13 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
             allowed_intents=(
                 ModeloEditScalarIntentKind.SET_TYPED_VALUE,
                 ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
+            ),
+            grammar=ModeloEditValueGrammarV1(
+                data_type=CasillaDataType.MONEY.value,
+                family=ModeloEditValueFamily.DECIMAL,
+                channel=ModeloEditValueChannel.DECIMAL,
+                max_fraction_digits=2,
+                money_operand_bound=True,
             ),
         ),
     )

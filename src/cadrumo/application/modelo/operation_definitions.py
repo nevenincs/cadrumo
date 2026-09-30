@@ -24,9 +24,10 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import re
 from collections.abc import Callable, Mapping
 from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
@@ -129,11 +130,14 @@ from .edit_models import (
     ModeloEditScalarIntentKind,
     ModeloEditSchemaIdentityV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
+from .edit_value_grammar import MONEY_OPERAND_MAXIMUM, ModeloEditValueGrammarV1
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
@@ -1716,8 +1720,8 @@ _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND = OperationTransientFinancialOperandDeclara
     operand_kind=_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND,
     currency="EUR",
     scale=2,
-    minimum=Decimal("-999999999999.99"),
-    maximum=Decimal("999999999999.99"),
+    minimum=-MONEY_OPERAND_MAXIMUM,
+    maximum=MONEY_OPERAND_MAXIMUM,
     lifetime=timedelta(minutes=5),
 )
 
@@ -1805,9 +1809,9 @@ class ModeloEditApplyBaselineV1(BaseModel):
 #: values, though NOT where this once said. ``to_submission`` does not restore
 #: the ``Decimal``: ``ModeloScalar`` is a plain union and ``EditModel`` is
 #: strict, so a string crosses back as a string. The reconstruction happens one
-#: layer further in, at the execution boundary, which coerces with
-#: ``Decimal(str(value))`` keyed on the CASILLA'S DECLARED ``data_type`` from
-#: the registry rather than on the value's Python type. That is the stronger
+#: layer further in, at the execution boundary, which re-applies the address's
+#: admitted value grammar (the registry's declared type, precision and bounds)
+#: rather than trusting the value's Python type. That is the stronger
 #: guarantee -- the registry decides what a casilla holds, not the wire -- but
 #: it does mean a round trip through this mirror is not an identity for
 #: ``Decimal``, and a test asserting that it is will fail correctly.
@@ -1825,10 +1829,10 @@ def _wire_scalar_value(value: ModeloScalar) -> _ModeloEditApplyScalarValue:
     Not a total inverse of the round trip, deliberately. ``ModeloScalar``
     admits a plain ``str``, so a string that spells a number is
     indistinguishable on the wire from a ``Decimal`` and comes back as a
-    ``str``. Nothing is lost by that: the execution boundary reconstructs the
-    amount with ``Decimal(str(value))`` according to the casilla's declared
-    registry ``data_type``, so what a casilla holds is decided by the registry
-    rather than by which Python type happened to survive the trip.
+    ``str``. Nothing is lost by that: the execution boundary reads the value
+    again through the address's admitted grammar, so what a casilla holds is
+    decided by the registry rather than by which Python type happened to
+    survive the trip.
     """
     return str(value) if isinstance(value, Decimal) else value
 
@@ -1905,21 +1909,28 @@ class ModeloEditApplyRowIntentV1(BaseModel):
         )
 
 
-def _amount_within_declared_operand_bounds(value: _ModeloEditApplyScalarValue) -> bool:
-    """Report whether a wire scalar value that parses as a decimal amount stays in bounds.
+def _amount_within_declared_operand_bounds(
+    value: _ModeloEditApplyScalarValue,
+    grammar: ModeloEditValueGrammarV1 | None,
+) -> bool:
+    """Report whether a money address's canonical amount stays inside the declared operand.
 
-    A value that is not decimal-shaped (an integer, a plain non-numeric
-    string, a boolean, or a date) carries no financial-operand meaning and is
-    left to whatever business validation the domain reconstruction applies.
+    The operand is a euro amount, so the bound applies to money addresses
+    only: a ratio of ``0.125`` or a four-decimal quantity is a legitimate value
+    that the money bound must not refuse. Only the declared range is judged
+    here; a value that is not a canonical decimal, or a money amount finer than
+    cents, is refused by the executor with its typed, address-level reason
+    rather than by a validation error at the wire.
     """
-    if not isinstance(value, str):
+    if grammar is None or not grammar.money_operand_bound or not isinstance(value, str):
         return True
-    try:
-        amount = Decimal(value)
-    except InvalidOperation:
+    if _CANONICAL_WIRE_DECIMAL.fullmatch(value) is None:
         return True
-    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(amount)
+    amount = Decimal(value)
+    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.minimum <= amount <= _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.maximum
 
+
+_CANONICAL_WIRE_DECIMAL = re.compile(r"^-?\d+(\.\d+)?$")
 
 _WIRE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -2284,20 +2295,35 @@ class ModeloEditApplySubmissionV1(BaseModel):
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
-        """Enforce the manual-override operand's own declared currency, scale and range.
+        """Enforce the manual-override operand's declared range on money addresses.
 
         The broker path (`OperationTransientFinancialOperandProtocolV1`) that
         would normally enforce `_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND` is not
         reachable from any executor today (`OperationExecutorContext` has no
         accessor for it). The manual-override amount instead arrives here,
-        through the already-admitted scalar intent value, so this duplicates
-        the bounds the declaration promises rather than leaving them
-        unenforced. It should collapse into the broker once that wire lands.
+        through the already-admitted intent value, so this duplicates the
+        bounds the declaration promises rather than leaving them unenforced.
+        The bound is looked up by address in the baseline's admitted grammar,
+        so only money casillas and money bindings are held to it. It should
+        collapse into the broker once that wire lands.
         """
+        grammars: dict[tuple[str, str], ModeloEditValueGrammarV1] = {}
+        for entry in self.baseline.permitted_surface:
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                grammars["writable_scalar", entry.casilla_id] = entry.grammar
+            elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                grammars["writable_binding_override", entry.binding_id] = entry.grammar
         for intent in self.scalar_intents:
-            if not _amount_within_declared_operand_bounds(intent.value):
+            grammar = grammars.get(("writable_scalar", intent.address.casilla_id))
+            if not _amount_within_declared_operand_bounds(intent.value, grammar):
                 raise ValueError(
                     "scalar edit intent amount is outside the declared manual-override financial operand bounds"
+                )
+        for binding_intent in self.binding_intents:
+            grammar = grammars.get(("writable_binding_override", binding_intent.address.binding_id))
+            if not _amount_within_declared_operand_bounds(binding_intent.value, grammar):
+                raise ValueError(
+                    "binding edit intent amount is outside the declared manual-override financial operand bounds"
                 )
         return self
 

@@ -40,6 +40,7 @@ from ..edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
+from ..edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, ModeloEditValueGrammarV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -76,6 +77,13 @@ def _scalar_surface_entry() -> ModeloEditWritableScalarSurfaceEntryV1:
         casilla_id="casilla-01",
         data_type=CasillaDataType.MONEY,
         allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
+        grammar=ModeloEditValueGrammarV1(
+            data_type=CasillaDataType.MONEY.value,
+            family=ModeloEditValueFamily.DECIMAL,
+            channel=ModeloEditValueChannel.DECIMAL,
+            max_fraction_digits=2,
+            money_operand_bound=True,
+        ),
     )
 
 
