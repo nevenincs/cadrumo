@@ -2247,6 +2247,9 @@ tui:
           reconciliation_mismatch: 'Két számnak egyeznie kellene, de nem egyezik.
             Egyiket sem választjuk ki Ön helyett: nézze át mindkettőt, és javítsa
             ki a hibásat.'
+          stale_calculation: A nyilvántartása megváltozott a bevallás kiszámítása
+            óta, ezért a számai már eltérhetnek tőle. A benyújtás addig nem rögzíthető,
+            amíg újra ki nem számítja.
         empty: Nincs átnézendő probléma.
         go_to_box: Ugrás a rovathoz
         key:
@@ -2273,6 +2276,7 @@ tui:
           declaration: A teljes bevallás
           not_on_form: Egy rovat, amely nem szerepel a bevallás oldalain
           record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
+          records: Az Ön nyilvántartásában
           unnumbered: 'Rovatszám nélküli értékek: {count}'
       key:
         back: Vissza

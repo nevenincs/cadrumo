@@ -85,7 +85,8 @@ def test_a_bound_box_says_where_its_value_comes_from_and_what_uses_it(operation:
     assert "[04]" in net.feeds
 
 
-def test_missing_constraints_are_said_to_be_undeclared(operation: PinnedAuthorityOperation) -> None:
+def test_a_box_without_limits_states_none(operation: PinnedAuthorityOperation) -> None:
+    """No sentence stands in for limits a box does not have: the card shows limits only where they exist."""
     snapshot = operation.snapshot("130", filing_year=2026, period="1T")
     unconstrained = next(item for item in snapshot.revision.casillas if item.constraints is None)
 
@@ -93,7 +94,7 @@ def test_missing_constraints_are_said_to_be_undeclared(operation: PinnedAuthorit
         unconstrained.id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON
     )
 
-    assert card.constraints == ("No limits are declared for this box.",)
+    assert card.constraints == ()
 
 
 def test_an_undefined_casilla_is_refused(operation: PinnedAuthorityOperation) -> None:

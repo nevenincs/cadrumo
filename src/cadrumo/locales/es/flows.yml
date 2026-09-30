@@ -179,6 +179,7 @@ flows:
           cross_period_dependency_unclean: Dependencia anterior no limpia
           missing_required_casilla: Falta una casilla obligatoria
           reconciliation_mismatch: Discrepancia de conciliación
+          stale_calculation: Cálculo desactualizado
         finding_severity:
           blocking: Bloqueante
           warning: Advertencia

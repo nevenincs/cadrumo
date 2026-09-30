@@ -1252,6 +1252,12 @@ application:
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
         period %{period}, was calculated: %{changed_count} entries changed and %{removed_count}
         removed. Calculate it again.'
+      ledger_snapshot_drift_changed: 'Your records changed after modelo %{modelo}
+        %{filing_year}, period %{period}, was calculated (entries changed: %{changed_count}).
+        Calculate it again.'
+      ledger_snapshot_drift_removed: 'Your records changed after modelo %{modelo}
+        %{filing_year}, period %{period}, was calculated (entries removed: %{removed_count}).
+        Calculate it again.'
       m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,
@@ -1332,7 +1338,6 @@ application:
         max_length: At most {maximum} characters.
         min_length: At least {minimum} characters.
         non_negative: Cannot be negative.
-        none_declared: No limits are declared for this box.
         range: Between {minimum} and {maximum}.
       formula:
         clamp: '{value} kept between {minimum} and {maximum}'

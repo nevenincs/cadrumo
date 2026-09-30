@@ -2209,6 +2209,9 @@ tui:
             If the right value is zero, enter 0 so that it counts as yours.
           reconciliation_mismatch: 'Two figures that should agree do not. Neither
             is chosen for you: check both and correct the one that is wrong.'
+          stale_calculation: Your records changed after this declaration was calculated,
+            so its figures may no longer match them. The filing cannot be recorded
+            until it is calculated again.
         empty: Nothing to look at.
         go_to_box: Go to box
         key:
@@ -2234,6 +2237,7 @@ tui:
           declaration: Whole declaration
           not_on_form: A box not shown on this declaration's pages
           record_value: A value every record in a table needs
+          records: In your records
           unnumbered: 'Values without a box number: {count}'
       key:
         back: Back

@@ -15,7 +15,7 @@ from textual.widgets import Input, OptionList, Static
 
 from ......application.modelo.work_form_models import ModeloFormBlocker
 from ......core.config import override_settings
-from ......core.i18n.render import lookup_translation
+from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..editor import CasillaEditorScreen
@@ -97,12 +97,19 @@ async def test_a_small_terminal_says_recorded_as_filed_once() -> None:
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 24)) as pilot:
             await _settle(pilot)
-            shown = "\n".join(
-                str(widget.render()) for widget in screen.query(Static) if widget.display and widget.region.area
+            # The notice surfaces: the header and the journey line, and whatever else states the declaration.
+            notices = "\n".join(
+                str(widget.render())
+                for widget in screen.query(Static)
+                if widget.display and widget.region.area and widget.id != "wb-help"
             )
+            band = str(screen.query_one("#wb-help", Static).render())
+            correction = tr("tui.modelo.workbench.editor.can_change.recorded")
             app.exit(None)
 
-    assert shown.lower().count("recorded as filed") == 1, shown
+    assert notices.lower().count("recorded as filed") == 1, notices
+    # The help band answers "can I change it" for the box under the cursor, with the way to correct it.
+    assert correction in band
 
 
 _CHANGE_KEY_WORDS = (

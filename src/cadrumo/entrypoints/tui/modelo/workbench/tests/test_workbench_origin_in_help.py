@@ -1,13 +1,17 @@
-"""The workbench dates a value taken from imported AEAT data wherever it explains the box.
+"""The workbench says where a box's value comes from in full wherever it explains the box.
 
-Driven through the real workbench over the synthetic declaration with box 01
-taken from AEAT tax data imported on a known day: the help band under the
+Driven through the real workbench over the synthetic declaration. With box 01
+taken from AEAT tax data imported on a known day, the help band under the
 cursor, the box panel and a search hit each say the day the data was imported.
+With box 01 a zero carried where no earlier declaration applies, the help band
+says why it holds zero, so the filer does not look for a filing that does not
+exist.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 from textual.pilot import Pilot
@@ -88,3 +92,21 @@ async def test_the_help_band_the_panel_and_search_say_the_day_the_aeat_data_was_
     assert dated in panel_text
     income = [hit for hit in hits if hit.box == _INCOME]
     assert income and all(hit.origin.endswith(dated) for hit in income)
+
+
+@pytest.mark.asyncio
+async def test_the_help_band_says_why_a_carry_with_no_earlier_declaration_holds_zero() -> None:
+    source = ModeloFormValueSource(family=SourceFamily.EARLIER_FILINGS, source_kind=BindingSourceKind.PREVIOUS_FILING)
+    form = replace_fields(synthetic_form(needs_input=False), {_INCOME: {"source": source, "value": Decimal("0")}})
+    with override_settings(cadrumo_output_language="en"):
+        explanation = tr("tui.modelo.workbench.help.origin_no_earlier_declaration")
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            screen.query_one(CasillaList).focus_address(address_key(ModeloFormCasillaAddressV1(casilla_id=_INCOME)))
+            await _settle(pilot)
+            band = str(screen.query_one("#wb-help", Static).render())
+            app.exit(None)
+
+    assert explanation in band

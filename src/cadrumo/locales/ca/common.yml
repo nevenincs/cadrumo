@@ -2260,6 +2260,9 @@ tui:
           reconciliation_mismatch: 'Dues xifres que haurien de coincidir no coincideixen.
             No se''n tria cap per tu: revisa-les totes dues i corregeix la que estigui
             malament.'
+          stale_calculation: Els teus registres han canviat des que es va calcular
+            aquesta declaració, així que les seves xifres poden no coincidir-hi. No
+            es pot registrar la presentació fins que la tornis a calcular.
         empty: No hi ha res a revisar.
         go_to_box: Anar a la casella
         key:
@@ -2286,6 +2289,7 @@ tui:
           declaration: Tota la declaració
           not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
           record_value: Una dada que necessita cada registre d'una taula
+          records: Als teus registres
           unnumbered: 'Valors sense número de casella: {count}'
       key:
         back: Tornar

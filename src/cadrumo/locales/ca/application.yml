@@ -1365,6 +1365,12 @@ application:
       ledger_snapshot_drift: 'Els teus registres han canviat des que es va calcular
         el model %{modelo} de %{filing_year}, període %{period}: %{changed_count}
         apunts modificats i %{removed_count} eliminats. Torna a calcular-lo.'
+      ledger_snapshot_drift_changed: 'Els teus registres han canviat des que es va
+        calcular el model %{modelo} de %{filing_year}, període %{period} (apunts modificats:
+        %{changed_count}). Torna a calcular-lo.'
+      ledger_snapshot_drift_removed: 'Els teus registres han canviat des que es va
+        calcular el model %{modelo} de %{filing_year}, període %{period} (apunts eliminats:
+        %{removed_count}). Torna a calcular-lo.'
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
@@ -1447,7 +1453,6 @@ application:
         max_length: Com a màxim {maximum} caràcters.
         min_length: Com a mínim {minimum} caràcters.
         non_negative: No pot ser negatiu.
-        none_declared: No hi ha límits declarats per a aquesta casella.
         range: Entre {minimum} i {maximum}.
       formula:
         clamp: '{value} entre {minimum} i {maximum}'

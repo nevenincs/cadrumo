@@ -1,8 +1,8 @@
 """A value only a finding names, such as a Modelo 349 record's, counts as missing in the header and on the next line.
 
-A Modelo 349 form is built from the real published registry with five findings
+A Modelo 349 form is built from the real published registry with three findings
 of a missing value in the operator records, which no box of the form lists.
-The header's missing chip counts the five, nothing counts them as blocking, and
+The header's missing chip counts the three with the boxes still empty, nothing counts them as blocking, and
 the next-action line sends the filer to them with the same count, since the
 issue list is where they are answered.
 """
@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ......application.modelo.work_form import build_modelo_work_form
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 from ......core.config import override_settings
@@ -26,25 +27,19 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ..header import ChipLevel, attention_chips, blocking_count, missing_count
+from ..navigator import to_do_counts
 from ..progress import NextAction, workbench_progress
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RECORD_VALUES = (
-    "op.codigo-pais",
-    "op.nif-comunitario",
-    "op.clave-operacion",
-    "op.nombre",
-    "op.base-imponible",
-)
+_RECORD_VALUES = ("op.codigo-pais", "op.nif-comunitario", "op.clave-operacion")
 
 
-def _missing_record_values(operation: PinnedAuthorityOperation) -> object:
+def _missing_record_values(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     modelo, year, code = "349", 2026, "1T"
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
     snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    known = {str(casilla.casilla_id) for casilla in snapshot.revision.casillas}
     findings = tuple(
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
@@ -55,7 +50,6 @@ def _missing_record_values(operation: PinnedAuthorityOperation) -> object:
             legal_refs=("ley-37-1992:art-164",),
         )
         for casilla_id in _RECORD_VALUES
-        if casilla_id in known
     )
     review = ModeloWorkReview(
         bucket_id="13000000-0000-4000-8000-000000000349",
@@ -94,9 +88,9 @@ def test_missing_record_values_count_in_the_missing_chip_and_on_the_next_line(
         missing = missing_count(form)
         progress = workbench_progress(form, staged=0, verified=False, filed=False)
 
-    assert len(form.issues) == len(_RECORD_VALUES), "every record value is a field of the published revision"
+    assert len(form.issues) == len(_RECORD_VALUES)
     assert blocking_count(form) == 0
     assert ChipLevel.BLOCKS not in chips
-    assert chips[ChipLevel.MISSING] == missing >= len(_RECORD_VALUES)
+    assert chips[ChipLevel.MISSING] == missing == to_do_counts(form).needs_input + len(_RECORD_VALUES)
     assert progress.next_action in {NextAction.FILL, NextAction.RESOLVE}
     assert progress.count == missing

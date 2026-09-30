@@ -2265,6 +2265,9 @@ tui:
             valor. Si el valor correcto es cero, escribe 0 para que conste como tuyo.
           reconciliation_mismatch: 'Dos cifras que deberían coincidir no coinciden.
             No se elige ninguna por ti: revisa las dos y corrige la que esté mal.'
+          stale_calculation: Tus registros han cambiado desde que se calculó esta
+            declaración, así que sus cifras pueden no coincidir ya con ellos. No se
+            puede registrar la presentación hasta que vuelvas a calcularla.
         empty: No hay nada que revisar.
         go_to_box: Ir a la casilla
         key:
@@ -2290,6 +2293,7 @@ tui:
           declaration: Toda la declaración
           not_on_form: Una casilla que no aparece en las páginas de esta declaración
           record_value: Un dato que necesita cada registro de una tabla
+          records: En tus registros
           unnumbered: 'Valores sin número de casilla: {count}'
       key:
         back: Volver

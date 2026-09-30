@@ -1366,6 +1366,12 @@ application:
       ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
         %{modelo} de %{filing_year}, periodo %{period}: %{changed_count} apuntes modificados
         y %{removed_count} eliminados. Vuelve a calcularlo.'
+      ledger_snapshot_drift_changed: 'Tus registros han cambiado desde que se calculó
+        el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes modificados:
+        %{changed_count}). Vuelve a calcularlo.'
+      ledger_snapshot_drift_removed: 'Tus registros han cambiado desde que se calculó
+        el modelo %{modelo} de %{filing_year}, periodo %{period} (apuntes eliminados:
+        %{removed_count}). Vuelve a calcularlo.'
       m193_settled_row_amount_authority_unresolved: El modelo 193 de %{filing_year}
         incluye %{settled_prior_accrual_rows} pago(s) de rendimientos devengados en
         un ejercicio anterior. Las normas oficiales no indican cómo declarar su base
@@ -1449,7 +1455,6 @@ application:
         max_length: Como máximo {maximum} caracteres.
         min_length: Como mínimo {minimum} caracteres.
         non_negative: No puede ser negativo.
-        none_declared: No hay límites declarados para esta casilla.
         range: Entre {minimum} y {maximum}.
       formula:
         clamp: '{value} entre {minimum} y {maximum}'

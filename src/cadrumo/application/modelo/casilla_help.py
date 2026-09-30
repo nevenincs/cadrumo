@@ -55,7 +55,6 @@ _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "constraint.max_length": "application.modelo.help.constraint.max_length",
     "constraint.min_length": "application.modelo.help.constraint.min_length",
     "constraint.non_negative": "application.modelo.help.constraint.non_negative",
-    "constraint.none_declared": "application.modelo.help.constraint.none_declared",
     "constraint.range": "application.modelo.help.constraint.range",
     "formula.clamp": "application.modelo.help.formula.clamp",
     "formula.if_then_else": "application.modelo.help.formula.if_then_else",
@@ -274,7 +273,7 @@ def _article_text(locator: str) -> str:
 
 def _constraint_sentences(constraints: CasillaConstraints | None, language: OutputLanguage) -> tuple[str, ...]:
     if constraints is None:
-        return (_phrase(language, "constraint.none_declared"),)
+        return ()
     sentences: list[str] = []
     if constraints.sign is CasillaSignConstraint.NON_NEGATIVE:
         sentences.append(_phrase(language, "constraint.non_negative"))
@@ -300,7 +299,7 @@ def _constraint_sentences(constraints: CasillaConstraints | None, language: Outp
         sentences.append(_phrase(language, "constraint.choices", choices=", ".join(constraints.enum)))
     if constraints.pattern is not None:
         sentences.append(_phrase(language, "constraint.format"))
-    return tuple(sentences) or (_phrase(language, "constraint.none_declared"),)
+    return tuple(sentences)
 
 
 def _bound_by(casilla: CasillaDefinition) -> tuple[BindingId, ...]:

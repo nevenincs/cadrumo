@@ -178,6 +178,7 @@ flows:
           cross_period_dependency_unclean: Dependència anterior no neta
           missing_required_casilla: Falta una casella obligatòria
           reconciliation_mismatch: Discrepància de conciliació
+          stale_calculation: Càlcul desactualitzat
         finding_severity:
           blocking: Bloquejant
           warning: Advertiment

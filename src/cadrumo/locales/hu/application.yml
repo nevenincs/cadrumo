@@ -1321,6 +1321,12 @@ application:
       ledger_snapshot_drift: 'A nyilvántartása megváltozott a(z) %{modelo} nyomtatvány
         (%{filing_year}, %{period} időszak) kiszámítása óta: %{changed_count} tétel
         módosult és %{removed_count} törlődött. Számítsa ki újra.'
+      ledger_snapshot_drift_changed: 'A nyilvántartása megváltozott a(z) %{modelo}
+        nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta (módosult
+        tételek: %{changed_count}). Számítsa ki újra.'
+      ledger_snapshot_drift_removed: 'A nyilvántartása megváltozott a(z) %{modelo}
+        nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta (törölt tételek:
+        %{removed_count}). Számítsa ki újra.'
       m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi 193-as
         nyomtatvány %{settled_prior_accrual_rows} olyan kifizetést tartalmaz, amely
         korábbi évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem
@@ -1406,7 +1412,6 @@ application:
         max_length: Legfeljebb {maximum} karakter.
         min_length: Legalább {minimum} karakter.
         non_negative: Nem lehet negatív.
-        none_declared: Ehhez a rovathoz nincs megadott korlát.
         range: '{minimum} és {maximum} között.'
       formula:
         clamp: '{value} {minimum} és {maximum} között'

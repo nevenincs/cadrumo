@@ -178,6 +178,7 @@ flows:
           cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
           missing_required_casilla: Kötelező mező hiányzik
           reconciliation_mismatch: Egyeztetési eltérés
+          stale_calculation: Elavult számítás
         finding_severity:
           blocking: Blokkoló
           warning: Figyelmeztetés

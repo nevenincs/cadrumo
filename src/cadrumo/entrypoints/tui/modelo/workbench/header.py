@@ -5,14 +5,16 @@ workbench. The first names the declaration and its deadline, the last day of
 the filing window with the days left, "today" or "passed". The second gives
 the result: the direction in words, the amount and the box that settles it,
 "not calculated yet" before the first calculation, an out-of-date mark while
-changes wait to be applied, and one chip per attention level that has anything
-in it. The third, the stepper and the next action, is :mod:`.progress`'s.
+changes wait to be applied or after the filer's records changed under the
+calculation, and one chip per attention level that has anything in it. The third, the stepper and the next action, is :mod:`.progress`'s.
 
 Everything shown is what the read model states. The direction comes from the
 settlement box's declared disposition, never from the sign; when nothing
 declares it the amount keeps its sign under the plain word "Result" and the
 help says why. Money is formatted by the same function as the rows, the
-magnitude where a word carries the direction. A declaration recorded as filed
+magnitude where a word carries the direction: a negative instalment result
+the filer deducts in later quarters says so with its amount, and a negative
+result nothing carries says it settles nothing. A declaration recorded as filed
 shows its result undimmed, no deadline and no attention chips: nothing is left
 to do on it here.
 
@@ -52,7 +54,6 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .....core.result_disposition import ResultDisposition
 from .casilla_list import CasillaListEntry, value_text
 from .issues import IssueLevel, blocks_marked, issue_lines
 from .navigator import to_do_counts
@@ -74,19 +75,21 @@ _DIRECTION_LOCALE_KEYS: Final[Mapping[ModeloFormResultDirection, str]] = Mapping
         ModeloFormResultDirection.TO_PAY: "tui.modelo.workbench.header.result.to_pay",
         ModeloFormResultDirection.TO_REFUND: "tui.modelo.workbench.header.result.to_refund",
         ModeloFormResultDirection.TO_CARRY_FORWARD: "tui.modelo.workbench.header.result.to_carry_forward",
+        ModeloFormResultDirection.TO_DEDUCT_LATER: "tui.modelo.workbench.header.result.negative_carried",
+        ModeloFormResultDirection.NEGATIVE: "tui.modelo.workbench.header.result.negative",
         ModeloFormResultDirection.NIL: "tui.modelo.workbench.header.result.zero",
         ModeloFormResultDirection.UNKNOWN: "tui.modelo.workbench.header.result.unknown",
     }
 )
 """The words for each direction the read model states; total over the directions."""
 
-_NEGATIVE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.negative"
 _CHOICE_PENDING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending"
 _CHOICE_PENDING_SHORT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.choice_pending_short"
 _ELLIPSIS: Final[str] = "…"
 _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
+_RECALCULATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.recalculate"
 
 
 class ChipLevel(StrEnum):
@@ -283,11 +286,12 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     box = (result.box if result is not None else None) or (field.box if field is not None else None)
     value = result.value if result is not None else _field_amount(field)
     direction = result.direction if result is not None else ModeloFormResultDirection.UNKNOWN
-    stale = (
-        f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
-        if staged and not recorded
-        else None
-    )
+    stale: str | None = None
+    if staged and not recorded:
+        stale = f"{STALE_MARK.glyph} {tr(_STALE_LOCALE_KEY, count=staged, key=_REVIEW_KEY)}"
+    elif form.calculation_out_of_date and not recorded:
+        # The records changed after the calculation, so the figure is no longer current.
+        stale = f"{STALE_MARK.glyph} {tr(_RECALCULATE_LOCALE_KEY, key=_CALCULATE_KEY)}"
     help_lines: list[str] = [tr("tui.modelo.workbench.header.own_calculation")]
     origin = field.origin if field is not None else None
     failed = origin is ModeloFormOrigin.CALCULATION_FAILED
@@ -297,7 +301,6 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
     if form.calculation_revision_id is None or origin is ModeloFormOrigin.NOT_CALCULATED_YET or value is None:
         text = tr(_NOT_CALCULATED_LOCALE_KEY, key=_CALCULATE_KEY)
         return ResultView(text=text, short_text=text, stale=stale, failed=False, help=())
-    disposition = result.disposition if result is not None else None
     settled: tuple[str, str] | None = None
     brief: str | None = None
     if result is not None and result.election_may_change:
@@ -305,8 +308,14 @@ def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, 
         full, short = _boxed(list(settled), box)
         brief = _WORD_GAP.join((tr(_CHOICE_PENDING_SHORT_LOCALE_KEY), settled[1]))
         help_lines.append(settled[0])
-    elif disposition is ResultDisposition.RESULTADO_A_DEDUCIR:
-        full, short = _boxed([tr(_NEGATIVE_LOCALE_KEY)], box)
+    elif direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction], amount=_money(abs(value), language))], box)
+        if box:
+            help_lines.append(
+                tr("tui.modelo.workbench.header.result.sign_help", box=box, value=_money(value, language))
+            )
+    elif direction is ModeloFormResultDirection.NEGATIVE:
+        full, short = _boxed([tr(_DIRECTION_LOCALE_KEYS[direction])], box)
     elif direction is ModeloFormResultDirection.UNKNOWN:
         settled = (tr(_DIRECTION_LOCALE_KEYS[direction]), _money(value, language))
         full, short = _boxed(list(settled), box)
