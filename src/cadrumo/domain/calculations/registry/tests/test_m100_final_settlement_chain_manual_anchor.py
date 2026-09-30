@@ -53,7 +53,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -64,8 +64,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The ejercicio of the manual worked example the anchor figures reproduce.
 _MANUAL_EJERCICIO = 2024
-
-_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 _CUOTA_INTEGRA_ESTATAL: CasillaId = validated_casilla_id("0545", surface="0545")
@@ -91,7 +89,7 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
-        **_MATERNIDAD_BINDINGS,
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-descendientes-guarderia": Decimal("0"),

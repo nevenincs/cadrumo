@@ -35,7 +35,7 @@ from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_editions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -56,8 +56,6 @@ def reviewed_edition_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]
     """The reviewed edition at calculation grade: these tests assert wiring, never filing eligibility."""
     return registry_snapshot("100", _REVIEWED_EDITION, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
-
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 _M100_MINIMO_PERSONAL_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_MINIMO_PERSONAL_CASILLA")
 _M100_RETENCIONES_M111_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_RETENCIONES_M111_CASILLA")
@@ -101,7 +99,7 @@ def _prior_base_binding_values(
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
         # which declare no qualifying descendant.
-        **_M100_2024_MATERNIDAD_BINDINGS,
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
@@ -155,7 +153,7 @@ def _reviewed_base_binding_values(
         "renta-maritime-qualifying-days": Decimal("0"),
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
-        **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
+        **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     }
     if m111 is not None:
         values["renta-modelo-111-retenciones-periodicas"] = m111

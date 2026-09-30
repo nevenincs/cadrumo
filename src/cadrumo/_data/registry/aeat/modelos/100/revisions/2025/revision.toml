@@ -5792,7 +5792,6 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1481" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:368 y aeat-dr-100-2025-dictionary:371: E4AR, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AR, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["binding", "input_kind"]
 restate_provenance = true
 
 [[revisions."2025".casilla_overrides]]
@@ -9789,7 +9788,7 @@ sequence_order = {legal_refs = [0, 2, 1]}
 family = "dependency_classifications"
 selector = {revision = "2024", id = "renta-dep-131"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-economic-activities"]}
-sequence_removals = {binding_refs = [1], legal_refs = [0, 1, 2, 3, 5], source_refs = [0, 1, 2, 3]}
+sequence_removals = {legal_refs = [0, 1, 2, 3, 5], source_refs = [0, 1, 2, 3]}
 sequence_order = {legal_refs = [0, 2, 1]}
 
 [[revisions."2025".family_overrides]]
@@ -9808,16 +9807,16 @@ sequence_order = {casilla_ids = [1, 0, 2, 3, 4]}
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "renta-cuota-chain"}
-sequence_additions = {formulas = ["renta-base-liquidable-negativa-general-compensacion-total", "renta-minimo-contribuyente-autonomica"], legal_refs = ["andalucia-ley-5-2021:art-23-bis", "asturias-dl-2-2014:art-2-bis", "canarias-dl-1-2009:art-18-quater", "galicia-dl-1-2011:art-4-bis", "valenciana-ley-13-1997:art-2-bis", "ley-35-2006:art-48", "ley-35-2006:art-75"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
+sequence_additions = {formulas = ["renta-base-liquidable-negativa-general-compensacion-total", "renta-minimo-contribuyente-autonomica"], legal_refs = ["asturias-dl-2-2014:art-2-bis", "ley-35-2006:art-48", "ley-35-2006:art-75"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-modelo-100-procedure", "aeat-renta-2025-manual-deducciones-autonomicas", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {formulas = [1], legal_refs = [1, 2, 3, 5, 6, 8, 32], source_refs = [0, 1, 2]}
-sequence_order = {formulas = [11, 10, 17, 12, 13, 14, 36, 15, 16, 29, 28, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 31, 30, 33, 35, 32, 34, 8, 6, 7, 5, 37, 0, 1, 2, 4, 3, 9], legal_refs = [32, 33, 34, 35, 36, 0, 37, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 38, 26, 27, 28, 29, 30, 31], source_refs = [1, 2, 3, 4, 5, 6, 0]}
+sequence_order = {formulas = [11, 10, 17, 12, 13, 14, 36, 15, 16, 29, 28, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 31, 30, 33, 35, 32, 34, 8, 6, 7, 5, 37, 0, 1, 2, 4, 3, 9], legal_refs = [32, 36, 33, 34, 35, 0, 37, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 38, 26, 27, 28, 29, 30, 31], source_refs = [1, 2, 3, 4, 5, 6, 0]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "renta-dependent-modelos"}
 removed_fields = ["casilla_ids", "formulas"]
 sequence_additions = {bindings = ["renta-modelo-184-atribucion-actividades-economicas", "renta-modelo-190-retenciones-anuales", "renta-base-liquidable-negativa-general-anterior"], dependency_classifications = ["renta-dep-100", "renta-dep-184", "renta-dep-190", "renta-dep-303", "renta-dep-390", "renta-dep-347", "renta-dep-349", "renta-dep-369", "renta-dep-840", "renta-dep-036", "renta-dep-202", "renta-dep-200", "renta-dep-232", "renta-dep-720"], legal_refs = ["ley-35-2006:art-50", "ley-27-2014:art-18", "ley-27-2014:art-40", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "orden-hac-277-2026:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-232-procedure", "aeat-dr-184-2025"]}
-sequence_removals = {bindings = [4], legal_refs = [2, 3, 4, 8], source_refs = [0, 1, 2, 3, 4]}
+sequence_removals = {legal_refs = [2, 3, 4, 8], source_refs = [0, 1, 2, 3, 4]}
 sequence_order = {bindings = [0, 1, 2, 3, 5, 6, 4, 7], dependency_classifications = [0, 1, 2, 3, 5, 6, 7, 4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], legal_refs = [0, 1, 10, 2, 11, 12, 3, 4, 13, 7, 14, 15, 8, 9, 5, 6, 16, 17, 18, 19, 20, 21], source_refs = [2, 3, 4, 5, 6, 0, 1, 7, 8, 9]}
 
 [[revisions."2025".family_overrides]]
@@ -10078,6 +10077,96 @@ family = "parameters"
 selector = {revision = "2024", id = "renta-minimo-ascendientes-mayor-75"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo por ascendientes"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5.790 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.200 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base-canarias"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5.606 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74-canarias"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.162 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75-canarias"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.414 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["5.789 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.199 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.234,26 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.502,58 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-base-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["6.105 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-65-74-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.265 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-minimo-contribuyente-edad-75-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-minimo-contribuyente-base"}
@@ -10800,10 +10889,6 @@ selector = {revision = "2024", id = "renta-mini-model-actividades-economicas-dir
 [[revisions."2025".family_removals]]
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-trabajo"}
-
-[[revisions."2025".family_removals]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-modelo-131-rendimiento-neto-modulos"}
 
 [[revisions."2025".family_removals]]
 family = "bindings"

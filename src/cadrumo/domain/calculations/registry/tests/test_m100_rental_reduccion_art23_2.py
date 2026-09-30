@@ -12,11 +12,10 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 _FILING_DATE = date(2024, 12, 31)
 _TIER_BINDING = "renta-rental-reduccion-art-23-2-tier"
@@ -57,7 +56,7 @@ def _calculate(
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-profile-descendientes-guarderia": Decimal("0"),
-            **_M100_2024_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),

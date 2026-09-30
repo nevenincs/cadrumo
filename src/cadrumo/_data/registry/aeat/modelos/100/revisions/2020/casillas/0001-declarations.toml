@@ -545,7 +545,7 @@ section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_afecto_actividades_economicas_flag"
 continuidad_id = "irpf-inmueble-afecto-actividades-economicas-flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0073"
 number = "0073"
@@ -609,7 +609,7 @@ section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_dias_afecto_actividades_economicas"
 continuidad_id = "irpf-inmueble-dias-afecto-actividades-economicas"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0081"
 number = "0081"
@@ -617,7 +617,7 @@ section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_contribuyente_actividad_economica"
 continuidad_id = "irpf-inmueble-contribuyente-actividad-economica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0082"
 number = "0082"
@@ -1219,7 +1219,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_actividad_tipo_clave"
 continuidad_id = "irpf-ed-actividad-tipo-clave"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0167"
 number = "0167"
@@ -1227,7 +1227,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_actividad_iae_code"
 continuidad_id = "irpf-ed-actividad-iae-code"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0168"
 number = "0168"
@@ -1235,7 +1235,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_modalidad_clave"
 continuidad_id = "irpf-ed-modalidad-clave"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0169"
 number = "0169"
@@ -1243,7 +1243,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "boolean"
 semantic_role = "irpf_ed_cobros_pagos_flag"
 continuidad_id = "irpf-ed-cobros-pagos-flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0170"
 number = "0170"
@@ -1251,70 +1251,70 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "boolean"
 semantic_role = "irpf_ed_derechos_imagen_cessation_flag"
 continuidad_id = "irpf-ed-derechos-imagen-cessation-flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0171"
 continuidad_id = "irpf-ed-ingresos-explotacion"
 number = "0171"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_ingresos_explotacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0172"
 continuidad_id = "irpf-ed-ingresos-financieros-aplazamiento"
 number = "0172"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_ingresos_financieros_aplazamiento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0173"
 continuidad_id = "irpf-ed-ingresos-subvenciones-corrientes"
 number = "0173"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_ingresos_subvenciones_corrientes"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0174"
 continuidad_id = "irpf-ed-ingresos-subvenciones-capital"
 number = "0174"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_ingresos_subvenciones_capital"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0175"
 continuidad_id = "irpf-ed-autoconsumo"
 number = "0175"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_autoconsumo"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0176"
 continuidad_id = "irpf-ed-iva-devengado"
 number = "0176"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_iva_devengado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0177"
 continuidad_id = "irpf-ed-variacion-existencias-incremento"
 number = "0177"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_variacion_existencias_incremento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0178"
 continuidad_id = "irpf-ed-otros-ingresos"
 number = "0178"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_ingresos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0179"
 continuidad_id = "irpf-ed-exceso-amortizacion-libertad"
 number = "0179"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_exceso_amortizacion_libertad"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0180"
 continuidad_id = "irpf-ed-total-ingresos-computables"
@@ -1323,188 +1323,188 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_total_ingresos_computables"
 input_kind = "computed"
 formula = "renta-estimacion-directa-ingresos-computables"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0181"
 continuidad_id = "irpf-ed-compra-existencias"
 number = "0181"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_compra_existencias"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0182"
 continuidad_id = "irpf-ed-variacion-existencias-disminucion"
 number = "0182"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_variacion_existencias_disminucion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0183"
 continuidad_id = "irpf-ed-otros-consumos-explotacion"
 number = "0183"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_consumos_explotacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0184"
 continuidad_id = "irpf-ed-sueldos-salarios"
 number = "0184"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_sueldos_salarios"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0185"
 continuidad_id = "irpf-ed-seguridad-social-empresa"
 number = "0185"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_seguridad_social_empresa"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0186"
 number = "0186"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_seguridad_social_titular"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0187"
 continuidad_id = "irpf-ed-indemnizaciones"
 number = "0187"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_indemnizaciones"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0188"
 continuidad_id = "irpf-ed-dietas-viajes-personal"
 number = "0188"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_dietas_viajes_personal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0189"
 continuidad_id = "irpf-ed-aportaciones-prevision-social-personal"
 number = "0189"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_aportaciones_prevision_social_personal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0190"
 continuidad_id = "irpf-ed-otros-gastos-personal"
 number = "0190"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_gastos_personal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0191"
 continuidad_id = "irpf-ed-gastos-manutencion-contribuyente"
 number = "0191"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_gastos_manutencion_contribuyente"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0192"
 continuidad_id = "irpf-ed-arrendamientos-canones"
 number = "0192"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_arrendamientos_canones"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0193"
 continuidad_id = "irpf-ed-reparaciones-conservacion"
 number = "0193"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_reparaciones_conservacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0194"
 continuidad_id = "irpf-ed-suministros"
 number = "0194"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_suministros"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0198"
 continuidad_id = "irpf-ed-otros-suministros"
 number = "0198"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_suministros"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0199"
 continuidad_id = "irpf-ed-servicios-profesionales-independientes"
 number = "0199"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_servicios_profesionales_independientes"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0200"
 continuidad_id = "irpf-ed-primas-seguros"
 number = "0200"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_primas_seguros"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0202"
 continuidad_id = "irpf-ed-otros-servicios-exteriores"
 number = "0202"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_servicios_exteriores"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0203"
 continuidad_id = "irpf-ed-gastos-financieros"
 number = "0203"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_gastos_financieros"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0205"
 continuidad_id = "irpf-ed-iva-soportado"
 number = "0205"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_iva_soportado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0206"
 continuidad_id = "irpf-ed-otros-tributos-deducibles"
 number = "0206"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_tributos_deducibles"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0208"
 continuidad_id = "irpf-ed-amortizacion-inmovilizado-material"
 number = "0208"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_amortizacion_inmovilizado_material"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0214"
 continuidad_id = "irpf-ed-perdidas-insolvencias-deudores"
 number = "0214"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_perdidas_insolvencias_deudores"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0215"
 continuidad_id = "irpf-ed-mecenazgo-convenios-colaboracion"
 number = "0215"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_mecenazgo_convenios_colaboracion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0216"
 continuidad_id = "irpf-ed-mecenazgo-actividades-interes-general"
 number = "0216"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_mecenazgo_actividades_interes_general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0217"
 continuidad_id = "irpf-ed-otros-conceptos-deducibles"
 number = "0217"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_otros_conceptos_deducibles"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0218"
 continuidad_id = "irpf-ed-suma-gastos-previos"
@@ -1513,14 +1513,14 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_suma_gastos_previos"
 input_kind = "computed"
 formula = "renta-estimacion-directa-gastos-previos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0219"
 continuidad_id = "irpf-ed-provisiones-deducibles"
 number = "0219"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_provisiones_deducibles"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0220"
 continuidad_id = "irpf-ed-total-gastos-deducibles-normal"
@@ -1529,7 +1529,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_total_gastos_deducibles_normal"
 input_kind = "computed"
 formula = "renta-estimacion-directa-gastos-normal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0221"
 continuidad_id = "irpf-ed-diferencia-ingresos-gastos-previos"
@@ -1539,7 +1539,7 @@ input_kind = "computed"
 formula = "renta-estimacion-directa-diferencia-previa"
 data_type = "decimal"
 semantic_role = "irpf_ed_diferencia_ingresos_gastos_previos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0222"
 number = "0222"
@@ -1547,7 +1547,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_provisiones_gastos_dificil_justificacion"
 input_kind = "computed"
 formula = "renta-estimacion-directa-gastos-dificil-justificacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0223"
 continuidad_id = "irpf-ed-total-gastos-deducibles-simplificada"
@@ -1556,7 +1556,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_total_gastos_deducibles_simplificada"
 input_kind = "computed"
 formula = "renta-estimacion-directa-gastos-simplificada"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0224"
 number = "0224"
@@ -1564,7 +1564,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 input_kind = "computed"
 formula = "renta-estimacion-directa-rendimiento-neto"
 semantic_role = "irpf_ed_rdto_neto"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0225"
 continuidad_id = "irpf-ed-reduccion-rendimientos-irregulares"
@@ -1572,7 +1572,7 @@ number = "0225"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "decimal"
 semantic_role = "irpf_ed_reduccion_rendimientos_irregulares"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0226"
 number = "0226"
@@ -1581,14 +1581,14 @@ input_kind = "computed"
 formula = "renta-estimacion-directa-rendimiento-neto-reducido"
 data_type = "decimal"
 semantic_role = "irpf_ed_rdto_neto_reducido"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0227"
 continuidad_id = "irpf-ed-amortizacion-inmovilizado-inmaterial"
 number = "0227"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_amortizacion_inmovilizado_inmaterial"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0231"
 continuidad_id = "irpf-ed-suma-rdtos-netos-reducidos"
@@ -1598,28 +1598,28 @@ input_kind = "computed"
 formula = "renta-estimacion-directa-total-rendimiento-neto-reducido"
 data_type = "decimal"
 semantic_role = "irpf_ed_suma_rdtos_netos_reducidos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0232"
 continuidad_id = "irpf-ed-reduccion-art-32-2-1"
 number = "0232"
 section = ["resultados", "reg_estima_directa_res"]
 semantic_role = "irpf_ed_reduccion_art_32_2_1"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0233"
 continuidad_id = "irpf-ed-reduccion-art-32-2-3"
 number = "0233"
 section = ["resultados", "reg_estima_directa_res"]
 semantic_role = "irpf_ed_reduccion_art_32_2_3"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0234"
 continuidad_id = "irpf-ed-reduccion-inicio-actividad"
 number = "0234"
 section = ["resultados", "reg_estima_directa_res"]
 semantic_role = "irpf_ed_reduccion_inicio_actividad"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0235"
 continuidad_id = "irpf-ed-rdto-neto-reducido-total"
@@ -1629,7 +1629,7 @@ input_kind = "computed"
 formula = "renta-estimacion-directa-rendimiento-neto-reducido-total"
 data_type = "decimal"
 semantic_role = "irpf_ed_rdto_neto_reducido_total"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "0240"
 continuidad_id = "irpf-conyuge-discapacidad-nif"
@@ -9724,7 +9724,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_actividad_iae_code"
 continuidad_id = "irpf-eo-actividad-iae-code"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1443"
 number = "1443"
@@ -9732,7 +9732,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "boolean"
 semantic_role = "irpf_eo_cobros_pagos_flag"
 continuidad_id = "irpf-eo-cobros-pagos-flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1444"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad1"
@@ -9740,21 +9740,21 @@ number = "1444"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1445"
 number = "1445"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1446"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn1"
 number = "1446"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1447"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad2"
@@ -9762,21 +9762,21 @@ number = "1447"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1448"
 number = "1448"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1449"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn2"
 number = "1449"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1450"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad3"
@@ -9784,21 +9784,21 @@ number = "1450"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1451"
 number = "1451"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1452"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn3"
 number = "1452"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1453"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad4"
@@ -9806,21 +9806,21 @@ number = "1453"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1454"
 number = "1454"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1455"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn4"
 number = "1455"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1456"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad5"
@@ -9828,21 +9828,21 @@ number = "1456"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1457"
 number = "1457"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1458"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn5"
 number = "1458"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1459"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad6"
@@ -9850,21 +9850,21 @@ number = "1459"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1460"
 number = "1460"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1461"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn6"
 number = "1461"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1462"
 continuidad_id = "irpf-eo-modulo-definicion-e4ad7"
@@ -9872,42 +9872,42 @@ number = "1462"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1463"
 number = "1463"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1464"
 continuidad_id = "irpf-eo-modulo-rdto-antes-amort-e4arn7"
 number = "1464"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_modulo_rdto_antes_amort"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1465"
 number = "1465"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_rdto_neto_previo"
 continuidad_id = "irpf-eo-rdto-neto-previo"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1466"
 number = "1466"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_minoracion_empleo"
 continuidad_id = "irpf-eo-minoracion-empleo"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1467"
 number = "1467"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_minoracion_inversion"
 continuidad_id = "irpf-eo-minoracion-inversion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1468"
 number = "1468"
@@ -9915,7 +9915,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_rdto_neto_minorado"
 continuidad_id = "irpf-eo-rdto-neto-minorado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1469"
 number = "1469"
@@ -9923,7 +9923,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_especial"
 continuidad_id = "irpf-eo-indice-corrector-especial"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1470"
 number = "1470"
@@ -9931,7 +9931,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_pequena_dimension"
 continuidad_id = "irpf-eo-indice-corrector-pequena-dimension"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1471"
 number = "1471"
@@ -9939,7 +9939,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_temporada"
 continuidad_id = "irpf-eo-indice-corrector-temporada"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1472"
 number = "1472"
@@ -9947,7 +9947,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_exceso"
 continuidad_id = "irpf-eo-indice-corrector-exceso"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1473"
 number = "1473"
@@ -9955,7 +9955,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_inicio"
 continuidad_id = "irpf-eo-indice-corrector-inicio"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1474"
 number = "1474"
@@ -9963,47 +9963,47 @@ section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_rdto_neto_modulos"
 continuidad_id = "irpf-eo-rdto-neto-modulos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1475"
 number = "1475"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_reduccion_general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1476"
 number = "1476"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_reduccion_lorca"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1477"
 number = "1477"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_gastos_extraordinarios"
 continuidad_id = "irpf-eo-gastos-extraordinarios"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1478"
 number = "1478"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_otras_percepciones"
 continuidad_id = "irpf-eo-otras-percepciones"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1479"
 number = "1479"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_actividad_rdto_neto_actividad"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1480"
 continuidad_id = "irpf-eo-reduccion-irregulares"
 number = "1480"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_reduccion_irregulares"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1481"
 continuidad_id = "irpf-eo-rdto-neto-reducido"
@@ -10011,7 +10011,7 @@ number = "1481"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_rdto_neto_reducido"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1482"
 continuidad_id = "irpf-eo-suma-rdtos-netos-reducidos"
@@ -10021,14 +10021,14 @@ input_kind = "computed"
 formula = "renta-estimacion-objetiva-no-agricola-suma"
 data_type = "decimal"
 semantic_role = "irpf_eo_suma_rdtos_netos_reducidos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1483"
 number = "1483"
 section = ["resultados", "reg_estima_obj_res"]
 semantic_role = "irpf_eo_reduccion_art_32_2_3"
 continuidad_id = "irpf-eo-reduccion-art-32-2-3"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1484"
 continuidad_id = "irpf-eo-rdto-neto-reducido-total"
@@ -10038,7 +10038,7 @@ input_kind = "computed"
 formula = "renta-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total"
 data_type = "decimal"
 semantic_role = "irpf_eo_rdto_neto_reducido_total"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1485"
 # aeat-dr-100-2020-dictionary:345: E5AT, titular de actividades agricolas ganaderas o forestales en estimacion objetiva.
@@ -10055,7 +10055,7 @@ data_type = "integer"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_clave_actividad"
 continuidad_id = "irpf-eo-agr-clave-actividad"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1487"
 number = "1487"
@@ -10063,14 +10063,14 @@ section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "boolean"
 semantic_role = "irpf_eo_agr_cobros_pagos_flag"
 continuidad_id = "irpf-eo-agr-cobros-pagos-flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1488"
 continuidad_id = "irpf-eo-agr-ingresos-integros-porcino-carne"
 number = "1488"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_porcino_carne"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1489"
 continuidad_id = "irpf-eo-agr-indice-e501"
@@ -10078,21 +10078,21 @@ number = "1489"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1490"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn01"
 number = "1490"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1491"
 continuidad_id = "irpf-eo-agr-ingresos-integros-remolacha"
 number = "1491"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_remolacha"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1492"
 continuidad_id = "irpf-eo-agr-indice-e502"
@@ -10100,21 +10100,21 @@ number = "1492"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1493"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn02"
 number = "1493"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1494"
 continuidad_id = "irpf-eo-agr-ingresos-integros-bovino-carne-avicultura"
 number = "1494"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_bovino_carne_avicultura"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1495"
 continuidad_id = "irpf-eo-agr-indice-e503"
@@ -10122,21 +10122,21 @@ number = "1495"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1496"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn03"
 number = "1496"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1497"
 continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-corta-larga"
 number = "1497"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_forestal_corta_larga"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1498"
 continuidad_id = "irpf-eo-agr-indice-e504"
@@ -10144,21 +10144,21 @@ number = "1498"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1499"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn04"
 number = "1499"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1500"
 continuidad_id = "irpf-eo-agr-ingresos-integros-bovino-leche"
 number = "1500"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_bovino_leche"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1501"
 continuidad_id = "irpf-eo-agr-indice-e505"
@@ -10166,21 +10166,21 @@ number = "1501"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1502"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn05"
 number = "1502"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1503"
 continuidad_id = "irpf-eo-agr-ingresos-integros-cereales-citricos-horticultura"
 number = "1503"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_cereales_citricos_horticultura"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1504"
 continuidad_id = "irpf-eo-agr-indice-e506"
@@ -10188,21 +10188,21 @@ number = "1504"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1505"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn06"
 number = "1505"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1506"
 continuidad_id = "irpf-eo-agr-ingresos-integros-porcino-cria-ovino-leche-apicultura"
 number = "1506"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_porcino_cria_ovino_leche_apicultura"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1507"
 continuidad_id = "irpf-eo-agr-indice-e507"
@@ -10210,21 +10210,21 @@ number = "1507"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1508"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn07"
 number = "1508"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1509"
 continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-corta-corta"
 number = "1509"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_forestal_corta_corta"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1510"
 continuidad_id = "irpf-eo-agr-indice-e508"
@@ -10232,21 +10232,21 @@ number = "1510"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1511"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn08"
 number = "1511"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1512"
 continuidad_id = "irpf-eo-agr-ingresos-integros-arroz-oleaginosas-flores"
 number = "1512"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_arroz_oleaginosas_flores"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1513"
 continuidad_id = "irpf-eo-agr-indice-e509"
@@ -10254,21 +10254,21 @@ number = "1513"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1514"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn09"
 number = "1514"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1515"
 continuidad_id = "irpf-eo-agr-ingresos-integros-otras-especies-ganaderas"
 number = "1515"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_otras_especies_ganaderas"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1516"
 continuidad_id = "irpf-eo-agr-indice-e510"
@@ -10276,21 +10276,21 @@ number = "1516"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1517"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn10"
 number = "1517"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1518"
 continuidad_id = "irpf-eo-agr-ingresos-integros-forestal-resina"
 number = "1518"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_forestal_resina"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1519"
 continuidad_id = "irpf-eo-agr-indice-e511"
@@ -10298,21 +10298,21 @@ number = "1519"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1520"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn11"
 number = "1520"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1521"
 continuidad_id = "irpf-eo-agr-ingresos-integros-raices-tuberculos-forrajes"
 number = "1521"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_raices_tuberculos_forrajes"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1522"
 continuidad_id = "irpf-eo-agr-indice-e512"
@@ -10320,21 +10320,21 @@ number = "1522"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1523"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn12"
 number = "1523"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1524"
 continuidad_id = "irpf-eo-agr-ingresos-integros-plantas-textiles"
 number = "1524"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_plantas_textiles"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1525"
 continuidad_id = "irpf-eo-agr-indice-e513"
@@ -10342,21 +10342,21 @@ number = "1525"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1526"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn13"
 number = "1526"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1527"
 continuidad_id = "irpf-eo-agr-ingresos-integros-actividades-accesorias"
 number = "1527"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_actividades_accesorias"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1528"
 continuidad_id = "irpf-eo-agr-indice-e514"
@@ -10364,21 +10364,21 @@ number = "1528"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1529"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn14"
 number = "1529"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1530"
 continuidad_id = "irpf-eo-agr-ingresos-integros-otros-trabajos-accesorios"
 number = "1530"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_otros_trabajos_accesorios"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1531"
 continuidad_id = "irpf-eo-agr-indice-e515"
@@ -10386,21 +10386,21 @@ number = "1531"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1532"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn15"
 number = "1532"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1533"
 continuidad_id = "irpf-eo-agr-ingresos-integros-cria-guarda-engorde-ganado"
 number = "1533"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_cria_guarda_engorde_ganado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1534"
 continuidad_id = "irpf-eo-agr-indice-e516"
@@ -10408,35 +10408,35 @@ number = "1534"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1535"
 continuidad_id = "irpf-eo-agr-rendimiento-base-producto-e5arn16"
 number = "1535"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rendimiento_base_producto"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1536"
 number = "1536"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_total_ingresos"
 continuidad_id = "irpf-eo-agr-total-ingresos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1537"
 continuidad_id = "irpf-eo-agr-rdto-neto-previo"
 number = "1537"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_rdto_neto_previo"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1538"
 continuidad_id = "irpf-eo-agr-amortizacion"
 number = "1538"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_amortizacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1539"
 continuidad_id = "irpf-eo-agr-rdto-neto-minorado"
@@ -10444,7 +10444,7 @@ number = "1539"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_minorado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1540"
 number = "1540"
@@ -10452,7 +10452,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_medios_ajenos"
 continuidad_id = "irpf-eo-agr-indice-medios-ajenos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1541"
 number = "1541"
@@ -10460,7 +10460,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_personal_asalariado"
 continuidad_id = "irpf-eo-agr-indice-personal-asalariado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1542"
 number = "1542"
@@ -10468,7 +10468,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_tierras_arrendadas"
 continuidad_id = "irpf-eo-agr-indice-tierras-arrendadas"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1543"
 number = "1543"
@@ -10476,7 +10476,7 @@ section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "text"
 semantic_role = "irpf_eo_agr_indice_piensos_terceros"
 continuidad_id = "irpf-eo-agr-indice-piensos-terceros"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1544"
 number = "1544"
@@ -10484,7 +10484,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_ecologica"
 continuidad_id = "irpf-eo-agr-indice-ecologica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1545"
 number = "1545"
@@ -10492,7 +10492,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_regadio_electrico"
 continuidad_id = "irpf-eo-agr-indice-regadio-electrico"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1546"
 number = "1546"
@@ -10500,7 +10500,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_pequena_empresa"
 continuidad_id = "irpf-eo-agr-indice-pequena-empresa"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1547"
 number = "1547"
@@ -10508,7 +10508,7 @@ data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_forestal"
 continuidad_id = "irpf-eo-agr-indice-forestal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1548"
 continuidad_id = "irpf-eo-agr-rdto-neto-modulos"
@@ -10516,13 +10516,13 @@ number = "1548"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_modulos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1549"
 number = "1549"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_reduccion_general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1550"
 continuidad_id = "irpf-eo-agr-diferencia-reduccion"
@@ -10532,28 +10532,28 @@ input_kind = "computed"
 formula = "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido"
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_diferencia_reduccion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1551"
 number = "1551"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_reduccion_jovenes"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1552"
 number = "1552"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_gastos_extraordinarios"
 continuidad_id = "irpf-eo-agr-gastos-extraordinarios"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1553"
 number = "1553"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_actividad"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1554"
 continuidad_id = "irpf-eo-agr-reduccion-irregulares"
@@ -10561,14 +10561,14 @@ number = "1554"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_reduccion_irregulares"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1555"
 number = "1555"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_reducido"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1558"
 continuidad_id = "irpf-eo-agr-suma-rdtos-netos-reducidos"
@@ -10578,14 +10578,14 @@ input_kind = "computed"
 formula = "renta-estimacion-objetiva-agricola-suma"
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_suma_rdtos_netos_reducidos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1559"
 number = "1559"
 section = ["resultados", "reg_estima_obj_agricola_res"]
 semantic_role = "irpf_eo_agr_reduccion_art_32_2_3"
 continuidad_id = "irpf-eo-agr-reduccion-art-32-2-3"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1560"
 continuidad_id = "irpf-eo-agr-rdto-neto-reducido-total"
@@ -10595,7 +10595,7 @@ input_kind = "computed"
 formula = "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido-total"
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_reducido_total"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]
 id = "1561"
 # aeat-dr-100-2020-dictionary:419: F1ETI, socio comunero o participe identificado para la entidad en atribucion de rentas.

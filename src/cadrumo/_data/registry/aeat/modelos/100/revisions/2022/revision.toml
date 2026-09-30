@@ -676,11 +676,11 @@ fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0157" }
-fields = { section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"], semantic_role = "irpf_eo_reduccion_la_palma", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"], semantic_role = "irpf_eo_reduccion_la_palma", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0158" }
-fields = { section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"], semantic_role = "irpf_eo_agr_reduccion_gasoleo_agricola", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"], semantic_role = "irpf_eo_agr_reduccion_gasoleo_agricola", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
 removed_fields = ["data_type"]
 
 [[revisions."2022".casilla_overrides]]

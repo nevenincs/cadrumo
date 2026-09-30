@@ -72,7 +72,7 @@ from ._cross_dependency_calculation_support import (
     _grounded_observations,
     _observations_from_requirements,
 )
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 
@@ -731,7 +731,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-maritime-qualifying-days": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
-            **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -835,7 +835,7 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             "renta-maritime-qualifying-days": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
-            **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
@@ -919,7 +919,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-maritime-qualifying-days": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
-            **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},

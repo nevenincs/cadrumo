@@ -1,11 +1,13 @@
-"""M100 objective-estimation income folds in annual Modelo 131 módulos data.
+"""M100 settles the Modelo 131 pagos fraccionados, never its módulos estimate.
 
 This live application regression proves that stored Modelo 131 quarterly
-observations feed the annual Modelo 100 estimación-objetiva módulos chain
-through the registry ``relation_prefill`` mechanism. The objective-estimation
-case sums Modelo 131 casilla ``01`` into the M100 relation-backed binding for
-casilla ``1481`` and carries it through ``1482``/``1484``; the direct-estimation
-case keeps that módulos-only binding at the explicit not-applicable zero.
+observations reach the annual Modelo 100 only as pagos fraccionados: casilla
+``15`` of each quarter folds into casilla ``0604`` through the registry
+``relation_prefill`` mechanism. Casilla ``01`` restates each quarter the annual
+net yield estimated from the datos-base of 1 January (RD 439/2007 art. 110.1.b),
+which is not the year's rendimiento neto reducido, so it never reaches casilla
+``1481`` or the ``1482``/``1484`` totals; the direct-estimation case calculates
+without any Modelo 131 filing.
 
 See Also:
     :mod:`~application.modelo`
@@ -17,12 +19,8 @@ See Also:
     :mod:`~domain.calculations.registry`
         Registry authority for relation declarations, binding ids, casillas,
         and formula execution.
-    ``renta-modelo-131-rendimiento-neto-modulos``
-        M100/2024 relation-backed binding populated from Modelo 131 casilla
-        ``01``.
-    ``renta-modelo-131-rendimiento-neto-modulos``
-        M100/2024 relation that sums the quarterly Modelo 131 source
-        observations.
+    ``renta-modelo-131-pagos-fraccionados``
+        M100 relation that sums the quarterly Modelo 131 results into 0604.
 """
 
 from __future__ import annotations
@@ -95,23 +93,16 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
 
-_M131_RENDIMIENTO_BY_PERIOD: dict[str, Decimal] = {
-    "1T": Decimal("1200.00"),
-    "2T": Decimal("1300.00"),
-    "3T": Decimal("1400.00"),
-    "4T": Decimal("1500.00"),
-}
+#: Casilla 01 restates the same annual estimate every quarter.
+_M131_ANNUAL_RENDIMIENTO_ESTIMATE = Decimal("5400.00")
 _M131_PAGO_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("24.00"),
     "2T": Decimal("26.00"),
     "3T": Decimal("28.00"),
     "4T": Decimal("30.00"),
 }
-_EXPECTED_M131_RENDIMIENTO_TOTAL = Decimal("5400.00")
 _EXPECTED_M131_PAGOS_TOTAL = Decimal("108.00")
-_M131_RENDIMIENTO_BINDING: BindingId = "renta-modelo-131-rendimiento-neto-modulos"
-_M131_RENDIMIENTO_RELATION = "renta-modelo-131-rendimiento-neto-modulos"
-_M131_PAGOS_RELATION = "renta-modelo-131-pagos-fraccionados"
+_M131_PAGOS_RELATION: BindingId = "renta-modelo-131-pagos-fraccionados"
 
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:
@@ -190,7 +181,7 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
 
 def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
     obs_repo = CalculationObservationRepository(objects=objects)
-    for period, rendimiento in _M131_RENDIMIENTO_BY_PERIOD.items():
+    for period, pago in _M131_PAGO_BY_PERIOD.items():
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
                 RegistryModeloObservation(
@@ -202,8 +193,8 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
                         filing_year=_YEAR,
                         period=period,
                         casilla_values={
-                            _M131_RENDIMIENTO_CASILLA: rendimiento,
-                            _M131_RESULTADO_CASILLA: _M131_PAGO_BY_PERIOD[period],
+                            _M131_RENDIMIENTO_CASILLA: _M131_ANNUAL_RENDIMIENTO_ESTIMATE,
+                            _M131_RESULTADO_CASILLA: pago,
                         },
                     ),
                 ),
@@ -219,8 +210,8 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
                             filing_year=_YEAR,
                             period=period,
                             casilla_values={
-                                _M131_RENDIMIENTO_CASILLA: rendimiento,
-                                _M131_RESULTADO_CASILLA: _M131_PAGO_BY_PERIOD[period],
+                                _M131_RENDIMIENTO_CASILLA: _M131_ANNUAL_RENDIMIENTO_ESTIMATE,
+                                _M131_RESULTADO_CASILLA: pago,
                             },
                         ),
                     )
@@ -286,7 +277,7 @@ def _calculate_m100_annual(
         )
 
 
-def test_objective_estimation_profile_folds_m131_rendimiento_into_m100_modulos(
+def test_objective_estimation_profile_folds_m131_pagos_but_not_its_rendimiento_estimate(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _seed_m131_quarters(secure_objects)
@@ -294,23 +285,20 @@ def test_objective_estimation_profile_folds_m131_rendimiento_into_m100_modulos(
     result = _calculate_m100_annual(secure_objects, estimation_regime="objetiva", operation=operation)
 
     values = result.revision.casilla_values
-    assert values[_M100_EO_RENDIMIENTO_CASILLA] == _EXPECTED_M131_RENDIMIENTO_TOTAL
-    assert values[_M100_EO_SUM_CASILLA] == _EXPECTED_M131_RENDIMIENTO_TOTAL
-    assert values[_M100_EO_TOTAL_CASILLA] == _EXPECTED_M131_RENDIMIENTO_TOTAL
     assert values[_M100_PAGOS_CASILLA] == _EXPECTED_M131_PAGOS_TOTAL
-    assert Decimal(result.revision.binding_overrides[_M131_RENDIMIENTO_BINDING]) == _EXPECTED_M131_RENDIMIENTO_TOTAL
-    assert _M131_RENDIMIENTO_RELATION not in result.revision.relation_overrides
     assert Decimal(result.revision.binding_overrides[_M131_PAGOS_RELATION]) == _EXPECTED_M131_PAGOS_TOTAL
+    # No quarterly Modelo 131 estimate reaches the year's rendimiento neto reducido.
+    assert values[_M100_EO_RENDIMIENTO_CASILLA] == Decimal("0")
+    assert values[_M100_EO_SUM_CASILLA] == Decimal("0")
+    assert values[_M100_EO_TOTAL_CASILLA] == Decimal("0")
     assert result.source_diagnostics == (), result.source_diagnostics
 
 
-def test_direct_estimation_profile_keeps_m131_modulos_binding_at_not_applicable_zero(
+def test_direct_estimation_profile_calculates_without_modelo_131_filings(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     result = _calculate_m100_annual(secure_objects, estimation_regime="directa_normal", operation=operation)
 
     assert result.revision.casilla_values[_M100_EO_RENDIMIENTO_CASILLA] == Decimal("0")
-    assert result.revision.casilla_values[_M100_EO_SUM_CASILLA] == Decimal("0.00")
-    assert result.revision.casilla_values[_M100_EO_TOTAL_CASILLA] == Decimal("0.00")
-    assert Decimal(result.revision.binding_overrides[_M131_RENDIMIENTO_BINDING]) == Decimal("0")
-    assert _M131_RENDIMIENTO_RELATION not in result.revision.relation_overrides
+    assert result.revision.casilla_values[_M100_EO_SUM_CASILLA] == Decimal("0")
+    assert result.revision.casilla_values[_M100_EO_TOTAL_CASILLA] == Decimal("0")

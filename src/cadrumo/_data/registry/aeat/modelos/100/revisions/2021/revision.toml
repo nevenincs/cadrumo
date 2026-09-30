@@ -867,7 +867,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0224" }
-fields = { continuidad_id = "irpf-ed-rdto-neto-previo-reduccion", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_ed_rdto_neto_previo_reduccion", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_id = "irpf-ed-rdto-neto-previo-reduccion", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_ed_rdto_neto_previo_reduccion", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32-2015"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "0225" }
@@ -5404,7 +5404,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "1479" }
-fields = { continuidad_id = "irpf-rendimiento-act-eco-eo-resto-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_eo_resto_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_id = "irpf-rendimiento-act-eco-eo-resto-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_eo_resto_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
 removed_fields = ["data_type"]
 
 [[revisions."2021".casilla_overrides]]
@@ -5701,7 +5701,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "1553" }
-fields = { continuidad_id = "irpf-rendimiento-act-eco-eo-agr-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_eo_agr_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_id = "irpf-rendimiento-act-eco-eo-agr-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_eo_agr_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
 removed_fields = ["data_type"]
 
 [[revisions."2021".casilla_overrides]]
@@ -5790,7 +5790,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "1577" }
-fields = { continuidad_id = "irpf-rendimiento-act-eco-atribuido-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-86", "ley-35-2006:art-89"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_id = "irpf-rendimiento-act-eco-atribuido-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015", "ley-35-2006:art-86", "ley-35-2006:art-89"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
 removed_fields = ["data_type"]
 
 [[revisions."2021".casilla_overrides]]

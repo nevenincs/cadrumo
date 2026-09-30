@@ -28,7 +28,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_editions
 from .published_authority import published_snapshot
 
@@ -50,7 +50,7 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 
 
 def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
-    return dict(M100_2024_EMPTY_MATERNIDAD_BINDINGS)
+    return dict(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
 
 
 # Relation values required by the prior-edition snapshot (zero - not exercised).
@@ -140,7 +140,7 @@ def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-maritime-qualifying-days": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
-            **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
+            **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

@@ -348,7 +348,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0072" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0073" }
@@ -380,11 +380,11 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0080" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0081" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0082" }
@@ -680,19 +680,19 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0157" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0158" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0159" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0160" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0165" }
@@ -700,131 +700,131 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0166" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0167" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0168" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0169" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0170" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0171" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:253 y aeat-dr-100-2023-dictionary:257: E1II1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:253 y aeat-dr-100-2023-dictionary:257: E1II1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0172" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:254 y aeat-dr-100-2023-dictionary:258: E1II2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:254 y aeat-dr-100-2023-dictionary:258: E1II2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0173" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:255 y aeat-dr-100-2023-dictionary:259: E1II3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:255 y aeat-dr-100-2023-dictionary:259: E1II3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0174" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:256 y aeat-dr-100-2023-dictionary:260: E1II4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II4, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:256 y aeat-dr-100-2023-dictionary:260: E1II4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II4, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0175" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:257 y aeat-dr-100-2023-dictionary:261: E1II5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II5, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:257 y aeat-dr-100-2023-dictionary:261: E1II5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II5, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0176" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:258 y aeat-dr-100-2023-dictionary:262: E1II6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II6, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:258 y aeat-dr-100-2023-dictionary:262: E1II6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II6, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0177" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:259 y aeat-dr-100-2023-dictionary:263: E1II7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II7, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:259 y aeat-dr-100-2023-dictionary:263: E1II7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II7, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0178" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:260 y aeat-dr-100-2023-dictionary:264: E1II8, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:260 y aeat-dr-100-2023-dictionary:264: E1II8, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0179" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:261 y aeat-dr-100-2023-dictionary:265: E1II9, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II9, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:261 y aeat-dr-100-2023-dictionary:265: E1II9, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1II9, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0180" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:262 y aeat-dr-100-2023-dictionary:266: E1INGRESO, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1INGRESO, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:262 y aeat-dr-100-2023-dictionary:266: E1INGRESO, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1INGRESO, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0181" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:263 y aeat-dr-100-2023-dictionary:267: E1G1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:263 y aeat-dr-100-2023-dictionary:267: E1G1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0182" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:264 y aeat-dr-100-2023-dictionary:268: E1G2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:264 y aeat-dr-100-2023-dictionary:268: E1G2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0183" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:265 y aeat-dr-100-2023-dictionary:269: E1G3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:265 y aeat-dr-100-2023-dictionary:269: E1G3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0184" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:266 y aeat-dr-100-2023-dictionary:270: E1G4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G4, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:266 y aeat-dr-100-2023-dictionary:270: E1G4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G4, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0185" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:267 y aeat-dr-100-2023-dictionary:271: E1G5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G5, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:267 y aeat-dr-100-2023-dictionary:271: E1G5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G5, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0186" }
-fields = { continuidad_id = "irpf-ed-seguridad-social-titular", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_id = "irpf-ed-seguridad-social-titular", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0187" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:269 y aeat-dr-100-2023-dictionary:274: E1G7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G7, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:269 y aeat-dr-100-2023-dictionary:274: E1G7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G7, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0188" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:270 y aeat-dr-100-2023-dictionary:275: E1G8, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:270 y aeat-dr-100-2023-dictionary:275: E1G8, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G8, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0189" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:271 y aeat-dr-100-2023-dictionary:276: E1G9, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G9, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:271 y aeat-dr-100-2023-dictionary:276: E1G9, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G9, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0190" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:272 y aeat-dr-100-2023-dictionary:277: E1G10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G10, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:272 y aeat-dr-100-2023-dictionary:277: E1G10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G10, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0191" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:273 y aeat-dr-100-2023-dictionary:278: E1G11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G11, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:273 y aeat-dr-100-2023-dictionary:278: E1G11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G11, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0192" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:274 y aeat-dr-100-2023-dictionary:279: E1G12, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G12, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:274 y aeat-dr-100-2023-dictionary:279: E1G12, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G12, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0193" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:275 y aeat-dr-100-2023-dictionary:280: E1G13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G13, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:275 y aeat-dr-100-2023-dictionary:280: E1G13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G13, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0194" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:276 y aeat-dr-100-2023-dictionary:281: E1G14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G14, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:276 y aeat-dr-100-2023-dictionary:281: E1G14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G14, tipo P102; identidad legal conservada en el mismo componente de renta; el diseno explicita cambios de redaccion o detalle del importe, declarados en las evoluciones, sin cambio de sujeto ni tipo.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0198" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:277 y aeat-dr-100-2023-dictionary:282: E1G15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G15, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:277 y aeat-dr-100-2023-dictionary:282: E1G15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G15, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0199" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:278 y aeat-dr-100-2023-dictionary:283: E1G16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G16, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:278 y aeat-dr-100-2023-dictionary:283: E1G16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G16, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0200" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:279 y aeat-dr-100-2023-dictionary:284: E1G17, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G17, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:279 y aeat-dr-100-2023-dictionary:284: E1G17, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G17, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0201" }
@@ -832,11 +832,11 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0202" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:280 y aeat-dr-100-2023-dictionary:285: E1G18, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G18, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:280 y aeat-dr-100-2023-dictionary:285: E1G18, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G18, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0203" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:281 y aeat-dr-100-2023-dictionary:286: E1G19, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G19, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:281 y aeat-dr-100-2023-dictionary:286: E1G19, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G19, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0204" }
@@ -844,11 +844,11 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0205" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:282 y aeat-dr-100-2023-dictionary:287: E1G20, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G20, tipo P102; mismo concepto, contexto XML, tipo y referencias legales sustantivas; solo evolucionan puntuacion/abreviaturas DT, marcadores de nota o ventana anual relativa y referencia de anexo, sin cambio de sujeto ni regla del importe.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:282 y aeat-dr-100-2023-dictionary:287: E1G20, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G20, tipo P102; mismo concepto, contexto XML, tipo y referencias legales sustantivas; solo evolucionan puntuacion/abreviaturas DT, marcadores de nota o ventana anual relativa y referencia de anexo, sin cambio de sujeto ni regla del importe.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0206" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:283 y aeat-dr-100-2023-dictionary:288: E1G21, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G21, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:283 y aeat-dr-100-2023-dictionary:288: E1G21, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G21, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0207" }
@@ -856,7 +856,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0208" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:284 y aeat-dr-100-2023-dictionary:289: E1G22, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G22, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:284 y aeat-dr-100-2023-dictionary:289: E1G22, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G22, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0209" }
@@ -880,59 +880,59 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0214" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:286 y aeat-dr-100-2023-dictionary:291: E1G24, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G24, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:286 y aeat-dr-100-2023-dictionary:291: E1G24, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G24, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0215" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:287 y aeat-dr-100-2023-dictionary:292: E1G25, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G25, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:287 y aeat-dr-100-2023-dictionary:292: E1G25, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G25, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0216" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:288 y aeat-dr-100-2023-dictionary:293: E1G26, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G26, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:288 y aeat-dr-100-2023-dictionary:293: E1G26, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G26, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0217" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:289 y aeat-dr-100-2023-dictionary:294: E1G27, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G27, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:289 y aeat-dr-100-2023-dictionary:294: E1G27, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G27, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0218" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:290 y aeat-dr-100-2023-dictionary:295: E1SUMA, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1SUMA, tipo P102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Suma ( [0181] a [0194] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + [0227] + [0214] a [0217] ); enunciado sucesor: Suma ( [0181] a [0195] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + [0227] + [0214] a [0217] ). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. Para 0595 el paso manual a computed en 2024 implementa la misma cuota resultante del art79 LIRPF; 2025 resta la nueva deduccion laboral DA61/0414.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:290 y aeat-dr-100-2023-dictionary:295: E1SUMA, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1SUMA, tipo P102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Suma ( [0181] a [0194] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + [0227] + [0214] a [0217] ); enunciado sucesor: Suma ( [0181] a [0195] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + [0227] + [0214] a [0217] ). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. Para 0595 el paso manual a computed en 2024 implementa la misma cuota resultante del art79 LIRPF; 2025 resta la nueva deduccion laboral DA61/0414.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0219" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:291 y aeat-dr-100-2023-dictionary:296: E1N1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1N1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:291 y aeat-dr-100-2023-dictionary:296: E1N1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1N1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0220" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:292 y aeat-dr-100-2023-dictionary:297: E1NGD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1NGD, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:292 y aeat-dr-100-2023-dictionary:297: E1NGD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1NGD, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0221" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:293 y aeat-dr-100-2023-dictionary:298: E1S1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1S1, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:293 y aeat-dr-100-2023-dictionary:298: E1S1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1S1, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0222" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0223" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:295 y aeat-dr-100-2023-dictionary:300: E1SGD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1SGD, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:295 y aeat-dr-100-2023-dictionary:300: E1SGD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1SGD, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0224" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:296 y aeat-dr-100-2023-dictionary:301: E1RN, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1RN, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:296 y aeat-dr-100-2023-dictionary:301: E1RN, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1RN, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0225" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:297 y aeat-dr-100-2023-dictionary:302: E1REDU, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1REDU, tipo N102; mismo concepto, contexto XML, tipo y referencias legales sustantivas; solo evolucionan puntuacion/abreviaturas DT, marcadores de nota o ventana anual relativa y referencia de anexo, sin cambio de sujeto ni regla del importe.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:297 y aeat-dr-100-2023-dictionary:302: E1REDU, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1REDU, tipo N102; mismo concepto, contexto XML, tipo y referencias legales sustantivas; solo evolucionan puntuacion/abreviaturas DT, marcadores de nota o ventana anual relativa y referencia de anexo, sin cambio de sujeto ni regla del importe.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0226" }
-fields = { continuidad_id = "irpf-ed-rdto-neto-reducido", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_id = "irpf-ed-rdto-neto-reducido", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0227" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:285 y aeat-dr-100-2023-dictionary:290: E1G23, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G23, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:285 y aeat-dr-100-2023-dictionary:290: E1G23, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G23, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0228" }
@@ -948,23 +948,23 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0231" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:300 y aeat-dr-100-2023-dictionary:306: E1TRNR, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1TRNR, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:300 y aeat-dr-100-2023-dictionary:306: E1TRNR, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1TRNR, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0232" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:302 y aeat-dr-100-2023-dictionary:308: E1RED1, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:302 y aeat-dr-100-2023-dictionary:308: E1RED1, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED1, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0233" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:303 y aeat-dr-100-2023-dictionary:309: E1RED2, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:303 y aeat-dr-100-2023-dictionary:309: E1RED2, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED2, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0234" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:304 y aeat-dr-100-2023-dictionary:310: E1RED3, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:304 y aeat-dr-100-2023-dictionary:310: E1RED3, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED3, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0235" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:305 y aeat-dr-100-2023-dictionary:311: E1TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1TOTAL, tipo N102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Rendimiento neto reducido total de las actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] ); enunciado sucesor: Rendimiento neto reducido total de las actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] ). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. Para 0595 el paso manual a computed en 2024 implementa la misma cuota resultante del art79 LIRPF; 2025 resta la nueva deduccion laboral DA61/0414.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:305 y aeat-dr-100-2023-dictionary:311: E1TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1TOTAL, tipo N102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Rendimiento neto reducido total de las actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] ); enunciado sucesor: Rendimiento neto reducido total de las actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] ). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. Para 0595 el paso manual a computed en 2024 implementa la misma cuota resultante del art79 LIRPF; 2025 resta la nueva deduccion laboral DA61/0414.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0240" }
@@ -5564,175 +5564,175 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1442" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1443" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1444" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:310 y aeat-dr-100-2023-dictionary:316: E4AD1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:310 y aeat-dr-100-2023-dictionary:316: E4AD1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1445" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:311 y aeat-dr-100-2023-dictionary:317: E4AU1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:311 y aeat-dr-100-2023-dictionary:317: E4AU1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1446" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:312 y aeat-dr-100-2023-dictionary:318: E4ARN1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:312 y aeat-dr-100-2023-dictionary:318: E4ARN1, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo1/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1447" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:313 y aeat-dr-100-2023-dictionary:319: E4AD2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:313 y aeat-dr-100-2023-dictionary:319: E4AD2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1448" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:314 y aeat-dr-100-2023-dictionary:320: E4AU2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:314 y aeat-dr-100-2023-dictionary:320: E4AU2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1449" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:315 y aeat-dr-100-2023-dictionary:321: E4ARN2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:315 y aeat-dr-100-2023-dictionary:321: E4ARN2, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo2/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1450" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:316 y aeat-dr-100-2023-dictionary:322: E4AD3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:316 y aeat-dr-100-2023-dictionary:322: E4AD3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1451" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:317 y aeat-dr-100-2023-dictionary:323: E4AU3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:317 y aeat-dr-100-2023-dictionary:323: E4AU3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1452" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:318 y aeat-dr-100-2023-dictionary:324: E4ARN3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:318 y aeat-dr-100-2023-dictionary:324: E4ARN3, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo3/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1453" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:319 y aeat-dr-100-2023-dictionary:325: E4AD4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:319 y aeat-dr-100-2023-dictionary:325: E4AD4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1454" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:320 y aeat-dr-100-2023-dictionary:326: E4AU4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:320 y aeat-dr-100-2023-dictionary:326: E4AU4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1455" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:321 y aeat-dr-100-2023-dictionary:327: E4ARN4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:321 y aeat-dr-100-2023-dictionary:327: E4ARN4, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo4/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1456" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:322 y aeat-dr-100-2023-dictionary:328: E4AD5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:322 y aeat-dr-100-2023-dictionary:328: E4AD5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1457" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:323 y aeat-dr-100-2023-dictionary:329: E4AU5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:323 y aeat-dr-100-2023-dictionary:329: E4AU5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1458" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:324 y aeat-dr-100-2023-dictionary:330: E4ARN5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:324 y aeat-dr-100-2023-dictionary:330: E4ARN5, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo5/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1459" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:325 y aeat-dr-100-2023-dictionary:331: E4AD6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:325 y aeat-dr-100-2023-dictionary:331: E4AD6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1460" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:326 y aeat-dr-100-2023-dictionary:332: E4AU6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:326 y aeat-dr-100-2023-dictionary:332: E4AU6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1461" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:327 y aeat-dr-100-2023-dictionary:333: E4ARN6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:327 y aeat-dr-100-2023-dictionary:333: E4ARN6, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo6/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1462" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:328 y aeat-dr-100-2023-dictionary:334: E4AD7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:328 y aeat-dr-100-2023-dictionary:334: E4AD7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@definicion, tipo MOD; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1463" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:329 y aeat-dr-100-2023-dictionary:335: E4AU7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:329 y aeat-dr-100-2023-dictionary:335: E4AU7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@unidades, tipo P072; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1464" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:330 y aeat-dr-100-2023-dictionary:336: E4ARN7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:330 y aeat-dr-100-2023-dictionary:336: E4ARN7, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/Modulo7/@rendimiento, tipo P102; descripcion oficial equivalente salvo espacios y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1465" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1466" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1467" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1468" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1469" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1470" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1471" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1472" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1473" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1474" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1475" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:341 y aeat-dr-100-2023-dictionary:347: E4AF, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AF, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:341 y aeat-dr-100-2023-dictionary:347: E4AF, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AF, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1476" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1477" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1478" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1479" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:346 y aeat-dr-100-2023-dictionary:352: E4AL, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AL, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:346 y aeat-dr-100-2023-dictionary:352: E4AL, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AL, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1480" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:347 y aeat-dr-100-2023-dictionary:353: E4AM, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AM, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:347 y aeat-dr-100-2023-dictionary:353: E4AM, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AM, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1481" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:348 y aeat-dr-100-2023-dictionary:354: E4AR, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AR, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:348 y aeat-dr-100-2023-dictionary:354: E4AR, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObj/ActividadEstObj/E4AR, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1482" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:349 y aeat-dr-100-2023-dictionary:355: E4SUMA, ruta /DatosEconomicos/Resultados/RegEstimaObjRes/E4SUMA, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:349 y aeat-dr-100-2023-dictionary:355: E4SUMA, ruta /DatosEconomicos/Resultados/RegEstimaObjRes/E4SUMA, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1483" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1484" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:351 y aeat-dr-100-2023-dictionary:357: E4TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaObjRes/E4TOTAL, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:351 y aeat-dr-100-2023-dictionary:357: E4TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaObjRes/E4TOTAL, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1485" }
@@ -5740,283 +5740,283 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1486" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1487" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1488" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:355 y aeat-dr-100-2023-dictionary:361: E5AU01, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:355 y aeat-dr-100-2023-dictionary:361: E5AU01, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1489" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:356 y aeat-dr-100-2023-dictionary:362: E501, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:356 y aeat-dr-100-2023-dictionary:362: E501, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1490" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:357 y aeat-dr-100-2023-dictionary:363: E5ARN01, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:357 y aeat-dr-100-2023-dictionary:363: E5ARN01, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto1/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1491" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:358 y aeat-dr-100-2023-dictionary:364: E5AU02, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:358 y aeat-dr-100-2023-dictionary:364: E5AU02, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1492" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:359 y aeat-dr-100-2023-dictionary:365: E502, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:359 y aeat-dr-100-2023-dictionary:365: E502, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1493" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:360 y aeat-dr-100-2023-dictionary:366: E5ARN02, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:360 y aeat-dr-100-2023-dictionary:366: E5ARN02, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto2/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1494" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:361 y aeat-dr-100-2023-dictionary:367: E5AU03, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:361 y aeat-dr-100-2023-dictionary:367: E5AU03, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1495" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:362 y aeat-dr-100-2023-dictionary:368: E503, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:362 y aeat-dr-100-2023-dictionary:368: E503, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1496" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:363 y aeat-dr-100-2023-dictionary:369: E5ARN03, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:363 y aeat-dr-100-2023-dictionary:369: E5ARN03, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto3/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1497" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:364 y aeat-dr-100-2023-dictionary:370: E5AU04, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:364 y aeat-dr-100-2023-dictionary:370: E5AU04, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1498" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:365 y aeat-dr-100-2023-dictionary:371: E504, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:365 y aeat-dr-100-2023-dictionary:371: E504, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1499" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:366 y aeat-dr-100-2023-dictionary:372: E5ARN04, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:366 y aeat-dr-100-2023-dictionary:372: E5ARN04, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto4/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1500" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:367 y aeat-dr-100-2023-dictionary:373: E5AU05, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:367 y aeat-dr-100-2023-dictionary:373: E5AU05, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1501" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:368 y aeat-dr-100-2023-dictionary:374: E505, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:368 y aeat-dr-100-2023-dictionary:374: E505, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1502" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:369 y aeat-dr-100-2023-dictionary:375: E5ARN05, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:369 y aeat-dr-100-2023-dictionary:375: E5ARN05, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto5/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1503" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:370 y aeat-dr-100-2023-dictionary:376: E5AU06, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:370 y aeat-dr-100-2023-dictionary:376: E5AU06, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1504" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:371 y aeat-dr-100-2023-dictionary:377: E506, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:371 y aeat-dr-100-2023-dictionary:377: E506, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1505" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:372 y aeat-dr-100-2023-dictionary:378: E5ARN06, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:372 y aeat-dr-100-2023-dictionary:378: E5ARN06, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto6/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1506" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:373 y aeat-dr-100-2023-dictionary:379: E5AU07, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:373 y aeat-dr-100-2023-dictionary:379: E5AU07, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1507" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:374 y aeat-dr-100-2023-dictionary:380: E507, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:374 y aeat-dr-100-2023-dictionary:380: E507, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1508" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:375 y aeat-dr-100-2023-dictionary:381: E5ARN07, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:375 y aeat-dr-100-2023-dictionary:381: E5ARN07, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto7/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1509" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:376 y aeat-dr-100-2023-dictionary:382: E5AU08, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:376 y aeat-dr-100-2023-dictionary:382: E5AU08, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1510" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:377 y aeat-dr-100-2023-dictionary:383: E508, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:377 y aeat-dr-100-2023-dictionary:383: E508, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1511" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:378 y aeat-dr-100-2023-dictionary:384: E5ARN08, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:378 y aeat-dr-100-2023-dictionary:384: E5ARN08, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto8/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1512" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:379 y aeat-dr-100-2023-dictionary:385: E5AU09, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:379 y aeat-dr-100-2023-dictionary:385: E5AU09, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1513" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:380 y aeat-dr-100-2023-dictionary:386: E509, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:380 y aeat-dr-100-2023-dictionary:386: E509, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1514" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:381 y aeat-dr-100-2023-dictionary:387: E5ARN09, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:381 y aeat-dr-100-2023-dictionary:387: E5ARN09, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto9/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1515" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:382 y aeat-dr-100-2023-dictionary:388: E5AU10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:382 y aeat-dr-100-2023-dictionary:388: E5AU10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1516" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:383 y aeat-dr-100-2023-dictionary:389: E510, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:383 y aeat-dr-100-2023-dictionary:389: E510, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1517" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:384 y aeat-dr-100-2023-dictionary:390: E5ARN10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:384 y aeat-dr-100-2023-dictionary:390: E5ARN10, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto10/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1518" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:385 y aeat-dr-100-2023-dictionary:391: E5AU11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:385 y aeat-dr-100-2023-dictionary:391: E5AU11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1519" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:386 y aeat-dr-100-2023-dictionary:392: E511, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:386 y aeat-dr-100-2023-dictionary:392: E511, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1520" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:387 y aeat-dr-100-2023-dictionary:393: E5ARN11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:387 y aeat-dr-100-2023-dictionary:393: E5ARN11, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto11/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1521" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:388 y aeat-dr-100-2023-dictionary:394: E5AU12, /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@ingresosIntegros, tipo P102; tablas oficiales de productos de aeat-renta-2022-manual-parte1 y aeat-renta-2023-manual-parte1 (2020 pp538-539,2021 pp513-514,2022 pp519-520,2023 pp585-586). El mismo producto agricola/ganadero/forestal identifica el agregado de ingresos integros; en 2022 el titulo explicita el producto antes solo identificado por la tabla y la ruta XML. Raices/Raices acentuado en producto12 es correccion ortografica. Esta identidad no afirma que las reglas de imputacion PAC ni los limites fiscales permanezcan inmutables.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:388 y aeat-dr-100-2023-dictionary:394: E5AU12, /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@ingresosIntegros, tipo P102; tablas oficiales de productos de aeat-renta-2022-manual-parte1 y aeat-renta-2023-manual-parte1 (2020 pp538-539,2021 pp513-514,2022 pp519-520,2023 pp585-586). El mismo producto agricola/ganadero/forestal identifica el agregado de ingresos integros; en 2022 el titulo explicita el producto antes solo identificado por la tabla y la ruta XML. Raices/Raices acentuado en producto12 es correccion ortografica. Esta identidad no afirma que las reglas de imputacion PAC ni los limites fiscales permanezcan inmutables.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1522" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:389 y aeat-dr-100-2023-dictionary:395: E512, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:389 y aeat-dr-100-2023-dictionary:395: E512, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1523" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:390 y aeat-dr-100-2023-dictionary:396: E5ARN12, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:390 y aeat-dr-100-2023-dictionary:396: E5ARN12, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto12/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1524" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:391 y aeat-dr-100-2023-dictionary:397: E5AU13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:391 y aeat-dr-100-2023-dictionary:397: E5AU13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1525" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:392 y aeat-dr-100-2023-dictionary:398: E513, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:392 y aeat-dr-100-2023-dictionary:398: E513, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1526" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:393 y aeat-dr-100-2023-dictionary:399: E5ARN13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:393 y aeat-dr-100-2023-dictionary:399: E5ARN13, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto13/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1527" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:394 y aeat-dr-100-2023-dictionary:400: E5AU14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:394 y aeat-dr-100-2023-dictionary:400: E5AU14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1528" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:395 y aeat-dr-100-2023-dictionary:401: E514, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:395 y aeat-dr-100-2023-dictionary:401: E514, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1529" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:396 y aeat-dr-100-2023-dictionary:402: E5ARN14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:396 y aeat-dr-100-2023-dictionary:402: E5ARN14, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto14/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1530" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:397 y aeat-dr-100-2023-dictionary:403: E5AU15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:397 y aeat-dr-100-2023-dictionary:403: E5AU15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1531" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:398 y aeat-dr-100-2023-dictionary:404: E515, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:398 y aeat-dr-100-2023-dictionary:404: E515, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1532" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:399 y aeat-dr-100-2023-dictionary:405: E5ARN15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:399 y aeat-dr-100-2023-dictionary:405: E5ARN15, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto15/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1533" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:400 y aeat-dr-100-2023-dictionary:406: E5AU16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:400 y aeat-dr-100-2023-dictionary:406: E5AU16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@ingresosIntegros, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1534" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:401 y aeat-dr-100-2023-dictionary:407: E516, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:401 y aeat-dr-100-2023-dictionary:407: E516, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@indice, tipo X; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1535" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:402 y aeat-dr-100-2023-dictionary:408: E5ARN16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:402 y aeat-dr-100-2023-dictionary:408: E5ARN16, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/Producto16/@rendimiento, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1536" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1537" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:404 y aeat-dr-100-2023-dictionary:410: E5AA, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AA, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:404 y aeat-dr-100-2023-dictionary:410: E5AA, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AA, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1538" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:407 y aeat-dr-100-2023-dictionary:413: E5AB, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AB/@valor, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:407 y aeat-dr-100-2023-dictionary:413: E5AB, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AB/@valor, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1539" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:408 y aeat-dr-100-2023-dictionary:414: E5AC, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AC, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:408 y aeat-dr-100-2023-dictionary:414: E5AC, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AC, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1540" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1541" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1542" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1543" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1544" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1545" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1546" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1547" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1548" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:417 y aeat-dr-100-2023-dictionary:423: E5AD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AD, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:417 y aeat-dr-100-2023-dictionary:423: E5AD, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AD, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1549" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:418 y aeat-dr-100-2023-dictionary:424: E5AE, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AE, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:418 y aeat-dr-100-2023-dictionary:424: E5AE, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AE, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1550" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:420 y aeat-dr-100-2023-dictionary:426: E5AF, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AF, tipo N102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Diferencia ([1548 - [1549] - [0160]); enunciado sucesor: Diferencia ([1548 - [1549] - [0160]). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. En 1550 se restan las reducciones temporales La Palma/0160 en 2022-2024 y DANA/0162 en 2024, que no se arrastran a los numeros reutilizados en 2025. En 1583 se resta la nueva reduccion artistica DA60/0384 en 2025.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:420 y aeat-dr-100-2023-dictionary:426: E5AF, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AF, tipo N102; mismo agregado legal identificado por el campo/contexto oficial, no igualdad de operandos. La aritmetica propia de cada edicion esta declarada expresamente en su miembro formulas, sin arrastre automatico. Enunciado anterior: Diferencia ([1548 - [1549] - [0160]); enunciado sucesor: Diferencia ([1548 - [1549] - [0160]). Se incorporan las nuevas partidas o desgloses sin cambiar el papel del total. En 1550 se restan las reducciones temporales La Palma/0160 en 2022-2024 y DANA/0162 en 2024, que no se arrastran a los numeros reutilizados en 2025. En 1583 se resta la nueva reduccion artistica DA60/0384 en 2025.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1551" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1552" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1553" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:423 y aeat-dr-100-2023-dictionary:429: E5AK, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AK, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:423 y aeat-dr-100-2023-dictionary:429: E5AK, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AK, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1554" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:424 y aeat-dr-100-2023-dictionary:430: E5AL, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AL, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:424 y aeat-dr-100-2023-dictionary:430: E5AL, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaObjAgricola/ActividadAgr/E5AL, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1555" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1556" }
@@ -6028,15 +6028,15 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1558" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:426 y aeat-dr-100-2023-dictionary:432: E5SUMA, ruta /DatosEconomicos/Resultados/RegEstimaObjAgricolaRes/E5SUMA, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:426 y aeat-dr-100-2023-dictionary:432: E5SUMA, ruta /DatosEconomicos/Resultados/RegEstimaObjAgricolaRes/E5SUMA, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1559" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1560" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:428 y aeat-dr-100-2023-dictionary:434: E5TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaObjAgricolaRes/E5TOTAL, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:428 y aeat-dr-100-2023-dictionary:434: E5TOTAL, ruta /DatosEconomicos/Resultados/RegEstimaObjAgricolaRes/E5TOTAL, tipo N102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1561" }
@@ -6104,7 +6104,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1577" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:445 y aeat-dr-100-2023-dictionary:451: F1EH, ruta /DatosEconomicos/TomaDatosAmpliada/RegimenesEspeciales/REAtRentas/ENTIDADAR/F1EH, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:445 y aeat-dr-100-2023-dictionary:451: F1EH, ruta /DatosEconomicos/TomaDatosAmpliada/RegimenesEspeciales/REAtRentas/ENTIDADAR/F1EH, tipo N102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-86", "ley-35-2006:art-89"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1578" }
@@ -7150,11 +7150,11 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1845" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1846" }
-fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "1847" }
@@ -7878,8 +7878,9 @@ sequence_removals = {source_refs = [0, 1]}
 [[revisions."2023".family_overrides]]
 family = "extraction_profiles"
 selector = {revision = "2022", id = "modelo-100-declaracion-pdf"}
-sequence_additions = {source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_refs = [0, 1]}
+sequence_additions = {legal_refs = ["ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form"]}
+sequence_removals = {legal_refs = [4], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 15, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]}
 
 [[revisions."2023".family_overrides]]
 family = "dependency_classifications"

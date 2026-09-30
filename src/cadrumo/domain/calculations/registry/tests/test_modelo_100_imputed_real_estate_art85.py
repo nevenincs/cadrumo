@@ -11,12 +11,10 @@ import pytest
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
@@ -56,7 +54,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values["renta-maritime-qualifying-days"] = Decimal("0")
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
-        values.update(_M100_2024_MATERNIDAD_BINDINGS)
+        values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
     if year == 2024:
         values.update(
             {
@@ -69,7 +67,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
                 # an art. 85 imputed-real-estate example and claims no
                 # maternity deducción. It joined the 2024 closure after the
                 # others and was the only one left unsupplied.
-                **_M100_2024_MATERNIDAD_BINDINGS,
+                **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
             },
         )
     return values

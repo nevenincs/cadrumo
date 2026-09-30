@@ -53,7 +53,7 @@ from ..authority import PinnedAuthorityOperation
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
 from .published_authority import (
     PublishedGovernedFactSource,
@@ -154,8 +154,8 @@ def _run(
     }
     # An edition that computes the maternity deducción (casilla 0611) needs its
     # binding; neutral zero for a filer with no descendants.
-    if set(M100_2024_EMPTY_MATERNIDAD_BINDINGS) <= {binding.id for binding in snapshot.revision.bindings}:
-        binding_values.update(M100_2024_EMPTY_MATERNIDAD_BINDINGS)
+    if set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) <= {binding.id for binding in snapshot.revision.bindings}:
+        binding_values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
         "renta-modelo-131-pagos-fraccionados": Decimal("0"),
