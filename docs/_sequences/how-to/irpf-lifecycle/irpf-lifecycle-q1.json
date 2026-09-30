@@ -896,7 +896,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01 (previous_filing_binding).",
             "severity": "warning"
           },
           {
@@ -911,7 +911,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "An output transaction has no supporting evidence (binding 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, kind output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           }
         ],
@@ -927,7 +927,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01 (previous_filing_binding).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -943,7 +943,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, kind output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",

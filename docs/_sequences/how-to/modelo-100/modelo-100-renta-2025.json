@@ -47470,7 +47470,7 @@
               "severity": "warning",
               "source_refs": "aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"
             },
-            "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
+            "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
             "severity": "warning"
           },
           {
@@ -47489,7 +47489,7 @@
               "target_modelo": "100",
               "target_period": "0A"
             },
-            "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
+            "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
             "severity": "warning"
           },
           {
@@ -47503,7 +47503,7 @@
               "source_modelos": "111|123|130|131|184|190|193",
               "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-dr-184-2025, aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form, aeat-modelo-193-296-note-2025, boe-modelo-193-2011-form"
             },
-            "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
+            "message": "These 7 modelos were not used, because they do not apply to you: 111|123|130|131|184|190|193.",
             "severity": "warning"
           }
         ],
@@ -47519,7 +47519,7 @@
               "legal_refs": [
                 "ley-35-2006:dt-12"
               ],
-              "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
+              "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
@@ -47538,7 +47538,7 @@
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
               ],
-              "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
+              "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
@@ -47572,7 +47572,7 @@
                 "orden-hac-1431-2025:art-2",
                 "orden-eha-3377-2011:art-1"
               ],
-              "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
+              "message": "These 7 modelos were not used, because they do not apply to you: 111|123|130|131|184|190|193.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",

@@ -11128,7 +11128,7 @@
               "predicate_id": "modelo-390-resultado-liquidacion-equals-resultados-liquidaciones",
               "severity": "warning"
             },
-            "message": "The registry advisory predicate modelo-390-resultado-liquidacion-equals-resultados-liquidaciones fired for this revision.",
+            "message": "A built-in check flagged this declaration for a closer look (check modelo-390-resultado-liquidacion-equals-resultados-liquidaciones).",
             "severity": "warning"
           },
           {
@@ -11144,7 +11144,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11160,7 +11160,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11176,7 +11176,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11192,7 +11192,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11208,7 +11208,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11224,7 +11224,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11240,7 +11240,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11256,7 +11256,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11272,7 +11272,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11288,7 +11288,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11304,7 +11304,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11320,7 +11320,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11336,7 +11336,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11352,7 +11352,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11368,7 +11368,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11384,7 +11384,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11400,7 +11400,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11416,7 +11416,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11432,7 +11432,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11448,7 +11448,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11464,7 +11464,7 @@
               "source_period": "1T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11480,7 +11480,7 @@
               "source_period": "2T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11496,7 +11496,7 @@
               "source_period": "3T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11512,7 +11512,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-390-2022, aeat-modelo-390-procedure, boe-modelo-390-2009-form"
             },
-            "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+            "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
             "severity": "warning"
           },
           {
@@ -11527,7 +11527,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"
             },
-            "message": "An output transaction has no supporting evidence (binding 34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a, kind output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           },
           {
@@ -11542,7 +11542,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"
             },
-            "message": "An output transaction has no supporting evidence (binding 3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c, kind output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           },
           {
@@ -11557,7 +11557,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"
             },
-            "message": "An output transaction has no supporting evidence (binding 686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc, kind output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           },
           {
@@ -11572,7 +11572,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"
             },
-            "message": "An output transaction has no supporting evidence (binding 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, kind output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           }
         ],
@@ -11592,7 +11592,7 @@
                 "rd-1624-1992:art-71",
                 "orden-eha-3111-2009:art-1"
               ],
-              "message": "The registry advisory predicate modelo-390-resultado-liquidacion-equals-resultados-liquidaciones fired for this revision.",
+              "message": "A built-in check flagged this declaration for a closer look (check modelo-390-resultado-liquidacion-equals-resultados-liquidaciones).",
               "severity": "warning",
               "source_refs": []
             },
@@ -11610,7 +11610,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11632,7 +11632,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11654,7 +11654,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11676,7 +11676,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11697,7 +11697,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11718,7 +11718,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11739,7 +11739,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11760,7 +11760,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11781,7 +11781,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11802,7 +11802,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11823,7 +11823,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11844,7 +11844,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11864,7 +11864,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11884,7 +11884,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11904,7 +11904,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11924,7 +11924,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11944,7 +11944,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11964,7 +11964,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -11984,7 +11984,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -12004,28 +12004,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-390-2022",
-                "aeat-modelo-390-procedure",
-                "boe-modelo-390-2009-form"
-              ]
-            },
-            {
-              "action": null,
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-58-2003:art-119",
-                "ley-58-2003:art-120",
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
-                "orden-eha-3111-2009:art-1",
-                "rd-1624-1992:art-71"
-              ],
-              "message": "Modelo 303 2025 1T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -12046,7 +12025,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 2T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -12067,7 +12046,7 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 3T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 2T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -12088,7 +12067,28 @@
                 "orden-eha-3111-2009:art-1",
                 "rd-1624-1992:art-71"
               ],
-              "message": "Modelo 303 2025 4T rests on a local chain (registry_relation), not official AEAT evidence.",
+              "message": "The figures from modelo 303 for 2025, period 3T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-390-2022",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ]
+            },
+            {
+              "action": null,
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-58-2003:art-119",
+                "ley-58-2003:art-120",
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "orden-eha-3111-2009:art-1",
+                "rd-1624-1992:art-71"
+              ],
+              "message": "The figures from modelo 303 for 2025, period 4T, come from a declaration recorded only on this computer, not one confirmed by AEAT (registry_relation).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-390-2022",
@@ -12105,7 +12105,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a, kind output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "boe-modelo-390-2009-form",
@@ -12123,7 +12123,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c, kind output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "boe-modelo-390-2009-form",
@@ -12141,7 +12141,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 686e740b2d1feb1b0d9976809469fc0043b31869d9964f5f09d04150e7c11afc, kind output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "boe-modelo-390-2009-form",
@@ -12159,7 +12159,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98, kind output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "boe-modelo-390-2009-form",
