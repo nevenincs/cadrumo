@@ -8,16 +8,17 @@ from __future__ import annotations
 
 import base64
 import gzip
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import override
+from typing import Any, override
 from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, SecretBytes, ValidationError
 
+from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     api_key_verifier,
     canonical_record,
@@ -477,14 +478,174 @@ class TrackedWindowsStore(WindowsAutomationSecretStore):
         super().replace(namespace, account, value)
 
 
+class WindowsCredentialApiDouble:
+    """In-memory raw-byte seam for portable adapter contract tests."""
+
+    def __init__(self) -> None:
+        self.items: dict[str, bytes] = {}
+
+    def read(self, target: str) -> bytes | None:
+        return self.items.get(target)
+
+    def write(self, target: str, account: str, value: bytes) -> None:
+        self.items[target] = bytes(value)
+
+    def delete(self, target: str) -> None:
+        self.items.pop(target, None)
+
+
+@pytest.mark.parametrize("size", [1, 259, 2560])
+def test_windows_secret_store_preserves_exact_binary_blob(monkeypatch: pytest.MonkeyPatch, size: int) -> None:
+    api = WindowsCredentialApiDouble()
+    monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
+    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    store = WindowsAutomationSecretStore()
+    namespace, account = "cadrumo.automation.synthetic.v1", "random-synthetic-item"
+    source = bytes(range(256)) * (size // 256) + bytes(range(size % 256))
+    value = SecretBytes(source)
+
+    store.replace(namespace, account, value)
+
+    observed = store.read(namespace, account)
+    assert observed is not None
+    assert observed.get_secret_value() == source
+    assert set(api.items) == {namespace + ":" + account}
+    store.delete(namespace, account)
+    assert store.read(namespace, account) is None
+    assert not api.items
+
+
+def test_windows_secret_store_rejects_malformed_native_blob(monkeypatch: pytest.MonkeyPatch) -> None:
+    api = WindowsCredentialApiDouble()
+    monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
+    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    namespace, account = "cadrumo.automation.synthetic.v1", "malformed-synthetic-item"
+    api.items[namespace + ":" + account] = bytes(2561)
+
+    with pytest.raises(AutomationCustodyError, match="invalid"):
+        WindowsAutomationSecretStore().read(namespace, account)
+
+
+@pytest.mark.windows_only
+def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ctypes
+
+    class FakeFunction:
+        def __init__(self, callback: Callable[..., object] | None = None) -> None:
+            self.callback = callback
+            self.argtypes: list[object] | None = None
+            self.restype: object | None = None
+
+        def __call__(self, *args: object) -> object:
+            if self.callback is None:
+                return 1
+            return self.callback(*args)
+
+    class FakeAdvapi32:
+        credential_type: Any
+
+    api = FakeAdvapi32()
+    recorded: dict[str, object] = {}
+    records: dict[str, bytes] = {}
+    allocations: dict[int, tuple[Any, Any]] = {}
+    freed: list[int] = []
+    last_error = {"value": 0}
+
+    def cred_write(pointer: object, _flags: int) -> int:
+        credential = ctypes.cast(pointer, ctypes.POINTER(api.credential_type)).contents
+        size = int(credential.CredentialBlobSize)
+        recorded["target"] = credential.TargetName
+        recorded["account"] = credential.UserName
+        recorded["type"] = int(credential.Type)
+        recorded["persist"] = int(credential.Persist)
+        recorded["blob"] = ctypes.string_at(credential.CredentialBlob, size)
+        recorded["size"] = size
+        records[credential.TargetName] = bytes(recorded["blob"])
+        return 1
+
+    def cred_read(target: str, _credential_type: int, _flags: int, output_pointer: object) -> int:
+        value = records.get(target)
+        if value is None:
+            last_error["value"] = 1168
+            return 0
+        credential = api.credential_type()
+        blob_array = (ctypes.c_ubyte * len(value)).from_buffer_copy(value)
+        credential.Type = 1
+        credential.TargetName = target
+        credential.CredentialBlobSize = len(value)
+        credential.CredentialBlob = ctypes.cast(blob_array, ctypes.POINTER(ctypes.c_ubyte))
+        address = ctypes.addressof(credential)
+        allocations[address] = (credential, blob_array)
+        output = ctypes.cast(output_pointer, ctypes.POINTER(ctypes.POINTER(api.credential_type)))
+        output[0] = ctypes.pointer(credential)
+        return 1
+
+    def cred_free(pointer: object) -> None:
+        address = ctypes.cast(pointer, ctypes.c_void_p).value
+        assert address is not None
+        allocations.pop(address)
+        freed.append(address)
+
+    def cred_delete(target: str, _credential_type: int, _flags: int) -> int:
+        if target not in records:
+            last_error["value"] = 1168
+            return 0
+        del records[target]
+        return 1
+
+    api.CredReadW = FakeFunction(cred_read)
+    api.CredWriteW = FakeFunction(cred_write)
+    api.CredDeleteW = FakeFunction(cred_delete)
+    api.CredFree = FakeFunction(cred_free)
+    monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
+    monkeypatch.setattr(windows_secret_store.ctypes, "WinDLL", lambda _name, **_kwargs: api, raising=False)
+    monkeypatch.setattr(
+        windows_secret_store.ctypes, "get_last_error", lambda: last_error["value"], raising=False
+    )
+
+    manager = windows_secret_store._WindowsCredentialManager()
+    api.credential_type = manager._credential_type
+    source = bytes(range(256)) * 10
+    target, account = "cadrumo.automation.synthetic:" + str(uuid4()), "synthetic-account"
+    manager.write(target, account, source)
+    assert manager.read(target) == source
+    manager.delete(target)
+    assert manager.read(target) is None
+
+    assert ctypes.sizeof(manager._credential_type) == 80
+    assert recorded == {
+        "target": target,
+        "account": account,
+        "type": 1,
+        "persist": 2,
+        "blob": source,
+        "size": 2560,
+    }
+    assert not allocations
+    assert len(freed) == 1
+
+
 @pytest.mark.os_keychain
 @pytest.mark.windows_only
 def test_windows_native_publication_replacement_and_deletion(subject: Subject) -> None:
     native = TrackedWindowsStore()
     store = AutomationControlStore(root=subject.store.root, binding=subject.store.binding, secrets_store=native)
     # The fixture supplies random installation/profile identities and a unique root.
+    try:
+        native._api().read("cadrumo.automation.probe:" + str(uuid4()))
+    except windows_secret_store._WindowsCredentialError as error:
+        if error.winerror == 1312:
+            pytest.skip("Windows Credential Manager is unavailable in this logon session (WinError 1312)")
+        raise
     assert native.read(CONTROL_NAMESPACE, store.account) is None
     try:
+        probe_namespace = "cadrumo.automation.native-probe.v1"
+        probe_account = store.account + "/synthetic"
+        probe = SecretBytes(bytes(range(256)) + b"\x00\xff\x80")
+        native.replace(probe_namespace, probe_account, probe)
+        observed_probe = native.read(probe_namespace, probe_account)
+        assert observed_probe is not None
+        assert observed_probe.get_secret_value() == probe.get_secret_value()
         assert (
             store.publish(
                 grants=(subject.material,), expected_revision=0, profile_lock_generation=0, automation_enabled=True
