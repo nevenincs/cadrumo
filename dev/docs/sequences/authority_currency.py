@@ -3,8 +3,8 @@
 Every executed frame reads the published registry authority the runner
 resolves through
 :func:`~cadrumo.domain.calculations.registry.authority.bundled_authority_descriptor_path`.
-When that generation no longer records the live registry sources or compiler,
-an execution yields values the current tree would not produce: a check reports
+When that generation no longer records the live legal sources, an execution
+yields values the current tree would not produce: a check reports
 divergences that are not real, and a refresh commits them into the goldens as
 the new truth. The engine therefore confirms currency before it executes
 anything and refuses with the one command that repairs it, rather than

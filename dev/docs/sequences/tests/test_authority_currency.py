@@ -8,7 +8,6 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from dev.registry.pipeline.authority_publication import (
-    AuthorityBuildInput,
     AuthorityDatabaseCurrency,
     AuthorityDatabaseCurrencyStatus,
 )
@@ -28,19 +27,13 @@ _PAGE = "tutorials/authority-currency-case"
 _SEQUENCE_ID = "authority-currency-case"
 
 
-def _currency(
-    status: AuthorityDatabaseCurrencyStatus, detail: str, *drifted: AuthorityBuildInput
-) -> AuthorityDatabaseCurrency:
+def _currency(status: AuthorityDatabaseCurrencyStatus, detail: str) -> AuthorityDatabaseCurrency:
     return AuthorityDatabaseCurrency(
         descriptor_path=_DESCRIPTOR,
         status=status,
-        candidate_source_identity_digest="0" * 64,
-        candidate_identity_digest=None,
+        candidate_identity_digest="0" * 64,
         recorded_identity_digest=None,
-        candidate_build_identity=None,
-        recorded_build_identity=None,
         detail=detail,
-        drifted_inputs=drifted,
     )
 
 
@@ -67,15 +60,11 @@ class TestRefusalDecision:
         assert str(_DESCRIPTOR) in refusal
         assert refusal.endswith(PUBLISH_AUTHORITY_REMEDY)
 
-    def test_stale_refusal_carries_the_drifted_inputs_from_the_detail(self) -> None:
-        detail = (
-            "the indexed generation logical identity differs from the live complete-authority receipt; drifted: source"
-        )
-        refusal = authority_currency_refusal(
-            _currency(AuthorityDatabaseCurrencyStatus.STALE, detail, AuthorityBuildInput.SOURCE),
-        )
+    def test_stale_refusal_carries_the_currency_detail(self) -> None:
+        detail = "the legal sources changed since the indexed generation was published"
+        refusal = authority_currency_refusal(_currency(AuthorityDatabaseCurrencyStatus.STALE, detail))
         assert refusal is not None
-        assert "drifted: source" in refusal
+        assert detail in refusal
 
     def test_unavailable_descriptor_refusal_names_the_remedy(self) -> None:
         refusal = unavailable_authority_refusal("no descriptor at the configured root")
