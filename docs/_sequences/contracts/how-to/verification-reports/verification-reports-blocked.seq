@@ -12,6 +12,6 @@ aeat app ledger update {sale_id} --amount 968 --taxable-base 800 --iva-amount 16
 @result aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.completeness_status == "blocked"
 @expect result.granted_verificado_completo == false
-@expect result.findings[2].kind == "blocking_rule"
+@expect result.findings[2].kind == "stale_calculation"
 @expect result.findings[2].severity == "blocking"
 @expect exit_code == 1
