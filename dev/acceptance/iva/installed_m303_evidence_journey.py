@@ -27,9 +27,10 @@ installed wheel, all in the one filing year given by ``--year``:
   period does not ask for; the TUI form offers only the joint-return question,
   calculates and verifies without any attestation.
 
-Each fresh TUI process also opens the workspace Results destination.  A rendered
-``iva.resultado`` must equal the independent oracle; a not-applicable page is
-recorded in the receipt as an unexercised numeric readback, never as a pass.
+Each fresh TUI process also opens the declaration's workbench.  Its
+``iva.resultado`` casilla must read as calculated and equal the independent
+oracle; a casilla the workbench does not show, or shows with any other origin,
+fails the readback.
 
 Receipts carry identities, outcomes and oracle verdicts only: no passphrase,
 amount or synthetic document content.
@@ -48,7 +49,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any, Final, Literal, cast
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
@@ -62,17 +63,28 @@ from dev.acceptance.income_tax.installed_tui_child import (
     write_installed_tui_failure_receipt,
 )
 from dev.acceptance.income_tax.tui_journey import (
+    WORKBENCH_AT_RISK_PROCEED,
+    WORKBENCH_LIST,
+    WORKBENCH_NOTICE,
+    TuiJourneyError,
     TuiOperationBinding,
     TuiTerminalEvidence,
+    acknowledge_export_result,
     activate_tui_operation,
     installed_lifecycle_contract,
+    open_workbench_export,
+    wait_for_tui_refresh,
+    wait_for_workbench,
 )
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .filing_year import IvaJourneyYear, require_journey_year, require_m303_developer_header_positions
 
-_SCHEMA_VERSION: Final = "iva-01-installed-m303-evidence-journey-v1"
+if TYPE_CHECKING:
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+
+_SCHEMA_VERSION: Final = "iva-01-installed-m303-evidence-journey-v2"
 _CHILD_MODULE: Final = "dev.acceptance.iva.installed_m303_evidence_journey"
 _PERIOD: Final = "4T"
 _PRIOR_PERIOD: Final = "3T"
@@ -84,6 +96,7 @@ _COORDINATES: Final = tuple(
     ("303", period) for period in (_PERIOD, _PRIOR_PERIOD, _MONTH, _PRIOR_MONTH, _FIRST_QUARTER)
 )
 _ORACLE_RESULTADO: Final = Decimal("21.00") - Decimal("10.50")
+_RESULTADO_CASILLA: Final = "iva.resultado"
 _OUTSIDE_LAST_PERIOD: Final = "exonerado_390_attestation_outside_last_period"
 # Month and day of the sale and purchase inside each scenario's period.
 _LAST_PERIOD_DAYS: Final = ((12, 15), (12, 18))
@@ -124,15 +137,15 @@ class TuiOutcome:
 class ReopenReadback:
     """What a fresh installed TUI session shows for the calculated declaration.
 
-    ``results_page`` records whether the workspace Results destination rendered
-    computed values or declared itself not applicable; only a rendered page can
-    carry a numeric comparison with the oracle.
+    ``resultado_origin`` is the origin the workbench gives the ``iva.resultado``
+    casilla (``None`` when it shows no such casilla), and
+    ``resultado_matches_oracle`` whether the value it holds equals the oracle.
     """
 
     revision_listed_current: bool
     revision_state: str | None
-    results_page: Literal["rendered", "not_applicable"]
-    results_resultado_matches_oracle: bool | None
+    resultado_origin: str | None
+    resultado_matches_oracle: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -458,52 +471,61 @@ async def _close_modals(pilot: Any) -> None:
     raise InstalledTuiChildError("installed operation modal did not close after its terminal result")
 
 
-async def _await_refreshed_generation(pilot: Any) -> None:
-    """After a succeeded write, wait for the workspace to capture its new generation and return to the list.
-
-    Reopening earlier reads the pre-write generation, whose lifecycle projection
-    does not yet carry the new calculation or verification.
-    """
+async def _await_workbench_refresh(pilot: Any, *, binding: TuiOperationBinding) -> None:
+    """After a succeeded write, wait for the workbench to come back on top and read the declaration again."""
     await _close_modals(pilot)
-    await _await_selector(pilot, "#declarations-list", seconds=300)
+    try:
+        await wait_for_tui_refresh(pilot, binding=binding, maximum_polls=6000)
+    except TuiJourneyError as error:
+        raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
 
 
-async def _open_work(pilot: Any, *, work_unit_id: str) -> None:
-    """Open the selected declaration on a fresh overview whose notice starts empty."""
+async def _open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
+    """Open the selected declaration in a fresh workbench, whose notice starts empty, once it has read its form."""
+    await _close_modals(pilot)
+    await _open_declarations(pilot)
+    await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)
+    try:
+        return await wait_for_workbench(pilot, seconds=300)
+    except TuiJourneyError as error:
+        exception = getattr(pilot.app, "_exception", None)
+        raise InstalledTuiChildError(
+            f"installed declaration workbench did not open: {error} "
+            f"app_exception={type(exception).__name__ if exception else None}:{exception!s:.300}",
+            diagnostic=public_surface_diagnostic(pilot),
+        ) from error
+
+
+async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
+    """Calculate from the workbench, which first asks the Modelo 303 filing evidence.
+
+    The workbench may ask, before recalculating, to confirm a declaration last
+    calculated elsewhere; that confirmation is accepted only while it is the
+    top screen.
+    """
     import time
 
     from textual.css.query import NoMatches
 
-    await _close_modals(pilot)
-    await _open_declarations(pilot)
-    await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)
-    deadline = time.monotonic() + 300
+    await _open_work(pilot, work_unit_id=work_unit_id)
+    await pilot.press("c")
+    deadline = time.monotonic() + 120.0
     while time.monotonic() < deadline:
-        try:
-            pilot.app.screen.query_one("#modelo-lifecycle-calculate")
-        except NoMatches:
-            await pilot.pause(0.2)
-        else:
+        screen = pilot.app.screen
+        if screen.query(_EVIDENCE_SUBMIT_ID):
             return
-    screen = pilot.app.screen
-    exception = getattr(pilot.app, "_exception", None)
+        try:
+            proceed = screen.query_one(WORKBENCH_AT_RISK_PROCEED)
+        except NoMatches:
+            pass
+        else:
+            proceed.focus()
+            await pilot.press("enter")
+        await pilot.pause(0.2)
     raise InstalledTuiChildError(
-        "installed Modelo workspace exposed no Calculate control: "
-        f"screen={type(screen).__name__} mounted={screen.is_mounted} children={len(screen.children)} "
-        f"ids={sorted(str(w.id) for w in screen.query('*') if w.id)[:20]} "
-        f"app_exception={type(exception).__name__ if exception else None}:{exception!s:.300}",
+        f"installed workbench did not ask the Modelo 303 filing evidence: {_visible_refusal(pilot)}",
         diagnostic=public_surface_diagnostic(pilot),
     )
-
-
-async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
-    from textual.widgets import Button
-
-    await _open_work(pilot, work_unit_id=work_unit_id)
-    button = query_public_selector(pilot, "#modelo-lifecycle-calculate", Button)
-    button.focus()
-    await pilot.press("enter")
-    await _await_selector(pilot, "#m303-evidence-submit")
 
 
 def _fill_evidence_form(
@@ -544,9 +566,10 @@ def _notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | N
 _EVIDENCE_SUBMIT: Final = TuiOperationBinding(
     "modelo.work.calculate",
     activation_id=_EVIDENCE_SUBMIT_ID,
+    at_risk_proceed_id=WORKBENCH_AT_RISK_PROCEED,
     terminal_result_id="#operation-modal-status",
-    refresh_result_id="#declarations-list",
-    refusal_notice_id="#modelo-lifecycle-notice",
+    refresh_result_id=WORKBENCH_LIST,
+    refusal_notice_id=WORKBENCH_NOTICE,
 )
 
 
@@ -554,8 +577,9 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     """Drive one operation the product must refuse and read the refusal where the product leaves it.
 
     The operation modal dismisses itself as soon as the operation is terminal, so
-    a refusal settled after Apply is observed on the workspace notice: the
-    terminal copy followed by the registry's public explanation.
+    a refusal settled after Apply is observed on the workbench notice: the
+    sentence saying the operation did not complete, followed by the registry's
+    public explanation.
     """
     import time
 
@@ -565,7 +589,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.tui.operations.modal import OperationModal
 
-    refused = tr("operation.modal.terminal.refused")
+    not_done = tr("tui.modelo.workbench.operation.not_done")
     query_public_selector(pilot, activation_id, Button).focus()
     await pilot.press("enter")
     applied = False
@@ -587,7 +611,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
                     applied = True
         else:
             try:
-                notice = _rendered(screen.query_one("#modelo-lifecycle-notice", Static))
+                notice = _rendered(screen.query_one(WORKBENCH_NOTICE, Static))
             except NoMatches:
                 notice = ""
             if notice:
@@ -600,20 +624,20 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
         stack: list[str] = []
         for layer in pilot.app.screen_stack:
             try:
-                layer_notice = _rendered(layer.query_one("#modelo-lifecycle-notice", Static))
+                layer_notice = _rendered(layer.query_one(WORKBENCH_NOTICE, Static))
             except NoMatches:
                 layer_notice = None
             stack.append(f"{type(layer).__name__}:{layer_notice!r}")
         raise InstalledTuiChildError(
-            f"installed TUI {step} left no workspace notice (modal_seen={modal_seen}, applied={applied}, "
+            f"installed TUI {step} left no workbench notice (modal_seen={modal_seen}, applied={applied}, "
             f"stack={stack})",
             diagnostic=public_surface_diagnostic(pilot),
         )
-    if notice != f"{refused}: {tr(refusal_key)}":
+    if notice != f"{not_done} {tr(refusal_key)}":
         # The notice is the only place the product explains a non-refusal; a
-        # bare condition would send the reader to the operation journal.
+        # bare sentence would send the reader to the operation journal.
         raise InstalledTuiChildError(
-            f"installed TUI {step} expected refusal {refusal_key}, workspace notice was {notice[:400]!r}",
+            f"installed TUI {step} expected refusal {refusal_key}, workbench notice was {notice[:400]!r}",
             diagnostic=public_surface_diagnostic(pilot),
         )
     return TuiOutcome(step=step, terminal_condition="refused", visible_notice_key=refusal_key)
@@ -631,10 +655,10 @@ async def _form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> 
     outcomes: list[TuiOutcome] = []
     await _open_evidence_form(pilot, work_unit_id=work_unit_id)
     _fill_evidence_form(pilot, answer=False, observed_at=observed_at)
-    query_public_selector(pilot, "#m303-evidence-submit", Button).focus()
+    query_public_selector(pilot, _EVIDENCE_SUBMIT_ID, Button).focus()
     await pilot.press("enter")
     await pilot.pause()
-    await _await_selector(pilot, "#m303-evidence-submit")
+    await _await_selector(pilot, _EVIDENCE_SUBMIT_ID)
     outcomes.append(
         TuiOutcome(
             step="missing_booleans",
@@ -644,13 +668,13 @@ async def _form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> 
     )
     query_public_selector(pilot, "#m303-evidence-cancel", Button).focus()
     await pilot.press("enter")
-    await _await_selector(pilot, "#modelo-lifecycle-notice")
+    await _await_selector(pilot, WORKBENCH_NOTICE)
     await pilot.pause()
     outcomes.append(
         TuiOutcome(
             step="cancelled",
             terminal_condition="cancelled_without_request",
-            visible_notice_key=_notice_key(pilot, "#modelo-lifecycle-notice", ("tui.modelo.m303_evidence.cancelled",)),
+            visible_notice_key=_notice_key(pilot, WORKBENCH_NOTICE, ("tui.modelo.m303_evidence.cancelled",)),
         )
     )
     return outcomes
@@ -674,15 +698,15 @@ async def _calculate_and_verify(
         raise InstalledTuiChildError(
             f"installed TUI M303 calculation ended {calculated.terminal_condition}: {_visible_refusal(pilot)}"
         )
-    await _await_refreshed_generation(pilot)
+    await _await_workbench_refresh(pilot, binding=_EVIDENCE_SUBMIT)
     return outcomes
 
 
 def _visible_refusal(pilot: Any) -> str:
-    """Name what the operator can see after a non-succeeded operation: the modal receipt or the workspace notice."""
+    """Name what the operator can see after a non-succeeded operation: the modal receipt or the workbench notice."""
     from textual.css.query import NoMatches
 
-    for selector in ("#operation-modal-receipt", "#modelo-lifecycle-notice"):
+    for selector in ("#operation-modal-receipt", WORKBENCH_NOTICE):
         try:
             text = _rendered(pilot.app.screen.query_one(selector))
         except NoMatches:
@@ -700,45 +724,21 @@ async def _verify(pilot: Any, *, work_unit_id: str) -> TuiOutcome:
         raise InstalledTuiChildError(
             f"installed TUI M303 verification ended {terminal.terminal_condition}: {_visible_refusal(pilot)}"
         )
-    await _await_refreshed_generation(pilot)
+    await _await_workbench_refresh(pilot, binding=verify)
     return TuiOutcome(step="verify", terminal_condition=terminal.terminal_condition, visible_notice_key=None)
 
 
-async def _results_page(pilot: Any, *, work_unit_id: str) -> tuple[Literal["rendered", "not_applicable"], bool | None]:
-    """Open the workspace Results destination and report what it shows, comparing a rendered value with the oracle."""
-    import time
+async def _workbench_resultado(pilot: Any, *, work_unit_id: str) -> tuple[str | None, bool]:
+    """Read ``iva.resultado`` off the workbench's form: its origin, and whether its value equals the oracle."""
+    from cadrumo.application.modelo.work_form_models import address_key
 
-    from textual.css.query import NoMatches
-    from textual.widgets import DataTable
-
-    await _open_work(pilot, work_unit_id=work_unit_id)
-    await select_public_data_table_row(
-        pilot=pilot, table_selector="#workspace-overview-destinations", row_key="modelo.workspace.results"
-    )
-    deadline = time.monotonic() + 120.0
-    while time.monotonic() < deadline:
-        screen = pilot.app.screen
-        try:
-            table = cast("DataTable[Any]", screen.query_one("#workspace-results-table", DataTable))
-        except NoMatches:
-            pass
-        else:
-            for row_key in table.rows:
-                if str(row_key.value) == "iva.resultado":
-                    return "rendered", resultado_matches_oracle(table.get_row(row_key)[1])
-            raise InstalledTuiChildError(
-                "installed TUI Results did not expose iva.resultado", diagnostic=public_surface_diagnostic(pilot)
-            )
-        try:
-            refusal = _rendered(screen.query_one("#workspace-results-not-applicable"))
-        except NoMatches:
-            refusal = ""
-        if refusal:
-            return "not_applicable", None
-        await pilot.pause(0.2)
-    raise InstalledTuiChildError(
-        "installed TUI Results neither rendered nor refused", diagnostic=public_surface_diagnostic(pilot)
-    )
+    form = (await _open_work(pilot, work_unit_id=work_unit_id)).form
+    if form is None:
+        raise InstalledTuiChildError("installed workbench lost its form", diagnostic=public_surface_diagnostic(pilot))
+    field = next((item for item in form.fields() if address_key(item.address) == ("casilla", _RESULTADO_CASILLA)), None)
+    if field is None:
+        return None, False
+    return field.origin.value, resultado_matches_oracle(field.value)
 
 
 async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple[bool, str | None]:
@@ -772,15 +772,16 @@ async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple
 
 
 async def _attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
-    """Run the official export through the lifecycle control and classify its public terminal result."""
-    from textual.widgets import Input
-
+    """Run the official export through the workbench's export dialog and classify its public terminal result."""
     binding = installed_lifecycle_contract().export
-    if binding.activation_id is None:
-        raise InstalledTuiChildError("installed export binding declares no activation control")
     await _open_work(pilot, work_unit_id=work_unit_id)
-    query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = output_path
+    try:
+        await open_workbench_export(pilot, output_path=output_path)
+    except TuiJourneyError as error:
+        raise InstalledTuiChildError(str(error), diagnostic=public_surface_diagnostic(pilot)) from error
     terminal = await activate_tui_operation(pilot, binding=binding)
+    if terminal.terminal_condition == "succeeded":
+        await acknowledge_export_result(pilot)
     return TuiOutcome(step="export", terminal_condition=terminal.terminal_condition, visible_notice_key=None)
 
 
@@ -933,13 +934,13 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
                 listed_current, state = await _listed_revision(
                     pilot, calculation_revision_id=cast(str, args.calculation_revision_id)
                 )
-                page, matches_oracle = await _results_page(pilot, work_unit_id=work_unit_id)
+                origin, matches_oracle = await _workbench_resultado(pilot, work_unit_id=work_unit_id)
                 reopen.append(
                     ReopenReadback(
                         revision_listed_current=listed_current,
                         revision_state=state,
-                        results_page=page,
-                        results_resultado_matches_oracle=matches_oracle,
+                        resultado_origin=origin,
+                        resultado_matches_oracle=matches_oracle,
                     )
                 )
                 if args.export_path:
@@ -1065,11 +1066,13 @@ def _setup_store(
 
 
 def require_reopen(readback: ReopenReadback | None, *, scenario: str) -> ReopenReadback:
-    """Require the fresh TUI to list the verified revision as current, and any rendered result to equal the oracle."""
+    """Require the fresh TUI to list the verified revision as current and its workbench to show the oracle's result."""
     if readback is None or not readback.revision_listed_current or readback.revision_state != "verificado_completo":
         raise IvaInstalledM303Error(f"fresh installed TUI did not list the {scenario} revision as current and verified")
-    if readback.results_page == "rendered" and readback.results_resultado_matches_oracle is not True:
-        raise IvaInstalledM303Error(f"fresh installed TUI Results for {scenario} did not equal the independent oracle")
+    if readback.resultado_origin != "calculated" or readback.resultado_matches_oracle is not True:
+        raise IvaInstalledM303Error(
+            f"fresh installed TUI workbench for {scenario} did not show a calculated iva.resultado equal to the oracle"
+        )
     return readback
 
 
@@ -1377,11 +1380,6 @@ def run_journey(args: argparse.Namespace) -> JourneyReceipt:
         bundled_authority_generation=bundled_generation,
         stores=stores,
         unexercised=(
-            *(
-                ("tui_results_numeric_readback_workspace_admits_static_inspection_only",)
-                if any(store.tui_reopen.results_page == "not_applicable" for store in stores)
-                else ()
-            ),
             "official_m303_export_blocked_by_unavailable_eedd_header_identity",
             "tui_invoice_capture_multi_line",
             "aeat_submission",

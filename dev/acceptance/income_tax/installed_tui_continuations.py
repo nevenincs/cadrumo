@@ -64,10 +64,12 @@ from .installed_tui_financial_child import (
 from .scenario import build_scenario
 from .tui_journey import (
     ContinuationStateEvidence,
+    acknowledge_export_result,
     activate_tui_operation,
     canonical_financial_value_fingerprint,
     create_continuation_checkpoint,
     installed_lifecycle_contract,
+    open_workbench_export,
     prove_continuation,
 )
 
@@ -385,11 +387,9 @@ async def _assert_tui_partial_readback(*, pilot: Any, scenario: Any, year: int) 
 async def _export_visible_m130(
     *, pilot: Any, export_path: Path, work_unit_id: str, year: int, period: str
 ) -> dict[str, str]:
-    """Export an already-filed quarterly work through its visible TUI control."""
-    from textual.widgets import Input
-
+    """Export an already-filed quarterly work through its workbench's export dialog."""
     await _open_work(pilot, work_unit_id=work_unit_id)
-    query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = str(export_path)
+    await open_workbench_export(pilot, output_path=str(export_path))
     contract = installed_lifecycle_contract(
         profile_selection_id="#manager-status",
         ledger_capture_id="#ledger-import-confirm",
@@ -399,6 +399,7 @@ async def _export_visible_m130(
     terminal = await activate_tui_operation(pilot, binding=contract.export)
     if terminal.outcome.value != "proven":
         raise InstalledTuiChildError("installed TUI did not export the public Q1 work artifact")
+    await acknowledge_export_result(pilot)
     return _parse_m130_artifact(
         path=export_path,
         year=year,

@@ -1953,8 +1953,10 @@ async def _create_declarations_work(pilot: Any, *, modelo: str, year: int, perio
 
 
 async def _open_work_address(pilot: Any, *, modelo: str, year: int, period: str) -> None:
-    """Open one declaration by its displayed natural address in a freshly built list."""
+    """Open one declaration's workbench by its displayed natural address in a freshly built list."""
     from textual.widgets import DataTable
+
+    from dev.acceptance.income_tax.tui_journey import TuiJourneyError, wait_for_workbench
 
     await _open_fresh_declarations(pilot, expected_selector="#declarations-list")
     table = query_public_selector(pilot, "#declarations-list", DataTable)
@@ -1963,7 +1965,12 @@ async def _open_work_address(pilot: Any, *, modelo: str, year: int, period: str)
     if len(matches) != 1:
         raise RetencionesInstalledTuiError(f"declarations_list_rows_{len(matches)}:{modelo}|{year}|{period}")
     await _select_table_row(pilot=pilot, table_selector="#declarations-list", row_key=str(matches[0].value))
-    await _wait_for_selector(pilot, "#modelo-lifecycle-calculate")
+    try:
+        await wait_for_workbench(pilot)
+    except TuiJourneyError as error:
+        raise RetencionesInstalledTuiError(
+            f"{_address_token(modelo=modelo, year=year, period=period)}:{error}"
+        ) from error
 
 
 async def _run_work_operation(
@@ -1975,13 +1982,18 @@ async def _run_work_operation(
     operation: Literal["calculate", "verify", "file", "export"],
     export_path: Path | None = None,
 ) -> str:
-    """Run one lifecycle control on one addressed declaration and require a succeeded terminal."""
-    from textual.widgets import Input, Static
+    """Run one lifecycle action in one addressed declaration's workbench and require a succeeded terminal.
 
+    Each action opens the declaration afresh, so its result is read from a
+    workbench notice no earlier action wrote.
+    """
     from dev.acceptance.income_tax.tui_journey import (
+        acknowledge_export_result,
         activate_tui_operation,
         installed_lifecycle_contract,
+        open_workbench_export,
         wait_for_tui_refresh,
+        workbench_notice,
     )
 
     contract = installed_lifecycle_contract(work_create_id="#declarations-work-create")
@@ -1995,17 +2007,18 @@ async def _run_work_operation(
     if operation == "export":
         if export_path is None:
             raise RetencionesInstalledTuiError("tui_only_export_requires_a_destination")
-        query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = str(export_path)
+        await open_workbench_export(pilot, output_path=str(export_path), maximum_polls=20000)
     terminal = await activate_tui_operation(pilot, binding=binding, maximum_polls=20000)
     token = _address_token(modelo=modelo, year=year, period=period)
     if terminal.outcome.value != "proven":
-        notice = str(query_public_selector(pilot, "#modelo-lifecycle-notice", Static).render()).strip()
+        notice = workbench_notice(pilot)
         raise RetencionesInstalledTuiError(
             f"{token}:{binding.operation_id}:{terminal.terminal_condition}:{notice[:240]}"
         )
     if operation == "export":
         if export_path is None or not export_path.is_file() or export_path.stat().st_size == 0:
             raise RetencionesInstalledTuiError(f"{token}:modelo.export:artifact_missing")
+        await acknowledge_export_result(pilot, maximum_polls=20000)
     else:
         await wait_for_tui_refresh(pilot, binding=binding, maximum_polls=20000)
     return f"{token}:{binding.operation_id}"

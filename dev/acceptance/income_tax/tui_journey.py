@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -26,12 +27,31 @@ if TYPE_CHECKING:
     from textual.pilot import Pilot
     from textual.widget import Widget
 
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+
 _XML_DECLARATION_ENCODING: Final = re.compile(r'encoding="[^"]+"')
 _SHA256_HEX: Final = re.compile(r"[0-9a-f]{64}")
 _XSD_NORMALIZATION: Final = (
     "canonical record-design preparation replaces the XML declaration encoding "
     "with UTF-8 and removes only illegal escapes from xs:pattern values"
 )
+
+#: The workbench line where its refusals and settled operations are reported.
+WORKBENCH_NOTICE: Final = "#wb-notice"
+#: The workbench's casilla list, present whenever the workbench is the top screen.
+WORKBENCH_LIST: Final = "#wb-list"
+#: The workbench's line naming the next step its F8 key runs.
+WORKBENCH_NEXT: Final = "#wb-next"
+#: The accept control of the shared confirmation dialog, which the workbench shows
+#: before recalculating a declaration last calculated elsewhere that holds values
+#: nobody is recorded as having entered.
+WORKBENCH_AT_RISK_PROCEED: Final = "#btn-confirm-accept"
+_EXPORT_PATH: Final = "#export-path"
+_EXPORT_RESULT_CLOSE: Final = "#modelo-export-result-close"
+#: The close control of the statement of which boxes a recalculation changed.
+_RESULT_STATEMENT_CLOSE: Final = "#result-close"
+
+type TerminalCondition = Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled", "not_completed"]
 
 
 class TuiJourneyError(RuntimeError):
@@ -52,10 +72,21 @@ class TuiOperationBinding:
     remaining values are deliberately absent until the installed composition
     supplies stable controls; an operation definition alone cannot prove that
     a TUI user can activate it, confirm it, or observe its terminal result.
+
+    An operation starts either from a workbench key (``activation_key``) or
+    from a button on a dialog the journey has already opened
+    (``activation_id``), never both.  A key that runs whatever step the
+    workbench offers next names that step in ``offered_step`` (``verify``,
+    ``file``), and the driver refuses to press it while the workbench offers
+    another one.  ``at_risk_proceed_id`` is pressed only while the
+    workbench's pre-recalculation confirmation is the top screen.
     """
 
     operation_id: str
+    activation_key: str | None = None
     activation_id: str | None = None
+    offered_step: str | None = None
+    at_risk_proceed_id: str | None = None
     confirmation_id: str | None = None
     confirmation_required: bool = False
     terminal_result_id: str | None = None
@@ -65,7 +96,7 @@ class TuiOperationBinding:
     def missing(self, *, label: str) -> tuple[str, ...]:
         """Name required installed controls that are not available yet."""
         values = {
-            "activation": self.activation_id,
+            "activation": self.activation_key or self.activation_id,
             "terminal_result": self.terminal_result_id,
             "refresh_result": self.refresh_result_id,
             "refusal_notice": self.refusal_notice_id,
@@ -134,7 +165,7 @@ class TuiTerminalEvidence:
     """One terminal result observed through the public operation modal."""
 
     operation_id: str
-    terminal_condition: Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled"]
+    terminal_condition: TerminalCondition
     outcome: AcceptanceOutcome
     receipt_present: bool
     diagnostic_present: bool
@@ -258,10 +289,14 @@ def installed_lifecycle_contract(
     The caller must still supply actual profile, ledger, and calendar controls.
     Leaving them absent causes a blocked receipt, which prevents lifecycle
     wiring from being misreported as a complete TUI-only journey.
+
+    Every lifecycle action runs in the declaration's workbench, opened from
+    the Declarations list: ``c`` calculates, ``F8`` runs the verification or
+    the local filing the stepper offers next (filing through its
+    confirmation dialog), and the export dialog opened with ``e`` submits the
+    export.
     """
     modal_terminal = "#operation-modal-status"
-    refresh_target = "#declarations-list"
-    refusal_notice = "#modelo-lifecycle-notice"
     return InstalledTuiContract(
         profile_selection_id=profile_selection_id,
         ledger_capture_id=ledger_capture_id,
@@ -270,35 +305,117 @@ def installed_lifecycle_contract(
         work_open_id="#declarations-list",
         calculate=TuiOperationBinding(
             "modelo.work.calculate",
-            activation_id="#modelo-lifecycle-calculate",
+            activation_key="c",
+            at_risk_proceed_id=WORKBENCH_AT_RISK_PROCEED,
             terminal_result_id=modal_terminal,
-            refresh_result_id=refresh_target,
-            refusal_notice_id=refusal_notice,
+            refresh_result_id=WORKBENCH_LIST,
+            refusal_notice_id=WORKBENCH_NOTICE,
         ),
         verify=TuiOperationBinding(
             "modelo.work.verify",
-            activation_id="#modelo-lifecycle-verify",
+            activation_key="f8",
+            offered_step="verify",
             terminal_result_id=modal_terminal,
-            refresh_result_id=refresh_target,
-            refusal_notice_id=refusal_notice,
+            refresh_result_id=WORKBENCH_LIST,
+            refusal_notice_id=WORKBENCH_NOTICE,
         ),
         local_file=TuiOperationBinding(
             "modelo.work.file",
-            activation_id="#modelo-lifecycle-file",
+            activation_key="f8",
+            offered_step="file",
             confirmation_id="#btn-confirm-accept",
             confirmation_required=True,
             terminal_result_id=modal_terminal,
-            refresh_result_id=refresh_target,
-            refusal_notice_id=refusal_notice,
+            refresh_result_id=WORKBENCH_LIST,
+            refusal_notice_id=WORKBENCH_NOTICE,
         ),
         export=TuiOperationBinding(
             "modelo.export",
-            activation_id="#modelo-lifecycle-export",
+            activation_id="#export-submit",
             terminal_result_id=modal_terminal,
-            refresh_result_id=refresh_target,
-            refusal_notice_id=refusal_notice,
+            refresh_result_id=WORKBENCH_LIST,
+            refusal_notice_id=WORKBENCH_NOTICE,
         ),
     )
+
+
+async def wait_for_workbench(pilot: Pilot[Any], *, seconds: float = 300.0) -> ModeloWorkbenchScreen:
+    """Wait until the declaration's workbench is the top screen and has read its form.
+
+    The workbench reads its form off the event loop, so the screen appears
+    before it can be acted on.  A read the workbench itself reports as failed
+    is refused at once rather than waited out.
+    """
+    from textual.css.query import NoMatches
+
+    from cadrumo.core.i18n.render import tr
+    from cadrumo.entrypoints.tui.modelo.workbench import screen as workbench_screen
+
+    read_failed = tr("tui.modelo.workbench.read_failed")
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        # The top of the stack is the screen on display; unlike ``app.screen`` it is
+        # typed ``Screen[Any]``, which a workbench screen can narrow.
+        screen = pilot.app.screen_stack[-1]
+        if isinstance(screen, workbench_screen.ModeloWorkbenchScreen):
+            if screen.form is not None:
+                return screen
+            try:
+                loading = _rendered_text(screen.query_one("#wb-loading"))
+            except NoMatches:
+                loading = ""
+            if loading == read_failed:
+                raise TuiJourneyError("the declaration's workbench could not read its form")
+        await pilot.pause(0.2)
+    raise TuiJourneyError(
+        f"the declaration's workbench did not read its form within {seconds:.0f}s "
+        f"(top screen {type(pilot.app.screen).__name__})"
+    )
+
+
+async def open_workbench_export(pilot: Pilot[Any], *, output_path: str, maximum_polls: int = 600) -> None:
+    """Open the workbench's export dialog with its own key and name the destination.
+
+    The dialog is only offered for a verified declaration; the workbench's
+    own refusal is reported instead of being waited out.
+    """
+    from textual.css.query import NoMatches
+    from textual.widgets import Input
+
+    _require_fresh_notice(pilot, label="modelo.export")
+    await pilot.press("e")
+    for _ in range(maximum_polls):
+        try:
+            destination = pilot.app.screen.query_one(_EXPORT_PATH, Input)
+        except NoMatches:
+            notice = _stack_text(pilot, WORKBENCH_NOTICE)
+            if notice:
+                raise TuiJourneyError(f"the workbench did not open its export dialog: {notice[:240]}") from None
+            await pilot.pause()
+            continue
+        destination.value = output_path
+        return
+    raise TuiJourneyError("the workbench did not open its export dialog")
+
+
+async def acknowledge_export_result(pilot: Pilot[Any], *, maximum_polls: int = 600) -> None:
+    """Close the statement a finished export shows before the workbench moves on."""
+    from textual.css.query import NoMatches
+
+    for _ in range(maximum_polls):
+        try:
+            close = pilot.app.screen.query_one(_EXPORT_RESULT_CLOSE)
+        except NoMatches:
+            await pilot.pause()
+            continue
+        close.focus()
+        await pilot.press("enter")
+        for _ in range(maximum_polls):
+            if not pilot.app.screen.query(_EXPORT_RESULT_CLOSE):
+                return
+            await pilot.pause()
+        raise TuiJourneyError("the export statement did not close")
+    raise TuiJourneyError("the finished export did not show its statement")
 
 
 async def activate_tui_operation(
@@ -310,19 +427,25 @@ async def activate_tui_operation(
     """Activate one real TUI control and classify its public terminal result.
 
     This adapter reads only the modal's rendered status, receipt and diagnostic
-    widgets.  It intentionally does not call an operation controller or inspect
-    a private journal, and it cannot turn a refreshed screen into success.
+    widgets and the workbench's notice.  It intentionally does not call an
+    operation controller or inspect a private journal, and it cannot turn a
+    refreshed screen into success.  The workbench's notice must be empty
+    before activation, so a notice left by an earlier operation can never be
+    read as this operation's result.
     """
     _require_operation_binding(binding)
-    activation_id = binding.activation_id
-    if activation_id is None:
-        raise TuiJourneyError(f"{binding.operation_id} has no activation control")
-    activation = _query_visible_tui_control(pilot, activation_id)
-    activation.focus()
-    await pilot.press("enter")
+    _require_fresh_notice(pilot, label=binding.operation_id, selector=binding.refusal_notice_id)
+    if binding.activation_key is not None:
+        if binding.offered_step is not None:
+            _require_offered_step(pilot, step=binding.offered_step, key=binding.activation_key)
+        await pilot.press(binding.activation_key)
+    elif binding.activation_id is not None:
+        activation = _query_visible_tui_control(pilot, binding.activation_id)
+        activation.focus()
+        await pilot.press("enter")
     await pilot.pause()
     if binding.confirmation_id is not None:
-        confirmation = _query_visible_tui_control(pilot, binding.confirmation_id)
+        confirmation = await _wait_for_visible_tui_control(pilot, binding.confirmation_id, maximum_polls=maximum_polls)
         confirmation.focus()
         await pilot.press("enter")
         await pilot.pause()
@@ -332,23 +455,8 @@ async def activate_tui_operation(
         maximum_polls=maximum_polls,
     )
     if modal is None:
-        from cadrumo.core.i18n.render import tr
-
-        notice = _rendered_text(_query_visible_tui_control(pilot, binding.refusal_notice_id or ""))
-        terminal_notices: dict[
-            str,
-            tuple[
-                Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled"],
-                AcceptanceOutcome,
-            ],
-        ] = {
-            tr("operation.modal.terminal.succeeded"): ("succeeded", AcceptanceOutcome.PROVEN),
-            tr("operation.modal.terminal.succeeded_partial"): ("succeeded_partial", AcceptanceOutcome.FAILED),
-            tr("operation.modal.terminal.refused"): ("refused", AcceptanceOutcome.BLOCKED),
-            tr("operation.modal.terminal.failed"): ("failed", AcceptanceOutcome.FAILED),
-            tr("operation.modal.terminal.cancelled"): ("cancelled", AcceptanceOutcome.FAILED),
-        }
-        settled = terminal_notices.get(notice)
+        notice = _stack_text(pilot, binding.refusal_notice_id or "")
+        settled = settled_notice_terminal(notice)
         if settled is not None:
             condition, outcome = settled
             return TuiTerminalEvidence(
@@ -379,18 +487,35 @@ async def wait_for_tui_refresh(
     binding: TuiOperationBinding,
     maximum_polls: int = 600,
 ) -> None:
-    """Require the real refresh destination after a succeeded lifecycle action."""
+    """Require the workbench back on top after a succeeded lifecycle action, with its re-read settled.
+
+    The workbench stays open after an operation and reads the declaration
+    again; the wait ends only once that read, and any other work the screen
+    started, has finished.  After a recalculation the workbench states which
+    boxes now read differently; that statement is closed as a filer closes it.
+    """
     from textual.css.query import NoMatches
 
     if binding.refresh_result_id is None:
         raise TuiJourneyError(f"{binding.operation_id} has no installed refresh target")
     for _ in range(maximum_polls):
         try:
+            close = pilot.app.screen.query_one(_RESULT_STATEMENT_CLOSE)
+        except NoMatches:
+            pass
+        else:
+            close.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+            continue
+        try:
             pilot.app.screen.query_one(binding.refresh_result_id)
         except NoMatches:
             await pilot.pause()
-        else:
+            continue
+        if all(worker.is_finished for worker in pilot.app.workers):
             return
+        await pilot.pause()
     raise TuiJourneyError(f"{binding.operation_id} did not reach its refreshed TUI destination")
 
 
@@ -662,24 +787,97 @@ def write_tui_journey_receipt(*, evidence: TuiJourneyEvidence, path: Path) -> No
     path.write_text(f"{rendered}\n", encoding="utf-8", newline="\n")
 
 
-def settled_notice_terminal[TerminalT](notice: str, terminal_copies: Mapping[str, TerminalT]) -> TerminalT | None:
-    """Classify the notice a workspace leaves after its operation modal dismissed itself.
+def settled_notice_terminal(notice: str) -> tuple[TerminalCondition, AcceptanceOutcome] | None:
+    """Classify the notice the workbench leaves after its operation modal dismissed itself.
 
-    The modal closes as soon as the operation is terminal, and the workspace then
-    shows the terminal copy alone or followed by ``": "`` and the registry's public
-    explanation. Only those two shapes settle; any other text is not a terminal.
+    The modal closes as soon as the operation is terminal.  The workbench then
+    says the declaration was updated -- or, once it has read a recalculated
+    declaration again, that no box changed -- or that the operation did not
+    complete, alone or followed by one space and the registry's public
+    explanation of a settled refusal.  An explanation is only ever given for a
+    refusal, so that shape is a refusal; the bare sentence cannot say which
+    non-success it was and stays ``not_completed``.  Any other text is not a
+    terminal.
     """
-    for copy, terminal in terminal_copies.items():
-        if notice == copy or notice.startswith(f"{copy}: "):
-            return terminal
+    from cadrumo.core.i18n.render import tr
+
+    succeeded = {tr("tui.modelo.workbench.operation.done"), tr("tui.modelo.workbench.result_diff.nothing_changed")}
+    not_done = tr("tui.modelo.workbench.operation.not_done")
+    if notice in succeeded:
+        return "succeeded", AcceptanceOutcome.PROVEN
+    if notice == not_done:
+        return "not_completed", AcceptanceOutcome.FAILED
+    if notice.startswith(f"{not_done} ") and notice[len(not_done) + 1 :].strip():
+        return "refused", AcceptanceOutcome.BLOCKED
     return None
 
 
 def _require_operation_binding(binding: TuiOperationBinding) -> None:
-    """Refuse to drive an incomplete public control contract."""
+    """Refuse to drive an incomplete or ambiguous public control contract."""
     missing = binding.missing(label=binding.operation_id)
     if missing:
         raise TuiJourneyError(f"installed TUI operation contract is incomplete: {', '.join(missing)}")
+    if binding.activation_key is not None and binding.activation_id is not None:
+        raise TuiJourneyError(f"{binding.operation_id} names both a key and a control to activate it")
+
+
+def _require_fresh_notice(pilot: Pilot[Any], *, label: str, selector: str | None = WORKBENCH_NOTICE) -> None:
+    """Refuse to start an operation while the workbench still shows an earlier notice."""
+    if selector is None:
+        return
+    notice = _stack_text(pilot, selector)
+    if notice:
+        raise TuiJourneyError(
+            f"{label} would start under an earlier workbench notice; open the declaration afresh first "
+            f"(notice {notice[:120]!r})"
+        )
+
+
+def _require_offered_step(pilot: Pilot[Any], *, step: str, key: str) -> None:
+    """Require the workbench to offer ``step`` as the one its next-step key runs."""
+    from textual.css.query import NoMatches
+
+    from cadrumo.core.i18n.render import tr
+
+    expected = tr(
+        "tui.modelo.workbench.next_line",
+        action=tr(f"tui.modelo.workbench.next.{step}", count=0),
+        key=key.upper(),
+    )
+    try:
+        offered = _rendered_text(pilot.app.screen.query_one(WORKBENCH_NEXT))
+    except NoMatches:
+        offered = ""
+    if not offered.startswith(expected):
+        raise TuiJourneyError(f"the workbench does not offer {step} as its next step (it offers {offered[:200]!r})")
+
+
+async def _wait_for_visible_tui_control(pilot: Pilot[Any], selector: str, *, maximum_polls: int) -> Widget:
+    """Wait until a control is on the top screen."""
+    from textual.css.query import NoMatches
+
+    for _ in range(maximum_polls):
+        try:
+            return _query_visible_tui_control(pilot, selector)
+        except NoMatches:
+            await pilot.pause()
+    raise TuiJourneyError(f"installed TUI did not show {selector}")
+
+
+async def _proceed_past_at_risk_confirmation(pilot: Pilot[Any], selector: str | None) -> bool:
+    """Press the pre-recalculation confirmation's proceed control, only while it is the top screen."""
+    from textual.css.query import NoMatches
+
+    if selector is None:
+        return False
+    try:
+        proceed = _query_visible_tui_control(pilot, selector)
+    except NoMatches:
+        return False
+    proceed.focus()
+    await pilot.press("enter")
+    await pilot.pause()
+    return True
 
 
 async def _wait_for_operation_modal_or_refusal(
@@ -689,8 +887,6 @@ async def _wait_for_operation_modal_or_refusal(
     maximum_polls: int,
 ) -> _TuiScreen | None:
     """Wait for the standard modal or a visible typed pre-submit refusal."""
-    from textual.css.query import NoMatches
-
     from cadrumo.entrypoints.tui.operations.modal import OperationModal
 
     refusal_notice_id = binding.refusal_notice_id
@@ -700,12 +896,9 @@ async def _wait_for_operation_modal_or_refusal(
         current = pilot.app.screen
         if isinstance(current, OperationModal):
             return current
-        try:
-            notice = current.query_one(refusal_notice_id)
-        except NoMatches:
-            await pilot.pause()
+        if await _proceed_past_at_risk_confirmation(pilot, binding.at_risk_proceed_id):
             continue
-        if _rendered_text(notice):
+        if _stack_text(pilot, refusal_notice_id):
             return None
         await pilot.pause()
     raise TuiJourneyError(f"{binding.operation_id} did not open an operation modal or visible refusal")
@@ -723,20 +916,15 @@ async def _observe_operation_terminal(
     A shared operation may pause at its public REVIEW phase before it can
     settle.  The installed driver answers that phase through the modal's
     ordinary Apply button once.  It never calls an operation controller or
-    assumes that opening the modal executed the action.
+    assumes that opening the modal executed the action.  Once the modal has
+    dismissed itself, the workbench's notice carries the settled result.
     """
     from textual.css.query import NoMatches
     from textual.widget import Widget
 
     from cadrumo.core.i18n.render import tr
 
-    expected: dict[
-        str,
-        tuple[
-            Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled"],
-            AcceptanceOutcome,
-        ],
-    ] = {
+    expected: dict[str, tuple[TerminalCondition, AcceptanceOutcome]] = {
         tr("operation.modal.terminal.succeeded"): ("succeeded", AcceptanceOutcome.PROVEN),
         tr("operation.modal.terminal.succeeded_partial"): ("succeeded_partial", AcceptanceOutcome.FAILED),
         tr("operation.modal.terminal.refused"): ("refused", AcceptanceOutcome.BLOCKED),
@@ -754,22 +942,16 @@ async def _observe_operation_terminal(
             receipt = _rendered_text(modal.query_one("#operation-modal-receipt"))
             diagnostic = _rendered_text(modal.query_one("#operation-modal-diagnostic"))
         except NoMatches:
-            refusal_notice_id = binding.refusal_notice_id
-            if refusal_notice_id is not None:
-                try:
-                    settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
-                except NoMatches:
-                    settled_notice = ""
-                terminal = settled_notice_terminal(settled_notice, expected)
-                if terminal is not None:
-                    condition, outcome = terminal
-                    return TuiTerminalEvidence(
-                        operation_id=binding.operation_id,
-                        terminal_condition=condition,
-                        outcome=outcome,
-                        receipt_present=False,
-                        diagnostic_present=False,
-                    )
+            terminal = _settled_terminal(pilot, binding)
+            if terminal is not None:
+                condition, outcome = terminal
+                return TuiTerminalEvidence(
+                    operation_id=binding.operation_id,
+                    terminal_condition=condition,
+                    outcome=outcome,
+                    receipt_present=False,
+                    diagnostic_present=False,
+                )
             await pilot.pause()
             continue
         terminal = expected.get(status)
@@ -783,22 +965,16 @@ async def _observe_operation_terminal(
                 diagnostic_present=bool(diagnostic),
             )
         if not getattr(modal, "is_mounted", True):
-            refusal_notice_id = binding.refusal_notice_id
-            if refusal_notice_id is not None:
-                try:
-                    settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
-                except NoMatches:
-                    settled_notice = ""
-                terminal = settled_notice_terminal(settled_notice, expected)
-                if terminal is not None:
-                    condition, outcome = terminal
-                    return TuiTerminalEvidence(
-                        operation_id=binding.operation_id,
-                        terminal_condition=condition,
-                        outcome=outcome,
-                        receipt_present=bool(receipt),
-                        diagnostic_present=bool(diagnostic),
-                    )
+            terminal = _settled_terminal(pilot, binding)
+            if terminal is not None:
+                condition, outcome = terminal
+                return TuiTerminalEvidence(
+                    operation_id=binding.operation_id,
+                    terminal_condition=condition,
+                    outcome=outcome,
+                    receipt_present=bool(receipt),
+                    diagnostic_present=bool(diagnostic),
+                )
         # The generic modal keeps Apply disabled unless its public projection
         # has reached REVIEW.  A single click is the same operator act as the
         # visible button; repeating it while the projected revision catches up
@@ -831,6 +1007,16 @@ async def _observe_operation_terminal(
     raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
 
 
+def _settled_terminal(
+    pilot: Pilot[Any], binding: TuiOperationBinding
+) -> tuple[TerminalCondition, AcceptanceOutcome] | None:
+    """Classify the notice the workbench shows once the operation modal has gone."""
+    refusal_notice_id = binding.refusal_notice_id
+    if refusal_notice_id is None:
+        return None
+    return settled_notice_terminal(_stack_text(pilot, refusal_notice_id))
+
+
 def _rendered_text(widget: object) -> str:
     """Read a widget's public rendered content without serializing raw data."""
     render = getattr(widget, "render", None)
@@ -840,18 +1026,30 @@ def _rendered_text(widget: object) -> str:
 
 
 def _query_visible_tui_control(pilot: Pilot[Any], selector: str) -> Widget:
-    """Resolve a public control from the root before its pushed screen.
+    """Resolve a public control on the top screen, the only one an operator can act on."""
+    return pilot.app.screen.query_one(selector)
 
-    The installed workbench can retain a root-level destination while a modal
-    or screen sits above it.  This is still a public selector lookup and avoids
-    confusing a real post-success refresh with a missing screen-local widget.
+
+def workbench_notice(pilot: Pilot[Any]) -> str:
+    """Read the workbench's notice, even while a dialog it opened sits above it."""
+    return _stack_text(pilot, WORKBENCH_NOTICE)
+
+
+def _stack_text(pilot: Pilot[Any], selector: str) -> str:
+    """Read the rendered text of the top-most screen that shows ``selector``, or nothing.
+
+    The workbench's notice stays on the workbench while a dialog it opened
+    sits above it, so it is read from the nearest screen down the stack that
+    has it.
     """
     from textual.css.query import NoMatches
 
-    try:
-        return pilot.app.query_one(selector)
-    except NoMatches:
-        return pilot.app.screen.query_one(selector)
+    for screen in reversed(pilot.app.screen_stack):
+        try:
+            return _rendered_text(screen.query_one(selector))
+        except NoMatches:
+            continue
+    return ""
 
 
 def _required_coordinate(resolution: IncomeTaxAuthorityResolution) -> tuple[int, tuple[str, ...], str]:
@@ -929,6 +1127,10 @@ def _schema_error_identity(domain: str | None, type_name: str | None, line: int)
 
 
 __all__ = [
+    "WORKBENCH_AT_RISK_PROCEED",
+    "WORKBENCH_LIST",
+    "WORKBENCH_NEXT",
+    "WORKBENCH_NOTICE",
     "AcceptanceCaseEvidence",
     "ContinuationCheckpoint",
     "ContinuationEvidence",
@@ -936,19 +1138,25 @@ __all__ = [
     "InstalledTuiContract",
     "LifecycleEvidence",
     "LocalXsdValidationEvidence",
+    "TerminalCondition",
     "TuiJourneyError",
     "TuiJourneyEvidence",
     "TuiOperationBinding",
     "TuiTerminalEvidence",
+    "acknowledge_export_result",
     "activate_tui_operation",
     "blocked_tui_journey_evidence",
     "build_tui_journey_evidence",
     "canonical_financial_value_fingerprint",
     "create_continuation_checkpoint",
     "installed_lifecycle_contract",
+    "open_workbench_export",
     "prove_continuation",
+    "settled_notice_terminal",
     "validate_continuation_readback",
     "validate_modelo_100_xsd",
     "wait_for_tui_refresh",
+    "wait_for_workbench",
+    "workbench_notice",
     "write_tui_journey_receipt",
 ]

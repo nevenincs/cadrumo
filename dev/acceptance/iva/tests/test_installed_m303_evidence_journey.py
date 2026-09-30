@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from ..installed_m303_evidence_journey import (
@@ -52,29 +54,23 @@ def test_outcome_gate_refuses_a_missing_step_or_a_different_terminal_or_notice()
         require_outcomes(observed, {"cancelled": ("cancelled_without_request", "key.other")})
 
 
-_LISTED = ReopenReadback(
-    revision_listed_current=True,
-    revision_state="verificado_completo",
-    results_page="not_applicable",
-    results_resultado_matches_oracle=None,
-)
+def _readback(
+    *,
+    listed: bool = True,
+    state: str | None = "verificado_completo",
+    origin: str | None = "calculated",
+    matches: bool = True,
+) -> ReopenReadback:
+    return ReopenReadback(
+        revision_listed_current=listed,
+        revision_state=state,
+        resultado_origin=origin,
+        resultado_matches_oracle=matches,
+    )
 
 
-@pytest.mark.parametrize(
-    "readback",
-    [
-        _LISTED,
-        ReopenReadback(
-            revision_listed_current=True,
-            revision_state="verificado_completo",
-            results_page="rendered",
-            results_resultado_matches_oracle=True,
-        ),
-    ],
-    ids=["results-not-applicable", "results-rendered-equal"],
-)
-def test_reopen_gate_accepts_a_current_verified_revision(readback: ReopenReadback) -> None:
-    """A not-applicable Results page is admitted here and reported as unexercised by the receipt, not as a match."""
+def test_reopen_gate_accepts_a_current_verified_revision_whose_workbench_shows_the_oracle() -> None:
+    readback = _readback()
     assert require_reopen(readback, scenario="tui_led") is readback
 
 
@@ -82,33 +78,34 @@ def test_reopen_gate_accepts_a_current_verified_revision(readback: ReopenReadbac
     "readback",
     [
         None,
-        ReopenReadback(
-            revision_listed_current=False,
-            revision_state="verificado_completo",
-            results_page="not_applicable",
-            results_resultado_matches_oracle=None,
-        ),
-        ReopenReadback(
-            revision_listed_current=True,
-            revision_state="borrador",
-            results_page="not_applicable",
-            results_resultado_matches_oracle=None,
-        ),
-        ReopenReadback(
-            revision_listed_current=True,
-            revision_state="verificado_completo",
-            results_page="rendered",
-            results_resultado_matches_oracle=False,
-        ),
-        ReopenReadback(
-            revision_listed_current=True,
-            revision_state="verificado_completo",
-            results_page="rendered",
-            results_resultado_matches_oracle=None,
-        ),
+        _readback(listed=False),
+        _readback(state="borrador"),
+        _readback(state=None),
+        _readback(matches=False),
+        _readback(origin=None, matches=False),
+        _readback(origin="not_calculated_yet"),
+        _readback(origin="default_to_confirm"),
     ],
-    ids=["no-readback", "not-current", "unverified", "rendered-mismatch", "rendered-unread"],
+    ids=[
+        "no-readback",
+        "not-current",
+        "unverified",
+        "state-unread",
+        "resultado-mismatch",
+        "resultado-not-shown",
+        "resultado-not-calculated",
+        "resultado-not-from-the-calculation",
+    ],
 )
 def test_reopen_gate_refuses_an_unlisted_unverified_or_unequal_readback(readback: ReopenReadback | None) -> None:
     with pytest.raises(IvaInstalledM303Error):
         require_reopen(readback, scenario="tui_led")
+
+
+@pytest.mark.parametrize(
+    ("value", "matches"),
+    [(Decimal("10.50"), True), (Decimal("10.5"), True), (Decimal("-10.50"), False), (None, False)],
+)
+def test_the_oracle_reads_the_typed_value_the_workbench_form_holds(value: Decimal | None, matches: bool) -> None:
+    """The workbench's form holds a typed Decimal, or nothing, never a rendered string."""
+    assert resultado_matches_oracle(value) is matches

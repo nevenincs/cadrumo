@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -32,13 +32,21 @@ from .installed_tui_child import (
 )
 from .scenario import ExpenseInvoice, IncomeTaxScenario, IssuedInvoice, QuarterlyOracle, build_scenario
 from .tui_journey import (
+    WORKBENCH_LIST,
+    WORKBENCH_NOTICE,
     TuiOperationBinding,
+    acknowledge_export_result,
     activate_tui_operation,
     canonical_financial_value_fingerprint,
     installed_lifecycle_contract,
+    open_workbench_export,
     validate_modelo_100_xsd,
     wait_for_tui_refresh,
+    wait_for_workbench,
 )
+
+if TYPE_CHECKING:
+    from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 
 _SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
@@ -475,11 +483,11 @@ async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: s
     await _wait_for_refreshed_home(pilot)
 
 
-async def _open_work(pilot: Any, *, work_unit_id: str) -> None:
-    """Open the created work using its public work-unit row key."""
+async def _open_work(pilot: Any, *, work_unit_id: str) -> ModeloWorkbenchScreen:
+    """Open the created work's workbench using its public work-unit row key, once it has read its form."""
     await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
     await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)
-    await wait_for_public_selector(pilot, "#modelo-lifecycle-calculate")
+    return await wait_for_workbench(pilot)
 
 
 def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
@@ -504,7 +512,11 @@ async def _run_lifecycle(
     work_unit_id: str,
     calculate: bool = True,
 ) -> tuple[str, ...]:
-    """Run calculate, verify, local filing and export through the TUI."""
+    """Run calculate, verify, local filing and export through the declaration's workbench.
+
+    Each action opens the declaration afresh, so its result is read from a
+    workbench notice no earlier action wrote.
+    """
     contract = installed_lifecycle_contract(
         profile_selection_id="#manager-status",
         ledger_capture_id="#ledger-import-confirm",
@@ -527,12 +539,11 @@ async def _run_lifecycle(
         await wait_for_tui_refresh(pilot, binding=binding)
         completed.append(binding.operation_id)
     await _open_work(pilot, work_unit_id=work_unit_id)
-    from textual.widgets import Input
-
-    query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = str(export_path)
+    await open_workbench_export(pilot, output_path=str(export_path))
     terminal = await activate_tui_operation(pilot, binding=contract.export)
     if terminal.outcome.value != "proven":
         raise InstalledTuiChildError("modelo.export did not reach a succeeded terminal")
+    await acknowledge_export_result(pilot)
     completed.append(contract.export.operation_id)
     return tuple(completed)
 
@@ -556,43 +567,170 @@ def _parse_m130_artifact(*, path: Path, year: int, period: str, expected: dict[s
     return actual
 
 
-async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
-    """Set explicit annual-only facts through the admitted public edit surface."""
-    from textual.css.query import NoMatches
-    from textual.widgets import Input
+#: The annual-only facts the scenario declares, addressed as the workbench addresses them.
+_ANNUAL_EDITS: Final[tuple[tuple[tuple[str, str], str], ...]] = (
+    (("casilla", "0001"), "declarante"),
+    (("casilla", "0165"), "declarante"),
+    (("casilla", "0166"), "A05"),
+    (("binding", "renta-modelo-100-estimacion-directa-es-normal"), "1"),
+    (("binding", "renta-certificado-trabajo-retenciones"), "0"),
+)
+_EDIT_SECONDS: Final = 120.0
 
-    await _open_work(pilot, work_unit_id=work_unit_id)
-    values = {
-        "#modelo-edit-scalar-0001": "declarante",
-        "#modelo-edit-scalar-0165": "declarante",
-        "#modelo-edit-scalar-0166": "A05",
-        "#modelo-edit-binding-renta-modelo-100-estimacion-directa-es-normal": "1",
-        "#modelo-edit-binding-renta-certificado-trabajo-retenciones": "0",
-    }
-    for selector, value in values.items():
+
+def _workbench_notice(workbench: ModeloWorkbenchScreen) -> str:
+    from textual.widgets import Static
+
+    return str(workbench.query_one(WORKBENCH_NOTICE, Static).render()).strip()
+
+
+async def _stage_workbench_value(
+    pilot: Any, *, workbench: ModeloWorkbenchScreen, address: tuple[str, str], lexeme: str
+) -> None:
+    """Stage one value as a filer does: find its line, open its editor, type it and save it."""
+    import time
+
+    from textual.css.query import NoMatches
+    from textual.widgets import Button, Input, Static
+
+    from cadrumo.application.modelo.work_form_models import address_key
+    from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList
+    from cadrumo.entrypoints.tui.modelo.workbench.page_items import workbench_pages
+
+    label = ":".join(address)
+    form = workbench.form
+    if form is None:
+        raise InstalledTuiChildError("the annual workbench has not read its form")
+    pages = len(workbench_pages(form))
+    casilla_list = workbench.query_one(WORKBENCH_LIST, CasillaList)
+    for _ in range(pages):
+        await pilot.press("left_square_bracket")
+    for _ in range(pages):
+        if casilla_list.focus_address(address):
+            break
+        await pilot.press("right_square_bracket")
+        await pilot.pause()
+    else:
+        raise InstalledTuiChildError(f"the annual workbench shows no {label} on any page")
+    casilla_list.focus()
+    await pilot.press("enter")
+    deadline = time.monotonic() + _EDIT_SECONDS
+    while True:
         try:
-            query_public_selector(pilot, selector, Input).value = value
-        except NoMatches as error:
-            raise InstalledTuiChildError(f"annual edit did not expose public input {selector}") from error
+            value_input = pilot.app.screen.query_one("#editor-input", Input)
+        except NoMatches:
+            notice = _workbench_notice(workbench)
+            if notice:
+                raise InstalledTuiChildError(f"the annual workbench would not edit {label}: {notice[:200]}") from None
+            if time.monotonic() > deadline:
+                raise InstalledTuiChildError(
+                    f"the annual workbench opened no editor for {label}", diagnostic=public_surface_diagnostic(pilot)
+                ) from None
+            await pilot.pause()
+            continue
+        break
+    editor = pilot.app.screen
+    value_input.value = lexeme
+    save = editor.query_one("#editor-save", Button)
+    readback = editor.query_one("#editor-readback", Static)
+    while save.disabled:
+        if readback.has_class("-refused") or time.monotonic() > deadline:
+            raise InstalledTuiChildError(
+                f"the annual editor did not accept the value for {label}: {str(readback.render()).strip()[:200]}"
+            )
+        await pilot.pause()
+    save.focus()
+    await pilot.press("enter")
+    while pilot.app.screen is not workbench:
+        if time.monotonic() > deadline:
+            raise InstalledTuiChildError(f"the annual editor for {label} did not close")
+        await pilot.pause()
+    if not any(address_key(change.field.address) == address for change in workbench.staged_changes):
+        raise InstalledTuiChildError(
+            f"the annual workbench staged no change for {label}: {_workbench_notice(workbench)[:200]}"
+        )
+
+
+async def _open_review_ready_to_apply(pilot: Any, *, workbench: ModeloWorkbenchScreen) -> None:
+    """Open the review of the staged changes and, when it asks, acknowledge it before applying.
+
+    The workbench checks the changes with the application before the review
+    opens; a finding that would refuse them keeps Apply unavailable, and is
+    reported as the review states it.
+    """
+    import time
+
+    from textual.css.query import NoMatches
+    from textual.widgets import Button, Checkbox, Static
+
+    await pilot.press("R")
+    deadline = time.monotonic() + _EDIT_SECONDS
+    while True:
+        try:
+            apply = pilot.app.screen.query_one("#review-apply", Button)
+        except NoMatches:
+            if time.monotonic() > deadline:
+                raise InstalledTuiChildError(
+                    f"the annual workbench opened no review of its changes: {_workbench_notice(workbench)[:200]}",
+                    diagnostic=public_surface_diagnostic(pilot),
+                ) from None
+            await pilot.pause()
+            continue
+        break
+    review = pilot.app.screen
+    try:
+        acknowledge = review.query_one("#review-acknowledge", Checkbox)
+    except NoMatches:
+        acknowledge = None
+    if acknowledge is not None and not acknowledge.value:
+        acknowledge.focus()
+        await pilot.press("space")
+        await pilot.pause()
+        if not acknowledge.value:
+            raise InstalledTuiChildError("the annual review's acknowledgement did not take")
+    while apply.disabled:
+        if time.monotonic() > deadline:
+            try:
+                findings = str(review.query_one("#review-findings", Static).render()).strip()
+            except NoMatches:
+                findings = ""
+            raise InstalledTuiChildError(f"the annual review never allowed applying the changes: {findings[:300]}")
+        await pilot.pause()
+
+
+async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
+    """Set explicit annual-only facts in the declaration's workbench, then review and apply them."""
+    import re
+
+    from textual.css.query import NoMatches
+    from textual.widgets import Static
+
+    workbench = await _open_work(pilot, work_unit_id=work_unit_id)
+    for address, lexeme in _ANNUAL_EDITS:
+        await _stage_workbench_value(pilot, workbench=workbench, address=address, lexeme=lexeme)
+    if len(workbench.staged_changes) != len(_ANNUAL_EDITS):
+        raise InstalledTuiChildError(
+            f"the annual workbench staged {len(workbench.staged_changes)} changes, expected {len(_ANNUAL_EDITS)}"
+        )
+    await _open_review_ready_to_apply(pilot, workbench=workbench)
     binding = TuiOperationBinding(
         "modelo.edit.apply",
-        activation_id="#modelo-edit-apply",
+        activation_id="#review-apply",
         terminal_result_id="#operation-modal-status",
-        refresh_result_id="#declarations-list",
-        refusal_notice_id="#modelo-lifecycle-notice",
+        refresh_result_id=WORKBENCH_LIST,
+        refusal_notice_id=WORKBENCH_NOTICE,
     )
     terminal = await activate_tui_operation(pilot, binding=binding)
     if terminal.outcome.value != "proven":
-        import re
-
-        from textual.widgets import Static
-
-        log = query_public_selector(pilot, "#operation-modal-log", Static)
-        public_codes = sorted(set(re.findall(r"\b(?:modelo|operation|calculation)\.[a-z0-9_.-]+\b", str(log.render()))))
+        try:
+            log = str(pilot.app.screen.query_one("#operation-modal-log", Static).render())
+        except NoMatches:
+            log = ""
+        public_codes = sorted(set(re.findall(r"\b(?:modelo|operation|calculation)\.[a-z0-9_.-]+\b", log)))
         raise InstalledTuiChildError(
             f"modelo.edit.apply terminal={terminal.terminal_condition}, "
             f"receipt_present={terminal.receipt_present}, diagnostic_present={terminal.diagnostic_present}, "
-            f"public_event_codes={public_codes}"
+            f"public_event_codes={public_codes}, notice={_workbench_notice(workbench)[:200]!r}"
         )
     await wait_for_tui_refresh(pilot, binding=binding)
 
@@ -774,7 +912,7 @@ def run_financial_child(
             table_selector="#declarations-list",
             row_key=work_unit_ids["4T"],
         )
-        await wait_for_public_selector(pilot, "#modelo-lifecycle-export")
+        await wait_for_workbench(pilot)
         await _open_work(pilot, work_unit_id=work_unit_ids["0A"])
         observed.append("financial-work-and-links-reopened")
         pilot.app.exit()
