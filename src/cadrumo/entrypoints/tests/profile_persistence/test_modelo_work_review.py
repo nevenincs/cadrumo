@@ -19,7 +19,10 @@ from cadrumo.application.modelo.work_review import (
     ModeloWorkProgressDenominator,
     ModeloWorkReview,
     build_modelo_work_review,
+    capture_modelo_work_review,
+    read_modelo_work_review_current_coordinate,
 )
+from cadrumo.application.producer_capture import ProducerCaptureError
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
@@ -135,6 +138,47 @@ def _persist_work_unit(
     )
     work_repo.save(upsert_work_unit(work_repo.load(), unit))
     return unit
+
+
+def test_a_work_review_capture_carries_exactly_the_built_review_and_stays_current(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    target = (work_unit.bucket_id, work_unit.modelo, work_unit.filing_year, work_unit.period)
+    stores = {
+        "work_unit_repository": work_repo,
+        "calculation_repository": calculation_repo,
+        "verification_repository": verification_repo,
+    }
+
+    with bundled_indexed_authority().operation() as operation:
+        built = build_modelo_work_review(*target, operation=operation, **stores)
+        captured = capture_modelo_work_review(*target, operation=operation, **stores)
+        again = capture_modelo_work_review(*target, operation=operation, **stores)
+        current = read_modelo_work_review_current_coordinate(*target, operation=operation, **stores)
+
+    assert captured.value == built
+    assert again.generation == captured.generation
+    assert captured.require_current(current) is captured
+
+
+def test_a_work_review_capture_refuses_as_not_current_after_an_interleaved_write(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    target = (work_unit.bucket_id, work_unit.modelo, work_unit.filing_year, work_unit.period)
+    stores = {
+        "work_unit_repository": work_repo,
+        "calculation_repository": calculation_repo,
+        "verification_repository": verification_repo,
+    }
+
+    with bundled_indexed_authority().operation() as operation:
+        captured = capture_modelo_work_review(*target, operation=operation, **stores)
+        _persist_work_unit(repos, period_code="2T")
+        moved = read_modelo_work_review_current_coordinate(*target, operation=operation, **stores)
+
+    with pytest.raises(ProducerCaptureError) as refusal:
+        captured.require_current(moved)
+    assert refusal.value.translated_message == "errors.refused.producer_capture_not_current"
 
 
 def test_review_projects_resolvable_work_without_a_calculation_from_real_storage(repos: Repos) -> None:
