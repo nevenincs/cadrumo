@@ -537,10 +537,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "00068"
 continuidad_id = "00068"
@@ -651,6 +647,15 @@ data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
+id = "DP200001:00082"
+continuidad_id = "is-sociedad-matriz-ultima-grupo"
+number = "00082"
+segmento = "DP200001"
+section = ["sociedad_matriz_ultima_grupo_multinacional"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
 id = "00083"
 continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"
 number = "00083"
@@ -744,10 +749,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00094"
@@ -3089,7 +3090,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 semantic_role = "is_ecpn_ajuste_criterio_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00401"
 continuidad_id = "00401"
@@ -3199,6 +3199,22 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00416"
 continuidad_id = "00416"
 number = "00416"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+semantic_role = "is_ecpn_ajuste_errores_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00417"
+continuidad_id = "is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto"
+number = "00417"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
+semantic_role = "is_ecpn_ajuste_errores_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00418"
+continuidad_id = "is-ecpn-iii-ajustes-errores-ajustes-cambios-valor"
+number = "00418"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ajustes_por_errores_de_ejercicios_anteriores"]
 semantic_role = "is_ecpn_ajuste_errores_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4103,6 +4119,14 @@ section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_pr
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
+id = "DP200011:00547"
+continuidad_id = "is-ecpn-iii-reducciones-capital-total"
+number = "00547"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
 id = "00548"
 continuidad_id = "00548"
 number = "00548"
@@ -4146,7 +4170,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00552"
@@ -4156,7 +4179,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00555"
 continuidad_id = "00555"
@@ -4175,6 +4197,14 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00557"
 continuidad_id = "00557"
 number = "00557"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00558"
+continuidad_id = "is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor"
+number = "00558"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4200,6 +4230,38 @@ section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_pr
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
+id = "DP200011:00569"
+continuidad_id = "is-ecpn-iii-distribucion-dividendos-resultado-ejercicio"
+number = "00569"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00570"
+continuidad_id = "is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta"
+number = "00570"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00571"
+continuidad_id = "is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto"
+number = "00571"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00572"
+continuidad_id = "is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor"
+number = "00572"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
 id = "00564"
 continuidad_id = "00564"
 number = "00564"
@@ -4218,6 +4280,38 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00574"
 continuidad_id = "00574"
 number = "00574"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00575"
+continuidad_id = "is-ecpn-iii-distribucion-dividendos-total"
+number = "00575"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00583"
+continuidad_id = "is-ecpn-iii-acciones-propias-resultado-ejercicio"
+number = "00583"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00584"
+continuidad_id = "is-ecpn-iii-acciones-propias-dividendo-a-cuenta"
+number = "00584"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00585"
+continuidad_id = "is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto"
+number = "00585"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4246,6 +4340,14 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 id = "00586"
 continuidad_id = "00586"
 number = "00586"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00588"
+continuidad_id = "is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados"
+number = "00588"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4327,6 +4429,22 @@ section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_pr
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
+id = "DP200011:00603"
+continuidad_id = "is-ecpn-iii-combinacion-negocios-total"
+number = "00603"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00611"
+continuidad_id = "is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio"
+number = "00611"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
 id = "00604"
 continuidad_id = "00604"
 number = "00604"
@@ -4377,7 +4495,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00612"
 continuidad_id = "00612"
@@ -4419,6 +4536,14 @@ continuidad_id = "00617"
 number = "00617"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00625"
+continuidad_id = "is-ecpn-iii-otras-variaciones-resultado-ejercicio"
+number = "00625"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpn_otras_variaciones_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00618"
@@ -4471,7 +4596,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 semantic_role = "is_ecpn_otras_variaciones_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00626"
 continuidad_id = "00626"
@@ -5738,10 +5862,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "00815"
 continuidad_id = "00815"
@@ -5801,10 +5921,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00822"
@@ -5887,10 +6003,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00832'
 continuidad_id = "00832"
@@ -5906,10 +6018,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00833"
@@ -6700,10 +6808,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00906'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-applied"
@@ -6720,10 +6824,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00907"
@@ -6840,10 +6940,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00923'
 continuidad_id = "ric-2019-materialization-a-b"
@@ -6861,10 +6957,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00924'
 continuidad_id = "ric-2019-materialization-bbis-c-d"
@@ -6881,10 +6973,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00925"
@@ -6905,6 +6993,30 @@ id = "00927"
 continuidad_id = "is-reserva-inversiones-canarias-importe"
 number = "00927"
 section = ["reg_especial_reserva_inversiones_canarias", "importe_de_la_dotacion_ric_con_cargo_a_beneficios"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+# AEAT aeat-dr-200-2024 DP200022 campo 33, posicion 472: Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2020 - Pendiente de dotar RIC a principio del período [01176]
+[[revisions."2024".casillas]]
+id = "01176"
+continuidad_id = "ric-inversiones-anticipadas-2020-pendiente-dotar-inicio"
+number = "01176"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2020"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+# AEAT aeat-dr-200-2024 DP200022 campo 34, posicion 489: Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03352]
+[[revisions."2024".casillas]]
+id = "03352"
+continuidad_id = "ric-inversiones-anticipadas-2024-previstas-letras-a-b"
+number = "03352"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+# AEAT aeat-dr-200-2024 DP200022 campo 35, posicion 506: Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [03353]
+[[revisions."2024".casillas]]
+id = "03353"
+continuidad_id = "ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d"
+number = "03353"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2024".casillas]]
@@ -6938,10 +7050,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00931'
 continuidad_id = "priority-donation-2014-applied"
@@ -6958,10 +7066,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00932"
@@ -7029,10 +7133,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00940'
 continuidad_id = "canary-investment-2006-applied"
@@ -7049,10 +7149,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00941"
@@ -7074,10 +7170,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00943"
@@ -7130,10 +7222,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00949"
@@ -7208,10 +7296,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00956'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-remaining"
@@ -7229,10 +7313,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00957'
 continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-generated"
@@ -7249,10 +7329,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00960"
@@ -7523,10 +7599,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00997'
 continuidad_id = "ordinary-donation-2014-generated"
@@ -7544,10 +7616,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '00998'
 continuidad_id = "ordinary-donation-2014-applied"
@@ -7564,10 +7632,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "00999"
@@ -8554,10 +8618,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01088'
 continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-remaining"
@@ -8575,10 +8635,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01089'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-generated"
@@ -8595,10 +8651,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01090"
@@ -8729,10 +8781,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01107'
 continuidad_id = "capitalization-reserve-2022-applied"
@@ -8749,10 +8797,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01109"
@@ -8784,10 +8828,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01112"
@@ -8956,10 +8996,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-130',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01135'
 continuidad_id = "deferred-tax-excess-quota-2022-applied-2008-2015"
@@ -8973,10 +9009,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-130',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01136'
 continuidad_id = "deferred-tax-excess-quota-2022-applied-since-2016"
@@ -8989,10 +9021,6 @@ section = [
 ]
 legal_refs = [
     'ley-27-2014:art-130',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01137"
@@ -9032,10 +9060,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01142'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-generated"
@@ -9052,10 +9076,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01143"
@@ -9081,10 +9101,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01145'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-remaining"
@@ -9102,10 +9118,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01146'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-generated"
@@ -9122,10 +9134,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01147"
@@ -9165,10 +9173,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01151'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-remaining"
@@ -9185,10 +9189,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01152'
@@ -9207,10 +9207,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01153'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-applied"
@@ -9227,10 +9223,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01154'
@@ -9249,10 +9241,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01155'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-generated"
@@ -9269,10 +9257,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01156'
@@ -9291,10 +9275,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01157'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-remaining"
@@ -9311,10 +9291,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01158"
@@ -9718,10 +9694,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01221'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-applied"
@@ -9739,10 +9711,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01222'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-remaining"
@@ -9759,10 +9727,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01224"
@@ -9816,10 +9780,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "01234"
 continuidad_id = "01234"
@@ -9844,10 +9804,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01236'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-remaining"
@@ -9864,10 +9820,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01237'
@@ -9886,10 +9838,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01238'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-applied"
@@ -9907,10 +9855,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01239'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining"
@@ -9927,10 +9871,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01240"
@@ -10096,10 +10036,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01262'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-applied"
@@ -10116,10 +10052,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01263'
@@ -10138,10 +10070,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01264'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-generated"
@@ -10158,10 +10086,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01265'
@@ -10180,10 +10104,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01266'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-remaining"
@@ -10200,10 +10120,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01267'
@@ -10222,10 +10138,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01268'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-applied"
@@ -10243,10 +10155,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01269'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-remaining"
@@ -10263,10 +10171,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01270"
@@ -10300,10 +10204,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01273'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-applied"
@@ -10321,10 +10221,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01274'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-remaining"
@@ -10341,10 +10237,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01275"
@@ -10385,10 +10277,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01282'
 continuidad_id = "public-interest-south-summit-credit-2024-applied"
@@ -10406,10 +10294,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01283'
 continuidad_id = "public-interest-south-summit-credit-2024-remaining"
@@ -10426,10 +10310,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01284"
@@ -10947,10 +10827,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "01357"
 continuidad_id = "01357"
@@ -11269,10 +11145,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01404"
@@ -11685,10 +11557,6 @@ section = [
 ]
 legal_refs = [
     'ley-27-2014:art-130',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01470"
@@ -12573,10 +12441,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-105',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "01604"
 continuidad_id = "01604"
@@ -13125,10 +12989,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01684'
 continuidad_id = "01684"
@@ -13145,10 +13005,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01685'
 continuidad_id = "01685"
@@ -13164,10 +13020,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01686"
@@ -13207,10 +13059,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01690'
 continuidad_id = "ordinary-donation-2014-subtotal-applied"
@@ -13227,10 +13075,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01692"
@@ -13312,10 +13156,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01702'
 continuidad_id = "priority-donation-2014-subtotal-applied"
@@ -13332,10 +13172,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01704"
@@ -13381,10 +13217,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01709"
@@ -14386,10 +14218,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "01872"
 continuidad_id = "01872"
@@ -14603,10 +14431,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01904'
 continuidad_id = "public-interest-hockey-centenary-credit-2024-applied"
@@ -14623,10 +14447,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01905"
@@ -14665,10 +14485,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01915"
@@ -14818,10 +14634,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01936"
@@ -15029,10 +14841,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01964'
 continuidad_id = "levelling-reserve-2019-allocation-required"
@@ -15045,10 +14853,6 @@ section = [
 ]
 legal_refs = [
     'ley-27-2014:art-105',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '01965'
@@ -15063,10 +14867,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-105',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01966'
 continuidad_id = "levelling-reserve-2019-allocation-remaining"
@@ -15080,10 +14880,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-105',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01967'
 continuidad_id = "levelling-reserve-2019-disposed"
@@ -15096,10 +14892,6 @@ section = [
 ]
 legal_refs = [
     'ley-27-2014:art-105',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01968"
@@ -15174,10 +14966,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "01977"
 continuidad_id = "01977"
@@ -15230,10 +15018,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '01983'
 continuidad_id = "unused-operating-profit-2019-applied"
@@ -15250,10 +15034,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "01984"
@@ -15418,10 +15198,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02080'
 continuidad_id = "02080"
@@ -15437,10 +15213,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02081"
@@ -16525,10 +16297,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02239'
 continuidad_id = "levelling-reserve-2019-added"
@@ -16541,10 +16309,6 @@ section = [
 ]
 legal_refs = [
     'ley-27-2014:art-105',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02240"
@@ -16702,10 +16466,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02261"
@@ -16878,10 +16638,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02285'
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-applied"
@@ -16898,10 +16654,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '02286'
@@ -16920,10 +16672,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02287'
 continuidad_id = "02287"
@@ -16940,10 +16688,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02288'
 continuidad_id = "02288"
@@ -16959,10 +16703,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02289"
@@ -17499,10 +17239,6 @@ section = [
 legal_refs = [
     'ley-31-2022:da-70',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02364'
 continuidad_id = "riib-2024-advance-investment-c"
@@ -17515,10 +17251,6 @@ section = [
 ]
 legal_refs = [
     'ley-31-2022:da-70',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '02365'
@@ -17537,10 +17269,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02366'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-applied"
@@ -17558,10 +17286,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02367'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-remaining"
@@ -17578,10 +17302,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02368"
@@ -17869,10 +17589,6 @@ section = [
 legal_refs = [
     'ley-27-2014:art-105',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "02413"
 continuidad_id = "02413"
@@ -18128,10 +17844,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02459'
 continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-applied"
@@ -18149,10 +17861,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02460'
 continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-remaining"
@@ -18169,10 +17877,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02461"
@@ -18235,10 +17939,6 @@ section = [
 ]
 legal_refs = [
     'ley-49-2002:art-20',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02472"
@@ -18417,10 +18117,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02496'
 continuidad_id = "02496"
@@ -18436,10 +18132,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02497"
@@ -19019,10 +18711,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02577'
 continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-remaining"
@@ -19035,10 +18723,6 @@ section = [
 ]
 legal_refs = [
     'ley-49-2002:art-20',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02578"
@@ -19868,10 +19552,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02692'
 continuidad_id = "ordinary-recurrent-donation-2024-subperiod-applied"
@@ -19885,10 +19565,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02693'
 continuidad_id = "ordinary-recurrent-donation-2024-subperiod-remaining"
@@ -19901,10 +19577,6 @@ section = [
 ]
 legal_refs = [
     'ley-49-2002:art-20',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '02694'
@@ -19920,10 +19592,6 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02695'
 continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-applied"
@@ -19937,10 +19605,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '02696'
@@ -19956,10 +19620,6 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02697'
 continuidad_id = "priority-recurrent-donation-2024-subperiod-generated"
@@ -19974,10 +19634,6 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02698'
 continuidad_id = "priority-recurrent-donation-2024-subperiod-applied"
@@ -19991,10 +19647,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02699"
@@ -20016,10 +19668,6 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02701"
@@ -21690,10 +21338,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02945'
 continuidad_id = "aieg-ute-balearic-goods-bonus-amount"
@@ -21710,10 +21354,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '02947'
@@ -21732,10 +21372,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02949'
 continuidad_id = "aieg-ute-housing-rental-bonus-amount"
@@ -21752,10 +21388,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02951"
@@ -21844,10 +21476,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02963'
 continuidad_id = "aieg-ute-other-bonus-amount"
@@ -21865,10 +21493,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02965'
 continuidad_id = "aieg-ute-research-development-credit-amount"
@@ -21885,10 +21509,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02966"
@@ -21914,10 +21534,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02970'
 continuidad_id = "aieg-ute-spanish-film-producer-credit-amount"
@@ -21935,10 +21551,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '02971'
 continuidad_id = "credit-institution-temporary-levy-correction"
@@ -21955,10 +21567,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02972"
@@ -21983,10 +21591,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02975"
@@ -22025,10 +21629,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "02981"
@@ -22614,10 +22214,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03064'
 continuidad_id = "aieg-ute-profit-investment-credit-amount"
@@ -22634,10 +22230,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions.2024.casillas]]
 id = '03066'
@@ -22656,10 +22248,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03068'
 continuidad_id = "aieg-ute-west-africa-investment-advertising-credit-amount"
@@ -22677,10 +22265,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03070'
 continuidad_id = "aieg-ute-public-interest-event-credit-amount"
@@ -22697,10 +22281,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03071"
@@ -23951,10 +23531,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03250'
 continuidad_id = "aieg-ute-canary-foreign-film-credit-amount"
@@ -23971,10 +23547,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03251"
@@ -24203,10 +23775,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03284'
 continuidad_id = "aieg-ute-nonprofit-donation-credit-amount"
@@ -24223,10 +23791,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03286"
@@ -24252,10 +23816,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03289'
 continuidad_id = "aieg-ute-canary-technological-innovation-credit-amount"
@@ -24272,10 +23832,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03291"
@@ -24434,10 +23990,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions.2024.casillas]]
 id = '03312'
 continuidad_id = "ric-2024-current-advance-materialization"
@@ -24454,10 +24006,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03313"
@@ -24482,10 +24030,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03316"
@@ -24768,10 +24312,6 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
-]
 [[revisions."2024".casillas]]
 id = "03357"
 continuidad_id = "03357"
@@ -24802,10 +24342,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "03361"
@@ -25092,27 +24628,6 @@ section = ["otras_correcciones_al_resultado_de_la_cuenta_de_pe", "disminucion"]
 semantic_role = "is_correccion_otras_correcciones_resultado_saldo_final_neto"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "03627"
-continuidad_id = "03627"
-number = "03627"
-section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
-semantic_role = "is_reserva_inversiones_canarias_importe"
-legal_refs = ["ley-19-1994:art-27"]
-[[revisions."2024".casillas]]
-id = "03628"
-continuidad_id = "03628"
-number = "03628"
-section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
-semantic_role = "is_reserva_inversiones_canarias_importe"
-legal_refs = ["ley-19-1994:art-27"]
-[[revisions."2024".casillas]]
-id = "03629"
-continuidad_id = "03629"
-number = "03629"
-section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2024"]
-semantic_role = "is_reserva_inversiones_canarias_importe"
-legal_refs = ["ley-19-1994:art-27"]
-[[revisions."2024".casillas]]
 id = "1501"
 continuidad_id = "is-participaciones-directas-d-valor-nominal-total-de-la-participacion"
 number = "1501"
@@ -25183,7 +24698,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00563"
@@ -25193,7 +24707,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00565"
@@ -25203,7 +24716,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00566"
@@ -25213,7 +24725,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00567"
@@ -25223,7 +24734,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00568"
@@ -25233,7 +24743,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "DP200010:00576"
 continuidad_id = "is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado"
@@ -25242,7 +24751,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00577"
@@ -25252,7 +24760,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00581"
@@ -25262,7 +24769,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".casillas]]
 id = "DP200010:00582"
@@ -25272,7 +24778,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "DP200010:00590"
 continuidad_id = "is-ecpn-total-cambios-combinacion-negocios-capital-escriturado"
@@ -25281,7 +24786,6 @@ segmento = "DP200010"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 # Segment-qualified Liquidación II total of correcciones al resultado contable
 # de AUMENTO (DP200013 segment, diseño 2024 pos 1560). The per-row correccion
 # detalle casillas (semantic_role is_correcciones_aumentos and the per-article
@@ -25874,10 +25378,6 @@ legal_refs = [
     'ley-27-2014:art-19',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
-]
-source_refs = [
-    'aeat-dr-200-2024',
-    'aeat-modelo-200-manual-2024',
 ]
 [[revisions."2024".casillas]]
 id = "DP200026:00625"

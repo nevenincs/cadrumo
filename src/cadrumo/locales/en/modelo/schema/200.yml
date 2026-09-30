@@ -8900,6 +8900,63 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Interim
+              dividend [00584]
+          is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Other
+              equity instruments [00585]
+          is-ecpn-iii-acciones-propias-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Result
+              for the period [00583]
+          is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Grants,
+              donations and legacies received [00588]
+          is-ecpn-iii-ajustes-errores-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Adjustments for errors from
+              previous periods - Adjustments for changes in value [00418]
+          is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Adjustments for errors from
+              previous periods - Other equity instruments [00417]
+          is-ecpn-iii-combinacion-negocios-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Total [00603]
+          is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Conversion of liabilities into equity - Adjustments for
+              changes in value [00558]
+          is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Adjustments for change in
+              value [00572]
+          is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Interim dividend [00570]
+          is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Other equity instruments
+              [00571]
+          is-ecpn-iii-distribucion-dividendos-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Result for the period [00569]
+          is-ecpn-iii-distribucion-dividendos-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Total [00575]
+          is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Other transactions with shareholders or owners - Result
+              for the period [00611]
+          is-ecpn-iii-otras-variaciones-resultado-ejercicio:
+            label: Statement of changes in equity (III) - Other changes in equity
+              - Result for the period [00625]
+          is-ecpn-iii-reducciones-capital-total:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - (-) Capital reductions - Total [00547]
           is-ecpn-imputacion-directa-activos-no-corrientes-pasivos-vinculados-mantenidos-venta:
             label: Statement of changes in equity (I) - Income and expenses recognized
               in equity - From non-current assets and associated liabilities held
@@ -10273,6 +10330,18 @@ modelo:
               Islands investment reserve 2024 - Applied/materialised in this settlement
               - Advance investments treated as materialising the RIC in this settlement
               [03312]
+          ric-inversiones-anticipadas-2020-pendiente-dotar-inicio:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2020 - Canary Islands investment reserve pending allocation
+              at start of period [01176]
+          ric-inversiones-anticipadas-2024-previstas-letras-a-b:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2024 - Investments provided for in letters A and B, art.
+              27.4, Law 19/1994 [03352]
+          ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2024 - Investments provided for in letters B bis, C and
+              D, art. 27.4, Law 19/1994 [03353]
           riib-2024-advance-investment-a-b:
             label: Special regime for the Balearic Islands investment reserve - Advance
               investments 2024 - Investments provided for in letters A and B, Additional
@@ -12218,6 +12287,8 @@ modelo:
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
                 - Adjustments for the tax year - Temporary (originating in prior tax
                 years) [03368]
+            x-8h834c1g60o32ehg60o3gcg:
+              label: Ultimate parent company of a multinational group [00082]
           field:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
@@ -15109,64 +15180,5 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group or large-scale
                 domestic group [00082]
-            x-8h834c1g60oj2ehg60q32do:
-              label: Statement of changes in equity (III) - Adjustments for errors
-                from previous periods - Total corrections to the profit and loss account
-                result (increases) [00417]
-            x-8h834c1g60oj2ehg60q32e0:
-              label: Statement of changes in equity (III) - Adjustments for errors
-                from previous periods - Adjustments for changes in value [00418]
-            x-8h834c1g60oj2ehg60qj8do:
-              label: Settlement III - Tax base - Offset of negative tax bases from
-                previous periods [00547]
-            x-8h834c1g60oj2ehg60qjae0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Conversion of liabilities into equity - Adjustments for
-                changes in value [00558]
-            x-8h834c1g60oj2ehg60qjce8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Result for the period
-                [00569]
-            x-8h834c1g60oj2ehg60qjec0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Interim dividend [00570]
-            x-8h834c1g60oj2ehg60qjec8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Other equity instruments
-                [00571]
-            x-8h834c1g60oj2ehg60qjecg:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Adjustments for change
-                in value [00572]
-            x-8h834c1g60oj2ehg60qjed8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Total [00575]
-            x-8h834c1g60oj2ehg60qjgco:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Result
-                for the period [00583]
-            x-8h834c1g60oj2ehg60qjgd0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Interim
-                dividend [00584]
-            x-8h834c1g60oj2ehg60qjgd8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Other
-                equity instruments [00585]
-            x-8h834c1g60oj2ehg60qjge0:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Grants,
-                donations and legacies received [00588]
-            x-8h834c1g60oj2ehg60r30co:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Increase (reduction) in equity from business combination
-                - Total [00603]
-            x-8h834c1g60oj2ehg60r32c8:
-              label: Statement of changes in equity (III) - Transactions with shareholders
-                or owners - Other transactions with shareholders or owners - Result
-                for the period [00611]
-            x-8h834c1g60oj2ehg60r34d8:
-              label: Statement of changes in equity (III) - Other changes in equity
-                - Result for the period [00625]
           field:
             label: Modelo 200, tax years 2025 onwards

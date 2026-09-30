@@ -8864,6 +8864,65 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Dividendo a cuenta [00584]
+          is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Otros instrumentos patrimonio neto [00585]
+          is-ecpn-iii-acciones-propias-resultado-ejercicio:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Resultado del ejercicio [00583]
+          is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Subvenciones, donaciones y legados recibidos [00588]
+          is-ecpn-iii-ajustes-errores-ajustes-cambios-valor:
+            label: Estado de cambios patrimonio neto (III) - Ajustes por errores de
+              ejercicios anteriores - Ajustes por cambios de valor [00418]
+          is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
+            label: Estado de cambios patrimonio neto (III) - Ajustes por errores de
+              ejercicios anteriores - Otros instrumentos patrimonio neto [00417]
+          is-ecpn-iii-combinacion-negocios-total:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Incremento (reducción) de patr. neto de combinación
+              de negocios - Total [00603]
+          is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Conversión de pasivos en patrim. neto - Ajustes por
+              cambios de valor [00558]
+          is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Ajustes por cambio
+              de valor [00572]
+          is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Dividendo a cuenta
+              [00570]
+          is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Otros instrumentos
+              patrimonio neto [00571]
+          is-ecpn-iii-distribucion-dividendos-resultado-ejercicio:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Resultado del ejercicio
+              [00569]
+          is-ecpn-iii-distribucion-dividendos-total:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Total [00575]
+          is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Otras operaciones con socios o propietarios - Resultado
+              del ejercicio [00611]
+          is-ecpn-iii-otras-variaciones-resultado-ejercicio:
+            label: Estado de cambios patrimonio neto (III) - Otras variaciones del
+              patrimonio neto - Resultado del ejercicio [00625]
+          is-ecpn-iii-reducciones-capital-total:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - (-) Reducciones de capital - Total [00547]
           is-ecpn-imputacion-directa-activos-no-corrientes-pasivos-vinculados-mantenidos-venta:
             label: Estado de cambios patrimonio neto (I) - Ingresos y gastos imputados
               al patrimonio neto - Por activos no corrientes y pasivos vinculados,
@@ -10271,6 +10330,16 @@ modelo:
             label: Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado
               en esta liquidación - Inversiones anticipadas consideradas materialización
               de la RIC en esta liquidación [03312]
+          ric-inversiones-anticipadas-2020-pendiente-dotar-inicio:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2020 - Pendiente de dotar RIC a principio del período [01176]
+          ric-inversiones-anticipadas-2024-previstas-letras-a-b:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2024 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03352]
+          ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2024 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994
+              [03353]
           riib-2024-advance-investment-a-b:
             label: Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas
               2024 - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02363]
@@ -12215,6 +12284,8 @@ modelo:
                 con presencia en territ. español (art. 38 TRLIRNR) - Disminución -
                 Correcciones del ejercicio - Temporarias (con origen en ejercicios
                 anteriores) [03368]
+            x-8h834c1g60o32ehg60o3gcg:
+              label: Sociedad matriz última grupo multinacional [00082]
           field:
             label: Modelo 200, ejercicio 2024
         2025-y-siguientes:
@@ -15007,64 +15078,5 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Sociedad matriz última grupo multinacional o grupo nacional de
                 gran magnitud [00082]
-            x-8h834c1g60oj2ehg60q32do:
-              label: Estado de cambios patrimonio neto (III) - Ajustes por errores
-                de ejercicios anteriores - Otros instrumentos patrimonio neto [00417]
-            x-8h834c1g60oj2ehg60q32e0:
-              label: Estado de cambios patrimonio neto (III) - Ajustes por errores
-                de ejercicios anteriores - Ajustes por cambios de valor [00418]
-            x-8h834c1g60oj2ehg60qj8do:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Reducciones de capital - Total [00547]
-            x-8h834c1g60oj2ehg60qjae0:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Conversión de pasivos en patrim. neto - Ajustes por
-                cambios de valor [00558]
-            x-8h834c1g60oj2ehg60qjce8:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Distribución de dividendos - Resultado del ejercicio
-                [00569]
-            x-8h834c1g60oj2ehg60qjec0:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Distribución de dividendos - Dividendo a cuenta
-                [00570]
-            x-8h834c1g60oj2ehg60qjec8:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Distribución de dividendos - Otros instrumentos
-                patrimonio neto [00571]
-            x-8h834c1g60oj2ehg60qjecg:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Distribución de dividendos - Ajustes por cambio
-                de valor [00572]
-            x-8h834c1g60oj2ehg60qjed8:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - (-) Distribución de dividendos - Total [00575]
-            x-8h834c1g60oj2ehg60qjgco:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Operaciones con acciones o participaciones propias
-                - Resultado del ejercicio [00583]
-            x-8h834c1g60oj2ehg60qjgd0:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Operaciones con acciones o participaciones propias
-                - Dividendo a cuenta [00584]
-            x-8h834c1g60oj2ehg60qjgd8:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Operaciones con acciones o participaciones propias
-                - Otros instrumentos patrimonio neto [00585]
-            x-8h834c1g60oj2ehg60qjge0:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Operaciones con acciones o participaciones propias
-                - Subvenciones, donaciones y legados recibidos [00588]
-            x-8h834c1g60oj2ehg60r30co:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Incremento (reducción) de patr. neto de combinación
-                de negocios - Total [00603]
-            x-8h834c1g60oj2ehg60r32c8:
-              label: Estado de cambios patrimonio neto (III) - Operaciones con socios
-                o propietarios - Otras operaciones con socios o propietarios - Resultado
-                del ejercicio [00611]
-            x-8h834c1g60oj2ehg60r34d8:
-              label: Estado de cambios patrimonio neto (III) - Otras variaciones del
-                patrimonio neto - Resultado del ejercicio [00625]
           field:
             label: Modelo 200, ejercicios 2025 y siguientes

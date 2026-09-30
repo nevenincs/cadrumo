@@ -8867,6 +8867,63 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Saját tőke változásainak kimutatása (II) - Előző időszakok hibái
               miatti kiigazítások - Tőke - Jegyzett [00408]
+          is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Előlegosztalék [00584]
+          is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Egyéb saját tőke instrumentumok [00585]
+          is-ecpn-iii-acciones-propias-resultado-ejercicio:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Időszak eredménye [00583]
+          is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Kapott támogatások, adományok és hagyományok [00588]
+          is-ecpn-iii-ajustes-errores-ajustes-cambios-valor:
+            label: Saját tőke változásainak kimutatása (III) - Előző időszakok hibái
+              miatti kiigazítások - Értékváltozások miatti kiigazítások [00418]
+          is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
+            label: Saját tőke változásainak kimutatása (III) - Előző időszakok hibái
+              miatti kiigazítások - Egyéb saját tőke instrumentumok [00417]
+          is-ecpn-iii-combinacion-negocios-total:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
+              (csökkenése) - Összesen [00603]
+          is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Kötelezettségek saját tőkévé alakítása - Értékváltozások
+              miatti kiigazítások [00558]
+          is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Értékváltozás miatti kiigazítások
+              [00572]
+          is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Előlegosztalék [00570]
+          is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Egyéb saját tőke instrumentumok
+              [00571]
+          is-ecpn-iii-distribucion-dividendos-resultado-ejercicio:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Időszak eredménye [00569]
+          is-ecpn-iii-distribucion-dividendos-total:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Összesen [00575]
+          is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Egyéb műveletek tagokkal vagy tulajdonosokkal
+              - Időszak eredménye [00611]
+          is-ecpn-iii-otras-variaciones-resultado-ejercicio:
+            label: Saját tőke változásainak kimutatása (III) - Saját tőke egyéb változásai
+              - Időszak eredménye [00625]
+          is-ecpn-iii-reducciones-capital-total:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Tőkeleszállítások - Összesen [00547]
           is-ecpn-imputacion-directa-activos-no-corrientes-pasivos-vinculados-mantenidos-venta:
             label: Saját tőke változásainak kimutatása (I) - Saját tőkében elszámolt
               bevételek és ráfordítások - Értékesítésre tartott befektetett eszközök
@@ -10251,6 +10308,17 @@ modelo:
               beruházási tartalék (RIC) 2024 - Ebben az elszámolásban alkalmazva/materializálva
               - Az ebben az elszámolásban a RIC megvalósításának tekintett előrehozott
               beruházások [03312]
+          ric-inversiones-anticipadas-2020-pendiente-dotar-inicio:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2020 - Az időszak elején képzésre váró RIC [01176]
+          ric-inversiones-anticipadas-2024-previstas-letras-a-b:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2024 - 19/1994. törvény 27.4 cikk A és B pont szerinti beruházások
+              [03352]
+          ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2024 - 19/1994. törvény 27.4 cikk B bis, C és D pont szerinti
+              beruházások [03353]
           riib-2024-advance-investment-a-b:
             label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
               beruházások 2024 - A 31/2022. törvény DA 70.4. cikkének a) és b) pontjában
@@ -12201,6 +12269,8 @@ modelo:
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Csökkenés
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [03368]
+            x-8h834c1g60o32ehg60o3gcg:
+              label: Multinacionális csoport végső anyavállalata [00082]
           field:
             label: 200-es modelo, 2024. adóév
         2025-y-siguientes:
@@ -15042,63 +15112,5 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Multinacionális csoport vagy nagy méretű belföldi csoport végső
                 anyavállalata [00082]
-            x-8h834c1g60oj2ehg60q32do:
-              label: Saját tőke változásainak kimutatása (III) - Előző időszakok hibái
-                miatti kiigazítások - Az eredménykimutatás eredményének összes korrekciója
-                (növelések) [00417]
-            x-8h834c1g60oj2ehg60q32e0:
-              label: Saját tőke változásainak kimutatása (III) - Előző időszakok hibái
-                miatti kiigazítások - Értékváltozások miatti kiigazítások [00418]
-            x-8h834c1g60oj2ehg60qj8do:
-              label: Elszámolás III - Adóalap - Előző időszakok negatív adóalapjainak
-                kompenzálása [00547]
-            x-8h834c1g60oj2ehg60qjae0:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Kötelezettségek saját tőkévé alakítása - Értékváltozások
-                miatti kiigazítások [00558]
-            x-8h834c1g60oj2ehg60qjce8:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - (-) Osztalékfizetés - Időszak eredménye [00569]
-            x-8h834c1g60oj2ehg60qjec0:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - (-) Osztalékfizetés - Előlegosztalék [00570]
-            x-8h834c1g60oj2ehg60qjec8:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - (-) Osztalékfizetés - Egyéb saját tőke instrumentumok
-                [00571]
-            x-8h834c1g60oj2ehg60qjecg:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - (-) Osztalékfizetés - Értékváltozás miatti kiigazítások
-                [00572]
-            x-8h834c1g60oj2ehg60qjed8:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - (-) Osztalékfizetés - Összesen [00575]
-            x-8h834c1g60oj2ehg60qjgco:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Időszak eredménye [00583]
-            x-8h834c1g60oj2ehg60qjgd0:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Előlegosztalék [00584]
-            x-8h834c1g60oj2ehg60qjgd8:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Egyéb saját tőke instrumentumok [00585]
-            x-8h834c1g60oj2ehg60qjge0:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Kapott támogatások, adományok és hagyományok [00588]
-            x-8h834c1g60oj2ehg60r30co:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
-                (csökkenése) - Összesen [00603]
-            x-8h834c1g60oj2ehg60r32c8:
-              label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
-                folytatott ügyletek - Egyéb műveletek tagokkal vagy tulajdonosokkal
-                - Időszak eredménye [00611]
-            x-8h834c1g60oj2ehg60r34d8:
-              label: Saját tőke változásainak kimutatása (III) - Saját tőke egyéb
-                változásai - Időszak eredménye [00625]
           field:
             label: 200-es modelo, 2025. adóévtől

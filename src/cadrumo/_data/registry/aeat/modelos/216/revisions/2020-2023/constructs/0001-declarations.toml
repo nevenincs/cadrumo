@@ -1,0 +1,23 @@
+[[revisions."2020-2023".constructs]]
+id = "modelo-216-liquidacion"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4"]
+source_refs = [
+    "aeat-dr-216-2020-2023",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+]
+casilla_ids = ["partida-1", "partida-2", "partida-3", "partida-4", "partida-5", "partida-6", "partida-7"]
+application_links = ["modelo-216-deadline", "modelo-216-filing"]
+workbook_parity_refs = ["modelo-216-2020-2023-static-layout"]
+filing_schedules = ["modelo-216-trimestral"]
+deadline_windows = [
+    "modelo-216-2022-1t",
+    "modelo-216-2022-2t",
+    "modelo-216-2022-3t",
+    "modelo-216-2022-4t",
+    "modelo-216-2023-1t",
+    "modelo-216-2023-2t",
+    "modelo-216-2023-3t",
+    "modelo-216-2023-4t",
+]

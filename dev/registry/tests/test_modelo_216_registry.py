@@ -27,18 +27,23 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.modelo_inception import UnauthoredBefore
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,6 +57,14 @@ _ANTERIORES: CasillaId = validated_casilla_id("20", surface="_ANTERIORES")
 _RESULTADO: CasillaId = validated_casilla_id("21", surface="_RESULTADO")
 
 _EXPECTED_DEADLINES = {
+    (2022, "1T"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
+    (2022, "2T"): (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
+    (2022, "3T"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
+    (2022, "4T"): (date(2023, 1, 1), date(2023, 1, 20), date(2023, 1, 15)),
+    (2023, "1T"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
+    (2023, "2T"): (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
+    (2023, "3T"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
+    (2023, "4T"): (date(2024, 1, 1), date(2024, 1, 22), date(2024, 1, 17)),
     (2024, "1T"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
     (2024, "2T"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
     (2024, "3T"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
@@ -117,10 +130,10 @@ def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
 
 def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
     modelo, catalogues = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
-    assert len(revision.deadline_windows) == len(_EXPECTED_DEADLINES) == 12
+    owned = [(revision, window) for revision in modelo.revisions.values() for window in revision.deadline_windows]
+    assert len(owned) == len(_EXPECTED_DEADLINES)
 
-    for window in revision.deadline_windows:
+    for revision, window in owned:
         filing_year = window.period.filing_year
         period = window.period.registry_token
         physical_calendar_year = window.closes_on.year
@@ -167,3 +180,52 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
     assert result.values[_BASE_TOTAL] == Decimal("1500.00")
     assert result.values[_RET_TOTAL] == Decimal("285.00")
     assert result.values[_RESULTADO] == Decimal("245.00")
+
+
+def _pre_redesign_years() -> tuple[tuple[int, ...], ModeloRevision]:
+    modelo, _catalogues = _load_modelo_216()
+    support = load_shared_catalogues(bundled_path("registry", "aeat")).supported_filing_years
+    assert support is not None
+    redesign = select_revision(modelo, filing_year=support.horizon, period="1T", support=support)
+    years = tuple(year for year in support.years if year < redesign.valid_from.year)
+    assert years, "no supported year precedes the 2024 redesign"
+    return years, redesign
+
+
+def test_modelo_216_years_before_the_redesign_answer_from_the_design_that_governed_them() -> None:
+    """The 2024 design refuses an earlier devengo year, so those years resolve to the 2020-2023 design."""
+    modelo, catalogues = _load_modelo_216()
+    support = load_shared_catalogues(bundled_path("registry", "aeat")).supported_filing_years
+    years, redesign = _pre_redesign_years()
+    for year in years:
+        for period in redesign.period_selector.declared_periods:
+            revision = select_revision(modelo, filing_year=year, period=period, support=support)
+            assert revision is not redesign
+            assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+            designs = [ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"]
+            assert len(designs) == 1
+            design = catalogues.sources[designs[0]]
+            assert design.applies_from is not None and design.applies_to is not None
+            assert design.applies_from.year <= year <= design.applies_to.year
+
+
+def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_prints() -> None:
+    modelo, catalogues = _load_modelo_216()
+    years, _redesign = _pre_redesign_years()
+    revision = select_revision(modelo, filing_year=years[0], period="1T")
+    (design_ref,) = [ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"]
+    corpus = bundled_path() / catalogues.sources[design_ref].corpus_path
+    text = corpus.with_name(f"{corpus.name}.extracted.md").read_text(encoding="utf-8")
+    printed = sorted(set(re.findall(r"Liquidación - Partida (\d)", text)))
+    assert printed
+    assert sorted(str(casilla.id) for casilla in revision.casillas) == [f"partida-{n}" for n in printed]
+    assert revision.formulas == ()
+    assert revision.export_layouts == ()
+
+
+def test_modelo_216_inception_names_its_earliest_authored_edition() -> None:
+    declared = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "216"))
+    assert isinstance(declared.inception, UnauthoredBefore)
+    assert declared.inception.earliest_authored == min(
+        revision.valid_from.year for revision in declared.revisions.values()
+    )

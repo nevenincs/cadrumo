@@ -1,0 +1,22 @@
+[revisions."2020-2023"]
+# aeat-dr-216-2020-2023 is AEAT's record design for ejercicios 2020 a 2023. It
+# prints the liquidacion as seven partidas without box numbers; the 2024
+# redesign that 2024-y-siguientes renders refuses a devengo year before 2024,
+# so it cannot answer these years. This edition states only what the design
+# prints. The form that numbered those partidas and the instructions tying
+# partidas 1-3 and 4-5 to their blocks are not held, so no formula, binding or
+# export layout is authored and the reach stays at applicability.
+casilla_source_refs = ["aeat-dr-216-2020-2023"]
+application_link_source_refs = ["aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"]
+authority_grade = "applicability"
+valid_from = 2020-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2020, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-3290-2008:art-1"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = [
+    "aeat-dr-216-2020-2023",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+]

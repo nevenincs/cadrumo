@@ -1,7 +1,9 @@
 [revisions."2024"]
 binding_source_refs = ["aeat-modelo-200-manual-2024"]
-formula_source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-casilla_source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+# Rows and formulas cite the 2024 design, which prints this edition's boxes;
+# the 2025 design governs only the successor edition.
+formula_source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+casilla_source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 parameter_source_refs = ["aeat-modelo-200-manual-2024"]
 live_cross_reference_source_refs = ["aeat-modelo-200-manual-2024"]
 application_link_source_refs = ["aeat-modelo-200-manual-2024"]

@@ -1,0 +1,62 @@
+# Liquidacion partidas of aeat-dr-216-2020-2023, Pag. 1, positions 109-227.
+# The design names each field only "Liquidacion - Partida N" with its caption;
+# ids follow that printed naming because the design prints no box numbers.
+
+# @109+17 Num. Liquidacion - Partida 1 - Num. Rentas [entero 17 posiciones]
+[[revisions."2020-2023".casillas]]
+id = "partida-1"
+number = "partida-1"
+section = ["liquidacion"]
+data_type = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @126+17 Num. Liquidacion - Partida 2 - Base ret. ing. cuenta. [15 enteros + 2 decimales]
+[[revisions."2020-2023".casillas]]
+id = "partida-2"
+number = "partida-2"
+section = ["liquidacion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @143+17 Num. Liquidacion - Partida 3 - Retenciones ingresos a cuenta [15 enteros + 2 decimales]
+[[revisions."2020-2023".casillas]]
+id = "partida-3"
+continuidad_id = "irnr-retencion-cuota-total"
+number = "partida-3"
+semantic_role = "irnr_retencion_cuota_total"
+section = ["liquidacion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @160+17 Num. Liquidacion - Partida 4 - Num. Rentas [entero 17 posiciones]
+[[revisions."2020-2023".casillas]]
+id = "partida-4"
+number = "partida-4"
+section = ["liquidacion"]
+data_type = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @177+17 Num. Liquidacion - Partida 5 - Base ret. ing. cuenta. [15 enteros + 2 decimales]
+[[revisions."2020-2023".casillas]]
+id = "partida-5"
+number = "partida-5"
+section = ["liquidacion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @194+17 Num. Liquidacion - Partida 6. - Resultado ing. anteriores declaraciones. [15 enteros + 2 decimales]
+[[revisions."2020-2023".casillas]]
+id = "partida-6"
+continuidad_id = "irnr-retencion-resultados-anteriores"
+number = "partida-6"
+semantic_role = "irnr_retencion_resultados_anteriores"
+section = ["liquidacion"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+# @211+17 Num. Liquidacion - Partida 7 - Resultado ingresar [15 enteros + 2 decimales]
+[[revisions."2020-2023".casillas]]
+id = "partida-7"
+continuidad_id = "cuota-a-ingresar"
+number = "partida-7"
+semantic_role = "cuota_a_ingresar"
+section = ["liquidacion"]
+# Num: numerico sin signo per the design's Nota2, so the result is never negative.
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"] }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]

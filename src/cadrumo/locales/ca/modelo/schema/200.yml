@@ -8770,6 +8770,64 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estat de canvis en el patrimoni net (II) - Ajustos per errors d'exercicis
               anteriors - Capital - Escripturat [00408]
+          is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Dividend
+              a compte [00584]
+          is-ecpn-iii-acciones-propias-otros-instrumentos-patrimonio-neto:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Altres
+              instruments de patrimoni net [00585]
+          is-ecpn-iii-acciones-propias-resultado-ejercicio:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Resultat
+              de l'exercici [00583]
+          is-ecpn-iii-acciones-propias-subvenciones-donaciones-legados:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Subvencions,
+              donacions i llegats rebuts [00588]
+          is-ecpn-iii-ajustes-errores-ajustes-cambios-valor:
+            label: Estat de canvis en el patrimoni net (III) - Ajustos per errors
+              d'exercicis anteriors - Ajustos per canvis de valor [00418]
+          is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
+            label: Estat de canvis en el patrimoni net (III) - Ajustos per errors
+              d'exercicis anteriors - Altres instruments de patrimoni net [00417]
+          is-ecpn-iii-combinacion-negocios-total:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Increment (reducció) de patrim. net de combinació de
+              negocis - Total [00603]
+          is-ecpn-iii-conversion-pasivos-ajustes-cambios-valor:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Conversió de passius en patrimoni net - Ajustos per
+              canvis de valor [00558]
+          is-ecpn-iii-distribucion-dividendos-ajustes-cambios-valor:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Ajustos per canvi de
+              valor [00572]
+          is-ecpn-iii-distribucion-dividendos-dividendo-a-cuenta:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Dividend a compte [00570]
+          is-ecpn-iii-distribucion-dividendos-otros-instrumentos-patrimonio-neto:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Altres instruments de
+              patrimoni net [00571]
+          is-ecpn-iii-distribucion-dividendos-resultado-ejercicio:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Resultat de l'exercici
+              [00569]
+          is-ecpn-iii-distribucion-dividendos-total:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Total [00575]
+          is-ecpn-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Altres operacions amb socis o propietaris - Resultat
+              de l'exercici [00611]
+          is-ecpn-iii-otras-variaciones-resultado-ejercicio:
+            label: Estat de canvis en el patrimoni net (III) - Altres variacions del
+              patrimoni net - Resultat de l'exercici [00625]
+          is-ecpn-iii-reducciones-capital-total:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - (-) Reduccions de capital - Total [00547]
           is-ecpn-imputacion-directa-activos-no-corrientes-pasivos-vinculados-mantenidos-venta:
             label: Estat de canvis en el patrimoni net (I) - Ingressos i despeses
               imputats al patrimoni net - Per actius no corrents i passius vinculats,
@@ -10160,6 +10218,17 @@ modelo:
             label: Règ. especial reserva per a inversions a Canàries - RIC 2024 -
               Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
               considerades materialització de la RIC en aquesta liquidació [03312]
+          ric-inversiones-anticipadas-2020-pendiente-dotar-inicio:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2020 - Pendent de dotar la RIC a principi del període [01176]
+          ric-inversiones-anticipadas-2024-previstas-letras-a-b:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2024 - Inversions previstes lletres A i B, art. 27.4 Llei
+              19/1994 [03352]
+          ric-inversiones-anticipadas-2024-previstas-letras-b-bis-c-d:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2024 - Inversions previstes lletres B bis, C i D art. 27.4
+              Llei 19/1994 [03353]
           riib-2024-advance-investment-a-b:
             label: Règ. especial reserva per a inversions a les Illes Balears - Inversions
               anticipades 2024 - Inversions previstes lletres A i B, DA 70.4 Llei
@@ -12005,6 +12074,8 @@ modelo:
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [03368]
+            x-8h834c1g60o32ehg60o3gcg:
+              label: Societat matriu última d'un grup multinacional [00082]
           field:
             label: Model 200, exercici 2024
         2025-y-siguientes:
@@ -14788,64 +14859,5 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Societat matriu última d'un grup multinacional o grup nacional
                 de gran magnitud [00082]
-            x-8h834c1g60oj2ehg60q32do:
-              label: Estat de canvis en el patrimoni net (III) - Ajustos per errors
-                d'exercicis anteriors - Total correccions al resultat del compte de
-                pèrdues i guanys (augments) [00417]
-            x-8h834c1g60oj2ehg60q32e0:
-              label: Estat de canvis en el patrimoni net (III) - Ajustos per errors
-                d'exercicis anteriors - Ajustos per canvis de valor [00418]
-            x-8h834c1g60oj2ehg60qj8do:
-              label: Liquidació III - Base imposable - Compensació de bases imposables
-                negatives períodes anteriors [00547]
-            x-8h834c1g60oj2ehg60qjae0:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Conversió de passius en patrimoni net - Ajustos per
-                canvis de valor [00558]
-            x-8h834c1g60oj2ehg60qjce8:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Resultat de l'exercici
-                [00569]
-            x-8h834c1g60oj2ehg60qjec0:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Dividend a compte [00570]
-            x-8h834c1g60oj2ehg60qjec8:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Altres instruments
-                de patrimoni net [00571]
-            x-8h834c1g60oj2ehg60qjecg:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Ajustos per canvi de
-                valor [00572]
-            x-8h834c1g60oj2ehg60qjed8:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Total [00575]
-            x-8h834c1g60oj2ehg60qjgco:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Resultat de l'exercici [00583]
-            x-8h834c1g60oj2ehg60qjgd0:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Dividend a compte [00584]
-            x-8h834c1g60oj2ehg60qjgd8:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Altres instruments de patrimoni net [00585]
-            x-8h834c1g60oj2ehg60qjge0:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Subvencions, donacions i llegats rebuts [00588]
-            x-8h834c1g60oj2ehg60r30co:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Increment (reducció) de patrim. net de combinació
-                de negocis - Total [00603]
-            x-8h834c1g60oj2ehg60r32c8:
-              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
-                o propietaris - Altres operacions amb socis o propietaris - Resultat
-                de l'exercici [00611]
-            x-8h834c1g60oj2ehg60r34d8:
-              label: Estat de canvis en el patrimoni net (III) - Altres variacions
-                del patrimoni net - Resultat de l'exercici [00625]
           field:
             label: Model 200, exercicis 2025 i següents

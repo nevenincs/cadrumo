@@ -5,12 +5,33 @@ modelo:
         modelo-216-calculation-construct:
           field:
             title: 'Model 216: càlcul de les retencions de l''IRNR'
+        modelo-216-liquidacion:
+          field:
+            title: 'Model 216: liquidació de les retencions de l''IRNR'
       field:
         official_name: Modelo 216. Impost sobre la Renda de no Residents. Rendes obtingudes
           sense mediació d'establiment permanent. Retencions i ingressos a compte.
           Declaració-document d'ingrés.
         title: IRNR retencions i ingressos a compte
       revision:
+        2020-2023:
+          casilla:
+            partida-1:
+              label: Liquidació. Partida 1. Nombre de rendes
+            partida-2:
+              label: Liquidació. Partida 2. Base de retencions i ingressos a compte
+            partida-3:
+              label: Liquidació. Partida 3. Retencions i ingressos a compte
+            partida-4:
+              label: Liquidació. Partida 4. Nombre de rendes
+            partida-5:
+              label: Liquidació. Partida 5. Base de retencions i ingressos a compte
+            partida-6:
+              label: Liquidació. Partida 6. Resultat a ingressar de declaracions anteriors
+            partida-7:
+              label: Liquidació. Partida 7. Resultat a ingressar
+          field:
+            label: Ordre EHA/3290/2008, exercicis 2020 a 2023
         2024-y-siguientes:
           casilla:
             '05':
