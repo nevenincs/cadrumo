@@ -12,7 +12,8 @@ before it could reach the application.
 
 Confirming an assumed value makes it the filer's own: the value the
 calculation holds is kept as a typed value, exactly as if the filer had typed
-it. Only a box the filer types into can be confirmed this way. A box a source
+it. Only a box whose value is the filer's own entry can be confirmed this way:
+a manual box, or a value the form asks for that no box prints. A box a source
 fills is never confirmed, because a value kept over a source replaces it.
 
 When the declaration moves underneath the staged changes -- another
@@ -34,6 +35,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormScalar,
     ModeloWorkForm,
     address_key,
+    confirmable,
     edit_address,
 )
 from .....core.external_constants import OutputLanguage
@@ -160,15 +162,16 @@ class WorkbenchEditSession:
     def stage_confirmation(self, field: ModeloFormField) -> StageRefusal | None:
         """Stage an assumed value as the filer's own, without retyping it.
 
-        Only a box the filer types into, holding a value nobody is recorded as
-        having entered, can be confirmed. A box a source fills is refused, since
-        keeping a value over it would replace the source rather than confirm it.
+        Only a value the filer types, that nobody is recorded as having
+        entered, can be confirmed. A box a source fills is refused, since
+        keeping a value over it would replace the source rather than confirm
+        it, and so is a box that takes no typed value here.
         """
-        if field.editability is not ModeloFormEditability.EDITABLE_VALUE or edit_address(field) != field.address:
+        if confirmable(field):
+            return self.stage_value(field, field.value, self._before(field))
+        if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM and field.value is not None:
             return StageRefusal.NOT_EDITABLE
-        if field.origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM or field.value is None:
-            return StageRefusal.NOTHING_TO_CONFIRM
-        return self.stage_value(field, field.value, self._before(field))
+        return StageRefusal.NOTHING_TO_CONFIRM
 
     def stage_clear(self, field: ModeloFormField) -> StageRefusal | None:
         """Stage removing a value the filer declared.

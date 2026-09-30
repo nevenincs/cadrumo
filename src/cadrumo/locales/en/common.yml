@@ -2016,10 +2016,13 @@ tui:
         count: 'Boxes to confirm: {count}'
         intro: Cadrumo holds these values, but nobody entered them. Confirm them only
           if they are right for you.
+        left_out:
+          not_changeable: 'Not listed, cannot be changed here: {count}. Open one to
+            see why.'
+          sourced: 'Not listed, filled from a source: {count}. They update from their
+            source.'
         none_in_section: There are no assumed values to confirm in this section.
         none_on_page: There are no assumed values to confirm on this page.
-        sourced_left_out: 'Boxes filled from a source are not listed: they update
-          from their source.'
         tick: I have checked these values and they are right for me
         title: Confirm assumed values
       calculate:
@@ -2042,6 +2045,7 @@ tui:
         official_spanish: official Spanish text
         spanish_fallback: Spanish text, not yet translated
         technical: technical name
+        unnamed: the form gives it no name
       editability:
         calculated: Cadrumo calculates it from other boxes.
         design_constant: The official design fixes this value.
@@ -2318,7 +2322,7 @@ tui:
         schema_declared_read_only: The official design does not let this box be typed
           into.
         source_locked: It follows your records; correct it there and recalculate.
-        value_channel_unavailable: Dates and years cannot be entered here yet.
+        value_channel_unavailable: Values of this kind cannot be entered here yet.
       operation:
         calculated: Calculated. {direction} {value}.
         checked:

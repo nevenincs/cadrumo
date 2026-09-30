@@ -9,7 +9,8 @@ historical editions no filer can select and are not part of this population.
 For each one the form must build without a layout refusal, from the generated
 layout rather than the inspection-only fallback, and account for every casilla
 of the revision exactly once: shown on a page, kept as a working figure, or
-declared unplaced with its reason.
+declared unplaced with its reason. No field is ever labelled with its own
+identifier: a box the form gives no name says so in words.
 """
 
 from __future__ import annotations
@@ -26,10 +27,12 @@ from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishe
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
+    ModeloFormBindingAddressV1,
     ModeloFormEditability,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
+    ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
 )
@@ -142,3 +145,39 @@ def test_a_box_the_design_fixes_is_shown_fixed_and_never_invents_its_figure(
     assert rate.editability is ModeloFormEditability.DESIGN_CONSTANT
     assert rate.origin is ModeloFormOrigin.INFORMATIONAL
     assert rate.value is None
+
+
+def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A value the form gives no name reads as unnamed, in words, and keeps its identifier in its address."""
+    labelled_by_id: list[str] = []
+    unnamed = Counter[str]()
+    for (modelo, revision_id), (year, code) in sorted(_reachable_contexts(operation).items()):
+        form, _declared = _form(operation, modelo, year, code)
+        for field in (*form.fields(), *form.working_figures, *(item.field for item in form.unplaced)):
+            identifier = address_key(field.address)[1]
+            if field.label.text == identifier or field.label.disclosure is ModeloFormTextDisclosure.TECHNICAL:
+                labelled_by_id.append(f"{modelo}/{revision_id}: {identifier}")
+            if field.label.disclosure is ModeloFormTextDisclosure.UNNAMED:
+                unnamed[modelo] += 1
+                assert field.label.text == "Casilla sin nombre", identifier
+
+    assert not labelled_by_id, "\n".join(labelled_by_id[:20])
+    assert unnamed["390"], "Modelo 390's first-page inputs have no name in the registry; pick another witness"
+
+
+def test_modelo_390s_unnamed_first_page_inputs_keep_their_identifier_and_their_kind(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form, _declared = _form(operation, "390", 2025, "0A")
+    flag = next(
+        field
+        for field in form.fields()
+        if field.address
+        == ModeloFormBindingAddressV1(binding_id="modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual")
+    )
+
+    assert flag.label.disclosure is ModeloFormTextDisclosure.UNNAMED
+    assert flag.label.text == "Casilla sin nombre"
+    assert flag.data_type == "text", "the registry declares this input free text, and the form says the same"

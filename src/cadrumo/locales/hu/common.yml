@@ -2044,10 +2044,13 @@ tui:
         count: 'Megerősítendő rovatok: {count}'
         intro: A Cadrumo tárolja ezeket az értékeket, de senki nem adta meg őket.
           Csak akkor erősítse meg őket, ha Önre nézve helyesek.
+        left_out:
+          not_changeable: 'Nem szerepelnek, itt nem módosíthatók: {count}. Nyisson
+            meg egyet, hogy lássa, miért.'
+          sourced: 'Nem szerepelnek, forrásból töltődnek ki: {count}. A forrásukból
+            frissülnek.'
         none_in_section: Ebben a szakaszban nincs megerősítendő feltételezett érték.
         none_on_page: Ezen az oldalon nincs megerősítendő feltételezett érték.
-        sourced_left_out: 'A forrásból kitöltött rovatok nem szerepelnek: azok a forrásukból
-          frissülnek.'
         tick: Átnéztem ezeket az értékeket, és helyesek
         title: Feltételezett értékek megerősítése
       calculate:
@@ -2072,6 +2075,7 @@ tui:
         official_spanish: hivatalos spanyol szöveg
         spanish_fallback: spanyol szöveg, még nincs lefordítva
         technical: technikai név
+        unnamed: a nyomtatvány nem nevezi meg
       editability:
         calculated: A Cadrumo más rovatokból számítja ki.
         design_constant: Ezt az értéket a hivatalos terv rögzíti.
@@ -2355,7 +2359,7 @@ tui:
         schema_declared_read_only: A hivatalos minta nem engedi, hogy ebbe a rovatba
           írjanak.
         source_locked: Az Ön nyilvántartását követi; ott javítsa, majd számoljon újra.
-        value_channel_unavailable: Dátumot és évet itt még nem lehet megadni.
+        value_channel_unavailable: Ilyen típusú értéket itt még nem lehet megadni.
       operation:
         calculated: 'Kiszámítva. {direction}: {value}.'
         checked:

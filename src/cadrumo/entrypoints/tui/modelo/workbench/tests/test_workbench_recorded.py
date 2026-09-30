@@ -5,7 +5,7 @@ banner says it can be looked at but not changed and that changing it starts a
 correction; the journey says when it was recorded; no deadline, attention chip,
 navigator count or row blocker mark asks for anything; every box opens its panel read only; and
 recording the filing again, confirming values or recalculating is refused with
-the same words.
+the same words. Its help and its legend name no key that would change it.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from textual.widgets import Input, OptionList, Static
 
 from ......application.modelo.work_form_models import ModeloFormBlocker
 from ......core.config import override_settings
+from ......core.i18n.render import lookup_translation
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList, CasillaListEntry
 from ..editor import CasillaEditorScreen
@@ -103,3 +104,42 @@ async def test_a_declaration_not_recorded_hides_the_banner() -> None:
             app.exit(None)
 
     assert not shown
+
+
+_CHANGE_KEY_WORDS = (
+    "tui.modelo.workbench.bulk_confirm.title",
+    "tui.modelo.workbench.key.next_step",
+    "tui.modelo.workbench.key.review",
+    "tui.modelo.workbench.key.calculate",
+    "tui.modelo.workbench.key.next_attention",
+)
+"""What the keys that change a declaration, or lead to something left to do, are called."""
+
+
+@pytest.mark.asyncio
+async def test_the_help_and_the_legend_of_a_recorded_declaration_name_no_key_that_asks_for_anything() -> None:
+    form = recorded_as_filed(synthetic_form())
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form, verified=True, filed=True), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(160, 48)) as pilot:
+            await _settle(pilot)
+            await pilot.press("question_mark")
+            await _settle(pilot)
+            band = str(screen.query_one("#wb-help", Static).render())
+            await pilot.press("question_mark")
+            await _settle(pilot)
+            legend = str(screen.query_one("#wb-legend-text", Static).render())
+            app.exit(None)
+
+    words = [lookup_translation(key, locale="en") for key in _CHANGE_KEY_WORDS]
+    edit = lookup_translation("tui.modelo.workbench.key.edit", locale="en")
+    assert all(words)
+    assert edit is not None
+    assert edit in band, "the help band still names the keys a reader uses"
+    for text in (band, legend):
+        named = [segment.strip() for line in text.splitlines() for segment in line.split(" · ")]
+        for word in words:
+            assert not [segment for segment in named if segment.endswith(f" {word}")], (
+                f"a recorded declaration's help names the key for {word!r}"
+            )

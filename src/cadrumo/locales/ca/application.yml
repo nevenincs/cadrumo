@@ -1535,6 +1535,7 @@ application:
         settle_earlier_declaration: Resol primer la declaració del període anterior
           i torna a calcular.
       inspection_heading: Totes les caselles, per número de casella
+      unnamed_box: Casella sense nom
   overview:
     calendar:
       holiday_coverage:

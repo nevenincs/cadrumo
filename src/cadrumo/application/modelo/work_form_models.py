@@ -66,7 +66,7 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from .calculation_report import CalculationReportRowRole
-from .source_policy import SourceFamily, SourcePolicyV1
+from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1
 from .work_review import ModeloWorkProgress
 
 type ModeloFormScalar = Decimal | int | str | bool | date | None
@@ -106,6 +106,9 @@ class ModeloFormTextDisclosure(StrEnum):
     OFFICIAL_SPANISH = "official_spanish"
     #: A technical name, shown because no human text exists.
     TECHNICAL = "technical"
+    #: The form gives the field no name: the text says so in the requested language, and the
+    #: field's identifier stays in its address, never on its label.
+    UNNAMED = "unnamed"
 
 
 class ModeloFormText(_FormModel):
@@ -344,6 +347,35 @@ def edit_address(field: ModeloFormField) -> ModeloFormAddressV1:
     ):
         return ModeloFormBindingAddressV1(binding_id=field.bindings[0].binding_id)
     return field.address
+
+
+_CONFIRMING_EDITABILITIES = frozenset({ModeloFormEditability.EDITABLE_VALUE, ModeloFormEditability.EDITABLE_OVERRIDE})
+
+
+def typed_by_the_filer(field: ModeloFormField) -> bool:
+    """Whether ``field``'s value is the filer's own entry rather than one a source supplies.
+
+    A manual box is, and so is a binding no casilla owns whose source is the
+    filer's entry. A box any other source fills is not: keeping a value over
+    it replaces the source.
+    """
+    return all(binding.policy.override_policy is SourceOverridePolicy.ENTER for binding in field.bindings)
+
+
+def confirmable(field: ModeloFormField) -> bool:
+    """Whether ``field`` holds an assumed value the filer can confirm here as their own.
+
+    The value must be one nobody is recorded as having entered, in a box the
+    filer types into, and the box must take a typed value here: a box whose
+    kind of value cannot be entered here yet cannot be confirmed either.
+    """
+    return (
+        field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+        and field.value is not None
+        and typed_by_the_filer(field)
+        and field.editability in _CONFIRMING_EDITABILITIES
+        and edit_address(field) == field.address
+    )
 
 
 class ModeloFormCounts(_FormModel):
@@ -940,8 +972,10 @@ __all__ = [
     "ModeloFormValueSource",
     "ModeloWorkForm",
     "address_key",
+    "confirmable",
     "edit_address",
     "finding_action_locale_key",
     "finding_attention",
     "section_fields",
+    "typed_by_the_filer",
 ]

@@ -59,6 +59,7 @@ from .....application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
+    confirmable,
     edit_address,
     section_fields,
 )
@@ -1038,8 +1039,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         return lines
 
     def _all_keys_text(self) -> str:
+        """Every key the help and the legend name; on a declaration recorded as filed, none that would change it."""
         descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
-        return " · ".join(self._key_label(key, descriptions[key]) for key in (*_FOOTER_PRIORITY, *_HELP_ONLY_KEYS))
+        hidden = _CHANGE_KEYS if self.recorded else frozenset()
+        return " · ".join(
+            self._key_label(key, descriptions[key])
+            for key in (*_FOOTER_PRIORITY, *_HELP_ONLY_KEYS)
+            if key not in hidden
+        )
 
     def _help_title(self, entry: CasillaListEntry) -> str:
         field = entry.field
@@ -1411,7 +1418,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """List the assumed values of the section under the cursor, or of the page, to confirm them together.
 
         Never the whole declaration at once: the filer reads the values of one
-        part of the form before saying they are right.
+        part of the form before saying they are right. Where none of the
+        assumed values here can be confirmed from a list, the first one's panel
+        opens instead, which says what can be done about it.
         """
         if not self._may_confirm():
             self._edit_unavailable()
@@ -1421,9 +1430,19 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if not assumed:
             self._notice(tr(_NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
             return
+        if not any(confirmable(field) for field in assumed):
+            self._open_box(address_key(assumed[0].address))
+            return
         self.app.push_screen(
             BulkConfirmScreen(assumed, language=self._language, status_line=self._status_line()), self._bulk_confirmed
         )
+
+    def _open_box(self, key: AddressKey) -> None:
+        """Put the cursor on one box and open its panel."""
+        self._go_to(key)
+        entry = self.query_one(CasillaList).highlighted
+        if entry is not None and entry.key == key:
+            self._open_editor(entry)
 
     def _may_confirm(self) -> bool:
         form = self.form

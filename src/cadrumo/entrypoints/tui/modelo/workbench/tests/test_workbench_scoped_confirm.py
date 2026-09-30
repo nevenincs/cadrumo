@@ -4,7 +4,8 @@
 when that section holds none. During the confirm step F8 does the same, and
 when the section under the cursor holds none it goes to the next part of the
 form that does, passing over a page that does not apply this period, and
-offers those.
+offers those. Where nothing assumed there can be confirmed from a list, it
+opens the first assumed box's panel, which says what can be done about it.
 """
 
 from __future__ import annotations
@@ -13,10 +14,17 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Static
 
+from ......application.modelo.work_form_models import (
+    ModeloFormEditability,
+    ModeloFormField,
+    ModeloFormFieldBlock,
+    ModeloWorkForm,
+)
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ..bulk_confirm import BulkConfirmScreen
 from ..casilla_list import CasillaList
+from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from .sectioned_form import sectioned_form
 from .workbench_fixture import FakeActions, FakeReader
@@ -102,3 +110,65 @@ async def test_f8_goes_on_to_the_next_part_with_something_assumed_and_offers_onl
 
     assert first == ["09"], "the second part printed under the same heading is its own section"
     assert second == ["20"], "the page that does not apply this quarter is passed over"
+
+
+def _with_unwritable(form: ModeloWorkForm, box: str) -> ModeloWorkForm:
+    """The form with the assumed value of ``box`` in a box whose kind of value cannot be entered here yet."""
+
+    def changed(field: ModeloFormField) -> ModeloFormField:
+        if field.box != box:
+            return field
+        return field.model_copy(
+            update={
+                "data_type": "year",
+                "editability": ModeloFormEditability.NOT_WRITABLE,
+                "not_writable_reason": "value_channel_unavailable",
+            }
+        )
+
+    pages = tuple(
+        page.model_copy(
+            update={
+                "sections": tuple(
+                    section.model_copy(
+                        update={
+                            "blocks": tuple(
+                                block.model_copy(update={"field": changed(block.field)})
+                                if isinstance(block, ModeloFormFieldBlock)
+                                else block
+                                for block in section.blocks
+                            )
+                        }
+                    )
+                    for section in page.sections
+                )
+            }
+        )
+        for page in form.pages
+    )
+    return form.model_copy(update={"pages": pages})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("key", ["b", "f8"])
+async def test_with_nothing_here_confirmable_from_a_list_the_first_assumed_box_opens_instead(key: str) -> None:
+    form = _with_unwritable(sectioned_form(), "05")
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            landed = screen.query_one(CasillaList).highlighted
+            await pilot.press(key)
+            await _settle(pilot, 8)
+            opened = app.screen
+            title = (
+                str(opened.query_one("#editor-title", Static).render())
+                if isinstance(opened, CasillaEditorScreen)
+                else ""
+            )
+            app.exit(None)
+
+    assert landed is not None and landed.field.box == "05"
+    assert isinstance(opened, CasillaEditorScreen), f"{key} opened {type(opened).__name__}, not the box's panel"
+    assert "[05]" in title

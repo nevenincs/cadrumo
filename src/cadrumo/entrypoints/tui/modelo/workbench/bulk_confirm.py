@@ -6,9 +6,10 @@ its concept and the value it holds, and confirms nothing until the filer ticks
 that these values are right for them. Confirming keeps each value as the
 filer's own for review; nothing is applied from here.
 
-Only a box the filer types into can be confirmed. A box a source fills is left
-out, and the dialog says so, because keeping a value over a source would
-replace the source rather than confirm it.
+Only a value the filer types can be confirmed, and only where it can be typed
+here. An assumed box left out is counted under its reason: a source fills it,
+so keeping a value over it would replace the source rather than confirm it; or
+its kind of value cannot be changed here, which its own panel explains.
 
 The dialog covers the header, so it can repeat the header's result line as its
 first line.
@@ -27,10 +28,10 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
 from .....application.modelo.work_form_models import (
-    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
-    edit_address,
+    confirmable,
+    typed_by_the_filer,
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
@@ -38,15 +39,23 @@ from ...components.theme import tokenised
 from .casilla_list import CasillaListEntry, value_text
 from .dialog_width import fit_dialog_width
 
+_LEFT_OUT_SOURCED_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
+_LEFT_OUT_NOT_CHANGEABLE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
 
-def confirmable(field: ModeloFormField) -> bool:
-    """Whether ``field`` holds an assumed value the filer can confirm as their own."""
-    return (
-        field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-        and field.value is not None
-        and field.editability is ModeloFormEditability.EDITABLE_VALUE
-        and edit_address(field) == field.address
-    )
+
+def left_out_notes(fields: tuple[ModeloFormField, ...]) -> tuple[str, ...]:
+    """Say, by reason, how many assumed boxes among ``fields`` cannot be confirmed here."""
+    assumed = [
+        field for field in fields if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM and not confirmable(field)
+    ]
+    sourced = sum(1 for field in assumed if not typed_by_the_filer(field))
+    not_changeable = len(assumed) - sourced
+    notes: list[str] = []
+    if sourced:
+        notes.append(tr(_LEFT_OUT_SOURCED_KEY, count=sourced))
+    if not_changeable:
+        notes.append(tr(_LEFT_OUT_NOT_CHANGEABLE_KEY, count=not_changeable))
+    return tuple(notes)
 
 
 def confirmation_table(fields: tuple[ModeloFormField, ...], language: OutputLanguage) -> Table:
@@ -134,15 +143,16 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
     ) -> None:
         """Hold the assumed boxes offered for confirmation.
 
-        Every box passed is considered; the ones a source fills, or that hold no
-        assumed value, are left out of the list, and the dialog says so.
+        Every box passed is considered. One that holds no assumed value is not
+        listed; an assumed one that cannot be confirmed here is not listed
+        either, and the dialog counts it under its reason.
         ``language`` formats the values, and defaults to the filer's language.
         ``status_line`` is the header's result line, shown first because the
         dialog covers it.
         """
         super().__init__()
         self._fields = tuple(field for field in fields if confirmable(field))
-        self._left_out = len(fields) - len(self._fields)
+        self._left_out = left_out_notes(fields)
         self._language = language if language is not None else OutputLanguage(output_language())
         self._status_line = status_line
 
@@ -164,9 +174,7 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
             with VerticalScroll(id="bulk-body", can_focus=True):
                 yield Static(confirmation_table(self._fields, self._language), id="bulk-table")
                 if self._left_out:
-                    yield Static(
-                        tr("tui.modelo.workbench.bulk_confirm.sourced_left_out"), id="bulk-left-out", markup=False
-                    )
+                    yield Static("\n".join(self._left_out), id="bulk-left-out", markup=False)
             yield Checkbox(
                 tr("tui.modelo.workbench.bulk_confirm.tick"),
                 id="bulk-tick",
@@ -204,4 +212,4 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         self.dismiss(None)
 
 
-__all__ = ["BulkConfirmScreen", "confirmable", "confirmation_table"]
+__all__ = ["BulkConfirmScreen", "confirmation_table", "left_out_notes"]

@@ -1501,6 +1501,7 @@ application:
         settle_earlier_declaration: Előbb rendezd a korábbi időszak bevallását, majd
           számolj újra.
       inspection_heading: Minden rovat, rovatszám szerint
+      unnamed_box: Név nélküli rovat
   overview:
     calendar:
       holiday_coverage:

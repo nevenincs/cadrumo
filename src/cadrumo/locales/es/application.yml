@@ -1537,6 +1537,7 @@ application:
         settle_earlier_declaration: Resuelve primero la declaración del periodo anterior
           y vuelve a calcular.
       inspection_heading: Todas las casillas, por número de casilla
+      unnamed_box: Casilla sin nombre
   overview:
     calendar:
       holiday_coverage:

@@ -142,6 +142,8 @@ from .work_review import ModeloWorkOriginAnomaly, ModeloWorkReview, ModeloWorkRe
 _SPANISH: Final[str] = OutputLanguage.ES.value
 _INSPECTION_PAGE_ID: Final[str] = "inspection"
 _INSPECTION_HEADING_LOCALE_KEY: Final[str] = "application.modelo.work_form.inspection_heading"
+_UNNAMED_LOCALE_KEY: Final[str] = "application.modelo.work_form.unnamed_box"
+"""The label of a box the form gives no name, in the filer's words."""
 _BOX_LOCATOR_HELP: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"^Casilla [\d-]+ del modelo \d+, ejercicios? [\d-]+( y siguientes)?\.$"),
     re.compile(r"^Box [\d-]+ of [Mm]odelo \d+, tax years? [\d-]+( onwards)?\.$"),
@@ -162,6 +164,8 @@ _BINDING_DATA_TYPE: Final[Mapping[str, str]] = {
 
 _BOOLEAN_TOKENS: Final[Mapping[str, bool]] = {"true": True, "1": True, "false": False, "0": False}
 """The spellings a yes-or-no binding value is stored under."""
+_NUMERIC_BINDING_TYPES: Final[frozenset[str]] = frozenset({"money", "decimal", "integer"})
+"""The binding data types whose stored digits stand for a number."""
 _FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
     {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
 )
@@ -276,6 +280,16 @@ def _heading(key: str, official: str | None, technical: str, language: OutputLan
     if official:
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
     return ModeloFormText(text=technical, disclosure=ModeloFormTextDisclosure.TECHNICAL)
+
+
+def _unnamed(language: OutputLanguage) -> ModeloFormText:
+    """The label of a box the form gives no name: plain words saying so, never its identifier."""
+    text = lookup_translation(_UNNAMED_LOCALE_KEY, locale=language.value) or lookup_translation(
+        _UNNAMED_LOCALE_KEY, locale=_SPANISH
+    )
+    if not text:
+        raise InternalInvariantError(f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}")
+    return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.UNNAMED)
 
 
 def _help(casilla: CasillaDefinition, label: str, language: OutputLanguage) -> str | None:
@@ -431,9 +445,7 @@ def _casilla_field(
     casilla = context.casillas.get(casilla_id)
     if row is None or casilla is None:
         raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r}, which the revision does not define")
-    label = _localized(casilla.localization_keys, context.language) or ModeloFormText(
-        text=casilla_id, disclosure=ModeloFormTextDisclosure.TECHNICAL
-    )
+    label = _localized(casilla.localization_keys, context.language) or _unnamed(context.language)
     required = casilla_id in context.required
     editability, reason = _casilla_editability(row, context)
     origin = _casilla_origin(row, context, required=required)
@@ -483,7 +495,7 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
     owner_casilla = None if owner is None else context.casillas.get(owner)
     label = (
         None if owner_casilla is None else _localized(owner_casilla.localization_keys, context.language)
-    ) or ModeloFormText(text=binding_id, disclosure=ModeloFormTextDisclosure.TECHNICAL)
+    ) or _unnamed(context.language)
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
     data_type = _BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
     policy = source_policy(binding.source)
@@ -523,11 +535,20 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
 
 
 def _binding_value(raw: str | None, data_type: str) -> ModeloFormScalar:
-    """Read a stored binding value as the value it stands for; a yes-or-no is stored as a token."""
-    if raw is not None and data_type == "boolean":
-        token = raw.strip().lower()
-        if token in _BOOLEAN_TOKENS:
-            return _BOOLEAN_TOKENS[token]
+    """Read a stored binding value as the value it stands for.
+
+    A binding value is stored as text: a yes-or-no as a token, and an amount
+    or a count as its digits. Each is read back as the typed value it holds,
+    the one the filer's own entry would have, so keeping it unchanged
+    confirms exactly that value.
+    """
+    if raw is None:
+        return None
+    if data_type == "boolean":
+        return _BOOLEAN_TOKENS.get(raw.strip().lower(), raw)
+    if data_type in _NUMERIC_BINDING_TYPES:
+        amount = _numeric(raw.strip())
+        return raw if amount is None else amount
     return raw
 
 

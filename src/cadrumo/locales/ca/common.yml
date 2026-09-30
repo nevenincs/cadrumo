@@ -2063,10 +2063,13 @@ tui:
         count: 'Caselles per confirmar: {count}'
         intro: Cadrumo té aquests valors, però ningú no els ha introduït. Confirma'ls
           només si són correctes per a tu.
+        left_out:
+          not_changeable: 'No hi apareixen, no es poden canviar aquí: {count}. Obre''n
+            una per veure per què.'
+          sourced: 'No hi apareixen, s''emplenen des d''un origen: {count}. S''actualitzen
+            des d''ell.'
         none_in_section: En aquesta secció no hi ha valors suposats per confirmar.
         none_on_page: En aquesta pàgina no hi ha valors suposats per confirmar.
-        sourced_left_out: 'No hi apareixen les caselles que s''emplenen des d''un
-          origen: s''actualitzen des d''ell.'
         tick: He revisat aquests valors i són correctes per a mi
         title: Confirmar valors suposats
       calculate:
@@ -2091,6 +2094,7 @@ tui:
         official_spanish: text oficial en castellà
         spanish_fallback: text en castellà, encara sense traduir
         technical: nom tècnic
+        unnamed: el formulari no li dona nom
       editability:
         calculated: Cadrumo la calcula a partir d'altres caselles.
         design_constant: El disseny oficial fixa aquest valor.
@@ -2370,8 +2374,8 @@ tui:
         schema_declared_read_only: El disseny oficial no permet escriure en aquesta
           casella.
         source_locked: Segueix els teus registres; corregeix-la allà i recalcula.
-        value_channel_unavailable: Les dates i els anys encara no es poden introduir
-          aquí.
+        value_channel_unavailable: Encara no s'hi poden introduir valors d'aquest
+          tipus.
       operation:
         calculated: Calculada. {direction} {value}.
         checked:

@@ -401,7 +401,7 @@ def test_a_box_that_cannot_be_edited_says_why() -> None:
     with override_settings(cadrumo_output_language="en"):
         text = editability_text(dated)
 
-    assert text == "Dates and years cannot be entered here yet."
+    assert text == "Values of this kind cannot be entered here yet."
 
 
 def _finding(casilla_id: str | None, severity: ModeloVerificationFindingSeverity) -> ModeloVerificationFinding:

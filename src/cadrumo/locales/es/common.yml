@@ -2075,10 +2075,13 @@ tui:
         count: 'Casillas por confirmar: {count}'
         intro: Cadrumo tiene estos valores, pero nadie los introdujo. Confírmalos
           solo si son correctos para ti.
+        left_out:
+          not_changeable: 'No aparecen, no se pueden cambiar aquí: {count}. Abre una
+            para ver por qué.'
+          sourced: 'No aparecen, se rellenan desde un origen: {count}. Se actualizan
+            desde él.'
         none_in_section: En esta sección no hay valores supuestos que confirmar.
         none_on_page: En esta página no hay valores supuestos que confirmar.
-        sourced_left_out: 'No aparecen las casillas que se rellenan desde un origen:
-          se actualizan desde él.'
         tick: He revisado estos valores y son correctos para mí
         title: Confirmar valores supuestos
       calculate:
@@ -2102,6 +2105,7 @@ tui:
         official_spanish: texto oficial
         spanish_fallback: texto en español
         technical: nombre técnico
+        unnamed: el formulario no le da nombre
       editability:
         calculated: Cadrumo la calcula a partir de otras casillas.
         design_constant: El diseño oficial fija este valor.
@@ -2374,8 +2378,8 @@ tui:
           introduce las líneas donde se guardan.
         schema_declared_read_only: El diseño oficial no permite escribir en esta casilla.
         source_locked: Sigue tus registros; corrígela allí y recalcula.
-        value_channel_unavailable: Las fechas y los años aún no se pueden introducir
-          aquí.
+        value_channel_unavailable: Todavía no se pueden introducir aquí valores de
+          este tipo.
       operation:
         calculated: Calculada. {direction} {value}.
         checked:

@@ -1422,6 +1422,7 @@ application:
         settle_earlier_declaration: Settle the declaration of the earlier period first,
           then calculate again.
       inspection_heading: All boxes, in box-number order
+      unnamed_box: Unnamed box
   overview:
     calendar:
       holiday_coverage:

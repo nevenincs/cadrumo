@@ -1,12 +1,15 @@
 """Confirming assumed values: one at a time or together, and never over a source.
 
-The edit session stages a confirmation as the filer's own typed value, only on
-a box the filer types into that holds an assumed value; a box a source fills
-is refused, because keeping a value over it would replace the source. The
-bulk dialog lists every box it would confirm with its value, confirms nothing
-until the filer ticks that the values are right, and fits a small terminal. It
-repeats the header's result line first, since it covers the header, under a
-title in the strongest style.
+The edit session stages a confirmation as the filer's own typed value, on a
+manual box or on a value the filer types that no box prints; a box a source
+fills is refused, because keeping a value over it would replace the source,
+and so is a box that takes no typed value here. The bulk dialog lists every box
+it would confirm with its value, confirms nothing until the filer ticks that
+the values are right, counts what it leaves out under the real reason, and fits
+a small terminal. It repeats the header's result line first, since it covers
+the header, under a title in the strongest style. Where nothing assumed under
+the cursor can be confirmed from a list, ``b`` opens the first such box's panel
+instead of an empty list.
 """
 
 from __future__ import annotations
@@ -68,18 +71,53 @@ def test_confirming_an_assumed_value_stages_it_as_the_filers_own_at_its_box() ->
     assert submitted.address == ModeloFormCasillaAddressV1(casilla_id="06")
 
 
-def test_a_bound_box_is_never_confirmed_because_that_would_override_its_source() -> None:
-    session = WorkbenchEditSession(OutputLanguage.EN)
-    binding_input = _assumed("07").model_copy(
+def _typed_input(value: str = "250") -> ModeloFormField:
+    """A value the filer types that no printed box shows, held but not entered by anyone."""
+    return _assumed("07", value).model_copy(
         update={
-            "address": ModeloFormBindingAddressV1(binding_id="m130.manual"),
+            "address": ModeloFormBindingAddressV1(binding_id="m131.manual"),
             "box": None,
             "editability": ModeloFormEditability.EDITABLE_OVERRIDE,
+            "bindings": (fed_by("m131.manual", BindingSourceKind.MANUAL_INPUT),),
         }
     )
 
+
+def _unwritable_assumed() -> ModeloFormField:
+    """An assumed manual box whose kind of value cannot be entered here yet."""
+    return _assumed("05", "2024").model_copy(
+        update={
+            "data_type": "year",
+            "editability": ModeloFormEditability.NOT_WRITABLE,
+            "not_writable_reason": "value_channel_unavailable",
+        }
+    )
+
+
+def test_a_bound_box_is_never_confirmed_because_that_would_override_its_source() -> None:
+    session = WorkbenchEditSession(OutputLanguage.EN)
+
     assert session.stage_confirmation(_bound_assumed()) is StageRefusal.NOT_EDITABLE
-    assert session.stage_confirmation(binding_input) is StageRefusal.NOT_EDITABLE
+    assert not session.dirty
+
+
+def test_a_typed_value_no_box_prints_is_confirmed_at_its_own_address() -> None:
+    field = _typed_input()
+    session = WorkbenchEditSession(OutputLanguage.EN)
+
+    refusal = session.stage_confirmation(field)
+
+    assert refusal is None
+    (submitted,) = session.payload()
+    assert submitted.address == ModeloFormBindingAddressV1(binding_id="m131.manual")
+    assert submitted.kind is WorkbenchChangeKind.SET
+    assert submitted.value == Decimal("250")
+
+
+def test_a_box_that_takes_no_typed_value_here_is_not_confirmed() -> None:
+    session = WorkbenchEditSession(OutputLanguage.EN)
+
+    assert session.stage_confirmation(_unwritable_assumed()) is StageRefusal.NOT_EDITABLE
     assert not session.dirty
 
 
@@ -145,9 +183,10 @@ async def test_bulk_confirm_lists_every_box_and_confirms_nothing_until_ticked() 
 
 
 @pytest.mark.asyncio
-async def test_bulk_confirm_leaves_out_a_bound_box_and_says_so() -> None:
+async def test_bulk_confirm_lists_a_typed_value_and_counts_what_it_leaves_out_by_its_reason() -> None:
+    fields = (_assumed(), _typed_input(), _bound_assumed(), _unwritable_assumed())
     with override_settings(cadrumo_output_language="en"):
-        dialog = BulkConfirmScreen((_assumed(), _bound_assumed()))
+        dialog = BulkConfirmScreen(fields)
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
@@ -156,9 +195,28 @@ async def test_bulk_confirm_leaves_out_a_bound_box_and_says_so() -> None:
             await pilot.press("escape")
             await _settle(pilot)
 
-    assert [field.box for field in listed] == ["06"]
-    assert note.startswith("Boxes filled from a source are not listed")
+    assert [field.address for field in listed] == [fields[0].address, fields[1].address]
+    assert note.splitlines() == [
+        "Not listed, filled from a source: 1. They update from their source.",
+        "Not listed, cannot be changed here: 1. Open one to see why.",
+    ]
     assert app.return_value is None
+
+
+@pytest.mark.asyncio
+async def test_bulk_confirm_says_nothing_is_left_out_that_is_not() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        dialog = BulkConfirmScreen((_unwritable_assumed(),))
+        app = ScreenHostApp(dialog)
+        async with app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            note = str(dialog.query_one("#bulk-left-out", Static).render())
+            sourced = "source" in note
+            tick_disabled = dialog.query_one("#bulk-tick", Checkbox).disabled
+            app.exit(None)
+
+    assert not sourced, "a box nobody's source fills is never said to update from a source"
+    assert tick_disabled
 
 
 @pytest.mark.asyncio
