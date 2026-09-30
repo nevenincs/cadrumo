@@ -23,6 +23,7 @@ from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCa
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
+from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .errors import ModeloValidationError
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
@@ -222,6 +223,22 @@ def _cleared_casillas_revision_id_payload(
     if canonical_cleared:
         return {"cleared_casilla_ids": canonical_cleared}
     return {}
+
+
+def _operator_layer_revision_id_payload(
+    operator_layer: CalculationOperatorLayer | None,
+) -> dict[str, object]:
+    """Build the optional operator-layer payload key.
+
+    Present only when the calculation recorded its caller tier. A revision
+    stored before the layer existed carries none and hashes exactly as it did,
+    so its content-addressed id is unchanged. A recorded layer joins identity
+    even when it is empty: "the operator authored nothing" is a known fact that
+    a revision whose layer is unknown does not assert.
+    """
+    if operator_layer is None:
+        return {}
+    return {OPERATOR_LAYER_IDENTITY_KEY: operator_layer.identity_payload()}
 
 
 def _m210_revision_id_payload(
@@ -445,6 +462,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     ]
     amendment_identity = identity_inputs["amendment_identity"]
     cleared_casilla_ids = identity_inputs["cleared_casilla_ids"]
+    operator_layer = identity_inputs["operator_layer"]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -478,6 +496,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     )
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
+    payload.update(_operator_layer_revision_id_payload(operator_layer))
     return content_hash_hex(payload)
 
 
