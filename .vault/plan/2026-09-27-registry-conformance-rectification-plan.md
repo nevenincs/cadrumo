@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:1db5a43a26f5d9fa72baf723cd9b8b45c021162f8492b91f9c3c1b80fb756c04'
+body_hash: 'sha256:6777cd78d8f47400bd129012925af7415443755a558ce0a65164d0c1030b0079'
 ---
 
 # `registry-conformance-rectification` plan
@@ -50,6 +50,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - Found in P05.S19: a declared inception year is a gate, because a modelo that did not exist answers no earlier year, while an unauthored-debt declaration is not, because the standard projects missing years (P05.S44). A year whose release is published in BOE but whose AEAT design is not yet out is authored from the BOE orden at applicability grade rather than served the replaced layout at filing grade; a year whose governing design differs is authored as a delta from the official text, at no higher grade than that text proves; Modelo 353's January 2026 is authored on the design that governs it, with its edition renamed to the span it truly covers.
 - Found in P05.S19: a year whose own design refuses the edition projected into it is authored at the grade its evidence earns, even if that turns filing into a refusal, as for Modelo 216 in 2022 and 2023; a cell whose official text is not yet held stays projected until the text is captured (P05.S45). Provenance errors in an edition being restructured are corrected with it; an undeclared box is declared where its design grounds it, and a larger undeclared inventory is recorded as debt.
 - Found in P05.S39: a calculation defect the official dictionary or manual confirms is corrected even when the fix spans domain code and shared tests, by one step that owns them all (P05.S47, P05.S48); a relation that cannot express the member's share is withdrawn rather than left summing entity totals; a legal catalogue's effective date is grounded in the governing law itself, not in a manual.
+- Found in P05.S26: a validator demanding coverage below the support floor contradicts the support declaration, which claims nothing there, so it is clamped at the floor (P05.S32) rather than splitting an edition to satisfy it; Modelo 131's 2022 and 2023 modulos engine is then authored in its root, its labels citing each year's own orden.
 
 ## Steps
 
@@ -108,7 +109,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 - [x] `P05.S30` - Let the test-run command runner read lines longer than asyncio's default limit, so check-locales completes; `dev/test_runs/command.py`.
 - [x] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
-- [ ] `P05.S32` - Fix the delta converter defects the rectification lanes found, each with a detector case: uncaused roots judged minimal, constraints carrying both source-ref forms, greedy positions over declared ones, a casilla baseline forcing a family baseline, export layouts folded into whole overrides, out-of-period windows inherited by storage, and export scenarios rendering editions below the support floor; `dev/registry/edition_delta_migration.py`.
+- [ ] `P05.S32` - Fix the delta converter and compiler defects the rectification lanes found, each with a detector case: uncaused roots judged minimal, constraints carrying both source-ref forms, greedy positions over declared ones, a casilla baseline forcing a family baseline, export layouts folded into whole overrides, out-of-period windows inherited by storage, export scenarios rendering editions below the support floor, and bracket-coverage validation demanding years below the support floor; `dev/registry/edition_delta_migration.py`.
 - [ ] `P05.S33` - Complete the Modelo 604 2024 and Modelo 308 2019 construct memberships from their designs, and re-measure 604's storage reuse once the converter keeps its layout per edition; `src/cadrumo/_data/registry/aeat/modelos/604/`.
 - [ ] `P05.S34` - Withdraw the 2025 Modelo 220 jurisdiction assignment of boxes 02796 and 02797, which rests on an identical ambiguous caption, and leave the pair unauthored in both editions until an official source states the foral column; `src/cadrumo/_data/registry/aeat/modelos/220/`.
 - [ ] `P05.S35` - Re-review the Modelo 184 2022, 182 2024, 220 2024 and 165 2023-2025 editions against their new members and restamp them through the conformance stamp command; `src/cadrumo/_data/registry/aeat/modelos/`.

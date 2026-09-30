@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e3f3ccf58090874baa241f2296224ae3ca6e06498941c3c2bacfbe55fe47baf'
+body_hash: 'sha256:fedcb421a74f96416cb3883f78be836f8f7d994a605e6d8c49ffda26d1d74950'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -570,6 +570,9 @@ related:
 - `S39` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_modulos_fold_in_live.py`
 - `S39` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
 - `S39` `verify:` `isolated-copy inspection and converter no-op; live inspection valid; Modelo 100 dev tests 2049 passed then remaining 17 passed; published 5ea36a5e; 1642 runtime tests passed (2 failures in other lanes' modelos)` -> `pass`
+- `S26` `A` `dev/registry/tests/test_modelo_131_modulos_rows_open_past_horizon.py`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S26` `verify:` `hydration: only 289 2026 rows open; isolated and live inspection valid; converter no-op; published f1704f74; 2027 1T computes where it was refused; 131 tests 1221 passed with the remainder in other lanes' modelos` -> `pass`
 
 ## Notes
 
@@ -598,3 +601,4 @@ related:
 - `S11` 210 verification against 0b6bfacc: equivalence, facts, indexed (3307 coordinates), cache and publication readiness passed, but `inputs_stable=False` because a concurrent lane captured corpus evidence mid-run, so the run is not certifying; the verification round is suspended while lanes write and runs once over every touched modelo when they finish
 - `S18` the S18 message named the product, which the locale audit reserves for a closed set of keys
 - `S39` landed: 131 relation into 1481 withdrawn, 0512 regional minimo with age increments for 2024 and 2025, art. 32 re-cited with 170 evolutions, constant renamed; confirmed but blocked on code and shared tests: 0525 maritime and 1577 relation (P05.S47); found: 0531 uses 0521 where every dictionary says 0523 (P05.S48); first partial apply broke validity and was reverted with git show, then landed in one validated step
+- `S26` modulos engine for 2022 and 2023 is grounded but blocked by `validate_bracket_table_temporal_coverage` requiring coverage from 2019, below the floor; ruled to clamp it at the support floor in P05.S32, then author the engine in the root
