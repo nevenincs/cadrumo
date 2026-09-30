@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:50cd46787275d76364757d4a1f7ba38d53c101d77f70a9d1e4490eab091c0472'
+body_hash: 'sha256:ec43a00bc9950c6d5438d2bb4ddc1e8ff4374eb28d148cf6b69389972f379aa3'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -480,6 +480,21 @@ related:
 - `S27` `verify:` `production root over the documented 303 declaration at 80x24, 120x36, 160x48 in light and dark (12 frames)` -> `pass`
 - `S27` `verify:` `locale, geometry and theme proofs retargeted to the workbench in S25 (64)` -> `pass`
 - `S27` `by:` `orchestrator`
+- `S29` `A` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S29` `M` `docs/how-to/index.md`
+- `S29` `M` `docs/index.md`
+- `S29` `A` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S29` `A` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S29` `A` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S29` `M` `docs/locales/es/LC_MESSAGES/how-to/index.po`
+- `S29` `M` `docs/locales/ca/LC_MESSAGES/how-to/index.po`
+- `S29` `M` `docs/locales/hu/LC_MESSAGES/how-to/index.po`
+- `S29` `M` `docs/locales/es/LC_MESSAGES/index.po`
+- `S29` `M` `docs/locales/ca/LC_MESSAGES/index.po`
+- `S29` `M` `docs/locales/hu/LC_MESSAGES/index.po`
+- `S29` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S29` `verify:` `pytest dev/docs/tests/test_docs_localization.py dev/docs/tests/test_docs_catalogue_drift.py dev/docs/tests/test_localized_surface_exclusions.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
+- `S29` `verify:` `pytest src/cadrumo/entrypoints/tui/modelo/workbench/tests` -> `pass`
 
 ## Notes
 
