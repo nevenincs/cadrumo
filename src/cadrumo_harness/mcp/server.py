@@ -53,8 +53,8 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,

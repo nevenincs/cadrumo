@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from types import SimpleNamespace
 from typing import cast
-from datetime import timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -114,7 +114,9 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
                 "code": (
                     "credential_rejected"
                     if failure == "admission"
-                    else "profile_mismatch" if failure in {"profile", "session"} else "session_expired"
+                    else "profile_mismatch"
+                    if failure in {"profile", "session"}
+                    else "session_expired"
                 ),
             }
             assert adapter.client is original

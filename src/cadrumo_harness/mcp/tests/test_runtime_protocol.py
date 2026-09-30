@@ -12,8 +12,8 @@ import pytest
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import server as mcp_server
 from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
