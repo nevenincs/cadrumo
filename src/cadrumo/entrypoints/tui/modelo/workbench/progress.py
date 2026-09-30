@@ -49,7 +49,7 @@ from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
-from .header import blocking_count, missing_findings
+from .header import blocking_count, confirm_count, missing_findings
 from .issues import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
@@ -225,7 +225,8 @@ def _next(
     if to_fill and not verified:
         return NextAction.FILL, to_fill + unboxed
     if assumed:
-        return NextAction.CONFIRM, assumed
+        # The count is the header's: the assumed boxes and the notes waiting on the filer alike.
+        return NextAction.CONFIRM, confirm_count(form)
     if verified and not blocking:
         return (NextAction.RECORD if exported else NextAction.EXPORT), 0
     if form.calculation_revision_id is None:

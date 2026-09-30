@@ -1,8 +1,8 @@
 """Nothing assumed reaches the AEAT, and what blocks filing reads the same everywhere it is counted and drawn.
 
 Driven through the real workbench screen over the synthetic declaration. The
-same verified declaration with one assumed value, or with one issue that blocks
-filing, refuses the file for the AEAT and recording the filing, says which
+same verified declaration with one assumed value, one issue that blocks
+filing or one calculation note that blocks it, refuses the file for the AEAT and recording the filing, says which
 reason holds it and opens what resolves it; with neither, F8 creates the file,
 and recording comes next once it exists. The count beside "resolve what blocks
 filing" is the header chip's, whatever else the check found. Every blocker
@@ -23,6 +23,8 @@ from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.work_form_models import (
+    ModeloFormAttention,
+    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
     ModeloWorkForm,
@@ -81,17 +83,25 @@ def _checked_with_a_blocker(form: ModeloWorkForm) -> ModeloWorkForm:
     return blocked.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE})
 
 
+def _with_a_blocking_note(form: ModeloWorkForm) -> ModeloWorkForm:
+    """The form whose latest calculation noted an amount from the records that reached no box, which blocks filing."""
+    note = ModeloFormCalculationNote(reason="unrouted_observation", attention=ModeloFormAttention.BLOCKS, durable=True)
+    return form.model_copy(update={"calculation_notes": (note,)})
+
+
 def _cause(name: str) -> ModeloWorkForm:
-    """The same verified declaration, withheld by one assumed value, by one blocking issue, or by nothing."""
+    """The same verified declaration, withheld by one assumed value, one blocking issue or note, or by nothing."""
     if name == "one-assumed":
         return _declaration(assumed=True)
     if name == "one-blocking":
         return _checked_with_a_blocker(_declaration(assumed=False))
+    if name == "one-blocking-note":
+        return _with_a_blocking_note(_declaration(assumed=False))
     return _declaration(assumed=False)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("cause", ["one-assumed", "one-blocking", "nothing-withholds"])
+@pytest.mark.parametrize("cause", ["one-assumed", "one-blocking", "one-blocking-note", "nothing-withholds"])
 async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_which(cause: str) -> None:
     actions = FakeActions()
     with override_settings(cadrumo_output_language="en"):
@@ -119,7 +129,7 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
         assert [field.address for field in offered] == [ModeloFormCasillaAddressV1(casilla_id=_WITHHOLDING)]
         assert export_notice == tr("tui.modelo.workbench.export.confirm_first", locale="en", count=1)
         assert isinstance(after_f8, BulkConfirmScreen), "F8 goes to the confirm step"
-    elif cause == "one-blocking":
+    elif cause in {"one-blocking", "one-blocking-note"}:
         assert isinstance(after_export, WorkbenchIssuesScreen), "what blocks filing is shown in place of the export"
         assert export_notice == tr("tui.modelo.workbench.export.resolve_first", locale="en", count=1)
         assert isinstance(after_f8, WorkbenchIssuesScreen), "F8 goes to what blocks filing"
@@ -264,3 +274,15 @@ async def test_the_bulk_confirm_tick_reads_unticked_until_the_filer_ticks_it() -
     assert value
     assert ticked.startswith("[✓]")
     assert cell_len(ticked) == cell_len(unticked)
+
+
+def test_a_note_the_filer_should_confirm_counts_with_the_assumed_values() -> None:
+    note = ModeloFormCalculationNote(reason="orphaned_override", attention=ModeloFormAttention.CONFIRM)
+    form = _declaration(assumed=True).model_copy(update={"calculation_notes": (note,)})
+    with override_settings(cadrumo_output_language="en"):
+        chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
+    progress = workbench_progress(form, staged=0, verified=True, filed=False)
+
+    assert chips["confirm"] == 2
+    assert progress.next_action is NextAction.CONFIRM and progress.count == 2
+    assert blocking_count(form) == 0

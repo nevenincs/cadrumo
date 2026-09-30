@@ -1752,7 +1752,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self.action_review()
         elif action is NextAction.CONFIRM:
             self._confirm_next()
-        elif action is NextAction.RESOLVE and load.form.verification is not None:
+        elif action is NextAction.RESOLVE and (load.form.verification is not None or load.form.calculation_notes):
             self.action_issues()
         elif action in {NextAction.FILL, NextAction.RESOLVE}:
             self._advance_attention(1)

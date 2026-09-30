@@ -358,13 +358,18 @@ def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
 
 
 def blocking_count(form: ModeloWorkForm) -> int:
-    """How many things block filing: every blocking finding of the last check, and each failed result box none names.
+    """How many things block filing: the check's blocking findings, the calculation's blocking notes, and failed boxes.
 
-    The header's chip and the next-action line both count with this, so the
-    number beside "resolve what blocks filing" is the number the chip shows.
+    A result box the calculation could not produce counts once, when neither a
+    finding nor a note already names it. The header's chip, the next-action
+    line and the gate on the file and the recording all count with this, so
+    the number beside "resolve what blocks filing" is the number the chip shows.
     """
     blocking = [issue for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS]
-    named = {issue.box for issue in blocking if issue.box is not None}
+    notes = form.blocking_calculation_notes
+    named = {issue.box for issue in blocking if issue.box is not None} | {
+        note.box for note in notes if note.box is not None
+    }
     failed = sum(
         1
         for field in _result_fields(form).values()
@@ -372,11 +377,25 @@ def blocking_count(form: ModeloWorkForm) -> int:
         and field.box not in named
         and is_result_field(form, field)
     )
-    return len(blocking) + failed
+    return len(blocking) + len(notes) + failed
+
+
+def confirm_count(form: ModeloWorkForm) -> int:
+    """How many things wait for the filer to confirm: assumed values on pages that apply, and the calculation's notes.
+
+    A note at this level is a value the calculation assumed or kept that no
+    box lists as assumed, so nothing is counted twice.
+    """
+    notes = sum(1 for note in form.calculation_notes if note.attention is ModeloFormAttention.CONFIRM)
+    return to_do_counts(form).default_to_confirm + notes
 
 
 def missing_findings(form: ModeloWorkForm) -> int:
-    """How many findings of a missing value name no box the missing boxes already count, such as a record's value."""
+    """How many missing values only a finding or a calculation note names, such as a record's value.
+
+    The findings list already leaves out a finding whose box the missing
+    boxes count, and lists the calculation's notes beside the findings.
+    """
     return sum(1 for line in issue_lines(form) if line.level is IssueLevel.MISSING)
 
 
@@ -397,11 +416,10 @@ def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionC
     """
     if recorded:
         return ()
-    to_do = to_do_counts(form)
     counts = {
         ChipLevel.BLOCKS: blocking_count(form),
         ChipLevel.MISSING: missing_count(form),
-        ChipLevel.CONFIRM: to_do.default_to_confirm,
+        ChipLevel.CONFIRM: confirm_count(form),
         ChipLevel.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
     }
     return tuple(AttentionChip(level, count) for level, count in counts.items() if count)
@@ -500,6 +518,7 @@ __all__ = [
     "ResultView",
     "attention_chips",
     "blocking_count",
+    "confirm_count",
     "deadline_help",
     "deadline_view",
     "fit_identity",
