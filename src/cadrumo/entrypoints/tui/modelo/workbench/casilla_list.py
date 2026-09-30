@@ -82,6 +82,21 @@ _WIDEST: Final[int] = 150
 _LABEL_FLOOR: Final[int] = 8
 _NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
+_EMPTY_VALUE: Final[str] = "·"
+_ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {
+        ModeloFormOrigin.NOT_APPLICABLE,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+        ModeloFormOrigin.CALCULATION_FAILED,
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.CLEARED,
+    }
+)
+"""Origins whose words say there is no value, whatever the field still holds."""
+_ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.OPTIONAL_EMPTY, ModeloFormOrigin.NEEDS_INPUT}
+)
+"""Origins whose words say there is no value only when the field holds none; a held zero is still shown."""
 _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
 _FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
@@ -93,6 +108,8 @@ _BOX_PREFIXES: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"^\d[\w-]*\.\s+mező\s*:\s*"),
 )
 """A description that opens by naming its box, in each language the catalogue writes: the row already shows it."""
+_BREAKABLE_SPACE: Final[re.Pattern[str]] = re.compile(r"[^\S\u00a0]+")
+"""Where a label may break: any space except a no-break space, which holds "art. 71" or "1 000" together."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,7 +200,7 @@ def _wrap(text: str, width: int) -> tuple[str, ...]:
     width = max(width, 1)
     lines: list[str] = []
     line = ""
-    for word in text.split():
+    for word in _BREAKABLE_SPACE.split(text.strip()):
         candidate = f"{line} {word}" if line else word
         if cell_len(candidate) <= width:
             line = candidate
@@ -240,6 +257,25 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     return format_casilla_value(
         field.value, data_type=field.data_type, language=language, ratio_unit=ratio_unit(field.data_type, maximum)
     )
+
+
+def _origin_says_absence(field: ModeloFormField) -> bool:
+    """Whether a field's origin words already say its value is not there."""
+    if field.origin in _ABSENT_BY_ORIGIN:
+        return True
+    return field.value is None and field.origin in _ABSENT_WHEN_NONE
+
+
+def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
+    """Return the value cell of a row, where an origin that says the value is absent leaves only a dot.
+
+    The row's origin column says the absence in words, so the value column
+    does not say it a second time. Every other surface, which shows the value
+    without the origin words beside it, uses :func:`value_text`.
+    """
+    if entry.staged_text is None and _origin_says_absence(entry.field):
+        return _EMPTY_VALUE
+    return value_text(entry, language)
 
 
 class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
@@ -437,7 +473,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         return _Measures(
             box=max(cell_len(_box_mark(entry.field)) for entry in entries),
             label=max(entry.indent + cell_len(self._label(entry)) for entry in entries),
-            value=min(max(cell_len(value_text(entry, self._language)) for entry in entries), _VALUE_CAP),
+            value=min(max(cell_len(row_value_text(entry, self._language)) for entry in entries), _VALUE_CAP),
             words=max(cell_len(origin_words(entry.field)) for entry in entries),
         )
 
@@ -562,7 +598,9 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text.append(_right(_box_mark(field), columns.box) + " ", style=self._style("box"))
             text.append(_fit(labels[0], label_width))
             role = ColourRole.STAGED if entry.staged_text is not None else ORIGIN_ROLES[field.origin]
-            text.append(" " + _right(value_text(entry, self._language), columns.value), style=self._role_style(role))
+            text.append(
+                " " + _right(row_value_text(entry, self._language), columns.value), style=self._role_style(role)
+            )
             text.append(" " + origin_glyph(field), style=self._role_style(ORIGIN_ROLES[field.origin]))
             if columns.words:
                 text.append(" " + _fit(origin_words(field), columns.words), style=self._style("muted"))
@@ -719,5 +757,6 @@ __all__ = [
     "CasillaListNote",
     "Density",
     "description_text",
+    "row_value_text",
     "value_text",
 ]

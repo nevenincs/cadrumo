@@ -372,3 +372,41 @@ async def test_the_row_carries_the_source_words_and_marks_a_carried_value_apart(
 
 def _records() -> ModeloFormValueSource:
     return ModeloFormValueSource(family=SourceFamily.RECORDS)
+
+
+@pytest.mark.asyncio
+async def test_an_empty_box_says_so_once_in_its_origin_words_and_keeps_a_held_zero() -> None:
+    items: tuple[CasillaListItem, ...] = (
+        CasillaListEntry(_field("01", "Optional amount", ModeloFormOrigin.OPTIONAL_EMPTY)),
+        CasillaListEntry(_field("02", "Pending total", ModeloFormOrigin.NOT_CALCULATED_YET, Decimal("7"))),
+        CasillaListEntry(_field("03", "Waiting amount", ModeloFormOrigin.NOT_IMPORTED_YET)),
+        CasillaListEntry(_field("04", "Emptied amount", ModeloFormOrigin.CLEARED)),
+        CasillaListEntry(_field("05", "Missing amount", ModeloFormOrigin.NEEDS_INPUT)),
+        CasillaListEntry(_field("06", "Other amount", ModeloFormOrigin.NOT_APPLICABLE)),
+        CasillaListEntry(_field("07", "Zero amount", ModeloFormOrigin.OPTIONAL_EMPTY, Decimal("0"))),
+    )
+
+    lines = await _render(items, width=140)
+
+    assert _line_with(lines, "Optional amount").endswith(" · ○ Optional, empty")
+    assert _line_with(lines, "Pending total").endswith(" · ◌ Not calculated yet")
+    assert _line_with(lines, "Waiting amount").endswith(" · ⇣ Not imported yet")
+    assert _line_with(lines, "Emptied amount").endswith(" · □ Cleared by you")
+    assert _line_with(lines, "Missing amount").endswith(" · ! Needs your input")
+    assert _line_with(lines, "Other amount").endswith(" · - Not applicable")
+    # A zero is a value, not an absence, and is shown as one.
+    assert _line_with(lines, "Zero amount").endswith("0.00" + _EURO + " ○ Optional, empty")
+    assert not any("no data" in line or "…" in line for line in lines)
+
+
+@pytest.mark.asyncio
+async def test_a_wrapped_label_never_breaks_at_a_no_break_space() -> None:
+    label = "Deduction under Real Decreto 1624/1992, art.\u00a071"
+    items: tuple[CasillaListItem, ...] = (
+        CasillaListEntry(_field("71", label, ModeloFormOrigin.CALCULATED, Decimal("1"))),
+    )
+
+    for width in range(34, 52, 2):
+        lines = await _render(items, width=width)
+        assert len(lines) > 1, width
+        assert any("art.\u00a071" in line for line in lines), (width, lines)

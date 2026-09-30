@@ -2428,11 +2428,19 @@ tui:
           Your value will win until you restore the source.'
         effect:
           clear: will have no value
+          replaces_aeat_draft: replaces the value from AEAT data
+          replaces_earlier_filings: replaces the value from an earlier declaration
+          replaces_fixed_by_design: replaces the value set by the form
+          replaces_named_filing: replaces the value from modelo {modelo}, {period}
+          replaces_profile: replaces the value from your profile
+          replaces_records: replaces the value from your records
+          replaces_registers: replaces the value from a register you keep
+          replaces_your_entries: replaces the value from your entries
           restore: goes back to the source value
           set_calculation: replaces the calculated value
           set_filer: changes your value
           set_nothing: new value
-          set_source: replaces the imported value
+          set_source: replaces the value from its source
         finding:
           clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
             Give it back to its source instead.

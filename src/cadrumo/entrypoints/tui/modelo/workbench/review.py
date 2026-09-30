@@ -34,11 +34,13 @@ from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
+from .....application.modelo.source_policy import SourceFamily
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
+from .wording import period_words
 
 
 class ReviewDecision(StrEnum):
@@ -57,21 +59,50 @@ class ReviewNote:
     blocking: bool
 
 
-REVIEW_EFFECTS: Final[tuple[str, ...]] = ("clear", "restore", *(f"set_{item.value}" for item in Displacement))
-"""Every effect the review can state for a change."""
+_NAMED_FILING: Final[str] = "named_filing"
+REVIEW_EFFECTS: Final[tuple[str, ...]] = (
+    "clear",
+    "restore",
+    *(f"set_{item.value}" for item in Displacement),
+    *(f"replaces_{family.value}" for family in SourceFamily),
+    f"replaces_{_NAMED_FILING}",
+)
+"""Every effect the review can state for a change; a replaced source is named by its family."""
 _NOTE_MARKS: Final[Mapping[bool, str]] = {True: "▲", False: "◆"}
 _AT_RISK_SHOWN: Final[int] = 12
 
 
-def change_effect_key(change: StagedChange) -> str:
-    """The catalogue key saying in words what one change does."""
-    if change.kind is WorkbenchChangeKind.CLEAR:
-        effect = "clear"
-    elif change.kind is WorkbenchChangeKind.RESTORE:
-        effect = "restore"
-    else:
-        effect = f"set_{change.displaces.value}"
+def _effect_key(effect: str) -> str:
     return f"tui.modelo.workbench.review.effect.{effect}"
+
+
+def change_effect_key(change: StagedChange) -> str:
+    """The catalogue key saying in words what one change does.
+
+    A value that replaces a source says which kind of place that value came
+    from, and which declaration when it was carried from exactly one; the key
+    for one earlier declaration takes ``{modelo}`` and ``{period}``.
+    """
+    if change.kind is WorkbenchChangeKind.CLEAR:
+        return _effect_key("clear")
+    if change.kind is WorkbenchChangeKind.RESTORE:
+        return _effect_key("restore")
+    source = change.field.source
+    if change.displaces is Displacement.SOURCE and source is not None:
+        if source.family is SourceFamily.EARLIER_FILINGS and len(source.earlier_filings) == 1:
+            return _effect_key(f"replaces_{_NAMED_FILING}")
+        return _effect_key(f"replaces_{source.family.value}")
+    return _effect_key(f"set_{change.displaces.value}")
+
+
+def change_effect_text(change: StagedChange) -> str:
+    """Say in words what one change does, naming the source a replaced value came from."""
+    key = change_effect_key(change)
+    source = change.field.source
+    if key == _effect_key(f"replaces_{_NAMED_FILING}") and source is not None:
+        filing = source.earlier_filings[0]
+        return tr(key, modelo=filing.modelo, period=period_words(filing.period))
+    return tr(key)
 
 
 def _boxes_text(boxes: tuple[str, ...]) -> str:
@@ -99,7 +130,7 @@ def change_line(change: StagedChange) -> str:
     """One change as a line of words: its box and concept, how it read before and after, and its effect."""
     field = change.field
     box = f"[{field.box}] " if field.box else ""
-    effect = tr(change_effect_key(change))
+    effect = change_effect_text(change)
     if change.before_changed:
         effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
     return tr(
@@ -305,6 +336,7 @@ __all__ = [
     "ReviewNote",
     "at_risk_text",
     "change_effect_key",
+    "change_effect_text",
     "change_line",
     "recalculation_risk_text",
 ]

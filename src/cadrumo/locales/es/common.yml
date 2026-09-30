@@ -2485,11 +2485,19 @@ tui:
           Tu valor mandará hasta que restaures el origen.'
         effect:
           clear: quedará sin valor
+          replaces_aeat_draft: sustituye el valor de los datos de la AEAT
+          replaces_earlier_filings: sustituye el valor de una declaración anterior
+          replaces_fixed_by_design: sustituye el valor fijado por el modelo
+          replaces_named_filing: sustituye el valor del modelo {modelo}, {period}
+          replaces_profile: sustituye el valor de tu perfil
+          replaces_records: sustituye el valor de tus registros
+          replaces_registers: sustituye el valor de un registro que llevas
+          replaces_your_entries: sustituye el valor de lo que escribiste
           restore: vuelve al valor de origen
           set_calculation: sustituye el valor calculado
           set_filer: cambia tu valor
           set_nothing: valor nuevo
-          set_source: sustituye el valor importado
+          set_source: sustituye el valor de su origen
         finding:
           clear_of_source_fed_casilla: Un origen rellena esta casilla, así que no
             se puede vaciar. Devuélvela a su origen en su lugar.

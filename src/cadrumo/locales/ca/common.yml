@@ -2480,11 +2480,19 @@ tui:
           El teu valor manarà fins que restauris l''origen.'
         effect:
           clear: quedarà sense valor
+          replaces_aeat_draft: substitueix el valor de les dades de l'AEAT
+          replaces_earlier_filings: substitueix el valor d'una declaració anterior
+          replaces_fixed_by_design: substitueix el valor fixat pel model
+          replaces_named_filing: substitueix el valor del model {modelo}, {period}
+          replaces_profile: substitueix el valor del teu perfil
+          replaces_records: substitueix el valor dels teus registres
+          replaces_registers: substitueix el valor d'un registre que portes
+          replaces_your_entries: substitueix el valor del que vas escriure
           restore: torna al valor d'origen
           set_calculation: substitueix el valor calculat
           set_filer: canvia el teu valor
           set_nothing: valor nou
-          set_source: substitueix el valor importat
+          set_source: substitueix el valor del seu origen
         finding:
           clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que
             no es pot buidar. Torna-la al seu origen en lloc d'això.

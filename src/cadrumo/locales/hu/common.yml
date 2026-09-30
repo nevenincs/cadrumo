@@ -2465,11 +2465,21 @@ tui:
           Az Ön értéke marad érvényben, amíg vissza nem állítja a forrást.'
         effect:
           clear: érték nélkül marad
+          replaces_aeat_draft: felülírja az AEAT-adatokból származó értéket
+          replaces_earlier_filings: felülírja egy korábbi bevallásból származó értéket
+          replaces_fixed_by_design: felülírja a nyomtatvány által rögzített értéket
+          replaces_named_filing: felülírja a(z) {modelo} nyomtatványból ({period})
+            származó értéket
+          replaces_profile: felülírja az Ön profiljából származó értéket
+          replaces_records: felülírja az Ön nyilvántartásaiból származó értéket
+          replaces_registers: felülírja az Ön által vezetett nyilvántartásból származó
+            értéket
+          replaces_your_entries: felülírja az Ön bejegyzéseiből származó értéket
           restore: visszaáll a forrás értékére
           set_calculation: felülírja a számított értéket
           set_filer: módosítja az Ön értékét
           set_nothing: új érték
-          set_source: felülírja az importált értéket
+          set_source: felülírja a forrásból származó értéket
         finding:
           clear_of_source_fed_casilla: Ezt a rovatot egy forrás tölti ki, ezért nem
             üríthető ki. Állítsa inkább vissza a forrására.

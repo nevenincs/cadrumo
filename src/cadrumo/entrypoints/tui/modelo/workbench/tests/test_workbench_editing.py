@@ -129,7 +129,9 @@ async def test_a_staged_change_can_be_reverted() -> None:
             staged_line = next(line for line in _list_text(screen).splitlines() if "Retenciones" in line)
 
     assert "Δ" not in staged_line
-    assert "sin dato" in staged_line
+    # The box is empty again, and its origin words say so once.
+    assert "· ! Falta tu dato" in staged_line
+    assert "sin dato" not in staged_line
 
 
 @pytest.mark.asyncio

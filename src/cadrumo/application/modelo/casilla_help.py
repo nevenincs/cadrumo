@@ -104,6 +104,8 @@ _LAW_ID: Final[re.Pattern[str]] = re.compile(
 )
 _ORDER_ID: Final[re.Pattern[str]] = re.compile(r"^orden-(?P<department>[a-z]+)-(?P<number>\d+)-(?P<year>\d{4})$")
 _ARTICLE_PREFIXES: Final[Mapping[str, str]] = {"art": "art.", "da": "DA", "df": "DF", "dt": "DT", "dd": "DD"}
+_NO_BREAK_SPACE: Final[str] = "\u00a0"
+"""Joins a provision's abbreviation to its number, so "art. 71" never wraps between the two."""
 
 
 class ModeloHelpFormulaV1(BaseModel):
@@ -266,7 +268,8 @@ def _article_text(locator: str) -> str:
     prefix = _ARTICLE_PREFIXES.get(head)
     if prefix is None:
         return locator.replace("-", " ")
-    return f"{prefix} {rest.replace('-', ' ')}".strip()
+    number = rest.replace("-", " ").strip()
+    return f"{prefix}{_NO_BREAK_SPACE}{number}" if number else prefix
 
 
 def _constraint_sentences(constraints: CasillaConstraints | None, language: OutputLanguage) -> tuple[str, ...]:

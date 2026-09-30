@@ -7,6 +7,7 @@ spelling, not read back from the renderer.
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -50,16 +51,28 @@ def test_the_legal_basis_is_cited_from_each_reference(operation: PinnedAuthority
     card = _card(operation, "01")
 
     texts = {citation.text for citation in card.legal_basis}
-    assert "Ley 35/2006, art. 99" in texts
-    assert "Orden EHA/672/2007, art. 1" in texts
-    assert "Real Decreto 439/2007, art. 110" in texts
+    assert "Ley 35/2006, art.\u00a099" in texts
+    assert "Orden EHA/672/2007, art.\u00a01" in texts
+    assert "Real Decreto 439/2007, art.\u00a0110" in texts
     assert all(citation.permalink.startswith("https://") for citation in card.legal_basis)
 
 
 def test_an_unfamiliar_identifier_falls_back_to_the_official_document_id(operation: PinnedAuthorityOperation) -> None:
     reference = operation.legal_reference("convenio-es-ar-1992:art-19")
 
-    assert legal_citation_text(reference) == f"{reference.document_id}, art. 19"
+    assert legal_citation_text(reference) == f"{reference.document_id}, art.\u00a019"
+
+
+def test_a_citation_never_breaks_between_the_article_and_its_number(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("390", filing_year=2025, period="0A")
+    cited = next(item for item in snapshot.revision.casillas if "rd-1624-1992:art-71" in map(str, item.legal_refs))
+
+    card = build_casilla_help_card(cited.id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON)
+
+    texts = {citation.text for citation in card.legal_basis}
+    assert "Real Decreto 1624/1992, art.\u00a071" in texts
+    # No citation leaves a space a line may break at between "art." and its number.
+    assert not any(re.search(r"art\.[^\S\u00a0]", text) for text in texts)
 
 
 def test_a_bound_box_says_where_its_value_comes_from_and_what_uses_it(operation: PinnedAuthorityOperation) -> None:
