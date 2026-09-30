@@ -2038,6 +2038,15 @@ tui:
         at_risk_title: Újraszámítja a forrásai alapján?
         kept: Semmi sem lett újraszámítva. Adja meg a megtartandó értékeket, majd
           számoljon újra.
+        operator_entries_at_risk: 'Néhány rovat olyan értéket tartalmaz, amelyet nem
+          ezen a képernyőn adtak meg ({count}): {boxes}. Ezt a bevallást legutóbb
+          ezen a képernyőn kívül számították ki, ezért a Cadrumo nem tudja, hogy ezeket
+          Ön írta-e be. Újraszámításkor ezek a rovatok a forrásuk vagy a nyomtatvány
+          által adott értéket kapják, vagy üresen maradnak, hogy kitölthesse őket.
+          Ha meg szeretne tartani egy értéket, előbb adja meg itt.'
+        operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
+          számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Az
+          újraszámítás csak az itt megadott értékeket tartja meg.
       defaults_to_confirm: 'meg nem erősített alapértékek: {count} [n]'
       design_constant: '{column}: {value} · a hivatalos terv rögzíti'
       details_page: A számítás részletei
@@ -2304,6 +2313,7 @@ tui:
         back: Vissza a szerkesztéshez
         before_changed: a rovat megváltozott, mióta ezt előkészítette
         blocked: Az alkalmazás előtt oldja meg a ▲ jellel jelölteket.
+        change_line: '{box}{concept}: {before} helyett {after} ({effect})'
         check_failed: A módosításait nem sikerült ellenőrizni. Megmaradtak; próbálja
           újra.
         column:
@@ -2311,7 +2321,6 @@ tui:
           before: Előtte
           box: Rovat
           concept: Megnevezés
-          effect: Hatás
         discard: Összes elvetése
         discarded: A módosításai elvetve.
         displacing: 'Importált vagy számított értéket felülíró módosítások: {count}.
@@ -2333,16 +2342,17 @@ tui:
         none: Nincs alkalmazandó módosítás.
         nothing_saved: Semmi sem mentődik, amíg meg nem nyomja az „Alkalmazás és újraszámítás”
           gombot.
-        operator_entries_at_risk: 'Ezt a bevallást legutóbb a munkafelületen kívül
-          számították ki, ezért a Cadrumo nem tudja, mely értékeit írta be Ön. Az
-          alkalmazás csak az itt felsorolt módosításokat tartja meg. Ezekben a rovatokban
-          olyan értékek vannak, amelyekről nincs nyilvántartva, hogy bárki beírta
-          volna, és visszaállnak arra, amit a forrásuk mond (rovatok: {count}): {boxes}.
-          Ha meg szeretne tartani egyet, előbb adja meg az értékét.'
-        operator_entries_unknown: Ezt a bevallást legutóbb a munkafelületen kívül
-          számították ki, ezért a Cadrumo nem tudja, mely értékeit írta be Ön. Az
-          alkalmazás csak az itt felsorolt módosításokat tartja meg; minden más, máshol
-          beírt érték visszaáll arra, amit a forrása mond.
+        operator_entries_at_risk: 'Néhány rovat olyan értéket tartalmaz, amelyet nem
+          ezen a képernyőn adtak meg ({count}): {boxes}. Ezt a bevallást legutóbb
+          ezen a képernyőn kívül számították ki, ezért a Cadrumo nem tudja, hogy ezeket
+          Ön írta-e be. Alkalmazáskor ezek a rovatok a forrásuk vagy a nyomtatvány
+          által adott értéket kapják, vagy üresen maradnak, hogy kitölthesse őket.
+          Ha meg szeretne tartani egy értéket, előbb adja meg itt.'
+        operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
+          számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Alkalmazáskor
+          csak az itt felsorolt módosítások maradnak meg. Minden más, a képernyőn
+          kívül beírt érték a forrása vagy a nyomtatvány által adott értéket kapja,
+          vagy üresen marad.
         rebased: 'A bevallás megváltozott, miután előkészítette ezeket a módosításokat.
           Nézze át újra a megjelölt sorokat (megváltozott: {count}).'
         title: 'Alkalmazandó módosítások: {count}'

@@ -2056,6 +2056,16 @@ tui:
         at_risk_title: Vols recalcular a partir dels teus orígens?
         kept: No s'ha recalculat res. Introdueix els valors que vulguis conservar
           i després recalcula.
+        operator_entries_at_risk: 'Algunes caselles tenen valors que no es van introduir
+          en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
+          per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
+          si els vas escriure tu. En tornar a calcular, cadascuna d''aquestes caselles
+          pren el valor que li donin el seu origen o el model, o queda buida perquè
+          l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
+        operator_entries_unknown: Aquesta declaració es va calcular per última vegada
+          fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
+          escriure. En tornar a calcular només es conserven els valors introduïts
+          aquí.
       defaults_to_confirm: 'valors per defecte sense confirmar: {count} [n]'
       design_constant: '{column}: {value} · el fixa el disseny oficial'
       details_page: Detalls del càlcul
@@ -2322,6 +2332,7 @@ tui:
         back: Torna a editar
         before_changed: la casella ha canviat des que vas preparar això
         blocked: Resol el que està marcat amb ▲ abans d'aplicar.
+        change_line: '{box}{concept}: {before} passa a {after} ({effect})'
         check_failed: No s'han pogut comprovar els teus canvis. Continuen aquí; torna-ho
           a provar.
         column:
@@ -2329,7 +2340,6 @@ tui:
           before: Abans
           box: Casella
           concept: Concepte
-          effect: Efecte
         discard: Descarta-ho tot
         discarded: S'han descartat els teus canvis.
         displacing: 'Canvis que substitueixen un valor importat o calculat: {count}.
@@ -2350,16 +2360,17 @@ tui:
         findings_heading: 'El que ha trobat la comprovació:'
         none: No hi ha canvis per aplicar.
         nothing_saved: No es desa res fins que premis «Aplica i recalcula».
-        operator_entries_at_risk: 'Aquesta declaració es va calcular per última vegada
-          fora del banc de treball, així que Cadrumo no pot saber quins valors vas
-          escriure. En aplicar només es conserven els canvis d''aquesta llista. Aquestes
-          caselles tenen valors que no consta que ningú escrivís i tornen al que digui
-          el seu origen (caselles: {count}): {boxes}. Per conservar-ne un, introdueix-lo
-          abans.'
+        operator_entries_at_risk: 'Algunes caselles tenen valors que no es van introduir
+          en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
+          per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
+          si els vas escriure tu. En aplicar, cadascuna d''aquestes caselles pren
+          el valor que li donin el seu origen o el model, o queda buida perquè l''emplenis.
+          Per conservar un valor, introdueix-lo aquí abans.'
         operator_entries_unknown: Aquesta declaració es va calcular per última vegada
-          fora del banc de treball, així que Cadrumo no pot saber quins valors vas
-          escriure. En aplicar només es conserven els canvis d'aquesta llista; qualsevol
-          altre valor que escrivissis fora torna al que digui el seu origen.
+          fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
+          escriure. En aplicar només es conserven els canvis d'aquesta llista. Qualsevol
+          altre valor escrit fora d'aquesta pantalla pren el valor que li donin el
+          seu origen o el model, o queda buit.
         rebased: 'La declaració va canviar després que preparessis aquests canvis.
           Revisa de nou les línies marcades (canviades: {count}).'
         title: 'Canvis per aplicar: {count}'

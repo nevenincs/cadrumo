@@ -2068,6 +2068,15 @@ tui:
         at_risk_title: ¿Recalcular a partir de tus orígenes?
         kept: No se ha recalculado nada. Introduce los valores que quieras conservar
           y después recalcula.
+        operator_entries_at_risk: 'Algunas casillas tienen valores que no se introdujeron
+          en esta pantalla ({count}): {boxes}. Esta declaración se calculó por última
+          vez fuera de esta pantalla, así que Cadrumo no puede saber si los escribiste
+          tú. Al volver a calcular, cada una de estas casillas toma el valor que le
+          den su origen o el modelo, o queda vacía para que la rellenes. Para conservar
+          un valor, introdúcelo aquí antes.'
+        operator_entries_unknown: Esta declaración se calculó por última vez fuera
+          de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
+          Al volver a calcular solo se conservan los valores introducidos aquí.
       defaults_to_confirm: 'valores por defecto sin confirmar: {count} [n]'
       design_constant: '{column}: {value} · lo fija el diseño oficial'
       details_page: Detalles del cálculo
@@ -2331,6 +2340,7 @@ tui:
         back: Volver a editar
         before_changed: la casilla cambió desde que preparaste esto
         blocked: Resuelve lo marcado con ▲ antes de aplicar.
+        change_line: '{box}{concept}: {before} pasa a {after} ({effect})'
         check_failed: No se han podido comprobar tus cambios. Siguen aquí; inténtalo
           de nuevo.
         column:
@@ -2338,7 +2348,6 @@ tui:
           before: Antes
           box: Casilla
           concept: Concepto
-          effect: Efecto
         discard: Descartar todo
         discarded: Se han descartado tus cambios.
         displacing: 'Cambios que sustituyen un valor importado o calculado: {count}.
@@ -2359,15 +2368,17 @@ tui:
         findings_heading: 'Lo que encontró la comprobación:'
         none: No hay cambios por aplicar.
         nothing_saved: Nada se guarda hasta que pulses «Aplicar y recalcular».
-        operator_entries_at_risk: 'Esta declaración se calculó por última vez fuera
-          del banco de trabajo, así que Cadrumo no puede saber qué valores escribiste.
-          Al aplicar solo se conservan los cambios de esta lista. Estas casillas tienen
-          valores que nadie consta que escribiera y vuelven a lo que diga su origen
-          (casillas: {count}): {boxes}. Para conservar uno, introdúcelo antes.'
+        operator_entries_at_risk: 'Algunas casillas tienen valores que no se introdujeron
+          en esta pantalla ({count}): {boxes}. Esta declaración se calculó por última
+          vez fuera de esta pantalla, así que Cadrumo no puede saber si los escribiste
+          tú. Al aplicar, cada una de estas casillas toma el valor que le den su origen
+          o el modelo, o queda vacía para que la rellenes. Para conservar un valor,
+          introdúcelo aquí antes.'
         operator_entries_unknown: Esta declaración se calculó por última vez fuera
-          del banco de trabajo, así que Cadrumo no puede saber qué valores escribiste.
-          Al aplicar solo se conservan los cambios de esta lista; cualquier otro valor
-          que escribieras fuera vuelve a lo que diga su origen.
+          de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
+          Al aplicar solo se conservan los cambios de esta lista. Cualquier otro valor
+          escrito fuera de esta pantalla toma el valor que le den su origen o el modelo,
+          o queda vacío.
         rebased: 'La declaración cambió después de que prepararas estos cambios. Revisa
           de nuevo las líneas marcadas (cambiadas: {count}).'
         title: 'Cambios por aplicar: {count}'

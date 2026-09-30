@@ -2008,6 +2008,15 @@ tui:
         at_risk_proceed: Recalculate
         at_risk_title: Recalculate from your sources?
         kept: Nothing was recalculated. Enter the values you want to keep, then recalculate.
+        operator_entries_at_risk: 'Some boxes hold values that were not entered on
+          this screen ({count}): {boxes}. This declaration was last calculated outside
+          this screen, so Cadrumo cannot tell whether you typed them. When you calculate
+          again, each of these boxes takes the value its source or the form gives
+          it, or is left empty for you to fill in. To keep a value, enter it here
+          first.'
+        operator_entries_unknown: This declaration was last calculated outside this
+          screen, so Cadrumo cannot tell which values you typed. Calculating again
+          keeps only the values entered here.
       defaults_to_confirm: 'defaults not yet confirmed: {count} [n]'
       design_constant: '{column}: {value} · fixed by the official design'
       details_page: Calculation details
@@ -2271,6 +2280,7 @@ tui:
         back: Back to editing
         before_changed: the box changed since you staged this
         blocked: Resolve the items marked ▲ before applying.
+        change_line: '{box}{concept}: {before} becomes {after} ({effect})'
         check_failed: Your changes could not be checked. They are still here; try
           again.
         column:
@@ -2278,7 +2288,6 @@ tui:
           before: Before
           box: Box
           concept: Item
-          effect: Effect
         discard: Discard all
         discarded: Your changes were discarded.
         displacing: 'Changes that replace an imported or calculated value: {count}.
@@ -2299,15 +2308,15 @@ tui:
         findings_heading: 'What the check found:'
         none: There are no changes to apply.
         nothing_saved: Nothing is saved until you press “Apply and recalculate”.
-        operator_entries_at_risk: 'This declaration was last calculated outside the
-          workbench, so Cadrumo cannot tell which of its values you typed. Applying
-          keeps only the changes listed here. These boxes hold values nobody is recorded
-          as having typed, and they go back to what their source says (boxes: {count}):
-          {boxes}. To keep one, enter its value first.'
-        operator_entries_unknown: This declaration was last calculated outside the
-          workbench, so Cadrumo cannot tell which of its values you typed. Applying
-          keeps only the changes listed here; any other value you typed elsewhere
-          goes back to what its source says.
+        operator_entries_at_risk: 'Some boxes hold values that were not entered on
+          this screen ({count}): {boxes}. This declaration was last calculated outside
+          this screen, so Cadrumo cannot tell whether you typed them. When you apply,
+          each of these boxes takes the value its source or the form gives it, or
+          is left empty for you to fill in. To keep a value, enter it here first.'
+        operator_entries_unknown: This declaration was last calculated outside this
+          screen, so Cadrumo cannot tell which values you typed. Applying keeps only
+          the changes listed here. Any other value typed outside this screen takes
+          the value its source or the form gives it, or is left empty.
         rebased: 'The declaration changed after you staged these changes. Check the
           marked lines again (changed: {count}).'
         title: 'Changes to apply: {count}'

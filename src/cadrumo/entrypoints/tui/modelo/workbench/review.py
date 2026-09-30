@@ -3,18 +3,21 @@
 The review lists each change with its box, its concept, how it read before,
 how it will read after, and what the change does in words: a new value, a value
 that replaces what a source or the calculation produced, a value removed, or a
-source restored. Changes that displace a source or a calculated figure are
-warned about, because the filer's value will keep winning until they restore
-it. Nothing is saved until the filer chooses to apply; the table has the focus
-on arrival so Enter cannot apply by accident.
+source restored. Each change is a wrapped line rather than a table row, so a
+narrow terminal wraps the words instead of cutting them. Changes that displace
+a source or a calculated figure are warned about, because the filer's value
+will keep winning until they restore it. Nothing is saved until the filer
+chooses to apply; the scrolling list has the focus on arrival so Enter cannot
+apply by accident, and the acknowledgement and the buttons stay in view however
+long the list grows.
 
 What the application found when it checked the changes is listed under them;
 a finding that would make it refuse the changes keeps Apply unavailable until
 the filer resolves it. Two situations ask the filer to acknowledge before
 applying: a declaration that does not record which of its values the filer
-typed, where applying returns every value not listed to what its source says,
-and a declaration that changed after the changes were staged, whose changed
-boxes are marked.
+typed, where applying recalculates every value not listed without anything
+typed elsewhere, and a declaration that changed after the changes were staged,
+whose changed boxes are marked.
 """
 
 from __future__ import annotations
@@ -27,13 +30,12 @@ from typing import ClassVar, Final, override
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
-from ...components.widgets import ContentDataTable
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
@@ -57,14 +59,7 @@ class ReviewNote:
 
 REVIEW_EFFECTS: Final[tuple[str, ...]] = ("clear", "restore", *(f"set_{item.value}" for item in Displacement))
 """Every effect the review can state for a change."""
-_COLUMN_LOCALE_KEYS: Final[Mapping[str, str]] = {
-    "box": "tui.modelo.workbench.review.column.box",
-    "concept": "tui.modelo.workbench.review.column.concept",
-    "before": "tui.modelo.workbench.review.column.before",
-    "after": "tui.modelo.workbench.review.column.after",
-    "effect": "tui.modelo.workbench.review.column.effect",
-}
-_NOTE_MARKS: Final[Mapping[bool, str]] = {True: "▲", False: "!"}
+_NOTE_MARKS: Final[Mapping[bool, str]] = {True: "▲", False: "◆"}
 _AT_RISK_SHOWN: Final[int] = 12
 
 
@@ -79,14 +74,42 @@ def change_effect_key(change: StagedChange) -> str:
     return f"tui.modelo.workbench.review.effect.{effect}"
 
 
+def _boxes_text(boxes: tuple[str, ...]) -> str:
+    shown = ", ".join(boxes[:_AT_RISK_SHOWN])
+    if len(boxes) > _AT_RISK_SHOWN:
+        shown = tr("tui.modelo.workbench.review.and_more", shown=shown, count=len(boxes) - _AT_RISK_SHOWN)
+    return shown
+
+
 def at_risk_text(boxes: tuple[str, ...]) -> str:
     """Say what applying does to values nobody is recorded as having typed, naming their boxes."""
     if not boxes:
         return tr("tui.modelo.workbench.review.operator_entries_unknown")
-    shown = ", ".join(boxes[:_AT_RISK_SHOWN])
-    if len(boxes) > _AT_RISK_SHOWN:
-        shown = tr("tui.modelo.workbench.review.and_more", shown=shown, count=len(boxes) - _AT_RISK_SHOWN)
-    return tr("tui.modelo.workbench.review.operator_entries_at_risk", count=len(boxes), boxes=shown)
+    return tr("tui.modelo.workbench.review.operator_entries_at_risk", count=len(boxes), boxes=_boxes_text(boxes))
+
+
+def recalculation_risk_text(boxes: tuple[str, ...]) -> str:
+    """Say what recalculating does to values nobody is recorded as having typed, naming their boxes."""
+    if not boxes:
+        return tr("tui.modelo.workbench.calculate.operator_entries_unknown")
+    return tr("tui.modelo.workbench.calculate.operator_entries_at_risk", count=len(boxes), boxes=_boxes_text(boxes))
+
+
+def change_line(change: StagedChange) -> str:
+    """One change as a line of words: its box and concept, how it read before and after, and its effect."""
+    field = change.field
+    box = f"[{field.box}] " if field.box else ""
+    effect = tr(change_effect_key(change))
+    if change.before_changed:
+        effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
+    return tr(
+        "tui.modelo.workbench.review.change_line",
+        box=box,
+        concept=field.label.text,
+        before=change.previous_text,
+        after=change.text,
+        effect=effect,
+    )
 
 
 class EditReviewScreen(ModalScreen[ReviewDecision | None]):
@@ -118,8 +141,14 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             color: $secondary;
             margin-bottom: $cadrumo-stack;
         }
-        EditReviewScreen #review-table {
+        EditReviewScreen #review-body {
             height: 1fr;
+        }
+        EditReviewScreen #review-body:focus {
+            background-tint: $foreground 4%;
+        }
+        EditReviewScreen .review-change {
+            height: auto;
         }
         EditReviewScreen #review-warning, EditReviewScreen #review-at-risk, EditReviewScreen #review-rebased {
             color: $warning;
@@ -129,8 +158,6 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         }
         EditReviewScreen #review-findings {
             height: auto;
-            max-height: $cadrumo-help-max-height;
-            overflow-y: auto;
             margin-top: $cadrumo-stack;
         }
         EditReviewScreen #review-acknowledge {
@@ -192,21 +219,29 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
             )
             yield Static(tr("tui.modelo.workbench.review.nothing_saved"), id="review-subtitle", markup=False)
-            yield ContentDataTable[str](id="review-table", cursor_type="row", zebra_stripes=True)
-            if displacing:
-                yield Static(
-                    tr("tui.modelo.workbench.review.displacing", count=displacing), id="review-warning", markup=False
-                )
-            if self._rebased:
-                yield Static(
-                    tr("tui.modelo.workbench.review.rebased", count=self._rebased), id="review-rebased", markup=False
-                )
-            if self._at_risk is not None:
-                yield Static(at_risk_text(self._at_risk), id="review-at-risk", markup=False)
-            if self._notes:
-                yield Static(self._notes_text(), id="review-findings", markup=False)
+            with VerticalScroll(id="review-body", can_focus=True):
+                for index, change in enumerate(self._changes):
+                    yield Static(
+                        change_line(change), id=f"review-change-{index}", classes="review-change", markup=False
+                    )
+                if displacing:
+                    yield Static(
+                        tr("tui.modelo.workbench.review.displacing", count=displacing),
+                        id="review-warning",
+                        markup=False,
+                    )
+                if self._rebased:
+                    yield Static(
+                        tr("tui.modelo.workbench.review.rebased", count=self._rebased),
+                        id="review-rebased",
+                        markup=False,
+                    )
+                if self._at_risk is not None:
+                    yield Static(at_risk_text(self._at_risk), id="review-at-risk", markup=False)
+                if self._notes:
+                    yield Static(self._notes_text(), id="review-findings", markup=False)
             if self._needs_acknowledgement:
-                yield Checkbox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge")
+                yield Checkbox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
             with Horizontal(id="review-actions"):
                 yield Button(tr("tui.modelo.workbench.review.back"), id="review-back")
                 yield Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error")
@@ -238,25 +273,9 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         fit_dialog_width(self, event.size.width)
 
     def on_mount(self) -> None:
-        """List the changes and give the table the focus."""
+        """Fit the terminal and give the list of changes the focus."""
         fit_dialog_width(self, self.app.size.width)
-        table = self.query_one("#review-table", ContentDataTable)
-        for key, label_key in _COLUMN_LOCALE_KEYS.items():
-            table.add_column(tr(label_key), key=key)
-        for index, change in enumerate(self._changes):
-            field = change.field
-            effect = tr(change_effect_key(change))
-            if change.before_changed:
-                effect = f"{effect} · {tr('tui.modelo.workbench.review.before_changed')}"
-            table.add_row(
-                field.box or "·",
-                field.label.text,
-                change.previous_text,
-                change.text,
-                effect,
-                key=f"change-{index}",
-            )
-        table.focus()
+        self.query_one("#review-body", VerticalScroll).focus()
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         """Offer Apply once the filer has acknowledged what applying does."""
@@ -279,4 +298,13 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         self.dismiss(None)
 
 
-__all__ = ["REVIEW_EFFECTS", "EditReviewScreen", "ReviewDecision", "ReviewNote", "at_risk_text", "change_effect_key"]
+__all__ = [
+    "REVIEW_EFFECTS",
+    "EditReviewScreen",
+    "ReviewDecision",
+    "ReviewNote",
+    "at_risk_text",
+    "change_effect_key",
+    "change_line",
+    "recalculation_risk_text",
+]

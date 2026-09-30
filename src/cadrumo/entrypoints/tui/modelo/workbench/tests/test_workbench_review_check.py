@@ -184,7 +184,7 @@ async def test_an_unattributed_declaration_names_what_applying_returns_to_source
             after_acknowledging = review.query_one("#review-apply", Button).disabled
 
     assert "[07]" in warning
-    assert "go back to what their source says" in warning
+    assert "takes the value its source or the form gives it" in warning
     assert before_acknowledging
     assert not after_acknowledging
 
@@ -480,3 +480,26 @@ def test_what_a_recalculation_changed_is_grouped_by_why_it_changed() -> None:
     ]
     assert "14.500,00" in lines[1].before
     assert "14.000,00" in lines[1].after
+
+
+@pytest.mark.asyncio
+async def test_on_a_small_terminal_the_review_keeps_its_acknowledgement_and_buttons_in_view() -> None:
+    with override_settings(cadrumo_output_language="es"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=_unattributed_form()), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _settle(pilot)
+            await _stage_on_withholding(pilot, screen)
+            await pilot.press("R")
+            await _settle(pilot)
+            review = app.screen
+            assert isinstance(review, EditReviewScreen)
+            visible = {
+                widget_id: review.query_one(widget_id).region.intersection(review.region).area > 0
+                for widget_id in ("#review-acknowledge", "#review-apply", "#review-back", "#review-discard")
+            }
+            change = str(review.query_one("#review-change-0", Static).render())
+
+    assert visible == dict.fromkeys(visible, True)
+    assert "300,50" in change
+    assert "[06]" in change
