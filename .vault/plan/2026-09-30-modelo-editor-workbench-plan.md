@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:9ba784acef23b113bf269587e50589d302926b75f6c60bdd11e606afba8bf0a9'
+body_hash: 'sha256:b197941b3382161210d2faffc2c736c449edcd55e0df4458027bf128687a976a'
 ---
 
 # `modelo-editor-workbench` plan
@@ -102,6 +102,18 @@ Prove the workbench across locales, geometries and themes through the production
 - [x] `P05.S29` - Update the user documentation for filing a modelo in the TUI; `docs`.
 - [ ] `P05.S30` - Run the plan-close review of the integrated workbench against both decisions and resolve its findings; `.vault/audit`.
 
+### Phase `P06` - filer experience convergence
+
+Converge the workbench on the filer-facing design the UX session specified, one owner per file: the read model states origin sources, AEAT data provenance, deadline, result direction and filed state; rows, lists, header, browsing and the editor present them in the filer's words; assumed values hold the journey until confirmed.
+
+- [ ] `P06.S31` - Add origin source descriptors, AEAT data provenance, the filing deadline, the result direction and the recorded-filing state to the form read model, and reconcile required boxes with verification; `src/cadrumo/application/modelo/work_form.py`.
+- [ ] `P06.S32` - Render rows as the official form: full box numbers, units, wrapped labels and origin words from the read model; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
+- [ ] `P06.S33` - Group the findings list by attention level with what to do and a working Enter, and turn the sources view into a per-box map by origin; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
+- [ ] `P06.S34` - Rewrite the findings catalogue and the workbench texts in the filer's words and one register; `src/cadrumo/locales`.
+- [ ] `P06.S35` - Show a permanent status header with result direction, deadline and attention chips, rename the steps, and add collapsible navigation, search, go-to-box and sort; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
+- [ ] `P06.S36` - Let assumed values hold the journey until confirmed, with bulk confirm, save-and-next, and where-it-comes-from in the editor; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [ ] `P06.S37` - Render the converged workbench in the review previews after each wave and close the phase with a review; `dev/tui`.
+
 ## Parallelization
 
 P01 and P02 run in parallel as two isolated lanes, each in its own git worktree on its own
@@ -123,6 +135,23 @@ sit uncommitted in the shared worktree while a republish could run.
   so their tests wait for both merges; S15, S16, S18 and S20 do not.
 
 P05 starts after P04 closes. Commits use explicit pathspecs; no lane edits another lane's files.
+
+P06 runs in the shared worktree as parallel workers with disjoint write scopes; the orchestrator
+reviews and commits each worker's files. None of these scopes is in the authority compiler
+closure. The UX session writes specs and catalogue text and edits no file here.
+
+- Wave 1, in parallel:
+  - S31 owns `src/cadrumo/application/modelo/work_form*.py` and their tests.
+  - S32 owns `casilla_list.py`, `vocabulary.py` and `page_items.py` under
+    `src/cadrumo/entrypoints/tui/modelo/workbench/`, and their tests; its origin words wait for
+    S31's descriptor.
+  - S33 owns `issues.py` and `sources.py` in the same package, and their tests.
+  - S34 changes only catalogue values, through `dev.locales set-batch`.
+- Wave 2, after S31 lands:
+  - S35 owns `screen.py`, `progress.py`, `wording.py` and `keys.py`.
+  - S36 owns `editor.py`, `session.py` and a new bulk-confirm module.
+- S37's preview worker owns `dev/tui/**`. It renders only in quiet windows the orchestrator
+  declares, or from a frozen snapshot of a commit.
 
 ## Verification
 

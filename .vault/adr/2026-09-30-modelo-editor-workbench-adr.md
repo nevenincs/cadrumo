@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:376b139fa37ff736b7d0559a0091b384699f666fd565834ccf09ed77f37f6554'
+body_hash: 'sha256:2f54a5401c79c40535e0e16f5ff16e4446540b49650568fc45f406b4db2aa66e'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -169,6 +169,21 @@ same list, verification is the review step's issue list with jumps to casillas, 
 help card's origin section, and filing and export are the file step. Operations run in the
 existing operation modal and return to the workbench, which refreshes in place. Raw identifiers
 live only in a technical drawer.
+
+Amendment 2026-09-30, converging with the UX design specification. An assumed value, one the
+calculation holds that nobody is recorded as having entered, keeps the fill step open and
+withholds recording the filing until the filer confirms it or enters another value. This follows
+no-silent-under-declaration: an unentered value in a filing-bound box is a suspicious zero.
+
+Bulk confirm lists every assumed box with its value and requires an explicit acknowledgement. It
+stages ordinary set intents for manual boxes only, through the mandatory review. It never confirms
+a bound box, because that would become an override.
+
+A declaration recorded as filed opens read-only, and says that changing it starts a correction.
+The step words follow the filer's vocabulary: check, not review, and record filing, not file,
+because the workbench submits nothing to the AEAT.
+
+Authorized under the standing advance authorization the plan records.
 
 ### D5 Editing interaction
 
