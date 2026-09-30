@@ -82,17 +82,21 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: authored from the bundled hash-pinned aeat-dr-182-2024 record design. VERIFIED -- every \
-position line of the ejercicio 2024 design was diffed against the ejercicio 2025 design and the \
-two field sets are identical, so the 7 modelled casillas sit at the same places in both epochs; \
-the only substantive textual difference between the two designs is the RECURRENCIA DONATIVOS \
-clave test at tipo 2 position 132, recorded above verbatim on both sides. VERIFIED -- every \
-legal_ref and source_ref cited here has a catalogue window covering ejercicio 2024: \
-orden-hac-1430-2025 art. 2 and df-unica and the source aeat-dr-182-2025 are DELIBERATELY absent \
-because that orden first applies to ejercicio 2025. NOT CLAIMED -- no independent AEAT oracle \
-checked any value here; independent_check_coverage is no claim, not zero. NOT CLAIMED -- no \
-bindings, formulas, export layout or completeness manifest are declared, so calculation refuses \
-this edition rather than resolving a silent blank. NOT CLAIMED -- the per-donor tipo 2 detail rows \
-beyond the 5 modelled boxes are not modelled, exactly as in the 2025 sibling. No human operator \
-has countersigned this."""
-reviewed_at = 2026-09-12
+agent: re-review on 2026-09-30 of the ejercicio 2024 edition against the members stated on \
+it since the 2026-09-12 review. VERIFIED -- DESIGN: the 30 position lines of \
+aeat-dr-182-2024 (02-182-ejercicio-2024.pdf.extracted.md) equal those of aeat-dr-182-2025 \
+line for line. VERIFIED -- CASILLAS: 7 hydrate; their numbers are stable slugs because the \
+printed sheets carry no box numbers. VERIFIED -- BINDINGS AND CONSTRUCT, now stated here: \
+the five donativo_donor row bindings (donor NIF, name, deduction percentage, amount and \
+recurrencia) correspond to tipo 2 fields 18-26, 36-75, 79-83, 84-96 and 132, printed at \
+lines 208, 271, 371, 408 and 548 of the 2024 design, and the informative construct gathers \
+them with the ejercicio 2024 deadline window, whose enero plazo is Orden EHA/3021/2007 \
+art. 5 (orden-eha-3021-2007.html.extracted.md:7). VERIFIED -- every legal and source \
+reference the hydrated edition cites has a window covering ejercicio 2024; \
+orden-hac-1430-2025 and aeat-dr-182-2025 are not cited, because that orden first applies \
+to ejercicio 2025. NOT CLAIMED -- the recurrencia binding carries the donor row's own flag \
+and no year-specific clave test. NOT CLAIMED -- no formulas, export layout, completeness \
+manifest or verification expectation are declared, and the grade stays applicability until \
+AEAT's ejercicio 2024 instructions are captured. NOT CLAIMED -- no independent AEAT oracle \
+checked any value. No human operator has countersigned this."""
+reviewed_at = 2026-09-30

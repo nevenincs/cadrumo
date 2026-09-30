@@ -250,3 +250,12 @@ selector = {revision = "2022", id = "modelo-184-member-row-dias-arrendamiento"}
 sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
+
+# The reduccion binding cites the LIRPF art. 23 and art. 32 redactions in force
+# at this edition's devengo in place of the ejercicio 2022 ones.
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-reduccion"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-32"], source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {legal_refs = [1, 2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 3, 1], source_refs = [1, 0]}

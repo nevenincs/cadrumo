@@ -24,7 +24,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as CompiledAuthority
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 
 from ..compiler.loader import load_shared_catalogues
 
@@ -55,6 +55,7 @@ _FLOOR_BINDINGS = frozenset(
         "modelo-184-member-row-clave-declarado",
         "modelo-184-member-row-porcentaje-titularidad-inmueble",
         "modelo-184-member-row-dias-arrendamiento",
+        "modelo-184-member-row-reduccion",
     }
 )
 _ESTIMACION_OBJETIVA_BINDINGS = frozenset(
@@ -64,6 +65,9 @@ _ESTIMACION_OBJETIVA_BINDINGS = frozenset(
     }
 )
 _CONSTRUCT = "modelo-184-informative"
+_REDUCCION = "modelo-184-member-row-reduccion"
+#: The LIRPF articles whose reductions the member record's REDUCCION campo reports.
+_REDUCCION_ARTICLES = frozenset({"23", "32"})
 
 
 @cache
@@ -254,3 +258,48 @@ def test_floor_members_cite_sources_that_reach_the_floor(edition: Callable[[int]
         source = sources[ref]
         assert source.applies_from is None or source.applies_from.year <= FLOOR, ref
         assert source.applies_to is None or source.applies_to.year >= FLOOR, ref
+
+
+def _reduccion_lirpf_refs(revision: ModeloRevision) -> dict[str, str]:
+    """Map each LIRPF article the reduccion binding cites to the cited legal id."""
+    catalogue = load_shared_catalogues(bundled_path("registry", "aeat")).legal
+    binding = next(item for item in revision.bindings if str(item.id) == _REDUCCION)
+    cited: dict[str, str] = {}
+    for legal_id in map(str, binding.legal_refs):
+        reference = catalogue[legal_id]
+        if reference.document_id == "BOE-A-2006-20764" and reference.article in _REDUCCION_ARTICLES:
+            assert reference.article not in cited, (legal_id, cited)
+            cited[reference.article] = legal_id
+    return cited
+
+
+@pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
+def test_reduccion_binding_cites_each_lirpf_article_once(
+    edition: Callable[[int], RegistrySnapshot], filing_year: int
+) -> None:
+    assert set(_reduccion_lirpf_refs(edition(filing_year).revision)) == _REDUCCION_ARTICLES, filing_year
+
+
+def test_floor_reduccion_cites_the_redactions_in_force_at_its_devengo(
+    edition: Callable[[int], RegistrySnapshot],
+) -> None:
+    """The floor edition grounds the campo in the LIRPF text that governed its own ejercicio."""
+    revision = edition(FLOOR).revision
+    catalogue = load_shared_catalogues(bundled_path("registry", "aeat")).legal
+    devengo = revision.valid_to
+    assert devengo is not None and devengo.year == FLOOR
+
+    for article, legal_id in _reduccion_lirpf_refs(revision).items():
+        reference = catalogue[legal_id]
+        assert reference.effective_from <= devengo, (article, legal_id)
+        assert reference.effective_to is None or reference.effective_to >= devengo, (article, legal_id)
+
+
+@pytest.mark.parametrize("filing_year", [year for year in SUPPORTED_YEARS if year > FLOOR])
+def test_later_reduccion_keys_its_own_redactions(edition: Callable[[int], RegistrySnapshot], filing_year: int) -> None:
+    """Moving the binding to the floor leaves the later editions' citations as they were."""
+    cited = _reduccion_lirpf_refs(edition(filing_year).revision)
+    floor_cited = _reduccion_lirpf_refs(edition(FLOOR).revision)
+
+    assert cited == {"23": "ley-35-2006:art-23", "32": "ley-35-2006:art-32"}, filing_year
+    assert cited != floor_cited

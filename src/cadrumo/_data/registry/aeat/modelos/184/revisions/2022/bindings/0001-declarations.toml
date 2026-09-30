@@ -174,3 +174,23 @@ legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:ar
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-modelo-184-procedure"
 required_text = ["atribución de rentas"]
+
+# The socio record's REDUCCION campo, pos. 109-119, is laid out by the Orden
+# HAP/2250/2015 anexo (orden-hap-2250-2015.html.extracted.md:764-773) and is
+# untouched by the amendments before ejercicio 2023: Orden HAC/1276/2019 art.
+# sexto changes only entidad positions 266-497
+# (orden-hac-1276-2019.html.extracted.md:370-373) and Orden HFP/1192/2022 art.
+# quinto adds only socio positions 200-202
+# (orden-hfp-1192-2022.html.extracted.md:244-259). It cites the LIRPF art. 23
+# and art. 32 redactions in force at the ejercicio 2022 devengo; 2023-2024 keys
+# its own redactions.
+[[revisions."2022".bindings]]
+id = "modelo-184-member-row-reduccion"
+provider = { kind = "atribucion_member", fact = "row_field", row_field = "reduccion", grouping = "per_atribucion_member", record = "miembro", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "atribucion" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-23-2021", "ley-35-2006:art-32-2015", "ley-58-2003:art-93"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["atribución de rentas"]

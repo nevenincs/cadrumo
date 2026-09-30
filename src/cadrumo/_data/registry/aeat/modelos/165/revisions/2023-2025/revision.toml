@@ -21,8 +21,25 @@ legal_refs = [
 ]
 source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]
 review_status = "agent_reviewed"
-reviewed_by = "agent: 2023-2025 legal selection retained; no positional source whose own heading covers this interval is bundled"
-reviewed_at = 2026-08-26
+reviewed_by = """\
+agent: re-review on 2026-09-30 of the 2023-2025 edition against the ejercicio 2023 design \
+it now states. VERIFIED -- DESIGN: aeat-dr-165-2026 is AEAT's DR_Mod_165_2023, the Orden \
+HAP/2455/2013 anexo as updated by Orden HFP/1284/2023, whose art. 13 adds EMPRESA \
+EMERGENTE at tipo 1 position 184 (orden-hfp-1284-2023.html.extracted.md:1331-1342) and \
+whose disposicion final unica applies it first to the declaraciones of ejercicio 2023 \
+(same file:1643). VERIFIED -- CASILLAS: 18 hydrate, the two headers and 16 positional \
+ones, each printed in the 2023 design \
+(01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md:58-196 and 249-310): tipo \
+1 18-57, 59-107, 108-120, 121-122, 123-135, 136-144, 145-159, 160-167, 168-183 and 184; \
+tipo 2 18-26, 27-35, 36-75, 76-88, 89-96 and 97-101. Only empresa-emergente is stated \
+here; the rest are stored against 2016-2022 and grounded on the 2023 design. VERIFIED -- \
+the deadline windows of ejercicios 2023, 2024 and 2025 fall in the enero that follows \
+each, the plazo of Orden HAP/2455/2013 art. 4 (orden-hap-2455-2013.html.extracted.md:7). \
+VERIFIED -- every legal and source reference cited has a window reaching 2023-2025. NOT \
+CLAIMED -- the export layout's byte-position parity against the design is not run. NOT \
+CLAIMED -- the grade stays applicability; no independent AEAT oracle checked any value. No \
+human operator has countersigned this."""
+reviewed_at = 2026-09-30
 
 [[revisions."2023-2025".casilla_overrides]]
 selector = { revision = "2016-2022", id = "decl.ejercicio" }

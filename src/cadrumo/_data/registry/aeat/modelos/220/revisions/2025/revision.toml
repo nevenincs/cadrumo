@@ -57,39 +57,33 @@ source_refs = [
     "aeat-dr-220-2025",
     "aeat-modelo-200-manual-2025",
 ]
-review_status = "agent_reviewed"
-reviewed_by = """\
-agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025 \
-era. DISCLOSURE -- self-review: the same agent acquired and bundled Orden HAC/529/2026, \
-split this revision out of the former open-ended '2024-y-siguientes', and swept the \
-split's fallout, all in the immediately preceding commits. VERIFIED -- APPLICABILITY, and \
-it is firmer than the 2024 era's: orden-hac-529-2026 art 6.3 speaks of 'el Modelo 220 de \
-declaracion aprobado en el articulo 1 de la presente orden', an operative clause naming \
-this modelo, where the 2024 era has only art 3's domiciliacion-bancaria heading -- \
-distribution evidence rather than an approving clause. Both provisions were fetched from \
-two BOE surfaces that reproduce them identically. VERIFIED -- WHEN DUE: art 6.3 grounds \
-the group declaration in LIS art 75.2, 'dentro del plazo correspondiente a la declaracion \
-en regimen de tributacion individual de la entidad representante del grupo fiscal', which \
-routes to the representante's own art 124.1 plazo: a calendar-year group closing 31 Dec \
-2025 files 1-25 July 2026. NOMINAL dates stored. The payment_cutoff_on 2026-07-22 is now \
-grounded in art 3.2, 'desde el dia 1 de julio hasta el 22 de julio de 2026, ambos \
-inclusive' -- that date had been carried across the split from the 2024 orden's clause by \
-pattern and was verified only in this sweep; it was right, but nothing in the tree said \
-so. VERIFIED -- SPAN BOUNDARY: the disposicion final segunda makes the orden applicable to \
-periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025, which is \
-the boundary the split was cut at. NOT CLAIMED -- ARTICULO 1 IS NOT BUNDLED. No fetch \
-returned its enumerated list without elision, and bundling an abridged provision as \
-verbatim is the exact defect corrected in orden-hac-510-2021 the same day. Art 6.3 attests \
-art 1's approval of this modelo; the approving text itself remains to be acquired whole. \
-VERIFIED -- RECORD DESIGN: 326 money-closure casillas over SIX of the 2025 diseno's 141 \nrecord sheets are modelled, alongside the two declaration headers, for 328 in total. Every \nposition, length, type and caption was read from aeat-dr-220-2025's own field descriptions by \ngenerator rather than transcribed by hand, and every record was asserted to tile its declared \ntotal exactly once with no gap and no overlap -- 1062, 1248, 789, 2927, 687 and 720. All 328 \nids are distinct, proven by loading the modelo rather than by the absence of a refusal. \nT22007000 is the ONE closure record the 2024/2025 boundary moves: it grows 991 -> 1062 inside \nits tramo run, three 2024 ids are arithmetically wrong for 2025 and were recomputed rather \nthan copied, six slots are new, and .786-802 holds its position while its meaning changes from \n'Tramo base imponible 1' to a cooperatives-specific tramo -- carried deliberately, not by \ndefault. No casilla number fabricated. NOT CLAIMED -- the other 135 record sheets are not \nmodelled, nor are T22016000's 60 unnumbered volumen-de-operaciones rows, which 2024 declined \nand which this edition declines on the same ground. NOT CLAIMED -- FORMULAS: the formulas \nfamily is empty and undeclared, so the grade stays at applicability; promoting it needs the 220 \nchapter of aeat-modelo-200-manual-2025, bundled as PDF with no extraction sidecar and NOT read. \nREVERSED -- 02796/02797: the 2024 edition withheld all of T22009001 because these two boxes \ncarry BYTE-IDENTICAL descriptions, both ending "Estado.", where the pair above them splits \nEstado / D. Forales. The 2025 design was checked and repeats the defect unchanged. The evidence \nis unresolved; the DISPOSITION is reversed. Both are declared with captions exactly as printed \nand NO jurisdiction asserted between them, because withholding the record instead left 00621 \nand 00622 -- the liquido a ingresar o a devolver, the terminal numbers of the whole return -- \nwith no home on the record that computes them. Declaring what AEAT printed without guessing \nwhat AEAT meant preserves the ambiguity where suppressing the record hid it. NOT CLAIMED -- SUCCESSOR: the 2025 source and \
-approving orden both stop at calendar 2025; no 2026 design or approving authority is \
-registered, so no successor is selected. NOT CLAIMED -- FILING: no export \
-layout; on the filing-capability worklist, which its gate states is a backlog and not a \
-defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
-is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
-reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
 scoped_families = ["workbook_parity_refs"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: re-review on 2026-09-30 of the ejercicio 2025 edition after the withdrawal of boxes \
+[02796] and [02797]. VERIFIED -- APPLICABILITY AND DEADLINE: Orden HAC/529/2026 art. 6.3 \
+names 'el Modelo 220 de declaracion aprobado en el articulo 1 de la presente orden' and \
+routes its plazo through LIS art. 75.2 (orden-hac-529-2026.html.extracted.md:7); art. 3.2 \
+sets domiciliacion 'desde el dia 1 de julio hasta el 22 de julio de 2026', the window's \
+payment cutoff (same file:3); the disposicion final segunda bounds the orden to the \
+ejercicio 2025 models (same file:11). NOT CLAIMED -- article 1 itself is not bundled. \
+VERIFIED -- RECORD DESIGN: 326 casillas hydrate, the two declaration headers and 324 on \
+six of the 141 record sheets of aeat-dr-220-2025: T22007000 56, T22009000 63, T22009001 \
+34, T22016000 110, T22016001 30 and T220DID00 31. Each sheet's field rows tile its printed \
+total from position 1 with no gap or overlap (1062, 1248, 789, 2927, 687 and 720), every \
+declared five-digit box is printed on its sheet, and every printed box is declared except \
+[02796] and [02797]. WITHDRAWN -- [02796] and [02797] are declared in neither edition: \
+both designs print the identical description ending 'Estado.' at offsets 220 and 237, and \
+no official source held states which is the foral column. T22009001's other 34 boxes are \
+inherited from the 2024 edition, whose design lays them out identically, and this edition \
+keys only their continuity and orden references. NOT CLAIMED -- the other 135 record \
+sheets are not modelled. NOT CLAIMED -- FORMULAS: none, so the grade stays applicability; \
+no export layout, scope stays inspection_only. NOT CLAIMED -- no 2026 successor is \
+selected: no 2026 design or approving orden is registered. NOT CLAIMED -- \
+independent_check_coverage is n/a, no claim; locales not audited for accuracy. No human \
+operator has countersigned this."""
+reviewed_at = 2026-09-30
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "T22007000:00043" }
