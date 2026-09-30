@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:a6456d2f002a93c9995ab3b034bccda8438340782e3422da1b84f1d6f6257731'
+body_hash: 'sha256:fc867486529d5a01a50bfde7e97f5b34f7211d8a4e328c8adab580e84c1e9398'
 ---
 
 # `modelo-editor-workbench` plan
@@ -75,7 +75,7 @@ Give every modelo revision a generated, validated form layout published with the
 
 Join the canonical review, the declared layout, the current revision and the edit admission into one classified, localized editor form.
 
-- [ ] `P03.S15` - Lift the locale number formats into a shared presentation formatter for money, ratio, decimal, integer, boolean, date and masked IBAN values; `src/cadrumo/application/modelo/value_presentation.py`.
+- [x] `P03.S15` - Lift the locale number formats into a shared presentation formatter for money, ratio, decimal, integer, boolean, date and masked IBAN values; `src/cadrumo/application/modelo/value_presentation.py`.
 - [ ] `P03.S16` - Add the total source-kind policy table with family, override policy and destination, bound by test to the calculation precedence ladder; `src/cadrumo/application/modelo/source_policy.py`.
 - [ ] `P03.S17` - Build the editor form read model and builder with closed editability and origin enums, localized labels and help, counts, working figures, the unplaced list and the totality invariant; `src/cadrumo/application/modelo/work_form.py`.
 - [ ] `P03.S18` - Assemble the help card parts from legal references, rendered formulas, official quotes, constraints and origin, treating label restatements as absent help; `src/cadrumo/application/modelo/casilla_help.py`.

@@ -49,6 +49,7 @@ from .calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportRow,
 )
+from .value_presentation import group_decimal_text
 
 TITLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.title"
 SUBTITLE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.subtitle"
@@ -122,27 +123,6 @@ SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS: Final[Mapping[AeatSoftwareIdentityGrade, st
 )
 """The short label each software-identity grade is shown with in the trace section."""
 
-
-class CalculationSummaryNumberFormat(BaseModel):
-    """How one language writes a decimal figure: its grouping and decimal marks."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    group_separator: str = Field(min_length=1, max_length=1)
-    decimal_separator: str = Field(min_length=1, max_length=1)
-
-
-NUMBER_FORMATS: Final[Mapping[OutputLanguage, CalculationSummaryNumberFormat]] = MappingProxyType(
-    {
-        OutputLanguage.ES: CalculationSummaryNumberFormat(group_separator=".", decimal_separator=","),
-        OutputLanguage.CA: CalculationSummaryNumberFormat(group_separator=".", decimal_separator=","),
-        OutputLanguage.EN: CalculationSummaryNumberFormat(group_separator=",", decimal_separator="."),
-        # Hungarian groups thousands with a space; a no-break space keeps a figure
-        # on one line and extracts as a plain space.
-        OutputLanguage.HU: CalculationSummaryNumberFormat(group_separator="\u00a0", decimal_separator=","),
-    },
-)
-"""Figure formatting per report language; total over the language axis."""
 
 _DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\d+)(?:\.(?P<fraction>\d+))?$")
 _SECTION_SEPARATOR: Final[str] = " \u203a "
@@ -256,25 +236,8 @@ def format_summary_value(value: object, *, language: OutputLanguage, true_text: 
     """
     if isinstance(value, bool):
         return true_text if value else false_text
-    number_format = NUMBER_FORMATS[language]
-    if isinstance(value, int):
-        return _grouped(str(abs(value)), number_format.group_separator, negative=value < 0)
     text = str(value)
-    match = _DECIMAL_TOKEN.match(text)
-    if match is None:
-        return text
-    grouped = _grouped(match["integer"], number_format.group_separator, negative=bool(match["sign"]))
-    fraction = match["fraction"]
-    return grouped if fraction is None else f"{grouped}{number_format.decimal_separator}{fraction}"
-
-
-def _grouped(digits: str, separator: str, *, negative: bool) -> str:
-    groups: list[str] = []
-    while len(digits) > 3:
-        groups.insert(0, digits[-3:])
-        digits = digits[:-3]
-    groups.insert(0, digits)
-    return ("-" if negative else "") + separator.join(groups)
+    return group_decimal_text(text, language) or text
 
 
 def _section_heading(section_path: tuple[str, ...], chrome: _Chrome) -> str:
@@ -444,13 +407,11 @@ def build_calculation_summary_presentation(
 
 
 __all__ = [
-    "NUMBER_FORMATS",
     "REVISION_STATE_LOCALE_KEYS",
     "SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS",
     "VERIFICATION_OUTCOME_LOCALE_KEYS",
     "CalculationSummaryChromeUnavailableError",
     "CalculationSummaryFact",
-    "CalculationSummaryNumberFormat",
     "CalculationSummaryPresentation",
     "CalculationSummaryRow",
     "CalculationSummarySection",

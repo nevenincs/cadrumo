@@ -19,13 +19,13 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_report import CalculationReportValueState
 from ..calculation_summary_presentation import (
-    NUMBER_FORMATS,
     REVISION_STATE_LOCALE_KEYS,
     VERIFICATION_OUTCOME_LOCALE_KEYS,
     CalculationSummaryChromeUnavailableError,
     build_calculation_summary_presentation,
     format_summary_value,
 )
+from ..value_presentation import LOCALE_NUMBER_FORMATS
 from ._calculation_report_fixture import (
     MEASURED_CASILLA,
     NOT_APPLICABLE_CASILLA,
@@ -75,7 +75,7 @@ def test_non_figure_values_are_shown_as_the_report_spells_them() -> None:
 
 
 def test_every_language_axis_is_enrolled() -> None:
-    assert set(NUMBER_FORMATS) == set(OutputLanguage)
+    assert set(LOCALE_NUMBER_FORMATS) == set(OutputLanguage)
     assert set(REVISION_STATE_LOCALE_KEYS) == set(CalculationRevisionState)
     assert set(VERIFICATION_OUTCOME_LOCALE_KEYS) == set(VerificationCompletenessStatus)
 
