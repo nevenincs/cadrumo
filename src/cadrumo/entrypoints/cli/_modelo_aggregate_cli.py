@@ -25,12 +25,18 @@ from ...application.aggregation.ledger_payment_withholding import (
     build_ledger_payment_withholding_capture,
     resolve_ledger_payment_transaction,
 )
+from ...application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...application.aggregation.service import (
+    CalculationWithholdingRows,
     PerModeloAggregationCommand,
     PerModeloAggregationResult,
     aggregate_per_modelo,
+    load_calculation_withholding_rows,
 )
-from ...application.aggregation.withholding_filing_cadence import load_bucket_withholding_filer_cadence
+from ...application.aggregation.withholding_filing_cadence import (
+    PERIODIC_WITHHOLDING_MODELOS,
+    load_bucket_withholding_filer_cadence,
+)
 from ...application.aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
     WithholdingWindowScope,
@@ -38,7 +44,7 @@ from ...application.aggregation.withholding_observation_service import (
 from ...application.aggregation.withholding_producer import WithholdingProducerError
 from ...application.aggregation.withholding_recognition import WithholdingRecognitionError
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_bindings import (
@@ -51,12 +57,16 @@ from ._modelo_payloads import ModeloAggregateResult, WithholdingWindowReadbackPa
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import (
     authority_operation,
+    percepcion_observation_ports_factory,
     retencion_observation_ports_factory,
     withholding_observation_service,
 )
 
-_INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
+# Modelo 123 is absent on purpose: its capital withholding is evidenced by the
+# paying ledger transaction, and invoice evidence for it is refused outright.
+_INVOICE_EVIDENCE_MODELOS = frozenset({Modelo("111").value, Modelo("115").value})
 _LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
+_PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
 
 
 def _capture_invoice_withholding_into_command(
@@ -75,11 +85,15 @@ def _capture_invoice_withholding_into_command(
     the registered error boundary, so the operator receives each defect as a
     structured, localized refusal rather than a flattened argument error.
     """
-    if command.modelo not in _INVOICE_WITHHOLDING_MODELOS:
-        if requests:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo)
+    if requests and command.modelo not in _INVOICE_EVIDENCE_MODELOS:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
+                modelo=command.modelo,
+                accepted_modelos=", ".join(sorted(_INVOICE_EVIDENCE_MODELOS)),
             )
+        )
+    if command.modelo not in _PERIODIC_WINDOW_MODELOS:
         return command
     if len(requests) > 1:
         raise typer.BadParameter(
@@ -214,15 +228,85 @@ def _refuse_misplaced_ledger_payment_withholding(
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_single_allocation"))
 
 
-def _clave_breakdown(command: PerModeloAggregationCommand) -> tuple[WithholdingClaveBreakdown, ...]:
-    """Project ingested withholding detail into the modelo 190 per-clave reconciliation aid.
+def _read_calculation_withholding_rows(
+    ctx: typer.Context,
+    command: PerModeloAggregationCommand,
+) -> CalculationWithholdingRows | None:
+    """Read the stored rows an annual withholding summary's calculation reads.
 
-    A pure projection of the same store the percepciones-count resolver reads
-    (one-aggregation-path), not a recomputation of the calculation engine.
+    ``None`` for a periodic window, which its capture path reads back, and for
+    a modelo outside the retenciones family, which has no withholding store.
+    Every other modelo is an annual summary composed from stored windows, so
+    the report reads exactly what its calculation reads instead of an empty
+    command.
     """
-    if command.modelo != Modelo("190").value:
+    if command.modelo in _PERIODIC_WINDOW_MODELOS or not RetencionesAggregationSourceResolver.supports_modelo(
+        command.modelo
+    ):
+        return None
+    bucket_id = active_bucket_id_or_refuse()
+    operation = authority_operation(ctx)
+    return load_calculation_withholding_rows(
+        command.modelo,
+        command.period,
+        operation=operation,
+        retencion_ports=retencion_observation_ports_factory(ctx)(bucket_id=bucket_id),
+        percepcion_ports=percepcion_observation_ports_factory(ctx)(bucket_id=bucket_id),
+        cadence=lambda: load_bucket_withholding_filer_cadence(
+            bucket_id=bucket_id,
+            filing_year=command.period.filing_year,
+            operation=operation,
+        ),
+    )
+
+
+def _clave_breakdown(
+    calculation_rows: CalculationWithholdingRows | None,
+) -> tuple[WithholdingClaveBreakdown, ...]:
+    """Project the per-perceptor-clave rows the calculation reads into the per-clave reconciliation aid.
+
+    A pure projection of the rows the percepciones resolver materialises, through
+    the helpers its bound facts use, not a recomputation of the calculation
+    engine. Empty when the calculation reads no per-perceptor-clave rows.
+    """
+    if calculation_rows is None or calculation_rows.percepciones is None:
         return ()
-    return tuple(aggregate_withholding_by_clave(command.withholding_observations))
+    return tuple(aggregate_withholding_by_clave(calculation_rows.percepciones))
+
+
+def _calculation_rows_absent_notices(
+    command: PerModeloAggregationCommand,
+    calculation_rows: CalculationWithholdingRows | None,
+) -> list[Notice]:
+    """Warn once for each source the calculation reads that holds no stored row.
+
+    An empty summary then reads as missing data rather than as a proven zero;
+    a stored row whose amounts are zero is counted and raises no warning.
+    """
+    if calculation_rows is None:
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="modelo.aggregate.calculation_rows_absent",
+            message=tr(
+                "cli.app.modelo.aggregate.calculation_rows_absent",
+                modelo=command.modelo,
+                filing_year=command.period.filing_year,
+                period=command.period.registry_token,
+                source_family=source_family.value,
+            ),
+            context={
+                "modelo": command.modelo,
+                "filing_year": str(command.period.filing_year),
+                "period": command.period.registry_token,
+                "revision": calculation_rows.revision_id,
+                "source_family": source_family.value,
+                "reason": "stored_rows_absent",
+            },
+        )
+        for source_family in calculation_rows.absent_source_families
+    ]
 
 
 def _withholding_window_readback(
@@ -237,7 +321,7 @@ def _withholding_window_readback(
     it preserves the service's optimistic-concurrency and immutable-generation
     contracts instead of reconstructing a token from aggregation data.
     """
-    if command.modelo not in _INVOICE_WITHHOLDING_MODELOS:
+    if command.modelo not in _PERIODIC_WINDOW_MODELOS:
         return None
     scope = WithholdingWindowScope(modelo=command.modelo, period=command.period)
     service = withholding_observation_service(ctx, bucket_id=active_bucket_id_or_refuse())
@@ -348,13 +432,16 @@ def aggregate_modelo(
                 flag="--received-invoice-retencion",
             )
             command = _capture_invoice_withholding_into_command(ctx, command, invoice_withholding_requests)
+        calculation_rows = _read_calculation_withholding_rows(ctx, command)
+        if calculation_rows is not None:
+            command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
     result = aggregate_per_modelo(command, operation=operation)
-    clave_breakdown = _clave_breakdown(command)
+    clave_breakdown = _clave_breakdown(calculation_rows)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(
         result,
         clave_breakdown=clave_breakdown,
         withholding_window=_withholding_window_readback(ctx, command),
     )
-    notices: list[Notice] = []
+    notices = _calculation_rows_absent_notices(command, calculation_rows)
     lines = _aggregate_output_lines(result, clave_breakdown=clave_breakdown, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)

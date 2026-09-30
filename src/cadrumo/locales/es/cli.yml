@@ -706,15 +706,18 @@ cli:
       year_help: Ejercicio de presentación
     modelo:
       aggregate:
+        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no hay filas
+          almacenadas para la fuente {source_family} que lee su cálculo, así que este
+          informe está vacío porque faltan los datos, no porque sean cero.'
         counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
-        invoice_retencion_wrong_modelo: --received-invoice-retención enruta al almacén
-          de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
-          123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion solo registra
+          retenciones de facturas recibidas para los modelos %{accepted_modelos};
+          el modelo %{modelo} no admite retenciones de facturas.
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'

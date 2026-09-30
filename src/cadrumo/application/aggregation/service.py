@@ -21,7 +21,8 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -51,10 +52,14 @@ from .errors import AggregationConfigError, AggregationUnsupportedModeloError
 from .foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
 from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .retenciones import RetencionesAggregation, RetencionObservation
+from .withholding_source import WithholdingSourceResolver
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+    from .percepciones_observations_repository import PercepcionObservationPorts
+    from .retencion_observations_repository import RetencionObservationPorts
+    from .withholding_filing_cadence import WithholdingFilerCadence
 
 LOGGER = get_logger(__name__)
 
@@ -345,6 +350,75 @@ def aggregate_per_modelo(
     return result
 
 
+@dataclass(frozen=True, slots=True)
+class CalculationWithholdingRows:
+    """The stored withholding rows one modelo's calculation reads, by source family.
+
+    A family is ``None`` when the selected revision's calculation reads nothing
+    from that store, and an empty tuple when it reads the store and finds no
+    row. The second is missing data, never a proven zero, so
+    :attr:`absent_source_families` names it for the report to surface; a stored
+    row whose amounts are zero is present and counts as a row.
+    """
+
+    revision_id: str
+    retenciones: tuple[RetencionObservation, ...] | None
+    percepciones: tuple[WithholdingObservation, ...] | None
+
+    @property
+    def absent_source_families(self) -> tuple[BindingSourceKind, ...]:
+        """Return each source family the calculation reads for which no row is stored."""
+        read = (
+            (BindingSourceKind.RETENCIONES_AGGREGATION, self.retenciones),
+            (BindingSourceKind.WITHHOLDING, self.percepciones),
+        )
+        return tuple(family for family, rows in read if rows is not None and not rows)
+
+
+def load_calculation_withholding_rows(
+    modelo: str,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    retencion_ports: RetencionObservationPorts,
+    percepcion_ports: PercepcionObservationPorts,
+    cadence: Callable[[], WithholdingFilerCadence],
+) -> CalculationWithholdingRows:
+    """Read the stored withholding rows the calculation of ``modelo`` reads for ``period``.
+
+    The revision is selected for the period's coordinates, and each store is
+    read through the calculation resolver that owns it, so an annual summary
+    reports the windows its calculation composes rather than a window chosen
+    here. ``cadence`` is consulted only when a composition reads periodic
+    windows; the per-perceptor-clave read refuses a filer who does not file
+    that periodic modelo quarterly all year, exactly as the calculation does.
+    """
+    revision = operation.revision_for_context(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    retenciones = RetencionesAggregationSourceResolver(ports=retencion_ports).load_calculation_observations(
+        modelo=modelo,
+        period=period,
+        revision=revision,
+    )
+    detail = WithholdingSourceResolver(
+        ports=percepcion_ports,
+        retencion_ports=retencion_ports,
+    ).load_calculation_detail(
+        modelo=modelo,
+        period=period,
+        revision=revision,
+        cadence=cadence,
+    )
+    return CalculationWithholdingRows(
+        revision_id=str(revision.id),
+        retenciones=retenciones,
+        percepciones=None if detail is None else detail.observations,
+    )
+
+
 def _aggregate_retenciones(
     modelo: str,
     period: Period,
@@ -392,11 +466,13 @@ def _observation_count_for_command(
 
 
 __all__ = [
+    "CalculationWithholdingRows",
     "PerModeloAggregationCommand",
     "PerModeloAggregationContributor",
     "PerModeloAggregationLogFields",
     "PerModeloAggregationPayload",
     "PerModeloAggregationResult",
     "aggregate_per_modelo",
+    "load_calculation_withholding_rows",
     "provider_for_modelo",
 ]

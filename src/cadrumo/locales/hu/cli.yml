@@ -697,15 +697,18 @@ cli:
       year_help: Benyújtási év.
     modelo:
       aggregate:
+        calculation_rows_absent: A(z) {modelo} nyomtatvány ({filing_year} {period})
+          számítása által olvasott {source_family} forráshoz nincs tárolt sor, ezért
+          ez a jelentés hiányzó adatok miatt üres, nem nulla érték miatt.
         counterpart_observation_help: JSON CounterpartObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
-        invoice_retencion_wrong_modelo: A --received-invoice-retencion a perceptoronkénti
-          levonás-tárolóba irányít; a(z) %{modelo} nyomtatvány nem a 111, 115, 123,
-          180, 190, 193 egyike.
+        invoice_retencion_wrong_modelo: A --received-invoice-retencion befogadott
+          számlák levonásait csak a(z) %{accepted_modelos} nyomtatványhoz rögzíti;
+          a(z) %{modelo} nyomtatvány nem fogad el számlából származó levonást.
         json_not_object: A(z) {flag} értékének JSON-objektumnak kell lennie.
         json_parse_error: A(z) {flag} értékének JSON-objektumnak kell lennie; érvénytelen
           JSON a(z) {pos}. bájtnál.

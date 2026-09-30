@@ -128,6 +128,18 @@ def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
     return stripped
 
 
+def validate_trusted_public_key(value: str) -> str:
+    """Return *value* as the lowercase 64-character hex of a raw Ed25519 public key.
+
+    Case is folded before the check because an operator may paste the key in
+    upper case; any other shape is refused rather than compared as a key.
+    """
+    normalized = value.strip().lower()
+    if not re.fullmatch(HEX_PATTERN_64, normalized):
+        raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.trusted_key_invalid"))
+    return normalized
+
+
 def load_modelo_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
@@ -861,6 +873,7 @@ __all__ = [
     "validate_calculation_revision_id",
     "validate_casilla_key",
     "validate_relation_key",
+    "validate_trusted_public_key",
     "validate_work_unit_id",
     "work_calculate_input_bundle_from_cli",
     "work_candidate_lines",

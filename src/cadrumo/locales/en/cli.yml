@@ -648,15 +648,18 @@ cli:
       year_help: Filing year
     modelo:
       aggregate:
+        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no stored
+          rows exist for the {source_family} source its calculation reads, so this
+          report is empty because the data is missing, not because it is zero.'
         counterpart_observation_help: JSON CounterpartObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        invoice_retencion_wrong_modelo: --received-invoice-retencion routes into the
-          retenciones per-perceptor store; modelo %{modelo} is not one of 111, 115,
-          123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion records received-invoice
+          withholding for Modelos %{accepted_modelos} only; modelo %{modelo} does
+          not accept invoice evidence.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:

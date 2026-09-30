@@ -701,13 +701,17 @@ cli:
       year_help: Exercici de presentació
     modelo:
       aggregate:
+        calculation_rows_absent: 'Model {modelo} {filing_year} {period}: no hi ha
+          files emmagatzemades per a la font {source_family} que llegeix el seu càlcul,
+          de manera que aquest informe és buit perquè falten les dades, no perquè
+          siguin zero.'
         counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix
           l'opció per a diverses observacions
         foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
           l'opció per a diverses observacions
-        invoice_retencion_wrong_modelo: --received-invoice-retencion encamina cap
-          a l'emmagatzematge de retencions per perceptor; el model %{modelo} no és
-          un dels 111, 115, 123, 180, 190, 193.
+        invoice_retencion_wrong_modelo: --received-invoice-retencion només registra
+          retencions de factures rebudes per als models %{accepted_modelos}; el model
+          %{modelo} no admet retencions de factures.
         json_not_object: '{flag} ha de ser un objecte JSON.'
         json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte
           {pos}.'
