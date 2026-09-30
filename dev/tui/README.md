@@ -20,6 +20,7 @@ uv run --no-sync python -m dev.tui viewports          # the geometries a render 
 uv run --no-sync python -m dev.tui inventory          # every interface, and its coverage
 uv run --no-sync python -m dev.tui render             # every surface, default matrix
 uv run --no-sync python -m dev.tui render -s status -v tall -t dark
+uv run --no-sync python -m dev.tui render --sequence modelo-303-first-quarter
 uv run --no-sync python -m dev.tui runs               # the review runs on disk, newest first
 uv run --no-sync python -m dev.tui snapshot baseline  # keep the current review under a name
 uv run --no-sync python -m dev.tui rasterise --run latest --cell-height 32
@@ -58,6 +59,32 @@ from. `--cell-height` raises the output resolution without changing the grid.
 harness's own text reading -- and writes side-by-side highlight images plus
 unified text diffs for the frames that moved. It exits non-zero when anything
 changed, so it works as a review gate as well as a report.
+
+## Modelo pages from documentation sequences
+
+The Modelo workspace pages exist only for a declaration that has been created
+and calculated through the registry, which no fixture surface can supply. A
+sequence scenario borrows that state from the documentation: it names a
+`cli-sequence` whose committed golden already records the real CLI chain
+(profile, ledger, evidence, create, calculate, verify, file), runs it once in
+the documentation engine's hermetic sandbox, and checks the result against
+that golden. The installed workbench is then composed over the sandbox the
+way `aeat app tui` composes it, and each capture walks the operator's path on
+a freshly built app: Declarations, the declaration's row, then the page picked
+from the overview's list.
+
+Each scenario captures the Declarations list and every page in the Modelo
+workspace route table, at each requested viewport and appearance, as surfaces
+named `seq-<sequence>--<page>`. The manifest records, per frame, the sequence,
+its documentation page, the golden's digest, and whether the run still
+reproduced that golden; a frame from a run that did not says so in the index
+and in the review page. Scenarios render in the sandbox's pinned English.
+
+`render` with no filter renders the surfaces and then every scenario.
+`--sequence` narrows it to the named scenarios (`all` for every scenario and
+no surfaces), just as `--surface` narrows it to surfaces. The scenario table
+lives in `dev/tui/harness/sequences.py`; a scenario is a sequence id plus the
+modelo whose declaration it opens.
 
 ## How the render loop handles failure
 

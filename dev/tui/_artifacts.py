@@ -54,7 +54,7 @@ name the last session happened to invent.
 RENDER_LOG_NAME: Final[str] = "render.log"
 
 MANIFEST_NAME: Final[str] = "manifest.json"
-MANIFEST_SCHEMA_VERSION: Final[int] = 3
+MANIFEST_SCHEMA_VERSION: Final[int] = 4
 """Bumped whenever the manifest shape changes. Older runs are refused rather
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
@@ -97,6 +97,25 @@ class ThemeName(StrEnum):
     LIGHT = "light"
 
 
+class SequenceProvenance(BaseModel):
+    """The documented state a sequence-backed frame shows.
+
+    A sequence scenario renders a declaration that a documentation sequence
+    built, so the frame is only as trustworthy as that state. The record names
+    the sequence and the golden it was checked against, and says plainly when
+    the run no longer reproduced that golden: such a frame shows a state the
+    documentation does not describe, which a reviewer has to know.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    sequence_id: str
+    docs_page: str
+    golden_sha256: str
+    matches_golden: bool
+    golden_problems: tuple[str, ...] = ()
+
+
 class RenderedFrame(BaseModel):
     """One surface rendered at one viewport under one theme."""
 
@@ -130,6 +149,8 @@ class RenderedFrame(BaseModel):
     missing_glyphs: tuple[str, ...] = ()
     """Characters the pinned raster font could not draw; a blank box in the
     PNG at one of these is a font gap, never a defect in the surface."""
+    sequence: SequenceProvenance | None = None
+    """For a sequence scenario's frame, the documented state it shows."""
 
     @model_validator(mode="after")
     def _geometry_matches_the_named_viewport(self) -> RenderedFrame:
@@ -693,6 +714,10 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
                 continue
             shape = f"{frame.columns}x{frame.rows} {frame.orientation}"
             lines.append(f"- `{frame.viewport}` {shape} · {frame.theme} — [{frame.png}]({frame.png})")
+            if frame.sequence is not None:
+                state = frame.sequence
+                golden = "matches its golden" if state.matches_golden else "DIVERGES from its golden"
+                lines.append(f"  - state: sequence `{state.sequence_id}` ({state.docs_page}), {golden}")
             for finding in frame.geometry_findings:
                 lines.append(f"  - geometry: {finding}")
         lines.append("")
@@ -751,6 +776,7 @@ __all__ = [
     "Manifest",
     "ManifestVersionError",
     "RenderedFrame",
+    "SequenceProvenance",
     "SkippedFrame",
     "StaleArtifactPurgeRefusedError",
     "ThemeName",

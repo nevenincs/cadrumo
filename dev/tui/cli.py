@@ -16,6 +16,7 @@ frame is a cached statement about a tree that existed earlier.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 from typing import Annotated
@@ -28,12 +29,14 @@ from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
     DEFAULT_RUN_NAME,
     RUNS_DIR,
+    SCRATCH_DIR,
     FailedFrame,
     FrameFailureKind,
     InterfaceRecord,
     Manifest,
     ManifestVersionError,
     RenderedFrame,
+    SequenceProvenance,
     SkippedFrame,
     StaleArtifactPurgeRefusedError,
     ThemeName,
@@ -145,7 +148,7 @@ def inventory_command(
     when it does not.
     """
     interfaces = _inventory.scan()
-    surfaces = tuple(surface.name for surface in _harness.surfaces())
+    surfaces = _harness.reviewable_surface_names(_harness.surfaces(), _harness.scenarios())
     table = _harness.coverage()
     _coverage.check(interfaces, surfaces, rendered_table=table)
     resolved_notes = _coverage.notes(interfaces, surfaces, rendered_table=table)
@@ -283,6 +286,17 @@ def _resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
     return tuple(chosen)
 
 
+def _resolve_scenarios(names: list[str], available: tuple[_harness.Scenario, ...]) -> tuple[_harness.Scenario, ...]:
+    if names == ["all"]:
+        return available
+    known = {scenario.name: scenario for scenario in available}
+    unknown = sorted(set(names) - set(known))
+    if unknown:
+        accepted = ", ".join(sorted(known))
+        raise typer.BadParameter(f"unknown sequence scenario(s) {', '.join(unknown)}; accepted: {accepted}")
+    return tuple(known[name] for name in names)
+
+
 def _resolve_surfaces(names: list[str] | None, available: tuple[_harness.Surface, ...]) -> tuple[str, ...]:
     known = {surface.name for surface in available}
     if not names:
@@ -300,6 +314,14 @@ def render_command(
     surface: Annotated[
         list[str] | None,
         typer.Option("--surface", "-s", help="Render only this surface; repeatable. Omit for all."),
+    ] = None,
+    sequence: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--sequence",
+            "-q",
+            help="Render only this sequence scenario; repeatable, or 'all' for every scenario and no surfaces.",
+        ),
     ] = None,
     viewport: Annotated[
         list[str] | None,
@@ -337,15 +359,27 @@ def render_command(
     directories the last session happened to name. To keep a run for later
     comparison, take a `snapshot` of it under a name; that is an explicit act
     with an explicit name, rather than a render quietly aimed somewhere else.
+
+    Sequence scenarios render after the surfaces: each runs its documentation
+    sequence once and captures every Modelo workspace page over the
+    declaration it built. `--surface` and `--sequence` each narrow the render
+    to what they name; with neither, both kinds render.
     """
     run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
+    available_scenarios = _harness.scenarios()
     interfaces = _inventory.scan()
     coverage_table = _harness.coverage()
-    available_names = tuple(item.name for item in available)
+    available_names = _harness.reviewable_surface_names(available, available_scenarios)
     coverage_notes = _coverage.notes(interfaces, available_names, rendered_table=coverage_table)
 
-    chosen_surfaces = _resolve_surfaces(surface, available)
+    # Naming either kind narrows the render to what was named; naming neither
+    # renders everything, surfaces and scenarios alike.
+    chosen_surfaces = _resolve_surfaces(surface, available) if surface or not sequence else ()
+    if sequence:
+        chosen_scenarios = _resolve_scenarios(sequence, available_scenarios)
+    else:
+        chosen_scenarios = () if surface else available_scenarios
     chosen_viewports = _resolve_viewports(viewport)
     chosen_themes = _resolve_themes(theme)
 
@@ -362,6 +396,7 @@ def render_command(
     failures: list[FailedFrame] = []
     skipped: list[SkippedFrame] = []
     total = len(chosen_surfaces) * len(chosen_viewports) * len(chosen_themes)
+    scenario_surfaces = tuple(page for scenario in chosen_scenarios for page in scenario.pages.values())
     index = 0
 
     for name in chosen_surfaces:
@@ -433,6 +468,19 @@ def render_command(
                     ),
                 )
 
+    for scenario in chosen_scenarios:
+        _render_scenario(
+            scenario,
+            directory,
+            viewports=chosen_viewports,
+            themes=chosen_themes,
+            cell_height=cell_height,
+            retries=retries,
+            workspace=f"visual-inventory-{run}",
+            frames=frames,
+            failures=failures,
+        )
+
     rendered_surfaces = tuple(sorted({frame.surface for frame in frames}))
     manifest = Manifest(
         generated_at=now(),
@@ -455,7 +503,7 @@ def render_command(
     )
     unaccounted = unaccounted_frames(
         manifest,
-        surfaces=chosen_surfaces,
+        surfaces=(*chosen_surfaces, *scenario_surfaces),
         viewports=tuple(view.name for view in chosen_viewports),
         themes=tuple(chosen_themes),
     )
@@ -505,6 +553,109 @@ def render_command(
         _echo(f"{len(failures)} failed")
     if failures or purge_refusal is not None:
         raise typer.Exit(code=1)
+
+
+def _render_scenario(
+    scenario: _harness.Scenario,
+    directory: Path,
+    *,
+    viewports: tuple[_viewports.Viewport, ...],
+    themes: tuple[ThemeName, ...],
+    cell_height: int,
+    retries: int,
+    workspace: str,
+    frames: list[RenderedFrame],
+    failures: list[FailedFrame],
+) -> None:
+    """Render every page of one sequence scenario into the run, recording what failed.
+
+    The harness writes a scenario's SVGs into a staging directory under
+    ``scratch/``, never into the run, so a scenario that dies part way leaves
+    no unclaimed SVG for the stale-frame sweep to meet. Each is moved into the
+    run under the same stem an ordinary frame uses and rasterised the same way.
+    """
+    expected = len(scenario.pages) * len(viewports) * len(themes)
+    _echo(f"[sequence {scenario.name}] {expected} frames: {scenario.summary}")
+    staging = SCRATCH_DIR / f"sequence-{scenario.name}"
+    outcome: tuple[SequenceProvenance, tuple[_harness.ScenarioCapture, ...]] | None = None
+    detail, kind, made = "", FrameFailureKind.CRASHED, 0
+    for attempt in range(1, retries + 2):
+        made = attempt
+        if staging.exists():
+            shutil.rmtree(staging)
+        try:
+            outcome = _harness.capture_scenario(
+                scenario.name,
+                viewports,
+                themes=themes,
+                out_dir=staging,
+                workspace=workspace,
+            )
+            break
+        except _harness.HarnessError as refusal:
+            detail, kind = str(refusal), refusal.kind
+            if refusal.kind is FrameFailureKind.REFUSED:
+                break
+            if attempt <= retries:
+                _echo(f"    {kind}; retrying ({attempt}/{retries})")
+    if outcome is None:
+        _echo(f"    {kind} after {made} attempt(s)")
+        failures.extend(
+            FailedFrame(surface=surface, viewport=shape.name, theme=theme, kind=kind, attempts=made, detail=detail)
+            for surface in scenario.pages.values()
+            for shape in viewports
+            for theme in themes
+        )
+        return
+
+    provenance, captures = outcome
+    if not provenance.matches_golden:
+        _echo(f"    state DIVERGES from the golden for {provenance.sequence_id}; frames are recorded as such")
+    for item in captures:
+        captured = item.capture
+        stem = f"{captured.surface}__{captured.viewport.name}__{captured.theme}"
+        svg_path = directory / "svg" / f"{stem}.svg"
+        png_path = directory / "png" / f"{stem}.png"
+        text_path = directory / "text" / f"{stem}.txt"
+        svg_path.parent.mkdir(parents=True, exist_ok=True)
+        captured.svg_path.replace(svg_path)
+        try:
+            raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
+        except _raster.RasterError as unpaintable:
+            failures.append(
+                FailedFrame(
+                    surface=captured.surface,
+                    viewport=captured.viewport.name,
+                    theme=captured.theme,
+                    kind=FrameFailureKind.RASTER,
+                    detail=str(unpaintable),
+                ),
+            )
+            continue
+        text_path.parent.mkdir(parents=True, exist_ok=True)
+        text_path.write_text(captured.stable_text + "\n", encoding=UTF_8, newline="\n")
+        frames.append(
+            RenderedFrame(
+                surface=captured.surface,
+                viewport=captured.viewport.name,
+                columns=captured.viewport.columns,
+                rows=captured.viewport.rows,
+                orientation=captured.viewport.orientation,
+                theme=captured.theme,
+                png=_relative(png_path, directory),
+                svg=_relative(svg_path, directory),
+                text=_relative(text_path, directory),
+                png_sha256=digest(png_path),
+                text_sha256=digest(text_path),
+                cell_height=cell_height,
+                elapsed_ms=captured.elapsed_ms,
+                geometry_findings=captured.geometry_findings,
+                missing_glyphs=raster.missing_glyphs,
+                sequence=provenance,
+            ),
+        )
+    shutil.rmtree(staging, ignore_errors=True)
+    _echo(f"    {len(captures)} frames from {provenance.sequence_id} ({provenance.docs_page})")
 
 
 @app.command("snapshot")

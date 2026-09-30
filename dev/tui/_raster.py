@@ -191,8 +191,12 @@ def _cell_size(markup: str) -> tuple[float, float]:
     which is immune to a single run whose content Rich measured as
     full-width. Height comes from the distance between adjacent baselines.
     """
+    # Counted on the unescaped text, which is what the painter draws: Rich
+    # writes a non-breaking space as ``&#160;``, and counting that as six
+    # characters shrank the measured cell to a fraction of its width on any
+    # frame whose runs are mostly padding.
     advances = [
-        float(run["length"]) / len(run["content"])
+        float(run["length"]) / len(html.unescape(run["content"]))
         for run in _TEXT_RUN.finditer(markup)
         if run["content"] and float(run["length"]) > 0
     ]

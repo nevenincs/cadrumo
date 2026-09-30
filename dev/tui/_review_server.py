@@ -308,6 +308,7 @@ def _frame_payload(view: RunView, frame: CatalogueFrame) -> dict[str, object]:
             "geometry_findings": list(record.geometry_findings),
             "missing_glyphs": list(record.missing_glyphs),
             "elapsed_ms": record.elapsed_ms,
+            "sequence": None if record.sequence is None else record.sequence.model_dump(mode="json"),
         },
     }
 

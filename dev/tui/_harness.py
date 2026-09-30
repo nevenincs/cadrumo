@@ -11,8 +11,10 @@ a crash in one surface cannot leave residue that colours the next.
 
 from __future__ import annotations
 
+import json
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,7 +23,7 @@ from typing import Final
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
-from ._artifacts import FrameFailureKind, ThemeName
+from ._artifacts import FrameFailureKind, SequenceProvenance, ThemeName
 from ._viewports import Viewport
 
 HARNESS_MODULE: Final[str] = "dev.tui.harness"
@@ -33,6 +35,11 @@ _ELAPSED = re.compile(r"·\s*(?P<ms>[\d.]+)ms\s")
 _TIMEOUT_SECONDS: Final[int] = 300
 """Generous: a surface that provisions a real encrypted profile pays real
 Argon2id derivation on first build, which is slow by design."""
+
+_SCENARIO_TIMEOUT_SECONDS: Final[int] = 3600
+"""One scenario runs a documentation sequence and then captures every page at
+every requested geometry and appearance in the same process, so it is bounded
+by the whole scenario rather than by one frame."""
 
 
 class HarnessError(RuntimeError):
@@ -128,14 +135,14 @@ def _environment(workspace: str) -> dict[str, str]:
     return environment
 
 
-def _run(arguments: tuple[str, ...], *, workspace: str) -> str:
+def _run(arguments: tuple[str, ...], *, workspace: str, timeout_seconds: float = _TIMEOUT_SECONDS) -> str:
     """Run one harness command and return its stdout, or raise its refusal."""
     result = run_command(
         [sys.executable, "-m", HARNESS_MODULE, *arguments],
         cwd=REPO_ROOT,
         errors="replace",
         environment=_environment(workspace),
-        timeout_seconds=_TIMEOUT_SECONDS,
+        timeout_seconds=timeout_seconds,
     )
     if result.returncode != 0:
         diagnostics = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
@@ -216,15 +223,106 @@ def capture(
     )
 
 
+@dataclass(frozen=True)
+class Scenario:
+    """One sequence-backed scenario, as the development harness reports it."""
+
+    name: str
+    summary: str
+    pages: dict[str, str]
+    """Each page the scenario captures, to the surface name it is reviewed under."""
+
+
+def scenarios(*, workspace: str = "visual-inventory") -> tuple[Scenario, ...]:
+    """Ask the harness which sequence-backed scenarios it can run."""
+    listing = json.loads(_run(("sequences",), workspace=workspace))
+    return tuple(
+        Scenario(name=entry["name"], summary=entry["summary"], pages=dict(entry["pages"])) for entry in listing
+    )
+
+
+def reviewable_surface_names(
+    surfaces: tuple[Surface, ...],
+    scenarios: tuple[Scenario, ...],
+) -> tuple[str, ...]:
+    """Every surface a frame can be reviewed under: the harness's, then each scenario page.
+
+    Both kinds are executable -- a surface through ``open``, a scenario page
+    through ``sequence`` -- so both are what a coverage row may name.
+    """
+    return (
+        *(surface.name for surface in surfaces),
+        *(surface for scenario in scenarios for surface in scenario.pages.values()),
+    )
+
+
+@dataclass(frozen=True)
+class ScenarioCapture:
+    """One page of a scenario at one geometry and appearance."""
+
+    page: str
+    capture: Capture
+
+
+def capture_scenario(
+    name: str,
+    viewports: tuple[Viewport, ...],
+    *,
+    themes: tuple[ThemeName, ...],
+    out_dir: Path,
+    workspace: str = "visual-inventory",
+) -> tuple[SequenceProvenance, tuple[ScenarioCapture, ...]]:
+    """Run one scenario's sequence once and collect every page it captured.
+
+    One harness process per scenario, not per frame: the sequence builds its
+    declaration through the real CLI chain, and running that again for each
+    of dozens of frames would multiply the slowest part of the render for no
+    change in what is shown. Each capture inside still builds a fresh app.
+    """
+    arguments = ["sequence", name, "--out", str(out_dir)]
+    for viewport in viewports:
+        arguments.extend(("--size", viewport.label))
+    for theme in themes:
+        arguments.extend(("--theme", str(theme)))
+    try:
+        output = _run(tuple(arguments), workspace=workspace, timeout_seconds=_SCENARIO_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired as expired:
+        raise HarnessError(f"scenario {name} ran past {expired.timeout:.0f}s and was stopped") from expired
+    document = json.loads(output)
+    by_label = {viewport.label: viewport for viewport in viewports}
+    captures = tuple(
+        ScenarioCapture(
+            page=entry["page"],
+            capture=Capture(
+                surface=entry["surface"],
+                viewport=by_label[f"{entry['width']}x{entry['height']}"],
+                theme=ThemeName(entry["theme"]),
+                svg_path=Path(entry["svg"]),
+                frame_text=entry["frame"].rstrip("\n"),
+            ),
+        )
+        for entry in document["captures"]
+    )
+    missing = [item.capture.svg_path.name for item in captures if not item.capture.svg_path.is_file()]
+    if missing:
+        raise HarnessError(f"scenario {name} reported frames it wrote no SVG for: {', '.join(missing[:5])}")
+    return SequenceProvenance.model_validate(document["provenance"]), captures
+
+
 __all__ = [
     "HARNESS_MODULE",
     "Capture",
     "FrameFailureKind",
     "HarnessError",
+    "Scenario",
+    "ScenarioCapture",
     "Surface",
     "ThemeName",
     "capture",
+    "capture_scenario",
     "classify",
     "coverage",
+    "reviewable_surface_names",
+    "scenarios",
     "surfaces",
 ]

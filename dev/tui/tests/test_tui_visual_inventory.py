@@ -22,11 +22,13 @@ from dev._paths import UTF_8
 
 from .. import _coverage, _diff, _inventory, _raster
 from .._artifacts import (
+    MANIFEST_SCHEMA_VERSION,
     FailedFrame,
     FrameFailureKind,
     InterfaceRecord,
     Manifest,
     RenderedFrame,
+    SequenceProvenance,
     SkippedFrame,
     ThemeName,
     now,
@@ -319,6 +321,36 @@ def test_rasterising_a_real_export_produces_the_declared_cell_grid(real_export: 
     assert width == expected_columns * (width // expected_columns)
 
 
+def test_the_cell_is_measured_on_drawn_text_even_when_padding_dominates(real_export: Path, tmp_path: Path) -> None:
+    """A frame made mostly of padding runs measures the same cell as any other.
+
+    Rich writes a non-breaking space as ``&#160;``. Counting that markup as
+    six characters shrank the measured cell to a sixth of its width on the
+    Modelo pages, whose runs are mostly padding, and the painter then refused
+    the frame. The oracle is independent of the measurement: the SVG's own
+    terminal width over the viewport's declared column count.
+    """
+    markup = real_export.read_text(encoding=UTF_8)
+    terminal = _raster._TERMINAL_CLIP.search(markup)
+    first_run = _raster._TEXT_RUN.search(markup)
+    assert terminal is not None and first_run is not None
+    true_width = float(terminal["width"]) / resolve("medium").columns
+    padding = "".join(
+        f'<text class="{first_run["klass"]}" x="0" y="{first_run["y"]}" textLength="{4 * true_width}">'
+        "&#160;&#160;&#160;&#160;</text>"
+        for _ in range(4 * len(_raster._TEXT_RUN.findall(markup)))
+    )
+    padded = tmp_path / "padded.svg"
+    padded.write_text(markup.replace("</svg>", f"{padding}</svg>"), encoding=UTF_8)
+
+    measured_width, _ = _raster._cell_size(padded.read_text(encoding=UTF_8))
+    assert measured_width == pytest.approx(true_width, rel=0.02)
+    assert (
+        Image.open(_raster.rasterise(padded, tmp_path / "padded.png", cell_height=20).path).size
+        == Image.open(_raster.rasterise(real_export, tmp_path / "plain.png", cell_height=20).path).size
+    )
+
+
 def test_raising_the_cell_height_raises_the_resolution_proportionally(real_export: Path, tmp_path: Path) -> None:
     """The same frame at a larger cell is the same grid, more pixels."""
     svg = real_export
@@ -467,9 +499,16 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
         elapsed_ms=1234.5,
         geometry_findings=("ContentScroll overflows but cannot scroll",),
         missing_glyphs=("ⓘ",),
+        sequence=SequenceProvenance(
+            sequence_id="modelo-303-first-quarter",
+            docs_page="how-to/modelo-303",
+            golden_sha256="c" * 64,
+            matches_golden=False,
+            golden_problems=("frame 3 exit code differs",),
+        ),
     )
     manifest = Manifest(
-        schema_version=3,
+        schema_version=MANIFEST_SCHEMA_VERSION,
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
         generated_at="2026-01-01T00:00:00+00:00",

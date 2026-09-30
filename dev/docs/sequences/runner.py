@@ -119,6 +119,7 @@ __all__ = [
     "default_fixtures_root",
     "execute_page_sequences",
     "execute_sequence",
+    "executed_sequence_sandbox",
     "live_aeat_tokens",
     "m303_filing_evidence_fixture_name",
     "refuse_live_frames",
@@ -1237,13 +1238,7 @@ def execute_sequence(
             code, declares a capture its output cannot satisfy, or the live-test
             opt-in is set.
     """
-    if not sequence.executed_frames:
-        raise SequenceExecutionError(
-            sequence.sequence_id,
-            "an all-@static sequence has no executed frames to run and no golden to build; "
-            "the check/refresh path skips it (it is display-only)",
-        )
-    refuse_live_frames(sequence)
+    _refuse_unexecutable(sequence)
     if sandbox_root is not None:
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
@@ -1252,12 +1247,58 @@ def execute_sequence(
         return _execute_in_root(sequence, Path(tmp), fixtures_root)
 
 
+def _refuse_unexecutable(sequence: ParsedSequence) -> None:
+    """Refuse a sequence with nothing to run, or one that would reach live AEAT."""
+    if not sequence.executed_frames:
+        raise SequenceExecutionError(
+            sequence.sequence_id,
+            "an all-@static sequence has no executed frames to run and no golden to build; "
+            "the check/refresh path skips it (it is display-only)",
+        )
+    refuse_live_frames(sequence)
+
+
 def _execute_in_root(
     sequence: ParsedSequence,
     sandbox_root: Path,
     fixtures_root: Path | None,
 ) -> SequenceTranscript:
     """Open the sandbox under ``sandbox_root`` and run every frame in order."""
+    with executed_sequence_sandbox(sequence, sandbox_root=sandbox_root, fixtures_root=fixtures_root) as (_, transcript):
+        return transcript
+
+
+@contextmanager
+def executed_sequence_sandbox(
+    sequence: ParsedSequence,
+    *,
+    sandbox_root: Path,
+    fixtures_root: Path | None = None,
+) -> Generator[tuple[SequenceSandbox, SequenceTranscript]]:
+    """Run a sequence and hold its sandbox open over the state it built.
+
+    The golden tier needs only the transcript, so it leaves the scope at once.
+    A consumer that renders what the sequence produced -- the TUI visual
+    review, which shows the calculated declaration a sequence leaves behind --
+    needs the storage, the frozen clock and the open profile session still in
+    place, and reads them inside this scope. It is the same execution as
+    :func:`execute_sequence`, with the same refusals; there is no second way
+    to run a frame.
+
+    Args:
+        sequence: The structurally valid parsed sequence to run.
+        sandbox_root: An empty directory the sandbox owns.
+        fixtures_root: Optional override of the committed synthetic-fixtures
+            tree copied into the sandbox workdir.
+
+    Yields:
+        The open sandbox and the transcript of every executed frame.
+
+    Raises:
+        SequenceExecutionError: Under the conditions :func:`execute_sequence`
+            names.
+    """
+    _refuse_unexecutable(sequence)
     with sequence_sandbox(
         sequence_id=sequence.sequence_id,
         sandbox_root=sandbox_root,
@@ -1270,14 +1311,17 @@ def _execute_in_root(
             _execute_frame(sequence, frame, captures, frame_index=frame_index)
             for frame_index, frame in enumerate(sequence.executed_frames)
         )
-    return SequenceTranscript(
-        sequence_id=sequence.sequence_id,
-        profile_id=sandbox.profile_id,
-        frozen_instant=sandbox.frozen_instant,
-        storage_root=str(sandbox.storage_root),
-        workdir=str(sandbox.workdir),
-        frames=frames,
-    )
+        yield (
+            sandbox,
+            SequenceTranscript(
+                sequence_id=sequence.sequence_id,
+                profile_id=sandbox.profile_id,
+                frozen_instant=sandbox.frozen_instant,
+                storage_root=str(sandbox.storage_root),
+                workdir=str(sandbox.workdir),
+                frames=frames,
+            ),
+        )
 
 
 def execute_page_sequences(

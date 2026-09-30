@@ -694,6 +694,13 @@ function renderDetail() {
 
   const findings = [];
   if (frame.recorded) {
+    const state = frame.recorded.sequence;
+    if (state) {
+      findings.push(el('li', { class: state.matches_golden ? '' : 'warn' },
+        'State built by the documentation sequence ', el('code', { text: state.sequence_id }),
+        ` (${state.docs_page}), which ${state.matches_golden ? 'matches its committed golden.' : 'no longer matches its committed golden:'}`,
+        state.golden_problems.map((problem) => el('div', { text: problem }))));
+    }
     for (const finding of frame.recorded.geometry_findings) findings.push(el('li', { class: 'warn', text: `Geometry: ${finding}` }));
     if (frame.recorded.missing_glyphs.length) {
       findings.push(el('li', { text: `The raster font lacks ${frame.recorded.missing_glyphs.join(' ')}; a blank box there is a font gap, not a defect.` }));
