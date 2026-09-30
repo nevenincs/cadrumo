@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4ef983ffa33705ed9b253c8b4892f3d000100fd2e5442c1bd8b22c4a4a2324f'
+body_hash: 'sha256:60db05f74c2968b7d0e1a03aa33aff4a8f97c15d42854942fb294f301ec5dc05'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -124,6 +124,53 @@ the product refresh and the form comparison are now wired; `renew_edit_baseline`
 ### blank-by-rule | low | Modelo 130 boxes 13 to 19 read as "could not be calculated" when box 07 is negative
 
 The engine leaves them empty by rule, and the form has no origin for a box blank by rule. Open.
+
+### modelo-100-direction | medium | the Modelo 100 result has no grounded direction
+
+The convergence read model derives the settlement direction from the codified tipo de declaración
+rule (`src/cadrumo/core/result_disposition.py`) or the registry's result role. Modelo 100 box 0670
+has a role but no declared sign convention, so its header can say neither "to pay" nor "to be
+refunded". Open: ground the sign convention and any refund or payment split from the official
+Renta design or instructions.
+
+### registry-pipeline-deadlock | medium | publishing authority in a fresh checkout can hang on Windows
+
+The preview worker found that `candidate_compile_process.exit_when_parent_exits` starts a thread
+blocked in `sys.stdin.buffer.read()`, and validation then imports numpy through openpyxl while
+extracting XLSX evidence (`dev/registry/validate_evidence.py:201`); the numpy extension load hangs
+beside that thread. Reproduced standalone. It bites any checkout that must re-extract XLSX text.
+Open, outside this feature: the registry pipeline's owner should import numpy/openpyxl before the
+watcher thread starts or stop reading stdin in a blocking thread.
+
+### money-declared-as-decimal | medium | Modelo 100 money boxes are declared decimal, so they render without a euro sign
+
+124 Modelo 100 casilla declarations, such as box 0012 at
+`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml:91`,
+are `data_type = "decimal"` although their formulas round as money. Presentation must not add a
+euro sign to a decimal. Open, for the registry's authoring owner, grounded in the AEAT record design.
+
+### finding-facts-raw | medium | some finding placeholders still carry raw codes and period tokens
+
+The findings rewrite (`8735cd5b25`) kept every placeholder its producer supplies. Several still
+carry raw identifiers (binding, source-kind, reason and predicate codes, pipe-joined id lists) and
+period tokens such as "0A" or "4T"; amounts render unformatted with "EUR" and dates as ISO. Open:
+their producers should supply filer-facing facts, or the renderer should format typed amounts and
+dates.
+
+### calculation-diagnostics | low | non-blocking calculation diagnostics never reach the workbench
+
+Unresolved outcomes and source issues persist on the revision and reach the form as verification
+findings, but the non-blocking `source_diagnostics` returned with a calculation
+(`src/cadrumo/application/modelo/calculation_actions.py:194`) are dropped at
+`src/cadrumo/application/modelo/operation_definitions.py:478`. Open.
+
+### required-rule-sharing | low | verification keeps a wider required check than the form
+
+The form's "needs your input" set (`src/cadrumo/application/modelo/required_inputs.py`) excludes
+detail-row templates, which their rows answer for; verification also checks those templates through
+their rows (`src/cadrumo/application/modelo/verification_actions.py:1733`). Replacing
+verification's loop with the form's set would drop that check and under-declare, so it stays.
+Resolved as intended; a test proves the form and a real verification agree on the scalar set.
 
 ## Recommendations
 
