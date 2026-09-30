@@ -38,7 +38,7 @@
               "modelo": "100",
               "source_kinds": "inventory, manual_input"
             },
-            "message": "Some declared binding sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because their source semantics require review.",
+            "message": "Some declared box sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because where their values come from needs review.",
             "severity": "warning"
           }
         ],

@@ -20,7 +20,7 @@ adapters:
         no_context_capture_storage: No active browser context; cannot capture storage
           state.
         persisted_session_verification_failed: Persisted AEAT browser session failed
-          live verification.
+          the live check.
         resume_failed: Persisted AEAT session resume did not produce a usable context.
         session_stale: The AEAT session is stale; the idle deadline has elapsed.
     clave_movil:
@@ -68,13 +68,13 @@ adapters:
         browser_launcher_refused: The operating system browser launcher refused to
           open the OAuth consent URL.
         client_config_refused: The Google OAuth client configuration was refused.
-        email_claim_missing: The Google id_token was verified but carries no email
+        email_claim_missing: The Google id_token was checked but carries no email
           claim.
         endpoint_unreachable: The Google OAuth endpoint is unreachable.
         id_token_missing: Google did not return an id_token; the OAuth consent did
           not include the openid+email scopes.
         id_token_module_not_importable: The google-auth id_token module is not importable.
-        id_token_verification_failed: Google id_token verification failed.
+        id_token_verification_failed: The check of the Google id_token failed.
         loopback_bind_failed: The local loopback OAuth receiver failed to bind a port.
         non_interactive: 'Google OAuth refused: the interactive browser consent flow
           needs a controlling terminal, but this command was run non-interactively.'
@@ -97,10 +97,10 @@ adapters:
           for modelo={modelo}; available: {available}.'
         profile_unavailable: Declaration extraction profile {profile!r} is not available
           for modelo={modelo}.
-        registry_snapshot_required: 'Declaration extraction requires a validated registry
-          snapshot for modelo={modelo} year={year} period={period}: {error}'
-        snapshot_modelo_conflict: Registry snapshot modelo {snapshot_modelo!r} conflicts
-          with detected {detected!r}.
+        registry_snapshot_required: 'Declaration extraction needs the validated modelo
+          definitions for modelo={modelo} year={year} period={period}: {error}'
+        snapshot_modelo_conflict: The modelo in the definitions {snapshot_modelo!r}
+          conflicts with the detected {detected!r}.
         tax_id_unresolved: Declaration tax id could not be resolved from the PDF text.
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
           and --año to override.
@@ -155,7 +155,7 @@ adapters:
           create_vault_folder_no_id: Google Drive did not return an id when creating
             the vault folder.
           folder_not_owned: Drive folder {folder_name} is not marked as owned by this
-            app; refusing to write to protect operator data.
+            app; refusing to write to protect your data.
           former_vault_folder: Google Drive vault folder {vault_folder_name} belongs
             to the former product and cannot be used; use the Cadrumo vault instead.
           googleapiclient_import_failed: The google-api-python-client dependency is
@@ -223,10 +223,12 @@ adapters:
             regularisation register.
       inventory:
         errors:
-          inventory_ledger_absent: That inventory ledger does not exist.
-          inventory_ledger_already_exists: That inventory ledger already exists.
-          inventory_ledger_not_found: The requested inventory ledger was not found.
-          load_inventory_ledger_failed: Unable to load the encrypted inventory ledger.
+          inventory_ledger_absent: That inventory record book does not exist.
+          inventory_ledger_already_exists: That inventory record book already exists.
+          inventory_ledger_not_found: The requested inventory record book was not
+            found.
+          load_inventory_ledger_failed: Unable to load the encrypted inventory record
+            book.
           movement_already_exists: That inventory movement already exists.
   sede:
     errors:
@@ -280,4 +282,4 @@ adapters:
         session has likely expired. Run 'aeat config auth test' and retry.
       submitted_file_layout_parse_failed: The submitted file could not be read through
         the modelo's official record layout, so no box value was recovered from it.
-        The layout and the filed file disagree about which records the file carries.
+        The layout and the submitted file disagree about which records the file carries.

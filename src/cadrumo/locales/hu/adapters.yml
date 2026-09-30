@@ -32,7 +32,7 @@ adapters:
           előtt hívja meg a close() metódust.
         approval_timeout: A Cl@ve Móvil böngészős hitelesítés nem fejeződött be a
           beállított időkorláton belül.
-        dni_nie_not_set: Az CADRUMO_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
+        dni_nie_not_set: A CADRUMO_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
           előtt adja meg DNI- vagy NIE-számát.
         initial_navigation_timeout: A Cl@ve Móvil kezdeti navigációja nem fejeződött
           be a beállított időkorláton belül.
@@ -102,10 +102,10 @@ adapters:
           a modelo={modelo} nyomtatványhoz; elérhető: {available}.'
         profile_unavailable: A(z) {profile!r} kinyerési profil nem érhető el a modelo={modelo}
           nyomtatványhoz.
-        registry_snapshot_required: 'A bevallás-kinyeréshez érvényesített nyilvántartási
-          pillanatkép szükséges: modelo={modelo} year={year} period={period}: {error}'
-        snapshot_modelo_conflict: A nyilvántartási pillanatkép {snapshot_modelo!r}
-          nyomtatványa ütközik az észlelt {detected!r} értékkel.
+        registry_snapshot_required: 'A bevallás-kinyeréshez érvényesített nyomtatványdefiníciók
+          szükségesek: modelo={modelo} year={year} period={period}: {error}'
+        snapshot_modelo_conflict: A nyomtatványdefiníciók {snapshot_modelo!r} nyomtatványa
+          ütközik az észlelt {detected!r} értékkel.
         tax_id_unresolved: Az adóazonosító nem volt meghatározható a PDF szövegéből.
         template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
           felülbíráláshoz adja meg a --modelo és --año értékeket.
@@ -162,7 +162,7 @@ adapters:
           create_vault_folder_no_id: A Google Drive nem adott vissza azonosítót a
             vault mappa létrehozásakor.
           folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazás tulajdonaként
-            jelölve; az operátori adatok védelmében az írás megtagadva.
+            jelölve; az Ön adatainak védelmében az írás megtagadva.
           former_vault_folder: A Google Drive vault mappa {vault_folder_name} az előző
             termékhez tartozik és nem használható; használja a Cadrumo vault mappát.
           googleapiclient_import_failed: 'A google-api-python-client függőség nem
@@ -245,11 +245,11 @@ adapters:
   sede:
     errors:
       censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
-        jelentkezz be újra, és próbáld meg ismét.
+        jelentkezzen be újra, és próbálja meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
         oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
       censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
-        oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.
+        oldalt működő kiszolgálón; jelentkezzen be újra, és próbálja meg ismét.
       ejercicio_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért adóévet
         ehhez a modellhez.
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
@@ -267,8 +267,8 @@ adapters:
         amelyet ez az olvasó nem olvas; ez az olvasó soha nem jut el AEAT-benyújtási
         oldalra.
       landing_unreadable: Az AEAT-olvasás elutasítva, mert a betöltött oldalnak nincs
-        olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezz
-        be újra, és próbáld meg ismét.
+        olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezzen
+        be újra, és próbálja meg ismét.
       listbox_missing: Az AEAT nyilatkozatválasz hiányzik a várt listázó tárolóból;
         az oldal struktúrája megváltozhatott.
       listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze
@@ -295,6 +295,6 @@ adapters:
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
       submitted_file_layout_parse_failed: A benyújtott fájlt nem sikerült beolvasni
-        a modell hivatalos rekordszerkezete szerint, így egyetlen rovatérték sem került
-        ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban, hogy a fájl
-        mely rekordokat tartalmazza.
+        a nyomtatvány hivatalos rekordszerkezete szerint, így egyetlen rovatérték
+        sem került ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban,
+        hogy a fájl mely rekordokat tartalmazza.

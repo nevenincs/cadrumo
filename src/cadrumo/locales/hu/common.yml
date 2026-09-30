@@ -39,8 +39,8 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
-      deduction_authority_on_non_deducible_row: Az olyan áfasor, amely nem hordoz
-        levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} áfakategória
+      deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
+        levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
         %{flow_direction} irányban számol el. Törölje a megadott levonási típust,
         vagy javítsa a kategóriát.
       differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
@@ -53,19 +53,20 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
-      inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} áfalevonási
-        típus nem fogadható el a %{iva_category} áfakategóriába tartozó sornál: %{refusal}.
-        Javítsa a megadott levonási típust, az áfakategóriát vagy a hozzárendelt bizonyítékot.'
+      inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} IVA-levonási
+        típus nem fogadható el a %{iva_category} IVA-kategóriába tartozó sornál: %{refusal}.
+        Javítsa a megadott levonási típust, az IVA-kategóriát vagy a hozzárendelt
+        bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
         Rögzítse az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
-        állapít meg, és az áfa-azonosítás erre nem ad választ.
+        állapít meg, és az IVA-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
-      rectification_consumed_more_than_once: Egy már helyesbített áfa-főkönyvi tény
-        csak egyszer helyesbíthető.
+      rectification_consumed_more_than_once: Egy már helyesbített IVA-tétel csak egyszer
+        helyesbíthető.
       sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
         a szektort többször deklarálja.
       sectorized_especial_missing_input_classification: A szektorizált különleges
@@ -86,8 +87,8 @@ aggregation:
         az érintett szektorokban nincs előző évi különleges nyilvántartási állapot.
       prorrata_transition_contradictory_evidence: A különleges arányosítási átmeneti
         tételek ellentmondanak a bejelentett átmenetnek.
-      prorrata_transition_declarations_unavailable: A kiválasztott 303-as modell revíziója
-        nem deklarál benyújtási ütemtervet vagy időszaki átvitt kötést, ezért az arányosítási
+      prorrata_transition_declarations_unavailable: A kiválasztott Modelo 303 változata
+        nem ad meg benyújtási ütemtervet vagy időszaki átvitel-forrást, ezért az arányosítási
         átmeneti időszak nem határozható meg.
       prorrata_transition_entry_without_evidence: Egy különleges arányosítási átmeneti
         tétel nem hordoz átmeneti bizonyítékot.
@@ -100,20 +101,22 @@ aggregation:
       prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
         bizonyítéka csak az év utolsó 303-es nyomtatvány időszakában alkalmazható.
       recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
-        címzettjére vonatkozó adat nem egyezik a szállítói rendszerű főkönyvi bizonyítékkal.
+        címzettjére vonatkozó adat nem egyezik az Ön nyilvántartásában szereplő, szállítói
+        rendszerű tételekkel.
       supplier_regime_aggregation_period_mismatch: Az áfa-összesítés időszaka nem
         egyezik a kért bevallási időszakkal.
-      supplier_regime_blank_ledger_identity: A szállítói rendszerű érkezés bizonyítéka
-        üres főkönyvi azonosítót tartalmaz.
-      supplier_regime_duplicate_ledger_evidence: A szállítói rendszerű érkezés bizonyítéka
-        ugyanazt a főkönyvi tételt ismétli.
+      supplier_regime_blank_ledger_identity: A szállítói rendszerű érkezési adatok
+        üres azonosítójú tételt tartalmaznak.
+      supplier_regime_duplicate_ledger_evidence: A szállítói rendszerű érkezési adatok
+        ugyanazt a tételt ismétlik.
       supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
         időszakon kívüli keltézésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euró árfolyama, ezért nem deklarálható ezen a modelón.
-      unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
+      unsupported_period: Nem támogatott nyomtatvány-időszak az Ön nyilvántartásaiból
+        számított összesítésekhez.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
@@ -136,12 +139,12 @@ aggregation:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
   renta_ledger:
     errors:
-      annual_period_required: A Renta főkönyvi aggregáláshoz éves időszak szükséges.
-      bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért Renta főkönyvi vödörrel.
-      invoice_bucket_mismatch: A számlatár vödre nem egyezik a kért Renta főkönyvi
-        vödörrel.
-      modelo_mismatch: Az adónyomtatvány nem egyezik a várt Renta főkönyvi nyomtatvánnyal.
-      period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
+      annual_period_required: A Renta összesítéséhez az Ön nyilvántartásaiból éves
+        időszak szükséges.
+      bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért Renta-vödörrel.
+      invoice_bucket_mismatch: A számlatár vödre nem egyezik a kért Renta-vödörrel.
+      modelo_mismatch: A nyomtatvány nem egyezik a várt Renta-nyomtatvánnyal.
+      period_mismatch: Az időszak nem egyezik a várt Renta-időszakkal.
       quarterly_period_required: Az M130 bevétel-összesítéshez negyedéves időszak
         szükséges (például --year 2024 --period 1T).
       unsupported_period: A 100-as nyomtatvány bevétel-összesítéshez éves időszak
@@ -150,15 +153,15 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
-      m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
-        levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
-        teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes
+      m111_no_retenciones_attestation_missing: 'A Modelo 111-hez nincs perceptoronkénti
+        levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújtson
+        be teljesen üres Modelo 111-et: nyilatkozzon a negyedévről mint levonásmentes
         időszakról az `aeat config profile edit --modelo-111-no-retenciones-periods
         %{attestation_period}` paranccsal (a kapcsoló felülírja a tárolt listát, ezért
-        vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy rögzítsd
+        vesszővel elválasztva adja meg a már bejelentett időszakokat is), vagy rögzítse
         a perceptor-sorokat az `aeat app modelo aggregate --retencion-observation`
         paranccsal.'
-      m193_phase_allocation_collision: '%{modelo} modell, %{filing_year}: a(z) %{source_allocations}
+      m193_phase_allocation_collision: 'Modelo %{modelo}, %{filing_year}: a(z) %{source_allocations}
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Törölje a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
@@ -169,9 +172,9 @@ aggregation:
         a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
         modellt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
         időszakok összegzése hónapoknyi forrásadó-levonást hagyna ki.'
-      withholding_filer_profile_absent: A bevalló profilja nem tölthető be erre az
-        adóévre, így nem állapítható meg, hogy a forrásadó-levonást negyedévente vagy
-        havonta vallja-e be. Töltse ki a profilt, majd próbálja újra.
+      withholding_filer_profile_absent: Az Ön profilja nem tölthető be erre az adóévre,
+        így nem állapítható meg, hogy a levonásokat negyedévente vagy havonta vallja-e
+        be. Töltse ki a profilt, majd próbálja újra.
       withholding_quarterly_window_not_scheduled: A bevalló benyújtási ütemezése nem
         rendeli ezt a negyedévet a forrásadó-levonási modellhez (nagyvállalatként
         havonta nyújtja be), a havi forrásadó-levonási időszakok pedig még nem támogatottak.
@@ -194,14 +197,15 @@ aggregation:
       annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
         éves összesítőjének változatlan átadását (első: {first_resolver}; második:
         {second_resolver}).'
-      binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
-        családra hivatkozik.
-      duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
-      duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
-        a forráshálon.'
+      binding_source_mismatch: A source_kind és a binding_source eltérő értékforrás-családra
+        hivatkozik.
+      duplicate_binding_owner: 'Belső hiba: ugyanannak az értékforrásnak két tulajdonosa
+        van a forráshálón.'
+      duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő tulajdonos egy értékforrással
+        rendelkező rovatnál a forráshálón.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
-      duplicate_row_binding_owner: 'Belső hiba: duplikált sor-binding tulajdonos a
-        forráshálóban.'
+      duplicate_row_binding_owner: 'Belső hiba: ugyanannak a sorérték-forrásnak két
+        tulajdonosa van a forráshálón.'
       duplicate_row_casilla_coordinate: 'Belső hiba: duplikált sor-mező koordináta.'
       duplicate_row_casilla_owner: 'Belső hiba: duplikált sor-mező tulajdonos a forráshálóban.'
       out_of_window_summary_date_span_invalid: Az ablakon kívüli összesítő legkésőbbi
@@ -211,54 +215,55 @@ aggregation:
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
       provenance_binding_source_mismatch: A származási soron megadott forrástípus
-        nem egyezik azzal a kötési forrással, amelyhez tartozónak vallja magát. A
-        nyomon követhetőség csak akkor ellenőrizhető, ha mindkettő ugyanazt a forrást
-        nevezi meg.
-      provenance_binding_source_missing: A származási sor felismert kötési forrástípust
-        jelöl, de nem nevezi meg, melyik kötéshez tartozik. A deklarált kötés nélküli
-        felismerhető forrás nyomon követhetetlenné teszi az értéket.
+        nem egyezik azzal az értékforrással, amelyhez tartozónak vallja magát. A nyomon
+        követhetőség csak akkor ellenőrizhető, ha mindkettő ugyanazt a forrást nevezi
+        meg.
+      provenance_binding_source_missing: A származási sor felismert értékforrás-típust
+        jelöl, de nem nevezi meg, melyik értékforráshoz tartozik. A megnevezett értékforrás
+        nélküli felismerhető forrás nyomon követhetetlenné teszi az értéket.
       provenance_contributor_missing_parent: A közreműködő származási sornak meg kell
         jelölnie azt az elsődleges sort, amelyből származik. Enélkül a hozzájárulás
         elszakad attól az értéktől, amelyet táplál.
       provenance_contributor_parent_missing: Egy közreműködő sor olyan szülőhivatkozást
         nevez meg, amely nem szerepel a deklarált elsődleges sorok között. A származási
-        lánc nem létező eredetre mutat.
+        lánc nem létező forrásra mutat.
       provenance_primary_has_parent: 'Elsődleges származási sor nem jelölhet szülősort:
-        az elsődleges sor az az eredet, amelytől a többi függ.'
+        az elsődleges sor az a forrás, amelytől a többi függ.'
       provenance_primary_ref_ambiguous: Két elsődleges származási sor ugyanazt a forráshivatkozást
         viseli, így egy közreműködő sor nem tudja eldönteni, melyikből származik.
       provenance_resolver_mismatch: Valamelyik származási sor más feloldót nevez meg,
         mint amelyik a feloldást előállította. Minden sort ugyanahhoz a feloldóhoz
         kell rendelni, amely az eredményt jegyzi.
-      relation_provenance_incomplete: A kapcsolat eredetének tartalmaznia kell a forrás
-        modellt, évet, időszakokat, mezőket, jogi hivatkozásokat és forráshivatkozásokat.
+      relation_provenance_incomplete: Egy kapcsolódó érték eredetének tartalmaznia
+        kell a forrás-nyomtatványt, az adóévet, az időszakokat, a rovatokat, a jogi
+        hivatkozásokat és a forráshivatkozásokat.
       reserved_composite_resolver_id: A megadott feloldóazonosító az összetett feloldások
         számára van fenntartva, és egyszerű feloldásban nem használható.
-      row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
-        nagyobbnak kell lennie.'
-      row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
+      row_binding_index_invalid: 'Belső hiba: a sorérték-forrás sorindexének 1-nek
+        vagy nagyobbnak kell lennie.'
+      row_binding_value_invalid: 'Belső hiba: a sorérték-forrás decimális értéke érvénytelen.'
       row_casilla_index_invalid: 'Belső hiba: a sor-mező indexének 1-nek vagy nagyobbnak
         kell lennie.'
-      row_casilla_provenance_coordinate_mismatch: Minden sor-mező értékhez pontosan
+      row_casilla_provenance_coordinate_mismatch: Minden sorrovat-értékhez pontosan
         egy származási sor szükséges.
-      row_casilla_row_index_mismatch: A sor-mezőnek és forráskötésének ugyanazt a
-        sorindexet kell használnia.
-      row_casilla_source_coordinate_missing: Hiányzik egy sor-mező forráskötési értéke
-        vagy azonossága.
-      row_casilla_source_identity_mismatch: A sor-mező származási azonossága eltér
+      row_casilla_row_index_mismatch: A sorrovatnak és az értéke forrásának ugyanazt
+        a sorindexet kell használnia.
+      row_casilla_source_coordinate_missing: Hiányzik egy sorrovat értékforrásának
+        értéke vagy azonossága.
+      row_casilla_source_identity_mismatch: A sorrovat származási azonossága eltér
         a forrás azonosságától.
-      row_casilla_source_value_mismatch: A sor-mező értéke eltér a forráskötés értékétől.
+      row_casilla_source_value_mismatch: A sorrovat értéke eltér a forrása értékétől.
       row_casilla_value_invalid: 'Belső hiba: a sor-mező decimális értéke érvénytelen.'
-      row_source_identity_coordinate_mismatch: Minden sorazonosító-koordinátának a
-        soron ténylegesen jelen lévő kötési értékhez kell tartoznia. Olyan koordinátát
+      row_source_identity_coordinate_mismatch: Minden sorforrás-azonosító koordinátának
+        a soron ténylegesen jelen lévő forrásértékhez kell tartoznia. Olyan koordinátát
         jelöltek meg, amelyet a sor nem hordoz.
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
         kell lenniük.
-      unresolved_binding_ids_blank: 'Belső hiba: a feloldatlan binding-azonosítók
+      unresolved_binding_ids_blank: 'Belső hiba: a feloldatlan értékforrás-azonosítók
         nem lehetnek üresek.'
-      unresolved_binding_ids_duplicate: 'Belső hiba: a feloldatlan binding-azonosítók
+      unresolved_binding_ids_duplicate: 'Belső hiba: a feloldatlan értékforrás-azonosítók
         nem lehetnek duplikáltak.'
       unresolved_relation_ids_blank: 'Belső hiba: a feloldatlan reláció-azonosítók
         nem lehetnek üresek.'

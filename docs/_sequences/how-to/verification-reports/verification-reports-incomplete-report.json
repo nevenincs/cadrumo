@@ -40,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nshort_work_unit_id\t2d35589f9d5e\nbucket_id\t<bucket-id>\nmodelo\t349\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2020-y-siguientes\nname\t349-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nshort_work_unit_id\t2d35589f9d5e\nbucket_id\t<bucket-id>\nmodelo\t349\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2020-y-siguientes\nname\t349-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew declaration created.\n"
     },
     {
       "argv": [

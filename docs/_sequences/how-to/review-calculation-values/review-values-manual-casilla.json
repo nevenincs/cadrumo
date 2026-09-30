@@ -203,12 +203,15 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "box": "06",
               "casilla_id": "06",
+              "detail": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+              "level": "confirm",
               "reason": "operator_override_diverges_from_computed",
               "remedy": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla.",
               "source_kind": "operator_casilla_input"
             },
-            "message": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+            "message": "The value in box 06 is the one you entered, not the one Cadrumo worked out.",
             "severity": "warning"
           }
         ],

@@ -44,8 +44,8 @@ aggregation:
         bucket d'agregació sol·licitat.
       deduction_authority_on_non_deducible_row: Una fila d'IVA que no suporta quota
         deduïble no pot portar una classificació de deducció; la categoria d'IVA %{category}
-        es liquida com %{flow_direction}. Elimineu el tipus de deducció declarat o
-        corregiu la categoria.
+        es liquida com %{flow_direction}. Elimina el tipus de deducció declarat o
+        corregeix la categoria.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
         per a l'exercici.
       differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
@@ -58,18 +58,18 @@ aggregation:
         no poden portar un Estat membre de la UE; rebut %{member_state}.
       inadmissible_deduction_classification: 'El tipus de deducció d''IVA declarat
         %{deduction_fact_kind} no és admissible en una fila de la categoria d''IVA
-        %{iva_category}: %{refusal}. Corregiu el tipus de deducció declarat, la categoria
+        %{iva_category}: %{refusal}. Corregeix el tipus de deducció declarat, la categoria
         d''IVA o l''evidència vinculada.'
       investment_observations_missing_bienes_inversion_authority: Les observacions
         d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
         autoritat de perfil coincident.
       missing_counterparty_establishment_on_export: Una exportació està exempta perquè
         l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
-        contrapart. Registreu el país de la contrapart; un codi absent o no assignat
+        contrapart. Registra el país de la contrapart; un codi absent o no assignat
         no estableix res, i la seva identificació a efectes d'IVA no pot respondre-hi.
       missing_counterparty_identification_state: Una operació intracomunitària requereix
         l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
-      rectification_consumed_more_than_once: Un fet d'IVA ja corregit només es pot
+      rectification_consumed_more_than_once: Un apunt d'IVA ja corregit només es pot
         rectificar una vegada.
       sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
         declara el mateix sector més d'una vegada.
@@ -91,8 +91,8 @@ aggregation:
         no té estat de registre especial de l'exercici anterior per als sectors afectats.
       prorrata_transition_contradictory_evidence: Les entrades de transició de prorrata
         especial contradiuen la transició declarada.
-      prorrata_transition_declarations_unavailable: La revisió seleccionada del model
-        303 no declara calendari de presentació ni vincle d'arrossegament periòdic,
+      prorrata_transition_declarations_unavailable: La versió seleccionada del Model
+        303 no declara calendari de presentació ni origen d'arrossegament periòdic,
         per la qual cosa no es pot determinar el període de transició de prorrata.
       prorrata_transition_entry_without_evidence: Una entrada de transició de prorrata
         especial no aporta evidència de transició.
@@ -105,14 +105,14 @@ aggregation:
       prorrata_transition_not_applicable_for_period: L'evidència de transició de prorrata
         especial només s'aplica en l'últim període del Model 303 de l'exercici.
       recipient_fact_disagrees_with_ledger_evidence: La dada de destinatari d'operacions
-        en criteri de caixa no concorda amb la seva evidència d'assentaments en règim
+        en criteri de caixa no concorda amb els apunts dels teus registres en règim
         del proveïdor.
       supplier_regime_aggregation_period_mismatch: El període de l'agregació d'IVA
         no coincideix amb el període de declaració sol·licitat.
-      supplier_regime_blank_ledger_identity: L'evidència d'arribada en règim del proveïdor
-        conté una identitat d'assentament en blanc.
-      supplier_regime_duplicate_ledger_evidence: L'evidència d'arribada en règim del
-        proveïdor repeteix el mateix assentament.
+      supplier_regime_blank_ledger_identity: Les dades d'arribada en règim del proveïdor
+        contenen un apunt amb identitat en blanc.
+      supplier_regime_duplicate_ledger_evidence: Les dades d'arribada en règim del
+        proveïdor repeteixen el mateix apunt.
       supplier_regime_observations_outside_period: L'agregació d'IVA conté observacions
         datades fora del període de declaració sol·licitat.
   modelo_bindings:
@@ -120,7 +120,7 @@ aggregation:
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
         declarar en aquest model.
-      unsupported_period: Període de model no admès per a l'agregació del llibre.
+      unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
@@ -144,16 +144,14 @@ aggregation:
       unsupported_modelo: Model no admès per a l'agregació per model
   renta_ledger:
     errors:
-      annual_period_required: Es requereix un període anual per a l'agregació del
-        llibre de Renda.
-      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
-        bucket sol·licitat del llibre de Renda.
-      invoice_bucket_mismatch: El bucket del repositori de factures no coincideix
-        amb el bucket sol·licitat del llibre de Renda.
-      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
-        de Renda.
-      period_mismatch: El període no coincideix amb el període esperat del llibre
-        de Renda.
+      annual_period_required: Es requereix un període anual per als totals de Renda
+        dels teus registres.
+      bucket_mismatch: El bucket del magatzem de moviments no coincideix amb el bucket
+        de Renda sol·licitat.
+      invoice_bucket_mismatch: El bucket del magatzem de factures no coincideix amb
+        el bucket de Renda sol·licitat.
+      modelo_mismatch: El model no coincideix amb el model de Renda esperat.
+      period_mismatch: El període no coincideix amb el període de Renda esperat.
       quarterly_period_required: Cal un període trimestral per a l'agregació d'ingressos
         del Model 130 (per exemple --year 2024 --period 1T).
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
@@ -171,7 +169,7 @@ aggregation:
         app modelo aggregate --retencion-observation`.'
       m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
         %{source_allocations} consten declarades manualment i també provenen de les
-        retencions de capital capturades. Elimineu la fila manual.'
+        retencions de capital capturades. Elimina la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
@@ -180,10 +178,9 @@ aggregation:
         el calendari de presentació del declarant no assigna el seu model periòdic
         de retencions a tots els trimestres de l''any (el presenta mensualment), i
         sumar només els períodes trimestrals deixaria fora mesos de retencions.'
-      withholding_filer_profile_absent: No s'ha pogut carregar el perfil del declarant
-        per a aquest exercici, de manera que no es pot determinar si les retencions
-        es presenten trimestralment o mensualment. Completeu el perfil i torneu-ho
-        a provar.
+      withholding_filer_profile_absent: No s'ha pogut carregar el teu perfil per a
+        aquest exercici, de manera que no es pot determinar si les retencions es presenten
+        trimestralment o mensualment. Completa el perfil i torna-ho a provar.
       withholding_quarterly_window_not_scheduled: El calendari de presentació del
         declarant no assigna aquest trimestre al model de retencions (una gran empresa
         el presenta mensualment) i els períodes mensuals de retencions encara no s'admeten.
@@ -205,16 +202,16 @@ aggregation:
     errors:
       annual_summary_handoff_duplicate: Més d'un resolutor ha proporcionat el traspàs
         immutable del resum anual del model 303 (primer {first_resolver}; segon {second_resolver}).
-      binding_source_mismatch: source_kind i binding_source fan referència a families
-        d'origen de binding diferents.
-      duplicate_binding_owner: 'Error intern: propietari de vinculació duplicat a
-        la malla de fonts.'
-      duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
-        duplicat a la malla de fonts.'
+      binding_source_mismatch: source_kind i binding_source fan referència a famílies
+        d'origen del valor diferents.
+      duplicate_binding_owner: 'Error intern: el mateix origen del valor té dos propietaris
+        a la malla de fonts.'
+      duplicate_bound_casilla_owner: 'Error intern: propietari duplicat d''una casella
+        amb origen de valor a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relació duplicat a la
         malla de fonts.'
-      duplicate_row_binding_owner: 'Error intern: propietari de vinculació de fila
-        duplicat a la malla de fonts.'
+      duplicate_row_binding_owner: 'Error intern: el mateix origen del valor de fila
+        té dos propietaris a la malla de fonts.'
       duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila
         duplicada.'
       duplicate_row_casilla_owner: 'Error intern: propietari de casella de fila duplicat
@@ -228,11 +225,11 @@ aggregation:
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
       provenance_binding_source_mismatch: El tipus d'origen declarat a la fila de
-        procedència no coincideix amb l'origen del vincle al qual diu pertànyer. Tots
+        procedència no coincideix amb l'origen del valor al qual diu pertànyer. Tots
         dos han de nomenar el mateix origen perquè la traçabilitat sigui comprovable.
       provenance_binding_source_missing: La fila de procedència declara un tipus d'origen
-        de vincle reconegut però no indica a quin vincle correspon. Un origen reconeixible
-        sense vincle declarat deixa el valor sense traçabilitat.
+        del valor reconegut però no indica a quin origen correspon. Un origen reconeixible
+        sense origen declarat deixa el valor sense traçabilitat.
       provenance_contributor_missing_parent: Una fila de procedència contribuent ha
         de declarar la fila primària de la qual procedeix. Sense ella, l'aportació
         queda deslligada del valor al qual contribueix.
@@ -247,39 +244,40 @@ aggregation:
       provenance_resolver_mismatch: Alguna fila de procedència nomena un resolutor
         diferent del que va produir la resolució. Totes les files s'han d'atribuir
         al mateix resolutor que signa el resultat.
-      relation_provenance_incomplete: La procedència de la relació ha d'incloure model
-        d'origen, exercici, períodes, caselles, referències legals i referències d'origen.
+      relation_provenance_incomplete: La procedència d'un valor relacionat ha d'incloure
+        model d'origen, exercici, períodes, caselles, referències legals i referències
+        d'origen.
       reserved_composite_resolver_id: L'identificador de resolutor indicat està reservat
         per a les resolucions compostes i no es pot fer servir en una resolució simple.
-      row_binding_index_invalid: 'Error intern: l''índex de fila de la vinculació
-        ha de ser 1 o superior.'
-      row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
-        de fila no és vàlid.'
+      row_binding_index_invalid: 'Error intern: l''índex de fila de l''origen d''un
+        valor de fila ha de ser 1 o superior.'
+      row_binding_value_invalid: 'Error intern: el valor decimal de l''origen d''un
+        valor de fila no és vàlid.'
       row_casilla_index_invalid: 'Error intern: l''índex de casella de fila ha de
         ser 1 o superior.'
       row_casilla_provenance_coordinate_mismatch: Cada valor de casella de fila ha
-        de tenir exactament una procedència.
-      row_casilla_row_index_mismatch: La casella de fila i la vinculació d'origen
+        de tenir exactament una fila de procedència.
+      row_casilla_row_index_mismatch: La casella de fila i l'origen del seu valor
         han d'usar el mateix índex.
-      row_casilla_source_coordinate_missing: Falta el valor o la identitat de la vinculació
-        d'origen d'una casella de fila.
+      row_casilla_source_coordinate_missing: Falta el valor o la identitat de l'origen
+        del valor d'una casella de fila.
       row_casilla_source_identity_mismatch: La identitat de procedència de la casella
         de fila difereix de la identitat d'origen.
       row_casilla_source_value_mismatch: El valor de la casella de fila difereix del
-        valor de la vinculació d'origen.
+        valor del seu origen.
       row_casilla_value_invalid: 'Error intern: el valor decimal de la casella de
         fila no és vàlid.'
-      row_source_identity_coordinate_mismatch: Tota coordenada d'identitat de fila
-        ha de correspondre a un valor de vincle present a la mateixa fila. S'ha declarat
-        una coordenada que la fila no aporta.
+      row_source_identity_coordinate_mismatch: Tota coordenada d'identitat d'origen
+        de fila ha de correspondre a un valor d'origen present a la mateixa fila.
+        S'ha declarat una coordenada que la fila no aporta.
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
         de fonts han de ser únics.
-      unresolved_binding_ids_blank: 'Error intern: els ids de vinculació sense resoldre
-        no poden estar en blanc.'
-      unresolved_binding_ids_duplicate: 'Error intern: els ids de vinculació sense
-        resoldre no poden estar duplicats.'
+      unresolved_binding_ids_blank: 'Error intern: els ids d''origen del valor sense
+        resoldre no poden estar en blanc.'
+      unresolved_binding_ids_duplicate: 'Error intern: els ids d''origen del valor
+        sense resoldre no poden estar duplicats.'
       unresolved_relation_ids_blank: 'Error intern: els ids de relació sense resoldre
         no poden estar en blanc.'
       unresolved_relation_ids_duplicate: 'Error intern: els ids de relació sense resoldre
@@ -825,7 +823,7 @@ provisioning:
 review:
   adapters:
     errors:
-      drafts_load_failed: No s han pogut carregar els esborranys de presentació des
+      drafts_load_failed: No s'han pogut carregar els esborranys de presentació des
         del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.

@@ -64,7 +64,7 @@ aggregation:
         nothing, and its VAT identification cannot answer this.
       missing_counterparty_identification_state: An intra-community transaction requires
         the Member State in which the counterparty is VAT-identified.
-      rectification_consumed_more_than_once: A corrected IVA ledger fact may be rectified
+      rectification_consumed_more_than_once: A corrected IVA entry may be rectified
         only once.
       sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
         declares the same sector more than once.
@@ -86,8 +86,8 @@ aggregation:
         has no prior-year especial register state for the affected sectors.
       prorrata_transition_contradictory_evidence: Prorrata especial transition entries
         contradict the declared transition.
-      prorrata_transition_declarations_unavailable: The selected Modelo 303 revision
-        declares no filing schedule or periodic carry binding, so the prorrata transition
+      prorrata_transition_declarations_unavailable: The selected Modelo 303 version
+        declares no filing schedule or periodic carry source, so the prorrata transition
         period cannot be determined.
       prorrata_transition_entry_without_evidence: A prorrata especial transition entry
         carries no transition evidence.
@@ -100,20 +100,20 @@ aggregation:
       prorrata_transition_not_applicable_for_period: Prorrata especial transition
         evidence applies only in the final Modelo 303 period of the year.
       recipient_fact_disagrees_with_ledger_evidence: The recipient-of-cash-accounting
-        fact does not agree with its supplier-regime ledger evidence.
+        fact does not agree with the supplier-regime entries in your records.
       supplier_regime_aggregation_period_mismatch: The IVA aggregation period does
         not match the requested filing period.
-      supplier_regime_blank_ledger_identity: Supplier-regime arrival evidence contains
-        a blank ledger identity.
-      supplier_regime_duplicate_ledger_evidence: Supplier-regime arrival evidence
-        repeats the same ledger entry.
+      supplier_regime_blank_ledger_identity: Supplier-regime arrival data contains
+        an entry with a blank identity.
+      supplier_regime_duplicate_ledger_evidence: Supplier-regime arrival data repeats
+        the same entry.
       supplier_regime_observations_outside_period: The IVA aggregation carries observations
         dated outside the requested filing period.
   modelo_bindings:
     errors:
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
-      unsupported_period: Unsupported modelo period for ledger aggregation.
+      unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: The member state of consumption has no declared
@@ -135,13 +135,14 @@ aggregation:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
   renta_ledger:
     errors:
-      annual_period_required: Annual period is required for Renta ledger aggregation.
-      bucket_mismatch: Transaction repository bucket does not match the requested
-        Renta ledger bucket.
-      invoice_bucket_mismatch: Invoice repository bucket does not match the requested
-        Renta ledger bucket.
-      modelo_mismatch: Tax model does not match the expected Renta ledger model.
-      period_mismatch: Period does not match the expected Renta ledger period.
+      annual_period_required: An annual period is required for Renta totals from your
+        records.
+      bucket_mismatch: The transaction store bucket does not match the requested Renta
+        bucket.
+      invoice_bucket_mismatch: The invoice store bucket does not match the requested
+        Renta bucket.
+      modelo_mismatch: The modelo does not match the expected Renta modelo.
+      period_mismatch: The period does not match the expected Renta period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
         (for example --year 2024 --period 1T).
       unsupported_period: Annual period is required for Modelo 100 income aggregation
@@ -167,9 +168,9 @@ aggregation:
         the filer''s filing schedule does not assign its periodic withholding modelo
         every quarter of the year (it files monthly), and totalling only the quarterly
         windows would leave months of withholding out.'
-      withholding_filer_profile_absent: The filer's profile could not be loaded for
-        this filing year, so it cannot be established whether withholding is filed
-        quarterly or monthly. Complete the profile and try again.
+      withholding_filer_profile_absent: Your profile could not be loaded for this
+        filing year, so it cannot be established whether withholding is filed quarterly
+        or monthly. Complete the profile and try again.
       withholding_quarterly_window_not_scheduled: The filer's filing schedule does
         not assign this quarter to the withholding modelo (a large company files it
         monthly), and monthly withholding periods are not supported yet. Nothing was
@@ -190,16 +191,16 @@ aggregation:
     errors:
       annual_summary_handoff_duplicate: More than one resolver supplied the immutable
         Modelo 303 annual-summary handoff (first {first_resolver}; second {second_resolver}).
-      binding_source_mismatch: source_kind and binding_source refer to different binding-source
-        families.
-      duplicate_binding_owner: 'Internal error: duplicate binding owner in source
-        mesh.'
-      duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
-        in source mesh.'
+      binding_source_mismatch: source_kind and binding_source refer to different families
+        of value sources.
+      duplicate_binding_owner: 'Internal error: the same value source has two owners
+        in the source mesh.'
+      duplicate_bound_casilla_owner: 'Internal error: duplicate owner for a box with
+        a value source in the source mesh.'
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
-      duplicate_row_binding_owner: 'Internal error: duplicate row-binding owner in
-        the source mesh.'
+      duplicate_row_binding_owner: 'Internal error: the same row value source has
+        two owners in the source mesh.'
       duplicate_row_casilla_coordinate: 'Internal error: duplicate row-casilla coordinate.'
       duplicate_row_casilla_owner: 'Internal error: duplicate row-casilla owner in
         the source mesh.'
@@ -210,57 +211,57 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
-      provenance_binding_source_mismatch: The source kind declared on the provenance
-        row does not match the binding source it claims to belong to. Both must name
-        the same source for the traceability to be checkable.
-      provenance_binding_source_missing: The provenance row declares a recognised
-        binding source kind but names no binding it belongs to. A recognisable source
-        with no declared binding leaves the value untraceable.
-      provenance_contributor_missing_parent: A contributor provenance row must declare
+      provenance_binding_source_mismatch: The source kind declared on the origin row
+        does not match the value source it claims to belong to. Both must name the
+        same source for the trail to be checkable.
+      provenance_binding_source_missing: The origin row declares a recognised value
+        source kind but names no value source it belongs to. A recognisable source
+        with no declared value source leaves the value untraceable.
+      provenance_contributor_missing_parent: A contributing origin row must declare
         the primary row it derives from. Without it the contribution is detached from
         the value it feeds.
-      provenance_contributor_parent_missing: A contributor row names a parent reference
-        that is not among the declared primary rows. The provenance chain points at
-        an origin that does not exist.
-      provenance_primary_has_parent: 'A primary provenance row may not declare a parent
-        row: the primary row is the origin the others depend on.'
-      provenance_primary_ref_ambiguous: Two primary provenance rows share the same
-        source reference, so a contributor row cannot determine which of them it derives
+      provenance_contributor_parent_missing: A contributing row names a parent reference
+        that is not among the declared primary rows. The origin chain points at a
+        source that does not exist.
+      provenance_primary_has_parent: 'A primary origin row may not declare a parent
+        row: the primary row is the source the others depend on.'
+      provenance_primary_ref_ambiguous: Two primary origin rows share the same source
+        reference, so a contributing row cannot determine which of them it derives
         from.
-      provenance_resolver_mismatch: A provenance row names a resolver other than the
+      provenance_resolver_mismatch: An origin row names a resolver other than the
         one that produced the resolution. Every row must be attributed to the same
         resolver that signs the result.
-      relation_provenance_incomplete: Relation provenance must include source modelo,
-        filing year, periods, casillas, legal refs, and source refs.
+      relation_provenance_incomplete: The origin of a related value must include the
+        source modelo, filing year, periods, boxes, legal references and source references.
       reserved_composite_resolver_id: The given resolver identifier is reserved for
         composite resolutions and may not be used on a simple resolution.
-      row_binding_index_invalid: 'Internal error: the row-binding row index must be
-        1 or greater.'
-      row_binding_value_invalid: 'Internal error: the row-binding decimal value is
-        not valid.'
+      row_binding_index_invalid: 'Internal error: the row index of a row value source
+        must be 1 or greater.'
+      row_binding_value_invalid: 'Internal error: the decimal value of a row value
+        source is not valid.'
       row_casilla_index_invalid: 'Internal error: the row-casilla row index must be
         1 or greater.'
-      row_casilla_provenance_coordinate_mismatch: Every row-casilla value must have
-        exactly one provenance row.
-      row_casilla_row_index_mismatch: A row-casilla and its source binding must use
+      row_casilla_provenance_coordinate_mismatch: Every row box value must have exactly
+        one origin row.
+      row_casilla_row_index_mismatch: A row box and the source of its value must use
         the same row index.
-      row_casilla_source_coordinate_missing: A row-casilla source binding value or
-        identity is missing.
-      row_casilla_source_identity_mismatch: A row-casilla provenance identity differs
+      row_casilla_source_coordinate_missing: The value or identity of a row box's
+        value source is missing.
+      row_casilla_source_identity_mismatch: The origin identity of a row box differs
         from its source identity.
-      row_casilla_source_value_mismatch: A row-casilla value differs from its source
-        binding value.
+      row_casilla_source_value_mismatch: The value of a row box differs from the value
+        of its source.
       row_casilla_value_invalid: 'Internal error: the row-casilla decimal value is
         not valid.'
       row_source_identity_coordinate_mismatch: Every row source identity coordinate
-        must correspond to a binding value present on the row itself. A coordinate
+        must correspond to a source value present on the row itself. A coordinate
         was declared that the row does not carry.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
-      unresolved_binding_ids_blank: 'Internal error: unresolved binding ids cannot
+      unresolved_binding_ids_blank: 'Internal error: unresolved value source ids cannot
         be blank.'
-      unresolved_binding_ids_duplicate: 'Internal error: unresolved binding ids cannot
-        be duplicated.'
+      unresolved_binding_ids_duplicate: 'Internal error: unresolved value source ids
+        cannot be duplicated.'
       unresolved_relation_ids_blank: 'Internal error: unresolved relation ids cannot
         be blank.'
       unresolved_relation_ids_duplicate: 'Internal error: unresolved relation ids

@@ -8,8 +8,8 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator ja té una sessió activa; crideu close()
-          o reauthenticate() abans d'autenticar de nou.
+        already_active: AeatAuthenticator ja té una sessió activa; crida close() o
+          reauthenticate() abans d'autenticar de nou.
         assertion_failed: L'autenticació AEAT no ha produït una asserció d'inici de
           sessió vàlida.
         capture_requires_active_session: Desar la sessió del navegador requereix la
@@ -17,34 +17,34 @@ adapters:
         capture_requires_certificate: Desar la sessió del navegador requereix una
           sessió activa amb certificat i metadades del recurs protegit.
         metadata_parse_failed: Les metadades persistides no han produït un model analitzat.
-        no_active_context: No hi ha context de navegador actiu; crideu authenticate()
+        no_active_context: No hi ha context de navegador actiu; crida authenticate()
           primer.
         no_context_capture_storage: No hi ha context de navegador actiu; no es pot
           capturar l'estat d'emmagatzematge.
-        persisted_session_verification_failed: La sessió persistida del navegador
-          AEAT ha fallat la verificació en directe.
+        persisted_session_verification_failed: La sessió desada del navegador AEAT
+          no ha passat la comprovació en directe.
         resume_failed: La represa de la sessió AEAT persistida no ha produït un context
           utilitzable.
         session_stale: La sessió AEAT ha caducat; el termini d'inactivitat ha expirat.
     clave_movil:
       errors:
-        already_active: Cl@ve Móvil ja té una sessió activa; crideu close() abans
-          de tornar a autenticar-vos.
+        already_active: Cl@ve Móvil ja té una sessió activa; crida close() abans de
+          tornar a autenticar-te.
         approval_timeout: L'autenticació per navegador de Cl@ve Móvil no s'ha completat
           dins del temps configurat.
-        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no està configurat; configureu
-          el vostre DNI o NIE abans d'autenticar-vos.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no està configurat; configura
+          el teu DNI o NIE abans d'autenticar-te.
         initial_navigation_timeout: La navegació inicial a Cl@ve Móvil no s'ha completat
           dins del temps configurat.
         metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
           no es poden analitzar.
-        no_persisted_session: No s'ha trobat cap sessió de Cl@ve Móvil; executeu `aeat
+        no_persisted_session: No s'ha trobat cap sessió de Cl@ve Móvil; executa `aeat
           config auth status` primer.
         session_expired: La sessió de Cl@ve Móvil ha superat el seu termini d'inactivitat.
         storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
           Móvil no coincideix; les dades de sessió poden estar corrompudes.
         verify_requires_active_context: Cl@ve Móvil verify() requereix un context
-          de navegador actiu; crideu authenticate() primer.
+          de navegador actiu; crida primer authenticate().
   browser:
     errors:
       not_provisioned: El navegador que obre l'automatització de l'AEAT no és en aquest
@@ -73,14 +73,14 @@ adapters:
         browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
           OAuth al navegador.
         client_config_refused: La configuració del client Google OAuth ha estat rebutjada.
-        email_claim_missing: L'id_token de Google s'ha verificat però no inclou la
+        email_claim_missing: L'id_token de Google s'ha comprovat però no inclou la
           reclamació email.
         endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
         id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
           no incloïa els àmbits openid+email.
         id_token_module_not_importable: El mòdul id_token de google-auth no es pot
           importar.
-        id_token_verification_failed: La verificació de l'id_token de Google ha fallat.
+        id_token_verification_failed: La comprovació de l'id_token de Google ha fallat.
         loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
           cap port.
         non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment
@@ -109,9 +109,9 @@ adapters:
           de declaració per a model={modelo}; disponibles: {available}.'
         profile_unavailable: El perfil d'extracció de declaració {profile!r} no està
           disponible per a model={modelo}.
-        registry_snapshot_required: 'L''extracció de declaració requereix un snapshot
-          validat del registre per a model={modelo} any={year} període={period}: {error}'
-        snapshot_modelo_conflict: El model del snapshot del registre {snapshot_modelo!r}
+        registry_snapshot_required: 'L''extracció de la declaració necessita les definicions
+          validades del model per a model={modelo} any={year} període={period}: {error}'
+        snapshot_modelo_conflict: El model de les definicions {snapshot_modelo!r}
           entra en conflicte amb el detectat {detected!r}.
         tax_id_unresolved: No s'ha pogut resoldre l'identificador fiscal de la declaració
           a partir del text del PDF.
@@ -134,7 +134,7 @@ adapters:
   notificacion:
     errors:
       sancion_does_not_reconcile: Els imports impresos al document de sanció no quadren,
-        per la qual cosa s'ha rebutjat la lectura. Comproveu el document a mà.
+        per la qual cosa s'ha rebutjat la lectura. Comprova el document a mà.
       sancion_incomplete: El document de sanció no s'ha pogut llegir completament.
         Obriu-lo a la seu i comproveu-lo a mà.
   outbound:
@@ -156,22 +156,22 @@ adapters:
           google_token_missing: No hi ha cap token OAuth de Google persistit per al
             perfil actiu. Executa `aeat config google login` primer.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND està buit.
-          kind_unhandled: El tipus de proveïdor d emmagatzematge {kind} no està gestionat
+          kind_unhandled: El tipus de proveïdor d'emmagatzematge {kind} no està gestionat
             per la factoria.
-          kind_unknown: El tipus de proveïdor d emmagatzematge {value} no es reconeix;
-            s esperava un de {expected}.
+          kind_unknown: El tipus de proveïdor d'emmagatzematge {value} no es reconeix;
+            s'esperava un de {expected}.
       google_drive:
         errors:
           content_hash_blank: El hash de contingut de Google Drive no pot estar buit.
           content_hash_mismatch: El hash de contingut de Google Drive no coincideix;
-            ha fallat la comprovació d integritat.
+            ha fallat la comprovació d'integritat.
           create_namespace_no_id: Google Drive no ha retornat cap id en crear la carpeta
-            d espai de noms.
+            d'espai de noms.
           create_vault_folder_no_id: Google Drive no ha retornat cap id en crear la
             carpeta vault.
           folder_not_owned: La carpeta de Drive {folder_name} no està marcada com
-            a propietat d aquesta app; es rebutja l escriptura per protegir dades
-            de l operador.
+            a propietat d'aquesta app; es rebutja l'escriptura per protegir les teves
+            dades.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
             de Cadrumo.
@@ -182,61 +182,61 @@ adapters:
           modified_time_invalid: Google Drive no ha retornat una data de modificació
             utilitzable per a aquest objecte; no es poden considerar fiables les seves
             metadades.
-          namespace_blank: L espai de noms d emmagatzematge de Google Drive no pot
+          namespace_blank: L'espai de noms d'emmagatzematge de Google Drive no pot
             estar buit.
-          namespace_forbidden_characters: L espai de noms de Google Drive {namespace}
+          namespace_forbidden_characters: L'espai de noms de Google Drive {namespace}
             conté caràcters de ruta prohibits.
-          namespace_not_found: No s ha trobat l espai de noms de Google Drive {namespace}.
-          object_not_found: No s ha trobat l objecte de Google Drive {object_key_hmac}
-            a l espai {namespace}.
+          namespace_not_found: No s'ha trobat l'espai de noms de Google Drive {namespace}.
+          object_not_found: No s'ha trobat l'objecte de Google Drive {object_key_hmac}
+            a l'espai {namespace}.
           request_failed: La petició de Google Drive {action} ha fallat amb estat
             {status}.
-          root_folder_id_blank: L id de carpeta arrel de Google Drive no pot estar
+          root_folder_id_blank: L'id de carpeta arrel de Google Drive no pot estar
             buit.
           size_invalid: Google Drive no ha indicat una mida utilitzable per a aquest
             objecte; no es poden considerar fiables les seves metadades.
-          vault_entry_not_folder: L arrel configurada de Drive conté {vault_folder_name},
+          vault_entry_not_folder: L'arrel configurada de Drive conté {vault_folder_name},
             però aquesta entrada no és una carpeta.
           vault_folder_name_blank: El nom de carpeta vault de Google Drive no pot
             estar buit.
-          write_non_dict_response: La resposta d escriptura de Google Drive per a
+          write_non_dict_response: La resposta d'escriptura de Google Drive per a
             {action} tenia una forma inesperada.
       local:
         errors:
           byte_length_invalid: El byte_length del sidecar local té tipus invàlid {actual_type}.
           content_hash_blank: El hash de contingut local no pot estar buit.
           content_hash_mismatch: El hash de contingut local no coincideix; ha fallat
-            la comprovació d integritat.
-          namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
+            la comprovació d'integritat.
+          namespace_blank: L'espai de noms d'emmagatzematge local no pot estar buit.
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (vegeu `aeat config check`).'
-          namespace_create_permission: L emmagatzematge local no ha pogut crear l
-            espai de noms {namespace}.
-          namespace_forbidden_characters: L espai de noms local {namespace} conté
+          namespace_create_permission: L'emmagatzematge local no ha pogut crear l'espai
+            de noms {namespace}.
+          namespace_forbidden_characters: L'espai de noms local {namespace} conté
             caràcters de ruta prohibits.
-          namespace_not_found: No s ha trobat l espai de noms local {namespace}.
-          object_delete_permission: L emmagatzematge local no ha pogut esborrar el
-            payload de l objecte.
-          object_not_found: No s ha trobat l objecte local {object_key_hmac} a l espai
+          namespace_not_found: No s'ha trobat l'espai de noms local {namespace}.
+          object_delete_permission: L'emmagatzematge local no ha pogut esborrar el
+            payload de l'objecte.
+          object_not_found: No s'ha trobat l'objecte local {object_key_hmac} a l'espai
             {namespace}.
-          payload_commit_failed: L emmagatzematge local no ha pogut confirmar atòmicament
-            el payload de l objecte.
-          payload_read_permission: L emmagatzematge local no ha pogut llegir el payload
-            de l objecte.
+          payload_commit_failed: L'emmagatzematge local no ha pogut confirmar atòmicament
+            el payload de l'objecte.
+          payload_read_permission: L'emmagatzematge local no ha pogut llegir el payload
+            de l'objecte.
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (vegeu `aeat config check`).'
-          payload_write_permission: L emmagatzematge local no ha pogut escriure el
-            payload de l objecte.
+          payload_write_permission: L'emmagatzematge local no ha pogut escriure el
+            payload de l'objecte.
           sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o està
             mal format.
-          sidecar_missing: Falta el sidecar de l objecte local.
+          sidecar_missing: Falta el sidecar de l'objecte local.
           sidecar_not_object: El sidecar local {sidecar_path} no és un objecte JSON.
-          sidecar_write_failed: L emmagatzematge local no ha pogut escriure el sidecar
-            de l objecte.
+          sidecar_write_failed: L'emmagatzematge local no ha pogut escriure el sidecar
+            de l'objecte.
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
@@ -253,10 +253,11 @@ adapters:
             de regularització.
       inventory:
         errors:
-          inventory_ledger_absent: Aquest llibre d'inventari no existeix.
-          inventory_ledger_already_exists: Aquest llibre d'inventari ja existeix.
-          inventory_ledger_not_found: No s'ha trobat el llibre d'inventari sol·licitat.
-          load_inventory_ledger_failed: No s'ha pogut carregar el llibre xifrat d'inventari.
+          inventory_ledger_absent: Aquest registre d'inventari no existeix.
+          inventory_ledger_already_exists: Aquest registre d'inventari ja existeix.
+          inventory_ledger_not_found: No s'ha trobat el registre d'inventari sol·licitat.
+          load_inventory_ledger_failed: No s'ha pogut carregar el registre d'inventari
+            xifrat.
           movement_already_exists: Aquest moviment d'inventari ja existeix.
   sede:
     errors:
@@ -291,19 +292,19 @@ adapters:
       listbox_missing: La resposta de declaracions d'AEAT no conté el contenidor de
         llista esperat; l'estructura de la pàgina pot haver canviat.
       listing_nav_failed: La navegació al llistat de declaracions d'AEAT ha fallat.
-        Comproveu la connectivitat de xarxa i torneu-ho a intentar.
+        Comprova la connectivitat de xarxa i torna-ho a intentar.
       modelo_unavailable: El registre de declaracions de l'AEAT no ofereix el model
         sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
-        executeu primer `aeat config auth status`.
+        executa primer `aeat config auth status`.
       notification_content_requires_operator: 'No es pot obrir el contingut d''una
         notificació no llegida: aquest mateix pas és la compareixença, que la dóna
-        per notificada i n''inicia els terminis, i requereix la vostra signatura.
-        Obriu-la vós mateix a la Seu.'
+        per notificada i n''inicia els terminis, i requereix la teva signatura. Obre-la
+        tu mateix a la Seu.'
       notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
-        correctament; la vostra sessió pot haver caducat o l'AEAT està en manteniment.
-        Executeu 'aeat config auth status' i torneu-ho a provar. No ho interpreteu
-        com una safata buida.
+        correctament; la teva sessió pot haver caducat o l'AEAT està en manteniment.
+        Executa 'aeat config auth status' i torna-ho a provar. No ho interpretis com
+        una safata buida.
       parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
         de la pàgina pot haver canviat.
       playwright_alert_modal_failed: Error en continuar el modal d'alerta de l'AEAT.
@@ -313,7 +314,7 @@ adapters:
       playwright_combobox_select_failed: Error en seleccionar una opció del quadre
         combinat de la Seu electrònica.
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
-        la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
+        la sessió probablement ha caducat. Executa 'aeat config auth test' i torna-ho
         a intentar.
       submitted_file_layout_parse_failed: No s'ha pogut llegir el fitxer presentat
         amb el disseny de registre oficial del model, de manera que no s'ha recuperat

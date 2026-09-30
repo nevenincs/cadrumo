@@ -98,7 +98,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\nf83add28\tf83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb\t2026-03-15\t210\tSilla de oficina\t\tpending\n"
+      "text": "TRANSACTIONS IN YOUR RECORDS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\nf83add28\tf83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb\t2026-03-15\t210\tSilla de oficina\t\tpending\n"
     },
     {
       "argv": [

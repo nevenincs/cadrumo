@@ -154,7 +154,7 @@
           "short_work_unit_id": "e01a09d64767",
           "state": "borrador",
           "status": "created",
-          "status_message": "New work unit created.",
+          "status_message": "New declaration created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
           "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         },

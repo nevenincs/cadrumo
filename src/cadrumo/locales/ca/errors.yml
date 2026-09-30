@@ -1190,7 +1190,7 @@ errors:
     refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
       desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
       la taula de despacho de filtres.
-    refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
+    refused_modelo_charge_account_missing: S'ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
     refused_modelo_export_prior_domiciliation_election_required: L'exportació del
@@ -1212,7 +1212,7 @@ errors:
       motiu està prohibit en els altres casos.
     refused_modelo_payment_election_capability: El mètode de pagament escollit encara
       no està disponible.
-    refused_modelo_payment_election_incompatible: L opció de pagament escollida requereix
+    refused_modelo_payment_election_incompatible: L'opció de pagament escollida requereix
       un resultat positiu.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució

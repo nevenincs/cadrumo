@@ -44,8 +44,8 @@ aggregation:
         bucket de agregación solicitado.
       deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
         deducible no puede llevar una clasificación de deducción; la categoría de
-        IVA %{category} se liquida como %{flow_direction}. Elimine el tipo de deducción
-        declarado o corrija la categoría.
+        IVA %{category} se liquida como %{flow_direction}. Elimina el tipo de deducción
+        declarado o corrige la categoría.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
         inactivo para el ejercicio.
       differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
@@ -58,20 +58,20 @@ aggregation:
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       inadmissible_deduction_classification: 'El tipo de deducción de IVA declarado
         %{deduction_fact_kind} no es admisible en una fila de la categoría de IVA
-        %{iva_category}: %{refusal}. Corrija el tipo de deducción declarado, la categoría
+        %{iva_category}: %{refusal}. Corrige el tipo de deducción declarado, la categoría
         de IVA o la evidencia vinculada.'
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.
       missing_counterparty_establishment_on_export: Una exportación está exenta porque
         la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
-        la contraparte. Registre el país de la contraparte; un código ausente o no
+        la contraparte. Registra el país de la contraparte; un código ausente o no
         asignado no establece nada, y su identificación a efectos del IVA no puede
         responder a esto.
       missing_counterparty_identification_state: Una operación intracomunitaria requiere
         el Estado miembro en el que la contraparte está identificada a efectos del
         IVA.
-      rectification_consumed_more_than_once: Un hecho de IVA ya corregido solo puede
+      rectification_consumed_more_than_once: Un apunte de IVA ya corregido solo puede
         rectificarse una vez.
       sectorized_apportionment_duplicate_sectors: El reparto sectorizado de IVA declara
         el mismo sector más de una vez.
@@ -94,8 +94,8 @@ aggregation:
         afectados.
       prorrata_transition_contradictory_evidence: Las entradas de transición de prorrata
         especial contradicen la transición declarada.
-      prorrata_transition_declarations_unavailable: La revisión seleccionada del modelo
-        303 no declara calendario de presentación ni vínculo de arrastre periódico,
+      prorrata_transition_declarations_unavailable: La versión seleccionada del Modelo
+        303 no declara calendario de presentación ni origen de arrastre periódico,
         por lo que no puede determinarse el periodo de transición de prorrata.
       prorrata_transition_entry_without_evidence: Una entrada de transición de prorrata
         especial no aporta evidencia de transición.
@@ -108,14 +108,14 @@ aggregation:
       prorrata_transition_not_applicable_for_period: La evidencia de transición de
         prorrata especial solo aplica en el último periodo del Modelo 303 del ejercicio.
       recipient_fact_disagrees_with_ledger_evidence: El dato de destinatario de operaciones
-        en criterio de caja no concuerda con su evidencia de apuntes en régimen del
-        proveedor.
+        en criterio de caja no concuerda con los apuntes de tus registros en régimen
+        del proveedor.
       supplier_regime_aggregation_period_mismatch: El periodo de la agregación de
         IVA no coincide con el periodo de declaración solicitado.
-      supplier_regime_blank_ledger_identity: La evidencia de llegada en régimen del
-        proveedor contiene una identidad de apunte en blanco.
-      supplier_regime_duplicate_ledger_evidence: La evidencia de llegada en régimen
-        del proveedor repite el mismo apunte.
+      supplier_regime_blank_ledger_identity: Los datos de llegada en régimen del proveedor
+        contienen un apunte con identidad en blanco.
+      supplier_regime_duplicate_ledger_evidence: Los datos de llegada en régimen del
+        proveedor repiten el mismo apunte.
       supplier_regime_observations_outside_period: La agregación de IVA contiene observaciones
         fechadas fuera del periodo de declaración solicitado.
   modelo_bindings:
@@ -123,7 +123,7 @@ aggregation:
       invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
         extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
         en este modelo.
-      unsupported_period: Periodo de modelo no soportado para la agregación del libro.
+      unsupported_period: Periodo de modelo no soportado para los totales de tus registros.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: El Estado miembro de consumo no tiene un código
@@ -147,16 +147,14 @@ aggregation:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
   renta_ledger:
     errors:
-      annual_period_required: Se requiere un periodo anual para la agregación del
-        libro de Renta.
-      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
-        bucket solicitado del libro de Renta.
-      invoice_bucket_mismatch: El bucket del repositorio de facturas no coincide con
-        el bucket solicitado del libro de Renta.
-      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
-        libro de Renta.
-      period_mismatch: El periodo no coincide con el periodo esperado del libro de
-        Renta.
+      annual_period_required: Se requiere un periodo anual para los totales de Renta
+        de tus registros.
+      bucket_mismatch: El bucket del almacén de movimientos no coincide con el bucket
+        de Renta solicitado.
+      invoice_bucket_mismatch: El bucket del almacén de facturas no coincide con el
+        bucket de Renta solicitado.
+      modelo_mismatch: El modelo no coincide con el modelo de Renta esperado.
+      period_mismatch: El periodo no coincide con el periodo de Renta esperado.
       quarterly_period_required: Se requiere un periodo trimestral para la agregación
         de ingresos del Modelo 130 (por ejemplo --year 2024 --period 1T).
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
@@ -174,7 +172,7 @@ aggregation:
         con `aeat app modelo aggregate --retencion-observation`.'
       m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: la(s) asignación(es)
         %{source_allocations} figuran declaradas manualmente y también proceden de
-        las retenciones de capital capturadas. Elimine la fila manual.'
+        las retenciones de capital capturadas. Elimina la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
@@ -183,9 +181,9 @@ aggregation:
         el calendario de presentación del declarante no asigna su modelo periódico
         de retenciones a todos los trimestres del año (lo presenta mensualmente),
         y sumar solo los periodos trimestrales dejaría fuera meses de retenciones.'
-      withholding_filer_profile_absent: No se ha podido cargar el perfil del declarante
-        para este ejercicio, por lo que no puede determinarse si las retenciones se
-        presentan trimestral o mensualmente. Complete el perfil y vuelva a intentarlo.
+      withholding_filer_profile_absent: No se ha podido cargar tu perfil para este
+        ejercicio, por lo que no puede determinarse si las retenciones se presentan
+        trimestral o mensualmente. Completa el perfil y vuelve a intentarlo.
       withholding_quarterly_window_not_scheduled: El calendario de presentación del
         declarante no asigna este trimestre al modelo de retenciones (una gran empresa
         lo presenta mensualmente) y los periodos mensuales de retenciones aún no se
@@ -209,15 +207,15 @@ aggregation:
         inmutable del resumen anual del modelo 303 (primero {first_resolver}; segundo
         {second_resolver}).
       binding_source_mismatch: source_kind y binding_source se refieren a familias
-        de origen de binding distintas.
-      duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado
-        en la malla de fuentes.'
-      duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
-        duplicado en la malla de fuentes.'
+        de origen del valor distintas.
+      duplicate_binding_owner: 'Error interno: el mismo origen del valor tiene dos
+        propietarios en la malla de fuentes.'
+      duplicate_bound_casilla_owner: 'Error interno: propietario duplicado de una
+        casilla con origen de valor en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relación duplicado
         en la malla de fuentes.'
-      duplicate_row_binding_owner: 'Error interno: propietario de vinculación de fila
-        duplicado en la malla de fuentes.'
+      duplicate_row_binding_owner: 'Error interno: el mismo origen del valor de fila
+        tiene dos propietarios en la malla de fuentes.'
       duplicate_row_casilla_coordinate: 'Error interno: coordenada de casilla de fila
         duplicada.'
       duplicate_row_casilla_owner: 'Error interno: propietario de casilla de fila
@@ -232,11 +230,11 @@ aggregation:
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
       provenance_binding_source_mismatch: El tipo de origen declarado en la fila de
-        procedencia no coincide con el origen del vínculo al que dice pertenecer.
-        Los dos deben nombrar el mismo origen para que la trazabilidad sea comprobable.
+        procedencia no coincide con el origen del valor al que dice pertenecer. Los
+        dos deben nombrar el mismo origen para que la trazabilidad sea comprobable.
       provenance_binding_source_missing: La fila de procedencia declara un tipo de
-        origen de vínculo reconocido pero no indica a qué vínculo corresponde. Un
-        origen reconocible sin vínculo declarado deja el valor sin trazabilidad.
+        origen del valor reconocido pero no indica a qué origen corresponde. Un origen
+        reconocible sin origen declarado deja el valor sin trazabilidad.
       provenance_contributor_missing_parent: Una fila de procedencia contribuyente
         debe declarar la fila primaria de la que procede. Sin ella, la aportación
         queda desligada del valor al que contribuye.
@@ -251,41 +249,41 @@ aggregation:
       provenance_resolver_mismatch: Alguna fila de procedencia nombra un resolutor
         distinto del que produjo la resolución. Todas las filas deben atribuirse al
         mismo resolutor que firma el resultado.
-      relation_provenance_incomplete: La procedencia de la relación debe incluir modelo
-        origen, ejercicio, periodos, casillas, referencias legales y referencias de
-        origen.
+      relation_provenance_incomplete: La procedencia de un valor relacionado debe
+        incluir modelo origen, ejercicio, periodos, casillas, referencias legales
+        y referencias de origen.
       reserved_composite_resolver_id: El identificador de resolutor indicado está
         reservado para las resoluciones compuestas y no puede usarse en una resolución
         simple.
-      row_binding_index_invalid: 'Error interno: el índice de fila de la vinculación
-        debe ser mayor o igual que 1.'
-      row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
-        de fila no es válido.'
+      row_binding_index_invalid: 'Error interno: el índice de fila del origen de un
+        valor de fila debe ser mayor o igual que 1.'
+      row_binding_value_invalid: 'Error interno: el valor decimal del origen de un
+        valor de fila no es válido.'
       row_casilla_index_invalid: 'Error interno: el índice de casilla de fila debe
         ser mayor o igual que 1.'
       row_casilla_provenance_coordinate_mismatch: Cada valor de casilla de fila debe
-        tener exactamente una procedencia.
-      row_casilla_row_index_mismatch: La casilla de fila y su vinculación de origen
-        deben usar el mismo índice.
-      row_casilla_source_coordinate_missing: Falta el valor o la identidad de la vinculación
-        de origen de una casilla de fila.
+        tener exactamente una fila de procedencia.
+      row_casilla_row_index_mismatch: La casilla de fila y el origen de su valor deben
+        usar el mismo índice.
+      row_casilla_source_coordinate_missing: Falta el valor o la identidad del origen
+        del valor de una casilla de fila.
       row_casilla_source_identity_mismatch: La identidad de procedencia de la casilla
         de fila difiere de su identidad de origen.
       row_casilla_source_value_mismatch: El valor de la casilla de fila difiere del
-        valor de su vinculación de origen.
+        valor de su origen.
       row_casilla_value_invalid: 'Error interno: el valor decimal de la casilla de
         fila no es válido.'
-      row_source_identity_coordinate_mismatch: Toda coordenada de identidad de fila
-        debe corresponder a un valor de vínculo presente en la propia fila. Se ha
-        declarado una coordenada que la fila no aporta.
+      row_source_identity_coordinate_mismatch: Toda coordenada de identidad de origen
+        de fila debe corresponder a un valor de origen presente en la propia fila.
+        Se ha declarado una coordenada que la fila no aporta.
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
         de fuentes deben ser únicos.
-      unresolved_binding_ids_blank: 'Error interno: los ids de vinculación sin resolver
-        no pueden estar en blanco.'
-      unresolved_binding_ids_duplicate: 'Error interno: los ids de vinculación sin
-        resolver no pueden estar duplicados.'
+      unresolved_binding_ids_blank: 'Error interno: los ids de origen del valor sin
+        resolver no pueden estar en blanco.'
+      unresolved_binding_ids_duplicate: 'Error interno: los ids de origen del valor
+        sin resolver no pueden estar duplicados.'
       unresolved_relation_ids_blank: 'Error interno: los ids de relación sin resolver
         no pueden estar en blanco.'
       unresolved_relation_ids_duplicate: 'Error interno: los ids de relación sin resolver
