@@ -40,7 +40,7 @@ class Attention(StrEnum):
 
 ORIGIN_GLYPHS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {
-        ModeloFormOrigin.NOT_APPLICABLE: "—",
+        ModeloFormOrigin.NOT_APPLICABLE: "-",
         ModeloFormOrigin.OVERRIDES_SOURCE: "≠",
         ModeloFormOrigin.CALCULATED: "=",
         ModeloFormOrigin.NOT_CALCULATED_YET: "◌",

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 12:44+0000\n"
+"POT-Creation-Date: 2026-09-30 08:34+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -344,64 +344,76 @@ msgstr ""
 "de presentación y el historial."
 
 #: ../../how-to/index.md:218
+msgid "Fill in and file in the workbench"
+msgstr "Rellenar y presentar en el banco de trabajo"
+
+#: ../../how-to/index.md:222
+msgid ""
+"Fill in a declaration box by box in the full-screen interface, then "
+"calculate, review, file and export it."
+msgstr ""
+"Rellena una declaración casilla a casilla en la interfaz de pantalla "
+"completa y después calcúlala, revísala, preséntala y expórtala."
+
+#: ../../how-to/index.md:225
 msgid "Modelo 036"
 msgstr "Modelo 036"
 
-#: ../../how-to/index.md:222
+#: ../../how-to/index.md:229
 msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
 msgstr ""
 "Registra un alta, una modificación o una baja que hayas presentado en la "
 "sede de la AEAT."
 
-#: ../../how-to/index.md:225
+#: ../../how-to/index.md:232
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta)"
 
-#: ../../how-to/index.md:229
+#: ../../how-to/index.md:236
 msgid "Prepare the annual Renta declaration that gathers the whole year."
 msgstr "Prepara la declaración anual de la Renta que reúne todo el año."
 
-#: ../../how-to/index.md:232
+#: ../../how-to/index.md:239
 msgid "Modelo 130"
 msgstr "Modelo 130"
 
-#: ../../how-to/index.md:236
+#: ../../how-to/index.md:243
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
 msgstr ""
 "Prepara el pago fraccionado trimestral del IRPF, acumulativo a lo largo "
 "del año."
 
-#: ../../how-to/index.md:239
+#: ../../how-to/index.md:246
 msgid "Modelo 303"
 msgstr "Modelo 303"
 
-#: ../../how-to/index.md:243
+#: ../../how-to/index.md:250
 msgid "Prepare, verify, and export a quarterly IVA return."
 msgstr "Prepara, verifica y exporta una declaración trimestral de IVA."
 
-#: ../../how-to/index.md:246
+#: ../../how-to/index.md:253
 msgid "Modelo 349"
 msgstr "Modelo 349"
 
-#: ../../how-to/index.md:250
+#: ../../how-to/index.md:257
 msgid "Declare intra-community operations from your invoice records."
 msgstr ""
 "Declara las operaciones intracomunitarias a partir de tus registros de "
 "factura."
 
-#: ../../how-to/index.md:253
+#: ../../how-to/index.md:260
 msgid "Modelo 390"
 msgstr "Modelo 390"
 
-#: ../../how-to/index.md:257
+#: ../../how-to/index.md:264
 msgid "Prepare the annual IVA summary."
 msgstr "Prepara el resumen anual de IVA."
 
-#: ../../how-to/index.md:260
+#: ../../how-to/index.md:267
 msgid "Review calculation inputs"
 msgstr "Revisa los datos de cálculo"
 
-#: ../../how-to/index.md:264
+#: ../../how-to/index.md:271
 msgid ""
 "Review which form boxes were filled, supply missing values, and handle "
 "offsets."
@@ -409,11 +421,11 @@ msgstr ""
 "Revisa qué casillas del formulario se rellenaron, aporta los valores que "
 "faltan y gestiona las compensaciones."
 
-#: ../../how-to/index.md:267
+#: ../../how-to/index.md:274
 msgid "Review with Google Sheets"
 msgstr "Revisa con Google Sheets"
 
-#: ../../how-to/index.md:271
+#: ../../how-to/index.md:278
 msgid ""
 "Export, edit, and pull back modelo calculations using a Google Sheets "
 "spreadsheet."
@@ -421,21 +433,21 @@ msgstr ""
 "Exporta, edita y vuelve a descargar los cálculos de un modelo usando una "
 "hoja de cálculo de Google Sheets."
 
-#: ../../how-to/index.md:274
+#: ../../how-to/index.md:281
 msgid "Verify a filing"
 msgstr "Verifica una presentación"
 
-#: ../../how-to/index.md:278
+#: ../../how-to/index.md:285
 msgid "Run verification, read the report findings, and fix what blocks export."
 msgstr ""
 "Ejecuta la verificación, lee los hallazgos del informe y corrige lo que "
 "bloquea la exportación."
 
-#: ../../how-to/index.md:281
+#: ../../how-to/index.md:288
 msgid "Share a calculation summary"
 msgstr "Comparte un resumen del cálculo"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:292
 msgid ""
 "Write a signed PDF of a verified calculation, and check a copy against "
 "your data."
@@ -443,11 +455,11 @@ msgstr ""
 "Escribe un PDF firmado de un cálculo verificado y comprueba una copia "
 "contra tus datos."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:295
 msgid "File at AEAT"
 msgstr "Presenta ante la AEAT"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:299
 msgid ""
 "Export the file, upload it at the AEAT portal yourself, record, and "
 "reconcile."
@@ -455,11 +467,11 @@ msgstr ""
 "Exporta el archivo, súbelo tú mismo en el portal de la AEAT, regístralo y"
 " concilia."
 
-#: ../../how-to/index.md:295
+#: ../../how-to/index.md:302
 msgid "Reconcile a filing"
 msgstr "Concilia una presentación"
 
-#: ../../how-to/index.md:299
+#: ../../how-to/index.md:306
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
@@ -467,15 +479,15 @@ msgstr ""
 "Descarga y guarda el justificante de la AEAT, y luego compáralo con tu "
 "registro de presentación local."
 
-#: ../../how-to/index.md:304
+#: ../../how-to/index.md:311
 msgid "Tools and help"
 msgstr "Herramientas y ayuda"
 
-#: ../../how-to/index.md:310
+#: ../../how-to/index.md:317
 msgid "Connect an agent (MCP)"
 msgstr "Conecta un agente (MCP)"
 
-#: ../../how-to/index.md:314
+#: ../../how-to/index.md:321
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -483,21 +495,21 @@ msgstr ""
 "Expón el conjunto de herramientas a Claude o a cualquier cliente MCP, "
 "manteniendo intacto el límite de seguridad."
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:324
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:328
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Corrige problemas de perfil activo, almacenamiento, registro y "
 "autenticación."
 
-#: ../../how-to/index.md:324
+#: ../../how-to/index.md:331
 msgid "Publish runtime authority"
 msgstr "Publicar la autoridad de ejecución"
 
-#: ../../how-to/index.md:328
+#: ../../how-to/index.md:335
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
 "Publica y verifica una autoridad de registro firmada como operador de "

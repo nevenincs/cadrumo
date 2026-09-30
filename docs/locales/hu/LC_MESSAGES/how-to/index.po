@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 12:44+0000\n"
+"POT-Creation-Date: 2026-09-30 08:34+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -348,58 +348,70 @@ msgstr ""
 "jelölőket és az előzményeket."
 
 #: ../../how-to/index.md:218
+msgid "Fill in and file in the workbench"
+msgstr "Kitöltés és benyújtás a munkafelületen"
+
+#: ../../how-to/index.md:222
+msgid ""
+"Fill in a declaration box by box in the full-screen interface, then "
+"calculate, review, file and export it."
+msgstr ""
+"Töltsön ki egy bevallást rovatról rovatra a teljes képernyős felületen, "
+"majd számítsa ki, ellenőrizze, nyújtsa be és exportálja."
+
+#: ../../how-to/index.md:225
 msgid "Modelo 036"
 msgstr "Modelo 036-os űrlap"
 
-#: ../../how-to/index.md:222
+#: ../../how-to/index.md:229
 msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
 msgstr "Rögzítsen egy AEAT sedéjén benyújtott altát, modificaciont vagy baját."
 
-#: ../../how-to/index.md:225
+#: ../../how-to/index.md:232
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100-as (Renta) űrlap"
 
-#: ../../how-to/index.md:229
+#: ../../how-to/index.md:236
 msgid "Prepare the annual Renta declaration that gathers the whole year."
 msgstr "Készítse el az éves Renta-bevallást, amely az egész évet összegyűjti."
 
-#: ../../how-to/index.md:232
+#: ../../how-to/index.md:239
 msgid "Modelo 130"
 msgstr "Modelo 130-as űrlap"
 
-#: ../../how-to/index.md:236
+#: ../../how-to/index.md:243
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
 msgstr "Készítse el a negyedéves IRPF-előleget, az év során halmozottan."
 
-#: ../../how-to/index.md:239
+#: ../../how-to/index.md:246
 msgid "Modelo 303"
 msgstr "Modelo 303-as űrlap"
 
-#: ../../how-to/index.md:243
+#: ../../how-to/index.md:250
 msgid "Prepare, verify, and export a quarterly IVA return."
 msgstr "Készítsen elő, ellenőrizzen és exportáljon egy negyedéves IVA-bevallást."
 
-#: ../../how-to/index.md:246
+#: ../../how-to/index.md:253
 msgid "Modelo 349"
 msgstr "Modelo 349-es űrlap"
 
-#: ../../how-to/index.md:250
+#: ../../how-to/index.md:257
 msgid "Declare intra-community operations from your invoice records."
 msgstr "Vallja be a közösségen belüli ügyleteket a számlanyilvántartásaiból."
 
-#: ../../how-to/index.md:253
+#: ../../how-to/index.md:260
 msgid "Modelo 390"
 msgstr "Modelo 390-es űrlap"
 
-#: ../../how-to/index.md:257
+#: ../../how-to/index.md:264
 msgid "Prepare the annual IVA summary."
 msgstr "Készítse el az éves IVA-összesítőt."
 
-#: ../../how-to/index.md:260
+#: ../../how-to/index.md:267
 msgid "Review calculation inputs"
 msgstr "Számítási bemenetek áttekintése"
 
-#: ../../how-to/index.md:264
+#: ../../how-to/index.md:271
 msgid ""
 "Review which form boxes were filled, supply missing values, and handle "
 "offsets."
@@ -407,11 +419,11 @@ msgstr ""
 "Tekintse át, mely nyomtatványrovatok voltak kitöltve, adja meg a hiányzó "
 "értékeket, és kezelje a beszámításokat."
 
-#: ../../how-to/index.md:267
+#: ../../how-to/index.md:274
 msgid "Review with Google Sheets"
 msgstr "Áttekintés Google Táblázatokkal"
 
-#: ../../how-to/index.md:271
+#: ../../how-to/index.md:278
 msgid ""
 "Export, edit, and pull back modelo calculations using a Google Sheets "
 "spreadsheet."
@@ -419,21 +431,21 @@ msgstr ""
 "Exportáljon, szerkesszen és húzzon vissza modelo-számításokat egy Google "
 "Táblázatok táblázat használatával."
 
-#: ../../how-to/index.md:274
+#: ../../how-to/index.md:281
 msgid "Verify a filing"
 msgstr "Egy benyújtás ellenőrzése"
 
-#: ../../how-to/index.md:278
+#: ../../how-to/index.md:285
 msgid "Run verification, read the report findings, and fix what blocks export."
 msgstr ""
 "Futtasson ellenőrzést, olvassa el a jelentés észrevételeit, és javítsa "
 "ki, ami blokkolja az exportot."
 
-#: ../../how-to/index.md:281
+#: ../../how-to/index.md:288
 msgid "Share a calculation summary"
 msgstr "Számítási összesítő megosztása"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:292
 msgid ""
 "Write a signed PDF of a verified calculation, and check a copy against "
 "your data."
@@ -441,11 +453,11 @@ msgstr ""
 "Készítsen aláírt PDF-et egy ellenőrzött számításról, és vesse össze egy "
 "példányát az adataival."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:295
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:299
 msgid ""
 "Export the file, upload it at the AEAT portal yourself, record, and "
 "reconcile."
@@ -453,11 +465,11 @@ msgstr ""
 "Exportálja a fájlt, töltse fel maga az AEAT-portálon, rögzítse és "
 "egyeztesse."
 
-#: ../../how-to/index.md:295
+#: ../../how-to/index.md:302
 msgid "Reconcile a filing"
 msgstr "Egy benyújtás egyeztetése"
 
-#: ../../how-to/index.md:299
+#: ../../how-to/index.md:306
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
@@ -465,15 +477,15 @@ msgstr ""
 "Húzza le és tárolja az AEAT justificantéját, majd hasonlítsa össze a "
 "helyi benyújtási nyilvántartásával."
 
-#: ../../how-to/index.md:304
+#: ../../how-to/index.md:311
 msgid "Tools and help"
 msgstr "Eszközök és segítség"
 
-#: ../../how-to/index.md:310
+#: ../../how-to/index.md:317
 msgid "Connect an agent (MCP)"
 msgstr "Ügynök csatlakoztatása (MCP)"
 
-#: ../../how-to/index.md:314
+#: ../../how-to/index.md:321
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -481,21 +493,21 @@ msgstr ""
 "Tedd elérhetővé az eszközkészletet Claude vagy bármely MCP-kliens "
 "számára, a biztonsági határ megtartásával."
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:324
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:328
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Javítsa az aktív profil, a tároló, a nyilvántartás és a hitelesítés "
 "problémáit."
 
-#: ../../how-to/index.md:324
+#: ../../how-to/index.md:331
 msgid "Publish runtime authority"
 msgstr "Futásidejű hatóság közzététele"
 
-#: ../../how-to/index.md:328
+#: ../../how-to/index.md:335
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
 "Kiadáskezelőként tegyen közzé és ellenőrizzen egy aláírt nyilvántartási "

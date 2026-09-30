@@ -166,6 +166,7 @@ IVA prorrata deductions <how-to/prorrata>
 :caption: Your filings
 
 The filing workflow <how-to/filing-spine>
+Fill in and file in the workbench <how-to/fill-in-and-file-in-the-workbench>
 Modelo 036 (censo) <how-to/modelo-036>
 Modelo 100 (Renta) <how-to/modelo-100>
 Modelo 130 (IRPF instalment) <how-to/modelo-130>

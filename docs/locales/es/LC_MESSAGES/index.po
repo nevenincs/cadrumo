@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 12:44+0000\n"
+"POT-Creation-Date: 2026-09-30 08:34+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -127,6 +127,10 @@ msgid "The filing workflow"
 msgstr "El flujo de trabajo de presentación"
 
 #: ../../index.md:164
+msgid "Fill in and file in the workbench"
+msgstr "Rellenar y presentar en el banco de trabajo"
+
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (censo)"
 
@@ -178,51 +182,51 @@ msgstr "Conciliar una presentación"
 msgid "Your filings"
 msgstr "Tus presentaciones"
 
-#: ../../index.md:183
+#: ../../index.md:184
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../index.md:183
+#: ../../index.md:184
 msgid "Publish runtime authority"
 msgstr "Publicar la autoridad de ejecución"
 
-#: ../../index.md:183
+#: ../../index.md:184
 msgid "Disclaimer"
 msgstr "Aviso legal"
 
-#: ../../index.md:183
+#: ../../index.md:184
 msgid "Help"
 msgstr "Ayuda"
 
-#: ../../index.md:192
+#: ../../index.md:193
 msgid "Cadrumo reference"
 msgstr "Referencia de Cadrumo"
 
-#: ../../index.md:192
+#: ../../index.md:193
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:203
+#: ../../index.md:204
 msgid "Overview"
 msgstr "Visión general"
 
-#: ../../index.md:203
+#: ../../index.md:204
 msgid "How it works"
 msgstr "Cómo funciona"
 
-#: ../../index.md:210
+#: ../../index.md:211
 msgid "Updates and downloads"
 msgstr "Actualizaciones y descargas"
 
-#: ../../index.md:210
+#: ../../index.md:211
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../../index.md:210
+#: ../../index.md:211
 msgid "Authoring guide"
 msgstr "Guía de redacción"
 
-#: ../../index.md:210
+#: ../../index.md:211
 msgid "Project"
 msgstr "Proyecto"
 

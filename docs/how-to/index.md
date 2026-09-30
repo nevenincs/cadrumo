@@ -214,6 +214,13 @@ The per-modelo work: prepare, review, verify, export, file, and reconcile.
 Understand drafts, verification, export, filing markers, and history.
 :::
 
+:::{grid-item-card} Fill in and file in the workbench
+:link: fill-in-and-file-in-the-workbench
+:link-type: doc
+
+Fill in a declaration box by box in the full-screen interface, then calculate, review, file and export it.
+:::
+
 :::{grid-item-card} Modelo 036
 :link: modelo-036
 :link-type: doc

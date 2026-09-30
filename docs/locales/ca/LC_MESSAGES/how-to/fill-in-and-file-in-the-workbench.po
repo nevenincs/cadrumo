@@ -1,0 +1,599 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-30 08:34+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:1
+msgid "Fill in and file a declaration in the workbench"
+msgstr "Emplenar i presentar una declaració al banc de treball"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:3
+msgid ""
+"The full-screen interface gives each declaration one workbench: its "
+"official pages, every box with its value and where that value comes from,"
+" the one thing to do next, and the help for the box under the cursor. "
+"This guide shows how to open a declaration, fill it in, calculate, "
+"review, file and export it."
+msgstr ""
+"La interfície de pantalla completa dona a cada declaració un banc de "
+"treball: les seves pàgines oficials, cada casella amb el seu valor i d'on"
+" surt aquest valor, l'única cosa que cal fer a continuació i l'ajuda de "
+"la casella sota el cursor. Aquesta guia explica com obrir una declaració,"
+" emplenar-la, calcular-la, revisar-la, presentar-la i exportar-la."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:8
+msgid ""
+"Cadrumo records a filing in your own records. It never submits a return "
+"to the AEAT; [File at AEAT](file-at-aeat.md) explains that step."
+msgstr ""
+"Cadrumo registra la presentació als teus propis registres. Mai no envia "
+"una declaració a l'AEAT; [Presentar a l'AEAT](file-at-aeat.md) explica "
+"aquest pas."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:11
+msgid "Before you start"
+msgstr "Abans de començar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:13
+msgid ""
+"Your taxpayer profile is complete: see [Set up your taxpayer profile"
+"](profile-setup.md)."
+msgstr ""
+"El teu perfil de contribuent és complet: consulta [Configurar el teu "
+"perfil de contribuent](profile-setup.md)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:14
+msgid ""
+"The declaration exists. In **Declarations**, use *Create or reopen a "
+"declaration* with the modelo, the filing year and the period."
+msgstr ""
+"La declaració existeix. A **Declaracions**, fes servir *Crear o reprendre"
+" una declaració* amb el model, l'exercici i el període."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:17
+msgid "Open a declaration"
+msgstr "Obrir una declaració"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:19
+msgid "Start the full-screen interface with `aeat app tui` and sign in."
+msgstr ""
+"Inicia la interfície de pantalla completa amb `aeat app tui` i inicia la "
+"sessió."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:20
+msgid "Open **Declarations**, select the declaration in the list and press Enter."
+msgstr "Obre **Declaracions**, selecciona la declaració a la llista i prem Retorn."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:22
+msgid "The workbench opens on the first box that needs you."
+msgstr "El banc de treball s'obre a la primera casella que et necessita."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:24
+msgid "Read the workbench"
+msgstr "Llegir el banc de treball"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:26
+msgid ""
+"**The header** names the modelo, the period in words and, when the modelo"
+" declares one, the calculated result."
+msgstr ""
+"**La capçalera** indica el model, el període en paraules i, quan el model"
+" el declara, el resultat calculat."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:28
+msgid ""
+"**The journey line** shows the four steps: Fill in, Calculate, Review and"
+" File. A step marked ✓ is done, ● is the current step, ▲ is blocked and ○"
+" is still to come."
+msgstr ""
+"**La línia del recorregut** mostra els quatre passos: Emplenar, Calcular,"
+" Revisar i Presentar. Un pas marcat amb ✓ està fet, ● és el pas actual, ▲"
+" està bloquejat i ○ encara ha d'arribar."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:31
+msgid ""
+"**The next line** says the one thing to do next and the key that does it."
+" It also counts the default values you have not confirmed."
+msgstr ""
+"**La línia següent** diu l'única cosa que cal fer a continuació i la "
+"tecla que ho fa. També compta els valors per defecte que no has "
+"confirmat."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:33
+msgid ""
+"**The navigator** on the left lists the official pages and their "
+"sections. A section marked ! with a number still has boxes that need you;"
+" ✓ marks a finished one. On a narrow terminal the navigator folds away: "
+"use `[` and `]` to change page."
+msgstr ""
+"**El navegador** de l'esquerra llista les pàgines oficials i els seus "
+"apartats. Un apartat marcat amb ! i un número encara té caselles que et "
+"necessiten; ✓ en marca un d'acabat. En un terminal estret el navegador "
+"s'amaga: fes servir `[` i `]` per canviar de pàgina."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:37
+msgid ""
+"**The list** shows each box: its number in brackets, its label, its "
+"value, a state mark and the state in words."
+msgstr ""
+"**La llista** mostra cada casella: el seu número entre claudàtors, la "
+"seva etiqueta, el seu valor, una marca d'estat i l'estat en paraules."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:39
+msgid ""
+"**The help band** explains the box under the cursor: what it asks for, "
+"where its value comes from, what you can do about it and, once loaded, "
+"its formula, the official text and its legal basis. Press `?` or F1 to "
+"enlarge it; the enlarged band also lists every key."
+msgstr ""
+"**La banda d'ajuda** explica la casella sota el cursor: què demana, d'on "
+"surt el seu valor, què hi pots fer i, un cop carregats, la seva fórmula, "
+"el text oficial i la seva base legal. Prem `?` o F1 per ampliar-la; la "
+"banda ampliada també llista totes les tecles."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:44
+msgid "A value that is missing is always said in words, never shown as a zero."
+msgstr ""
+"Un valor que falta sempre es diu amb paraules, mai no es mostra com un "
+"zero."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:46
+msgid "State marks"
+msgstr "Marques d'estat"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Mark"
+msgstr "Marca"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Meaning"
+msgstr "Significat"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "-"
+msgstr "-"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not applicable"
+msgstr "No s'aplica"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "≠"
+msgstr "≠"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Your value replaces the source"
+msgstr "El teu valor substitueix l'origen"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "="
+msgstr "="
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Calculated"
+msgstr "Calculada"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◌"
+msgstr "◌"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not calculated yet"
+msgstr "Encara sense calcular"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "×"
+msgstr "×"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Could not be calculated"
+msgstr "No s'ha pogut calcular"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◇"
+msgstr "◇"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "For information"
+msgstr "Informativa"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "!"
+msgstr "!"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Needs your input"
+msgstr "Falta la teva dada"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "↓"
+msgstr "↓"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Imported"
+msgstr "Importada"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "⇣"
+msgstr "⇣"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not imported yet"
+msgstr "Encara sense importar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "○"
+msgstr "○"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Optional, empty"
+msgstr "Opcional, buida"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "□"
+msgstr "□"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Cleared by you"
+msgstr "Buidada per tu"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◐"
+msgstr "◐"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Default, please confirm"
+msgstr "Per defecte, confirma-la"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "●"
+msgstr "●"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Entered by you"
+msgstr "Introduïda per tu"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Δ"
+msgstr "Δ"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Changed, not applied"
+msgstr "Canviada, sense aplicar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▲"
+msgstr "▲"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Blocks filing"
+msgstr "Bloqueja la presentació"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:66
+msgid "Keys"
+msgstr "Tecles"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Key"
+msgstr "Tecla"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "What it does"
+msgstr "Què fa"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Enter"
+msgstr "Retorn"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Edit the box under the cursor"
+msgstr "Editar la casella sota el cursor"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`n` and `N`"
+msgstr "`n` i `N`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the next or the previous box that needs you"
+msgstr "Anar a la casella següent o anterior que et necessita"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`[` and `]`"
+msgstr "`[` i `]`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the previous or the next page"
+msgstr "Anar a la pàgina anterior o següent"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`f`"
+msgstr "`f`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show every box, only those that need you, or only your own values"
+msgstr ""
+"Mostrar totes les caselles, només les que et necessiten o només els teus "
+"propis valors"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`d`"
+msgstr "`d`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show each box on one line or on two"
+msgstr "Mostrar cada casella en una línia o en dues"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`s`"
+msgstr "`s`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:111
+msgid "See where the values come from"
+msgstr "Veure d'on surten els valors"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`x` or Delete"
+msgstr "`x` o Supr"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Clear a value you entered"
+msgstr "Buidar un valor que vas introduir"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`u`"
+msgstr "`u`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Undo the change you made to the box"
+msgstr "Desfer el canvi que vas fer a la casella"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`R`"
+msgstr "`R`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Review your changes"
+msgstr "Revisar els teus canvis"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "F8"
+msgstr "F8"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Run the next step"
+msgstr "Executar el pas següent"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`c`"
+msgstr "`c`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Calculate"
+msgstr "Calcular"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`e`"
+msgstr "`e`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Export"
+msgstr "Exportar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`?` or F1"
+msgstr "`?` o F1"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Enlarge the help and list every key"
+msgstr "Ampliar l'ajuda i llistar totes les tecles"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Esc"
+msgstr "Esc"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go back"
+msgstr "Tornar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "F3"
+msgstr "F3"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Switch between the light and the dark appearance"
+msgstr "Canviar entre l'aparença clara i la fosca"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:86
+msgid "The footer shows as many keys as fit the width of the terminal."
+msgstr "El peu mostra tantes tecles com hi caben a l'amplada del terminal."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:88
+msgid "Fill in boxes"
+msgstr "Emplenar caselles"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:90
+msgid "Move to a box with the arrow keys or with `n`, then press Enter."
+msgstr "Ves a una casella amb les fletxes o amb `n` i prem Retorn."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
+msgid ""
+"Type the value the way you write numbers in your language, for example "
+"`1.234,56` in Spanish or `1,234.56` in English. The editor shows how it "
+"will read the value, or says why it cannot read it."
+msgstr ""
+"Escriu el valor com escrius els nombres en la teva llengua, per exemple "
+"`1.234,56` en català o `1,234.56` en anglès. L'editor mostra com llegirà "
+"el valor, o diu per què no el pot llegir."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:94
+msgid "Choose **Add to changes**. The box shows Δ with the value it replaces."
+msgstr ""
+"Tria **Afegeix als canvis**. La casella mostra Δ amb el valor que "
+"substitueix."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:96
+msgid ""
+"Nothing is saved yet. When a box cannot be typed into, the help band says"
+" why: a value that follows your records, for example, is corrected in the"
+" ledger and then recalculated."
+msgstr ""
+"Encara no es desa res. Quan en una casella no s'hi pot escriure, la banda"
+" d'ajuda diu per què: un valor que segueix els teus registres, per "
+"exemple, es corregeix al llibre registre i després es recalcula."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:100
+msgid "Review and apply your changes"
+msgstr "Revisar i aplicar els teus canvis"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:102
+msgid ""
+"Press `R`. The review lists each change with its box, how it read before,"
+" how it will read after, and what the change does. It warns you when your"
+" value replaces an imported or a calculated one: your value keeps winning"
+" until you restore the source."
+msgstr ""
+"Prem `R`. La revisió llista cada canvi amb la seva casella, com era "
+"abans, com quedarà després i què fa el canvi. T'avisa quan el teu valor "
+"substitueix un d'importat o de calculat: el teu valor mana fins que "
+"restauris l'origen."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:107
+msgid ""
+"Choose **Apply and recalculate** to save the changes and recalculate the "
+"declaration, or **Discard all** to drop them. If you leave the workbench "
+"with changes you have not applied, it asks you first."
+msgstr ""
+"Tria **Aplica i recalcula** per desar els canvis i recalcular la "
+"declaració, o **Descarta-ho tot** per rebutjar-los. Si surts del banc de "
+"treball amb canvis sense aplicar, primer et pregunta."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:113
+msgid ""
+"Press `s` on any box. The sources view groups every source by family: "
+"your records, the registers you keep, your profile, earlier filings, the "
+"AEAT draft, the values you enter and the values the official design "
+"fixes. Each source says what you can do about its values and whether it "
+"has produced data, and lists the boxes it feeds."
+msgstr ""
+"Prem `s` a qualsevol casella. La vista d'orígens agrupa cada origen per "
+"família: la teva comptabilitat, els registres que portes, el teu perfil, "
+"les declaracions anteriors, l'esborrany de l'AEAT, els valors que "
+"introdueixes tu i els valors que fixa el disseny oficial. Cada origen diu"
+" què pots fer amb els seus valors i si ha aportat dades, i llista les "
+"caselles que alimenta."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:119
+msgid ""
+"Press Enter to go to a box, or `o` to open the area that owns the source,"
+" such as the ledger or your profile."
+msgstr ""
+"Prem Retorn per anar a una casella, o `o` per obrir l'apartat al qual "
+"pertany l'origen, com el llibre registre o el teu perfil."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:122
+msgid "Calculate, verify, file and export"
+msgstr "Calcular, verificar, presentar i exportar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:124
+msgid ""
+"Press F8 to run the step the journey line offers, or `c` to recalculate "
+"at any time once your changes are applied. The values you entered are "
+"kept."
+msgstr ""
+"Prem F8 per executar el pas que ofereix la línia del recorregut, o `c` "
+"per recalcular en qualsevol moment quan els teus canvis estiguin "
+"aplicats. Els valors que vas introduir es conserven."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:126
+msgid ""
+"The first Modelo 303 calculation asks the filing answers its period "
+"needs: whether you file a joint return and, in the last period of the "
+"year, whether you are exempt from Modelo 390."
+msgstr ""
+"El primer càlcul del Model 303 demana les respostes que necessita el seu "
+"període: si presentes una declaració conjunta i, en l'últim període de "
+"l'any, si estàs exempt del Model 390."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:129
+msgid ""
+"Verification checks the declaration. A box that stops you from filing "
+"shows ▲, and the navigator counts it on its section."
+msgstr ""
+"La verificació comprova la declaració. Una casella que t'impedeix "
+"presentar mostra ▲, i el navegador la compta al seu apartat."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:131
+msgid "Filing asks you to confirm, then records the filing in Cadrumo."
+msgstr ""
+"La presentació et demana confirmació i després registra la presentació a "
+"Cadrumo."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:132
+msgid ""
+"Once the declaration is verified, `e` exports it: choose where to save "
+"it, which file to write and, for Modelo 303, the refund, payment and "
+"direct debit choices. The export result then states what the file is "
+"worth."
+msgstr ""
+"Quan la declaració està verificada, `e` l'exporta: tria on desar-la, quin"
+" fitxer escriure i, per al Model 303, les opcions de devolució, pagament "
+"i domiciliació. Després, el resultat de l'exportació indica el que val el"
+" fitxer."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:136
+msgid "When something looks unexpected"
+msgstr "Quan alguna cosa no és l'esperada"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:138
+msgid ""
+"**Default, please confirm.** For a declaration calculated outside the "
+"workbench, Cadrumo cannot tell which values you typed. Enter the value to"
+" confirm it."
+msgstr ""
+"**Per defecte, confirma-la.** En una declaració calculada fora del banc "
+"de treball, Cadrumo no pot saber quins valors vas escriure. Introdueix el"
+" valor per confirmar-lo."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:141
+msgid ""
+"**fixed.** The official design prints the value of the box; you cannot "
+"change it."
+msgstr ""
+"**fixat.** El disseny oficial imprimeix el valor de la casella; no el "
+"pots canviar."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:143
+msgid ""
+"**pages arranged automatically.** The pages were arranged from the "
+"official design by Cadrumo and have not been reviewed by hand. Every box "
+"still appears exactly once."
+msgstr ""
+"**pàgines ordenades automàticament.** Cadrumo va ordenar les pàgines a "
+"partir del disseny oficial i no s'han revisat a mà. Cada casella continua"
+" apareixent exactament una vegada."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:146
+msgid ""
+"A declaration whose modelo has no arrangement opens with every box in box"
+" number order, for viewing only."
+msgstr ""
+"Una declaració el model de la qual no té distribució s'obre amb totes les"
+" caselles per ordre de número, només per a consulta."
+
