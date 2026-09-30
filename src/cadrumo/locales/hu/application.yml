@@ -865,8 +865,8 @@ application:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'
         address_not_writable: Ez a rovat így nem módosítható.
-        ambiguous_separator: Nem egyértelmű, melyik jel választja el a tizedeseket;
-          írja be a számot ezres tagolás nélkül, például 1234,56.
+        ambiguous_separator_readings: 'Ez kétféleképpen olvasható: {as_thousands}
+          vagy {as_decimal}. Írja be az egyik alakban.'
         bad_grouping: 'Az ezres tagolás helytelen; írja így, például: 1 234 567,89.'
         below_minimum: 'A legkisebb megengedett érték: {bound}.'
         channel_unavailable: Ez az érték itt még nem adható meg.

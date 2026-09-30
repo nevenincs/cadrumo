@@ -159,8 +159,14 @@ def _read_single_mark(
     mark: str,
     marks: _LocaleMarks,
     normalisations: list[ModeloEditNormalisation],
+    sign: str,
 ) -> str:
-    """Read a number carrying one kind of separator, once or repeatedly."""
+    """Read a number carrying one kind of separator, once or repeatedly.
+
+    A single mark that could group thousands or separate decimals is refused
+    with both readings, the whole number and the one in this locale's decimal
+    mark, each carrying the entry's ``sign``, so the filer can type the one meant.
+    """
     count = body.count(mark)
     if count > 1:
         # Repeated, it can only be a grouping, whichever convention it belongs to.
@@ -173,7 +179,11 @@ def _read_single_mark(
         return f"{lead}.{tail}"
     # The mark is this locale's grouping or the other convention's decimal mark.
     if european_thousands_reading_is_ambiguous(f"{lead}.{tail}"):
-        raise ModeloEditParseRefusedError(ModeloEditParseReason.AMBIGUOUS_SEPARATOR)
+        raise ModeloEditParseRefusedError(
+            ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS,
+            f"{sign}{lead}{tail}",
+            f"{sign}{lead}{marks.decimal}{tail}",
+        )
     normalisations.append(ModeloEditNormalisation.FOREIGN_DECIMAL_MARK_READ)
     return f"{lead}.{tail}"
 
@@ -217,7 +227,9 @@ def _canonical_number(lexeme: str, locale: OutputLanguage, normalisations: list[
             normalisations.append(ModeloEditNormalisation.FOREIGN_DECIMAL_MARK_READ)
         canonical = f"{digits}.{fraction}"
     elif "." in body or "," in body:
-        canonical = _read_single_mark(body, "." if "." in body else ",", marks, normalisations)
+        canonical = _read_single_mark(
+            body, "." if "." in body else ",", marks, normalisations, sign="-" if negative else ""
+        )
     else:
         canonical = body
     if not _CANONICAL_DECIMAL_RE.fullmatch(canonical):

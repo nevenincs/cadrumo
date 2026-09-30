@@ -20,6 +20,7 @@ from .value_presentation import SCREEN_MINUS_SIGN, group_decimal_text
 
 _ARGUMENT_NAMES: Final[Mapping[ModeloEditParseReason, tuple[str, ...]]] = MappingProxyType(
     {
+        ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS: ("as_thousands", "as_decimal"),
         ModeloEditParseReason.TOO_MANY_DECIMALS: ("digits",),
         ModeloEditParseReason.BELOW_MINIMUM: ("bound",),
         ModeloEditParseReason.ABOVE_MAXIMUM: ("bound",),

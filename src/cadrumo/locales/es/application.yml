@@ -903,8 +903,8 @@ application:
       parse:
         above_maximum: El valor máximo es {bound}.
         address_not_writable: Esta casilla no se puede cambiar así.
-        ambiguous_separator: No queda claro qué signo separa los decimales; escribe
-          el número sin separador de miles, por ejemplo 1234,56.
+        ambiguous_separator_readings: 'Esto puede leerse de dos formas: {as_thousands}
+          o {as_decimal}. Escríbelo como una de ellas.'
         bad_grouping: Los separadores de miles no están bien colocados; escribe, por
           ejemplo, 1.234.567,89.
         below_minimum: El valor mínimo es {bound}.

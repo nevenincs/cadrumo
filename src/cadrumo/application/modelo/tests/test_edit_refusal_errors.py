@@ -74,7 +74,7 @@ _FAMILIES: tuple[tuple[ModeloEditRefusalV1, type[ModeloEditRefusedError], str], 
     (
         ModeloEditParseRefusalV1(
             address=ModeloEditScalarAddressV1(casilla_id="06"),
-            reason=ModeloEditParseReason.AMBIGUOUS_SEPARATOR,
+            reason=ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS,
         ),
         ModeloEditRefusedError,
         "REFUSED_MODELO_EDIT_REFUSED",

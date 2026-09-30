@@ -902,8 +902,8 @@ application:
       parse:
         above_maximum: El valor màxim és {bound}.
         address_not_writable: Aquesta casella no es pot canviar així.
-        ambiguous_separator: No queda clar quin signe separa els decimals; escriu
-          el nombre sense separador de milers, per exemple 1234,56.
+        ambiguous_separator_readings: 'Això es pot llegir de dues maneres: {as_thousands}
+          o {as_decimal}. Escriu-ho com una d''aquestes.'
         bad_grouping: Els separadors de milers no estan ben col·locats; escriu, per
           exemple, 1.234.567,89.
         below_minimum: El valor mínim és {bound}.

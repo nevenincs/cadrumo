@@ -820,8 +820,8 @@ application:
       parse:
         above_maximum: The largest value allowed is {bound}.
         address_not_writable: This box cannot be changed that way.
-        ambiguous_separator: It is unclear which mark separates the decimals; type
-          the number without thousands separators, for example 1234.56.
+        ambiguous_separator_readings: 'This can be read two ways: {as_thousands} or
+          {as_decimal}. Type it as one of those.'
         bad_grouping: The thousands separators are misplaced; type, for example, 1,234,567.89.
         below_minimum: The smallest value allowed is {bound}.
         channel_unavailable: This value cannot be entered here yet.

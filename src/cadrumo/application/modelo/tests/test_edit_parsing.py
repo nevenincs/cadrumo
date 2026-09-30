@@ -38,6 +38,7 @@ from ..edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from ..edit_parse_text import parse_refusal_text
 from ..edit_parsing import ModeloEditParseRequestV1, parse_modelo_edit_lexeme, validate_modelo_edit_value
 from ..edit_value_grammar import (
     ModeloEditChoiceV1,
@@ -231,10 +232,10 @@ def test_the_other_conventions_decimal_mark_is_read_when_it_cannot_be_a_grouping
 @pytest.mark.parametrize(
     ("locale", "lexeme", "reason"),
     [
-        (OutputLanguage.ES, "1.234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR),
-        (OutputLanguage.CA, "10.500", ModeloEditParseReason.AMBIGUOUS_SEPARATOR),
-        (OutputLanguage.EN, "1,234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR),
-        (OutputLanguage.HU, "1.234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR),
+        (OutputLanguage.ES, "1.234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS),
+        (OutputLanguage.CA, "10.500", ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS),
+        (OutputLanguage.EN, "1,234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS),
+        (OutputLanguage.HU, "1.234", ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS),
         (OutputLanguage.ES, "12.34.5", ModeloEditParseReason.BAD_GROUPING),
         (OutputLanguage.EN, "1,23,456.00", ModeloEditParseReason.BAD_GROUPING),
         (OutputLanguage.ES, "1 234,56", ModeloEditParseReason.BAD_GROUPING),
@@ -254,6 +255,28 @@ def test_a_number_that_cannot_be_read_exactly_is_refused_with_its_reason(
     locale: OutputLanguage, lexeme: str, reason: ModeloEditParseReason
 ) -> None:
     assert _reason(_parse("01", lexeme, locale)) == reason
+
+
+@pytest.mark.parametrize(
+    ("locale", "lexeme", "as_thousands", "as_decimal"),
+    [
+        (OutputLanguage.ES, "1.234", "1234", "1,234"),
+        (OutputLanguage.EN, "1,234", "1234", "1.234"),
+        (OutputLanguage.ES, "-1.234", "-1234", "-1,234"),
+    ],
+)
+def test_a_two_way_number_is_refused_naming_both_readings(
+    locale: OutputLanguage, lexeme: str, as_thousands: str, as_decimal: str
+) -> None:
+    result = _parse("01", lexeme, locale)
+
+    assert isinstance(result, ModeloEditRefusedV1)
+    assert isinstance(result.refusal, ModeloEditParseRefusalV1)
+    assert result.refusal.reason is ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS
+    sentence = parse_refusal_text(result.refusal, locale)
+    assert as_thousands in sentence
+    assert as_decimal in sentence
+    assert "{" not in sentence
 
 
 def test_a_refusal_carries_arguments_never_the_lexeme() -> None:

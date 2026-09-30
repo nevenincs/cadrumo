@@ -560,7 +560,7 @@ class ModeloEditParseReason(StrEnum):
 
     EMPTY = "empty"
     NOT_A_NUMBER = "not_a_number"
-    AMBIGUOUS_SEPARATOR = "ambiguous_separator"
+    AMBIGUOUS_SEPARATOR_READINGS = "ambiguous_separator_readings"
     BAD_GROUPING = "bad_grouping"
     SCIENTIFIC_NOTATION = "scientific_notation"
     NON_FINITE = "non_finite"
