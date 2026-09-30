@@ -451,7 +451,7 @@ async def test_an_unresolved_verification_sends_the_filer_to_its_findings_and_fr
             await _settle(pilot)
             highlighted = screen.query_one(CasillaList).highlighted
 
-    assert "Resolve what blocks filing (to do: 2) [i]" in next_line
+    assert "Resolve what blocks filing (to do: 1) [i]" in next_line
     assert listed
     assert highlighted is not None
     assert highlighted.field.box == "06"

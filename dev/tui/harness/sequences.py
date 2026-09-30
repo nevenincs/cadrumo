@@ -38,7 +38,7 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, confirmable
 from cadrumo.application.user_profile.login_interaction import profile_login_choices
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
@@ -56,6 +56,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScr
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
+from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
@@ -74,6 +75,7 @@ REVIEW_PAGE: Final[str] = "review"
 RECALCULATE_PAGE: Final[str] = "recalculate"
 EDITOR_PAGE: Final[str] = "editor"
 BULK_CONFIRM_PAGE: Final[str] = "bulk-confirm"
+F8_CONFIRM_PAGE: Final[str] = "f8-confirm"
 _DECLARATIONS_DESTINATION: Final = "workbench.declarations"
 _GOLDEN_PROBLEMS_KEPT: Final[int] = 5
 _SETTLE_ROUNDS: Final[int] = 20
@@ -126,6 +128,8 @@ class SequenceScenario:
     """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
     assumes: bool = False
     """Whether the calculation leaves assumed values for the filer to confirm."""
+    assumed_unconfirmable: bool = False
+    """Whether every assumed value is one a list cannot confirm, so F8 opens the first one's panel instead."""
 
 
 SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
@@ -284,6 +288,35 @@ async def _ask_to_confirm_assumed(scenario: SequenceScenario, pilot: Pilot[objec
     await _settle(pilot)
 
 
+async def _press_f8_with_nothing_to_confirm(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press F8 only where its next step is Confirm and no assumed value can be confirmed from a list.
+
+    F8 runs whatever the next step is, and a calculation, verification or
+    filing would change the declaration every capture shares. Confirm only
+    ever opens a list or a panel, so the step is read first, under either
+    verification state the workbench could hold, and F8 is pressed only when
+    both say Confirm.
+    """
+    workbench = _workbench(scenario, pilot.app)
+    form = workbench.form
+    if form is None or workbench.recorded or not form.edit_admitted or workbench.staged_changes:
+        raise PageUnavailableError(f"{scenario.sequence_id}: the declaration admits no confirmation here")
+    steps = {
+        workbench_progress(form, staged=0, verified=verified, filed=False).next_action for verified in (False, True)
+    }
+    if steps != {NextAction.CONFIRM}:
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: F8 would {', '.join(sorted(step.value for step in steps))}, not confirm"
+        )
+    assumed = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
+    if any(confirmable(field) for field in assumed):
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: an assumed value can be confirmed from a list, so F8 opens the list"
+        )
+    await pilot.press("f8")
+    await _settle(pilot)
+
+
 async def _stage(
     scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
 ) -> bool:
@@ -340,6 +373,7 @@ _PAGE_SCREENS: Final[dict[str, type[object]]] = {
     "not-editable": CasillaEditorScreen,
     EDITOR_PAGE: CasillaEditorScreen,
     BULK_CONFIRM_PAGE: BulkConfirmScreen,
+    F8_CONFIRM_PAGE: CasillaEditorScreen,
     REVIEW_PAGE: EditReviewScreen,
     RECALCULATE_PAGE: ConfirmScreen,
     ISSUES_PAGE: WorkbenchIssuesScreen,
@@ -353,12 +387,15 @@ _PAGE_WALKS: Final[dict[str, _Walk]] = {
     "not-editable": _open_read_only_panel,
     EDITOR_PAGE: _open_assumed_panel,
     BULK_CONFIRM_PAGE: _ask_to_confirm_assumed,
+    F8_CONFIRM_PAGE: _press_f8_with_nothing_to_confirm,
     REVIEW_PAGE: _open_review,
     RECALCULATE_PAGE: _ask_to_recalculate,
     ISSUES_PAGE: _open_issues,
 }
 """What the filer does on the workbench to reach each page."""
-_CHANGING_PAGES: Final[frozenset[str]] = frozenset({EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE})
+_CHANGING_PAGES: Final[frozenset[str]] = frozenset(
+    {EDITOR_PAGE, BULK_CONFIRM_PAGE, F8_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE}
+)
 """Pages that start a change, which a filed declaration does not offer."""
 _ASSUMED_PAGES: Final[frozenset[str]] = frozenset({EDITOR_PAGE, BULK_CONFIRM_PAGE})
 """Pages about assumed values, which a calculation that assumes nothing does not offer."""
@@ -370,12 +407,15 @@ def scenario_pages(scenario: SequenceScenario) -> tuple[str, ...]:
     The findings list is a page only of a declaration its sequence verified.
     A filed declaration accepts no change, so it offers none of the pages that
     start one, and the pages about assumed values need a calculation that
-    assumed some.
+    assumed some. F8 opening a panel needs assumed values none of which a list
+    can confirm.
     """
 
     def offered(page: str) -> bool:
         if page == ISSUES_PAGE:
             return scenario.verified
+        if page == F8_CONFIRM_PAGE:
+            return scenario.assumed_unconfirmable and not scenario.filed
         if scenario.filed and page in _CHANGING_PAGES:
             return False
         return scenario.assumes or page not in _ASSUMED_PAGES
@@ -616,6 +656,7 @@ __all__ = [
     "BULK_CONFIRM_PAGE",
     "DECLARATIONS_PAGE",
     "EDITOR_PAGE",
+    "F8_CONFIRM_PAGE",
     "ISSUES_PAGE",
     "RECALCULATE_PAGE",
     "REVIEW_PAGE",

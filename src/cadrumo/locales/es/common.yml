@@ -2172,6 +2172,8 @@ tui:
         save_next: Dejar y pasar a la siguiente
         unreadable: No se ha podido leer este valor.
       export:
+        confirm_first: 'Confirma los valores supuestos antes de generar el fichero
+          o registrar la presentación (por confirmar: {count}) [n].'
         title: Exportar la declaración
         verify_first: Verifica la declaración antes de exportarla [F8].
       filed:
@@ -2179,8 +2181,11 @@ tui:
           Para cambiarla, inicia una corrección de esta declaración.'
       filter:
         all: todas las casillas
+        amount: solo las casillas con importe
         attention: solo lo pendiente
+        calculated: solo los valores calculados
         mine: solo tus valores
+        records: solo lo que viene de tus registros
       go_to:
         missing: No hay ninguna casilla [{box}] en este modelo.
         prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
@@ -2411,7 +2416,10 @@ tui:
       origin_filed:
         default_to_confirm: Supuesta, nadie la introdujo
         needs_input: Vacía, nadie la rellenó
+      origin_held_zero:
+        optional_empty: Opcional, se queda en 0
       origin_source:
+        aeat_imported_on: De datos de la AEAT, importados el {date}
         imported:
           aeat_draft: De datos de la AEAT
           earlier_filings: De una declaración anterior
@@ -2469,7 +2477,7 @@ tui:
       rebase:
         changed: 'Casillas que ahora muestran otro valor: {count}.'
         dropped: 'Cambios que ya no se aplican y se han quitado: {count}.'
-        moved: La declaración cambió desde que preparaste tus cambios.
+        moved: La declaración cambió desde que escribiste cambios que aún no has aplicado.
         still_moving: La declaración sigue cambiando. Espera un momento y vuelve a
           revisar tus cambios [R].
       repeating: 'Filas de detalle: {count}'
@@ -2495,7 +2503,7 @@ tui:
         and_more: '{shown} y {count} más'
         apply: Aplicar y recalcular
         back: Volver a editar
-        before_changed: la casilla cambió desde que preparaste esto
+        before_changed: la casilla cambió desde que escribiste esto
         blocked: Resuelve lo marcado con ▲ antes de aplicar.
         change_line: '{box}{concept}: {before} pasa a {after} ({effect})'
         check_failed: No se han podido comprobar tus cambios. Siguen aquí; inténtalo
@@ -2544,8 +2552,9 @@ tui:
           Al aplicar solo se conservan los cambios de esta lista. Cualquier otro valor
           escrito fuera de esta pantalla toma el valor que le den su origen o el modelo,
           o queda vacío.
-        rebased: 'La declaración cambió después de que prepararas estos cambios. Revisa
-          de nuevo las líneas marcadas (cambiadas: {count}).'
+        rebased: 'La declaración cambió después de que escribieras estos cambios,
+          que aún no están aplicados. Revisa de nuevo las líneas marcadas (cambiadas:
+          {count}).'
         title: 'Cambios por aplicar: {count}'
       search:
         count: 'Casillas encontradas: {count}'
@@ -2568,6 +2577,7 @@ tui:
         count: 'Casillas: {count}'
         group:
           aeat_data: Datos de la AEAT
+          aeat_data_imported_on: Datos de la AEAT, importados el {date}
           assumed: Supuestos, confírmalos
           blank: En blanco o no aplican
           calculated: Calculados
@@ -2612,7 +2622,6 @@ tui:
         fill: Rellenar
         review: Comprobar
       value:
-        fixed_by_design: fijado
         not_applicable: no aplica
       was: 'antes: {value}'
   root:

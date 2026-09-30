@@ -5,7 +5,8 @@ rows come from the workbench's own page layout. Expected rates are the ones the
 official 303 design prints for these rows: 4 % super-reduced, 10 % reduced and
 the 2 % transitional rate, grounded on their base bindings. Only a rate box the
 design fixes shows its row's rate as its value; a rate box the calculation
-fills shows its own value and says the row's rate beside it. The design's own
+fills shows its own value, in its rate unit, and says the row's rate beside it.
+A held zero reads as a zero rate, never as an empty box. The design's own
 literals ("02100") declare no scale, so a rate box with no grounded rate shows
 none, and a literal is only printed as a rate where it states one outright.
 """
@@ -124,9 +125,6 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
     operation: PinnedAuthorityOperation,
 ) -> None:
     entries = _entries(_form(operation))
-    fixed = {
-        lookup_translation("tui.modelo.workbench.value.fixed_by_design", locale=item.value) for item in OutputLanguage
-    }
 
     with override_settings(cadrumo_output_language="en"):
         for box, rate in _GROUNDED.items():
@@ -154,15 +152,32 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
             calculated, field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATION_FAILED})
         )
         assert rate_note(worked_out, OutputLanguage.EN) == f"This row's rate is {rate}."
-        shown = row_value_text(worked_out, OutputLanguage.EN)
-        assert "%" not in shown and shown not in {"·", "…"}
+        # A worked-out zero is a rate of zero, in the rate's unit, in the row and in the grid.
+        assert row_value_text(worked_out, OutputLanguage.EN) == f"0{_PERCENT}"
+        assert grid_value_text(worked_out, OutputLanguage.EN) == f"0{_PERCENT}"
         assert row_value_text(failed, OutputLanguage.EN) == "·"
-        # An optional rate box nobody filled reads as empty, even over a held zero that would read as a rate.
+
+        def worked(figure: str) -> str:
+            field = calculated.field.model_copy(
+                update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal(figure)}
+            )
+            return row_value_text(replace(calculated, field=field), OutputLanguage.EN)
+
+        # The row's 2 % establishes the scale of a figure equal to it as a fraction or as a percentage.
+        assert worked("2.00") == rate
+        assert worked("0.02") == rate
+        # A figure matching the row's rate at neither scale keeps its scale undeclared, never guessed.
+        assert "%" not in worked("3")
+        # An optional rate box nobody filled shows nothing; one holding a zero shows it, and says it was left at 0.
         optional = entries["169"]
         assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-        held_zero = replace(optional, field=optional.field.model_copy(update={"value": Decimal("0")}))
-        assert row_value_text(held_zero, OutputLanguage.EN) == "·"
-        assert grid_value_text(held_zero, OutputLanguage.EN) == "·"
+        assert optional.field.value is None
+        assert row_value_text(optional, OutputLanguage.EN) == "·"
+        held_zero = replace(optional, field=optional.field.model_copy(update={"value": Decimal("0.00")}))
+        assert row_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
+        assert grid_value_text(held_zero, OutputLanguage.EN) == f"0{_PERCENT}"
+        assert origin_words(held_zero.field) == "Optional, left at 0"
+        assert origin_words(optional.field) == "Optional, empty"
         assert row_value_text(entries["05"], OutputLanguage.ES) == f"10{_PERCENT}"
         # A literal that states its rate outright is printed, and the band says only the form prints it.
         stated = replace(
@@ -180,11 +195,9 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
             assert entry.field.grounded_rate is None, box
             assert entry.field.printed_rate is None, box
             assert row_value_text(entry, OutputLanguage.EN) == "·", box
-            assert value_text(entry, OutputLanguage.EN) not in fixed, box
             assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.not_grounded", locale="en")
         # A box that is not a row's rate box never carries the note.
         assert rate_note(entries["01"]) is None
-        assert not any(row_value_text(entry, OutputLanguage.EN) in fixed for entry in entries.values())
 
 
 def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAuthorityOperation) -> None:

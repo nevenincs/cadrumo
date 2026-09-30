@@ -16,6 +16,10 @@ magnitude where a word carries the direction. A declaration recorded as filed
 shows its result undimmed, no deadline and no attention chips: nothing is left
 to do on it here.
 
+What blocks filing is counted once, by :func:`blocking_count`, so the chip and
+the next-action line never disagree, and every blocker mark is drawn in the
+theme's error colour, as the rows draw it.
+
 The header never drops the result to fit, and never runs past the screen's
 edge. A narrow terminal loses the modelo's name before the deadline, and the
 result's box before any chip. When the result and its chips still do not fit
@@ -26,6 +30,7 @@ said in the help), and the out-of-date mark and the chips share the next.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
@@ -34,6 +39,7 @@ from types import MappingProxyType
 from typing import Final
 
 from rich.cells import cell_len
+from textual.content import Content
 
 from .....application.modelo.value_presentation import format_casilla_value
 from .....application.modelo.work_form_models import (
@@ -49,7 +55,16 @@ from .....core.i18n.render import tr
 from .....core.result_disposition import ResultDisposition
 from .casilla_list import CasillaListEntry, value_text
 from .navigator import to_do_counts
-from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
+from .vocabulary import (
+    ATTENTION_ROLES,
+    BLOCKS_MARK,
+    CHECK_MARK,
+    CONFIRM_MARK,
+    MISSING_MARK,
+    STALE_MARK,
+    Attention,
+    WorkbenchMark,
+)
 from .wording import date_text, modelo_number, modelo_title, period_words
 
 _MONEY: Final[str] = "money"
@@ -80,6 +95,14 @@ _ELLIPSIS: Final[str] = "…"
 _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not_calculated"
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
+
+BLOCKS_STYLE: Final[str] = f"${ATTENTION_ROLES[Attention.BLOCKED].value}"
+"""The style every blocker mark is drawn in: the registry's colour role for it, as the active theme resolves it."""
+
+
+def blocks_marked(text: str) -> Content:
+    """``text`` as drawn, every blocker mark in it in the error colour, wherever it stands."""
+    return Content(text).highlight_regex(re.escape(BLOCKS_MARK.glyph), style=BLOCKS_STYLE)
 
 
 class ChipLevel(StrEnum):
@@ -167,6 +190,13 @@ class AttentionChip:
     def text(self) -> str:
         """The chip as the header shows it: the glyph, then its count in words."""
         return f"{self.mark.glyph} {tr(_CHIP_LOCALE_KEYS[self.level], count=self.count)}"
+
+    @property
+    def content(self) -> Content:
+        """The chip as drawn: its words, in the error colour when it counts what blocks filing."""
+        if self.level is ChipLevel.BLOCKS:
+            return Content.styled(self.text, BLOCKS_STYLE)
+        return Content(self.text)
 
 
 def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool) -> str:
@@ -335,30 +365,36 @@ def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
     return address.casilla_id == settling or address.casilla_id in form.result_addresses
 
 
-def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionChip, ...]:
-    """One chip per attention level with anything in it, counted from the form; none once recorded.
+def blocking_count(form: ModeloWorkForm) -> int:
+    """How many things block filing: every blocking finding of the last check, and each failed result box none names.
 
-    What blocks is every blocking finding of the last check, and a result box
-    the calculation could not produce when no finding already names it. What
-    is missing or assumed on a page that does not apply this period is not
-    counted: nothing there is asked of the filer.
+    The header's chip and the next-action line both count with this, so the
+    number beside "resolve what blocks filing" is the number the chip shows.
     """
-    if recorded:
-        return ()
     blocking = [issue for issue in form.issues if issue.attention is ModeloFormAttention.BLOCKS]
-    blocks = len(blocking)
-    view_fields = _result_fields(form)
     named = {issue.box for issue in blocking if issue.box is not None}
-    blocks += sum(
+    failed = sum(
         1
-        for field in view_fields.values()
+        for field in _result_fields(form).values()
         if field.origin is ModeloFormOrigin.CALCULATION_FAILED
         and field.box not in named
         and is_result_field(form, field)
     )
+    return len(blocking) + failed
+
+
+def attention_chips(form: ModeloWorkForm, *, recorded: bool) -> tuple[AttentionChip, ...]:
+    """One chip per attention level with anything in it, counted from the form; none once recorded.
+
+    What blocks is counted by :func:`blocking_count`. What is missing or
+    assumed on a page that does not apply this period is not counted: nothing
+    there is asked of the filer.
+    """
+    if recorded:
+        return ()
     to_do = to_do_counts(form)
     counts = {
-        ChipLevel.BLOCKS: blocks,
+        ChipLevel.BLOCKS: blocking_count(form),
         ChipLevel.MISSING: to_do.needs_input,
         ChipLevel.CONFIRM: to_do.default_to_confirm,
         ChipLevel.CHECK: sum(1 for issue in form.issues if issue.attention is ModeloFormAttention.CHECK),
@@ -381,6 +417,10 @@ class ResultLine:
     def marks_text(self) -> str:
         """The stale mark and the chips as one string, as the second line of a stacked result shows them."""
         return _PART_GAP.join(part for part in (self.stale, *(chip.text for chip in self.chips)) if part)
+
+    def chips_content(self) -> Content:
+        """The chips kept, as drawn side by side: a blocker's in the error colour."""
+        return Content(_PART_GAP).join(chip.content for chip in self.chips)
 
     def text(self) -> str:
         """The line as one string."""
@@ -447,6 +487,7 @@ def result_line_text(form: ModeloWorkForm, language: OutputLanguage, *, staged: 
 
 
 __all__ = [
+    "BLOCKS_STYLE",
     "AttentionChip",
     "ChipLevel",
     "DeadlineTone",
@@ -454,6 +495,8 @@ __all__ = [
     "ResultLine",
     "ResultView",
     "attention_chips",
+    "blocking_count",
+    "blocks_marked",
     "deadline_help",
     "deadline_view",
     "fit_identity",

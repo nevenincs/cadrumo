@@ -106,6 +106,8 @@ from .vocabulary import (
     attention_words_key,
     field_counts,
     field_needs_filer,
+    holds_nothing,
+    holds_zero,
     origin_glyph,
     origin_words,
 )
@@ -143,7 +145,6 @@ _ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
 )
 """Origins whose words say there is no value only when the field holds none; a held zero is still shown."""
 _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
-_FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
 _RATE_NOT_GROUNDED_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
 _RATE_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
@@ -154,6 +155,10 @@ _RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingPr
     {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
 )
 """How each unit a grounded rate is stated in reads as a percentage."""
+_RATE_READINGS: Final[frozenset[ModeloEditRatioUnit]] = frozenset(
+    {ModeloEditRatioUnit.PERCENT, ModeloEditRatioUnit.FRACTION}
+)
+"""The units a ratio's own figure can be read in as a percentage."""
 _SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
 )
@@ -355,8 +360,41 @@ def rate_is_value(field: ModeloFormField) -> bool:
     return field.editability is ModeloFormEditability.DESIGN_CONSTANT and shown_rate(field) is not None
 
 
+def own_ratio_unit(field: ModeloFormField) -> ModeloEditRatioUnit | None:
+    """How a box's own figure reads as a rate: its declared unit, else what its figure and its row's rate establish.
+
+    A ratio whose bounds declare no unit is still read as a rate when the
+    figure leaves no doubt: a zero reads the same at any scale, and a figure
+    equal to its row's grounded or printed rate at exactly one scale is at that
+    scale. Any other undeclared figure keeps its unit undeclared, never guessed.
+    ``None`` for a box that is not a ratio.
+    """
+    maximum = field.constraints.max_value if field.constraints is not None else None
+    unit = ratio_unit(field.data_type, maximum)
+    if unit is not ModeloEditRatioUnit.UNDECLARED:
+        return unit
+    value = field.value
+    if not isinstance(value, Decimal | int) or isinstance(value, bool):
+        return unit
+    if holds_zero(value):
+        return ModeloEditRatioUnit.PERCENT
+    rate = field.grounded_rate or field.printed_rate
+    if rate is None:
+        return unit
+    if value == rate.ratio:
+        return ModeloEditRatioUnit.FRACTION
+    if value == rate.ratio.scaleb(2):
+        return ModeloEditRatioUnit.PERCENT
+    return unit
+
+
 def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
-    """Return the text of a field's value cell, with absence spoken in words."""
+    """Return the text of a field's value cell, with absence spoken in words.
+
+    A rate box's own figure reads in its rate unit wherever that is
+    established. A box the design fixes and prints nothing for shows only a
+    dot, since the origin beside it says the form sets it.
+    """
     if entry.staged_text is not None:
         return entry.staged_text
     field = entry.field
@@ -366,19 +404,24 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     if rate is not None and rate_is_value(field):
         return rate_text(rate, language)
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
-        # A rate the form leaves to the filer's own operations is not fixed,
-        # so only a box that is not a rate says the design fixes it.
-        if field.data_type == _RATIO_DATA_TYPE:
-            return absent_value_text(language)
-        return tr(_FIXED_BY_DESIGN_VALUE_KEY)
+        return _EMPTY_VALUE
     if field.origin in {ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED}:
         return _PENDING_VALUE
     if field.value is None or field.origin in {ModeloFormOrigin.CLEARED, ModeloFormOrigin.NOT_IMPORTED_YET}:
         return absent_value_text(language)
-    maximum = field.constraints.max_value if field.constraints is not None else None
-    return format_casilla_value(
-        field.value, data_type=field.data_type, language=language, ratio_unit=ratio_unit(field.data_type, maximum)
-    )
+    unit = own_ratio_unit(field)
+    value = field.value
+    if unit in _RATE_READINGS and isinstance(value, Decimal):
+        # A rate reads as the printed form writes one, "2 %" rather than "2.00 %"; dropping zeros rounds nothing.
+        value = _without_trailing_zeros(value)
+    return format_casilla_value(value, data_type=field.data_type, language=language, ratio_unit=unit)
+
+
+def _without_trailing_zeros(value: Decimal) -> Decimal:
+    """The same figure without the zeros that end its fraction, and a zero without a sign."""
+    if value == 0:
+        return Decimal(0)
+    return value.quantize(Decimal(1)) if value == value.to_integral_value() else value.normalize()
 
 
 def rate_text(rate: ModeloFormRate | ModeloFormPrintedRate, language: OutputLanguage) -> str:
@@ -426,21 +469,15 @@ def grid_cell_title(entry: CasillaListEntry) -> str | None:
     return _SEPARATOR.join((entry.row_label, entry.column_label, entry.field.label.text))
 
 
-def _holds_nothing(value: ModeloFormScalar) -> bool:
-    return value is None or (isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0)
-
-
 def _origin_says_absence(field: ModeloFormField) -> bool:
     """Whether a field's origin words already say its value is not there.
 
-    An optional rate box nobody filled says so even over a held zero, which in
-    a rate column would read as a rate of nothing.
+    A held zero is a value, of a rate box as of any other: it is shown, and
+    the origin words say it was left at zero rather than that the box is empty.
     """
     if field.origin in _ABSENT_BY_ORIGIN:
         return True
-    if field.origin is ModeloFormOrigin.OPTIONAL_EMPTY and field.data_type == _RATIO_DATA_TYPE:
-        return _holds_nothing(field.value)
-    return field.value is None and field.origin in _ABSENT_WHEN_NONE
+    return field.origin in _ABSENT_WHEN_NONE and holds_nothing(field.value)
 
 
 def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
@@ -460,6 +497,16 @@ def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     if _ungrounded_rate(entry) or _origin_says_absence(field):
         return _EMPTY_VALUE
     return value_text(entry, language)
+
+
+def stated_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str | None:
+    """Return the value a panel or a search hit states beside the origin words; ``None`` when the box holds nothing.
+
+    The words beside it already say the value is absent, so absence is not
+    said a second time, while a held zero is stated as the figure it is.
+    """
+    text = row_value_text(entry, language)
+    return None if text == _EMPTY_VALUE else text
 
 
 def grid_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
@@ -1363,9 +1410,11 @@ __all__ = [
     "description_text",
     "grid_cell_title",
     "grid_value_text",
+    "own_ratio_unit",
     "rate_note",
     "rate_text",
     "row_value_text",
     "shown_rate",
+    "stated_value_text",
     "value_text",
 ]

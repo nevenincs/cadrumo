@@ -11,17 +11,20 @@ is never an editable field. The working figures and the unplaced casillas are
 one more page, so nothing the form holds is out of the filer's reach.
 
 Filters narrow a page without changing it: showing only what needs attention,
-or only the filer's own values, keeps the headings of the sections that still
-have lines.
+only the filer's own values, only values from their records, only calculated
+values, or only boxes holding an amount other than zero keeps the headings of
+the sections that still have lines.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 
+from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormField,
@@ -49,7 +52,7 @@ from .casilla_list import (
     shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
-from .vocabulary import AttentionCounts, WorkbenchMark, field_counts, field_needs_filer
+from .vocabulary import AttentionCounts, WorkbenchMark, field_counts, field_needs_filer, holds_nothing, holds_zero
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
@@ -69,6 +72,41 @@ class WorkbenchFilter(StrEnum):
     ALL = "all"
     ATTENTION = "attention"
     MINE = "mine"
+    RECORDS = "records"
+    CALCULATED = "calculated"
+    AMOUNT = "amount"
+
+
+_MINE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
+)
+_RECORD_FAMILIES: Final[frozenset[SourceFamily]] = frozenset({SourceFamily.RECORDS, SourceFamily.REGISTERS})
+_FROM_SOURCE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
+)
+_NO_AMOUNT_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {
+        ModeloFormOrigin.NOT_APPLICABLE,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+        ModeloFormOrigin.CALCULATION_FAILED,
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.CLEARED,
+    }
+)
+"""Origins whose value is not there, whatever the field still holds, so it is no amount the filer declares."""
+
+
+def _from_records(field: ModeloFormField) -> bool:
+    source = field.source
+    return field.origin in _FROM_SOURCE_ORIGINS and source is not None and source.family in _RECORD_FAMILIES
+
+
+def _holds_amount(field: ModeloFormField) -> bool:
+    """Whether a box holds an amount other than zero: a figure, never nothing, a held zero or a yes-or-no."""
+    value = field.value
+    if field.origin in _NO_AMOUNT_ORIGINS or holds_nothing(value) or holds_zero(value) or isinstance(value, bool):
+        return False
+    return isinstance(value, Decimal | int)
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,9 +172,17 @@ def _shown(
     if mode is WorkbenchFilter.ALL:
         return True
     key = address_key(field.address)
+    if key in staged:
+        return True
     if mode is WorkbenchFilter.ATTENTION:
-        return key in staged or field_needs_filer(field, recorded=page.recorded, applies=page.applies)
-    return key in staged or field.origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
+        return field_needs_filer(field, recorded=page.recorded, applies=page.applies)
+    if mode is WorkbenchFilter.RECORDS:
+        return _from_records(field)
+    if mode is WorkbenchFilter.CALCULATED:
+        return field.origin is ModeloFormOrigin.CALCULATED
+    if mode is WorkbenchFilter.AMOUNT:
+        return _holds_amount(field)
+    return field.origin in _MINE_ORIGINS
 
 
 def _entry(

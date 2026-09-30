@@ -9,19 +9,22 @@ done is the current one, and the next-action line names it with the key that
 performs it, so the filer is never left to guess what comes next.
 
 An assumed value, one the calculation holds that nobody is recorded as having
-entered, keeps filling in open and withholds recording the filing until the
-filer confirms it or types another: an unentered value in a box the
-declaration files is exactly the suspicious zero that must be surfaced before
-filing. Recording a filing only records it in Cadrumo, so a verified
-declaration is offered the file to take to the AEAT first, and recording once
-it has been filed there.
+entered, keeps filling in open and withholds both the file for the AEAT and
+recording the filing until the filer confirms it or types another: an
+unentered value in a box the declaration files is exactly the suspicious zero
+that must be surfaced before filing, and the file is what reaches the AEAT.
+Recording a filing only records it in Cadrumo, so a verified declaration is
+offered the file to take to the AEAT first, and recording once it has been
+filed there.
 
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
 not checked, and a verification that found something to resolve sends the
-filer to what it found rather than back to verifying. What a page that does
-not apply this period holds is never to do, so it neither keeps filling in
-open nor is counted on the next-action line.
+filer to what it found rather than back to verifying. The count beside a step
+counts what that step resolves: resolving counts what blocks filing, as the
+header's chip does. What a page that does not apply this period holds is never
+to do, so it neither keeps filling in open nor is counted on the next-action
+line. A blocked step is drawn in the error colour, as every blocker mark is.
 
 The next-action line always fits one line: it keeps its key and, when the
 words run out of room, shortens the words rather than wrapping.
@@ -35,12 +38,13 @@ from enum import StrEnum
 from typing import Final
 
 from rich.cells import cell_len
-from rich.text import Text
+from textual.content import Content
 
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
+from .header import BLOCKS_STYLE, blocking_count
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 from .wording import date_text
@@ -90,6 +94,7 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
+_STATUS_STYLES: Final[dict[StepStatus, str]] = {StepStatus.PENDING: _PENDING_STYLE, StepStatus.BLOCKED: BLOCKS_STYLE}
 _RECORD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next.record"
 _RECORD_KEY: Final[str] = "F8"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
@@ -106,12 +111,23 @@ class StepState:
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchProgress:
-    """The journey's state, the next action it offers, and when the filing was recorded, once it is."""
+    """The journey's state, the next action it offers, and when the filing was recorded, once it is.
+
+    ``assumed`` counts the assumed values on pages that apply this period;
+    while any remains, neither the file for the AEAT nor recording the filing
+    is offered.
+    """
 
     steps: tuple[StepState, ...]
     next_action: NextAction
     count: int
     recorded_at: datetime | None = None
+    assumed: int = 0
+
+    @property
+    def filing_withheld(self) -> bool:
+        """Whether an assumed value still withholds the file for the AEAT and recording the filing."""
+        return self.assumed > 0
 
 
 def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
@@ -126,7 +142,8 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     counts = to_do_counts(form)
     to_fill = counts.needs_input
     assumed = counts.default_to_confirm
-    blocked = counts.blocked
+    blocking = blocking_count(form)
+    blocked = max(counts.blocked, blocking)
     clean = staged == 0
     filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
@@ -149,14 +166,35 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         else:
             steps.append(StepState(step, StepStatus.PENDING))
     action, count = _next(
-        form, staged=staged, to_fill=to_fill, assumed=assumed, blocked=blocked, verified=verified, filed=filed
+        form,
+        staged=staged,
+        to_fill=to_fill,
+        assumed=assumed,
+        blocked=blocked,
+        blocking=blocking,
+        verified=verified,
+        filed=filed,
     )
     recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
-    return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count, recorded_at=recorded_at)
+    return WorkbenchProgress(
+        steps=tuple(steps),
+        next_action=action,
+        count=count,
+        recorded_at=recorded_at,
+        assumed=0 if filed else assumed,
+    )
 
 
 def _next(
-    form: ModeloWorkForm, *, staged: int, to_fill: int, assumed: int, blocked: int, verified: bool, filed: bool
+    form: ModeloWorkForm,
+    *,
+    staged: int,
+    to_fill: int,
+    assumed: int,
+    blocked: int,
+    blocking: int,
+    verified: bool,
+    filed: bool,
 ) -> tuple[NextAction, int]:
     if staged:
         return NextAction.APPLY, staged
@@ -171,7 +209,9 @@ def _next(
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
     if blocked or form.verification in _UNRESOLVED_VERDICTS:
-        return NextAction.RESOLVE, max(blocked, len(form.issues))
+        # The header's chip counts what blocks filing; boxes the check marked
+        # stand in only when no finding is left to count.
+        return NextAction.RESOLVE, blocking or blocked
     return NextAction.VERIFY, 0
 
 
@@ -179,18 +219,19 @@ def _step_name(step: WorkbenchStep) -> str:
     return tr(f"tui.modelo.workbench.step.{step.value}")
 
 
-def stepper_text(progress: WorkbenchProgress) -> Text:
-    """Render the steps as one line: a mark and a name each, a step not started dimmed and unmarked."""
-    line = Text()
-    for index, state in enumerate(progress.steps):
-        if index:
-            line.append(_STEP_SEPARATOR)
+def stepper_text(progress: WorkbenchProgress) -> Content:
+    """Render the steps as one line: a mark and a name each.
+
+    A step not started is dimmed and unmarked, and a blocked step is drawn in
+    the error colour.
+    """
+    parts: list[Content] = []
+    for state in progress.steps:
         mark = _STATUS_MARKS[state.status]
-        if mark is None:
-            line.append(_step_name(state.step), style=_PENDING_STYLE)
-        else:
-            line.append(f"{mark.glyph} {_step_name(state.step)}")
-    return line
+        words = _step_name(state.step) if mark is None else f"{mark.glyph} {_step_name(state.step)}"
+        style = _STATUS_STYLES.get(state.status)
+        parts.append(Content(words) if style is None else Content.styled(words, style))
+    return Content(_STEP_SEPARATOR).join(parts)
 
 
 def stepper_marks(progress: WorkbenchProgress) -> tuple[WorkbenchMark, ...]:

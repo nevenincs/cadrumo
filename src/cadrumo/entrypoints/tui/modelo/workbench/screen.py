@@ -15,7 +15,9 @@ under the cursor, or of the page, together; never the whole declaration at once.
 
 A page that does not apply this period is dimmed, says so and asks nothing of
 the filer. A declaration recorded as filed says so wherever a box is explained,
-counts nothing as to do, and offers no key that would change it.
+counts nothing as to do, and offers no key that would change it. While a value
+nobody entered is still assumed, nothing reaches the AEAT and no filing is
+recorded: ``e`` and F8 say why and offer the assumed values to confirm.
 
 The screen resolves nothing itself. It reads through the port the composition
 root hands it, off the event loop, and keeps only presentation state: the page
@@ -96,6 +98,7 @@ from .header import (
     DeadlineTone,
     ResultLine,
     attention_chips,
+    blocks_marked,
     deadline_help,
     deadline_view,
     fit_identity,
@@ -209,7 +212,6 @@ _SELF_REPORTING_OPERATIONS: Final[frozenset[str]] = frozenset(
 """Operations whose notice says what they concluded, read from the declaration once it is read again."""
 _NAV_MIN_LABEL: Final[int] = 12
 _FRAGMENT_SEPARATOR: Final[str] = " … "
-_CHIP_GAP: Final[str] = "   "
 _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.ALL,
     WorkbenchFilter.ATTENTION,
@@ -259,6 +261,8 @@ _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "s": "tui.modelo.workbench.key.sources",
 }
 _CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
+_WITHHELD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.confirm_first"
+"""Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
 _LEGEND_KEYS: Final[frozenset[str]] = frozenset({"escape"})
 _SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""
@@ -355,10 +359,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen.-outcome-stacked #wb-outcome {
             layout: vertical;
         }
-        ModeloWorkbenchScreen.-outcome-stacked #wb-stale {
-            margin: $cadrumo-space-0;
-        }
-        ModeloWorkbenchScreen.-outcome-stacked #wb-chips.-leading {
+        ModeloWorkbenchScreen #wb-stale.-leading, ModeloWorkbenchScreen #wb-chips.-leading {
+            /* First on its line, it starts where the lines above and below start. */
             margin: $cadrumo-space-0;
         }
         ModeloWorkbenchScreen #wb-stepper {
@@ -823,8 +825,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         stale.update(line.stale or "")
         stale.display = line.stale is not None
         chips_widget = self.query_one("#wb-chips", Static)
-        chips_widget.update(_CHIP_GAP.join(chip.text for chip in line.chips))
-        chips_widget.set_class(line.stale is None, "-leading")
+        chips_widget.update(line.chips_content())
+        # With no result beside them, or stacked below it, the marks start the line.
+        marks_lead = line.stacked or not line.result
+        stale.set_class(marks_lead, "-leading")
+        chips_widget.set_class(marks_lead and line.stale is None, "-leading")
         # Too narrow for one line: the result on its own, the stale mark and the chips on the next.
         self.set_class(line.stacked, "-outcome-stacked")
         stale_marks = () if view is None or line.stale is None else view.marks
@@ -991,7 +996,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if shifted is not None:
                 lines.append(shifted)
             lines.append(tr("tui.modelo.workbench.help.keys", keys=self._all_keys_text()))
-        band.update("\n".join(self._band_lines(band, lines)))
+        band.update(blocks_marked("\n".join(self._band_lines(band, lines))))
 
     def _band_lines(self, band: Static, lines: list[str]) -> list[str]:
         """The band's lines, a line holding a no-break space broken here so it never breaks there.
@@ -1770,8 +1775,27 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
 
+    def _withheld_for_assumed(self) -> bool:
+        """Refuse the file for the AEAT and recording the filing while an assumed value remains, and offer them.
+
+        Says why on the notice line and opens the confirm step on the next
+        assumed values, where the filer may confirm them or type others.
+        """
+        load = self._load
+        if load is None:
+            return False
+        progress = workbench_progress(
+            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
+        )
+        if not progress.filing_withheld:
+            return False
+        if self._may_confirm():
+            self._confirm_next()
+        self._notice(tr(_WITHHELD_LOCALE_KEY, count=progress.assumed))
+        return True
+
     def action_export(self) -> None:
-        """Export the verified declaration where and how the filer asks."""
+        """Export the verified declaration where and how the filer asks, once no value is only assumed."""
         actions = self._actions
         load = self._load
         if actions is None or load is None:
@@ -1779,6 +1803,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         if not load.verified:
             self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            return
+        if self._withheld_for_assumed():
             return
 
         def asked(request: WorkbenchExportRequest | None) -> None:
@@ -1788,6 +1814,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
 
     def _confirm_file(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
+        if self._withheld_for_assumed():
+            return
+
         def closed(confirmed: bool | None) -> None:
             if confirmed:
                 self._run_operation(submit)

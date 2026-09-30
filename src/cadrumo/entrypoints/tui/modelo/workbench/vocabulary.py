@@ -32,6 +32,8 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
@@ -45,9 +47,12 @@ from .....application.modelo.work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloWorkForm,
 )
+from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
-from .wording import period_words
+from .wording import date_text, period_words
 
 
 class ColourRole(StrEnum):
@@ -414,6 +419,51 @@ SOURCE_WORDED_ORIGINS: Final[tuple[ModeloFormOrigin, ...]] = (
 
 #: The mark of a value carried from an earlier declaration, in place of the imported glyph.
 EARLIER_FILING_GLYPH: Final[str] = EARLIER_FILING_MARK.glyph
+#: The mark of a value the official form sets, whether it reaches the box as a design constant or through a binding.
+FORM_SET_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL]
+_FORM_SET_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.INFORMATIONAL}
+)
+"""Origins whose value, when the form's own design is the source, is the value the form sets."""
+_FORM_SET_WORDS_KEY: Final[str] = "tui.modelo.workbench.origin_source.imported.fixed_by_design"
+_HELD_ZERO_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
+    {ModeloFormOrigin.OPTIONAL_EMPTY: "tui.modelo.workbench.origin_held_zero.optional_empty"}
+)
+"""Words for an origin that says nobody entered the box, when the box still holds a zero: never "empty"."""
+_AEAT_IMPORTED_ON_KEY: Final[str] = "tui.modelo.workbench.origin_source.aeat_imported_on"
+
+
+def holds_zero(value: ModeloFormScalar) -> bool:
+    """Whether a value is an amount of exactly zero: a figure the form holds, which is not the same as nothing."""
+    return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
+
+
+def holds_nothing(value: ModeloFormScalar) -> bool:
+    """Whether a box holds no value at all: nothing, an unmarked choice or blank text, but never a zero amount."""
+    if value is None or value is False:
+        return True
+    return isinstance(value, str) and not value.strip()
+
+
+def set_by_form(field: ModeloFormField) -> bool:
+    """Whether the value a field shows is one the official form itself sets."""
+    source = field.source
+    return field.origin in _FORM_SET_ORIGINS and source is not None and source.family is SourceFamily.FIXED_BY_DESIGN
+
+
+def aeat_imported_on(form: ModeloWorkForm | None) -> date | None:
+    """The day the AEAT tax data the current calculation took values from was imported; ``None`` when not known."""
+    data = None if form is None else form.aeat_data
+    imported_at = None if data is None else data.imported_at
+    if imported_at is None:
+        return None
+    return imported_at.astimezone().date() if imported_at.tzinfo is not None else imported_at.date()
+
+
+def _from_aeat_data(field: ModeloFormField) -> bool:
+    source = field.source
+    return field.origin is ModeloFormOrigin.IMPORTED and source is not None and source.family is SourceFamily.AEAT_DRAFT
+
 
 _NAMED_FILING_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
     {
@@ -439,18 +489,34 @@ _FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
 """Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
 
 
-def origin_words(field: ModeloFormField, *, recorded: bool = False) -> str:
+def origin_words(
+    field: ModeloFormField,
+    *,
+    recorded: bool = False,
+    aeat_imported: date | None = None,
+    language: OutputLanguage | None = None,
+) -> str:
     """Say where one field's value stands, in the few words its row, help band and panel share.
 
     A value from a source names the kind of place, and an earlier declaration by
-    its modelo and period when exactly one is known; any other says its origin.
-    On a declaration ``recorded`` as filed nothing is asked any more, so a box
-    that would ask for a value says what it holds instead. A row too narrow
-    for these words keeps only the glyph, so the help band calls this to say
-    them for the field under the cursor.
+    its modelo and period when exactly one is known; a value the official form
+    sets says so, whatever carries it to the box; any other says its origin. An
+    optional box nobody entered that still holds a zero says it was left at
+    zero, never that it is empty. On a declaration ``recorded`` as filed nothing
+    is asked any more, so a box that would ask for a value says what it holds
+    instead. Given the day ``aeat_imported`` the AEAT tax data was imported, a
+    value taken from it names that day, written for ``language``. A row too
+    narrow for these words keeps only the glyph, so the help band calls this to
+    say them for the field under the cursor.
     """
     if recorded and field.origin in _FILED_LOCALE_KEYS:
         return tr(_FILED_LOCALE_KEYS[field.origin])
+    if field.origin in _HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
+        return tr(_HELD_ZERO_LOCALE_KEYS[field.origin])
+    if set_by_form(field):
+        return tr(_FORM_SET_WORDS_KEY)
+    if aeat_imported is not None and language is not None and _from_aeat_data(field):
+        return tr(_AEAT_IMPORTED_ON_KEY, date=date_text(aeat_imported, language))
     source = field.source
     if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
         return tr(origin_words_key(field.origin))
@@ -461,7 +527,13 @@ def origin_words(field: ModeloFormField, *, recorded: bool = False) -> str:
 
 
 def origin_glyph(field: ModeloFormField) -> str:
-    """The mark a field's origin shows, with a value carried from an earlier declaration marked apart."""
+    """The mark a field's origin shows; a value carried from an earlier declaration or set by the form is marked apart.
+
+    A value the form sets draws the form's mark wherever it is shown, so a
+    row and the sources view never draw it two ways.
+    """
+    if set_by_form(field):
+        return FORM_SET_MARK.glyph
     source = field.source
     if (
         field.origin is ModeloFormOrigin.IMPORTED
@@ -472,15 +544,23 @@ def origin_glyph(field: ModeloFormField) -> str:
     return ORIGIN_GLYPHS[field.origin]
 
 
-def origin_text(field: ModeloFormField, *, recorded: bool = False) -> str:
+def origin_text(
+    field: ModeloFormField,
+    *,
+    recorded: bool = False,
+    aeat_imported: date | None = None,
+    language: OutputLanguage | None = None,
+) -> str:
     """The origin glyph followed by its words, as a help band or an editor states it.
 
     On a declaration ``recorded`` as filed a box that would ask for a value
     draws no glyph, as its row draws none, and says only what it holds.
+    ``aeat_imported`` and ``language`` date a value taken from imported AEAT
+    tax data, as :func:`origin_words` does.
     """
     if recorded and field.origin in ASKS_FOR_A_VALUE:
         return origin_words(field, recorded=True)
-    return f"{origin_glyph(field)} {origin_words(field)}"
+    return f"{origin_glyph(field)} {origin_words(field, aeat_imported=aeat_imported, language=language)}"
 
 
 NOT_WRITABLE_REASONS: Final[tuple[str, ...]] = (
@@ -540,6 +620,7 @@ __all__ = [
     "EARLIER_FILING_MARK",
     "EXPANDED_MARK",
     "FAILED_MARK",
+    "FORM_SET_MARK",
     "HERE_MARK",
     "INFO_MARK",
     "MISSING_MARK",
@@ -560,14 +641,18 @@ __all__ = [
     "ColourRole",
     "Standing",
     "WorkbenchMark",
+    "aeat_imported_on",
     "attention_words_key",
     "editability_text",
     "field_counts",
     "field_needs_filer",
+    "holds_nothing",
+    "holds_zero",
     "origin_glyph",
     "origin_source_words_key",
     "origin_text",
     "origin_words",
     "origin_words_key",
     "require_one_meaning_per_glyph",
+    "set_by_form",
 ]
