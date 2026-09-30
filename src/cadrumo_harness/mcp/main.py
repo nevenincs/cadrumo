@@ -15,8 +15,8 @@ def main() -> None:
     """Serve one explicitly bound profile and protected credential reference."""
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
     if isinstance(sys.stderr, io.TextIOWrapper):
-        # CPython's stdlib types leave the TextIOWrapper buffer parameter unknown.
-        cast(io.TextIOWrapper[BinaryIO], sys.stderr).reconfigure(newline="\n")
+        # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
+        cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile-id", type=UUID, required=True)
     parser.add_argument("--credential-reference", type=lambda value: UUID(value) if value else None)

@@ -978,3 +978,171 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     # The degradation is visible, never silent: the startup note names the
     # storage-root refusal on stderr, which the client's MCP log captures.
     assert "serving without telemetry" in stderr_text
+
+
+async def _call_dev_installed_mcp_authenticate(
+    executable: Path,
+    *,
+    storage_root: Path,
+    profile_id: str,
+    credential_reference: str,
+) -> tuple[bool, dict[str, Any], bool, dict[str, Any]]:
+    """Call authenticate and status on the active development environment's stdio process."""
+    from mcp import ClientSession
+    from mcp.client.stdio import StdioServerParameters, stdio_client
+
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    environment.pop("VIRTUAL_ENV", None)
+    environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
+    server = StdioServerParameters(
+        command=str(executable.resolve(strict=True)),
+        args=["--profile-id", profile_id],
+        env=environment,
+        cwd=storage_root,
+    )
+    async with asyncio.timeout(120):
+        with open(os.devnull, "w", encoding="utf-8") as stderr:
+            try:
+                async with (
+                    stdio_client(server, errlog=stderr) as (read_stream, write_stream),
+                    ClientSession(read_stream, write_stream, read_timeout_seconds=90) as client,
+                ):
+                    await client.initialize()
+                    authentication = await client.call_tool(
+                        "authenticate", {"credential_reference": credential_reference}
+                    )
+                    status = await client.call_tool("status", {})
+            except Exception:
+                raise AssertionError("installed MCP process exited before protocol response") from None
+    assert isinstance(authentication.structured_content, dict)
+    assert isinstance(status.structured_content, dict)
+    return authentication.is_error, authentication.structured_content, status.is_error, status.structured_content
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires installed Windows MCP and runtime launchers")
+def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missing_reference(
+    tmp_path: Path,
+) -> None:
+    """Exercise the console process's real auth door with a synthetic profile and absent credential.
+
+    This drives the current development environment's installed console scripts.
+    It verifies a native-store refusal or an exact-reference miss; it does not
+    attest the hashed-wheel cohort built by ``installed_cohort``.
+    """
+    import sysconfig
+    import time
+    from importlib.metadata import version
+    from uuid import uuid4
+
+    from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+    from cadrumo.adapters.local_runtime.installation import runtime_installation
+    from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+    from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+    from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+    from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
+        installed_automation_secret_store,
+    )
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+
+    mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
+    runtime_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-runtime.exe"
+    assert mcp_executable.is_file(), "install the current development environment entry points first"
+    assert runtime_executable.is_file(), "install the current development environment entry points first"
+
+    profile_id, credential_reference = uuid4(), uuid4()
+    process_scope = WindowsProcessScope()
+    endpoint: WindowsRuntimeEndpoint | None = None
+    runtime_started = False
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        try:
+            storage_root.mkdir(parents=True, exist_ok=True)
+            endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+            runtime_installation(
+                storage_root=storage_root,
+                os_owner_id=endpoint.os_owner_id,
+                storage_identity=endpoint.storage_identity,
+            )
+            with composed_profile_persistence_ports():
+                publish_test_profile_capsule(
+                    profile_id,
+                    label="Installed MCP synthetic acceptance",
+                    root=storage_root,
+                )
+            native = installed_automation_secret_store()
+            try:
+                native.read(CLIENT_NAMESPACE, str(credential_reference))
+            except AutomationCustodyError as error:
+                expected_refusal = error.reason.value
+            else:
+                expected_refusal = "missing"
+            assert expected_refusal in {"missing", "unavailable"}
+
+            runtime_environment = {
+                key: value
+                for key, value in os.environ.items()
+                if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
+            }
+            runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+            process_scope.launch(
+                executable=runtime_executable.resolve(strict=True),
+                arguments=(
+                    "--storage-root",
+                    str(storage_root),
+                    "--storage-identity",
+                    endpoint.storage_identity,
+                    "--expected-version",
+                    version("cadrumo"),
+                ),
+                directory=storage_root,
+                environment=runtime_environment,
+            )
+            runtime_started = True
+
+            deadline = time.monotonic() + 30
+            while True:
+                try:
+                    connection = VerifiedRuntimeConnection(
+                        endpoint.connect(timeout=0.2),
+                        expected=RuntimeClientHello(
+                            product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
+                        ),
+                        deadline=deadline,
+                    )
+                    connection.close()
+                    break
+                except RuntimeRefusalError as error:
+                    if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                        raise
+                    time.sleep(0.05)
+
+            authentication_error, authentication, status_error, status = asyncio.run(
+                _call_dev_installed_mcp_authenticate(
+                    mcp_executable,
+                    storage_root=storage_root,
+                    profile_id=str(profile_id),
+                    credential_reference=str(credential_reference),
+                )
+            )
+            assert authentication_error is True
+            assert authentication == {"outcome": "refused", "code": expected_refusal}
+            assert status_error is False
+            assert status == {
+                "outcome": "status",
+                "profile_id": str(profile_id),
+                "authenticated": False,
+                "denial": "authentication_required",
+            }
+        finally:
+            if runtime_started:
+                process_scope.terminate(timeout=5)
+            if endpoint is not None:
+                endpoint.close()
