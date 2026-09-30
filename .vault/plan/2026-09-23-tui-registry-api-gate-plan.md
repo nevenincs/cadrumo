@@ -7,9 +7,9 @@ tier: L1
 related:
   - '[[2026-09-23-tui-registry-api-gate-graded-snapshot-reconciliation-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
-modified: '2026-09-23'
+modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:70d7416c135eb8d32a7a0ae100d095c28a5ac345017cb4b4d5b79378c2945319'
+body_hash: 'sha256:00948720da2c44b9d7087bd1b135bb66b856f48fc0f15f7ed54dc5d2f332f949'
 ---
 
 # `tui-registry-api-gate` plan
@@ -18,40 +18,54 @@ Restore graded snapshot admission so the TUI Results, Inputs and Verification de
 
 ## Description
 
-Draft, not approved. No Step executes until the governing reconciliation
-decision is accepted.
+Approved 2026-09-30. Basis: the operator, reviewing the sequence-backed TUI
+captures, found every Modelo Results page refusing and every Verification page
+empty, and authorized writing and executing the plan that feeds the work
+review into the workspace. The same authorization accepted the reconciliation
+decision, with its TUI-admission clause reconciled to the reader the TUI ships.
 
 Graded snapshot admission was built, deleted as unreached because no
 production caller reached it, and is restored here with its production
 reader. It is restored against the current workspace contract as reconciled
-by `2026-09-23-tui-registry-api-gate-graded-snapshot-reconciliation-adr`, a
-proposed amendment of `2026-08-24-tui-registry-api-gate-adr`: seven
+by `2026-09-23-tui-registry-api-gate-graded-snapshot-reconciliation-adr`, an
+accepted amendment of `2026-08-24-tui-registry-api-gate-adr`: seven
 contributors, four capabilities, and a reinstated second-pass currentness read.
 The grounding, including the contract changes the restoration must rebase over,
 is `2026-09-23-tui-registry-api-gate-graded-snapshot-restoration-reference`.
 
-Decision coverage: the reconciliation decision governs S01 through S05.
+Measured state at approval. The Modelo restoration merged on 2026-09-26
+already restored graded assembly over six of the seven contributors, with the
+calculation and readiness ports and the launcher's graded-first reader. The
+seventh contributor, the bounded review, has an enum member and no port, so
+the work-review facet is still declared unmeasured and the Results and
+Verification destinations cannot render. No contributor runs a second-pass
+currentness read. The Steps are scoped to that remainder.
+
+Decision coverage: the reconciliation decision governs S01 through S06.
 - S02 also changes static admission, which gains the currentness read.
-- S05 carries the choice between graded and static admission, made from the
-  work unit's own state, and the refusal arm.
+- S05 carries the refusal arm as the reconciled TUI-admission clause states it.
 - The API-gate decision's canonical modules, no-shim rule and refusal models
   govern every Step unchanged.
 
+Acceptance evidence beyond the unit and behavioural tests is the
+sequence-backed TUI review render: every scenario's Results and Verification
+pages must show the calculated boxes and the review's findings.
+
 ## Steps
 
-- [ ] `S01` - Re-author the calculation, work-review and readiness capture and current-coordinate pairs in their owner modules, with their not-current refusal keys; `src/cadrumo/application/modelo/calculation.py`.
-- [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor and apply it to static admission; `src/cadrumo/application/modelo/workspace_producers.py`.
-- [ ] `S03` - Restore the calculation, bounded-review and readiness workspace ports on the current producer contract; `src/cadrumo/application/modelo/workspace_producers.py`.
-- [ ] `S04` - Restore graded snapshot assembly over seven contributors and four capabilities, with its refusals, baseline and conformance tests; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `S05` - Admit calculated units by graded snapshot and uncalculated units by static inspection in the launcher reader, produce ModeloWorkspaceDomainRefusalV1 for graded refusals and carry them to the destinations, disclose the grade, and remove the six DomainRefusalV1 field-register entries; `src/cadrumo/entrypoints/tui/launcher.py`.
-- [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and remove the eighteen graded-facet and casilla-definition field-register entries the graded path fills; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
+- [ ] `S01` - Author the bounded-review capture and its current-coordinate read in the work-review owner module, with its not-current refusal key; the calculation and readiness captures landed with the graded restoration; `src/cadrumo/application/modelo/work_review.py`.
+- [ ] `S03` - Add the bounded-review workspace port on the current producer contract, beside the calculation and readiness ports already restored; `src/cadrumo/application/modelo/workspace_producers.py`.
+- [ ] `S04` - Assemble graded snapshot over all seven contributors so the work-review facet carries the canonical review, with work-review parity and capture-once conformance tests; `src/cadrumo/application/modelo/workspace.py`.
+- [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
+- [ ] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
 
 ## Parallelization
 
-S01 precedes S02 and S03, because the ports wrap the owner captures. S02 and
-S03 both edit `workspace_producers.py`, so they are serial, with one writer. S04
-needs S02 and S03. S05 needs S04. S06 needs S05. There is no parallel
-execution; one writer owns the whole sequence.
+S01 precedes S03, because the port wraps the owner capture. S04 needs S03.
+S02 follows S04, so its second pass covers all seven contributors, the bounded
+review included. S05 needs S04. S06 needs S05. There is no parallel execution;
+one writer owns the whole sequence.
 
 ## Verification
 
