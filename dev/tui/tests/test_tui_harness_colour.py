@@ -31,7 +31,7 @@ _WINDOW_CHROME = frozenset({"#ff5f57", "#febc2e", "#28c840"})
 
 def _painted_colours(svg: Path) -> set[str]:
     """The saturated colours the app itself painted into an exported frame."""
-    found = set()
+    found: set[str] = set()
     for colour in _FILL.findall(svg.read_text(encoding=UTF_8)):
         red, green, blue = (int(colour[index : index + 2], 16) / 255 for index in (1, 3, 5))
         _, lightness, saturation = colorsys.rgb_to_hls(red, green, blue)

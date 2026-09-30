@@ -35,7 +35,6 @@ from typing import Final, Protocol, cast
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
-from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
@@ -102,6 +101,16 @@ class ScenarioError(RuntimeError):
     """A scenario that cannot produce the pages it names."""
 
 
+class PageUnavailableError(ScenarioError):
+    """One page the declaration does not offer as it stands; the scenario's other pages still render.
+
+    What a declaration offers moves with the product -- a narrower read model
+    leaves fewer assumed values, a filed declaration accepts no change -- so a
+    page that cannot be reached is recorded against that page alone rather
+    than costing every other page of its scenario.
+    """
+
+
 @dataclass(frozen=True)
 class SequenceScenario:
     """One documentation sequence, and the declaration whose pages it shows."""
@@ -115,7 +124,7 @@ class SequenceScenario:
     """Whether the sequence verifies the declaration, so its workbench lists what verification found."""
     filed: bool = False
     """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
-    assumes: bool = True
+    assumes: bool = False
     """Whether the calculation leaves assumed values for the filer to confirm."""
 
 
@@ -129,8 +138,8 @@ SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
             "verification-reports-incomplete", "303", "Modelo 303 calculated but not complete", verified=False
         ),
         SequenceScenario("modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified"),
-        SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified"),
-        SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified", assumes=False),
+        SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified", assumes=True),
+        SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
     )
 }
@@ -168,7 +177,7 @@ async def _first_box(scenario: SequenceScenario, pilot: Pilot[object], act: _Box
                 return
         await pilot.press("right_square_bracket")
         await _settle(pilot)
-    raise ScenarioError(f"{scenario.sequence_id}: no box on the workbench {wanted}")
+    raise PageUnavailableError(f"{scenario.sequence_id}: no box on the workbench {wanted}")
 
 
 async def _open_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
@@ -178,7 +187,7 @@ async def _open_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None
     await _settle(pilot)
 
 
-async def _open_panel(pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry) -> Screen[object]:
+async def _open_panel(pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry) -> object:
     """Press Enter on one box, as a filer opens its panel, and return what is on top afterwards."""
     if casilla_list.focus_address(entry.key):
         casilla_list.focus()
@@ -187,7 +196,7 @@ async def _open_panel(pilot: Pilot[object], casilla_list: CasillaList, entry: Ca
     return pilot.app.screen
 
 
-async def _close_panel(pilot: Pilot[object], screen: Screen[object]) -> None:
+async def _close_panel(pilot: Pilot[object], screen: object) -> None:
     """Close a panel Enter opened; Escape on the workbench itself would leave it, so it is never pressed there."""
     if not isinstance(screen, ModeloWorkbenchScreen):
         await pilot.press("escape")
@@ -231,28 +240,22 @@ async def _open_legend(scenario: SequenceScenario, pilot: Pilot[object]) -> None
     await pilot.press("question_mark", "question_mark")
     await _settle(pilot)
     if not _workbench(scenario, pilot.app).has_class("-legend"):
-        raise ScenarioError(f"{scenario.sequence_id}: pressing ? twice did not open the legend")
+        raise PageUnavailableError(f"{scenario.sequence_id}: pressing ? twice did not open the legend")
 
 
 async def _search_a_box(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
-    """Press ``/`` and type the number of the first numbered box, as a filer looks one up."""
+    """Press ``/`` and type the number of the declaration's first numbered box, as a filer looks one up."""
     workbench = _workbench(scenario, pilot.app)
-    box = next(
-        (
-            item.field.box
-            for item in workbench.query_one(CasillaList).items
-            if isinstance(item, CasillaListEntry) and item.field.box
-        ),
-        None,
-    )
+    form = workbench.form
+    box = None if form is None else next((field.box for field in form.fields() if field.box), None)
     if box is None:
-        raise ScenarioError(f"{scenario.sequence_id}: the workbench's first page shows no numbered box to search for")
+        raise PageUnavailableError(f"{scenario.sequence_id}: the declaration has no numbered box to search for")
     await pilot.press("slash")
     await _settle(pilot)
     await pilot.press(*box)
     await _settle(pilot)
     if not workbench.has_class("-searching") or not workbench.query_one(WorkbenchSearchPanel).hits:
-        raise ScenarioError(f"{scenario.sequence_id}: searching for box {box} found nothing")
+        raise PageUnavailableError(f"{scenario.sequence_id}: searching for box {box} found nothing")
 
 
 async def _ask_to_confirm_assumed(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
@@ -265,7 +268,9 @@ async def _ask_to_confirm_assumed(scenario: SequenceScenario, pilot: Pilot[objec
         or not form.edit_admitted
         or not any(field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM for field in form.fields())
     ):
-        raise ScenarioError(f"{scenario.sequence_id}: the declaration holds no assumed value a filer could confirm")
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: the declaration holds no assumed value a filer could confirm"
+        )
     await pilot.press("b")
     await _settle(pilot)
 
@@ -296,7 +301,7 @@ async def _ask_to_recalculate(scenario: SequenceScenario, pilot: Pilot[object]) 
     """Press ``c`` only where the workbench asks first; anywhere else it would recalculate the shared sandbox."""
     form = _workbench(scenario, pilot.app).form
     if form is None or not form.edit_admitted or form.calculation_revision_id is None or form.operator_entries_known:
-        raise ScenarioError(
+        raise PageUnavailableError(
             f"{scenario.sequence_id}: the declaration does not both admit changes and leave unknown which values "
             "the filer typed, so pressing c would not stop at the question"
         )
@@ -307,7 +312,9 @@ async def _ask_to_recalculate(scenario: SequenceScenario, pilot: Pilot[object]) 
 async def _open_issues(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
     form = _workbench(scenario, pilot.app).form
     if form is None or form.verification is None:
-        raise ScenarioError(f"{scenario.sequence_id}: the declaration has not been verified, so it lists no findings")
+        raise PageUnavailableError(
+            f"{scenario.sequence_id}: the declaration has not been verified, so it lists no findings"
+        )
     await pilot.press("i")
     await _settle(pilot)
 
@@ -428,11 +435,24 @@ class ScenarioFrame:
     """Qualified name of the screen actually on top when the frame was read."""
 
 
+@dataclass(frozen=True)
+class ShotRefusal:
+    """One shot whose page the declaration did not offer, and why."""
+
+    shot: Shot
+    surface: str
+    detail: str
+
+
 def capture_scenario(
     scenario: SequenceScenario,
     shots: Sequence[Shot],
-) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...]]:
-    """Run a scenario's sequence once and capture every requested shot over its outcome."""
+) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
+    """Run a scenario's sequence once and capture every requested shot over its outcome.
+
+    A shot whose page the declaration does not offer is returned as a refusal
+    instead of a frame; anything wrong with the scenario as a whole still raises.
+    """
     pages = scenario_pages(scenario)
     unknown = sorted({shot.page for shot in shots} - set(pages))
     if unknown:
@@ -459,15 +479,15 @@ def capture_scenario(
         # The installed session enters this composition before it builds the
         # root; the CLI frames above compose their own per invocation.
         with profile_adapter_composition():
-            frames = asyncio.run(_capture_all(scenario, sandbox, tuple(shots)))
-    return provenance, frames
+            frames, refusals = asyncio.run(_capture_all(scenario, sandbox, tuple(shots)))
+    return provenance, frames, refusals
 
 
 async def _capture_all(
     scenario: SequenceScenario,
     sandbox: SequenceSandbox,
     shots: tuple[Shot, ...],
-) -> tuple[ScenarioFrame, ...]:
+) -> tuple[tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
     provider = compose_authenticated_root_inputs_provider(
         profile_id=sandbox.profile_id,
         profile_label=SANDBOX_PROFILE_LABEL,
@@ -475,7 +495,18 @@ async def _capture_all(
     )
     async with operation_services_scope() as runtime:
         root = compose_installed_workbench_root(provider(runtime))
-        return tuple([await _capture(scenario, root, shot) for shot in shots])
+        frames: list[ScenarioFrame] = []
+        refusals: list[ShotRefusal] = []
+        for shot in shots:
+            try:
+                frames.append(await _capture(scenario, root, shot))
+            except PageUnavailableError as refusal:
+                refusals.append(
+                    ShotRefusal(
+                        shot=shot, surface=scenario_surface(scenario.sequence_id, shot.page), detail=str(refusal)
+                    )
+                )
+        return tuple(frames), tuple(refusals)
 
 
 async def _capture(
@@ -543,7 +574,7 @@ def _declaration_key(scenario: SequenceScenario, app: App[object]) -> str:
 def _require_page(scenario: SequenceScenario, app: App[object], page: str) -> None:
     """Refuse a capture whose walk did not land on the page it is named for."""
     if type(app.screen) is not _PAGE_SCREENS.get(page):
-        raise ScenarioError(
+        raise PageUnavailableError(
             f"{scenario.sequence_id}: the walk to {page!r} ended on {type(app.screen).__qualname__}; "
             "the declaration did not open that page"
         )
@@ -580,11 +611,13 @@ __all__ = [
     "RECALCULATE_PAGE",
     "REVIEW_PAGE",
     "SEQUENCE_SCENARIOS",
+    "PageUnavailableError",
     "ScenarioError",
     "ScenarioFrame",
     "ScenarioProvenance",
     "SequenceScenario",
     "Shot",
+    "ShotRefusal",
     "capture_scenario",
     "page_interfaces",
     "resolve_scenario",

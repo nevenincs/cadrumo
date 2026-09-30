@@ -95,7 +95,7 @@ def _capture_sequence(
                 svg = out / f"{scenario_surface(name, page)}__{width}x{height}__{theme}.svg"
                 shots.append(Shot(page=page, width=int(width), height=int(height), theme=theme, svg=svg))
     try:
-        provenance, frames = capture_scenario(scenario, shots)
+        provenance, frames, refusals = capture_scenario(scenario, shots)
     except ScenarioError as refusal:
         _emit(f"refused: {refusal}")
         return 1
@@ -113,6 +113,17 @@ def _capture_sequence(
                 "frame": frame.frame_text,
             }
             for frame in frames
+        ],
+        "refusals": [
+            {
+                "surface": refused.surface,
+                "page": refused.shot.page,
+                "width": refused.shot.width,
+                "height": refused.shot.height,
+                "theme": refused.shot.theme,
+                "detail": refused.detail,
+            }
+            for refused in refusals
         ],
     }
     _emit(json.dumps(document, ensure_ascii=False))

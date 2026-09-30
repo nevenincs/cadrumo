@@ -272,6 +272,16 @@ class ScenarioCapture:
     capture: Capture
 
 
+@dataclass(frozen=True)
+class ScenarioRefusal:
+    """One page of a scenario, at one geometry and appearance, that its declaration did not offer."""
+
+    surface: str
+    viewport: Viewport
+    theme: ThemeName
+    detail: str
+
+
 def capture_scenario(
     name: str,
     viewports: tuple[Viewport, ...],
@@ -279,8 +289,8 @@ def capture_scenario(
     themes: tuple[ThemeName, ...],
     out_dir: Path,
     workspace: str = "visual-inventory",
-) -> tuple[SequenceProvenance, tuple[ScenarioCapture, ...]]:
-    """Run one scenario's sequence once and collect every page it captured.
+) -> tuple[SequenceProvenance, tuple[ScenarioCapture, ...], tuple[ScenarioRefusal, ...]]:
+    """Run one scenario's sequence once and collect every page it captured, and every page it refused.
 
     One harness process per scenario, not per frame: the sequence builds its
     declaration through the real CLI chain, and running that again for each
@@ -314,7 +324,16 @@ def capture_scenario(
     missing = [item.capture.svg_path.name for item in captures if not item.capture.svg_path.is_file()]
     if missing:
         raise HarnessError(f"scenario {name} reported frames it wrote no SVG for: {', '.join(missing[:5])}")
-    return SequenceProvenance.model_validate(document["provenance"]), captures
+    refusals = tuple(
+        ScenarioRefusal(
+            surface=entry["surface"],
+            viewport=by_label[f"{entry['width']}x{entry['height']}"],
+            theme=ThemeName(entry["theme"]),
+            detail=entry["detail"],
+        )
+        for entry in document["refusals"]
+    )
+    return SequenceProvenance.model_validate(document["provenance"]), captures, refusals
 
 
 __all__ = [
@@ -324,6 +343,7 @@ __all__ = [
     "HarnessError",
     "Scenario",
     "ScenarioCapture",
+    "ScenarioRefusal",
     "Surface",
     "ThemeName",
     "capture",

@@ -577,7 +577,9 @@ def _render_scenario(
     expected = len(scenario.pages) * len(viewports) * len(themes)
     _echo(f"[sequence {scenario.name}] {expected} frames: {scenario.summary}")
     staging = SCRATCH_DIR / f"sequence-{scenario.name}"
-    outcome: tuple[SequenceProvenance, tuple[_harness.ScenarioCapture, ...]] | None = None
+    outcome: (
+        tuple[SequenceProvenance, tuple[_harness.ScenarioCapture, ...], tuple[_harness.ScenarioRefusal, ...]] | None
+    ) = None
     detail, kind, made = "", FrameFailureKind.CRASHED, 0
     for attempt in range(1, retries + 2):
         made = attempt
@@ -608,9 +610,22 @@ def _render_scenario(
         )
         return
 
-    provenance, captures = outcome
+    provenance, captures, refusals = outcome
     if not provenance.matches_golden:
         _echo(f"    state DIVERGES from the golden for {provenance.sequence_id}; frames are recorded as such")
+    for refused in refusals:
+        failures.append(
+            FailedFrame(
+                surface=refused.surface,
+                viewport=refused.viewport.name,
+                theme=refused.theme,
+                kind=FrameFailureKind.REFUSED,
+                attempts=1,
+                detail=refused.detail,
+            ),
+        )
+    if refusals:
+        _echo(f"    {len(refusals)} frame(s) refused: the declaration does not offer those pages")
     for item in captures:
         captured = item.capture
         stem = f"{captured.surface}__{captured.viewport.name}__{captured.theme}"

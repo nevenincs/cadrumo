@@ -44,9 +44,11 @@ _FIRST_QUARTER = SEQUENCE_SCENARIOS["modelo-303-first-quarter"]
 _INSTALMENT = SEQUENCE_SCENARIOS["modelo-130-first-quarter"]
 _UNVERIFIED = SEQUENCE_SCENARIOS["verification-reports-incomplete"]
 _NOTHING_ASSUMED = SEQUENCE_SCENARIOS["modelo-349-first-quarter"]
+_ANNUAL_RETURN = SEQUENCE_SCENARIOS["modelo-100-renta-2025"]
 _BROWSING_PAGES = ("workbench", "sources", "legend", "search", "not-editable")
 _FIRST_QUARTER_PAGES = (*_BROWSING_PAGES, ISSUES_PAGE)
-_INSTALMENT_PAGES = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
+_INSTALMENT_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
+_EVERY_PAGE = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 
 
 def _qualname(screen: object) -> str:
@@ -89,6 +91,7 @@ def test_a_scenario_offers_only_the_pages_its_declaration_can_reach() -> None:
     assert ISSUES_PAGE not in scenario_pages(_UNVERIFIED)
     assert REVIEW_PAGE in scenario_pages(_UNVERIFIED)
     assert EDITOR_PAGE not in scenario_pages(_NOTHING_ASSUMED)
+    assert scenario_pages(_ANNUAL_RETURN) == (DECLARATIONS_PAGE, *_EVERY_PAGE)
     assert REVIEW_PAGE in scenario_pages(_NOTHING_ASSUMED)
 
 
@@ -119,7 +122,7 @@ def test_a_page_the_scenario_does_not_offer_is_refused_before_its_sequence_runs(
 def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(tmp_path: Path) -> None:
     viewport = _viewports.resolve("small")
 
-    provenance, captures = _harness.capture_scenario(
+    provenance, captures, refusals = _harness.capture_scenario(
         _FIRST_QUARTER.sequence_id,
         (viewport,),
         themes=(ThemeName.DARK,),
@@ -128,6 +131,7 @@ def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(
 
     assert provenance.sequence_id == _FIRST_QUARTER.sequence_id
     assert provenance.matches_golden, provenance.golden_problems
+    assert not refusals
     assert [item.page for item in captures] == list(scenario_pages(_FIRST_QUARTER))
     for item in captures:
         assert item.capture.svg_path.stat().st_size > 0
@@ -149,10 +153,12 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
     """Every capture shares one sandbox, so a walk that saved anything would show on the workbench read after it."""
     shots = [
         Shot(page, 120, 40, "dark", tmp_path / f"{index}-{page}.svg")
-        for index, page in enumerate((*_INSTALMENT_PAGES, "workbench"))
+        for index, page in enumerate((*_EVERY_PAGE, "workbench"))
     ]
 
-    _, frames = capture_scenario(_INSTALMENT, shots)
+    _, frames, refusals = capture_scenario(_ANNUAL_RETURN, shots)
+
+    assert not refusals
 
     painted = {frame.shot.page: frame.screen for frame in frames}
     assert painted == {
@@ -168,6 +174,23 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
         ISSUES_PAGE: _qualname(WorkbenchIssuesScreen),
     }
     assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_a_page_the_declaration_does_not_offer_is_refused_alone(tmp_path: Path) -> None:
+    """A filed declaration opens no change; asking for one refuses that shot and keeps the others."""
+    claimed_open = SequenceScenario(_FIRST_QUARTER.sequence_id, "303", "filed, claimed to accept changes", assumes=True)
+    shots = [
+        Shot(page, 80, 24, "dark", tmp_path / f"{page}.svg") for page in ("workbench", BULK_CONFIRM_PAGE, "sources")
+    ]
+
+    _, frames, refusals = capture_scenario(claimed_open, shots)
+
+    assert [frame.shot.page for frame in frames] == ["workbench", "sources"]
+    assert [refused.shot.page for refused in refusals] == [BULK_CONFIRM_PAGE]
+    assert "no assumed value" in refusals[0].detail
+    assert not (tmp_path / f"{BULK_CONFIRM_PAGE}.svg").exists()
 
 
 @pytest.mark.integration
@@ -196,7 +219,7 @@ def test_the_workbench_reads_cleanly_at_every_geometry_and_theme_through_the_pro
         for theme in ("light", "dark")
     ]
 
-    _, frames = capture_scenario(_FIRST_QUARTER, shots)
+    _, frames, _ = capture_scenario(_FIRST_QUARTER, shots)
 
     expected = {"workbench": _qualname(ModeloWorkbenchScreen), "sources": _qualname(WorkbenchSourcesScreen)}
     assert len(frames) == len(shots)
