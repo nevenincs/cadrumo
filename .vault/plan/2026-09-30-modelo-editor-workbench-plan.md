@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:a830ff2c0f30d0905f6a86a4420a6897dffdbc73e7c9ee4af64070fe374cb84c'
+body_hash: 'sha256:170d3807f65e8ddbd2b145bdc922fc143b50e195034c32297198cb0dc3fea5ac'
 ---
 
 # `modelo-editor-workbench` plan
@@ -106,19 +106,19 @@ Prove the workbench across locales, geometries and themes through the production
 
 Converge the workbench on the filer-facing design the UX session specified, one owner per file: the read model states origin sources, AEAT data provenance, deadline, result direction and filed state; rows, lists, header, browsing and the editor present them in the filer's words; assumed values hold the journey until confirmed.
 
-- [ ] `P06.S31` - Add origin source descriptors, AEAT data provenance, the filing deadline, the result direction and the recorded-filing state to the form read model, and reconcile required boxes with verification; `src/cadrumo/application/modelo/work_form.py`.
-- [ ] `P06.S32` - Render rows as the official form: full box numbers, units, wrapped labels and origin words from the read model; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
-- [ ] `P06.S33` - Group the findings list by attention level with what to do and a working Enter, and turn the sources view into a per-box map by origin; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
-- [ ] `P06.S34` - Rewrite the findings catalogue and the workbench texts in the filer's words and one register; `src/cadrumo/locales`.
-- [ ] `P06.S35` - Show a permanent status header with result direction, deadline and attention chips, rename the steps, and add collapsible navigation, search, go-to-box and sort; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
-- [ ] `P06.S36` - Let assumed values hold the journey until confirmed, with bulk confirm, save-and-next, and where-it-comes-from in the editor; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [x] `P06.S31` - Add origin source descriptors, AEAT data provenance, the filing deadline, the result direction and the recorded-filing state to the form read model, and reconcile required boxes with verification; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P06.S32` - Render rows as the official form: full box numbers, units, wrapped labels and origin words from the read model; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
+- [x] `P06.S33` - Group the findings list by attention level with what to do and a working Enter, and turn the sources view into a per-box map by origin; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
+- [x] `P06.S34` - Rewrite the findings catalogue and the workbench texts in the filer's words and one register; `src/cadrumo/locales`.
+- [x] `P06.S35` - Show a permanent status header with result direction, deadline and attention chips, rename the steps, and add collapsible navigation, search, go-to-box and sort; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
+- [x] `P06.S36` - Let assumed values hold the journey until confirmed, with bulk confirm, save-and-next, and where-it-comes-from in the editor; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [ ] `P06.S37` - Render the converged workbench in the review previews after each wave and close the phase with a review; `dev/tui`.
-- [ ] `P06.S38` - Narrow assumed values to required or non-zero boxes, give findings a grounded action and level, and expose grounded rates for rate cells; `src/cadrumo/application/modelo/work_form.py`.
-- [ ] `P06.S39` - Show empty optional boxes without repeating themselves, keep legal citations whole, and word review effects by source family; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
-- [ ] `P06.S40` - Cap long box lists in the findings list, drop counts the chips already give, hide to-dos on recorded declarations, and name sources in the filer's words; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
-- [ ] `P06.S41` - Dim pages that do not apply this period, merge duplicate navigator rows, scope bulk confirm to a page or section, and drop redundant help lines; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
-- [ ] `P06.S42` - Drive the acceptance journeys through confirming assumed values and recording the filing; `dev/acceptance/income_tax/tui_journey.py`.
-- [ ] `P06.S43` - Keep raw identifiers out of finding sentences and put them behind technical details; `src/cadrumo/locales`.
+- [x] `P06.S38` - Narrow assumed values to required or non-zero boxes, give findings a grounded action and level, and expose grounded rates for rate cells; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P06.S39` - Show empty optional boxes without repeating themselves, keep legal citations whole, and word review effects by source family; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
+- [x] `P06.S40` - Cap long box lists in the findings list, drop counts the chips already give, hide to-dos on recorded declarations, and name sources in the filer's words; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
+- [x] `P06.S41` - Dim pages that do not apply this period, merge duplicate navigator rows, scope bulk confirm to a page or section, and drop redundant help lines; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
+- [x] `P06.S42` - Drive the acceptance journeys through confirming assumed values and recording the filing; `dev/acceptance/income_tax/tui_journey.py`.
+- [x] `P06.S43` - Keep raw identifiers out of finding sentences and put them behind technical details; `src/cadrumo/locales`.
 
 ## Parallelization
 

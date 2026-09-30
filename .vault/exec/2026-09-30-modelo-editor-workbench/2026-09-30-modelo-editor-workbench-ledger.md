@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:4276afaffa31071ecf7ee449e305b75ea7d44d9507c1cb70ad3dae1a510d3e98'
+body_hash: 'sha256:dd50863c598008001e9d5e779b554b87f6152a0d4e20a209aeb2401a3967a487'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -469,6 +469,238 @@ related:
 - `S29` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
 - `S29` `verify:` `pytest dev/docs/tests/test_docs_localization.py dev/docs/tests/test_docs_catalogue_drift.py dev/docs/tests/test_localized_surface_exclusions.py dev/docs/tests/test_docs_build_localized_es.py` -> `pass`
 - `S29` `verify:` `pytest src/cadrumo/entrypoints/tui/modelo/workbench/tests` -> `pass`
+- `S31` `A` `src/cadrumo/application/modelo/required_inputs.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_work_form.py`
+- `S31` `A` `src/cadrumo/application/modelo/tests/test_work_form_descriptors.py`
+- `S31` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S31` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S31` `A` `src/cadrumo/application/modelo/work_form_result.py`
+- `S31` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S31` `A` `src/cadrumo/application/modelo/work_form_sources.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S31` `M` `src/cadrumo/application/modelo/edit_value_grammar.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S31` `verify:` `pytest src/cadrumo/application/modelo/tests` -> `pass`
+- `S31` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S31` `by:` `orchestrator`
+- `S32` `M` `dev/locales/fstring_registry.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
+- `S32` `M` `src/cadrumo/application/modelo/value_presentation.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S32` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S32` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S32` `M` `src/cadrumo/locales/ca/common.yml`
+- `S32` `M` `src/cadrumo/locales/en/common.yml`
+- `S32` `M` `src/cadrumo/locales/es/common.yml`
+- `S32` `M` `src/cadrumo/locales/hu/common.yml`
+- `S32` `M` `dev/locales/tests/test_audit.py`
+- `S32` `A` `src/cadrumo/application/modelo/tests/test_work_form_grids.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S32` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/grid.py`
+- `S32` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_screen.py`
+- `S32` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S32` `verify:` `pytest src/cadrumo/application/modelo/tests` -> `pass`
+- `S32` `by:` `orchestrator`
+- `S33` `M` `dev/locales/fstring_registry.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S33` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/form_edits.py`
+- `S33` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issues.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S33` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources_real.py`
+- `S33` `M` `src/cadrumo/locales/ca/common.yml`
+- `S33` `M` `src/cadrumo/locales/en/common.yml`
+- `S33` `M` `src/cadrumo/locales/es/common.yml`
+- `S33` `M` `src/cadrumo/locales/hu/common.yml`
+- `S33` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S33` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S33` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S33` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S33` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S33` `by:` `orchestrator`
+- `S34` `M` `src/cadrumo/locales/ca/application.yml`
+- `S34` `M` `src/cadrumo/locales/en/application.yml`
+- `S34` `M` `src/cadrumo/locales/es/application.yml`
+- `S34` `M` `src/cadrumo/locales/hu/application.yml`
+- `S34` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S34` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S34` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S34` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S34` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S34` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S34` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S34` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S34` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S34` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S34` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S34` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S34` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S34` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S34` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S34` `M` `src/cadrumo/locales/ca/common.yml`
+- `S34` `M` `src/cadrumo/locales/en/common.yml`
+- `S34` `M` `src/cadrumo/locales/es/common.yml`
+- `S34` `M` `src/cadrumo/locales/hu/common.yml`
+- `S34` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S34` `verify:` `pytest src/cadrumo/entrypoints/cli/tests` -> `pass`
+- `S34` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S34` `by:` `orchestrator`
+- `S35` `M` `dev/locales/tests/test_audit.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/legend.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/search.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/sorting.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/declaration_states.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_browsing.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header_real.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S35` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_recorded.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_screen.py`
+- `S35` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S35` `M` `src/cadrumo/locales/ca/common.yml`
+- `S35` `M` `src/cadrumo/locales/en/common.yml`
+- `S35` `M` `src/cadrumo/locales/es/common.yml`
+- `S35` `M` `src/cadrumo/locales/hu/common.yml`
+- `S35` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S35` `by:` `orchestrator`
+- `S36` `M` `dev/locales/tests/test_audit.py`
+- `S36` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S36` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_editor_panel.py`
+- `S36` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S36` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirmation.py`
+- `S36` `M` `src/cadrumo/locales/ca/common.yml`
+- `S36` `M` `src/cadrumo/locales/en/common.yml`
+- `S36` `M` `src/cadrumo/locales/es/common.yml`
+- `S36` `M` `src/cadrumo/locales/hu/common.yml`
+- `S36` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_review_check.py`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S36` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S36` `by:` `orchestrator`
+- `S38` `M` `src/cadrumo/application/modelo/tests/test_work_form.py`
+- `S38` `A` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S38` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S38` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S38` `M` `src/cadrumo/locales/ca/application.yml`
+- `S38` `M` `src/cadrumo/locales/en/application.yml`
+- `S38` `M` `src/cadrumo/locales/es/application.yml`
+- `S38` `M` `src/cadrumo/locales/hu/application.yml`
+- `S38` `verify:` `pytest src/cadrumo/application/modelo/tests` -> `pass`
+- `S38` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S38` `by:` `orchestrator`
+- `S39` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S39` `M` `src/cadrumo/application/modelo/tests/test_casilla_help.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S39` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_review_effect.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S39` `M` `src/cadrumo/locales/ca/common.yml`
+- `S39` `M` `src/cadrumo/locales/en/common.yml`
+- `S39` `M` `src/cadrumo/locales/es/common.yml`
+- `S39` `M` `src/cadrumo/locales/hu/common.yml`
+- `S39` `M` `dev/locales/tests/test_audit.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S39` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S39` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S39` `by:` `orchestrator`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issues.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources_real.py`
+- `S40` `M` `src/cadrumo/locales/ca/common.yml`
+- `S40` `M` `src/cadrumo/locales/en/common.yml`
+- `S40` `M` `src/cadrumo/locales/es/common.yml`
+- `S40` `M` `src/cadrumo/locales/hu/common.yml`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S40` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S40` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S40` `by:` `orchestrator`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/legend.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/search.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/sectioned_form.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_applicability.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_browsing.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_and_footer.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend_search_and_fit.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_refinements_real.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_review_check.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_scoped_confirm.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S41` `M` `src/cadrumo/locales/ca/common.yml`
+- `S41` `M` `src/cadrumo/locales/en/common.yml`
+- `S41` `M` `src/cadrumo/locales/es/common.yml`
+- `S41` `M` `src/cadrumo/locales/hu/common.yml`
+- `S41` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S41` `A` `src/cadrumo/entrypoints/tui/tests/test_theme_palette_contrast.py`
+- `S41` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S41` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S41` `by:` `orchestrator`
+- `S42` `M` `dev/acceptance/income_tax/installed_tui_financial_child.py`
+- `S42` `M` `dev/acceptance/income_tax/tests/test_tui_journey.py`
+- `S42` `M` `dev/acceptance/income_tax/tui_journey.py`
+- `S42` `M` `dev/acceptance/iva/installed_m303_evidence_journey.py`
+- `S42` `M` `dev/acceptance/retenciones/installed_tui_withholding.py`
+- `S42` `verify:` `pytest dev/acceptance/income_tax/tests/test_tui_journey.py dev/acceptance/profile/tests/test_tui_journey.py` -> `pass`
+- `S42` `verify:` `ruff check dev/acceptance/income_tax/tui_journey.py` -> `pass`
+- `S42` `verify:` `ty check dev/acceptance/income_tax/tui_journey.py` -> `pass`
+- `S42` `by:` `orchestrator`
+- `S43` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_verification_report_view.py`
+- `S43` `M` `src/cadrumo/locales/ca/application.yml`
+- `S43` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S43` `M` `src/cadrumo/locales/en/application.yml`
+- `S43` `M` `src/cadrumo/locales/en/flows.yml`
+- `S43` `M` `src/cadrumo/locales/es/application.yml`
+- `S43` `M` `src/cadrumo/locales/es/flows.yml`
+- `S43` `M` `src/cadrumo/locales/hu/application.yml`
+- `S43` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S43` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S43` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S43` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S43` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S43` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S43` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S43` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S43` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S43` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S43` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S43` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S43` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S43` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S43` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S43` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S43` `verify:` `pytest src/cadrumo/entrypoints/cli/tests` -> `pass`
+- `S43` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S43` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
+- `S43` `verify:` `python -m dev.docs.sequences refresh` -> `pass`
+- `S43` `by:` `orchestrator`
 
 ## Notes
 
@@ -506,3 +738,19 @@ related:
 - `S25` The generation no longer reads each declaration's lifecycle history or keeps a graded-refusal map: both served only the retired pages; the Modelo projection reader now returns the projection the search indexes
 - `S26` The workbench's own keys were authored with each Step in four locales; this Step rewrites the Declarations entry and the layout note, which still spoke of workspaces, captures and revisions
 - `S27` The production-root frames report two vertical scroll owners (section navigator and casilla list); the harness reads it as advisory and the visual review judges it
+- `S31` Commits 9eb996e280, 6c7e5732aa, b6c87f4bc4
+- `S32` Commits 74ca1efb9a, 52acf84067
+- `S32` Official grids draw as tables from the layout's rows and columns; a rate cell shows a percentage only when the literal carries an explicit % or a declared export scale, so 303's `[08],` `[157],` `[20]` and `[23]` show a dot until the registry declares their scale
+- `S33` Commits 71270e2f62, 949b4f0926
+- `S34` Commits 8735cd5b25, a887913386, 3d82ca962d
+- `S35` Commits 110a520007
+- `S36` Commits 24306b9610, 2d4022753e, a63b4bac56, a0561df7d8, 43b55c934f
+- `S36` Editor refinements and the review layout landed with this Step's module ownership
+- `S38` Commits a4b3c1db0d
+- `S39` Commits 5218f076c1, 8cfeefe664
+- `S40` Commits a37c8abc72, 33872707b0
+- `S41` Commits 73b9d5f909, 9f6363b623, 70d715fd87
+- `S41` The TUI brand moved from terracotta to blue by the operator's choice, TUI only; the docs site and PDF summaries keep terracotta. A palette test keeps error apart from primary and accent
+- `S42` Commits 0146b2ae61
+- `S42` The in-process journeys pass; the installed-wheel journeys were not run, since they need a wheel built from a settled tree
+- `S43` Commits 9e3a5fee59, 72b7266e91
