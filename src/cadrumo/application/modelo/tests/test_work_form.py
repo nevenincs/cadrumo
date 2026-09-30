@@ -278,7 +278,7 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
     held = review.model_copy(
         update={
             "casillas": tuple(
-                row.model_copy(update={"realised_kind": ModeloValueKind.LITERAL, "value": Decimal("0")})
+                row.model_copy(update={"realised_kind": ModeloValueKind.LITERAL, "value": Decimal("250.00")})
                 if str(row.casilla_id) in {"06", "08"}
                 else row
                 for row in review.casillas
@@ -290,7 +290,9 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
     recorded = _by_casilla(_form(snapshot, operation, layout=_layout(snapshot), review=held, entered=frozenset({"06"})))
 
     assert unknown["06"].origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert unknown["06"].unattributed
     assert recorded["06"].origin is ModeloFormOrigin.ENTERED
+    assert not recorded["06"].unattributed
     assert recorded["08"].origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
 
 

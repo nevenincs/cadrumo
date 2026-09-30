@@ -1491,6 +1491,49 @@ application:
       stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
         amb %{error_code}.'
     work_form:
+      finding_action:
+        add_activity_start: Afegeix al teu perfil la data en què va començar la teva
+          activitat i torna a calcular.
+        add_attribution_to_profile: Registra al teu perfil d'on surt la renda atribuïda
+          i torna a calcular.
+        add_base_to_entry: Afegeix la base imposable a l'apunt dels teus registres
+          i torna a calcular.
+        attach_document: Adjunta el justificant a l'apunt dels teus registres.
+        await_update: Encara no es pot resoldre aquí. Actualitza l'aplicació quan
+          hi hagi una versió que ho cobreixi.
+        calculate_again: Torna a calcular la declaració.
+        check_carried_zero: Comprova que la declaració anterior va declarar realment
+          zero. Si no, corregeix-la allà i torna a calcular.
+        check_condition: Comprova que es compleix la condició que indica. Si no, corregeix
+          la casella i torna a calcular.
+        check_earlier_figures: Comprova'n les xifres amb la declaració que vas presentar
+          a l'AEAT abans de registrar aquesta com a presentada.
+        check_possible_reduction: Comprova si et correspon. Si és així, escriu-la
+          a la seva casella i torna a calcular.
+        check_profile_value: Revisa aquest valor al teu perfil, corregeix-lo si és
+          incorrecte i torna a calcular.
+        compare_figures: Compara les xifres, corregeix la que estigui malament i torna
+          a calcular.
+        correct_and_recalculate: Corregeix el que indica i torna a calcular i comprovar.
+        declare_asset_again: Torna a declarar aquest bé en aquesta declaració.
+        enter_box_value: Escriu el valor a la casella i torna a calcular.
+        enter_or_confirm_payments: Registra les percepcions de cada perceptor al detall
+          d'aquest model, o confirma cada període al teu perfil.
+        enter_payee_payments: Registra les percepcions de cada perceptor al detall
+          d'aquest model i torna a comprovar.
+        enter_withholding_certificate: Introdueix la retenció que figura al certificat
+          de retencions i ingressos a compte del teu pagador i torna a calcular.
+        nothing_to_do: No has de fer res. Explica el que va fer el càlcul.
+        read_and_decide: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
+        regroup_income_lines: Corregeix com estan agrupades les línies de renda i
+          torna a calcular.
+        resolve_303_returns: Resol els problemes pendents dels models 303 d'aquell
+          any i torna a calcular.
+        retry_or_update: Torna-ho a provar o actualitza l'aplicació.
+        review_attested_year: No has de fer res, tret que aquell any paguessis rendes
+          exemptes o per sota del llindar de retenció.
+        settle_earlier_declaration: Resol primer la declaració del període anterior
+          i torna a calcular.
       inspection_heading: Totes les caselles, per número de casella
   overview:
     calendar:

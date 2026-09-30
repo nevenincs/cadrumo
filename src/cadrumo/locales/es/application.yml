@@ -1494,6 +1494,48 @@ application:
       stage_refused: 'Quickfile se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
     work_form:
+      finding_action:
+        add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
+          y vuelve a calcular.
+        add_attribution_to_profile: Registra en tu perfil de dónde sale la renta atribuida
+          y vuelve a calcular.
+        add_base_to_entry: Añade la base imponible al apunte de tus registros y vuelve
+          a calcular.
+        attach_document: Adjunta el justificante al apunte de tus registros.
+        await_update: Todavía no se puede resolver aquí. Actualiza la aplicación cuando
+          haya una versión que lo cubra.
+        calculate_again: Vuelve a calcular la declaración.
+        check_carried_zero: Comprueba que la declaración anterior declaró de verdad
+          cero. Si no, corrígela allí y vuelve a calcular.
+        check_condition: Comprueba que se cumple la condición que indica. Si no, corrige
+          la casilla y vuelve a calcular.
+        check_earlier_figures: Comprueba sus cifras con la declaración que presentaste
+          en la AEAT antes de registrar esta como presentada.
+        check_possible_reduction: Comprueba si te corresponde. Si es así, escríbela
+          en su casilla y vuelve a calcular.
+        check_profile_value: Revisa ese valor en tu perfil, corrígelo si está mal
+          y vuelve a calcular.
+        compare_figures: Compara las cifras, corrige la que esté mal y vuelve a calcular.
+        correct_and_recalculate: Corrige lo que indica y vuelve a calcular y comprobar.
+        declare_asset_again: Vuelve a declarar ese bien en esta declaración.
+        enter_box_value: Escribe el valor en la casilla y vuelve a calcular.
+        enter_or_confirm_payments: Registra las percepciones de cada perceptor en
+          el detalle de este modelo, o confirma cada periodo en tu perfil.
+        enter_payee_payments: Registra las percepciones de cada perceptor en el detalle
+          de este modelo y vuelve a comprobar.
+        enter_withholding_certificate: Introduce la retención que figura en el certificado
+          de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
+        nothing_to_do: No tienes que hacer nada. Explica lo que hizo el cálculo.
+        read_and_decide: Léelo y decide si te afecta. No te impide presentar.
+        regroup_income_lines: Corrige cómo están agrupadas las líneas de renta y vuelve
+          a calcular.
+        resolve_303_returns: Resuelve los problemas pendientes de los modelos 303
+          de ese año y vuelve a calcular.
+        retry_or_update: Inténtalo de nuevo o actualiza la aplicación.
+        review_attested_year: No tienes que hacer nada, salvo que ese año pagaras
+          rentas exentas o por debajo del umbral de retención.
+        settle_earlier_declaration: Resuelve primero la declaración del periodo anterior
+          y vuelve a calcular.
       inspection_heading: Todas las casillas, por número de casilla
   overview:
     calendar:

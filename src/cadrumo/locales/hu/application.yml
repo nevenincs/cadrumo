@@ -1453,6 +1453,53 @@ application:
       stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
     work_form:
+      finding_action:
+        add_activity_start: Add meg a profilodban, mikor kezdted a tevékenységedet,
+          majd számolj újra.
+        add_attribution_to_profile: Rögzítsd a profilodban, honnan származik a betudott
+          jövedelem (renta atribuida), majd számolj újra.
+        add_base_to_entry: Add meg az adóalapot (base imponible) a nyilvántartásod
+          tételénél, majd számolj újra.
+        attach_document: Csatold a bizonylatot a nyilvántartásod megfelelő tételéhez.
+        await_update: Ezt itt még nem lehet megoldani. Frissítsd az alkalmazást, amikor
+          elérhető olyan verzió, amely kezeli.
+        calculate_again: Számold ki újra a bevallást.
+        check_carried_zero: Ellenőrizd, hogy a korábbi bevallás valóban nullát tartalmazott.
+          Ha nem, javítsd ki ott, majd számolj újra.
+        check_condition: Ellenőrizd, hogy teljesül-e a megnevezett feltétel. Ha nem,
+          javítsd a rovatot, majd számolj újra.
+        check_earlier_figures: Mielőtt ezt a bevallást benyújtottként rögzíted, vesd
+          össze a számait az AEAT-nál benyújtott bevallással.
+        check_possible_reduction: Ellenőrizd, hogy vonatkozik-e rád. Ha igen, írd
+          be a rovatába, majd számolj újra.
+        check_profile_value: Nézd át ezt az értéket a profilodban, javítsd, ha hibás,
+          majd számolj újra.
+        compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
+          újra.
+        correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz
+          újra.
+        declare_asset_again: Vallsd be újra ezt a vagyontárgyat ebben a bevallásban.
+        enter_box_value: Írd be az értéket a rovatba, majd számolj újra.
+        enter_or_confirm_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket
+          a nyomtatvány részletezésében, vagy erősítsd meg az egyes időszakokat a
+          profilodban.
+        enter_payee_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket a nyomtatvány
+          részletezésében, majd ellenőrizz újra.
+        enter_withholding_certificate: Írd be a kifizetőd igazolásán (certificado
+          de retenciones e ingresos a cuenta) szereplő levont adót (retención), majd
+          számolj újra.
+        nothing_to_do: Nincs teendőd. Azt magyarázza el, mit csinált a számítás.
+        read_and_decide: Olvasd el, és döntsd el, hogy vonatkozik-e rád. Nem akadályozza
+          a benyújtást.
+        regroup_income_lines: Javítsd a jövedelemsorok csoportosítását, majd számolj
+          újra.
+        resolve_303_returns: Rendezd az adott év 303-as bevallásainak nyitott problémáit,
+          majd számolj újra.
+        retry_or_update: Próbáld újra, vagy frissítsd az alkalmazást.
+        review_attested_year: Nincs teendőd, kivéve ha abban az évben adómentes vagy
+          a levonási értékhatár alatti jövedelmet fizettél ki.
+        settle_earlier_declaration: Előbb rendezd a korábbi időszak bevallását, majd
+          számolj újra.
       inspection_heading: Minden rovat, rovatszám szerint
   overview:
     calendar:

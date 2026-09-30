@@ -1376,6 +1376,51 @@ application:
       stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
     work_form:
+      finding_action:
+        add_activity_start: Add the date your activity started to your profile, then
+          calculate again.
+        add_attribution_to_profile: Record in your profile where the attributed income
+          comes from, then calculate again.
+        add_base_to_entry: Add the taxable amount (base imponible) to the entry in
+          your records, then calculate again.
+        attach_document: Attach the document to the entry in your records.
+        await_update: This cannot be resolved here yet. Update the application once
+          a version that covers it is available.
+        calculate_again: Calculate the declaration again.
+        check_carried_zero: Check that the earlier declaration really declared zero.
+          If it did not, correct it there, then calculate again.
+        check_condition: Check that the condition it names is met. If it is not, correct
+          the box, then calculate again.
+        check_earlier_figures: Check its figures against the declaration you filed
+          with AEAT before you record this one as filed.
+        check_possible_reduction: Check whether it applies to you. If it does, enter
+          it in its box, then calculate again.
+        check_profile_value: Check that value in your profile, correct it if it is
+          wrong, then calculate again.
+        compare_figures: Compare the figures, correct the one that is wrong, then
+          calculate again.
+        correct_and_recalculate: Correct what it describes, then calculate and check
+          again.
+        declare_asset_again: Declare that asset again in this declaration.
+        enter_box_value: Enter the value in the box, then calculate again.
+        enter_or_confirm_payments: Enter the payments for each payee in this modelo's
+          detail, or confirm each period in your profile.
+        enter_payee_payments: Enter the payments for each payee in this modelo's detail,
+          then check again.
+        enter_withholding_certificate: Enter the withholding shown on your payer's
+          certificado de retenciones e ingresos a cuenta, then calculate again.
+        nothing_to_do: Nothing to do. It explains what the calculation did.
+        read_and_decide: Read it and decide whether it applies to you. It does not
+          stop you from filing.
+        regroup_income_lines: Correct how the income lines are grouped, then calculate
+          again.
+        resolve_303_returns: Resolve the open problems in that year's modelo 303 returns,
+          then calculate again.
+        retry_or_update: Try again, or update the application.
+        review_attested_year: Nothing to do, unless that year you paid exempt income
+          or income below the withholding threshold.
+        settle_earlier_declaration: Settle the declaration of the earlier period first,
+          then calculate again.
       inspection_heading: All boxes, in box-number order
   overview:
     calendar:

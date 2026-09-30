@@ -19,12 +19,19 @@ Classification is decided once, here, so every frontend shows the same states:
   with the earlier declaration a carry reads and the AEAT tax data an imported
   draft supplied,
 * whether a box needs the filer's value, by the same rule verification checks,
+* the one rate a printed rate box stands for, where its row's base binding
+  declares exactly one,
 * the settlement box and which way it settles, and
-* whether the declaration is recorded as filed, which closes it to editing.
+* whether the declaration is recorded as filed, which closes it to editing and
+  leaves nothing counted as still to do.
 
 "Entered by the filer" is only ever claimed from the operator's own recorded
 entries. A revision that predates them has an unknown operator record, and a
-value it holds for a manual box is shown as one to confirm, never as entered.
+value it holds for a box the filer types is never shown as entered. It is one
+to confirm where it could under-declare, in a box verification requires or
+when it is not zero; an optional box holding zero reads as optional and empty.
+Either way the field says the value is unattributed, because a recalculation
+returns it to what the calculation gives.
 
 The form is total: every casilla of the revision appears exactly once, on a
 page, among the working figures, or in the unplaced list with its reason. A
@@ -49,8 +56,10 @@ from ...domain.calculations.registry.export_field_casilla import (
     layout_fields_in_emission_order,
 )
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormCellKind,
@@ -107,6 +116,7 @@ from .work_form_models import (
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
     ModeloFormPage,
+    ModeloFormRate,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
     ModeloFormResult,
@@ -149,6 +159,8 @@ _FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
     {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
 )
 """The lifecycle states of a calculation recorded as filed."""
+_TO_DO_TALLIES: Final[tuple[str, ...]] = ("needs_input", "default_to_confirm")
+"""The counts of what the filer still has to enter or confirm."""
 
 
 class ModeloWorkFormLayoutError(InternalInvariantError):
@@ -321,7 +333,31 @@ def _casilla_origin(row: ModeloWorkReviewCasilla, context: _FormContext, *, requ
         return ModeloFormOrigin.ENTERED
     if empty:
         return ModeloFormOrigin.NEEDS_INPUT if required else ModeloFormOrigin.OPTIONAL_EMPTY
-    return ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    return _held_origin(row.value, required=required)
+
+
+def _held_origin(value: ModeloFormScalar, *, required: bool) -> ModeloFormOrigin:
+    """Classify a value the filer types that the calculation holds and nobody is recorded as entering.
+
+    It is assumed, and waits for the filer to confirm it, only where it could
+    under-declare: in a box the declaration requires, or when it is not zero.
+    An optional box holding zero asks nothing of the filer.
+    """
+    if required or not _holds_nothing(value):
+        return ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    return ModeloFormOrigin.OPTIONAL_EMPTY
+
+
+def _holds_nothing(value: ModeloFormScalar) -> bool:
+    """Whether a held value is zero or nothing: no amount, a zero amount, a blank text or an unmarked choice."""
+    if value is None:
+        return True
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, str) and not value.strip():
+        return True
+    amount = _numeric(value)
+    return amount is not None and amount == 0
 
 
 def _casilla_editability(
@@ -390,6 +426,7 @@ def _casilla_field(
     )
     required = casilla_id in context.required
     editability, reason = _casilla_editability(row, context)
+    origin = _casilla_origin(row, context, required=required)
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
         box=_box(casilla, placement),
@@ -397,10 +434,12 @@ def _casilla_field(
         help=_help(casilla, label.text, context.language),
         data_type=str(row.data_type),
         value=row.value,
-        origin=_casilla_origin(row, context, required=required),
+        origin=origin,
         editability=editability,
         not_writable_reason=reason,
         required=required,
+        unattributed=origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+        or (origin is ModeloFormOrigin.OPTIONAL_EMPTY and row.realised_kind is not ModeloValueKind.EMPTY),
         role=_role(row),
         bindings=_bindings(row),
         source=bound_value_source(
@@ -440,30 +479,28 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
     policy = source_policy(binding.source)
     editability, reason = _binding_input_editability(binding_id, policy.override_policy, context)
     overridden = context.overridden is not None and binding_id in context.overridden
-    origin = (
-        ModeloFormOrigin.ENTERED
-        if overridden
-        else (
-            ModeloFormOrigin.OPTIONAL_EMPTY
-            if raw is None
-            else (
-                ModeloFormOrigin.IMPORTED
-                if binding.source is not BindingSourceKind.MANUAL_INPUT
-                else ModeloFormOrigin.DEFAULT_TO_CONFIRM
-            )
-        )
-    )
+    value = _binding_value(raw, data_type)
+    typed_unattributed = not overridden and raw is not None and binding.source is BindingSourceKind.MANUAL_INPUT
+    if overridden:
+        origin = ModeloFormOrigin.ENTERED
+    elif raw is None:
+        origin = ModeloFormOrigin.OPTIONAL_EMPTY
+    elif binding.source is not BindingSourceKind.MANUAL_INPUT:
+        origin = ModeloFormOrigin.IMPORTED
+    else:
+        origin = _held_origin(value, required=False)
     return ModeloFormField(
         address=ModeloFormBindingAddressV1(binding_id=binding.id),
         box=None,
         label=label,
         help=None,
         data_type=data_type,
-        value=_binding_value(raw, data_type),
+        value=value,
         origin=origin,
         editability=editability,
         not_writable_reason=reason,
         required=False,
+        unattributed=typed_unattributed,
         bindings=(ModeloFormBinding(binding_id=binding.id, policy=policy, resolved=raw is not None),),
         source=bound_value_source(
             (binding.id,),
@@ -506,7 +543,8 @@ def _binding_input_editability(
     return ModeloFormEditability.NOT_WRITABLE, ABSENT_FROM_ADMISSION
 
 
-def _counts(fields: Iterable[ModeloFormField]) -> ModeloFormCounts:
+def _counts(fields: Iterable[ModeloFormField], *, filed: bool) -> ModeloFormCounts:
+    """Tally fields by origin; a declaration recorded as filed has nothing left to enter or confirm."""
     tallies = {
         "total": 0,
         "needs_input": 0,
@@ -534,6 +572,8 @@ def _counts(fields: Iterable[ModeloFormField]) -> ModeloFormCounts:
             tallies[bucket] += 1
         if field.blockers:
             tallies["blocked"] += 1
+    if filed:
+        tallies.update(dict.fromkeys(_TO_DO_TALLIES, 0))
     return ModeloFormCounts(**tallies)
 
 
@@ -568,6 +608,62 @@ def _page_applies(
         for field in section_fields(section)
     )
     return True if has_value else None
+
+
+def _grounded_rate(field: ModeloFormField, context: _FormContext) -> ModeloFormRate | None:
+    """The one rate the bindings filling a base box declare, or ``None`` when they do not declare exactly one.
+
+    Every binding that fills the box must be a rate-specific IVA ledger
+    aggregate: a rate-blind binding admits records at any rate of its tier, so
+    a box it fills is not grounded on one rate, however the others read.
+    """
+    if not isinstance(field.address, ModeloFormCasillaAddressV1):
+        return None
+    casilla = context.casillas.get(str(field.address.casilla_id))
+    if casilla is None:
+        return None
+    binding_ids = tuple(item for item in (casilla.binding, *casilla.alternate_bindings) if item is not None)
+    rates: set[Decimal] = set()
+    for binding_id in binding_ids:
+        binding = context.bindings.get(str(binding_id))
+        provider = None if binding is None else binding.provider
+        if not isinstance(provider, LedgerIvaProvider) or provider.applied_rates is None:
+            return None
+        rates.update(provider.applied_rates)
+    if len(rates) != 1:
+        return None
+    return ModeloFormRate(ratio=rates.pop(), binding_id=binding_ids[0])
+
+
+def _with_grounded_rate(cells: tuple[ModeloFormGridCell, ...], context: _FormContext) -> tuple[ModeloFormGridCell, ...]:
+    """Give an official row's rate box the one rate its base box is grounded on.
+
+    The row must print exactly one rate box, and its other boxes must be
+    grounded on exactly one rate between them; any other row is left as it is,
+    with no rate claimed for its rate box.
+    """
+    rate_indexes = [
+        index
+        for index, cell in enumerate(cells)
+        if cell.field is not None and cell.field.data_type == CasillaDataType.RATIO.value
+    ]
+    if len(rate_indexes) != 1:
+        return cells
+    (rate_index,) = rate_indexes
+    grounded: dict[Decimal, ModeloFormRate] = {}
+    for index, cell in enumerate(cells):
+        rate = None if index == rate_index or cell.field is None else _grounded_rate(cell.field, context)
+        if rate is not None:
+            grounded.setdefault(rate.ratio, rate)
+    rate_cell = cells[rate_index]
+    if len(grounded) != 1 or rate_cell.field is None:
+        return cells
+    (rate,) = grounded.values()
+    field = rate_cell.field.model_copy(update={"grounded_rate": rate})
+    return tuple(
+        rate_cell.model_copy(update={"field": field}) if index == rate_index else cell
+        for index, cell in enumerate(cells)
+    )
 
 
 class _LayoutWalk:
@@ -606,6 +702,7 @@ class _LayoutWalk:
                 "editability": ModeloFormEditability.DESIGN_CONSTANT,
                 "not_writable_reason": None,
                 "origin": ModeloFormOrigin.INFORMATIONAL,
+                "unattributed": False,
                 "value": fixed,
                 "source": FIXED_BY_THE_FORM,
             }
@@ -621,7 +718,9 @@ class _LayoutWalk:
             condition=page.condition,
             applies=_page_applies(page, self.context, sections),
             sections=sections,
-            counts=_counts(field for section in sections for field in section_fields(section)),
+            counts=_counts(
+                (field for section in sections for field in section_fields(section)), filed=self.context.filed
+            ),
         )
 
     def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection:
@@ -631,9 +730,11 @@ class _LayoutWalk:
             heading=_heading(section.heading_key, section.official_heading, section.id, self.context.language),
             official_heading=section.official_heading,
             blocks=blocks,
-            counts=_counts(()),
+            counts=_counts((), filed=self.context.filed),
         )
-        return form_section.model_copy(update={"counts": _counts(section_fields(form_section))})
+        return form_section.model_copy(
+            update={"counts": _counts(section_fields(form_section), filed=self.context.filed)}
+        )
 
     def block(
         self, block: FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock
@@ -657,8 +758,11 @@ class _LayoutWalk:
                 ModeloFormGridRow(
                     key=row.key,
                     heading=_heading(row.heading_key, row.official_heading, row.key, language),
-                    cells=tuple(
-                        self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal) for cell in row.cells
+                    cells=_with_grounded_rate(
+                        tuple(
+                            self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal) for cell in row.cells
+                        ),
+                        self.context,
                     ),
                 )
                 for row in block.rows
@@ -832,7 +936,7 @@ def build_modelo_work_form(
         working_figures=tuple(working),
         unplaced=tuple(unplaced),
         result_addresses=_results(context),
-        counts=_counts(every_field),
+        counts=_counts(every_field, filed=context.filed),
         progress=review.progress,
         operator_entries_known=entered_casilla_ids is not None,
         edit_admitted=context.surface is not None,
@@ -934,7 +1038,11 @@ def _inspection_form(
     blocks = tuple(ModeloFormFieldBlock(id=f"field-{index}", field=field) for index, field in enumerate(fields))
     heading = _heading(_INSPECTION_HEADING_LOCALE_KEY, None, _INSPECTION_PAGE_ID, context.language)
     section = ModeloFormSection(
-        id=f"{_INSPECTION_PAGE_ID}.all", heading=heading, official_heading=None, blocks=blocks, counts=_counts(fields)
+        id=f"{_INSPECTION_PAGE_ID}.all",
+        heading=heading,
+        official_heading=None,
+        blocks=blocks,
+        counts=_counts(fields, filed=context.filed),
     )
     page = ModeloFormPage(
         id=_INSPECTION_PAGE_ID,
@@ -943,7 +1051,7 @@ def _inspection_form(
         condition=FormPageCondition.ALWAYS,
         applies=True,
         sections=(section,),
-        counts=_counts(fields),
+        counts=_counts(fields, filed=context.filed),
     )
     review = context.review
     return ModeloWorkForm(
@@ -958,7 +1066,7 @@ def _inspection_form(
         inspection_reason=reason,
         pages=(page,),
         result_addresses=_results(context),
-        counts=_counts(fields),
+        counts=_counts(fields, filed=context.filed),
         progress=review.progress,
         operator_entries_known=context.entered is not None,
         edit_admitted=False,
