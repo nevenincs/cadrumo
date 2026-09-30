@@ -102,10 +102,12 @@ from .ports import (
 from .screen import ModeloWorkbenchScreen
 
 if TYPE_CHECKING:
+    from .....application.live.borrador_100 import Borrador100SnapshotRepository
     from .....application.modelo.operation_definitions import ModeloExportPublicResultV2
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from .....domain.calculations.registry.authority import PinnedAuthorityOperation
     from .....domain.calculations.registry.schema import RegistrySnapshot
+    from .....domain.deadlines.festivos import CalendarCCAA
     from ...operations.controller import OperationController
 
 type LifecycleDoorFactory = Callable[[str | None, str | None], ModeloWorkspaceLifecycleDoor]
@@ -141,11 +143,19 @@ _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]]
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchRepositories:
-    """The profile repositories one declaration's form is read from."""
+    """The profile repositories one declaration's form is read from.
+
+    ``borrador_snapshots`` is the profile's AEAT draft store, read to say when
+    replayed AEAT data was imported; ``holiday_territory`` reads the profile's
+    holiday territory afresh on each read, so a deadline shifts for the
+    filer's own regional holidays and not the national ones only.
+    """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
     calculations: CalculationRevisionCatalogueRepositoryProtocol
     verifications: VerificationReportCatalogueRepositoryProtocol
+    borrador_snapshots: Borrador100SnapshotRepository | None = None
+    holiday_territory: Callable[[], CalendarCCAA | None] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,6 +206,7 @@ class InstalledModeloWorkbench:
         admit = self._door_factory(None, None).edit_admission
         admission = None if admit is None else admit()
         declaration = self._declaration
+        territory = self._repositories.holiday_territory
         loaded = load_modelo_work_form(
             self._bucket_id,
             declaration.modelo,
@@ -207,6 +218,8 @@ class InstalledModeloWorkbench:
             verification_repository=self._repositories.verifications,
             admission=admission,
             language=language,
+            borrador_snapshots=self._repositories.borrador_snapshots,
+            holiday_territory=None if territory is None else territory(),
         )
         form = loaded.form
         head_id = form.calculation_revision_id

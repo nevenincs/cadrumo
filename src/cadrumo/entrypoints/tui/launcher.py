@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from ...core.external_constants import OutputLanguage
     from ...core.period import Period
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.deadlines.festivos import CalendarCCAA
     from ...domain.modelos.work_unit import WorkUnit
     from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
     from .account import AccountFactoriesV1
@@ -1018,7 +1019,7 @@ def _declarations_generation_factory(
 def _modelo_workbench_repositories(bucket_id: str, operation: PinnedAuthorityOperation) -> WorkbenchRepositories:
     """Compose the repositories one declaration's workbench reads its form from."""
     from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ..adapter_composition import build_calculation_action_ports
+    from ..adapter_composition import build_borrador_100_snapshot_repository, build_calculation_action_ports
     from .modelo.workbench.installed import WorkbenchRepositories
 
     ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
@@ -1026,7 +1027,26 @@ def _modelo_workbench_repositories(bucket_id: str, operation: PinnedAuthorityOpe
         work_units=ports.work_unit_repository,
         calculations=ports.calculation_repository,
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
+        borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
+        holiday_territory=partial(_profile_holiday_territory, bucket_id, operation),
     )
+
+
+def _profile_holiday_territory(bucket_id: str, operation: PinnedAuthorityOperation) -> CalendarCCAA | None:
+    """Read the profile's holiday territory, or ``None`` while the profile cannot say.
+
+    An absent or incomplete profile leaves the deadline on the national
+    holidays, which the form discloses, rather than keeping the workbench shut.
+    """
+    from ...application.modelo.action_errors import ModeloProfileReadinessError
+    from ...application.modelo.m303_regimen_simplificado_scope import taxpayer_profile_for_work
+    from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
+
+    profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
+    try:
+        return taxpayer_profile_for_work(profile).holiday_territory
+    except ModeloProfileReadinessError:
+        return None
 
 
 def _modelo_lifecycle_door(

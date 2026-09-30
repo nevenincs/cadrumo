@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f54a5401c79c40535e0e16f5ff16e4446540b49650568fc45f406b4db2aa66e'
+body_hash: 'sha256:0f2e9e71473dc3cd9985fcf8f2067c29540b1bddfeee7a0114a543dbe8bdcc4c'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -144,6 +144,18 @@ the sparse `required` flag, decides "needs your input". A total source-kind poli
 by test to the calculation precedence ladder, gives every binding source its family, override
 policy and destination; an unclassified source shows its policy as undecided. A totality
 invariant refuses a form that drops or duplicates any casilla or writable address.
+
+Amendment 2026-09-30, from the convergence phase's read-model work. The completeness manifest
+lists the whole calculation closure, including 429 typed Modelo 100 boxes that no filer owes.
+Using it made the form demand more than 150 boxes that verification never requires. So
+"needs your input" now follows the rule verification applies: a manual casilla the registry
+declares required, excluding detail-row templates, which their rows answer for. That rule is
+defined once, in `src/cadrumo/application/modelo/required_inputs.py`, and a test proves the form
+and a real verification agree. Verification keeps its own additional check of detail-row
+templates through their rows. The form also carries, per field, the source family of a bound
+value and any named earlier declaration, and, form-wide, the replayed AEAT data, the filing
+deadline, the settlement direction and the recorded-filing state. The interface renders these
+and does not classify. Authorized under the standing advance authorization the plan records.
 
 ### D3 State vocabulary
 
