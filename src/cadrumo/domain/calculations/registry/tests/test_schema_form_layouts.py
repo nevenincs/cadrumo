@@ -69,8 +69,6 @@ def _layout(**overrides: object) -> FormLayoutDefinition:
         "source_state_digest": _DIGEST,
         "pages": (page,),
         "placements": (FormPlacementDefinition(casilla_id="01", kind=FormPlacementKind.ON_FORM, box_number="01"),),
-        "legal_refs": ("ley-37-1992:art-164",),
-        "source_refs": ("aeat-dr-303-2025",),
     }
     payload.update(overrides)
     return FormLayoutDefinition.model_validate(payload)

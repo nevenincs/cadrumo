@@ -1998,8 +1998,6 @@ placements = [
     { casilla_id = "representantes-legales.rl3-nombre", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "representantes-legales.rl3-notaria", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 [[revisions.2024.form_layouts.pages]]
 id = "t22001000"

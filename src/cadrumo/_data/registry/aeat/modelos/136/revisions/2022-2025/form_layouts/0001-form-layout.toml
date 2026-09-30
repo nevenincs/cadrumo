@@ -34,8 +34,6 @@ placements = [
     { casilla_id = "precio-unitario", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "provincia-residencia-irpf", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5", "orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7", "orden-hap-70-2013:art-10", "orden-hap-70-2013:art-11", "orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero", "orden-hac-763-2018:df-unica"]
-source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-base-order", "boe-modelo-136-2018-amendment-hac-763", "boe-modelo-136-current-form-text", "boe-modelo-136-current-form"]
 
 [[revisions.2022-2025.form_layouts.pages]]
 id = "numbered-boxes"

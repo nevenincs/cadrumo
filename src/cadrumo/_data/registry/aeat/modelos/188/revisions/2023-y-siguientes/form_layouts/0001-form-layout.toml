@@ -15,8 +15,6 @@ placements = [
     { casilla_id = "04", kind = "on_form", box_number = "04" },
     { casilla_id = "05", kind = "on_form", box_number = "05" },
 ]
-legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
-source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout", "aeat-dr-188-2023"]
 
 [[revisions.2023-y-siguientes.form_layouts.pages]]
 id = "numbered-boxes"

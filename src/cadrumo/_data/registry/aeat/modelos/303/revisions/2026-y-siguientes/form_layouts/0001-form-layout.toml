@@ -233,8 +233,6 @@ placements = [
     { casilla_id = "iva.soportado.interiores.bienes-inversion", kind = "working_figure" },
     { casilla_id = "iva.soportado.interiores.bienes-inversion.base", kind = "working_figure" },
 ]
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
-source_refs = ["aeat-dr-303-2026"]
 
 [[revisions.2026-y-siguientes.form_layouts.pages]]
 id = "dp30301"

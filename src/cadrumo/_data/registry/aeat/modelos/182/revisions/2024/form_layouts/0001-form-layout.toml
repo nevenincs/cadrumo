@@ -17,5 +17,3 @@ placements = [
     { casilla_id = "tipo2.porcentaje-deduccion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "tipo2.recurrencia", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["orden-eha-3021-2007:art-1", "orden-eha-3021-2007:art-5", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure", "enrolled-modelo-182-layout"]

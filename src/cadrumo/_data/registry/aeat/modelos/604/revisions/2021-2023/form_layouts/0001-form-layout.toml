@@ -56,8 +56,6 @@ placements = [
     { casilla_id = "sp.persona-contacto", kind = "on_form" },
     { casilla_id = "sp.telefono-contacto", kind = "on_form" },
 ]
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2021"]
 
 [[revisions.2021-2023.form_layouts.pages]]
 id = "pag-0"

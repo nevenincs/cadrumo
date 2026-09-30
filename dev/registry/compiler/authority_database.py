@@ -232,13 +232,8 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
             for form_layout in revision.form_layouts:
                 form_query = FormLayoutComponentQuery(str(modelo.id), str(revision_id))
                 form_dependencies = tuple(
-                    ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
-                    for reference_id in sorted(set(form_layout.legal_refs))
-                ) + tuple(
                     ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
-                    for reference_id in sorted(
-                        {*form_layout.source_refs, *(item.source_ref for item in form_layout.design_sources)}
-                    )
+                    for reference_id in sorted({item.source_ref for item in form_layout.design_sources})
                 )
                 components.append(_compiled_component(form_query, form_layout, dependencies=form_dependencies))
     for item in artifact.evidence.legal:

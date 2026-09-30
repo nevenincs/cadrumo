@@ -41,7 +41,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from .errors import RegistryValidationError
 from .ids import BindingId, RecordId, RevisionId, SourceRefId
-from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
+from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = [
     "FORM_LAYOUT_GENERATOR_VERSION",
@@ -447,7 +447,11 @@ class FormLayoutDefinition(RegistryModel):
     generated from (its casillas, the bindings it places and the export
     structure it reads); a layout whose digest no longer matches its revision
     is stale and refused. ``design_sources`` pins the official files the
-    headings were quoted from.
+    headings were quoted from, and ``seed_source`` names the anchor family.
+
+    The layout carries no ``legal_refs`` or ``source_refs`` of its own. It is
+    derived presentation, and copying its revision's citations onto it would
+    make every manifest reference look cited by an authored child.
     """
 
     id: FormNodeId
@@ -459,8 +463,6 @@ class FormLayoutDefinition(RegistryModel):
     design_sources: tuple[FormDesignSource, ...] = ()
     pages: tuple[FormPageDefinition, ...] = ()
     placements: tuple[FormPlacementDefinition, ...] = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

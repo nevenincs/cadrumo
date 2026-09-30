@@ -427,8 +427,6 @@ placements = [
     { casilla_id = "iva.anual.volumen.regimen-simplificado", kind = "on_form", box_number = "100" },
     { casilla_id = "iva.anual.volumen.total", kind = "on_form", box_number = "108" },
 ]
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "orden-eha-3111-2009:art-8"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions.2025.form_layouts.pages]]
 id = "pag-1"

@@ -1972,8 +1972,6 @@ placements = [
     { casilla_id = "ZCCAD", kind = "working_figure" },
     { casilla_id = "ZRUE2", kind = "working_figure" },
 ]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-265-2024:art-3"]
-source_refs = ["aeat-dr-100-2023-dictionary"]
 
 [[revisions.2023.form_layouts.pages]]
 id = "datoseconomicos"

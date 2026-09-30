@@ -12,5 +12,3 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
 ]
-legal_refs = ["orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "orden-hac-646-2024:art-1", "orden-hac-646-2024:df-unica", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-038-procedure", "aeat-dr-038-2024"]

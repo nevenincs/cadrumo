@@ -166,8 +166,6 @@ placements = [
     { casilla_id = "reg21-tipo-79-1502", kind = "on_form", box_number = "79" },
     { casilla_id = "resultado-a-deducir-18", kind = "on_form", box_number = "18" },
 ]
-legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-490-2021"]
 
 [[revisions.2022-1t.form_layouts.pages]]
 id = "dr49001"

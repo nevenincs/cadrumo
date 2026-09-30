@@ -52,8 +52,6 @@ placements = [
     { casilla_id = "tipo-operacion", kind = "on_form" },
     { casilla_id = "valor-tasacion-inmueble", kind = "on_form" },
 ]
-legal_refs = ["orden-eha-3514-2009:art-1", "orden-eha-3514-2009:art-6", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-181-procedure", "enrolled-modelo-181-layout", "aeat-dr-181-2022"]
 
 [[revisions.2022-y-siguientes.form_layouts.pages]]
 id = "modelo-181-declarante"

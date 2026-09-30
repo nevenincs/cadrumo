@@ -68,8 +68,6 @@ placements = [
     { casilla_id = "wire.transmitente-apellidos-nombre-razon-social", kind = "on_form", box_number = "34" },
     { casilla_id = "wire.transmitente-pais-texto", kind = "on_form", box_number = "74" },
 ]
-legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions.2004-2015.form_layouts.pages]]
 id = "modelo-309-historical-record"

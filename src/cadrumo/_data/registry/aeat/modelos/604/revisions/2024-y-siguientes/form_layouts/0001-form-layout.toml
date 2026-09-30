@@ -92,8 +92,6 @@ placements = [
     { casilla_id = "terr.vizcaya.porcentaje-atribuible", kind = "on_form", box_number = "26" },
     { casilla_id = "terr.vizcaya.signo-cuota-rectificaciones", kind = "on_form", box_number = "24" },
 ]
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions.2024-y-siguientes.form_layouts.pages]]
 id = "pag-0"

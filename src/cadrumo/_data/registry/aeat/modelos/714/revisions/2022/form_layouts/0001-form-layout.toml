@@ -124,8 +124,6 @@ placements = [
     { casilla_id = "patrimonio.suma-cuotas-limite", kind = "on_form", box_number = "37" },
     { casilla_id = "patrimonio.total-cuota-integra", kind = "on_form", box_number = "40" },
 ]
-legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
-source_refs = ["aeat-dr-714-2022"]
 
 [[revisions.2022.form_layouts.pages]]
 id = "714-00-patrimonio"

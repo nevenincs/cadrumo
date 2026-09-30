@@ -341,8 +341,6 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
 ]
-legal_refs = ["orden-hac-529-2026:art-6-3", "orden-hac-529-2026:df-segunda", "ley-27-2014:art-124", "ley-27-2014:art-75-2"]
-source_refs = ["aeat-dr-220-2025"]
 
 [[revisions.2025.form_layouts.pages]]
 id = "t22007000"

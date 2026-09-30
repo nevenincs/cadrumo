@@ -61,8 +61,6 @@ placements = [
     { casilla_id = "vinculada-5-tipo-operacion", kind = "on_form" },
     { casilla_id = "vinculada-5-tipo-vinculacion", kind = "on_form" },
 ]
-legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-2", "orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-232-2018"]
 
 [[revisions.2018-y-siguientes.form_layouts.pages]]
 id = "dr23201"

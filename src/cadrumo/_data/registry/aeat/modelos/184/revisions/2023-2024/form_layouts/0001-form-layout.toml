@@ -96,8 +96,6 @@ placements = [
     { casilla_id = "tipo3.subclave", kind = "on_form" },
     { casilla_id = "tipo3.tipo-hoja", kind = "on_form", box_number = "76" },
 ]
-legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure", "boe-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 
 [[revisions.2023-2024.form_layouts.pages]]
 id = "m184-declarante"

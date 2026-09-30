@@ -89,8 +89,6 @@ placements = [
     { casilla_id = "info.reserva-inversiones-canarias", kind = "on_form" },
     { casilla_id = "info.reversion-deterioros", kind = "on_form" },
 ]
-legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions.2025-y-siguientes.form_layouts.pages]]
 id = "dr22201"

@@ -24,8 +24,6 @@ placements = [
     { casilla_id = "10", kind = "on_form", box_number = "10" },
     { casilla_id = "11", kind = "on_form", box_number = "11" },
 ]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
-source_refs = ["aeat-dr-117-2019"]
 
 [[revisions.2019-y-siguientes.form_layouts.pages]]
 id = "dr-11701"

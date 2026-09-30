@@ -25,8 +25,6 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
 ]
-legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-341-2016"]
 
 [[revisions.2016-y-siguientes.form_layouts.pages]]
 id = "m34101"

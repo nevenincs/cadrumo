@@ -12,5 +12,3 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
 ]
-legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]

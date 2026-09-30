@@ -719,8 +719,6 @@ placements = [
     { casilla_id = "tit.f-tipo-documento", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "tit.sin-obligacion-identificar", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2", "orden-hac-1526-2024:art-1", "orden-hac-1526-2024:df-unica"]
-source_refs = ["aeat-dr-036-2025"]
 
 [[revisions.2025-02-03-y-siguientes.form_layouts.pages]]
 id = "pag-1"

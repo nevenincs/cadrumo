@@ -35,8 +35,6 @@ placements = [
     { casilla_id = "repr.nombre", kind = "on_form" },
     { casilla_id = "resultado.a-ingresar", kind = "on_form", box_number = "595" },
 ]
-legal_refs = ["orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-122-2016"]
 
 [[revisions.2017-y-siguientes.form_layouts.pages]]
 id = "pag-1"

@@ -68,8 +68,6 @@ placements = [
     { casilla_id = "iva.cuota-no-periodica-total", kind = "working_figure" },
     { casilla_id = "iva.soportado.recargo-equivalencia", kind = "working_figure" },
 ]
-legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2016"]
 
 [[revisions.2016-2017.form_layouts.pages]]
 id = "m30900"

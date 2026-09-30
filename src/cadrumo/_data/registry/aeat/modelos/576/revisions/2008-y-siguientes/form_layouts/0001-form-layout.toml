@@ -55,8 +55,6 @@ placements = [
     { casilla_id = "liq.resultado", kind = "on_form", box_number = "40" },
     { casilla_id = "liq.tipo", kind = "on_form", box_number = "35" },
 ]
-legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions.2008-y-siguientes.form_layouts.pages]]
 id = "pag-1"

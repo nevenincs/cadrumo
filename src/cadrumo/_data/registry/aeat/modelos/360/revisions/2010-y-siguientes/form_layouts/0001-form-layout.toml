@@ -236,8 +236,6 @@ placements = [
     { casilla_id = "prorrata.definitiva", kind = "on_form" },
     { casilla_id = "prorrata.ejercicio", kind = "on_form" },
 ]
-legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure", "boe-modelo-360-2010-form"]
 
 [[revisions.2010-y-siguientes.form_layouts.pages]]
 id = "modelo-360-page-01"

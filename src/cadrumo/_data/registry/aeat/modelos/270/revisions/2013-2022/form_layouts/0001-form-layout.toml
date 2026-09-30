@@ -39,8 +39,6 @@ placements = [
     { casilla_id = "perc.retencion", kind = "on_form" },
     { casilla_id = "perc.tipo-perceptor", kind = "on_form", box_number = "116" },
 ]
-legal_refs = ["orden-hap-2368-2013:art-1", "orden-hap-2368-2013:art-3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-270-procedure", "boe-dr-270-2013-2022"]
 
 [[revisions.2013-2022.form_layouts.pages]]
 id = "modelo-270-declarante"

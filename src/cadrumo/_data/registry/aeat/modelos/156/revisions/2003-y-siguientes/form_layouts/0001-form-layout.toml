@@ -33,8 +33,6 @@ placements = [
     { casilla_id = "numero-total-afiliados", kind = "on_form" },
     { casilla_id = "persona-relacion", kind = "on_form" },
 ]
-legal_refs = ["orden-hac-3580-2003:art-1", "orden-hac-3580-2003:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-procedure", "enrolled-modelo-156-layout"]
 
 [[revisions.2003-y-siguientes.form_layouts.pages]]
 id = "modelo-156-declarante"

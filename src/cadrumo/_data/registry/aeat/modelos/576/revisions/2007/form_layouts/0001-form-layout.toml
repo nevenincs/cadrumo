@@ -11,5 +11,3 @@ source_state_digest = "3676ad046c133587a9e2c2631276888ba3c24f2384316a4fae480f118
 placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
 ]
-legal_refs = ["orden-eha-1981-2005:df-unica", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-576-2005-form", "boe-modelo-576-2005-procedure"]

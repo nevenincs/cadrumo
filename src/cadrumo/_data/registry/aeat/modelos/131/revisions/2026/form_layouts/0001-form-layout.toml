@@ -48,8 +48,6 @@ placements = [
     { casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag", kind = "working_figure" },
     { casilla_id = "saldo-negativo-fin-periodo", kind = "working_figure" },
 ]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2026"]
 
 [[revisions.2026.form_layouts.pages]]
 id = "pag-1"

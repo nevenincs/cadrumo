@@ -51,6 +51,8 @@ from ...compiler.validate_export_field_widths import (
     validate_draft_field_slot_width,
 )
 from ...compiler.validator import RegistryValidator
+from ...form_layout.generator import generate_revision_layout
+from ...record_design_labels import DATA_ROOT
 from ...tests.profile_schema_support import load_user_profile_schema
 from ..coverage import build_model_law_coverage_ledger
 from ..loader_directory_mode_support import write_fragmented_modelo_from_text
@@ -175,7 +177,16 @@ def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -
 
 
 def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues, revision: ModeloRevision) -> None:
-    _validate_modelo(_with_revision(modelo, revision), catalogues)
+    """Validate an edited revision after regenerating its generator-owned form layout.
+
+    The layout is pinned to the revision facts it was generated from, so an
+    edit that moves an export field or casilla leaves it stale until the
+    generator runs again. Regenerating here, exactly as the generator's CLI
+    would after the edit, keeps each test measuring only its own declaration.
+    """
+    generated = generate_revision_layout(str(modelo.id), revision, sources=catalogues.sources, data_root=DATA_ROOT)
+    layouts = () if generated.layout is None else (generated.layout,)
+    _validate_modelo(_with_revision(modelo, revision.model_copy(update={"form_layouts": layouts})), catalogues)
 
 
 def _with_binding(revision: ModeloRevision, binding: BindingDefinition) -> ModeloRevision:

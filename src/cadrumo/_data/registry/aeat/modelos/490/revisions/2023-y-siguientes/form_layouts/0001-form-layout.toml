@@ -399,8 +399,6 @@ placements = [
     { casilla_id = "terr-vizcaya-per-63", kind = "on_form", box_number = "63" },
     { casilla_id = "terr-vizcaya-per-84", kind = "on_form", box_number = "84" },
 ]
-legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-490-2023"]
 
 [[revisions.2023-y-siguientes.form_layouts.pages]]
 id = "dr49001"

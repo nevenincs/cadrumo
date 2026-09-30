@@ -12,5 +12,3 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
 ]
-legal_refs = ["orden-eha-1881-2011:art-1", "orden-eha-1881-2011:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-763-procedure", "aeat-dr-763-2012"]

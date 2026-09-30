@@ -131,8 +131,6 @@ placements = [
     { casilla_id = "sujeto.nif", kind = "on_form", box_number = "1" },
     { casilla_id = "sujeto.telefono-contacto", kind = "on_form", box_number = "13" },
 ]
-legal_refs = ["rdl-2-2004:art-78", "rdl-2-2004:art-82", "rdl-2-2004:art-90", "orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
-source_refs = ["aeat-dr-840", "aeat-modelo-840-procedure", "boe-modelo-840-2003-form"]
 
 [[revisions.2003-y-siguientes.form_layouts.pages]]
 id = "numbered-boxes"

@@ -543,8 +543,6 @@ placements = [
     { casilla_id = "suc-f.nombre-razon-social", kind = "on_form", box_number = "941" },
     { casilla_id = "suc-f.porcentaje-liquidacion", kind = "on_form", box_number = "942" },
 ]
-legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2"]
-source_refs = ["aeat-dr-036-2023"]
 
 [[revisions.2023-hasta-2025-02-02.form_layouts.pages]]
 id = "pag-1"

@@ -37,5 +37,3 @@ placements = [
     { casilla_id = "tipo-identificador", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "tipo-plan-ahorro", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2", "orden-hap-2118-2015:art-4", "orden-hap-2118-2015:art-5", "ley-35-2006:da-26", "orden-hfp-1822-2016:art-sexto", "orden-hac-1276-2019:art-quinto", "orden-hfp-1192-2022:art-cuarto"]
-source_refs = ["aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "boe-modelo-280-2019-amendment-hac-1276", "boe-modelo-280-2022-amendment-hfp-1192"]

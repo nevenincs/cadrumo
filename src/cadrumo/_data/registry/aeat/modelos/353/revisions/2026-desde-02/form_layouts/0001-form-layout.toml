@@ -26,8 +26,6 @@ placements = [
     { casilla_id = "iva.reconciliacion.devengada-322", kind = "working_figure" },
     { casilla_id = "iva.reconciliacion.resultado-322", kind = "working_figure" },
 ]
-legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8", "orden-hac-27-2026:disposicion-final-unica", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2026"]
 
 [[revisions.2026-desde-02.form_layouts.pages]]
 id = "35301"

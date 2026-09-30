@@ -28,8 +28,6 @@ placements = [
     { casilla_id = "socio-nif", kind = "on_form" },
     { casilla_id = "socio-nombre", kind = "on_form" },
 ]
-legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]
 
 [[revisions.2026-y-siguientes.form_layouts.pages]]
 id = "modelo-165-declarante"

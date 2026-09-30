@@ -35,8 +35,6 @@ placements = [
     { casilla_id = "valoracion", kind = "on_form" },
     { casilla_id = "valoracion-total", kind = "on_form" },
 ]
-legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
-source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values", "aeat-dr-189-2023"]
 
 [[revisions.2025.form_layouts.pages]]
 id = "modelo-189-declarante"

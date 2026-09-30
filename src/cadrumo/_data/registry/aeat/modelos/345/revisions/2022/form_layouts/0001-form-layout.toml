@@ -36,5 +36,3 @@ placements = [
     { casilla_id = "subclave", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "total-declarados", kind = "unplaced", unplaced_reason = "no_official_anchor" },
 ]
-legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3", "orden-hfp-823-2022:art-4", "orden-hfp-823-2022:art-5"]
-source_refs = ["boe-modelo-345-base-order", "boe-dr-345-2022"]

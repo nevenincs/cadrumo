@@ -17,8 +17,6 @@ placements = [
     { casilla_id = "iva.exterior.cuota-total", kind = "working_figure" },
     { casilla_id = "iva.exterior.de.services-cuota", kind = "working_figure" },
 ]
-legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-octiesdecies", "ley-37-1992:art-163-noniesdecies", "ley-37-1992:art-163-vicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions.esquema-exterior.form_layouts.pages]]
 id = "t36901-ext"

@@ -31,8 +31,6 @@ placements = [
     { casilla_id = "declarado.tipo-jornada-mes-1", kind = "on_form", box_number = "98" },
     { casilla_id = "declarado.tipo-jornada-mes-2", kind = "on_form", box_number = "103" },
 ]
-legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-185-procedure", "enrolled-modelo-185-layout", "aeat-dr-185-2026"]
 
 [[revisions.2025-y-siguientes.form_layouts.pages]]
 id = "m185-declarante"

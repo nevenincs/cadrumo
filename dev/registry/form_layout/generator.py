@@ -148,6 +148,7 @@ class _Build:
     positions: list[_Position] = field(default_factory=list)
     anchors: dict[str, list[int]] = field(default_factory=lambda: defaultdict(list))
     ambiguous: set[str] = field(default_factory=set)
+    binding_primary: dict[str, int] = field(default_factory=dict)
     design_sources: list[FormDesignSource] = field(default_factory=list)
     used_design: bool = False
     used_export: bool = False
@@ -435,6 +436,15 @@ def _anchor_row_fields(build: _Build, records: Sequence[ExportRecordDefinition])
             build.positions.insert(insert_at + offset, position)
 
 
+def _binding_primary(build: _Build) -> dict[str, int]:
+    """Return the first position of each binding input, which is the one that shows it."""
+    found: dict[str, int] = {}
+    for index, position in enumerate(build.positions):
+        for binding_id in position.binding_ids:
+            found.setdefault(binding_id, index)
+    return found
+
+
 @dataclass(slots=True)
 class _SectionDraft:
     key: tuple[str, ...]
@@ -456,7 +466,11 @@ def _items_for(build: _Build, index: int, primary: Mapping[str, int]) -> list[_I
         for casilla_id in position.casilla_ids
         if primary.get(casilla_id) == index
     ]
-    items.extend(_Item(position=index, binding_id=binding_id) for binding_id in position.binding_ids)
+    items.extend(
+        _Item(position=index, binding_id=binding_id)
+        for binding_id in position.binding_ids
+        if build.binding_primary.get(binding_id) == index
+    )
     if not items and position.literal is not None and position.box is not None:
         items.append(_Item(position=index, literal=position.literal))
     return items
@@ -949,6 +963,7 @@ def generate_revision_layout(
     _anchor_row_fields(build, records)
     build.used_export = any(position.records for position in build.positions)
     _anchor_casillas(build)
+    build.binding_primary = _binding_primary(build)
     repeating = {record.id: record for record in records if record.repeat is not None}
     pages, section_of, shown, _placed_bindings = _build_pages(build, manual_bindings, repeating)
     layout = FormLayoutDefinition(
@@ -960,7 +975,5 @@ def generate_revision_layout(
         design_sources=tuple(build.design_sources),
         pages=tuple(pages),
         placements=_placements(build, section_of, shown),
-        legal_refs=revision.legal_refs,
-        source_refs=tuple(dict.fromkeys(item.source_ref for item in build.design_sources)) or revision.source_refs,
     )
     return LayoutGeneration(modelo_id, revision.id, layout, notes=tuple(build.notes))

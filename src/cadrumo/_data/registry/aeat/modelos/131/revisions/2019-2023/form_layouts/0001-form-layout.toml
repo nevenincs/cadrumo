@@ -29,8 +29,6 @@ placements = [
     { casilla_id = "15", kind = "on_form", box_number = "15" },
     { casilla_id = "saldo-negativo-fin-periodo", kind = "working_figure" },
 ]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1264-2018:art-4", "orden-hac-1164-2019:art-4", "orden-hac-1155-2020:art-4", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2019-2023-v101"]
 
 [[revisions.2019-2023.form_layouts.pages]]
 id = "pag-1"

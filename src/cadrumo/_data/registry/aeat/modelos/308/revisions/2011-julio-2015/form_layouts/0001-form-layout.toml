@@ -12,5 +12,3 @@ placements = [
     { casilla_id = "decl.ejercicio", kind = "working_figure" },
     { casilla_id = "decl.periodo", kind = "working_figure" },
 ]
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "orden-eha-1033-2011:articulo-unico", "orden-eha-1033-2011:disposicion-final-unica", "ley-37-1992:art-161"]
-source_refs = ["aeat-dr-308-2011-july", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
