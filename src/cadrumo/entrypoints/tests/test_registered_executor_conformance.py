@@ -667,6 +667,7 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
         ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
+    from ...application.modelo.edit_services import calculation_head_digest, work_unit_record_digest
     from ...application.modelo.edit_value_grammar import (
         ModeloEditValueChannel,
         ModeloEditValueFamily,
@@ -734,8 +735,8 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
         filing_year=current_unit.filing_year,
         period=current_unit.period,
         work_unit_id=current_unit.work_unit_id,
-        work_catalogue_revision=content_hash_hex(work_catalogue.model_dump(mode="json")),
-        calculation_catalogue_revision=content_hash_hex(calculation_catalogue.model_dump(mode="json")),
+        work_unit_record_digest=work_unit_record_digest(current_unit),
+        calculation_head_digest=calculation_head_digest(calculation_catalogue.get(revision.calculation_revision_id)),
         current_calculation_revision_id=revision.calculation_revision_id,
         law_selected_revision_id=current_unit.revision_id,
         schema_identity=ModeloEditSchemaIdentityV1(

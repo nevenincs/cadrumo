@@ -138,8 +138,8 @@ def _baseline() -> ModeloEditBaselineV1:
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         work_unit_id="b" * 64,
-        work_catalogue_revision=_DIGEST,
-        calculation_catalogue_revision=_DIGEST,
+        work_unit_record_digest=_DIGEST,
+        calculation_head_digest=_DIGEST,
         current_calculation_revision_id=None,
         law_selected_revision_id="2019-y-siguientes",
         schema_identity=ModeloEditSchemaIdentityV1(

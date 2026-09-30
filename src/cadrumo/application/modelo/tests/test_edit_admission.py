@@ -16,6 +16,7 @@ from ....domain.calculations.registry.binding_value_contract import (
     BindingValueChannel,
     BindingValueContract,
 )
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
@@ -38,7 +39,9 @@ from ...operations.registry import (
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_models import (
     ModeloEditAdmittedV1,
+    ModeloEditDomainRefusalV1,
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
@@ -256,7 +259,7 @@ def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_f
             "period": "0A",
             "on": None,
             "revision_id": None,
-            "grade": RegistryAuthorityGrade.FILING,
+            "grade": RegistryAuthorityGrade.CALCULATION,
         }
     ]
     assert not any("value" in field for field in baseline.model_dump(mode="json"))
@@ -290,3 +293,48 @@ def test_admission_refuses_when_the_required_public_operation_contract_is_not_co
 
     assert isinstance(outcome, ModeloEditRefusedV1)
     assert outcome.refusal.kind == "unsupported_compatibility"
+
+
+def test_a_ledger_binding_is_locked_by_its_source_not_by_the_schema() -> None:
+    outcome, _ = _admit()
+
+    assert isinstance(outcome, ModeloEditAdmittedV1)
+    ledger = next(
+        entry
+        for entry in outcome.baseline.permitted_surface
+        if isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1) and entry.binding_id == "renta-ledger"
+    )
+    assert ledger.reason is ModeloEditNonWritableReason.SOURCE_LOCKED
+
+
+def test_a_revision_below_calculation_grade_is_refused_not_raised() -> None:
+    """A revision that only declares applicability cannot be calculated, so it cannot be edited."""
+
+    class _ApplicabilityOnlyOperation(PinnedAuthorityOperation):
+        @override
+        def snapshot(
+            self,
+            modelo_id: str | Modelo,
+            *,
+            filing_year: int,
+            period: str,
+            on: date | None = None,
+            revision_id: RevisionId | None = None,
+            grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+        ) -> RegistrySnapshot:
+            raise RegistryValidationError("the revision cannot satisfy the requested calculation snapshot authority")
+
+    work_unit = _work_unit()
+    outcome = admit_modelo_edit_baseline(
+        work_unit_id=work_unit.work_unit_id,
+        work_catalogue=WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        operation=_ApplicabilityOnlyOperation.__new__(_ApplicabilityOnlyOperation),
+        operation_contracts=_contracts(),
+        issued_at=_NOW,
+    )
+
+    assert isinstance(outcome, ModeloEditRefusedV1)
+    assert isinstance(outcome.refusal, ModeloEditDomainRefusalV1)
+    assert outcome.refusal.code is ModeloEditRefusalCode.ADMISSION_DENIED
+    assert outcome.refusal.facts == ("registry_authority_grade",)

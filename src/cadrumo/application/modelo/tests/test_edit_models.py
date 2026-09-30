@@ -111,8 +111,8 @@ def _baseline(
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         work_unit_id=_WORK_UNIT_ID,
-        work_catalogue_revision=_DIGEST,
-        calculation_catalogue_revision=_DIGEST,
+        work_unit_record_digest=_DIGEST,
+        calculation_head_digest=_DIGEST,
         current_calculation_revision_id=None,
         law_selected_revision_id=_REVISION_ID,
         schema_identity=ModeloEditSchemaIdentityV1(
@@ -262,14 +262,14 @@ def test_domain_refusal_rejects_the_typed_stale_baseline_code() -> None:
         )
     ModeloEditStaleBaselineRefusalV1(
         baseline_id=_BASELINE_ID,
-        mismatching_coordinates=("work_catalogue_revision",),
+        mismatching_coordinates=("work_unit_record_digest",),
         responsible_owner="modelo.edit",
         reconsideration_condition="retry with a freshly admitted baseline",
     )
     with pytest.raises(ValidationError, match="must be unique"):
         ModeloEditStaleBaselineRefusalV1(
             baseline_id=_BASELINE_ID,
-            mismatching_coordinates=("work_catalogue_revision", "work_catalogue_revision"),
+            mismatching_coordinates=("work_unit_record_digest", "work_unit_record_digest"),
             responsible_owner="modelo.edit",
             reconsideration_condition="retry with a freshly admitted baseline",
         )
@@ -293,7 +293,7 @@ def test_execution_result_discriminates_on_effect() -> None:
 
     refusal = ModeloEditStaleBaselineRefusalV1(
         baseline_id=_BASELINE_ID,
-        mismatching_coordinates=("calculation_catalogue_revision",),
+        mismatching_coordinates=("calculation_head_digest",),
         responsible_owner="modelo.edit",
         reconsideration_condition="retry with a freshly admitted baseline",
     )

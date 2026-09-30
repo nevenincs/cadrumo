@@ -478,8 +478,8 @@ class ModeloEditBaselineV1(EditModel):
     filing_year: FilingYear
     period: Period
     work_unit_id: WorkUnitId
-    work_catalogue_revision: ContentDigest
-    calculation_catalogue_revision: ContentDigest
+    work_unit_record_digest: ContentDigest
+    calculation_head_digest: ContentDigest
     current_calculation_revision_id: CalculationRevisionId | None
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1

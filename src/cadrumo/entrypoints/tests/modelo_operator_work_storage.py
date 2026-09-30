@@ -31,7 +31,11 @@ from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.edit_admission import admit_modelo_edit_baseline
+from ...application.modelo.edit_admission import (
+    ModeloEditRenewalResultV1,
+    admit_modelo_edit_baseline,
+    renew_modelo_edit_baseline,
+)
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -152,6 +156,41 @@ class SeededOperatorWork:
             operation=self.operation,
             operation_contracts=build_production_operation_registry().public_contract_set,
             issued_at=issued_at,
+        )
+
+    def renew(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
+        """Renew ``baseline`` against the stored catalogues, as an editor does before review and submit."""
+        return renew_modelo_edit_baseline(
+            baseline,
+            work_catalogue=self.ports.work_unit_repository.load(),
+            calculation_catalogue=self.ports.calculation_repository.load(),
+            operation=self.operation,
+            operation_contracts=build_production_operation_registry().public_contract_set,
+        )
+
+    def sibling(self, period_code: str) -> SeededOperatorWork:
+        """Create another declaration of the same modelo and year in the same profile."""
+        unit = create_work_unit(
+            bucket_id=self.work_unit.bucket_id,
+            modelo=str(self.work_unit.modelo),
+            filing_year=self.work_unit.filing_year,
+            period=Period.from_year_and_code(self.work_unit.filing_year, period_code),
+            revision_id=str(
+                self.operation.revision_for_context(
+                    str(self.work_unit.modelo),
+                    filing_year=self.work_unit.filing_year,
+                    period=Period.from_year_and_code(self.work_unit.filing_year, period_code).registry_token,
+                ).id
+            ),
+            ports=build_work_lifecycle_ports(bucket_id=self.work_unit.bucket_id),
+            clock=SEEDED_AT,
+            operation=self.operation,
+        )
+        return SeededOperatorWork(
+            work_unit=unit,
+            ports=self.ports,
+            operation=self.operation,
+            receipt_repository_factory=self.receipt_repository_factory,
         )
 
     def baseline(self) -> ModeloEditBaselineV1:
