@@ -2133,6 +2133,41 @@ tui:
       producer_of: Origen de «{capability}»
       record_family: Sección
     technical_details: Detalles técnicos
+    workbench:
+      attention:
+        blocked: Bloquea la presentación
+        staged: Cambiada, sin aplicar
+      editability:
+        calculated: Cadrumo la calcula a partir de otras casillas.
+        design_constant: El diseño oficial fija este valor.
+        edit_at_profile: Sale de tu perfil; corrígelo una vez en el perfil.
+        editable_override: Este dato lo aportas tú; escríbelo aquí.
+        editable_value: Escribe el importe o el dato de esta casilla.
+        informational: Se muestra como información; no se declara aquí.
+        locked_source: Sale de tus registros; corrígelo allí y vuelve a calcular.
+        no_admission: La edición no está disponible ahora mismo para esta declaración.
+        not_writable: Esta casilla no se puede editar aquí.
+        overridable_source: Viene de una declaración anterior; puedes sustituirlo
+          indicando el motivo.
+        source_policy_undecided: Aún no se ha decidido si este origen puede sustituirse
+          a mano.
+      origin:
+        calculated: Calculada
+        calculation_failed: No se pudo calcular
+        cleared: Vaciada por ti
+        default_to_confirm: Por defecto, confírmala
+        entered: Introducida por ti
+        imported: Importada
+        informational: Informativa
+        needs_input: Falta tu dato
+        not_applicable: No aplica
+        not_calculated_yet: Aún sin calcular
+        not_imported_yet: Aún sin importar
+        optional_empty: Opcional, vacía
+        overrides_source: Tu valor sustituye al origen
+      value:
+        not_applicable: no aplica
+      was: 'antes: {value}'
     workspace_refusal:
       facts:
         modelo: Modelo

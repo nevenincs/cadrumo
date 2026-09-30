@@ -2074,6 +2074,41 @@ tui:
       producer_of: Source of "{capability}"
       record_family: Section
     technical_details: Technical details
+    workbench:
+      attention:
+        blocked: Blocks filing
+        staged: Changed, not applied
+      editability:
+        calculated: Cadrumo calculates it from other boxes.
+        design_constant: The official design fixes this value.
+        edit_at_profile: It comes from your profile; correct it once there.
+        editable_override: You supply this value; type it here.
+        editable_value: Type the amount or value for this box.
+        informational: Shown for information; it is not declared here.
+        locked_source: It follows your records; correct it there and recalculate.
+        no_admission: Editing is not available for this declaration right now.
+        not_writable: This box cannot be edited here.
+        overridable_source: Carried from an earlier filing; you may replace it and
+          state why.
+        source_policy_undecided: It is not yet decided whether this source may be
+          replaced by hand.
+      origin:
+        calculated: Calculated
+        calculation_failed: Could not be calculated
+        cleared: Cleared by you
+        default_to_confirm: Default, please confirm
+        entered: Entered by you
+        imported: Imported
+        informational: For information
+        needs_input: Needs your input
+        not_applicable: Not applicable
+        not_calculated_yet: Not calculated yet
+        not_imported_yet: Not imported yet
+        optional_empty: Optional, empty
+        overrides_source: Your value replaces the source
+      value:
+        not_applicable: n/a
+      was: was {value}
     workspace_refusal:
       facts:
         modelo: Modelo

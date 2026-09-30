@@ -2102,6 +2102,40 @@ tui:
       producer_of: „{capability}” forrása
       record_family: Szakasz
     technical_details: Technikai részletek
+    workbench:
+      attention:
+        blocked: Akadályozza a benyújtást
+        staged: Módosítva, még nem alkalmazva
+      editability:
+        calculated: A Cadrumo más rovatokból számítja ki.
+        design_constant: Ezt az értéket a hivatalos terv rögzíti.
+        edit_at_profile: A profiljából származik; ott javítsa egyszer.
+        editable_override: Ezt az adatot Ön adja meg; írja be ide.
+        editable_value: Adja meg a rovat összegét vagy adatát.
+        informational: Tájékoztatásul jelenik meg; itt nem kell megadni.
+        locked_source: Az Ön nyilvántartásából származik; ott javítsa, majd számoljon
+          újra.
+        no_admission: Ennél a bevallásnál a szerkesztés most nem érhető el.
+        not_writable: Ez a rovat itt nem szerkeszthető.
+        overridable_source: Korábbi bevallásból származik; indoklással felülírhatja.
+        source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
+      origin:
+        calculated: Számított
+        calculation_failed: Nem számítható ki
+        cleared: Ön törölte
+        default_to_confirm: Alapérték, kérjük erősítse meg
+        entered: Ön adta meg
+        imported: Importált
+        informational: Tájékoztató
+        needs_input: Adat szükséges Öntől
+        not_applicable: Nem alkalmazandó
+        not_calculated_yet: Még nincs kiszámítva
+        not_imported_yet: Még nincs importálva
+        optional_empty: Nem kötelező, üres
+        overrides_source: Az Ön értéke felülírja a forrást
+      value:
+        not_applicable: nem alk.
+      was: 'korábban: {value}'
     workspace_refusal:
       facts:
         modelo: Modell

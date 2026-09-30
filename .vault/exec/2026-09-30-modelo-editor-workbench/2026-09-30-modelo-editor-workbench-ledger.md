@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:131cef1d5cb037e0dab0065f8d5bc8f270dcf74a29277b433ad16574c241d62c'
+body_hash: 'sha256:e060d49d22e6c62b19cf26d92861980643b3ebe90f3eaf2941493936ab8d0771'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -85,6 +85,19 @@ related:
 - `S18` `verify:` `pytest test_casilla_help.py (7, real 130 registry)` -> `pass`
 - `S18` `verify:` `ruff + ty + basedpyright + pyrefly` -> `pass`
 - `S18` `by:` `orchestrator`
+- `S21` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/__init__.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/__init__.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S21` `M` `src/cadrumo/locales/ca/common.yml`
+- `S21` `M` `src/cadrumo/locales/en/common.yml`
+- `S21` `M` `src/cadrumo/locales/es/common.yml`
+- `S21` `M` `src/cadrumo/locales/hu/common.yml`
+- `S21` `verify:` `pytest workbench tests + glyph font gate (16)` -> `pass`
+- `S21` `verify:` `ruff + ty + basedpyright` -> `pass`
+- `S21` `verify:` `rasterised captures at 80, 120 and 160 columns, missing glyphs none` -> `pass`
+- `S21` `by:` `orchestrator`
 
 ## Notes
 
