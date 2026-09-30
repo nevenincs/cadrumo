@@ -14,6 +14,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
+from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
+from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -24,7 +26,9 @@ from dev.docs.sequences.golden_store import golden_path, read_golden
 from ... import _harness, _viewports
 from ..._artifacts import ThemeName
 from ..sequences import (
+    BULK_CONFIRM_PAGE,
     DECLARATIONS_PAGE,
+    EDITOR_PAGE,
     ISSUES_PAGE,
     RECALCULATE_PAGE,
     REVIEW_PAGE,
@@ -39,8 +43,10 @@ from ..sequences import (
 _FIRST_QUARTER = SEQUENCE_SCENARIOS["modelo-303-first-quarter"]
 _INSTALMENT = SEQUENCE_SCENARIOS["modelo-130-first-quarter"]
 _UNVERIFIED = SEQUENCE_SCENARIOS["verification-reports-incomplete"]
-_FIRST_QUARTER_PAGES = ("workbench", "sources", "not-editable", ISSUES_PAGE)
-_INSTALMENT_PAGES = ("workbench", "sources", "not-editable", REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
+_NOTHING_ASSUMED = SEQUENCE_SCENARIOS["modelo-349-first-quarter"]
+_BROWSING_PAGES = ("workbench", "sources", "legend", "search", "not-editable")
+_FIRST_QUARTER_PAGES = (*_BROWSING_PAGES, ISSUES_PAGE)
+_INSTALMENT_PAGES = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 
 
 def _qualname(screen: object) -> str:
@@ -82,14 +88,22 @@ def test_a_scenario_offers_only_the_pages_its_declaration_can_reach() -> None:
     assert scenario_pages(_FIRST_QUARTER) == (DECLARATIONS_PAGE, *_FIRST_QUARTER_PAGES)
     assert ISSUES_PAGE not in scenario_pages(_UNVERIFIED)
     assert REVIEW_PAGE in scenario_pages(_UNVERIFIED)
+    assert EDITOR_PAGE not in scenario_pages(_NOTHING_ASSUMED)
+    assert REVIEW_PAGE in scenario_pages(_NOTHING_ASSUMED)
 
 
 @pytest.mark.unit
 @pytest.mark.hex_core
 @pytest.mark.parametrize(
     ("scenario", "page"),
-    [(_UNVERIFIED, ISSUES_PAGE), (_FIRST_QUARTER, REVIEW_PAGE), (_FIRST_QUARTER, RECALCULATE_PAGE)],
-    ids=["unverified-issues", "filed-review", "filed-recalculate"],
+    [
+        (_UNVERIFIED, ISSUES_PAGE),
+        (_FIRST_QUARTER, REVIEW_PAGE),
+        (_FIRST_QUARTER, RECALCULATE_PAGE),
+        (_FIRST_QUARTER, BULK_CONFIRM_PAGE),
+        (_NOTHING_ASSUMED, EDITOR_PAGE),
+    ],
+    ids=["unverified-issues", "filed-review", "filed-recalculate", "filed-bulk-confirm", "unassumed-editor"],
 )
 def test_a_page_the_scenario_does_not_offer_is_refused_before_its_sequence_runs(
     scenario: SequenceScenario, page: str, tmp_path: Path
@@ -144,14 +158,16 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
     assert painted == {
         "workbench": _qualname(ModeloWorkbenchScreen),
         "sources": _qualname(WorkbenchSourcesScreen),
-        "not-editable": _qualname(ModeloWorkbenchScreen),
+        "legend": _qualname(ModeloWorkbenchScreen),
+        "search": _qualname(ModeloWorkbenchScreen),
+        "not-editable": _qualname(CasillaEditorScreen),
+        EDITOR_PAGE: _qualname(CasillaEditorScreen),
+        BULK_CONFIRM_PAGE: _qualname(BulkConfirmScreen),
         REVIEW_PAGE: _qualname(EditReviewScreen),
         RECALCULATE_PAGE: _qualname(ConfirmScreen),
         ISSUES_PAGE: _qualname(WorkbenchIssuesScreen),
     }
-    first, refused, last = (_surface_text(frames[index].frame_text) for index in (0, 2, -1))
-    assert first == last
-    assert refused != first, "the refused edit left the workbench saying nothing"
+    assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
 
 
 @pytest.mark.integration

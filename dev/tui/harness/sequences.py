@@ -35,9 +35,11 @@ from typing import Final, Protocol, cast
 from pydantic import BaseModel, ConfigDict
 from textual.app import App
 from textual.pilot import Pilot
-from textual.widgets import Button, DataTable, Static
+from textual.screen import Screen
+from textual.widgets import Button, DataTable, Input
 from textual.worker import WorkerCancelled
 
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin
 from cadrumo.application.user_profile.login_interaction import profile_login_choices
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
@@ -51,11 +53,13 @@ from cadrumo.entrypoints.tui.launcher import (
     compose_installed_workbench_root,
     operation_services_scope,
 )
+from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
 from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
@@ -69,6 +73,8 @@ DECLARATIONS_PAGE: Final[str] = "declarations"
 ISSUES_PAGE: Final[str] = "issues"
 REVIEW_PAGE: Final[str] = "review"
 RECALCULATE_PAGE: Final[str] = "recalculate"
+EDITOR_PAGE: Final[str] = "editor"
+BULK_CONFIRM_PAGE: Final[str] = "bulk-confirm"
 _DECLARATIONS_DESTINATION: Final = "workbench.declarations"
 _GOLDEN_PROBLEMS_KEPT: Final[int] = 5
 _SETTLE_ROUNDS: Final[int] = 20
@@ -109,6 +115,8 @@ class SequenceScenario:
     """Whether the sequence verifies the declaration, so its workbench lists what verification found."""
     filed: bool = False
     """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
+    assumes: bool = True
+    """Whether the calculation leaves assumed values for the filer to confirm."""
 
 
 SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
@@ -122,7 +130,7 @@ SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
         ),
         SequenceScenario("modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified"),
         SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified"),
-        SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
+        SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified", assumes=False),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
     )
 }
@@ -170,50 +178,114 @@ async def _open_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None
     await _settle(pilot)
 
 
-async def _refuse_an_edit(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
-    """Press Enter on the first box that opens no editor, so the workbench says why it cannot be edited."""
-    await _first_box(scenario, pilot, _press_enter_without_editor, "refused an edit")
-    if not str(_workbench(scenario, pilot.app).query_one("#wb-notice", Static).content).strip():
-        raise ScenarioError(f"{scenario.sequence_id}: Enter on a box that cannot be edited said nothing")
+async def _open_panel(pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry) -> Screen[object]:
+    """Press Enter on one box, as a filer opens its panel, and return what is on top afterwards."""
+    if casilla_list.focus_address(entry.key):
+        casilla_list.focus()
+        await pilot.press("enter")
+        await _settle(pilot)
+    return pilot.app.screen
 
 
-async def _press_enter_without_editor(
-    _scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
-) -> bool:
-    """Press Enter on one box; close any editor it opens and report whether the workbench refused instead."""
-    if not casilla_list.focus_address(entry.key):
+async def _close_panel(pilot: Pilot[object], screen: Screen[object]) -> None:
+    """Close a panel Enter opened; Escape on the workbench itself would leave it, so it is never pressed there."""
+    if not isinstance(screen, ModeloWorkbenchScreen):
+        await pilot.press("escape")
+        await _settle(pilot)
+
+
+async def _open_read_only_panel(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Open the panel of the first box a filer cannot type into, which says why and where to change it."""
+
+    async def read_only(
+        _scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
+    ) -> bool:
+        screen = await _open_panel(pilot, casilla_list, entry)
+        if isinstance(screen, CasillaEditorScreen) and screen.read_only:
+            return True
+        await _close_panel(pilot, screen)
         return False
-    casilla_list.focus()
-    await pilot.press("enter")
+
+    await _first_box(scenario, pilot, read_only, "opened a panel without an input")
+
+
+async def _open_assumed_panel(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Open the panel of the first assumed box, where the filer confirms or replaces the value."""
+
+    async def assumed(
+        _scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
+    ) -> bool:
+        if entry.field.origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM:
+            return False
+        screen = await _open_panel(pilot, casilla_list, entry)
+        if isinstance(screen, CasillaEditorScreen) and not screen.read_only:
+            return True
+        await _close_panel(pilot, screen)
+        return False
+
+    await _first_box(scenario, pilot, assumed, "holds an assumed value the filer can confirm")
+
+
+async def _open_legend(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press ``?`` twice: the first widens the help band, the second opens the legend of every mark."""
+    await pilot.press("question_mark", "question_mark")
     await _settle(pilot)
-    if isinstance(pilot.app.screen, ModeloWorkbenchScreen):
-        return True
-    await pilot.press("escape")
+    if not _workbench(scenario, pilot.app).has_class("-legend"):
+        raise ScenarioError(f"{scenario.sequence_id}: pressing ? twice did not open the legend")
+
+
+async def _search_a_box(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press ``/`` and type the number of the first numbered box, as a filer looks one up."""
+    workbench = _workbench(scenario, pilot.app)
+    box = next(
+        (
+            item.field.box
+            for item in workbench.query_one(CasillaList).items
+            if isinstance(item, CasillaListEntry) and item.field.box
+        ),
+        None,
+    )
+    if box is None:
+        raise ScenarioError(f"{scenario.sequence_id}: the workbench's first page shows no numbered box to search for")
+    await pilot.press("slash")
     await _settle(pilot)
-    return False
+    await pilot.press(*box)
+    await _settle(pilot)
+    if not workbench.has_class("-searching") or not workbench.query_one(WorkbenchSearchPanel).hits:
+        raise ScenarioError(f"{scenario.sequence_id}: searching for box {box} found nothing")
+
+
+async def _ask_to_confirm_assumed(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press ``b`` only where the workbench lists the assumed values; the list is a question, not a change."""
+    workbench = _workbench(scenario, pilot.app)
+    form = workbench.form
+    if (
+        form is None
+        or workbench.recorded
+        or not form.edit_admitted
+        or not any(field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM for field in form.fields())
+    ):
+        raise ScenarioError(f"{scenario.sequence_id}: the declaration holds no assumed value a filer could confirm")
+    await pilot.press("b")
+    await _settle(pilot)
 
 
 async def _stage(
     scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
 ) -> bool:
-    """Type a sample into one box's editor and save it, or cancel when the box or the value is refused."""
+    """Put a sample into one box's panel and keep it, or close the panel when the box or the value is refused."""
     field = entry.field
     sample = _TYPED_SAMPLES.get(field.data_type)
     if sample is None or field.editability not in TYPED_EDITABILITIES:
         return False
-    if not casilla_list.focus_address(entry.key):
+    editor = await _open_panel(pilot, casilla_list, entry)
+    if not isinstance(editor, CasillaEditorScreen) or editor.read_only:
+        await _close_panel(pilot, editor)
         return False
-    casilla_list.focus()
-    await pilot.press("enter")
-    await _settle(pilot)
-    editor = pilot.app.screen
-    if not isinstance(editor, CasillaEditorScreen):
-        raise ScenarioError(f"{scenario.sequence_id}: Enter on an editable box opened {type(editor).__qualname__}")
-    await pilot.press(*sample)
+    editor.query_one("#editor-input", Input).value = sample
     await _settle(pilot)
     if editor.query_one("#editor-save", Button).disabled:
-        await pilot.press("escape")
-        await _settle(pilot)
+        await _close_panel(pilot, editor)
         return False
     await pilot.press("enter")
     await _settle(pilot)
@@ -247,7 +319,11 @@ async def _stay(_scenario: SequenceScenario, _pilot: Pilot[object]) -> None:
 _PAGE_SCREENS: Final[dict[str, type[object]]] = {
     "workbench": ModeloWorkbenchScreen,
     "sources": WorkbenchSourcesScreen,
-    "not-editable": ModeloWorkbenchScreen,
+    "legend": ModeloWorkbenchScreen,
+    "search": ModeloWorkbenchScreen,
+    "not-editable": CasillaEditorScreen,
+    EDITOR_PAGE: CasillaEditorScreen,
+    BULK_CONFIRM_PAGE: BulkConfirmScreen,
     REVIEW_PAGE: EditReviewScreen,
     RECALCULATE_PAGE: ConfirmScreen,
     ISSUES_PAGE: WorkbenchIssuesScreen,
@@ -256,27 +332,39 @@ _PAGE_SCREENS: Final[dict[str, type[object]]] = {
 _PAGE_WALKS: Final[dict[str, _Walk]] = {
     "workbench": _stay,
     "sources": _open_sources,
-    "not-editable": _refuse_an_edit,
+    "legend": _open_legend,
+    "search": _search_a_box,
+    "not-editable": _open_read_only_panel,
+    EDITOR_PAGE: _open_assumed_panel,
+    BULK_CONFIRM_PAGE: _ask_to_confirm_assumed,
     REVIEW_PAGE: _open_review,
     RECALCULATE_PAGE: _ask_to_recalculate,
     ISSUES_PAGE: _open_issues,
 }
 """What the filer does on the workbench to reach each page."""
+_CHANGING_PAGES: Final[frozenset[str]] = frozenset({EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE})
+"""Pages that start a change, which a filed declaration does not offer."""
+_ASSUMED_PAGES: Final[frozenset[str]] = frozenset({EDITOR_PAGE, BULK_CONFIRM_PAGE})
+"""Pages about assumed values, which a calculation that assumes nothing does not offer."""
 
 
 def scenario_pages(scenario: SequenceScenario) -> tuple[str, ...]:
     """The Declarations list, then the declaration's workbench and the views it opens.
 
     The findings list is a page only of a declaration its sequence verified.
-    A filed declaration accepts no change, so it offers neither a review nor a
-    recalculation.
+    A filed declaration accepts no change, so it offers none of the pages that
+    start one, and the pages about assumed values need a calculation that
+    assumed some.
     """
-    offered = {
-        ISSUES_PAGE: scenario.verified,
-        REVIEW_PAGE: not scenario.filed,
-        RECALCULATE_PAGE: not scenario.filed,
-    }
-    return (DECLARATIONS_PAGE, *(page for page in _PAGE_SCREENS if offered.get(page, True)))
+
+    def offered(page: str) -> bool:
+        if page == ISSUES_PAGE:
+            return scenario.verified
+        if scenario.filed and page in _CHANGING_PAGES:
+            return False
+        return scenario.assumes or page not in _ASSUMED_PAGES
+
+    return (DECLARATIONS_PAGE, *(page for page in _PAGE_SCREENS if offered(page)))
 
 
 def scenario_surface(sequence_id: str, page: str) -> str:
@@ -485,7 +573,9 @@ async def _settle(pilot: Pilot[object]) -> None:
 
 
 __all__ = [
+    "BULK_CONFIRM_PAGE",
     "DECLARATIONS_PAGE",
+    "EDITOR_PAGE",
     "ISSUES_PAGE",
     "RECALCULATE_PAGE",
     "REVIEW_PAGE",
