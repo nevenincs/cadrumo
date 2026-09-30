@@ -164,6 +164,12 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         EditReviewScreen.-narrow #review-panel {
             width: 100%;
         }
+        EditReviewScreen #review-status {
+            color: $foreground;
+            text-style: bold;
+            height: auto;
+            margin-bottom: $cadrumo-stack;
+        }
         EditReviewScreen #review-title {
             text-style: bold;
             color: $primary;
@@ -216,15 +222,19 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         *,
         notes: tuple[ReviewNote, ...] = (),
         at_risk: tuple[str, ...] | None = None,
+        status_line: str | None = None,
     ) -> None:
         """Hold the changes under review, what the check found, and the boxes applying could return to source.
 
         ``at_risk`` is ``None`` when the declaration records which values the
         filer typed; otherwise it names the boxes holding values nobody is
         recorded as having typed, which applying returns to their source.
+        ``status_line`` is the declaration's result line, shown first because
+        the review dims the header that normally carries it.
         """
         super().__init__()
         self._changes = changes
+        self._status_line = status_line
         self._notes = notes
         self._at_risk = at_risk
         self._rebased = sum(1 for change in changes if change.before_changed)
@@ -246,6 +256,8 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             and change.displaces in {Displacement.SOURCE, Displacement.CALCULATION}
         )
         with Container(id="review-backdrop"), Vertical(id="review-panel"):
+            if self._status_line is not None:
+                yield Static(self._status_line, id="review-status", markup=False)
             yield Static(
                 tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
             )

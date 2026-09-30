@@ -11,8 +11,10 @@ change or a verification blocker), the official box number, the label, the
 value right-aligned with its unit, the origin glyph, and where they fit the
 origin in words and a detail column. Every column is measured from the lines
 being shown: the box column is as wide as the widest box number, so a number is
-never cut, and the label column no wider than the longest label, so the value
-and its origin sit next to the words they belong to. A label too long for its
+never cut, and the label column no wider than the longest label nor than sixty
+cells, so the value and its origin sit next to the words they belong to and a
+wide terminal leaves the rest of the line empty. Headings carry the strongest
+weight and descriptions the weakest. A label too long for its
 column wraps onto further lines and is never cut; only the one optional line
 under it, the start of the box's description, may be. Every mark comes from
 :mod:`.vocabulary`, so the list never invents a state.
@@ -28,6 +30,7 @@ import re
 from bisect import bisect_right
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import ClassVar, Final, Literal, override
 
 from rich.cells import cell_len
@@ -40,7 +43,7 @@ from textual.message import Message
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
 
-from .....application.modelo.edit_value_grammar import ratio_unit
+from .....application.modelo.edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .....application.modelo.value_presentation import (
     absent_value_text,
     format_casilla_value,
@@ -49,6 +52,8 @@ from .....application.modelo.work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
+    ModeloFormRate,
+    ModeloFormRateUnit,
     ModeloFormTextDisclosure,
     address_key,
 )
@@ -80,9 +85,12 @@ _DETAIL_WIDTH: Final[int] = 32
 _WIDEST: Final[int] = 150
 #: The label keeps at least this much room before a value gives up any of its own.
 _LABEL_FLOOR: Final[int] = 8
+#: The label column is never wider than this, so on a wide terminal the value stays beside its label.
+_LABEL_CAP: Final[int] = 60
 _NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
 _EMPTY_VALUE: Final[str] = "·"
+_RATIO_DATA_TYPE: Final[str] = "ratio"
 _ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {
         ModeloFormOrigin.NOT_APPLICABLE,
@@ -100,6 +108,11 @@ _ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
 _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
 _FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
+_RATE_NOT_GROUNDED_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
+_RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingProxyType(
+    {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
+)
+"""How each unit a grounded rate is stated in reads as a percentage."""
 _SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
 )
@@ -137,6 +150,8 @@ class CasillaListEntry:
     label: str | None = None
     staged_text: str | None = None
     previous_text: str | None = None
+    #: The one rate box of an official row, which prints the rate the row's base is taxed at.
+    rate_of_row: bool = False
 
     @property
     def key(self) -> AddressKey:
@@ -247,7 +262,13 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     field = entry.field
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_KEY)
+    if field.grounded_rate is not None:
+        return rate_text(field.grounded_rate, language)
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
+        # A rate the form leaves to the filer's own operations is not fixed,
+        # so only a box that is not a rate says the design fixes it.
+        if field.data_type == _RATIO_DATA_TYPE:
+            return absent_value_text(language)
         return tr(_FIXED_BY_DESIGN_VALUE_KEY)
     if field.origin in {ModeloFormOrigin.NOT_CALCULATED_YET, ModeloFormOrigin.CALCULATION_FAILED}:
         return _PENDING_VALUE
@@ -257,6 +278,24 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     return format_casilla_value(
         field.value, data_type=field.data_type, language=language, ratio_unit=ratio_unit(field.data_type, maximum)
     )
+
+
+def rate_text(rate: ModeloFormRate, language: OutputLanguage) -> str:
+    """Return a grounded rate as the printed form states it, a percentage in the filer's language."""
+    return format_casilla_value(
+        rate.ratio, data_type=_RATIO_DATA_TYPE, language=language, ratio_unit=_RATE_UNITS[rate.unit]
+    )
+
+
+def _ungrounded_rate(entry: CasillaListEntry) -> bool:
+    """Whether an entry is a row's rate box that holds no value and has no rate Cadrumo grounded."""
+    field = entry.field
+    return entry.rate_of_row and field.grounded_rate is None and field.value is None
+
+
+def rate_note(entry: CasillaListEntry) -> str | None:
+    """Say why a row's rate box shows no rate, or ``None`` for any other box."""
+    return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) else None
 
 
 def _origin_says_absence(field: ModeloFormField) -> bool:
@@ -270,10 +309,17 @@ def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     """Return the value cell of a row, where an origin that says the value is absent leaves only a dot.
 
     The row's origin column says the absence in words, so the value column
-    does not say it a second time. Every other surface, which shows the value
-    without the origin words beside it, uses :func:`value_text`.
+    does not say it a second time. A row's rate box shows the rate its base is
+    grounded on, or only a dot when there is none, since claiming a rate the
+    row does not ground would be a fact nobody established. Every other
+    surface, which shows the value without the origin words beside it, uses
+    :func:`value_text`.
     """
-    if entry.staged_text is None and _origin_says_absence(entry.field):
+    field = entry.field
+    showing_rate = field.grounded_rate is not None and field.origin is not ModeloFormOrigin.NOT_APPLICABLE
+    if entry.staged_text is not None or showing_rate:
+        return value_text(entry, language)
+    if _ungrounded_rate(entry) or _origin_says_absence(field):
         return _EMPTY_VALUE
     return value_text(entry, language)
 
@@ -309,8 +355,8 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text-style: bold;
         }
         CasillaList > .casilla-list--heading {
-            color: $primary;
-            text-style: bold;
+            color: $foreground;
+            text-style: bold underline;
         }
         CasillaList > .casilla-list--subheading {
             color: $foreground;
@@ -472,7 +518,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             return _Measures()
         return _Measures(
             box=max(cell_len(_box_mark(entry.field)) for entry in entries),
-            label=max(entry.indent + cell_len(self._label(entry)) for entry in entries),
+            label=min(max(entry.indent + cell_len(self._label(entry)) for entry in entries), _LABEL_CAP),
             value=min(max(cell_len(row_value_text(entry, self._language)) for entry in entries), _VALUE_CAP),
             words=max(cell_len(origin_words(entry.field)) for entry in entries),
         )
@@ -757,6 +803,8 @@ __all__ = [
     "CasillaListNote",
     "Density",
     "description_text",
+    "rate_note",
+    "rate_text",
     "row_value_text",
     "value_text",
 ]

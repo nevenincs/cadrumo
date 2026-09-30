@@ -2381,6 +2381,9 @@ tui:
         quarter_2: 2nd quarter {year}
         quarter_3: 3rd quarter {year}
         quarter_4: 4th quarter {year}
+      rate:
+        not_grounded: Cadrumo does not set a rate for this row, so none is shown here.
+          Check the rate that applies to you in the official instructions.
       read_failed: The declaration could not be read. Go back and open it again.
       rebase:
         changed: 'Boxes that now read differently: {count}.'

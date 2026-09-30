@@ -2438,6 +2438,9 @@ tui:
         quarter_2: 2.º trimestre {year}
         quarter_3: 3.er trimestre {year}
         quarter_4: 4.º trimestre {year}
+      rate:
+        not_grounded: Cadrumo no fija un tipo para esta fila, así que aquí no se muestra
+          ninguno. Consulta en las instrucciones oficiales el tipo que te corresponde.
       read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
       rebase:
         changed: 'Casillas que ahora muestran otro valor: {count}.'

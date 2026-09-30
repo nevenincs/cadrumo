@@ -9,6 +9,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.work_form_models import (
@@ -25,7 +26,8 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......core.period import Period
-from ..review import REVIEW_EFFECTS, change_line
+from ....components.host import ScreenHostApp
+from ..review import REVIEW_EFFECTS, EditReviewScreen, ReviewDecision, change_line
 from ..session import StagedChange, WorkbenchEditSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -104,3 +106,23 @@ def test_no_effect_calls_a_value_imported(language: OutputLanguage) -> None:
         text = lookup_translation(f"tui.modelo.workbench.review.effect.{effect}", locale=language.value)
         assert text, effect
         assert imported_words not in text, effect
+
+
+async def _review_lines(screen: EditReviewScreen) -> list[str]:
+    app: ScreenHostApp[ReviewDecision] = ScreenHostApp(screen)
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        return [str(item.render()) for item in screen.query(Static) if item.id is not None]
+
+
+@pytest.mark.asyncio
+async def test_the_review_opens_with_the_declarations_result_line_when_given() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        change = _staged(_field(ModeloFormOrigin.IMPORTED, ModeloFormValueSource(family=SourceFamily.RECORDS)))
+        status = "Result to pay 120.00 € · to confirm: 2"
+        with_status = await _review_lines(EditReviewScreen((change,), status_line=status))
+        without = await _review_lines(EditReviewScreen((change,)))
+
+    assert with_status[0] == status
+    assert with_status[1:] == without
+    assert status not in without

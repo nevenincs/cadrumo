@@ -89,14 +89,14 @@ def _section(*fields: ModeloFormField) -> ModeloFormSection:
         blocks=tuple(ModeloFormFieldBlock(id=f"f{item.box}", field=item) for item in fields),
         counts=ModeloFormCounts(
             total=len(fields),
-            needs_input=0,
+            needs_input=sum(1 for item in fields if item.origin is ModeloFormOrigin.NEEDS_INPUT),
             entered=0,
             imported=0,
             calculated=0,
             overridden=0,
-            default_to_confirm=0,
+            default_to_confirm=sum(1 for item in fields if item.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM),
             not_applicable=0,
-            blocked=0,
+            blocked=sum(1 for item in fields if item.blockers),
         ),
     )
 

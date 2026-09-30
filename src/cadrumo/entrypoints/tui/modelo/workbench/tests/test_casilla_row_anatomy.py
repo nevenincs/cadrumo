@@ -410,3 +410,22 @@ async def test_a_wrapped_label_never_breaks_at_a_no_break_space() -> None:
         lines = await _render(items, width=width)
         assert len(lines) > 1, width
         assert any("art.\u00a071" in line for line in lines), (width, lines)
+
+
+@pytest.mark.asyncio
+async def test_on_a_wide_terminal_the_value_stays_beside_a_long_label() -> None:
+    long_label = " ".join(["Deduction for investment in the main residence under the transitional regime"] * 2)
+    items: tuple[CasillaListItem, ...] = (
+        CasillaListEntry(_field("01", "Income", ModeloFormOrigin.CALCULATED, Decimal("500"))),
+        CasillaListEntry(_field("02", long_label, ModeloFormOrigin.CALCULATED, Decimal("7"))),
+    )
+
+    lines = await _render(items, width=200)
+
+    income = _line_with(lines, "Income")
+    value_end = income.index("500.00" + _EURO) + len("500.00" + _EURO)
+    # The label column stops at sixty cells, so the value sits there, not at the far edge.
+    assert value_end - income.index("Income") <= 60 + 1 + len("500.00" + _EURO)
+    assert income.endswith("= Calculated")
+    # The long label wraps instead of pushing the value away.
+    assert len([line for line in lines if line.strip() and "Income" not in line]) >= 2

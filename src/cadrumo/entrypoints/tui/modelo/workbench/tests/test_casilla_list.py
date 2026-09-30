@@ -202,7 +202,10 @@ async def test_headings_and_notes_keep_their_own_style_when_rendered() -> None:
         muted_style = widget.get_component_rich_style("casilla-list--muted")
         heading, subheading, note = (next(iter(widget.render_line(y))).style for y in range(3))
 
-    assert heading is not None and heading.bold and heading.color == heading_style.color
-    assert subheading is not None and subheading.bold and subheading.color != heading.color
+    # Headings carry the strongest weight, in the text colour, and never the muted one descriptions use.
+    assert heading is not None and heading.bold and heading.underline and heading.color == heading_style.color
+    assert heading.color == plain.color
+    assert subheading is not None and subheading.bold and subheading.color == plain.color
+    assert heading.color != muted_style.color
     assert note is not None and note.color == muted_style.color
     assert note.color != plain.color

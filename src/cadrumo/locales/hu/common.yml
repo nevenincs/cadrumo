@@ -2418,6 +2418,10 @@ tui:
         quarter_2: '{year}. II. negyedév'
         quarter_3: '{year}. III. negyedév'
         quarter_4: '{year}. IV. negyedév'
+      rate:
+        not_grounded: A Cadrumo ehhez a sorhoz nem rögzít adókulcsot, ezért itt nem
+          jelenik meg. Az Önre vonatkozó kulcsot a hivatalos kitöltési útmutatóban
+          ellenőrizze.
       read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
       rebase:
         changed: 'Most más értéket mutató rovatok: {count}.'
