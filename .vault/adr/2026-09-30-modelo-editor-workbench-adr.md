@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0dac25b0052987d03b4e223634ce338b389cfc0d6d3666ed941d5332cc84fbe6'
+body_hash: 'sha256:f251d6b4cb75e58d5d91c4cb153e75581e010c1d58bf638ff02239c7c6893dd8'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -219,6 +219,16 @@ derived) block filing: while one stands, export and recording are withheld exact
 for unconfirmed assumed values, and a recalculation that clears it releases them. They persist
 with the calculation so that reopening the declaration keeps them; every other diagnostic is held
 only until the next calculation. A box that could not be worked out never reads as zero.
+
+Amendment 2026-10-01, decided by the operator. Of those reasons, only an amount or record from the
+filer's records that reached no box (outside the one-stop-shop rows its own checks adjudicate) and
+a reverse-charge VAT amount that could not be derived withhold filing, and they do so in the
+application's check, export and filing services so that every entrypoint refuses, with the
+workbench's own check as the earlier warning. An unresolved binding on a printed box, an
+unhandled binding source, a source domain not ready and a terminal origin mismatch are shown as
+worth checking and persist with the calculation, but withhold nothing until their producers stop
+reporting sources that do not apply to the filer: today they fire for a salaried Modelo 100, for
+Modelo 720's producer joins and for a valid Modelo 390 path.
 
 ### D5 Editing interaction
 

@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:2d9a38752410312e757a12f6916570679a0c05d21ec718d76797c733c191b138'
+body_hash: 'sha256:af1846be7279ba381dfdd518108e5cdbfd1c28ca4288221e3acbc39489589d94'
 ---
 
 # `modelo-editor-workbench` plan
@@ -132,6 +132,7 @@ Close what the combined render and the design verification found: nothing unconf
 - [ ] `P07.S49` - Author official headings for Modelo 100, then 349; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
+- [ ] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
 
 ## Parallelization
 
