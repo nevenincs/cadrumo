@@ -13,9 +13,9 @@ related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-09-23'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8464e90422dc3742c6ec4597882bc56aded8dab1f0796287d033f1f8875f492'
+body_hash: 'sha256:d98a4bce0974c5ea6c951c94b2575aeae52a9436a112dd19db605edf24f1f270'
 ---
 
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
@@ -127,3 +127,15 @@ Descriptor versioning. `cadrumo-authority-descriptor-v1` versions the descriptor
 Launcher independence. A closure read from the publishing process also records whatever its launcher had already imported, so the build hook and the `publish-authority` command recorded different closures, and different logical generations, for identical source. Decision: every publication compiles in one canonical child interpreter (`dev/registry/pipeline/compile_authority_candidate.py`), started from `sys.executable` with the launcher's Python environment variables removed. The child observes its own closure and stages the database; the parent admits it and swaps the descriptor under the publication lock. The closure's environment records the interpreter and the dependency versions the child actually ran with. A build environment whose dependency versions differ from the lock therefore produces a different generation by design: it is a different compiler.
 
 Directory filing schedules. Deadline-window projection hydrated each window-owning revision only to read its filing schedules. Decision: the v3 modelo directory carries each revision's filing schedules beside its deadline windows as a required member, so the projection reads directory metadata alone. A directory without them is refused at decode, never defaulted to an empty schedule set.
+
+## Amendment 2026-09-30: legal identity only
+
+Accepted 2026-09-30 by the operator, who directed that the authority carry no coupling to the software or the development environment that builds it: the authority is the law, not the software version running on the machine.
+
+The 2026-09-23 amendments made the logical generation a digest of the legal inputs together with the observed compiler closure, the interpreter version, the `pyproject.toml` and `uv.lock` digests and the pydantic versions, and persisted all of them in the runtime database. The law an authority encodes could stay unchanged while its identity changed: merging a dependency update for a library the compiler never imports made every local authority stale and refused every docs sequence run. The published runtime artifact also carried development-tool paths and development-environment receipts.
+
+Decision: the authority's identity is the identity of its legal inputs alone, the content-addressed source identity over the registry sources, the source evidence and the profile schema, and the logical generation is that digest. The database records no compiler source closure, interpreter, dependency manifest or library version, and no compiler or component-dependency receipt; the `compiler_sources` and `compiler_environment` tables and those manifest columns leave the schema, and the store format advances to `cadrumo-authority-sqlite-v4` under the same refusal and republication rule as v2 and v3. Currency compares the recorded generation with the live source identity, so only a change to the law's sources makes a generation stale.
+
+A compiler or dependency change that alters the compiled content is a code change. Its tests and the complete publication validation prove it, and it reaches an authority when that authority is republished; a clean checkout, as every release build uses, always compiles. The physical database stays content-addressed by its own bytes, so republishing unchanged sources with a changed compiler installs a new file and switches the descriptor under the same generation. A consumer that depends on the exact compiled content rather than on the law, such as a verdict cache over rendered output, keys on the descriptor's physical digest. Development compile caches keep keying on the compiler source tree; they are development tooling and never enter an artifact.
+
+This replaces the persisted compiler and component-dependency receipts of the first 2026-09-23 amendment and the compiler-identity decision of the second. Publication still compiles in the canonical child interpreter, which keeps the compile isolated from its launcher, but nothing about that interpreter is recorded.

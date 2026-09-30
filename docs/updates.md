@@ -14,13 +14,13 @@ the Agencia Estatal de Administración Tributaria (AEAT) before you file.
 :gutter: 3
 :class-container: cadrumo-route-grid
 
-:::{grid-item-card} Latest download
-:link: https://github.com/nevenincs/cadrumo/releases/latest
-:link-type: url
+:::{grid-item-card} Get Cadrumo
+:link: download
+:link-type: doc
 :class-card: cadrumo-route-card
 
-Start with the latest release when a packaged download is available. Record the
-installed version before preparing any filing records.
+Install the latest release with pip or uv. Record the installed version
+before preparing any filing records.
 :::
 
 :::{grid-item-card} Critical updates
@@ -28,8 +28,7 @@ installed version before preparing any filing records.
 :link-type: url
 :class-card: cadrumo-route-card
 
-Use release notes to check breaking changes, migration notes, supported workflows,
-and known limitations before changing versions.
+Read each release's changes on GitHub before you change versions.
 :::
 
 :::{grid-item-card} Report an issue
@@ -77,10 +76,11 @@ Check this section when you need to know whether a release affects:
 
 ## Download guidance
 
-Use the latest release link when you need the current packaged version, and
-follow the [installation guide](workstation-setup.md) to install it. If no
-packaged artifact is available for your environment, open an issue so the gap
-is recorded.
+Follow [Get Cadrumo](download.md) to install the current version, and the
+[installation guide](workstation-setup.md) to add optional extras. The
+[latest release](https://github.com/nevenincs/cadrumo/releases/latest) on
+GitHub carries its release notes. If no install channel covers your platform,
+open an issue so the gap is recorded.
 
 After installing or upgrading, run:
 
@@ -88,10 +88,10 @@ After installing or upgrading, run:
 $ aeat --version
 ```
 
-Keep that version with the local export, AEAT submission receipt, and any
-reconciliation notes for the filing period.
+Keep that version with the local export, the AEAT receipt (justificante), and
+any reconciliation notes for the filing period.
 
-## Deadlines and project announcements
+## Events and deadlines
 
 This documentation may describe filing workflows and preparation order, but it
 does not publish an authoritative tax calendar. Always confirm deadlines,

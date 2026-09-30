@@ -22,7 +22,9 @@ from typing import cast
 
 import pytest
 from sphinx.application import Sphinx
+from sphinx.errors import SphinxError
 
+from cadrumo.core.config import override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
@@ -34,6 +36,7 @@ from ..sequence_build_gate import (
     should_check_sequences,
     should_emit_cli_tree,
 )
+from ..sequences.authority_currency import PUBLISH_AUTHORITY_REMEDY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -124,6 +127,20 @@ def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
         assert should_check_sequences() is False
         app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
         check_sequence_goldens(app, pages=None)
+
+
+def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(tmp_path: Path) -> None:
+    """The gate refuses a non-current authority ahead of the verdict cache.
+
+    A clean verdict recorded under an earlier generation would otherwise pass the
+    build without executing anything. The refusal must fire first, name the
+    republish command, and never reach the pages tree.
+    """
+    app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
+    with override_settings(cadrumo_authority_root=tmp_path / "unpublished"), pytest.raises(SphinxError) as refusal:
+        check_sequence_goldens(app, pages=None)
+    assert PUBLISH_AUTHORITY_REMEDY in str(refusal.value)
+    assert not (tmp_path / "never-read").exists()
 
 
 def test_no_golden_carries_a_version_literal() -> None:

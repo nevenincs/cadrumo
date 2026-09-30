@@ -181,8 +181,8 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "Add roundtrip/structural tests under the owning domain tests/ folder "
             "(aeat-architecture-boundaries, aeat-quality-gates); "
-            "regenerate docs/api stubs (`python -m dev.docs.apidocs scaffold`) and modelo "
-            "coverage docs if the new modelo introduces new public symbols."
+            "regenerate the modelo coverage docs if the new modelo introduces new public "
+            "symbols; the docs build generates the API reference pages itself."
         ),
     ),
 )

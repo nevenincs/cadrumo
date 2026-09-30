@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-30 05:24+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -25,23 +25,39 @@ msgstr "Llegeix les notificacions de l'AEAT i altres dades en directe"
 #: ../../how-to/check-aeat-notifications.md:3
 msgid ""
 "This page covers the live read-only AEAT surfaces: official "
-"notifications, declaration history, filed returns, NIF verification, the "
-"portal catalogue, the borrador, and your IVA compensation balance. All "
-"commands in this section download data and save it locally. None of them "
-"file anything or change your AEAT records."
+"notifications, declaration history, filed returns, NIF verification, and "
+"your IVA compensation balance. It also covers the local portal catalogue "
+"and the borrador, which you import from a PDF you download yourself. The "
+"`pull`, `verify`, and `filed list` commands contact AEAT and save what "
+"they read locally. The `list`, `view`, `latest`, and `history` commands "
+"read only your saved copies. None of them file anything or change your "
+"AEAT records."
 msgstr ""
-"Aquesta pàgina tracta les superfícies de l'AEAT de només lectura en "
-"directe: notificacions oficials, historial de declaracions, declaracions "
-"presentades, verificació de NIF, el catàleg del portal, el borrador i el "
-"saldo de compensació d'IVA. Totes les ordres d'aquesta secció "
-"descarreguen dades i les desen localment. Cap d'elles no presenta res ni "
-"canvia els teus registres de l'AEAT."
+"Aquesta pàgina tracta les superfícies de només lectura en directe de "
+"l'AEAT: notificacions oficials, historial de declaracions, declaracions "
+"presentades, verificació de NIF i el teu saldo de compensació d'IVA. "
+"També tracta el catàleg local de portals i el borrador, que importes d'un"
+" PDF que descarregues tu mateix. Les ordres `pull`, `verify` i `filed "
+"list` es connecten amb l'AEAT i desen localment el que llegeixen. Les "
+"ordres `list`, `view`, `latest` i `history` només llegeixen les teves "
+"còpies desades. Cap d'elles no presenta res ni canvia els teus registres "
+"de l'AEAT."
 
-#: ../../how-to/check-aeat-notifications.md:9
+#: ../../how-to/check-aeat-notifications.md:11
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"Els exemples d'aquesta documentació estan enregistrats en anglès. `aeat` "
+"mostra els seus missatges en espanyol tret que [triïs un altre idioma"
+"](profile-setup.md#choose-the-output-language)."
+
+#: ../../how-to/check-aeat-notifications.md:15
 msgid "How a live read works"
 msgstr "Com funciona una lectura en directe"
 
-#: ../../how-to/check-aeat-notifications.md:11
+#: ../../how-to/check-aeat-notifications.md:17
 msgid ""
 "Every live read works the same way. It uses your configured "
 "authentication, reads from the AEAT sede read-only, and saves an "
@@ -49,82 +65,78 @@ msgid ""
 " pull saves a local copy, and applying a downloaded fact updates only "
 "your local profile or records, and only after you review it. Nothing is "
 "ever sent back to AEAT. You remain the only one who files. To understand "
-"that boundary, see [Recording a filing and the "
-"boundary](../explanation/recording-a-filing-and-the-boundary.md)."
+"that boundary, see [Recording a filing, and why the tool never files for "
+"you](../explanation/recording-a-filing-and-the-boundary.md)."
 msgstr ""
 "Cada lectura en directe funciona igual. Utilitza l'autenticació que tens "
 "configurada, llegeix de la sede de l'AEAT en només lectura i desa una "
 "còpia local xifrada al teu perfil. No aplica res automàticament: una "
 "descàrrega (pull) desa una còpia local, i aplicar una dada descarregada "
-"només actualitza el teu perfil o registres locals, i només després que la"
-" revises. Mai no s'envia res de tornada a l'AEAT. Tu continues sent "
-"l'únic que presenta. Per entendre aquest límit, consulta [Registrar una "
-"presentació i el límit](../explanation/recording-a-filing-and-the-"
-"boundary.md)."
+"només actualitza el teu perfil o registres locals, i només després que "
+"l'hagis revisada. Mai no s'envia res de tornada a l'AEAT. Tu continues "
+"sent l'única persona que presenta. Per entendre aquest límit, consulta "
+"[Registrar una presentació, i per què l'eina mai no presenta per "
+"tu](../explanation/recording-a-filing-and-the-boundary.md)."
 
-#: ../../how-to/check-aeat-notifications.md:19
+#: ../../how-to/check-aeat-notifications.md:25
 msgid ""
-"Two live surfaces have their own guides: censo facts are covered in [Link"
-" Modelo 036 census information](censo-update.md), and filing receipts "
-"(justificantes) in [Pull and store the justificante](reconcile.md#pull-"
-"and-store-the-justificante)."
+"Two live surfaces have their own guides: censo facts are covered in "
+"[Maintain Modelo 036 census facts in your profile](censo-update.md), and "
+"filing receipts (justificantes) in [Pull and store the "
+"justificante](reconcile.md#pull-and-store-the-justificante)."
 msgstr ""
-"Dues superfícies en directe tenen la seva pròpia guia: les dades censals "
-"es tracten a [Enllaça la informació censal del Model 036](censo-"
-"update.md), i els justificants de presentació (justificantes) a "
-"[Descarrega i desa el justificante](reconcile.md#pull-and-store-the-"
-"justificante)."
+"Dues superfícies en directe tenen la seva pròpia guia: les dades del "
+"censo es tracten a [Mantén les dades censals del Modelo 036 al teu perfil"
+"](censo-update.md), i els rebuts de presentació (justificantes) a [Baixa "
+"i desa el justificante](reconcile.md#pull-and-store-the-justificante)."
 
-#: ../../how-to/check-aeat-notifications.md:24
+#: ../../how-to/check-aeat-notifications.md:30
 msgid ""
-"Before contacting AEAT, every live read runs an authentication preflight."
-" If no provider is configured, the read refuses at that preflight; the "
-"refusal text mentions a Cl@ve identity check (`La identidad de Cl@ve "
-"Móvil no coincide...`), but the underlying cause is that authentication "
-"is not configured. Configure a provider first. See [Authenticate with "
-"AEAT](authenticate-with-aeat.md)."
+"Before contacting AEAT, the notification, expediente, justificante, filed"
+" declaration, and IVA wallet reads run an authentication preflight and "
+"print redacted `auth_*` status lines. The read refuses if no provider is "
+"configured, if the certificate file is missing, or if the Cl@ve identity "
+"does not match your profile's tax ID. Configure a provider first. See "
+"[Authenticate with AEAT](authenticate-with-aeat.md)."
 msgstr ""
-"Abans de contactar amb l'AEAT, cada lectura en directe executa un "
-"preflight d'autenticació. Si no hi ha cap proveïdor configurat, la "
-"lectura es nega en aquest preflight; el text del rebuig esmenta una "
-"comprovació d'identitat de Cl@ve (`La identidad de Cl@ve Móvil no "
-"coincide...`), però la causa subjacent és que l'autenticació no està "
-"configurada. Configura primer un proveïdor. Consulta [Autentica't amb "
-"l'AEAT](authenticate-with-aeat.md)."
+"Abans de contactar amb l'AEAT, les lectures de notificacions, "
+"expedientes, justificantes, declaracions presentades i cartera d'IVA "
+"executen una comprovació prèvia (preflight) d'autenticació i imprimeixen "
+"línies d'estat `auth_*` amb dades ocultades. La lectura es nega si no hi "
+"ha cap proveïdor configurat, si falta el fitxer del certificat o si la "
+"identitat de Cl@ve no coincideix amb el NIF del teu perfil. Configura "
+"primer un proveïdor. Consulta [Autentica't amb l'AEAT](authenticate-with-"
+"aeat.md)."
 
-#: ../../how-to/check-aeat-notifications.md:31
+#: ../../how-to/check-aeat-notifications.md:37
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../how-to/check-aeat-notifications.md:33
+#: ../../how-to/check-aeat-notifications.md:39
 msgid "You need:"
-msgstr "Necessita:"
+msgstr "Necessites:"
 
-#: ../../how-to/check-aeat-notifications.md:34
+#: ../../how-to/check-aeat-notifications.md:40
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "Create one at a terminal so you can choose its passphrase:"
 msgstr ""
-"un [perfil actiu](profile-setup.md#what-the-active-profile-means). Creeu-"
-"ne un en un terminal per poder triar-ne la frase de contrasenya:"
+"un [perfil actiu](profile-setup.md#what-the-active-profile-means). Crea'n"
+" un en un terminal per poder triar-ne la frase de contrasenya:"
 
-#: ../../how-to/check-aeat-notifications.md:41
-msgid ""
-"the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) "
-"saved in that profile"
-msgstr ""
-"l'identificador fiscal del contribuent (generalitzat com a NIF, CIF, DNI,"
-" NIE o NII) desat en aquest perfil"
+#: ../../how-to/check-aeat-notifications.md:47
+msgid "the taxpayer's fiscal ID (NIF or NIE) saved in that profile"
+msgstr "l'identificador fiscal del contribuent (NIF o NIE) desat en aquest perfil"
 
-#: ../../how-to/check-aeat-notifications.md:42
+#: ../../how-to/check-aeat-notifications.md:48
 msgid ""
 "the profile passphrase that unwraps this profile's independent encryption"
 " key; the tool prompts for it."
 msgstr ""
-"la frase de contrasenya del perfil que desempaqueta la seva clau de "
-"xifratge independent; l'eina la demana."
+"la frase de contrasenya del perfil, que desbloqueja la clau de xifratge "
+"independent d'aquest perfil; l'eina te la demana."
 
-#: ../../how-to/check-aeat-notifications.md:44
+#: ../../how-to/check-aeat-notifications.md:50
 msgid ""
 "AEAT live-read authentication configured; see [Authenticate with AEAT"
 "](authenticate-with-aeat.md)"
@@ -132,30 +144,37 @@ msgstr ""
 "l'autenticació de lectura en directe de l'AEAT configurada; consulta "
 "[Autentica't amb l'AEAT](authenticate-with-aeat.md)"
 
-#: ../../how-to/check-aeat-notifications.md:48
-msgid "1. Official AEAT notifications (DEHu)"
-msgstr "1. Notificacions oficials de l'AEAT (DEHu)"
+#: ../../how-to/check-aeat-notifications.md:54
+msgid "1. Official AEAT notifications (DEHú)"
+msgstr "1. Notificacions oficials de l'AEAT (DEHú)"
 
-#: ../../how-to/check-aeat-notifications.md:50
+#: ../../how-to/check-aeat-notifications.md:56
 msgid ""
-"DEHu is the official AEAT electronic inbox for notifications "
-"(comunicaciones and notificaciones). The card shows the notification "
-"reads: pull downloads and saves them locally, list shows your current "
-"DEHu notifications, view opens a saved download by its reference number, "
-"and latest shows the most recent snapshot in the active profile."
+"DEHú (Dirección Electrónica Habilitada única) is the official electronic "
+"address for notifications. Cadrumo reads the notificaciones and "
+"comunicaciones that AEAT has served you, from AEAT's electronic "
+"notification service in its sede. It does not read notifications from "
+"other public bodies. The example shows the notification reads: pull "
+"downloads your notifications and saves them as a snapshot, list shows "
+"your saved snapshots, view opens a saved snapshot by its ID (or an "
+"unambiguous prefix of it), and latest shows the most recent snapshot in "
+"the active profile."
 msgstr ""
-"La DEHu és la bústia electrònica oficial de l'AEAT per a les "
-"notificacions (comunicaciones i notificaciones). La targeta mostra les "
-"lectures de notificacions: pull les descarrega i les desa localment, list"
-" mostra les teves notificacions actuals de la DEHu, view obre una "
-"descàrrega desada pel seu número de referència i latest mostra la "
+"La DEHú (Dirección Electrónica Habilitada única) és l'adreça electrònica "
+"oficial per a les notificacions. Cadrumo llegeix les notificaciones i "
+"comunicaciones que l'AEAT t'ha fet arribar, des del servei de "
+"notificacions electròniques de l'AEAT a la seva sede. No llegeix "
+"notificacions d'altres organismes públics. L'exemple mostra les lectures "
+"de notificacions: pull descarrega les teves notificacions i les desa com "
+"a instantània, list mostra les teves instantànies desades, view obre una "
+"instantània desada pel seu ID (o un prefix no ambigu) i latest mostra la "
 "instantània més recent del perfil actiu."
 
-#: ../../how-to/check-aeat-notifications.md:61
+#: ../../how-to/check-aeat-notifications.md:70
 msgid "2. Read documents from notifications you already opened"
 msgstr "2. Llegeix documents de notificacions que ja hagis obert"
 
-#: ../../how-to/check-aeat-notifications.md:63
+#: ../../how-to/check-aeat-notifications.md:72
 msgid ""
 "Read a notification document only after you have personally opened that "
 "notification in the AEAT sede. Opening an unread electronic notification "
@@ -173,17 +192,19 @@ msgstr ""
 "ja informi que la notificació s'ha llegit. Obre tu una notificació no "
 "llegida quan decideixis que han de començar aquests terminis."
 
-#: ../../how-to/check-aeat-notifications.md:70
+#: ../../how-to/check-aeat-notifications.md:79
 msgid ""
-"Pull one eligible document into encrypted local custody, view a stored "
-"document without contacting AEAT, or list the figures reported by each "
-"parsed document:"
+"Identify a document by the `certificado` number AEAT gives its "
+"notification. Pull one eligible document into encrypted local custody, "
+"view a stored document without contacting AEAT, or list the figures "
+"reported by each parsed document:"
 msgstr ""
-"Obtén un document apte en custòdia local xifrada, consulta un document "
-"desat sense contactar amb l'AEAT o enumera les xifres informades per cada"
-" document analitzat:"
+"Identifica un document pel número de `certificado` que l'AEAT assigna a "
+"la seva notificació. Obtén un document apte en custòdia local xifrada, "
+"consulta un document desat sense contactar amb l'AEAT o enumera les "
+"xifres informades per cada document analitzat:"
 
-#: ../../how-to/check-aeat-notifications.md:76
+#: ../../how-to/check-aeat-notifications.md:86
 msgid ""
 "Treat history as a document record, not as a balance. It does not total "
 "the figures, state what is currently payable, or replace the recaudación "
@@ -196,51 +217,50 @@ msgstr ""
 "document per si sol no estableix si el seu import s'ha pagat, recorregut,"
 " reduït o substituït."
 
-#: ../../how-to/check-aeat-notifications.md:83
+#: ../../how-to/check-aeat-notifications.md:93
 msgid "3. Declaration history (expedientes)"
-msgstr "2. Historial de declaracions (expedientes)"
+msgstr "3. Historial de declaracions (expedientes)"
 
-#: ../../how-to/check-aeat-notifications.md:85
+#: ../../how-to/check-aeat-notifications.md:95
 msgid ""
 "Expedientes are the official AEAT record of your past declarations: each "
 "filed return for each modelo and year, with its status and filing date."
 msgstr ""
 "Els expedientes són el registre oficial de l'AEAT de les teves "
-"declaracions anteriors: cada declaració presentada de cada model i any, "
+"declaracions anteriors: cada declaració presentada de cada modelo i any, "
 "amb el seu estat i la data de presentació."
 
-#: ../../how-to/check-aeat-notifications.md:88
+#: ../../how-to/check-aeat-notifications.md:98
 msgid ""
-"The card shows the expedientes reads: pull downloads the history for one "
-"form and year, pull with a year range covers several years at once (leave"
-" out `--modelo` to download history for all your registered forms), list "
-"shows saved downloads, view opens one download's details (individual "
-"declarations, status, dates, and links to justificantes), and latest "
-"shows the most recent snapshot."
+"The example shows the expedientes reads: pull downloads the history for "
+"one form and year, pull with a year range covers several years at once "
+"(leave out `--modelo` to download history for all your registered forms),"
+" list shows saved downloads, view opens one download's details "
+"(individual declarations, status, dates, and links to justificantes), and"
+" latest shows the most recent snapshot."
 msgstr ""
-"La targeta mostra les lectures d'expedientes: pull descarrega l'historial"
-" d'un formulari i any, pull amb un interval d'anys cobreix diversos anys "
-"alhora (omet `--modelo` per descarregar l'historial de tots els "
-"formularis que tens registrats), list mostra les descàrregues desades, "
-"view obre els detalls d'una descàrrega (declaracions individuals, estat, "
-"dates i enllaços als justificantes) i latest mostra la instantània més "
-"recent."
+"L'exemple mostra les lectures d'expedientes: pull descarrega l'historial "
+"d'un modelo i un any, pull amb un interval d'anys cobreix diversos anys "
+"alhora (omet `--modelo` per descarregar l'historial de tots els teus "
+"modelos registrats), list mostra les descàrregues desades, view obre els "
+"detalls d'una descàrrega (declaracions individuals, estat, dates i "
+"enllaços als justificantes) i latest mostra la instantània més recent."
 
-#: ../../how-to/check-aeat-notifications.md:99
+#: ../../how-to/check-aeat-notifications.md:109
 msgid "4. Filed declaration detail"
-msgstr "3. Detall d'una declaració presentada"
+msgstr "4. Detall de la declaració presentada"
 
-#: ../../how-to/check-aeat-notifications.md:101
+#: ../../how-to/check-aeat-notifications.md:111
 msgid ""
 "Download the box-by-box values from a return you have already filed with "
 "AEAT."
 msgstr ""
-"Descarrega els valors casella per casella d'una declaració que ja has "
+"Descarrega els valors casilla per casilla d'una declaració que ja has "
 "presentat a l'AEAT."
 
-#: ../../how-to/check-aeat-notifications.md:103
+#: ../../how-to/check-aeat-notifications.md:113
 msgid ""
-"The card shows the filed-detail reads. `filed list` lists the filed "
+"The example shows the filed-detail reads. `filed list` lists the filed "
 "returns AEAT holds without saving their box values (it still reads from "
 "AEAT live, so it needs configured authentication like any other live "
 "command). `filed pull` downloads and saves the full box values from one "
@@ -248,95 +268,111 @@ msgid ""
 "source declarations a target filing depends on (for example, the Modelo "
 "303 returns a Modelo 390 annual summary needs)."
 msgstr ""
-"La targeta mostra les lectures del detall presentat. `filed list` llista "
-"les declaracions presentades que l'AEAT té sense desar-ne els valors de "
-"les caselles (tot i així llegeix de l'AEAT en directe, de manera que "
-"necessita autenticació configurada com qualsevol altra ordre en directe)."
-" `filed pull` descarrega i desa els valors complets de les caselles d'una"
-" declaració o d'un interval d'anys, i `filed pull-sources` descarrega les"
-" declaracions font de què depèn una presentació objectiu (per exemple, "
-"les declaracions del Model 303 que necessita un resum anual del Model "
-"390)."
+"L'exemple mostra les lectures del detall presentat. `filed list` llista "
+"les declaracions presentades que l'AEAT té registrades, sense desar-ne "
+"els valors de les casillas (tot i així llegeix de l'AEAT en directe, de "
+"manera que necessita autenticació configurada com qualsevol altra ordre "
+"en directe). `filed pull` descarrega i desa els valors complets de les "
+"casillas d'una declaració o d'un interval d'anys, i `filed pull-sources` "
+"descarrega les declaracions d'origen de què depèn una presentació de "
+"destinació (per exemple, les declaracions del Modelo 303 que necessita un"
+" resum anual del Modelo 390)."
 
-#: ../../how-to/check-aeat-notifications.md:116
+#: ../../how-to/check-aeat-notifications.md:126
 msgid "5. NIF and EU VAT verification"
-msgstr "4. Verificació de NIF i d'IVA de la UE"
+msgstr "5. Verificació del NIF i de l'IVA de la UE"
 
-#: ../../how-to/check-aeat-notifications.md:118
+#: ../../how-to/check-aeat-notifications.md:128
 msgid ""
 "Verify whether a NIF is registered for intra-EU VAT purposes (the VIES "
 "register), or check a Spanish NIF in the Spanish ROI register."
 msgstr ""
 "Comprova si un NIF està registrat a efectes d'IVA intracomunitari (el "
-"registre VIES), o comproves un NIF espanyol al registre ROI espanyol."
+"registre VIES) o comprova un NIF espanyol al registre ROI espanyol."
 
-#: ../../how-to/check-aeat-notifications.md:121
+#: ../../how-to/check-aeat-notifications.md:131
 msgid ""
-"The card shows the verification reads. `verify nif-iva` checks whether a "
-"foreign EU VAT number is valid, and `verify tgvi` checks whether a "
+"The example shows the verification reads. `verify nif-iva` checks whether"
+" a foreign EU VAT number is valid, and `verify tgvi` checks whether a "
 "Spanish NIF or NIE appears in the Spanish ROI register (add `--expected "
 "valid|invalid|unknown` to compare against an expected result). `verify "
 "list` shows past verifications, `verify view` opens one by its "
 "observation id, and `verify latest` shows the latest observation for a "
 "NIF."
 msgstr ""
-"La targeta mostra les lectures de verificació. `verify nif-iva` comprova "
-"si un número d'IVA estranger de la UE és vàlid, i `verify tgvi` comprova "
-"si un NIF o NIE espanyol apareix al registre ROI espanyol (afegeixes "
-"`--expected valid|invalid|unknown` per comparar-ho amb un resultat "
-"esperat). `verify list` mostra les verificacions anteriors, `verify view`"
-" n'obre una pel seu id d'observació i `verify latest` mostra l'última "
-"observació d'un NIF."
+"L'exemple mostra les lectures de verificació. `verify nif-iva` comprova "
+"si un número d'IVA d'un altre estat de la UE és vàlid, i `verify tgvi` "
+"comprova si un NIF o NIE espanyol apareix al registre ROI espanyol "
+"(afegeix `--expected valid|invalid|unknown` per comparar-ho amb un "
+"resultat esperat). `verify list` mostra les verificacions anteriors, "
+"`verify view` n'obre una pel seu id d'observació i `verify latest` mostra"
+" l'última observació d'un NIF."
 
-#: ../../how-to/check-aeat-notifications.md:133
+#: ../../how-to/check-aeat-notifications.md:143
 msgid "6. Official AEAT portal catalogue"
-msgstr "5. Catàleg oficial del portal de l'AEAT"
+msgstr "6. Catàleg oficial de portals de l'AEAT"
 
-#: ../../how-to/check-aeat-notifications.md:135
+#: ../../how-to/check-aeat-notifications.md:145
 msgid ""
-"The card shows the portal-catalogue reads. `portals list` shows the "
-"official AEAT online portals the tool knows about and their "
-"authentication requirements; narrow it to one form with `--modelo` or to "
-"one category with `--category` (the accepted categories are `auth`, "
-"`filing`, `censo`, `consultation`, `borrador`, `payment`, and "
-"`calendar_reference`). Use `--modelo` or `--category`, not both: they are"
-" mutually exclusive. `portals view` opens one portal's details."
+"The portal catalogue is built into Cadrumo, so these commands work "
+"offline and never contact AEAT. The example shows the portal-catalogue "
+"reads. `portals list` shows the official AEAT online portals the tool "
+"knows about and their authentication requirements; narrow it to one form "
+"with `--modelo` or to one category with `--category` (the accepted "
+"categories are `auth`, `filing`, `censo`, `consultation`, `borrador`, "
+"`payment`, and `calendar_reference`). Use `--modelo` or `--category`, not"
+" both: they are mutually exclusive. `portals view` opens one portal's "
+"details."
 msgstr ""
-"La targeta mostra les lectures del catàleg del portal. `portals list` "
-"mostra els portals en línia oficials de l'AEAT que l'eina coneix i els "
-"seus requisits d'autenticació; acota-ho a un formulari amb `--modelo` o a"
-" una categoria amb `--category` (les categories admeses són `auth`, "
-"`filing`, `censo`, `consultation`, `borrador`, `payment` i "
-"`calendar_reference`). Usa `--modelo` o `--category`, no tots dos: són "
-"mútuament excloents. `portals view` obre els detalls d'un portal."
-
-#: ../../how-to/check-aeat-notifications.md:147
-msgid "7. Borrador (draft Modelo 100)"
-msgstr "6. Borrador (esborrany del Model 100)"
-
-#: ../../how-to/check-aeat-notifications.md:149
-msgid ""
-"The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes "
-"available to wage earners. The card shows the borrador reads: list shows "
-"the snapshots, view opens one borrador's box values, and latest shows the"
-" latest active draft for a filing year."
-msgstr ""
-"El borrador és l'esborrany precalculat del Model 100 d'IRPF que l'AEAT "
-"posa a disposició dels assalariats. La targeta mostra les lectures del "
-"borrador: list mostra les instantànies, view obre els valors de les "
-"caselles d'un borrador i latest mostra l'últim esborrany actiu d'un any "
-"de presentació."
+"El catàleg de portals està integrat a Cadrumo; per això aquestes ordres "
+"funcionen sense connexió i mai no contacten amb l'AEAT. L'exemple mostra "
+"les lectures del catàleg de portals. `portals list` mostra els portals en"
+" línia oficials de l'AEAT que l'eina coneix i els seus requisits "
+"d'autenticació; acota-ho a un modelo amb `--modelo` o a una categoria amb"
+" `--category` (les categories admeses són `auth`, `filing`, `censo`, "
+"`consultation`, `borrador`, `payment` i `calendar_reference`). Usa "
+"`--modelo` o `--category`, no tots dos: són mútuament excloents. `portals"
+" view` obre els detalls d'un portal."
 
 #: ../../how-to/check-aeat-notifications.md:159
-msgid "8. IVA compensation balance"
-msgstr "7. Saldo de compensació d'IVA"
+msgid "7. Borrador (draft Modelo 100)"
+msgstr "7. Borrador (esborrany del Modelo 100)"
 
 #: ../../how-to/check-aeat-notifications.md:161
 msgid ""
+"The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes "
+"available to taxpayers who meet its conditions. Cadrumo does not download"
+" it. Download the borrador PDF from the AEAT sede yourself, then import "
+"it with `aeat app live borrador 100 import`, passing the file with "
+"`--file` and its year with `--filing-year`, as the first command in the "
+"example shows. Import refuses a PDF that yields too few of the expected "
+"casillas, and stores nothing. The example shows the stored-snapshot "
+"reads, which never contact AEAT: list shows the snapshots (`--state` "
+"filters them), view opens one borrador's box values, and latest shows the"
+" latest active draft for a filing year."
+msgstr ""
+"El borrador és l'esborrany precalculat del Modelo 100 de l'IRPF que "
+"l'AEAT posa a disposició dels contribuents que compleixen les seves "
+"condicions. Cadrumo no el descarrega. Descarrega tu mateix el PDF del "
+"borrador de la sede de l'AEAT i, després, importa'l amb `aeat app live "
+"borrador 100 import`, indicant el fitxer amb `--file` i el seu any amb "
+"`--filing-year`, com mostra la primera ordre de l'exemple. La importació "
+"rebutja un PDF del qual s'extreuen massa poques de les casillas esperades"
+" i no desa res. L'exemple mostra les lectures de les instantànies "
+"desades, que mai no contacten amb l'AEAT: list mostra les instantànies "
+"(`--state` les filtra), view obre els valors de les casillas d'un "
+"borrador i latest mostra l'últim esborrany actiu d'un any de presentació."
+
+#: ../../how-to/check-aeat-notifications.md:176
+msgid "8. IVA compensation balance"
+msgstr "8. Saldo de compensació d'IVA"
+
+#: ../../how-to/check-aeat-notifications.md:178
+msgid ""
 "Your IVA compensation balance (saldo a compensar) is the amount of "
 "overpaid IVA from prior quarters that can be deducted from future Modelo "
-"303 filings. The card shows the IVA-wallet reads. `pull` downloads and "
-"tracks your current balance, `pull-history` reconstructs past "
+"303 filings. The example shows the IVA-wallet reads. `pull` downloads and"
+" tracks your current balance, `pull-history` reconstructs past "
 "compensation decisions from prior Modelo 303 filings, `pull-evidence` "
 "captures past returns and the current IVA evidence in a single read-only "
 "run, and `history` lists the persisted balances and decisions held "
@@ -344,31 +380,31 @@ msgid ""
 msgstr ""
 "El teu saldo de compensació d'IVA (saldo a compensar) és l'import d'IVA "
 "pagat en excés de trimestres anteriors que es pot deduir de presentacions"
-" futures del Model 303. La targeta mostra les lectures de la cartera "
+" futures del Modelo 303. L'exemple mostra les lectures de la cartera "
 "d'IVA. `pull` descarrega i fa el seguiment del teu saldo actual, `pull-"
 "history` reconstrueix les decisions de compensació anteriors a partir de "
-"presentacions prèvies del Model 303, `pull-evidence` captura declaracions"
-" anteriors i l'evidència d'IVA actual en una sola execució de només "
-"lectura, i `history` llista els saldos i les decisions persistits "
+"presentacions prèvies del Modelo 303, `pull-evidence` captura "
+"declaracions anteriors i les proves d'IVA actuals en una sola execució de"
+" només lectura, i `history` llista els saldos i les decisions conservats "
 "localment."
 
-#: ../../how-to/check-aeat-notifications.md:174
+#: ../../how-to/check-aeat-notifications.md:191
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/check-aeat-notifications.md:176
+#: ../../how-to/check-aeat-notifications.md:193
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/check-aeat-notifications.md:177
+#: ../../how-to/check-aeat-notifications.md:194
 msgid "[Authenticate with AEAT](authenticate-with-aeat.md)"
 msgstr "[Autentica't amb l'AEAT](authenticate-with-aeat.md)"
 
-#: ../../how-to/check-aeat-notifications.md:178
+#: ../../how-to/check-aeat-notifications.md:195
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configura el teu perfil de contribuent](profile-setup.md)"
 
-#: ../../how-to/check-aeat-notifications.md:179
-msgid "[Reconcile filing justificantes](reconcile.md)"
-msgstr "[Reconcilia els justificantes de presentació](reconcile.md)"
+#: ../../how-to/check-aeat-notifications.md:196
+msgid "[Reconcile a filing](reconcile.md)"
+msgstr "[Concilia una presentació](reconcile.md)"
 

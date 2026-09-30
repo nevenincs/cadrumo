@@ -1,8 +1,8 @@
 """The one process spawn behind every authority publication.
 
 A publication compiles its candidate in a fresh interpreter running a fixed
-module, so the compiler closure it records is what compiling imports and never
-what the launching tool had already loaded. The spawn is kept in this module
+module, so the compile never depends on what the launching tool had already
+loaded. The spawn is kept in this module
 alone so that it is the only place a subprocess starts on the publication path.
 
 The child is bound to the parent's lifetime through its standard input: the

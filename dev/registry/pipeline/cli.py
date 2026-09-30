@@ -126,7 +126,9 @@ def publish_authority(
     publishing when the recorded generation still matches a fresh receipt over
     the same trees. That question is a content read with no compilation, so it
     costs seconds against a publication's minutes, and it makes repeated
-    invocation cheap enough for a lifecycle step to run unconditionally.
+    invocation cheap enough for a lifecycle step to run unconditionally. The
+    recorded identity names the legal sources only, so a compiler change
+    reaches the artifact through a publication without ``--if-stale``.
     """
     if profile_schema is None and (registry_root is not None or source_root is not None):
         raise typer.BadParameter(

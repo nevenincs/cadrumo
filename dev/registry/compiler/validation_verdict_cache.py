@@ -125,7 +125,7 @@ def validation_verdict_scope(
     registry_root: Path,
     fingerprints: FingerprintRows,
     source_receipt: str,
-    compiler_identity_digest: str,
+    compiler_source_tree_digest: str,
 ) -> ValidationVerdictScope:
     """Derive the verdict keys for one compilation from the inputs that decide its outcome.
 
@@ -168,7 +168,7 @@ def validation_verdict_scope(
                 sorted([list(row) for row in (*shared_rows, *(r for rows in modelo_rows.values() for r in rows))])
             ),
             "source_receipt": source_receipt,
-            "compiler_identity_digest": compiler_identity_digest,
+            "compiler_source_tree_digest": compiler_source_tree_digest,
         }
     )
     modelo_keys = {
@@ -180,7 +180,7 @@ def validation_verdict_scope(
                 "modelo_rows": sorted([list(row) for row in rows]),
                 "shared_rows_digest": shared_digest,
                 "source_receipt": source_receipt,
-                "compiler_identity_digest": compiler_identity_digest,
+                "compiler_source_tree_digest": compiler_source_tree_digest,
             }
         )
         for modelo_id, rows in modelo_rows.items()

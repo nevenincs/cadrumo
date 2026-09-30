@@ -416,17 +416,3 @@ def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: Path) -> None:
     assert first.written > 0
     assert second.written == 0
     assert second.unchanged == first.written
-
-
-def test_audit_returns_conformant_message_after_scaffold(tmp_path: Path) -> None:
-    """audit() includes a conformant message after a successful scaffold."""
-
-    repo_root = REPO_ROOT
-    src_cadrumo = repo_root / "src" / "cadrumo"
-    docs_api = tmp_path / "api"
-
-    manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
-    manager.scaffold()
-
-    report = manager.audit()
-    assert "conformant" in report.lower()

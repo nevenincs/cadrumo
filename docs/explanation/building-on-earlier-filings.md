@@ -17,7 +17,7 @@ Tax doesn't reset every quarter. The figures you report in one period often feed
 Two common shapes show up across the forms:
 
 - **Annual summaries gather the year.** A yearly form rolls up the periods inside it. Modelo 390, for example, summarises the year's Modelo 303 IVA filings. Modelo 100 (RENTA) pulls together the income-tax instalments and withholdings you reported through the year.
-- **Unused amounts carry into the next period.** If a Modelo 303 quarter leaves you with more IVA paid than collected, the difference becomes an unused amount carried into a later period - a IVA credit you keep until a later return can use it.
+- **Unused amounts carry into the next period.** If a Modelo 303 quarter leaves you with more IVA paid than collected, the difference becomes an unused amount carried into a later period - an IVA credit you keep until a later return uses it or the legal carry window closes.
 
 In both shapes, the later form can't stand on its own. It reaches back to figures you already reported. The tool carries those figures forward from your earlier filings so you don't re-enter them by hand.
 
@@ -25,7 +25,7 @@ In both shapes, the later form can't stand on its own. It reaches back to figure
 
 A carried-forward figure is only as trustworthy as the filing it came from. So the carry-forward rests on a clear principle. A figure carried in from an earlier filing should come from a filing you actually completed and marked as filed. Where possible, it should come from one backed by the agency's receipt.
 
-The tool carries forward the figures it *has on record* for the matching modelo, year, and period. It does not invent a prior period that isn't there. If you ask a yearly form to gather four quarters and only two are on record, the tool brings in the two it has - it doesn't fabricate the missing pair to fill the gap. That's deliberate. A guessed figure in a filing is worse than a visible blank you can act on.
+The tool carries forward the figures it *has on record* for the matching modelo, year, and period. It does not invent a prior period that isn't there. If you ask a yearly form to gather four quarters and only two are on record, the tool brings in the two it has - it doesn't fabricate the missing pair to fill the gap. Verification then blocks the yearly form until you resolve the gap. That's deliberate. A guessed figure in a filing is worse than a visible blank you can act on.
 
 Because of this, the figures it carries forward are a starting point you review, not a verdict you accept blindly. You confirm that each earlier figure came from a filing you completed and that it still reflects what you filed before you rely on it.
 
@@ -35,7 +35,7 @@ The unused-IVA case has its own small piece of memory. When a Modelo 303 period 
 
 That running record needs a true starting point. The first time you use the tool, it has no history of the credit you'd built up before. So you set the opening balance once - the unused IVA credit you were already carrying when you started. From there, each period updates the balance on its own.
 
-People make mistakes with an opening balance, so there's a correction path. You can fix a wrong opening balance after the fact. One guard protects you: the tool refuses to change the basis of a period you've already completed and marked as filed. Rewriting a figure that a filed return already relied on would quietly change that return after the fact, so the correction is refused and names the filing that's in the way. If you hit that, the figure is locked because a filing already used it - which is exactly when you'd want it locked.
+People make mistakes with an opening balance, so there's a correction path. Fix a wrong opening balance after the fact. One guard protects you: the tool refuses to change the basis of a period you've already completed and marked as filed. Rewriting a figure that a filed return already relied on would quietly change that return after the fact, so the correction is refused and names the filing that's in the way. If you hit that, the figure is locked because a filing already used it - which is exactly when you'd want it locked.
 
 To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../how-to/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
 
@@ -61,4 +61,4 @@ This division is the point. The tool removes the re-typing and the arithmetic; y
 
 This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [how-it-works overview](index.md) maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
 
-Once your figures are settled - including the ones carried in from earlier filings - the next concept is checking and sharing them. Continue with [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
+Once your figures are settled - including the ones carried in from earlier filings - the next concept is checking and sharing them. Continue with [Reviewing your numbers and producing the export file](reviewing-and-exporting.md).

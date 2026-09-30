@@ -39,7 +39,6 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
     {
         "check-code",
         "check-repository",
-        "check-api-stubs",
         "check-workflows",
         "check-gate-contracts",
         "check-hooks",

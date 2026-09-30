@@ -203,7 +203,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app",
         "tui",
         kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.root.app_help"),
+        help_key=TranslationKey("cli.root.app_tui_help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter=None),
         parameters=(),

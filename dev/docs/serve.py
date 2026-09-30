@@ -29,15 +29,18 @@ is refused with guidance (eviction applies only to the canonical port we own).
 The first serve performs an initial build so the review is never a stale
 snapshot; subsequent edits rebuild incrementally.
 
-Surfaces that the build itself rewrites are excluded from the watch set so a
-rebuild cannot trigger itself: ``docs/cli/`` is regenerated from the live
-command tree at ``builder-inited`` (see ``docs/conf.py``) and ``docs/_build``
-is the output tree. Editing a docstring under ``src/cadrumo/`` rebuilds the
-affected autodoc page; adding or removing a *module* still requires
-``python -m dev.docs.apidocs scaffold`` to refresh the committed ``docs/api``
-stub set (per the aeat-documentation rule), which this server does not
-run. This is the interactive companion to :mod:`dev.docs.build`, which performs
-the one-shot incremental and gate builds.
+Every rebuild is a whole-site build, so the generated references (the CLI
+reference, glossary, casilla and legal pages, and under full scope the API
+stubs) regenerate at ``builder-inited`` (see ``docs/conf.py``). Surfaces that
+the build itself rewrites are excluded from the watch set so a rebuild cannot
+trigger itself, and ``docs/_build`` is the output tree. Editing a docstring
+under ``src/cadrumo/`` rebuilds the affected autodoc page, and adding or
+removing a module regenerates its stub on the next rebuild.
+
+Like ``just docs-page``, the server renders cli-sequences from their committed
+goldens and does not execute them; ``just docs-sequences-check`` verifies them.
+This is the interactive companion to :mod:`dev.docs.build`, which performs the
+one-shot incremental and gate builds.
 """
 
 from __future__ import annotations
@@ -63,6 +66,8 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+
+from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 _UTF_8: Final[str] = UTF_8
 
@@ -148,6 +153,11 @@ def _ignore_patterns() -> list[str]:
     is anchored to ``docs/cli`` specifically so changes under the unrelated
     ``src/cadrumo/entrypoints/cli`` source still rebuild the CLI reference.
 
+    The other build-written surfaces are ignored for the same reason: the
+    generated reference pages under ``docs/_generated``, the API stubs (the
+    hand-written ``docs/api/index.md`` stays watched), and the CLI-tree
+    projection under ``docs/_static``.
+
     Returns:
         The ignore globs, in declaration order.
     """
@@ -155,6 +165,9 @@ def _ignore_patterns() -> list[str]:
     return [
         f"*{sep}_build{sep}*",
         f"*{sep}docs{sep}cli{sep}*",
+        f"*{sep}docs{sep}_generated{sep}*",
+        f"*{sep}docs{sep}api{sep}*.rst",
+        f"*{sep}docs{sep}_static{sep}cli-tree.json",
         f"*{sep}__pycache__{sep}*",
         "*.pyc",
         f"*{sep}.git{sep}*",
@@ -512,15 +525,13 @@ def _wait_for_free(bind_host: str, port: int, *, timeout: float) -> bool:
 
 
 def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
-    """Return the child environment forcing the full-site build path.
+    """Return the child environment for the live-preview Sphinx builds.
 
-    sphinx-autobuild drives Sphinx through the ``build`` subcommand form
-    (``python -m sphinx build ...``), whose extra leading token defeats the
-    argv heuristic in ``docs/conf.py`` that distinguishes a full build from a
-    targeted partial one. That heuristic otherwise skips the deferred
-    pydantic-model rebuild and the CLI-reference generation, leaving autodoc to
-    crash on a not-fully-defined model. The dev server always serves the whole
-    site, so force both build-time steps on via the conf.py overrides.
+    Each rebuild is a whole-site build, which ``docs/conf.py`` recognises from
+    the command line, so every generated reference regenerates. Sequence
+    execution is skipped explicitly: the preview renders the committed goldens,
+    and re-executing every sequence on each edit would make the loop minutes
+    long while duplicating the dedicated gate.
 
     Ambient Cadrumo product and AEAT authority settings are stripped and the
     local-storage root is pinned to an isolated temp directory, mirroring the
@@ -533,8 +544,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     environment.update(
         {
             "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
-            "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
-            "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
+            SEQUENCE_CHECK_SKIP_ENV: "1",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
             "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-"),
@@ -614,7 +624,7 @@ def _launch(
         print(f"Bound to {host}:{port} ({stacks}) — reachable from other hosts on the network.", flush=True)
         print(f"Also reachable as http://{socket.gethostname().lower()}:{port}/ on the LAN.", flush=True)
     print("Watching docs/ and src/cadrumo/; rebuilding on change.", flush=True)
-    process = subprocess.Popen(command, cwd=repo_root, env=_build_env(repo_root))
+    process = subprocess.Popen(command, cwd=repo_root, env=_build_env(repo_root, scope=scope))
     write_state(state_path, ServeState(pid=process.pid, host=host, port=port))
     try:
         return process.wait()

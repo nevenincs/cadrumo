@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-08 07:52+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -29,8 +29,8 @@ msgid ""
 "page."
 msgstr ""
 "Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
-"adóhatóság, amelyre az ezen az oldalon szereplő bevallási és élő olvasási"
-" határok hivatkoznak."
+"adóhatóság, amelyre az ezen az oldalon szereplő benyújtási és élő "
+"olvasási határok hivatkoznak."
 
 #: ../../reference/filesystem-state-and-safety.md:6
 msgid "Local state layout"
@@ -47,7 +47,7 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Platform"
-msgstr "Platformok"
+msgstr "Platform"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Default storage root"
@@ -55,15 +55,15 @@ msgstr "Alapértelmezett tárolási gyökér"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Windows"
-msgstr "Windows-rendszer"
+msgstr "Windows"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr "A `%LOCALAPPDATA%/cadrumo/storage` Windows-tárolási útvonal"
+msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Linux"
-msgstr "Linux-rendszer"
+msgstr "Linux"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
@@ -71,11 +71,11 @@ msgstr "`$XDG_DATA_HOME/cadrumo/storage`, vagy `~/.local/share/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "macOS"
-msgstr "macOS-rendszer"
+msgstr "macOS"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr "A `~/Library/Application Support/cadrumo/storage` macOS-tárolási útvonal"
+msgstr "`~/Library/Application Support/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md:17
 msgid ""
@@ -84,9 +84,9 @@ msgid ""
 "`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout."
 msgstr ""
 "A gyökér ugyanaz, akár forráskódból, akár telepített csomagból fut a "
-"Cadrumo. A forráskódból való futtatás nem mozdítja el: állítsa be a "
+"Cadrumo. A forráskódból való futtatás nem mozdítja el: állítsd be a "
 "`CADRUMO_LOCAL_STORAGE_ROOT` változót, hogy a fát a forráskönyvtárba "
-"helyezze."
+"helyezd."
 
 #: ../../reference/filesystem-state-and-safety.md:21
 msgid ""
@@ -103,21 +103,25 @@ msgstr ""
 #: ../../reference/filesystem-state-and-safety.md:26
 msgid ""
 "Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. The "
-"bucket contains `db/cadrumo.db`, encrypted blobs, audit material, "
-"`manifest.toml`, `.lock`, and an output-language hint. Key material is "
-"rooted under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
+"bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, the "
+"`custody/` envelopes that hold the wrapped data key for the passphrase "
+"and the recovery code, `manifest.toml`, `profile.commit.v1.json`, "
+"`.lock`, and an `output-language.hint` file. Session and login-throttle "
+"state live under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
 "blobs, and audit paths derive from the same product root unless an "
 "explicit Cadrumo setting overrides them."
 msgstr ""
 "A profilállapot bucket-hatókörű a `<root>/buckets/<bucket-id>/` alatt. A "
-"bucket a `db/cadrumo.db` fájlt, titkosított blobokat, auditanyagot, a "
-"`manifest.toml` fájlt, a `.lock` fájlt és egy kimeneti nyelvi utalást "
-"tartalmaz. A kulcsanyag a `<root>/keystore/<bucket-id>/` alatt "
-"gyökerezik. A tokenek, naplók, titkok, blobok és auditútvonalak "
-"ugyanabból a termékgyökérből származnak, hacsak egy kifejezett Cadrumo-"
-"beállítás felül nem írja őket."
+"bucket tartalmazza a `db/cadrumo.db` fájlt, a `data/` alatti titkosított "
+"blobokat, a `custody/` borítékokat, amelyek a jelmondathoz és a "
+"helyreállítási kódhoz tartozó becsomagolt adatkulcsot őrzik, a "
+"`manifest.toml`, a `profile.commit.v1.json` és a `.lock` fájlt, valamint "
+"egy `output-language.hint` fájlt. A munkamenet- és a bejelentkezés-"
+"korlátozási állapot a `<root>/keystore/<bucket-id>/` alatt él. A tokenek,"
+" naplók, titkok, blobok és auditútvonalak ugyanabból a termékgyökérből "
+"származnak, hacsak egy kifejezett Cadrumo-beállítás felül nem írja őket."
 
-#: ../../reference/filesystem-state-and-safety.md:33
+#: ../../reference/filesystem-state-and-safety.md:35
 msgid ""
 "Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A "
 "former `aeat-vault/` folder is not adopted."
@@ -125,11 +129,11 @@ msgstr ""
 "A Google Drive-tükrözés egy Cadrumo tulajdonában lévő `cadrumo-vault/` "
 "mappát használ. Egy korábbi `aeat-vault/` mappát nem vesz át."
 
-#: ../../reference/filesystem-state-and-safety.md:36
+#: ../../reference/filesystem-state-and-safety.md:38
 msgid "Old `aeat`-named storage is refused, not migrated"
 msgstr "A régi, `aeat` nevű tárolót elutasítja, nem migrálja"
 
-#: ../../reference/filesystem-state-and-safety.md:38
+#: ../../reference/filesystem-state-and-safety.md:40
 msgid ""
 "Cadrumo refuses recognizable former product state. This includes a "
 "sibling `aeat` application-state directory, an `aeat.db` database, "
@@ -141,7 +145,7 @@ msgstr ""
 "az `aeat.*`, `aeat-test.*` vagy `aeat-tests.*` secure-object névterek, "
 "valamint a korábbi bundle- vagy Drive-mappanevek."
 
-#: ../../reference/filesystem-state-and-safety.md:43
+#: ../../reference/filesystem-state-and-safety.md:45
 msgid ""
 "The refusal is non-destructive. Cadrumo does not read, connect to, copy, "
 "move, re-key, delete, migrate, or adopt that state. Detection leaves the "
@@ -151,12 +155,12 @@ msgstr ""
 "Az elutasítás nem destruktív. A Cadrumo nem olvassa, nem kapcsolódik "
 "hozzá, nem másolja, nem mozgatja, nem kulcsolja újra, nem törli, nem "
 "migrálja és nem veszi át azt az állapotot. A felismerés érintetlenül "
-"hagyja a korábbi bájtokat, és megköveteli, hogy az operátor külön, "
+"hagyja a korábbi bájtokat, és megköveteli, hogy a kezelő külön, "
 "kifejezett rendelkezést válasszon."
 
-#: ../../reference/filesystem-state-and-safety.md:47
+#: ../../reference/filesystem-state-and-safety.md:49
 msgid "Safety and filing scope"
-msgstr "Biztonság és bevallási hatókör"
+msgstr "Biztonság és benyújtási hatókör"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Surface"
@@ -183,10 +187,17 @@ msgstr "Exportálás"
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
-"evidence gates pass; portal acceptance is not guaranteed"
+"evidence gates pass; refuses to overwrite an existing file without "
+"`--replace`; portal acceptance is not guaranteed, and files for modelos "
+"whose record design reserves a software identity, such as Modelo 303 and "
+"390, carry a development identity that AEAT does not accept"
 msgstr ""
-"Egy AEAT-kompatibilis helyi fájlt ír, miután a verifikálás és a kötelező "
-"bizonyítékkapuk átmentek; a portál általi elfogadás nem garantált"
+"AEAT-kompatibilis helyi fájlt ír, miután a verifikálás és a kötelező "
+"bizonyítékkapuk átmentek; `--replace` nélkül nem ír felül egy meglévő "
+"fájlt; a portál általi elfogadás nem garantált, és azoknak a modelóknak a"
+" fájljai, amelyek rekordleírása szoftveridentitást foglal le (például a "
+"Modelo 303 és a 390), fejlesztői identitást hordoznak, amelyet az AEAT "
+"nem fogad el"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
@@ -209,21 +220,29 @@ msgid "Official filing"
 msgstr "Hivatalos benyújtás"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "Performed by a human through an official AEAT channel"
-msgstr "Egy ember végzi egy hivatalos AEAT-csatornán keresztül"
+msgid ""
+"Performed by a human through an official AEAT channel; for modelos whose "
+"file AEAT does not accept, the human keys the calculated values into the "
+"portal form"
+msgstr ""
+"Ember végzi hivatalos AEAT-csatornán keresztül; azoknál a modelóknál, "
+"amelyeknek a fájlját az AEAT nem fogadja el, az ember a kiszámított "
+"értékeket a portál űrlapjába gépeli be"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Filing history"
-msgstr "Bevallási előzmény"
+msgstr "Benyújtási előzmény"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
-"Recorded locally after the human filing; reconciliation compares totals "
-"and, for enrolled modelos, captured per-casilla values"
+"Recorded locally after the human filing; reconciliation compares header "
+"fields, the result total where the modelo declares its result box, and, "
+"for enrolled modelos, casilla values from a filed declaration"
 msgstr ""
 "Helyben rögzítve az emberi benyújtás után; az egyeztetés összehasonlítja "
-"az összegeket, és a bejegyzett modelók esetében a rögzített casillánkénti"
-" értékeket"
+"a fejlécmezőket, az eredmény végösszegét (ahol a modelo deklarálja az "
+"eredmény-casilláját), a bejegyzett modelóknál pedig a benyújtott bevallás"
+" casillaértékeit"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Responsibility"
@@ -237,16 +256,16 @@ msgstr ""
 "Az adózó vagy a felhatalmazott bevalló áttekinti a számokat, betartja a "
 "határidőket, feltölt, és megőrzi a justificantét"
 
-#: ../../reference/filesystem-state-and-safety.md:59
+#: ../../reference/filesystem-state-and-safety.md:61
 msgid ""
 "See [Protect access to your data](../how-to/protect-data-access.md) for "
 "recovery, locking, export, and reset tasks. The [filing-boundary "
 "explanation](../explanation/recording-a-filing-and-the-boundary.md) "
 "explains why submission stays outside Cadrumo."
 msgstr ""
-"A helyreállítási, zárolási, exportálási és visszaállítási feladatokhoz "
-"lásd [Védje meg az adataihoz való hozzáférést](../how-to/protect-data-"
-"access.md). A [bevallási határ magyarázata](../explanation/recording-a"
-"-filing-and-the-boundary.md) elmagyarázza, miért marad a beküldés a "
+"Helyreállítási, zárolási, exportálási és visszaállítási feladatokhoz "
+"lásd: [Védd az adataidhoz való hozzáférést](../how-to/protect-data-"
+"access.md). A [benyújtási határ magyarázata](../explanation/recording-a"
+"-filing-and-the-boundary.md) elmagyarázza, miért marad a benyújtás a "
 "Cadrumón kívül."
 

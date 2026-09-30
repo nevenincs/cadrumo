@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-29 18:28+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -42,9 +42,9 @@ msgid ""
 "interactive prompt, log out safely, and reset local state only as a last "
 "resort."
 msgstr ""
-"Feu servir aquesta guia per desar la frase de contrasenya de manera "
-"segura, decidir si configureu un codi de recuperació, canviar o restablir"
-" la frase de contrasenya, executar ordres sense sol·licitud interactiva, "
+"Fes servir aquesta guia per desar la frase de contrasenya de manera "
+"segura, decidir si configures un codi de recuperació, canviar o restablir"
+" la frase de contrasenya, executar ordres sense indicació interactiva, "
 "tancar la sessió amb seguretat i restablir l'estat local només com a "
 "darrer recurs."
 
@@ -64,57 +64,61 @@ msgstr ""
 
 #: ../../how-to/protect-data-access.md:18
 msgid "Your current profile passphrase."
-msgstr "La teva contrasenya actual del perfil."
+msgstr "La frase de contrasenya actual del teu perfil."
 
 #: ../../how-to/protect-data-access.md:20
 msgid ""
-"Use `--language en`, `es`, `ca`, or `hu` when you need a specific output "
-"language."
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
 msgstr ""
-"Fes servir `--language en`, `es`, `ca` o `hu` quan necessitis un idioma "
-"de sortida concret."
+"Els exemples d'aquesta documentació estan enregistrats en anglès. `aeat` "
+"mostra els seus missatges en espanyol tret que [triïs un altre idioma"
+"](profile-setup.md#choose-the-output-language)."
 
-#: ../../how-to/protect-data-access.md:23
+#: ../../how-to/protect-data-access.md:24
 msgid "Store your passphrase safely"
-msgstr "Desa la contrasenya de forma segura"
+msgstr "Desa la frase de contrasenya de forma segura"
 
-#: ../../how-to/protect-data-access.md:25
+#: ../../how-to/protect-data-access.md:26
 msgid ""
 "Your passphrase opens the key to your encrypted data. Treat it "
 "accordingly:"
 msgstr ""
-"La contrasenya obre la clau de les dades xifrades. Tracta-la en "
-"conseqüència:"
+"La frase de contrasenya obre la clau de les teves dades xifrades. Tracta-"
+"la en conseqüència:"
 
-#: ../../how-to/protect-data-access.md:27
+#: ../../how-to/protect-data-access.md:28
 msgid ""
 "Write the passphrase down and keep it offline, separate from your "
 "computer."
-msgstr "Escriu la contrasenya i mantén-la fora de línia, separada de l'ordinador."
+msgstr ""
+"Escriu la frase de contrasenya i mantén-la fora de línia, separada de "
+"l'ordinador."
 
-#: ../../how-to/protect-data-access.md:28
+#: ../../how-to/protect-data-access.md:29
 msgid "Keep a second copy somewhere you can still reach after a disk failure."
 msgstr ""
 "Guarda una segona còpia en un lloc on encara puguis accedir després d'una"
 " fallada del disc."
 
-#: ../../how-to/protect-data-access.md:29
+#: ../../how-to/protect-data-access.md:30
 msgid "Never store it in a shared shell profile, a committed script, or a log."
 msgstr ""
 "No l'emmagatzemis mai en un perfil d'intèrpret d'ordres compartit, un "
-"script compromès o un registre."
+"script desat en un repositori o un registre."
 
-#: ../../how-to/protect-data-access.md:31
+#: ../../how-to/protect-data-access.md:32
 msgid ""
 "If you lose the passphrase and have not set up a recovery code, the "
 "encrypted data is permanently unreadable. The only way forward is a "
 "reset, which deletes it."
 msgstr ""
-"Si perdeu la frase de contrasenya i no heu configurat cap codi de "
-"recuperació, les dades xifrades seran illegibles de manera permanent. "
+"Si perds la frase de contrasenya i no has configurat cap codi de "
+"recuperació, les dades xifrades seran il·legibles de manera permanent. "
 "L'única sortida és un restabliment, que les elimina."
 
-#: ../../how-to/protect-data-access.md:35
+#: ../../how-to/protect-data-access.md:36
 msgid ""
 "Do not reset when only *some* records fail to open. Quarantine them "
 "first. Quarantine moves each unreadable record, still encrypted, into an "
@@ -122,18 +126,18 @@ msgid ""
 "untouched, so it deletes nothing and can be previewed before it runs. See"
 " [diagnose and repair your local setup](troubleshooting.md)."
 msgstr ""
-"No reiniciïs quan només *alguns* registres no s'obren. Primer, posa'ls en"
-" quarantena. La quarantena mou cada registre il·legible, encara "
-"encriptat, a un arxiu dins del mateix emmagatzematge i deixa intactes "
-"tots els registres legibles, de manera que no esborra res i es pot "
-"previsualitzar abans que s'executi. Consulta [diagnostica i repara la "
-"configuració local](troubleshooting.md)."
+"No restableixis quan només *alguns* registres no s'obren. Primer, posa'ls"
+" en quarantena. La quarantena mou cada registre il·legible, encara "
+"xifrat, a un arxiu dins del mateix magatzem i deixa intactes tots els "
+"registres llegibles, de manera que no esborra res i es pot previsualitzar"
+" abans que s'executi. Consulta [diagnostica i repara la teva configuració"
+" local](troubleshooting.md)."
 
-#: ../../how-to/protect-data-access.md:41
+#: ../../how-to/protect-data-access.md:42
 msgid "Set up a recovery code (optional)"
-msgstr "Configureu un codi de recuperació (opcional)"
+msgstr "Configura un codi de recuperació (opcional)"
 
-#: ../../how-to/protect-data-access.md:43
+#: ../../how-to/protect-data-access.md:44
 msgid ""
 "A recovery code is a second way to open the profile data key. It exists "
 "so a forgotten passphrase can be replaced instead of costing the records."
@@ -141,29 +145,29 @@ msgid ""
 "only door, and you choose whether to add the code."
 msgstr ""
 "Un codi de recuperació és una segona manera d'obrir la clau de dades del "
-"perfil. Existeix perquè una frase de contrasenya oblidada es pugui "
-"substituir en lloc de costar els registres. Està desactivat de manera "
-"predeterminada: un perfil es crea amb la seva frase de contrasenya com a "
-"única porta i vosaltres decidiu si hi afegiu el codi."
+"perfil. Existeix perquè es pugui substituir una frase de contrasenya "
+"oblidada sense perdre els registres. Està desactivat per defecte: un "
+"perfil es crea amb la seva frase de contrasenya com a única porta, i tu "
+"decideixes si hi afegeixes el codi."
 
-#: ../../how-to/protect-data-access.md:48
+#: ../../how-to/protect-data-access.md:49
 msgid ""
 "When you create a profile at a terminal, Cadrumo asks once whether to set"
 " up a recovery code and defaults to no. The full-screen registration asks"
 " the same question on its own screen with a `Skip for now` choice. Either"
-" way you can decide later."
+" way, the choice stays open: enable it later."
 msgstr ""
-"Quan creeu un perfil en un terminal, Cadrumo pregunta un cop si voleu "
-"configurar un codi de recuperació i la resposta predeterminada és no. El "
+"Quan crees un perfil en un terminal, Cadrumo pregunta un cop si vols "
+"configurar un codi de recuperació i la resposta per defecte és no. El "
 "registre a pantalla completa fa la mateixa pregunta a la seva pròpia "
-"pantalla, amb l'opció `Skip for now`. En tots dos casos ho podeu decidir "
-"més tard."
+"pantalla, amb l'opció `Skip for now`. En tots dos casos l'elecció queda "
+"oberta: pots activar-lo més tard."
 
-#: ../../how-to/protect-data-access.md:53
+#: ../../how-to/protect-data-access.md:54
 msgid "To enable it on the active profile:"
 msgstr "Per activar-lo al perfil actiu:"
 
-#: ../../how-to/protect-data-access.md:59
+#: ../../how-to/protect-data-access.md:60
 msgid ""
 "Cadrumo asks for the current passphrase, shows the code once on the "
 "terminal, and asks you to type it back before anything is installed. The "
@@ -172,85 +176,89 @@ msgid ""
 "from your passphrase and apart from the computer holding the data. "
 "Cadrumo keeps no copy and cannot show it again."
 msgstr ""
-"Cadrumo demana la frase de contrasenya actual, mostra el codi una sola "
-"vegada al terminal i us demana que el torneu a escriure abans "
+"Cadrumo et demana la frase de contrasenya actual, mostra el codi una sola"
+" vegada al terminal i et demana que el tornis a escriure abans "
 "d'instal·lar res. El codi té l'aspecte `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-"
 "XXXXX`; en escriure'l no importen les majúscules, els guions ni els "
-"espais. Anoteu-lo i guardeu-lo lluny de la vostra frase de contrasenya i "
-"lluny de l'ordinador que conté les dades. Cadrumo no en conserva cap "
-"còpia i no el pot tornar a mostrar."
+"espais. Anota'l i guarda'l lluny de la teva frase de contrasenya i lluny "
+"de l'ordinador que conté les dades. Cadrumo no en conserva cap còpia i no"
+" el pot tornar a mostrar."
 
-#: ../../how-to/protect-data-access.md:66
+#: ../../how-to/protect-data-access.md:67
 msgid ""
 "Anyone holding the code can set a new passphrase for the profile, so "
 "treat it as you would the passphrase itself. To check or remove it:"
 msgstr ""
 "Qualsevol que tingui el codi pot establir una frase de contrasenya nova "
-"per al perfil, així que tracteu-lo com tractaríeu la frase de contrasenya"
-" mateixa. Per comprovar-lo o eliminar-lo:"
+"per al perfil, així que tracta'l com tractaries la frase de contrasenya "
+"mateixa. Per comprovar-lo o eliminar-lo:"
 
-#: ../../how-to/protect-data-access.md:74
+#: ../../how-to/protect-data-access.md:75
 msgid ""
-"Disabling asks for the current passphrase. Enabling again issues a fresh "
-"code; the old one stops working."
+"Disabling asks for the current passphrase. Enabling refuses while a code "
+"is enrolled. To replace a code, disable recovery and enable it again; the"
+" new code is fresh and the old one stops working."
 msgstr ""
-"Desactivar-lo demana la frase de contrasenya actual. Tornar-lo a activar "
-"emet un codi nou; l'anterior deixa de funcionar."
+"Desactivar-lo demana la frase de contrasenya actual. Activar-lo es nega "
+"mentre hi ha un codi inscrit. Per substituir un codi, desactiva la "
+"recuperació i torna-la a activar; el codi nou és nou i l'anterior deixa "
+"de funcionar."
 
-#: ../../how-to/protect-data-access.md:77
+#: ../../how-to/protect-data-access.md:79
 msgid ""
 "The code stays valid across ordinary passphrase changes. It does not "
 "travel inside a backup archive: a restored profile always starts without "
 "recovery, and the restore command says so. Enable it again after a "
 "restore if you want it."
 msgstr ""
-"El codi continua essent vàlid a través dels canvis ordinaris de frase de "
+"El codi continua sent vàlid a través dels canvis ordinaris de frase de "
 "contrasenya. No viatja dins d'un arxiu de còpia de seguretat: un perfil "
 "restaurat sempre comença sense recuperació, i l'ordre de restauració ho "
-"indica. Torneu-lo a activar després d'una restauració si el voleu."
-
-#: ../../how-to/protect-data-access.md:81
-msgid "Reset a forgotten passphrase"
-msgstr "Restabliu una frase de contrasenya oblidada"
+"indica. Torna'l a activar després d'una restauració si el vols."
 
 #: ../../how-to/protect-data-access.md:83
-msgid "If you have the recovery code and have forgotten the passphrase:"
-msgstr "Si teniu el codi de recuperació i heu oblidat la frase de contrasenya:"
+msgid "Reset a forgotten passphrase"
+msgstr "Restableix una frase de contrasenya oblidada"
 
-#: ../../how-to/protect-data-access.md:89
+#: ../../how-to/protect-data-access.md:85
+msgid "If you have the recovery code and have forgotten the passphrase:"
+msgstr "Si tens el codi de recuperació i has oblidat la frase de contrasenya:"
+
+#: ../../how-to/protect-data-access.md:91
 msgid ""
 "Enter the recovery code, then the new passphrase twice. Nothing is "
 "echoed. The existing key is re-wrapped under the new passphrase, so no "
-"record is re-encrypted and the recovery code keeps working afterwards. A "
-"wrong code, a profile without recovery, a new passphrase that is too "
-"short, or two copies that do not match all refuse and leave the profile "
-"untouched."
+"record is re-encrypted and the recovery code keeps working afterwards. "
+"Archives exported before the reset still open with the passphrase they "
+"were sealed under. A wrong code, a profile without recovery, a new "
+"passphrase that is too short, or two copies that do not match all refuse "
+"and leave the profile untouched."
 msgstr ""
-"Introduïu el codi de recuperació i després la frase de contrasenya nova "
-"dues vegades. No es mostra res per pantalla. La clau existent es torna a "
-"embolcallar amb la frase de contrasenya nova, de manera que no es torna a"
-" xifrar cap registre i el codi de recuperació continua funcionant "
-"després. Un codi incorrecte, un perfil sense recuperació, una frase de "
-"contrasenya nova massa curta o dues còpies que no coincideixen es neguen "
-"i deixen el perfil intacte."
+"Introdueix el codi de recuperació i, després, la frase de contrasenya "
+"nova dues vegades. No es mostra res per pantalla. La clau existent es "
+"torna a embolcallar amb la frase de contrasenya nova, de manera que no es"
+" torna a xifrar cap registre i el codi de recuperació continua funcionant"
+" després. Els arxius exportats abans del restabliment continuen obrint-se"
+" amb la frase de contrasenya amb què es van segellar. Un codi incorrecte,"
+" un perfil sense recuperació, una frase de contrasenya nova massa curta o"
+" dues còpies que no coincideixen es neguen i deixen el perfil intacte."
 
-#: ../../how-to/protect-data-access.md:95
+#: ../../how-to/protect-data-access.md:98
 #, python-brace-format
 msgid ""
 "To reset without an interactive prompt, send `{\"recovery_code\": "
 "\"...\", \"new_passphrase\": \"...\", \"new_passphrase_confirmation\": "
 "\"...\"}` through `--secrets-stdin` or `--secrets-fd FD`."
 msgstr ""
-"Per restablir-la sense sol·licitud interactiva, envieu "
-"`{\"recovery_code\": \"...\", \"new_passphrase\": \"...\", "
-"\"new_passphrase_confirmation\": \"...\"}` mitjançant `--secrets-stdin` o"
-" `--secrets-fd FD`."
+"Per restablir-la sense indicació interactiva, envia `{\"recovery_code\": "
+"\"...\", \"new_passphrase\": \"...\", \"new_passphrase_confirmation\": "
+"\"...\"}` mitjançant `--secrets-stdin` o `--secrets-fd FD`."
 
-#: ../../how-to/protect-data-access.md:100
+#: ../../how-to/protect-data-access.md:103
 msgid "Enable recovery without a terminal"
-msgstr "Activeu la recuperació sense terminal"
+msgstr "Activa la recuperació sense terminal"
 
-#: ../../how-to/protect-data-access.md:102
+#: ../../how-to/protect-data-access.md:105
 #, python-brace-format
 msgid ""
 "A recovery code can only be shown on a terminal, so a headless caller "
@@ -266,72 +274,73 @@ msgid ""
 " descriptor collision, or I/O failure enrols nothing."
 msgstr ""
 "Un codi de recuperació només es pot mostrar en un terminal, de manera que"
-" un procés sense terminal l'ha de rebre de manera explícita. Proporcioneu"
-" `--secrets-stdin` o `--secrets-fd FD` amb `{\"passphrase\": \"...\"}`, a"
-" més de `--recovery-handoff-fd WRITE_FD` i `--recovery-verification-fd "
-"READ_FD`. Llegiu exactament un objecte amb la forma "
-"`{\"recovery_code\":\"...\"}` del primer conducte, deseu el codi de "
-"manera segura i envieu el mateix objecte estricte pel segon conducte. Feu"
-" servir conductes anònims diferents i números de descriptor diferents; "
-"cap dels descriptors no pot ser 0, 1 o 2 ni coincidir amb `--secrets-fd`."
-" El procés tanca cada descriptor després de la seva única operació "
-"limitada. Una meitat absent, una prova mal formada, una discrepància, una"
-" càrrega sobredimensionada, una col·lisió de descriptors o una fallada "
-"d'E/S no inscriu res."
+" un procés sense terminal l'ha de rebre de manera explícita. Proporciona "
+"`--secrets-stdin` o `--secrets-fd FD` amb `{\"passphrase\": \"...\"}`, a "
+"més de `--recovery-handoff-fd WRITE_FD` i `--recovery-verification-fd "
+"READ_FD`. Llegeix exactament un objecte amb la forma "
+"`{\"recovery_code\":\"...\"}` de la primera canonada, desa el codi de "
+"manera segura i envia el mateix objecte estricte per la segona canonada. "
+"Fes servir canonades anònimes diferents i números de descriptor "
+"diferents; cap dels descriptors no pot ser 0, 1 o 2 ni coincidir amb "
+"`--secrets-fd`. El procés tanca cada descriptor després de la seva única "
+"operació limitada. Una meitat absent, una verificació mal formada, una "
+"discrepància, una càrrega sobredimensionada, una col·lisió de descriptors"
+" o una fallada d'E/S no inscriu res."
 
-#: ../../how-to/protect-data-access.md:113
+#: ../../how-to/protect-data-access.md:116
 msgid "Change your passphrase"
-msgstr "Canvia la teva contrasenya"
+msgstr "Canvia la teva frase de contrasenya"
 
-#: ../../how-to/protect-data-access.md:115
+#: ../../how-to/protect-data-access.md:118
 msgid ""
 "Change the passphrase whenever you suspect it has been seen, or on "
 "whatever schedule your own policy sets:"
 msgstr ""
-"Canvia la contrasenya cada vegada que sospitis que s'ha vist, o en "
-"qualsevol horari que estableixi la teva pròpia política:"
+"Canvia la frase de contrasenya cada vegada que sospitis que s'ha vist, o "
+"segons el calendari que estableixi la teva pròpia política:"
 
-#: ../../how-to/protect-data-access.md:121
+#: ../../how-to/protect-data-access.md:124
 msgid "Enter the current passphrase, then the new one twice. Nothing is echoed."
 msgstr ""
-"Introdueix la contrasenya actual i, a continuació, la nova dues vegades. "
-"No es fa res."
+"Introdueix la frase de contrasenya actual i, a continuació, la nova dues "
+"vegades. No es mostra res."
 
-#: ../../how-to/protect-data-access.md:123
+#: ../../how-to/protect-data-access.md:126
 msgid "The change re-wraps the existing key rather than replacing it, so:"
 msgstr ""
-"El canvi torna a embolicar la clau existent en lloc de reemplaçar-la, de "
-"manera que:"
+"El canvi torna a embolcallar la clau existent en lloc de reemplaçar-la, "
+"de manera que:"
 
-#: ../../how-to/protect-data-access.md:125
+#: ../../how-to/protect-data-access.md:128
 msgid "No record is re-encrypted, and every existing record stays readable."
 msgstr ""
 "No es torna a xifrar cap registre i es poden llegir tots els registres "
 "existents."
 
-#: ../../how-to/protect-data-access.md:126
+#: ../../how-to/protect-data-access.md:129
 msgid "A recovery code you set up earlier stays correct."
-msgstr "Un codi de recuperació que heu configurat abans continua essent correcte."
+msgstr "Un codi de recuperació que hagis configurat abans continua sent correcte."
 
-#: ../../how-to/protect-data-access.md:128
+#: ../../how-to/protect-data-access.md:131
 msgid ""
 "The command reports both facts back to you. If the current passphrase is "
 "wrong, the new one is too short, or the two copies do not match, it "
 "refuses and leaves the existing passphrase working."
 msgstr ""
-"L'ordre t'informa de tots dos fets. Si la contrasenya actual és "
+"L'ordre t'informa de tots dos fets. Si la frase de contrasenya actual és "
 "incorrecta, la nova és massa curta o les dues còpies no coincideixen, es "
-"nega i deixa la contrasenya existent en funcionament."
+"nega i deixa la frase de contrasenya existent en funcionament."
 
-#: ../../how-to/protect-data-access.md:132
+#: ../../how-to/protect-data-access.md:135
 msgid ""
 "To change the passphrase without an interactive prompt, pass the three "
 "values as one JSON object through a leaf secret channel:"
 msgstr ""
-"Per canviar la contrasenya sense una indicació interactiva, passi els "
-"tres valors com un objecte JSON a través d'un canal de secret de fulla:"
+"Per canviar la frase de contrasenya sense indicació interactiva, passa "
+"els tres valors com un únic objecte JSON a través d'un canal de secrets "
+"de l'ordre fulla:"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:141
 #, python-brace-format
 msgid ""
 "Use `--secrets-stdin` when standard input is free. Use `--secrets-fd FD` "
@@ -341,19 +350,19 @@ msgid ""
 "command-line argument: arguments are visible in the process list and in "
 "shell history."
 msgstr ""
-"Utilitzeu `--secrets-stdin` quan l'entrada estàndard estigui disponible. "
-"Utilitzeu `--secrets-fd FD` amb el mateix objecte quan una altra entrada "
-"ocupi l'entrada estàndard. Envieu `{\"current_passphrase\": \"...\", "
+"Utilitza `--secrets-stdin` quan l'entrada estàndard estigui lliure. "
+"Utilitza `--secrets-fd FD` amb el mateix objecte quan una altra entrada "
+"ocupi l'entrada estàndard. Envia `{\"current_passphrase\": \"...\", "
 "\"new_passphrase\": \"...\", \"new_passphrase_confirmation\": \"...\"}`. "
-"No passeu mai una contrasenya com a argument de línia d'ordres: els "
-"arguments són visibles a la llista de processos i a l'historial de "
+"No passis mai una frase de contrasenya com a argument de línia d'ordres: "
+"els arguments són visibles a la llista de processos i a l'historial de "
 "l'intèrpret."
 
-#: ../../how-to/protect-data-access.md:146
+#: ../../how-to/protect-data-access.md:149
 msgid "Run without a passphrase prompt"
-msgstr "Executa sense demanar la contrasenya"
+msgstr "Executa sense indicació de frase de contrasenya"
 
-#: ../../how-to/protect-data-access.md:148
+#: ../../how-to/protect-data-access.md:151
 msgid ""
 "Automation cannot answer an interactive passphrase prompt. Supply a "
 "bounded UTF-8 JSON object through an explicit input channel. Do not put a"
@@ -361,28 +370,28 @@ msgid ""
 "environment variable or command-line argument. The CLI does not use "
 "`CADRUMO_SECRET_PASSPHRASE` as a secret-input fallback."
 msgstr ""
-"L'automatització no pot respondre una sol·licitud interactiva de frase de"
-" contrasenya. Proporcioneu un objecte JSON UTF-8 limitat mitjançant un "
-"canal d'entrada explícit. No poseu cap frase de contrasenya de perfil, "
+"L'automatització no pot respondre una indicació interactiva de frase de "
+"contrasenya. Proporciona un objecte JSON UTF-8 limitat mitjançant un "
+"canal d'entrada explícit. No posis cap frase de contrasenya de perfil, "
 "codi de recuperació ni frase de contrasenya de certificat en una variable"
 " d'entorn o un argument de línia d'ordres. La CLI no fa servir "
 "`CADRUMO_SECRET_PASSPHRASE` com a via alternativa d'entrada de secrets."
 
-#: ../../how-to/protect-data-access.md:154
+#: ../../how-to/protect-data-access.md:157
 msgid "There are two separate option pairs:"
 msgstr "Hi ha dos parells d'opcions separats:"
 
-#: ../../how-to/protect-data-access.md:156
+#: ../../how-to/protect-data-access.md:159
 msgid ""
 "Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself "
-"owns the secret. The leaf commands and their exact objects are listed "
-"below."
+"owns the secret. The following table lists the leaf commands and their "
+"exact objects."
 msgstr ""
-"Feu servir `--secrets-stdin` o `--secrets-fd FD` a l'ordre fulla quan "
-"l'ordre mateixa posseeix el secret. A continuació s'enumeren les ordres "
+"Fes servir `--secrets-stdin` o `--secrets-fd FD` de l'ordre fulla quan "
+"l'ordre mateixa posseeix el secret. La taula següent enumera les ordres "
 "fulla i els seus objectes exactes."
 
-#: ../../how-to/protect-data-access.md:158
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid ""
 "Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before "
@@ -390,12 +399,12 @@ msgid ""
 "profile after its persisted session cannot resume. Its object is "
 "`{\"profile_passphrase\": \"...\"}`."
 msgstr ""
-"Utilitzeu `--profile-secrets-stdin` o `--profile-secrets-fd FD` a "
+"Fes servir `--profile-secrets-stdin` o `--profile-secrets-fd FD` a "
 "l'arrel, abans de `config`, quan una ordre vinculada a un perfil hagi "
 "d'autenticar el perfil seleccionat perquè no s'ha pogut reprendre la "
 "sessió persistent. L'objecte és `{\"profile_passphrase\": \"...\"}`."
 
-#: ../../how-to/protect-data-access.md:163
+#: ../../how-to/protect-data-access.md:166
 msgid ""
 "The root options do not replace leaf options. For example, certificate-"
 "secret storage may need a root profile passphrase and a certificate "
@@ -403,51 +412,52 @@ msgid ""
 "channels."
 msgstr ""
 "Les opcions arrel no substitueixen les opcions fulla. Per exemple, desar "
-"un secret de certificat pot necessitar la contrasenya del perfil a "
-"l'arrel i la contrasenya del certificat en el mateix procés. "
-"Proporcioneu-les mitjançant dos canals que no entrin en conflicte."
+"un secret de certificat pot necessitar la frase de contrasenya del perfil"
+" a l'arrel i la frase de contrasenya del certificat en la mateixa "
+"invocació. Proporciona-les mitjançant dos canals que no entrin en "
+"conflicte."
 
-#: ../../how-to/protect-data-access.md:167
+#: ../../how-to/protect-data-access.md:170
 msgid "Supply a secret owned by a leaf command"
-msgstr "Proporciona un secret propietat d'una ordre Leaf"
+msgstr "Proporciona un secret propi d'una ordre fulla"
 
-#: ../../how-to/protect-data-access.md:169
+#: ../../how-to/protect-data-access.md:172
 msgid "Use the same two leaf flags on each scalar-secret command:"
 msgstr ""
-"Utilitzeu les mateixes dues banderes de fulla en cada ordre de secret "
+"Fes servir les mateixes dues opcions fulla en cada ordre de secret "
 "escalar:"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "Command"
 msgstr "Ordre"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "Strict JSON object"
 msgstr "Objecte JSON estricte"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config login`"
 msgstr "`aeat config login`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 #, python-brace-format
 msgid "`{\"passphrase\": \"...\"}`"
 msgstr "`{\"passphrase\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config profile create`"
 msgstr "`aeat config profile create`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 #, python-brace-format
 msgid "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 msgstr "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config passphrase change`"
 msgstr "`aeat config passphrase change`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 #, python-brace-format
 msgid ""
 "`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
@@ -456,11 +466,11 @@ msgstr ""
 "`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
 "\"new_passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config passphrase reset PROFILE`"
 msgstr "`aeat config passphrase reset PROFILE`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 #, python-brace-format
 msgid ""
 "`{\"recovery_code\": \"...\", \"new_passphrase\": \"...\", "
@@ -469,62 +479,60 @@ msgstr ""
 "`{\"recovery_code\": \"...\", \"new_passphrase\": \"...\", "
 "\"new_passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config profile archive import`"
 msgstr "`aeat config profile archive import`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config profile recovery enable`"
 msgstr "`aeat config profile recovery enable`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config profile recovery disable`"
 msgstr "`aeat config profile recovery disable`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 msgid "`aeat config auth certificate secret set`"
 msgstr "`aeat config auth certificate secret set`"
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:138
 #, python-brace-format
 msgid "`{\"certificate_passphrase\": \"...\"}`"
 msgstr "`{\"certificate_passphrase\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:182
+#: ../../how-to/protect-data-access.md:185
 msgid ""
 "Each object must contain exactly the fields shown. Profile creation "
 "through a machine channel never asks about recovery; enable it afterwards"
 " with the handoff pair described in [enable recovery without a terminal"
 "](#enable-recovery-without-a-terminal). Duplicate, missing, extra, "
-"oversized, malformed, or non-UTF-8 input is refused. The former restore "
-"field `password` and certificate field `secret` are not accepted."
+"oversized, malformed, or non-UTF-8 input is refused."
 msgstr ""
 "Cada objecte ha de contenir exactament els camps mostrats. La creació "
-"d'un perfil per un canal per a màquines no pregunta mai per la "
-"recuperació; activeu-la després amb el parell d'entrega descrit a "
-"[activeu la recuperació sense terminal](#enable-recovery-"
-"without-a-terminal). Es rebutja l'entrada duplicada, absent, addicional, "
-"sobredimensionada, mal formada o no UTF-8. No s'accepten l'antic camp de "
-"restauració `password` ni el camp de certificat `secret`."
+"d'un perfil mitjançant un canal de màquina no pregunta mai per la "
+"recuperació; activa-la després amb el parell d'entrega descrit a [activa "
+"la recuperació sense terminal](#enable-recovery-without-a-terminal). Es "
+"rebutja l'entrada duplicada, absent, addicional, sobredimensionada, mal "
+"formada o no UTF-8."
 
-#: ../../how-to/protect-data-access.md:189
+#: ../../how-to/protect-data-access.md:191
 msgid "Inspect the current flags without supplying a secret:"
-msgstr "Inspecciona les banderes actuals sense subministrar cap secret:"
-
-#: ../../how-to/protect-data-access.md:195
-msgid "Authenticate a profile for one command"
-msgstr "Autentifica un perfil per a una ordre"
+msgstr "Inspecciona les opcions actuals sense proporcionar cap secret:"
 
 #: ../../how-to/protect-data-access.md:197
+msgid "Authenticate a profile for one command"
+msgstr "Autentica un perfil per a una ordre"
+
+#: ../../how-to/protect-data-access.md:199
 msgid ""
 "Place a root option before the command path. Name the exact profile on "
 "the target command when it accepts a profile target. For example:"
 msgstr ""
-"Col·loca una opció root abans del camí de l'ordre. Nombra el perfil "
+"Col·loca una opció d'arrel abans del camí de l'ordre. Nomena el perfil "
 "exacte a l'ordre de destinació quan accepti una destinació de perfil. Per"
 " exemple:"
 
-#: ../../how-to/protect-data-access.md:204
+#: ../../how-to/protect-data-access.md:206
 msgid ""
 "This source is used only after the exact profile is known, the command "
 "requires a profile session, no matching live session exists, and "
@@ -545,7 +553,7 @@ msgstr ""
 " de la frase de contrasenya i l'activació o desactivació de la "
 "recuperació no accepten aquesta prova arrel."
 
-#: ../../how-to/protect-data-access.md:212
+#: ../../how-to/protect-data-access.md:214
 msgid ""
 "On a host without usable keychain persistence, successful root "
 "authentication continues only the current process. The command emits a "
@@ -553,59 +561,58 @@ msgid ""
 "Each new process repeats the Argon2 password derivation; this deliberate "
 "cost is not cached in a weaker credential or transferable bearer token."
 msgstr ""
-"En un amfitrió sense persistència de clau utilitzable, l'autenticació "
+"En un equip sense persistència de clauer utilitzable, l'autenticació "
 "arrel correcta només continua el procés actual. L'ordre emet un Notice "
-"que la contrasenya s'ha de tornar a subministrar en el proper procés. "
-"Cada nou procés repeteix la derivació de la contrasenya Argon2; aquest "
-"cost deliberat no s'emmagatzema a la memòria cau en una credencial més "
-"feble o en un testimoni de portador transferible."
-
-#: ../../how-to/protect-data-access.md:218
-msgid "Keep two secret sources distinct"
-msgstr "Mantenir dues fonts secretes diferents"
+"que la frase de contrasenya s'ha de tornar a proporcionar en el procés "
+"següent. Cada procés nou repeteix la derivació de la contrasenya amb "
+"Argon2; aquest cost deliberat no es desa a la memòria cau en una "
+"credencial més feble ni en un testimoni de portador transferible."
 
 #: ../../how-to/protect-data-access.md:220
-msgid "Choose sources before either is read:"
-msgstr "Trieu les fonts abans de llegir-les:"
+msgid "Keep two secret sources distinct"
+msgstr "Mantén diferenciades dues fonts de secrets"
 
 #: ../../how-to/protect-data-access.md:222
-msgid "Do not select both stdin and a descriptor for the same option pair."
-msgstr ""
-"No seleccioneu tant stdin com un descriptor per al mateix parell "
-"d'opcions."
-
-#: ../../how-to/protect-data-access.md:223
-msgid "Do not assign stdin to both the root and leaf scopes."
-msgstr "No assigneu stdin als àmbits arrel i fulla."
+msgid "Choose sources before either is read:"
+msgstr "Tria les fonts abans que se'n llegeixi cap:"
 
 #: ../../how-to/protect-data-access.md:224
-msgid "Do not assign the same descriptor number to both scopes."
-msgstr "No assigneu el mateix número de descriptor a tots dos àmbits."
+msgid "Do not select both stdin and a descriptor for the same option pair."
+msgstr "No triïs alhora stdin i un descriptor per al mateix parell d'opcions."
 
 #: ../../how-to/protect-data-access.md:225
+msgid "Do not assign stdin to both the root and leaf scopes."
+msgstr "No assignis stdin als dos àmbits, arrel i fulla."
+
+#: ../../how-to/protect-data-access.md:226
+msgid "Do not assign the same descriptor number to both scopes."
+msgstr "No assignis el mateix número de descriptor als dos àmbits."
+
+#: ../../how-to/protect-data-access.md:227
 msgid ""
 "Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
 "descriptors when one invocation needs both objects."
 msgstr ""
-"Utilitzeu root fd més leaf stdin, root stdin més leaf fd o dos "
-"descriptors diferents quan una invocació necessiti tots dos objectes."
+"Fes servir fd d'arrel més stdin de fulla, stdin d'arrel més fd de fulla, "
+"o dos descriptors diferents quan una invocació necessiti tots dos "
+"objectes."
 
-#: ../../how-to/protect-data-access.md:228
+#: ../../how-to/protect-data-access.md:230
 msgid ""
 "A selected source that does not apply to the resolved command or exact "
 "profile is refused as unused. This protects scripts from sending a "
 "credential to the wrong target after a command-line mistake."
 msgstr ""
-"S'ha rebutjat com a no utilitzada una font seleccionada que no s'aplica a"
-" l'ordre resolta o al perfil exacte. Això protegeix els scripts d'enviar "
-"una credencial a l'objectiu equivocat després d'un error de línia "
-"d'ordres."
+"Una font seleccionada que no s'aplica a l'ordre resolta o al perfil "
+"exacte es rebutja com a no utilitzada. Això protegeix els scripts "
+"d'enviar una credencial a l'objectiu equivocat després d'un error de "
+"línia d'ordres."
 
-#: ../../how-to/protect-data-access.md:232
+#: ../../how-to/protect-data-access.md:234
 msgid "Pass an inherited descriptor safely"
 msgstr "Passa un descriptor heretat de forma segura"
 
-#: ../../how-to/protect-data-access.md:234
+#: ../../how-to/protect-data-access.md:236
 msgid ""
 "Use an anonymous pipe when standard input already carries another value. "
 "The caller owns the descriptor's backing object and lifetime. Cadrumo "
@@ -614,15 +621,15 @@ msgid ""
 "equivalent; descriptors `1` and `2`, negative descriptors, closed "
 "descriptors, and unreadable descriptors are refused."
 msgstr ""
-"Utilitzeu una canonada anònima quan l'entrada estàndard ja transporti un "
-"altre valor. El cridador és propietari de l'objecte subjacent i de la "
-"vida útil del descriptor. Cadrumo fa una lectura acotada i tanca el "
-"descriptor localment després de començar la lectura, també quan rebutja "
+"Fes servir una canonada anònima quan l'entrada estàndard ja porti un "
+"altre valor. Qui fa la crida és propietari de l'objecte subjacent i de la"
+" vida útil del descriptor. Cadrumo fa una lectura acotada i tanca el "
+"descriptor localment un cop comença la lectura, també quan rebutja "
 "l'entrada. El descriptor `0` s'admet com a equivalent de stdin; es "
 "rebutgen els descriptors `1` i `2`, els negatius, els tancats i els que "
-"no permeten lectura."
+"no es poden llegir."
 
-#: ../../how-to/protect-data-access.md:241
+#: ../../how-to/protect-data-access.md:243
 msgid ""
 "On POSIX, start the process with the pipe's read descriptor in the child "
 "process's `pass_fds` allowlist, then pass that number to `--secrets-fd` "
@@ -632,16 +639,16 @@ msgid ""
 "`msvcrt.open_osfhandle`. Recovery enrolment uses one writable handoff "
 "HANDLE and one readable verification HANDLE:"
 msgstr ""
-"A POSIX, inicieu el procés incloent el descriptor de lectura del conducte"
-" a la llista permesa `pass_fds` del procés fill i passeu aquest número a "
-"`--secrets-fd` o `--profile-secrets-fd`. A Windows, no suposeu que un "
-"descriptor CRT numèric s'hereta directament. Incloeu HANDLE heretables de"
-" Windows a la llista permesa i feu servir l'embolcall d'arrencada "
-"compatible per convertir-los mitjançant `msvcrt.open_osfhandle`. La "
+"A POSIX, inicia el procés amb el descriptor de lectura de la canonada a "
+"la llista permesa `pass_fds` del procés fill i passa aquest número a "
+"`--secrets-fd` o `--profile-secrets-fd`. A Windows, no donis per fet que "
+"un descriptor CRT numèric s'hereta directament. Afegeix a la llista "
+"permesa els HANDLE heretables de Windows i fes servir l'embolcall "
+"d'arrencada compatible per convertir-los amb `msvcrt.open_osfhandle`. La "
 "inscripció de la recuperació fa servir un HANDLE d'entrega escrivible i "
 "un HANDLE de verificació llegible:"
 
-#: ../../how-to/protect-data-access.md:254
+#: ../../how-to/protect-data-access.md:256
 msgid ""
 "Omit `--profile-handle` or `--secrets-handle` when the invocation needs "
 "only one scope. The wrapper inserts the matching canonical descriptor "
@@ -650,10 +657,10 @@ msgid ""
 msgstr ""
 "Omet `--profile-handle` o `--secrets-handle` quan la invocació només "
 "necessiti un àmbit. L'embolcall insereix l'opció de descriptor canònic "
-"coincident; no l'afegiu també a la cua d'ordres. Preferiu el canal stdin "
-"per a una ordre portàtil llançada directament."
+"corresponent; no l'afegeixis també a la cua de l'ordre. Prefereix el "
+"canal stdin per a una ordre portàtil llançada directament."
 
-#: ../../how-to/protect-data-access.md:259
+#: ../../how-to/protect-data-access.md:261
 msgid ""
 "Cadrumo bounds the input, wipes mutable read buffers on a best-effort "
 "basis, and releases secret-bearing references promptly. Python may create"
@@ -661,28 +668,28 @@ msgid ""
 "the application does not claim guaranteed memory erasure. Never reuse the"
 " pipe, redirect it to a regular file, or log the JSON object."
 msgstr ""
-"Cadrumo delimita l'entrada, neteja les memòries intermèdies de lectura "
-"mútues amb el millor esforç i allibera les referències secretes "
-"ràpidament. Python pot crear cadenes immutables mentre es descodifica "
-"JSON i es validen camps secrets, de manera que l'aplicació no reclama un "
-"esborrat de memòria garantit. No reutilitzis mai la canonada, no la "
-"redireccionis a un fitxer normal ni registris l'objecte JSON."
+"Cadrumo delimita l'entrada, neteja els buffers de lectura mutables com a "
+"millor esforç i allibera ràpidament les referències que contenen secrets."
+" Python pot crear cadenes immutables mentre descodifica JSON i valida els"
+" camps secrets, de manera que l'aplicació no garanteix l'esborrat de la "
+"memòria. No reutilitzis mai la canonada, no la redirigeixis a un fitxer "
+"normal ni registris l'objecte JSON."
 
-#: ../../how-to/protect-data-access.md:265
+#: ../../how-to/protect-data-access.md:267
 msgid ""
 "Interactive commands may prompt only on a verified terminal. A redirected"
 " or non-interactive invocation without the required explicit channel is "
 "refused."
 msgstr ""
-"Les ordres interactives només es poden sol·licitar en un terminal "
+"Les ordres interactives només poden demanar dades en un terminal "
 "verificat. Es rebutja una invocació redirigida o no interactiva sense el "
 "canal explícit requerit."
 
-#: ../../how-to/protect-data-access.md:268
+#: ../../how-to/protect-data-access.md:270
 msgid "Log out of the active profile"
 msgstr "Tanca la sessió del perfil actiu"
 
-#: ../../how-to/protect-data-access.md:270
+#: ../../how-to/protect-data-access.md:272
 msgid ""
 "Run `aeat config logout` when you finish working with a profile. Logout "
 "closes the active storage session, discards in-memory key material, "
@@ -691,10 +698,10 @@ msgid ""
 msgstr ""
 "Executa `aeat config logout` quan acabis de treballar amb un perfil. El "
 "tancament de sessió tanca la sessió d'emmagatzematge activa, descarta el "
-"material clau en memòria, disposa els motors de cubells i manté el perfil"
-" seleccionat per al següent inici de sessió exacte:"
+"material de clau que hi ha a la memòria, allibera els motors de bucket i "
+"manté el perfil seleccionat per al següent inici de sessió exacte:"
 
-#: ../../how-to/protect-data-access.md:278
+#: ../../how-to/protect-data-access.md:280
 msgid ""
 "Nothing in the profile is deleted. Log in again with `aeat config login` "
 "to use the selected profile, or name another exact profile when you "
@@ -704,11 +711,11 @@ msgstr ""
 "login` per utilitzar el perfil seleccionat o nomena un altre perfil "
 "exacte quan tornis."
 
-#: ../../how-to/protect-data-access.md:281
+#: ../../how-to/protect-data-access.md:283
 msgid "Reset local state (last resort)"
 msgstr "Restableix l'estat local (últim recurs)"
 
-#: ../../how-to/protect-data-access.md:283
+#: ../../how-to/protect-data-access.md:285
 msgid ""
 "Export every profile you want to keep before continuing. Reset "
 "permanently deletes every profile stored locally, related local "
@@ -722,12 +729,12 @@ msgstr ""
 "Restablir elimina permanentment tots els perfils emmagatzemats localment,"
 " l'estat d'autenticació local relacionat i la selecció del perfil actiu. "
 "No elimina les exportacions emmagatzemades en altres llocs. No pots "
-"desfer el reinici. Eliminar tampoc no és una manera d'ocultar "
-"l'activitat: qualsevol còpia de les vostres dades que van sortir de la "
-"màquina (exportacions, arxius, còpies de seguretat) està fora del control"
-" de Cadrumo i no hi ha res a Cadrumo els pot retreure."
+"desfer el restabliment. Eliminar tampoc no és una manera d'ocultar "
+"l'activitat: qualsevol còpia de les teves dades que hagi sortit de la "
+"màquina (exportacions, presentacions, còpies de seguretat) està fora del "
+"control de Cadrumo, i res a Cadrumo la pot retirar."
 
-#: ../../how-to/protect-data-access.md:293
+#: ../../how-to/protect-data-access.md:295
 msgid ""
 "Use `start` only when you intend to remove all local profiles. Confirm "
 "the reset explicitly. It checks retention requirements before deleting "
@@ -738,7 +745,7 @@ msgstr ""
 "requisits de retenció abans de suprimir res i es nega a començar mentre "
 "un altre restabliment sigui incomplet."
 
-#: ../../how-to/protect-data-access.md:296
+#: ../../how-to/protect-data-access.md:298
 msgid ""
 "Use the read-only `status` command to inspect the latest operation "
 "without changing local data. Provide an operation ID to inspect an exact "
@@ -751,7 +758,7 @@ msgstr ""
 "incompleta, en pausa o completa. La seva sortida inclou l'ID de "
 "l'operació i qualsevol motiu de pausa."
 
-#: ../../how-to/protect-data-access.md:300
+#: ../../how-to/protect-data-access.md:302
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
 "continues the same incomplete operation instead of creating another. "
@@ -764,7 +771,7 @@ msgstr ""
 "operació exacta. Un cop comença la supressió, reprendre el restabliment "
 "no restaura les dades suprimides."
 
-#: ../../how-to/protect-data-access.md:305
+#: ../../how-to/protect-data-access.md:307
 msgid ""
 "If legal retention requirements pause the reset, stop if you must keep "
 "the affected records. Override the pause only after reviewing and "
@@ -778,7 +785,7 @@ msgstr ""
 "proporciona sempre un motiu no buit. Si proporciones un motiu sense "
 "l'anul·lació, l'ordre es nega a continuar."
 
-#: ../../how-to/protect-data-access.md:310
+#: ../../how-to/protect-data-access.md:312
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for sealed archive "
 "backup instructions."
@@ -786,21 +793,21 @@ msgstr ""
 "Consulta [Configura el teu perfil de contribuent](profile-setup.md) per "
 "obtenir instruccions de còpia de seguretat de l'arxiu segellat."
 
-#: ../../how-to/protect-data-access.md:313
+#: ../../how-to/protect-data-access.md:315
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/protect-data-access.md:315
+#: ../../how-to/protect-data-access.md:317
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - see where encrypted custody ends and deliberate plaintext "
 "handoffs begin."
 msgstr ""
-"[Importació, exportació i evidència](../reference/import-export-and-"
+"[Importació, exportació i proves](../reference/import-export-and-"
 "evidence.md) - mira on acaba la custòdia xifrada i on comencen els "
 "traspassos deliberats en text clar."
 
-#: ../../how-to/protect-data-access.md:317
+#: ../../how-to/protect-data-access.md:319
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
@@ -808,16 +815,16 @@ msgstr ""
 "[Configura el teu perfil de contribuent](profile-setup.md) - crea, "
 "exporta i importa perfils."
 
-#: ../../how-to/protect-data-access.md:319
+#: ../../how-to/protect-data-access.md:321
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - quarantine "
 "unreadable records and fix storage or integrity problems without a reset."
 msgstr ""
-"[Diagnostica i repara la configuració local](troubleshooting.md): posa en"
-" quarantena els registres il·legibles i soluciona els problemes "
-"d'emmagatzematge o integritat sense restablir-los."
+"[Diagnostica i repara la teva configuració local](troubleshooting.md): "
+"posa en quarantena els registres il·legibles i soluciona els problemes "
+"d'emmagatzematge o d'integritat sense restablir."
 
-#: ../../how-to/protect-data-access.md:321
+#: ../../how-to/protect-data-access.md:323
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referència de la CLI](../cli/index.rst) - referència completa d'opcions."
 

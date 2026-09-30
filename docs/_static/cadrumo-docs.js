@@ -6,6 +6,41 @@
 
   var IS_MAC = /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
+  /* ── Chrome strings ────────────────────────────────────────────────────
+   * Sphinx renders one inline <script type="application/json"
+   * id="cadrumo-chrome-strings"> payload per page, holding this site root's
+   * chrome resolved in the root's own language. Every string this file writes
+   * into the DOM is read from it, so a localized root never shows an English
+   * control around translated content. The English literal stays at each call
+   * site as the value used when no payload is present, which happens only
+   * outside a Sphinx build. */
+  var CHROME = (function () {
+    var node = document.getElementById("cadrumo-chrome-strings");
+    if (!node) return {};
+    try {
+      var parsed = JSON.parse(node.textContent);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  })();
+
+  function chromeText(name, english) {
+    var value = CHROME[name];
+    return typeof value === "string" && value ? value : english;
+  }
+
+  /* The palette and the search page assemble their inputs as markup strings, so
+   * the chrome they carry is escaped rather than trusted to hold no markup
+   * character. */
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") {
       fn();
@@ -183,7 +218,11 @@
       var title = anchor.textContent.replace(/\s+/g, " ").trim();
       if (!title || seen[href]) return;
       seen[href] = true;
-      entries.push({ title: title, href: href, crumb: "On this page" });
+      entries.push({
+        title: title,
+        href: href,
+        crumb: chromeText("search_on_this_page", "On this page"),
+      });
     });
 
     return entries;
@@ -275,7 +314,7 @@
       list.setAttribute("aria-busy", on ? "true" : "false");
       /* A screen reader gets told the search is working rather than sitting in
        * silence on unchanged (stale) rows; the settled count replaces it. */
-      if (on) status.textContent = "Searching…";
+      if (on) status.textContent = chromeText("search_searching", "Searching…");
     }
 
     function beginBusy() {
@@ -299,8 +338,8 @@
         typeof resultCount !== "number"
           ? ""
           : resultCount === 1
-            ? "1 result"
-            : String(resultCount) + " results";
+            ? chromeText("search_result_one", "1 result")
+            : chromeText("search_result_many", "{count} results").replace("{count}", String(resultCount));
     }
 
     /* ── Pagefind tier (term cards / full text) ───────────────────────── */
@@ -478,18 +517,18 @@
     /* Crumb category label, keyed on the shipped display class where present,
      * falling back to the record kind for a full-text page hit (no class). */
     var DISPLAY_CLASS_LABEL = {
-      casilla: "Casilla",
-      modelo: "Modelo",
-      legal: "Legal",
-      cli: "Command",
-      technical: "Reference",
-      doc: "Docs",
+      casilla: chromeText("class_label_casilla", "Casilla"),
+      modelo: chromeText("class_label_modelo", "Modelo"),
+      legal: chromeText("class_label_legal", "Legal"),
+      cli: chromeText("class_label_cli", "Command"),
+      technical: chromeText("class_label_technical", "Reference"),
+      doc: chromeText("class_label_doc", "Docs"),
     };
     var KIND_LABEL = {
-      concept: "Term",
-      cli: "Command",
-      casilla: "Casilla",
-      page: "Page",
+      concept: chromeText("kind_label_concept", "Term"),
+      cli: chromeText("kind_label_cli", "Command"),
+      casilla: chromeText("kind_label_casilla", "Casilla"),
+      page: chromeText("kind_label_page", "Page"),
     };
 
     /* Intra-band rank for a full-text PAGE hit, keyed on its shipped
@@ -513,12 +552,17 @@
       var kind = (meta && meta.kind) || "page";
       var displayClass = (meta && meta.display_class) || "";
       var title = (meta && meta.title) || fallbackTitle || url;
-      var crumbParts = [DISPLAY_CLASS_LABEL[displayClass] || KIND_LABEL[kind] || "Result"];
+      var crumbParts = [
+        DISPLAY_CLASS_LABEL[displayClass] ||
+          KIND_LABEL[kind] ||
+          chromeText("search_result_fallback", "Result"),
+      ];
       if (meta && meta.modelo && meta.number) {
         /* Casilla crumb: modelo + official number, plus the segmento the Python
          * seam now ships so sibling casillas of a segmented modelo (M200
          * `DP200014:00562`) read apart at a glance (ADR D6). */
-        var casillaCrumb = "Modelo " + meta.modelo + " · " + meta.number;
+        var casillaCrumb =
+          chromeText("class_label_modelo", "Modelo") + " " + meta.modelo + " · " + meta.number;
         if (meta.segmento) casillaCrumb += " · " + meta.segmento;
         crumbParts.push(casillaCrumb);
       } else if (meta && meta.command_path) {
@@ -665,9 +709,11 @@
 
     function fullSearchEntry(query) {
       return {
-        title: query ? 'Search the docs for “' + query + '”' : "Open full-text search",
+        title: query
+          ? chromeText("search_full_text_for", "Search the docs for “{query}”").replace("{query}", query)
+          : chromeText("search_open_full_text", "Open full-text search"),
         href: searchUrl + (query ? "?q=" + encodeURIComponent(query) : ""),
-        crumb: "Full-text search",
+        crumb: chromeText("search_full_text_crumb", "Full-text search"),
       };
     }
 
@@ -874,17 +920,27 @@
 
     var dialog = document.createElement("dialog");
     dialog.className = "cadrumo-palette";
-    dialog.setAttribute("aria-label", "Search documentation");
+    dialog.setAttribute("aria-label", chromeText("aria_search_documentation", "Search documentation"));
     dialog.innerHTML =
       '<div class="cadrumo-palette-head">' +
       '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
-      '<input class="cadrumo-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<input class="cadrumo-palette-input" type="text" placeholder="' +
+      escapeHtml(chromeText("search_placeholder", "Search docs…")) +
+      '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="' +
+      escapeHtml(chromeText("search_query_label", "Search query")) +
+      '">' +
       '<span class="cadrumo-palette-spin" aria-hidden="true"></span>' +
       '<kbd class="cadrumo-palette-esc">esc</kbd>' +
       "</div>" +
       '<ul class="cadrumo-palette-list" role="listbox" aria-busy="false"></ul>' +
       '<p class="cadrumo-palette-status" role="status" aria-live="polite"></p>' +
-      '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
+      '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> ' +
+      escapeHtml(chromeText("search_hint_navigate", "navigate")) +
+      '</span><span><kbd>↵</kbd> ' +
+      escapeHtml(chromeText("search_hint_open", "open")) +
+      '</span><span><kbd>esc</kbd> ' +
+      escapeHtml(chromeText("search_hint_close", "close")) +
+      "</span></div>";
     document.body.appendChild(dialog);
 
     var input = dialog.querySelector(".cadrumo-palette-input");
@@ -973,7 +1029,11 @@
     head.className = "cadrumo-search-page-head";
     head.innerHTML =
       '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
-      '<input class="cadrumo-palette-input cadrumo-search-page-input" type="search" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<input class="cadrumo-palette-input cadrumo-search-page-input" type="search" placeholder="' +
+      escapeHtml(chromeText("search_placeholder", "Search docs…")) +
+      '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="' +
+      escapeHtml(chromeText("search_query_label", "Search query")) +
+      '">' +
       '<span class="cadrumo-palette-spin" aria-hidden="true"></span>';
     var list = document.createElement("ul");
     list.className = "cadrumo-palette-list cadrumo-search-page-list";
@@ -1122,7 +1182,11 @@
       if (toggle) {
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
         var label = toggle.querySelector(".cadrumo-output-toggle-label");
-        if (label) label.textContent = open ? "Hide output" : "Show output";
+        if (label) {
+          label.textContent = open
+            ? chromeText("sequence_hide_output", "Hide output")
+            : chromeText("sequence_show_output", "Show output");
+        }
       }
     }
 
@@ -1135,7 +1199,7 @@
       toggle.innerHTML = CHEVRON_SVG; // static icon markup, no user data
       var label = document.createElement("span");
       label.className = "cadrumo-output-toggle-label";
-      label.textContent = "Show output";
+      label.textContent = chromeText("sequence_show_output", "Show output");
       toggle.appendChild(label);
       var command = frame.querySelector(".cadrumo-frame-command");
       if (command && command.parentNode === frame) {
@@ -1151,7 +1215,7 @@
     var controls = document.createElement("div");
     controls.className = "cadrumo-sequence-controls";
     controls.setAttribute("role", "group");
-    controls.setAttribute("aria-label", "Command rundown");
+    controls.setAttribute("aria-label", chromeText("sequence_rundown", "Command rundown"));
 
     function button(kind, label, glyph) {
       var el = document.createElement("button");
@@ -1162,8 +1226,8 @@
       return el;
     }
 
-    var prevBtn = button("prev", "Previous command", "&#8592;");
-    var nextBtn = button("next", "Next command", "&#8594;");
+    var prevBtn = button("prev", chromeText("sequence_previous_command", "Previous command"), "&#8592;");
+    var nextBtn = button("next", chromeText("sequence_next_command", "Next command"), "&#8594;");
 
     var indicator = document.createElement("span");
     indicator.className = "cadrumo-sequence-position";
@@ -1253,7 +1317,7 @@
     var switcher = document.createElement("div");
     switcher.className = "cadrumo-shell-switcher";
     switcher.setAttribute("role", "group");
-    switcher.setAttribute("aria-label", "Terminal shell");
+    switcher.setAttribute("aria-label", chromeText("sequence_shell", "Terminal shell"));
 
     var buttons = shells.map(function (shell) {
       var btn = document.createElement("button");
@@ -1341,7 +1405,7 @@
       var button = document.createElement("button");
       button.type = "button";
       button.className = "cadrumo-copy-btn";
-      button.setAttribute("aria-label", "Copy command");
+      button.setAttribute("aria-label", chromeText("sequence_copy_command", "Copy command"));
       button.innerHTML = COPY_SVG; // static icon markup, no user data
       var label = document.createElement("span");
       label.className = "cadrumo-copy-label";
@@ -1353,7 +1417,9 @@
         var command = frame.getAttribute("data-command-line") || "";
         writeClipboard(command).then(function (ok) {
           button.classList.add("is-copied");
-          label.textContent = ok ? "Copied" : "Copy failed";
+          label.textContent = ok
+            ? chromeText("sequence_copied", "Copied")
+            : chromeText("sequence_copy_failed", "Copy failed");
           if (timer) window.clearTimeout(timer);
           timer = window.setTimeout(function () {
             button.classList.remove("is-copied");
@@ -1504,7 +1570,7 @@
       if (param.required) {
         var req = document.createElement("span");
         req.className = "cadrumo-cli-popover-param-req";
-        req.textContent = "required";
+        req.textContent = chromeText("cli_help_required", "required");
         li.appendChild(req);
       }
       if (param.help) {
@@ -1523,7 +1589,7 @@
         var close = document.createElement("button");
         close.type = "button";
         close.className = "cadrumo-cli-popover-close";
-        close.setAttribute("aria-label", "Close help");
+        close.setAttribute("aria-label", chromeText("cli_help_close", "Close help"));
         close.textContent = "×";
         close.addEventListener("click", function () {
           intended = null;
@@ -1667,7 +1733,8 @@
 
     var heading = document.createElement("p");
     heading.className = "cadrumo-downloads-heading";
-    heading.textContent = "Direct downloads for the latest release" +
+    heading.textContent =
+      chromeText("download_direct_heading", "Direct downloads for the latest release") +
       (data.version ? " (v" + data.version + ")" : "");
     mount.appendChild(heading);
 
@@ -1776,7 +1843,12 @@
       if (!output.hasAttribute("tabindex")) output.setAttribute("tabindex", "0");
       if (!output.hasAttribute("role")) output.setAttribute("role", "group");
       if (!output.hasAttribute("aria-label")) {
-        output.setAttribute("aria-label", output.classList.contains("cadrumo-frame-stderr") ? "Command error output" : "Command output");
+        output.setAttribute(
+          "aria-label",
+          output.classList.contains("cadrumo-frame-stderr")
+            ? chromeText("sequence_command_error_output", "Command error output")
+            : chromeText("sequence_command_output", "Command output")
+        );
       }
     });
   }

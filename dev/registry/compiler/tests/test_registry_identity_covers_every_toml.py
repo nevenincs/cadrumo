@@ -67,7 +67,7 @@ def test_an_edit_to_any_non_modelo_directory_changes_the_identity_and_the_verdic
             registry_root=registry.resolve(),
             fingerprints=rows,
             source_receipt="fixed-source-receipt",
-            compiler_identity_digest="fixed-compiler-identity",
+            compiler_source_tree_digest="fixed-compiler-source-tree",
         )
         return compute_walked_tree_digest(rows), scope.registry_key
 

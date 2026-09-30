@@ -1,4 +1,10 @@
 @setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Classify the collected payment as business income.
-@result aeat --format json app ledger classify 71a5db2b --classification BUSINESS
+aeat --format json app ledger classify 71a5db2b --classification BUSINESS
 @expect result.transaction.business_classification == "BUSINESS"
+@step Classify the purchase as a deductible business expense, with its category, tax fields, and the source of the IVA deduction.
+aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --deduction-kind domestic_current
+@step Register the supplier's invoice, and take its evidence id from the output.
+@result aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105 --idempotency-key fq-factura
+@expect result.invoice_number == "C-2026-0087"
+@expect exit_code == 0

@@ -7,38 +7,42 @@ Store an evidence record for each invoice or receipt and link it to the transact
 You need:
 
 - An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
+- Your passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - Transactions in your ledger. If your ledger is empty, see [Import and manage transactions](import-bank-statements.md) first.
 - The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 
 ## Add an evidence record
 
 Record the invoice file and its details, then view the stored record. The file
-path is the only required part; every metadata flag is optional. `--iva-rate 21`
-means 21 %:
+path is the only required part; every metadata flag is optional. Here
+`--iva-rate 21` means 21 %. On `ledger add` and `classify`, write the rate as a
+decimal such as `0.21`:
 
 ```{cli-sequence} ledger-evidence-add
 :verify: Confirm the evidence record stored the supplier and invoice details.
 ```
 
-The command prints the evidence ID. Note the full ID down - later commands need it. Add what you know now; update the rest later.
+The command prints the evidence ID and the 64-character content id of the stored document: `attachment_id` in `--format json` output, `source_sha256` in text output. Note the evidence ID down - later commands need it. Add what you know now; update the rest later.
 
 ## Attach an evidence record to a transaction
 
-Attach the evidence record to the transaction it supports. The sequence records
-an evidence file and an expense, then attaches one to the other:
+Attach the evidence record to the transaction it supports. The example starts
+with one evidence record and one expense, then attaches the record to the
+expense:
 
 ```{cli-sequence} ledger-evidence-attach
 :verify: Confirm the purchase-invoice evidence attached to the transaction.
 ```
 
-A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
+A transaction carries at most one purchase-invoice evidence record. Attached purchase evidence is immutable: the command refuses a different record, and refuses re-attaching the same one. To change it, remove the transaction and add it again with the correct evidence.
 
 Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the evidence document, while `link` binds the transaction to an invoice and requires `--invoice-id`. That id comes from an imported, reconciled, or manually added invoice - the id `aeat app ledger invoice add` prints is exactly the one to pass.
 
-For most receipts and invoices, `--purchase-invoice-evidence-id` above is the path to use; the evidence id comes straight from `evidence add`.
+For most receipts and invoices, use `--purchase-invoice-evidence-id`; the evidence id comes straight from `evidence add`.
 
-The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a blob already in encrypted attachment storage, and it refuses any id that has no stored blob (`attachment_ids must reference existing secure attachment manifests and blobs`). No operator command currently prints that 64-character id - the `evidence_id` from `evidence add` is a different, shorter id and is not accepted here. Until a command surfaces the attachment id, use `--purchase-invoice-evidence-id` or `evidence pull` instead.
+The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a document already in encrypted attachment storage, and it refuses any id that has no stored document (`attachment_ids must reference existing secure attachment manifests and blobs`). The commands that store a document print that id: `evidence add` and `evidence pull-all`, as `attachment_id` in JSON output and as `source_sha256` in text output. The evidence id from `evidence add` is a shorter id and is not accepted here. Inspect a stored attachment with `aeat app ledger evidence attachment-view <attachment-id>`.
+
+To unlink a supplementary attachment without deleting its bytes, run `aeat app ledger detach` with the transaction id and the attachment's `--attachment-id`. Detach cannot clear purchase-invoice evidence.
 
 ## Pull a document from Google Drive instead
 
@@ -47,7 +51,7 @@ When the document lives in Google Drive, pull it straight into encrypted evidenc
 ```{cli-sequence} ledger-evidence-pull
 ```
 
-The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
+The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and register it with `aeat app ledger evidence add`.
 
 ## Bulk-fetch every invoice in a Drive folder
 
@@ -58,7 +62,7 @@ Fetch every PDF and image invoice in one Drive folder at once, instead of one do
 
 The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>`.
 
-Re-run the same command any time. A file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `aeat app ledger attach --attachment-id`.
+Re-run the same command any time. A file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and register it with `aeat app ledger evidence add`.
 
 Gmail bulk-fetch is not available yet.
 
@@ -74,8 +78,8 @@ evidence and link to transactions.
 ## List, view, update, and remove evidence records
 
 List every stored record, view one in full, update its details, and remove one
-you no longer need. The sequence records an evidence file, lists and inspects
-it, changes the supplier, and confirms the change:
+you no longer need. The example starts with one evidence record, lists and
+inspects it, changes the supplier, and confirms the change:
 
 ```{cli-sequence} ledger-evidence-manage
 :verify: Confirm the evidence record's supplier was updated.
@@ -88,6 +92,10 @@ Remove an evidence record you no longer need, addressing it by id:
 ```
 
 Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
+
+## Evidence and input IVA deduction
+
+Evidence also decides whether input IVA deducts. Input IVA deducts only when the row carries `--deduction-kind` on `aeat app ledger add` or `classify`. The kinds are `domestic_current`, `domestic_investment`, `import_current`, `import_investment`, `intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, `rectification`, and `investment_goods_regularisation`. Only `domestic_current` and `domestic_investment` can be substantiated from the ledger today. They take their evidence from the linked purchase-invoice record, so attach it first; `domestic_investment` also needs `--investment-asset-id`. The other kinds need a customs declaration, an intra-EU self-assessment, a REAGP receipt, rectification evidence, or a bienes de inversión record that a ledger row cannot link, so the IVA calculation holds such a row back.
 
 ## After you correct a row
 
@@ -105,7 +113,7 @@ official filing proof, and an audit bundle.
 
 - If a command fails or refuses, see [Troubleshooting](troubleshooting.md).
 - If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`.
-- Before sharing command output with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+- Before sharing command output with anyone, strip tax identifiers such as your NIF, DNI, or NIE.
 
 ## Next steps
 
