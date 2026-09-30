@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ef533bc06162e16528fff6375678084d7d33994a1fd719b3f0ba4c239d1ac41'
+body_hash: 'sha256:638914aff369e092f3708dfccff35b8e02378fb3828d1b42f266b49824edbaca'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -862,6 +862,117 @@ related:
 - `S32` `M` `dev/registry/edition_export_scenarios.py`
 - `S32` `M` `dev/registry/tests/test_edition_export_scenario_periods.py`
 - `S32` `verify:` `ten fixes each with defect and normal-path tests, focused 75 passed; dev/registry lane 6851 passed with 15 failures in other steps' data (P05.S54, P05.S56); hydrated digests of all 58 modelos unchanged by the loader window rule` -> `pass`
+- `S42` `M` `dev/registry/mappings/modelo_151/2015/0009-pagina08.toml`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html.extracted.json`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2015.html.extracted.md`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/completeness_manifest/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/constructs/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0012-record-m151-page-08.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/formulas/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/parameters/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/verification_expectations/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/verification_predicates/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/formulas/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/identifier_evolutions/0001-declarations.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/parameters/0001-declarations.toml`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S42` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S42` `A` `src/cadrumo/application/calculations/tests/test_modelo_151_ahorro_cuota_across_supported_years.py`
+- `S42` `A` `src/cadrumo/application/filing/tests/test_modelo_151_ahorro_export.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_modelo_151_ahorro_cuota_advisory_predicate.py`
+- `S42` `M` `src/cadrumo/locales/ca/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/en/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/es/modelo/schema/151.yml`
+- `S42` `M` `src/cadrumo/locales/hu/modelo/schema/151.yml`
+- `S42` `verify:` `ahorro chain at 2015-2022, boxes 18/20 export computed cuota, target-current both editions, 151 runtime and dev sets 439 passed with 13 failures outside 151; published 0eb8a732` -> `pass`
+- `S26` `M` `dev/registry/tests/test_modelo_131_edition_surfaces_across_supported_years.py`
+- `S26` `A` `dev/registry/tests/test_modelo_131_modulos_engine_ordenes_2022_2023.py`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/casillas/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/completeness_manifest/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/constructs/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/formulas/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/parameters/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/verification_predicates/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casillas/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/formulas/0001-declarations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/parameters/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/revision.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/verification_predicates/0001-declarations.toml`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/tests/test_committed_registry.py`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine_orden_hfp_1359_backfill.py`
+- `S26` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S26` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S26` `M` `dev/registry/tests/test_delta_minimality.py`
+- `S26` `M` `dev/registry/tests/test_modelo_131_modulos_rows_open_past_horizon.py`
+- `S26` `verify:` `engine in the 2019-2023 root from Orden HFP/1335/2021 and HFP/1172/2022, reduction 5/15/10 percent per period; manual cafe-bar examples 2022 (within one cent) and 2023 exact; isolated and live inspection valid; published da8ef5bf; 131 set 42 passed with one Modelo 100 failure outside the step` -> `pass`
+- `S56` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S56` `M` `dev/registry/compiler/validate_inherited_family_pairing.py`
+- `S56` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S56` `M` `dev/registry/pipeline/tests/test_delta_target_publication.py`
+- `S56` `M` `dev/registry/tests/_revision_span_boundary_support.py`
+- `S56` `M` `dev/registry/tests/test_inherited_family_pairing.py`
+- `S56` `M` `dev/registry/tests/test_irreducible_year_only_selection_refusals.py`
+- `S56` `M` `dev/registry/tests/test_mid_year_design_claim.py`
+- `S56` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S56` `M` `dev/registry/tests/test_modelo_308_490_lineage.py`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/casillas/0001-declarations.toml`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S56` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S56` `A` `src/cadrumo/application/modelo/tests/test_data_inventory_alternate_bindings.py`
+- `S56` `M` `src/cadrumo/core/registry_token.py`
+- `S56` `M` `src/cadrumo/core/tests/test_registry_token.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_requires_data_inventory.py`
+- `S56` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/es/modelo/schema/216.yml`
+- `S56` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S56` `M` `dev/registry/tests/test_runtime_projection_bundled_coordinates.py`
+- `S56` `M` `dev/registry/tests/test_unsupported_design_span_policy.py`
+- `S56` `verify:` `216 window citation and grammar chains, 353 per-year periods and edge-year design claim, 100 lineage row, 200 00417 grounded, requires on a live 202 relation plus synthetic alternates, scoped clearance beside stated members refused with teeth, registry token deep copy; dev/registry 6900 passed with failures only in other steps; gated commit d160cff662 27 passed` -> `pass`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/verification_expectations/0001-declarations.toml`
+- `S26` `verify:` `six engine casillas enrolled at the root, 2024-2026 hydration byte-identical; both enrolment gates and 131 set 1347 passed; published 01e2251c; gated commit 2fe0df665e` -> `pass`
+- `S42` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S42` `M` `src/cadrumo/domain/calculations/registry/tests/test_legal_window_historical_carrier.py`
+- `S42` `A` `src/cadrumo/application/calculations/tests/test_modelo_151_general_escala_by_year.py`
+- `S42` `verify:` `bracket rows defend their citation on the bracket axis with five detector cases; general top rate 47 percent 2015 (DA 31), 45 percent 2016-2020, 47 percent from 2021; snapshot 46 passed, runtime 151 set 185 passed; gated commit 25458ce91e` -> `pass`
+- `S56` `M` `src/cadrumo/application/calculations/tests/test_relation_prefill_not_applicable_registry_grounding.py`
+- `S56` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S56` `verify:` `record-design gate exempts only an edition below filing grade with no hydrated layout from citing a design, cited designs still checked, four detector cases; payer-filed guard proven per supported year without a count; 31 passed; gated commit cefe958f53` -> `pass`
+- `S54` `M` `dev/registry/tests/_modelo_303_registry_support.py`
+- `S54` `M` `dev/registry/tests/test_m303_regimen_general_manual_worked_example.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_boxes_from_support_floor.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_registry_autoconsumo.py`
+- `S54` `M` `dev/registry/tests/test_modelo_303_result_chain_year_parity.py`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/parameters/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/formulas/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S54` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S54` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_m303_primitive_anti_tautology.py`
+- `S54` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_303_registry_support.py`
+- `S54` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_autoconsumo.py`
+- `S54` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/es/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S54` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S54` `verify:` `autoconsumo declared at 2022 in the rate rows of LIVA art. 91.Dos, 91.Uno.1.7 and 90.Uno, box 27 sums only printed boxes in every edition; restored box 27 detector passes; converter proof, apply and no-op; inspection valid; dev 527 passed and runtime 188 passed with failures only in spelling dictionaries, 296 labels and pre-existing 303 intracom routing; gated commit 5e08554505` -> `pass`
 
 ## Notes
 
@@ -901,3 +1012,18 @@ related:
 - `S30` main's 66402446 fixed the same defect; the merge keeps main's reader as the single definition and this branch's extra test cases
 - `S31` main's 8f4b8306 moved the same check; the merge keeps main's validator as the single definition
 - `S32` converter now proposes stated layouts for 123, 131, 190, 193, 270, 490 and 714 and flags roots 216, 309 and 604 as not minimal (P05.S55); forward storage baselines stay refused
+- `S42` committed by the automatic checkpoint 16c8b7cae8, not by the orchestrator
+- `S42` 2015 general top rate is 47 percent (DA 31), only 2016-2020 is 45; the 2015-2020 scale awaits the snapshot legal-window exemption for bracket rows (lane S42c)
+- `S42` a first publish db4b432c left 151 unfileable from 2023 for about 12 minutes through an inherited ahorro-2021 citation, removed by a sequence removal and republished
+- `S26` registry and locale files committed by the automatic checkpoint 16c8b7cae8; the converter still proposes per-edition export layouts and 2026 position changes on HEAD as before this step (P05.S33, P05.S55), so no fresh no-op run
+- `S26` Anexo I agricultural reduction increases (Orden HFP/405/2023, HAC/348/2024) are not modelled; 131 routes agriculture through boxes 05 and 06
+- `S56` most files committed by the automatic checkpoint 16c8b7cae8; the leftover-clearance refusal sits at authority compilation, not the loader, because publishing a generated tree keeps the clearance it was staged under and reloads the modelo
+- `S56` 216 rows 07, 10, 16 and 19 stay without continuity: the pre-2024 form and instructions are not held (P05.S35)
+- `S56` the 353 fix exposed 390/2026 in the record-design matrix gate and a Modelo 100 payer-filed-source floor test; both go to a follow-up lane under this step
+- `S26` reopened fix after close: the engine move left its computed casillas enrolled only by the 2024 override, found by the S56 full dev/registry run
+- `S42` the step's 2015-2020 at 45 percent holds only for 2016-2020; 2015 is 47 percent under DA 31.1.f
+- `S42` ahorro rows before 2021 are not authored; those years are below the support floor and refuse
+- `S56` Modelo 100's payer-side dependency classifications were deleted by the accepted export-parity withholding-sources decision (PR 704), so the test floor of two was a count, not a restoration target
+- `S54` most files committed by the automatic checkpoint 16c8b7cae8
+- `S54` the rate-less profile key and CLI option --autoconsumo-promotor-base now refuse until the base is split by rate row; a per-rate profile or CLI input is an interface change returned to the operator
+- `S54` the accepted m390 annual autoconsumo source decision still states a 21 percent multiplication in its consequences; amending it is returned to the operator

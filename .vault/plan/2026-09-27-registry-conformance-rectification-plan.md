@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:1a6eb21706ce91be70c94e2a93334e648911b42be89b7bcbd37df9ddd2df06f8'
+body_hash: 'sha256:5c5f6d46a525ba297738dbb6ab7e4fb781d6301234e3a8f1dbefd72ee1c4ea8a'
 ---
 
 # `registry-conformance-rectification` plan
@@ -105,7 +105,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
 - [x] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
 - [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count the design's type-2 records instead of an unproduced retención window, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
-- [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
+- [x] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
 - [ ] `P05.S27` - Ground Modelo 202's 2025 art. 40.2 base on the Modelo 200 box net of retenciones and ingresos a cuenta, which every era's instructions define it as; `src/cadrumo/_data/registry/aeat/modelos/202/`.
 - [ ] `P05.S28` - Make the open-row gate also report an open row a later edition restates unchanged and a row a later edition removes and re-adds only to re-key its window, with detector cases, and fix the Modelo 210 rows it finds; `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`.
 - [x] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
@@ -121,7 +121,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S39` - Adjudicate against official evidence the suspected Modelo 100 defects: the 2025 maritime exemption writing box 0525, the 184 relation summing every type-2 record, the 131 binding summing four quarterly copies into box 1481, and box 0512 ignoring regions with their own minimo; re-cite the 2020 to 2022 casillas to art. 32's 2015 redaction and rename the maternity test constant that still names 2024; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S40` - Author Modelo 184's reduccion binding at 2022 now that art. 23 and art. 32 carry their 2022 redactions; `src/cadrumo/_data/registry/aeat/modelos/184/`.
 - [x] `P05.S41` - Author the missing ejercicio 2022 deadline windows of Modelos 151, 165 and 180 from their calendar sources, and remove Modelo 151's duplicate filing schedule and export link; `src/cadrumo/_data/registry/aeat/modelos/151/`.
-- [ ] `P05.S42` - Catalogue the 2022 wording of LIRPF art. 93.2.e).2.o, author Modelo 151's ahorro escala, formula and predicate at 2015-2022 once the coverage validator is clamped, map boxes 18 and 20 of the 2015 export to the computed cuota, and correct the 2015-2020 general scale to BOE's 45 percent; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`.
+- [x] `P05.S42` - Catalogue the 2022 wording of LIRPF art. 93.2.e).2.o, author Modelo 151's ahorro escala, formula and predicate at 2015-2022 once the coverage validator is clamped, map boxes 18 and 20 of the 2015 export to the computed cuota, and correct the 2015-2020 general scale to BOE's 45 percent; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`.
 - [ ] `P05.S43` - Author Modelo 100's modulos engine for 2022 to 2024 from each year's orden, and the Madrid birth deduction years once its facts catalogue entry carries them; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `P05.S45` - Capture the missing official texts and author the support-range cells they unblock: Modelos 200 and 220 for 2022 and 2023 with their approving ordenes, 182 and 189 for 2022 and 2023, 036 before its 2023 design, 038 before June 2024 and 210 for January to May 2022; `src/cadrumo/_data/corpus/`.
@@ -133,9 +133,9 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S51` - Give the capability, extemporaneidad and calendar tests synthetic missing-window examples instead of real gaps that this step closed; `dev/registry/tests/test_modelo_capability.py`.
 - [ ] `P05.S52` - Regenerate the docs sequence goldens through their generator against the published authority, and rewrite or retire the review-values-relation sequence now that no annual Modelo 100 relation survives; `docs/_sequences/`.
 - [ ] `P05.S53` - Give the three 2023 Modelo 303 internal carriers their continuity origin and evidence claims, which the 2022 relocation left without them; `src/cadrumo/_data/registry/aeat/modelos/303/`.
-- [ ] `P05.S54` - Declare promotor autoconsumo through the rate boxes its official instructions assign instead of adding its cuota to box 27 outside the printed boxes, in every edition, with its rate grounded rather than fixed at 21 percent, and land the restored box 27 design-parity test with it; `src/cadrumo/_data/registry/aeat/modelos/303/`.
+- [x] `P05.S54` - Declare promotor autoconsumo through the rate boxes its official instructions assign instead of adding its cuota to box 27 outside the printed boxes, in every edition, with its rate grounded rather than fixed at 21 percent, and land the restored box 27 design-parity test with it; `src/cadrumo/_data/registry/aeat/modelos/303/`.
 - [ ] `P05.S55` - Apply the converter's stated-layout proposals for Modelos 123, 131, 190, 193, 270, 490 and 714, and store the roots it now reports as restating (216, 309, 604) against their predecessors' payload with their layouts kept per edition; `src/cadrumo/_data/registry/aeat/modelos/`.
-- [ ] `P05.S56` - Fix the regressions this step introduced: Modelo 216's 2020-2023 calendar citation outside its window, Modelo 353's edition span and selection, the lineage ledger row for Modelo 100's internal maritime casilla, Modelo 200 row 00417's lineage origin, and the empty relation prefill of modelo requires; and make the loader refuse a leftover owed-tree clearance beside a stated layout; `src/cadrumo/_data/registry/aeat/modelos/`.
+- [x] `P05.S56` - Fix the regressions this step introduced: Modelo 216's 2020-2023 calendar citation outside its window, Modelo 353's edition span and selection, the lineage ledger row for Modelo 100's internal maritime casilla, Modelo 200 row 00417's lineage origin, and the empty relation prefill of modelo requires; and make the loader refuse a leftover owed-tree clearance beside a stated layout; `src/cadrumo/_data/registry/aeat/modelos/`.
 
 ## Parallelization
 
