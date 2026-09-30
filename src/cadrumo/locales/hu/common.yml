@@ -2083,11 +2083,7 @@ tui:
           ott, ahonnan származik, majd számoljon újra.
       editor:
         area:
-          declarations: a korábbi bevallás
-          ledger: a nyilvántartásai (Főkönyv)
           none: az érték forrása
-          profile: a profilja
-          withholding: a levonási igazolásai
         block:
           affects: Hatással van
           asks: Mit kér
@@ -2123,6 +2119,8 @@ tui:
           text: Szabad szöveg.
           year: Négyjegyű évszám.
         keys: 'Billentyűk: ⏎ {save_next} · Ctrl+⏎ {save}'
+        open_area: '{area} megnyitása'
+        open_keys: 'Billentyűk: a {open} · Esc {back}'
         placeholder:
           boolean: igen vagy nem
           date: Dátum, pl. 2026.03.31.

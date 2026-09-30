@@ -2052,11 +2052,7 @@ tui:
           where it comes from, then calculate again.
       editor:
         area:
-          declarations: the earlier declaration
-          ledger: your records (Ledger)
           none: the place it comes from
-          profile: your profile
-          withholding: your withholding certificates
         block:
           affects: Affects
           asks: What it asks
@@ -2091,6 +2087,8 @@ tui:
           text: Free text.
           year: A four-digit year.
         keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
+        open_area: Open {area}
+        open_keys: 'Keys: a {open} · Esc {back}'
         placeholder:
           boolean: yes or no
           date: Date, e.g. 31/03/2026

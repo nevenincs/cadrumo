@@ -109,7 +109,7 @@ async def test_a_box_that_follows_the_records_says_why_it_cannot_be_typed_into()
 
     assert read_only
     assert inputs == 0
-    assert reason == "Not here. Change it in your records (Ledger), then calculate again."
+    assert reason == "Not here. Change it in Ledger, then calculate again."
     assert back
 
 

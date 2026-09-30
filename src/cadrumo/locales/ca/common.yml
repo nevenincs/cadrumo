@@ -2101,11 +2101,7 @@ tui:
           on s'origina i torna a calcular.
       editor:
         area:
-          declarations: la declaració anterior
-          ledger: els teus registres (Llibre major)
           none: el lloc d'on surt
-          profile: el teu perfil
-          withholding: els teus justificants de retencions
         block:
           affects: Afecta
           asks: Què demana
@@ -2140,6 +2136,8 @@ tui:
           text: Text lliure.
           year: Un any de quatre xifres.
         keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
+        open_area: Obre {area}
+        open_keys: 'Tecles: a {open} · Esc {back}'
         placeholder:
           boolean: sí o no
           date: Data, p. ex. 31/03/2026

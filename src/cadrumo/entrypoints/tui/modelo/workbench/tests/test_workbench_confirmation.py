@@ -4,7 +4,9 @@ The edit session stages a confirmation as the filer's own typed value, only on
 a box the filer types into that holds an assumed value; a box a source fills
 is refused, because keeping a value over it would replace the source. The
 bulk dialog lists every box it would confirm with its value, confirms nothing
-until the filer ticks that the values are right, and fits a small terminal.
+until the filer ticks that the values are right, and fits a small terminal. It
+repeats the header's result line first, since it covers the header, under a
+title in the strongest style.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from textual.color import Color
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Static
 
@@ -156,3 +159,52 @@ async def test_bulk_confirm_leaves_out_a_bound_box_and_says_so() -> None:
     assert [field.box for field in listed] == ["06"]
     assert note.startswith("Boxes filled from a source are not listed")
     assert app.return_value is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", ["es", "en"])
+@pytest.mark.parametrize("size", [(80, 24), (140, 40)])
+async def test_bulk_confirm_repeats_the_header_result_line_first_and_titles_in_the_strongest_style(
+    language: str, size: tuple[int, int]
+) -> None:
+    status_line = "Resultado: 1.300,00 € a ingresar"
+    with override_settings(cadrumo_output_language=language):
+        dialog = BulkConfirmScreen((_assumed(),), status_line=status_line)
+        app = ScreenHostApp(dialog)
+        async with app.run_test(size=size) as pilot:
+            await _settle(pilot)
+            panel = dialog.query_one("#bulk-panel")
+            status_widget = dialog.query_one("#bulk-status", Static)
+            shown = str(status_widget.render())
+            status = status_widget.region
+            title_widget = dialog.query_one("#bulk-title", Static)
+            title = title_widget.region
+            first_row = panel.region.y + panel.gutter.top
+            bold = title_widget.styles.text_style.bold
+            colour = title_widget.styles.color
+            intro_colour = dialog.query_one("#bulk-intro").styles.color
+            foreground = Color.parse(app.theme_variables["foreground"])
+            regions = [button.region for button in dialog.query(Button)]
+
+    assert shown == status_line
+    assert status.y == first_row
+    assert title.y == status.bottom
+    assert bold
+    assert colour == foreground
+    assert intro_colour != colour
+    for region in regions:
+        assert region.width > 0
+        assert region.right <= size[0]
+        assert region.bottom <= size[1]
+
+
+@pytest.mark.asyncio
+async def test_bulk_confirm_without_a_result_line_starts_at_its_title() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        dialog = BulkConfirmScreen((_assumed(),))
+        app = ScreenHostApp(dialog)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _settle(pilot)
+            status = dialog.query("#bulk-status")
+
+    assert not status

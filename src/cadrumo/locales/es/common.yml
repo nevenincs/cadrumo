@@ -2112,11 +2112,7 @@ tui:
           donde se origina y vuelve a calcular.
       editor:
         area:
-          declarations: la declaración anterior
-          ledger: tus registros (Libro mayor)
           none: el lugar del que sale
-          profile: tu perfil
-          withholding: tus justificantes de retenciones
         block:
           affects: Afecta a
           asks: Qué pide
@@ -2149,6 +2145,8 @@ tui:
           text: Texto libre.
           year: Un año de cuatro cifras.
         keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
+        open_area: Abrir {area}
+        open_keys: 'Teclas: a {open} · Esc {back}'
         placeholder:
           boolean: sí o no
           date: Fecha, p. ej. 31/03/2026

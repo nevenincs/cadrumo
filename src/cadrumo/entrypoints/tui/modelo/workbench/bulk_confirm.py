@@ -9,6 +9,9 @@ filer's own for review; nothing is applied from here.
 Only a box the filer types into can be confirmed. A box a source fills is left
 out, and the dialog says so, because keeping a value over a source would
 replace the source rather than confirm it.
+
+The dialog covers the header, so it can repeat the header's result line as its
+first line.
 """
 
 from __future__ import annotations
@@ -82,9 +85,12 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         BulkConfirmScreen.-narrow #bulk-panel {
             width: 100%;
         }
+        BulkConfirmScreen #bulk-status {
+            height: auto;
+        }
         BulkConfirmScreen #bulk-title {
             text-style: bold;
-            color: $primary;
+            color: $foreground;
         }
         BulkConfirmScreen #bulk-intro, BulkConfirmScreen #bulk-left-out {
             color: $secondary;
@@ -119,17 +125,26 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
 
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, fields: tuple[ModeloFormField, ...], *, language: OutputLanguage | None = None) -> None:
+    def __init__(
+        self,
+        fields: tuple[ModeloFormField, ...],
+        *,
+        language: OutputLanguage | None = None,
+        status_line: str | None = None,
+    ) -> None:
         """Hold the assumed boxes offered for confirmation.
 
         Every box passed is considered; the ones a source fills, or that hold no
         assumed value, are left out of the list, and the dialog says so.
         ``language`` formats the values, and defaults to the filer's language.
+        ``status_line`` is the header's result line, shown first because the
+        dialog covers it.
         """
         super().__init__()
         self._fields = tuple(field for field in fields if confirmable(field))
         self._left_out = len(fields) - len(self._fields)
         self._language = language if language is not None else OutputLanguage(output_language())
+        self._status_line = status_line
 
     @property
     def fields(self) -> tuple[ModeloFormField, ...]:
@@ -139,6 +154,8 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
     @override
     def compose(self) -> ComposeResult:
         with Container(id="bulk-backdrop"), Vertical(id="bulk-panel"):
+            if self._status_line is not None:
+                yield Static(self._status_line, id="bulk-status", markup=False)
             yield Static(tr("tui.modelo.workbench.bulk_confirm.title"), id="bulk-title", markup=False)
             yield Static(tr("tui.modelo.workbench.bulk_confirm.intro"), id="bulk-intro", markup=False)
             yield Static(
