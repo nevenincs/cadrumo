@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-09-09'
+modified: '2026-09-30'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7c99d06864191c7bbac72c3140a30aeb1dbf2b868e35c5502334049675de38d'
+body_hash: 'sha256:fc6b6584affe119b469f891726238216b160d05b29ce3b0442ef2747ab428219'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
+  - '[[2026-09-30-modelo-editor-workbench-adr]]'
 ---
 
 # `tui-modelo-workspace-interface` adr: `Modelo workspace interface and staged editor amendment` | (**status:** `accepted`)
@@ -767,3 +768,7 @@ requirements are removed from Modelo admission proofs. A delivered Modelo screen
 TUI registration, admissibility, interaction/effect/refresh behavior, and supported-matrix
 coverage; work not registered is absent from TUI routing and remains plan work. No production or
 development table mirrors CLI command reachability as TUI state.
+
+## Amendment 2026-09-30: one workbench destination and user-confirmed re-basing
+
+`2026-09-30-modelo-editor-workbench-adr` (D4 and D5) amends D1 and D6 of this record. The read destinations of D1 are retired atomically into one workbench destination per declaration; results, verification, provenance and filing become regions of that workbench, with no alias to the retired destination ids. D6 gains user-confirmed re-basing: a stale session keeps its staged changes and re-opens its review against the new head, with every changed previous value marked for the operator to acknowledge before apply. Abandon and reload remains available. D2, D3, D5, D7 and D8 stand.
