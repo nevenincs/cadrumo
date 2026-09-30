@@ -1422,6 +1422,8 @@ application:
       stage_incomplete: L'etapa %{stage} de quickfile ha acabat amb l'estat %{status}.
       stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
         amb %{error_code}.'
+    work_form:
+      inspection_heading: Totes les caselles, per número de casella
   overview:
     calendar:
       holiday_coverage:

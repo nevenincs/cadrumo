@@ -1427,6 +1427,8 @@ application:
       stage_incomplete: La etapa %{stage} de quickfile terminó con el estado %{status}.
       stage_refused: 'Quickfile se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    work_form:
+      inspection_heading: Todas las casillas, por número de casilla
   overview:
     calendar:
       holiday_coverage:

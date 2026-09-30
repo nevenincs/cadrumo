@@ -1381,6 +1381,8 @@ application:
         be.
       stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    work_form:
+      inspection_heading: Minden rovat, rovatszám szerint
   overview:
     calendar:
       holiday_coverage:

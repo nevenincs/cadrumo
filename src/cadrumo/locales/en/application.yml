@@ -1304,6 +1304,8 @@ application:
       stage_incomplete: The quickfile %{stage} stage finished with status %{status}.
       stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    work_form:
+      inspection_heading: All boxes, in box-number order
   overview:
     calendar:
       holiday_coverage:

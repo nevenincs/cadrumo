@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:b57662cc4bcd16f7558e82b0e5d6f94489d55c7a5b325d09c8c48e853a757b52'
+body_hash: 'sha256:f20219894038764381ba19aaba8f6a848228536267f7058372dff8d577666f4a'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -66,7 +66,18 @@ related:
 - `S20` `verify:` `pytest dev/tui/tests/test_shipped_glyphs_are_in_the_pinned_font.py` -> `pass`
 - `S20` `verify:` `pytest tui components + modelo view + manager onboarding + theme (79 ran)` -> `pass`
 - `S20` `by:` `orchestrator`
+- `S17` `A` `src/cadrumo/application/modelo/work_form.py`
+- `S17` `A` `src/cadrumo/application/modelo/work_form_models.py`
+- `S17` `A` `src/cadrumo/application/modelo/tests/test_work_form.py`
+- `S17` `M` `src/cadrumo/locales/ca/application.yml`
+- `S17` `M` `src/cadrumo/locales/en/application.yml`
+- `S17` `M` `src/cadrumo/locales/es/application.yml`
+- `S17` `M` `src/cadrumo/locales/hu/application.yml`
+- `S17` `verify:` `pytest test_work_form.py (11, real 130 registry)` -> `pass`
+- `S17` `verify:` `ruff + ty + basedpyright + pyrefly` -> `pass`
+- `S17` `by:` `orchestrator`
 
 ## Notes
 
 - `S20` 6 TUI tests errored at import on a concurrent session's uncommitted launcher.py edit (ModeloWorkspaceReadContendedError without an error-code entry); not caused by this Step
+- `S17` Builder consumes the declared layout types merged from the layout-family lane; integration over every published layout waits for that lane's generator

@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:8feacdf458cd2164fa3309e2db21afbd027333fafb6e723859cae80ffea2c710'
+body_hash: 'sha256:db4ecc341b9619d4f3e67fe49415da84b382c5fbd166112ec85441dd0ded08d2'
 ---
 
 # `modelo-editor-workbench` plan
@@ -77,7 +77,7 @@ Join the canonical review, the declared layout, the current revision and the edi
 
 - [x] `P03.S15` - Lift the locale number formats into a shared presentation formatter for money, ratio, decimal, integer, boolean, date and masked IBAN values; `src/cadrumo/application/modelo/value_presentation.py`.
 - [x] `P03.S16` - Add the total source-kind policy table with family, override policy and destination, bound by test to the calculation precedence ladder; `src/cadrumo/application/modelo/source_policy.py`.
-- [ ] `P03.S17` - Build the editor form read model and builder with closed editability and origin enums, localized labels and help, counts, working figures, the unplaced list and the totality invariant; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P03.S17` - Build the editor form read model and builder with closed editability and origin enums, localized labels and help, counts, working figures, the unplaced list and the totality invariant; `src/cadrumo/application/modelo/work_form.py`.
 - [ ] `P03.S18` - Assemble the help card parts from legal references, rendered formulas, official quotes, constraints and origin, treating label restatements as absent help; `src/cadrumo/application/modelo/casilla_help.py`.
 - [ ] `P03.S19` - Add the form loading service and the before-and-after calculation diff query that the workbench door calls off the event loop; `src/cadrumo/application/modelo/work_form_service.py`.
 
