@@ -40,6 +40,7 @@ import grimp
 from grimp.exceptions import GrimpException
 
 from dev._paths import REPO_ROOT
+from dev.docs.sequences.verdict_cache import engine_import_closure
 
 __all__ = [
     "CHANGE_CLASS_RULES",
@@ -160,11 +161,12 @@ CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
         ci_contracts=True,
     ),
     # Each pattern holds an input of the goldens gate's verdict: the pages with
-    # their sequence contracts and goldens, the engine that executes them, and
-    # the product and locked dependencies whose output the goldens record.
+    # their sequence contracts and goldens, the engine that executes them and
+    # every dev module it imports, and the product and locked dependencies
+    # whose output the goldens record. The verdict key hashes the same set.
     ChangeClassRule(
         name="documented-output",
-        patterns=("docs/**", "dev/docs/**", "src/cadrumo/**", "uv.lock"),
+        patterns=("docs/**", "dev/docs/**", "src/cadrumo/**", "uv.lock", *engine_import_closure()),
         sequence_goldens=True,
     ),
 )

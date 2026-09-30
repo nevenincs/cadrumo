@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#docs-build-workflow'
 date: '2026-09-29'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:22b8aa792714f88f2a209a2e12e1fcd73e90e2ed1f1cb5198ff84fa0096ab9b3'
+body_hash: 'sha256:0f1707c742336746f044633e0a6bb47555084c3e30f7eb9d8b98b230b1ce75af'
 related:
   - "[[2026-09-29-docs-build-workflow-plan]]"
 ---
@@ -71,9 +71,22 @@ related:
 - `S04` `M` `docs/locales/{es,ca,hu}/LC_MESSAGES (9 catalogues)`
 - `S04` `verify:` `pytest i18n, localization, user-scope and localized build tests -m '' (44 passed)` -> `pass`
 - `S04` `by:` `opus-medium`
+- `S05` `M` `dev/docs/sequences/verdict_cache.py`
+- `S05` `M` `dev/docs/sequences/tests/test_verdict_cache.py`
+- `S05` `M` `dev/ci/change_scope.py`
+- `S05` `M` `dev/ci/tests/test_change_scope.py`
+- `S05` `verify:` `pytest dev/docs/sequences/tests/test_verdict_cache.py dev/ci/tests/test_change_scope.py dev/ci/tests/test_sequence_goldens_gate.py` -> `pass`
+- `S05` `verify:` `pytest dev/ci/tests dev/packaging/tests/test_verdict_cache_not_distributed.py` -> `pass`
+- `S05` `verify:` `python -m dev.quality.import_gate` -> `pass`
+- `S05` `verify:` `just docs-check` -> `pass`
+- `S05` `verify:` `just docs-build` -> `pass`
+- `S05` `verify:` `just docs-langs` -> `pass`
+- `S05` `verify:` `just test-sequence-goldens-gate` -> `pass`
+- `S05` `verify:` `python -m dev.docs.sequences check` -> `pass`
 
 ## Notes
 
 - `S04` `test_docs_build_full_scope` failed before this change: autodoc mocked reportlab, so `summary_layout's` A4 unpack raised; reportlab removed from the mocks in the same commit
 - `S03` Preview wall times: docs-page how-to/modelo-303 cold 29s, warm 22s; docs-page how-to (37 pages) 69s
 - `S02` Cache-miss duration on the Linux fleet is projected at 6 to 6.5 minutes, not yet measured in CI
+- `S05` Verdict key and documented-output change class now include the sequence engine's static dev-import closure (registry tooling excluded; its effect enters through the authority generation).

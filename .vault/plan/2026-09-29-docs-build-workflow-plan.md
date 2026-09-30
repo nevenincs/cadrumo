@@ -7,9 +7,9 @@ tier: L1
 related:
   - '[[2026-09-29-docs-build-workflow-adr]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:39e26ef7c0a3149a5b53da9c1690e123f4f76bc3009bbeb12854b7a4483361e9'
+body_hash: 'sha256:59c5cc4e39999774ae554657b0998fd1401233db1d254b6300e1a0e625c4079e'
 ---
 
 # `docs-build-workflow` plan
@@ -26,7 +26,7 @@ The decisions are D1 to D4 of the docs build workflow ADR; the goldens stay gove
 - [x] `S02` - Select the committed-goldens gate in the merge gate for docs, dev/docs and source changes, with a runner-persistent verdict cache; `dev/ci/change_scope.py, .github/workflows/`.
 - [x] `S03` - Preview a page or a directory from committed goldens with a persistent doctree cache, and stop classifying docs-serve as a partial build; `dev/docs/build.py, dev/docs/serve.py, docs/conf.py, justfile`.
 - [x] `S04` - Generate API stubs at build time, remove them from git, and guard the admitted module set with an independent derivation; `docs/conf.py, dev/docs/apidocs/, docs/api/, .gitignore, justfile`.
-- [ ] `S05` - Run the full docs build and owning gates, then open the pull request; `docs/, dev/docs/`.
+- [x] `S05` - Run the full docs build and owning gates, then open the pull request; `docs/, dev/docs/`.
 
 ## Parallelization
 
