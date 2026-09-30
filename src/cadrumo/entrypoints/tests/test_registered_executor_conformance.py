@@ -153,6 +153,7 @@ from ...application.ledger.evidence_read_operation import (
 from ...application.ledger.history_operation import LedgerHistoryProjection, LedgerHistoryRequest
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
+from ...application.ledger.invoice_evidence_operation import LedgerEvidenceConfirmProjection
 from ...application.ledger.list_operation import LedgerListProjection, LedgerListRequest
 from ...application.ledger.llm_classification import reject_llm_suggestion
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
@@ -316,6 +317,7 @@ from ...application.overview.read_operation import (
     OverviewReadRequest,
     OverviewStatusRead,
 )
+from ...application.prorrata_register.registered_operations import ProrrataListProjection, ProrrataMutationProjection
 from ...application.review.filter import LedgerReviewStatus
 from ...application.user_profile.automation_operations import build_automation_operation_definitions
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
@@ -422,6 +424,7 @@ from ..adapter_composition import (
     build_filing_action_ports,
     build_inventory_service_ports,
     build_ledger_evidence_ports,
+    build_prorrata_register_repository,
     build_verification_repository_bundle,
 )
 from ..justificante_composition import build_justificante_capture_service
@@ -436,6 +439,10 @@ from .activity_asset_operation_test_support import (
 )
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .censal_review_test_support import review_censal_with_services
+from .invoice_evidence_operation_test_support import (
+    assert_invoice_evidence_confirmation_persisted,
+    prepare_invoice_evidence_conformance_case,
+)
 from .invoice_withholding_operation_test_support import (
     InvoiceWithholdingConformanceSeed,
     assert_invoice_withholding_conformance_write,
@@ -449,6 +456,11 @@ from .prorrata_bienes_operation_test_support import (
     bienes_inversion_conformance_record,
     prepare_bienes_inversion_operation_conformance_case,
     read_bienes_inversion_operation_conformance_register,
+)
+from .prorrata_operation_test_support import (
+    ProrrataOperationConformanceCase,
+    prepare_prorrata_operation_conformance_case,
+    read_prorrata_operation_conformance_register,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -992,6 +1004,24 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             ("ledger.evidence.remove",),
         ),
         _RegisteredExecutorConformanceCase(
+            "ledger.evidence.reader-readiness",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.evidence.reader-readiness",),
+        ),
+        _RegisteredExecutorConformanceCase(
+            "ledger.evidence.extract",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.evidence.extract",),
+        ),
+        _RegisteredExecutorConformanceCase(
+            "ledger.evidence.confirm",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("ledger.evidence.confirm",),
+        ),
+        _RegisteredExecutorConformanceCase(
             "ledger.split.manual",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
@@ -1049,6 +1079,23 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
                 (f"ledger.bienes_inversion.{action}",),
             )
             for action in ("list", "declare")
+        ),
+        *(
+            _RegisteredExecutorConformanceCase(
+                f"ledger.prorrata.{action}",
+                OperationTerminalCondition.SUCCEEDED,
+                OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
+            )
+            for action in (
+                "list",
+                "declare_sector",
+                "elect_especial",
+                "elect_general",
+                "revoke_especial",
+                "seed",
+                "seed_sector",
+                "settle_sector",
+            )
         ),
         *(
             _RegisteredExecutorConformanceCase(
@@ -1794,6 +1841,22 @@ def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecor
     return record
 
 
+def _prorrata_case(
+    definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> ProrrataOperationConformanceCase:
+    return prepare_prorrata_operation_conformance_case(
+        definition_id,
+        profile_id,
+        repository_factory=build_prorrata_register_repository,
+        operation=operation,
+        observation_repository=(
+            build_calculation_action_ports(bucket_id=str(profile_id), operation=operation).observation_repository
+            if definition_id == "ledger.prorrata.seed"
+            else None
+        ),
+    )
+
+
 def _payload(
     definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> tuple[str, BaseModel, bytes | None]:
@@ -1802,6 +1865,18 @@ def _payload(
     values: dict[str, object]
     secret: bytes | None = None
     subject_ref = f"profile:{profile_id}"
+    if definition.definition_id in {
+        "ledger.evidence.reader-readiness",
+        "ledger.evidence.extract",
+        "ledger.evidence.confirm",
+    }:
+        evidence_case = prepare_invoice_evidence_conformance_case(
+            definition.definition_id, profile_id=profile_id, operation=operation
+        )
+        return profile_operation_subject(str(profile_id)), evidence_case.request, None
+    if definition.definition_id.startswith("ledger.prorrata."):
+        prorrata_case = _prorrata_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        return profile_operation_subject(str(profile_id)), prorrata_case.request, None
     if definition.definition_id == "modelo.aggregate":
         return (
             profile_operation_subject(str(profile_id)),
@@ -3378,13 +3453,44 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         )
     cleanup = _CloseWitness()
     with (
-        _closed_model_runtime() if definition_id == "local-reader.provision" else nullcontext(),
+        _closed_model_runtime()
+        if definition_id
+        in {
+            "local-reader.provision",
+            "ledger.evidence.reader-readiness",
+            "ledger.evidence.extract",
+            "ledger.evidence.confirm",
+        }
+        else nullcontext(),
         _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
-        subject_ref, payload, secret = _payload(
-            definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id, operation=operation
+        prorrata_case = (
+            _prorrata_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id.startswith("ledger.prorrata.")
+            else None
+        )
+        evidence_case = (
+            prepare_invoice_evidence_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id
+            in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
+            else None
+        )
+        if evidence_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
+        elif prorrata_case is None:
+            subject_ref, payload, secret = _payload(
+                definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id, operation=operation
+            )
+        else:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), prorrata_case.request, None
+        prorrata_before = (
+            read_prorrata_operation_conformance_register(
+                profile_id, repository_factory=build_prorrata_register_repository, operation=operation
+            )
+            if prorrata_case is not None
+            else None
         )
         withholding_seed = (
             InvoiceWithholdingConformanceSeed(
@@ -3482,6 +3588,58 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
         assert observed.projection.effect is case.expected_effect, case.definition_id
         assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
+        if evidence_case is not None:
+            result_type = (
+                type(evidence_case.expected_read)
+                if evidence_case.expected_read is not None
+                else LedgerEvidenceConfirmProjection
+            )
+            evidence_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=result_type,
+            )
+            if evidence_case.expected_read is not None:
+                assert evidence_result == evidence_case.expected_read
+                assert InvoiceCatalogueRepository(bucket_id=str(profile_id)).load().invoices == {}
+            else:
+                assert isinstance(evidence_result, LedgerEvidenceConfirmProjection)
+                assert evidence_result.profile_id == profile_id
+                assert_invoice_evidence_confirmation_persisted(
+                    evidence_case, evidence_result, operation_id=submitted.receipt.operation_id
+                )
+        if prorrata_case is not None:
+            assert prorrata_before is not None
+            prorrata_after = read_prorrata_operation_conformance_register(
+                profile_id, repository_factory=build_prorrata_register_repository, operation=operation
+            )
+            assert prorrata_after == prorrata_case.expected_register
+            prorrata_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=type(prorrata_case.expected_projection),
+            )
+            assert prorrata_result == prorrata_case.expected_projection
+            assert isinstance(prorrata_result, (ProrrataListProjection, ProrrataMutationProjection))
+            assert prorrata_result.profile_id == profile_id
+            assert prorrata_result.count == prorrata_case.expected_count
+            assert observed.projection.effect is prorrata_case.expected_effect
+            if prorrata_case.operation_id == "list":
+                assert prorrata_after == prorrata_before
+                assert prorrata_result.count == len(prorrata_after.entries)
+            else:
+                assert prorrata_after != prorrata_before
+                assert prorrata_result.count == (
+                    len(prorrata_after.sector_definitions)
+                    if prorrata_case.operation_id == "declare_sector"
+                    else len(prorrata_after.entries)
+                )
         if withholding_seed is not None:
             withholding_result = _resolve_result_projection(
                 driver,

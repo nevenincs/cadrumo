@@ -14,7 +14,7 @@ from ...application.prorrata_register.registered_operations import (
     ProrrataListProjection,
     ProrrataMutationProjection,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 from .runtime_profile_binding import require_profile_client
@@ -29,7 +29,7 @@ def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
     """Return only the invocation client bound to the current immutable profile."""
     expected_profile_id = UUID(active_bucket_id_or_refuse())
     if profile_id != expected_profile_id:
-        raise RuntimeError("prorrata request profile differs from the selected profile")
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return require_profile_client(ctx, expected_profile_id=expected_profile_id)
 
 
@@ -80,8 +80,7 @@ def validate_prorrata_list_completion(
 ) -> ProrrataListProjection:
     """Verify list payload and its terminal receipt agree before disclosure."""
     if (
-        completed.projection.profile_id == UUID(active_bucket_id_or_refuse())
-        and completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
         and completed.effect is OperationEffect.NONE
         and completed.refusal_code is None
     ):
@@ -100,7 +99,6 @@ def validate_prorrata_mutation_completion(
     refusal = projection.refusal
     if (
         projection.operation_id != operation_id
-        or projection.profile_id != UUID(active_bucket_id_or_refuse())
         or completed.terminal_condition
         is not (OperationTerminalCondition.REFUSED if refused else OperationTerminalCondition.SUCCEEDED)
         or completed.effect is not (OperationEffect.NONE if refused else OperationEffect.UPDATED)

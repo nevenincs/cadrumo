@@ -23,7 +23,7 @@ def aggregate_conformance_command(*, operation: PinnedAuthorityOperation) -> Per
                     counterparty_nif="FR12345678901",
                     counterparty_name="Synthetic counterpart",
                     counterparty_country="FR",
-                    operation_kind="E",
+                    operation_kind="entrega_intracomunitaria_bienes",
                     operation_period="1T",
                     taxable_base=amount,
                     invoice_total=amount,

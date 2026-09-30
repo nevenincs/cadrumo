@@ -3,51 +3,51 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Protocol, TypedDict, cast
+from typing import Never, Protocol, cast
+from uuid import UUID
 
 import typer
-from pydantic import ValidationError
 
 from ...adapters.outbound.llm.consent import (
-    EvidenceConsentToken,
     OffHostEvidenceReadOutcome,
     classify_off_host_evidence_read,
-    mint_evidence_consent_token,
 )
 from ...application.ledger.attachment_review import get_attachment_review_item, list_attachment_review_queue
-from ...application.ledger.confirmation_gate import FindingResolution
-from ...application.ledger.evidence import (
-    PurchaseInvoiceEvidencePatch,
-    PurchaseInvoiceEvidenceService,
-)
-from ...application.ledger.evidence_ports import LedgerEvidencePorts
-from ...application.ledger.invoice_confirmation import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence
-from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from ...application.ledger.confirmation_gate import FindingResolutionAction
+from ...application.ledger.evidence import PurchaseInvoiceEvidencePatch
 from ...application.ledger.invoice_draft_payloads import EvidenceExtractResult
-from ...application.ledger.invoice_draft_records import InvoiceDraft
-from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
+from ...application.ledger.invoice_draft_records import FieldProvenance
+from ...application.ledger.invoice_evidence_operation import (
+    LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
+    FindingResolutionInputV1,
+    LedgerEvidenceConfirmProjection,
+    LedgerEvidenceConfirmRequest,
+    LedgerEvidenceExtractProjection,
+    LedgerEvidenceExtractRequest,
+)
+from ...application.ledger.invoice_evidence_operation_dtos import (
+    ConfirmedEstablishmentProjectionV1,
+    InvoiceConfirmationProjectionV1,
+    InvoiceDraftProjectionV1,
+)
+from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
 from ...core.config_support import LLMProvider
+from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.field_grounding import FieldGroundingOutcome
 from ...core.i18n.render import tr
+from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.invoices.enums import InvoiceClass
-from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.regime_legend import resolve_regime_legends
+from ...domain.iva.schema import IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
-from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._evidence_field_notices import field_degradation_notices
-from ._ledger_business_invoice_cli import catalogue_invoice_shared_fields
-from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
 from ._ledger_evidence_review_cli import parse_finding_resolution
-from ._ledger_support import ledger_invoice_validation_no_recovery
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from .ledger_business_payloads import (
     AttachmentReviewQueueResult,
@@ -60,22 +60,10 @@ from .ledger_business_payloads import (
 from .runtime_ledger_evidence_add import run_ledger_evidence_add
 from .runtime_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
 from .runtime_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
-from .state_projection_support import (
-    catalogue_creation_ports_factory,
-    counterparty_establishment_repository_factory,
-    invoice_confirmation_ports_factory,
-    ledger_evidence_ports_factory,
+from .runtime_ledger_invoice_evidence import (
+    submit_invoice_evidence_confirm,
+    submit_invoice_evidence_extract,
 )
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.iva.regime_legend import RegimeLegend
-
-
-class _InvoiceClassKwarg(TypedDict, total=False):
-    """Optional keyword passed only when the operator supplied an invoice class."""
-
-    invoice_class: InvoiceClass
 
 
 def _attachment_store(bucket_id: str):
@@ -266,14 +254,9 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
     )
 
 
-#: Operator surface recorded on a token this command mints. Names the exact verb
-#: rather than "cli", because a withdrawal survey answers "where was this
-#: acknowledged" and a whole-entrypoint label cannot.
-_EXTRACT_CONSENT_SURFACE = "cli:ledger.evidence.extract"
-
 #: The operator-facing wording for each refusal the shared classifier returns.
 #: The rules are decided in :mod:`~llm.consent`; only the phrasing is CLI-owned.
-_OFF_HOST_REFUSAL_LOCALE_KEYS: Final[dict[OffHostEvidenceReadOutcome, str]] = {
+_OFF_HOST_REFUSAL_LOCALE_KEYS: dict[OffHostEvidenceReadOutcome, str] = {
     OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER: (
         "cli.app.ledger.evidence.extract_acknowledge_without_provider"
     ),
@@ -284,113 +267,45 @@ _OFF_HOST_REFUSAL_LOCALE_KEYS: Final[dict[OffHostEvidenceReadOutcome, str]] = {
 }
 
 
-def _mint_extract_consent(
+def _validate_extract_consent_options(
     *,
-    bucket_id: str,
     evidence_id: str | None,
     off_host_provider: LLMProvider | None,
     acknowledged: bool,
-    evidence_ports: LedgerEvidencePorts,
-) -> EvidenceConsentToken | None:
-    """Return the token authorising ONE off-host read, or ``None`` for the on-host default.
+) -> None:
+    """Translate malformed per-invocation consent flags before submission.
 
     Whether the two flags constitute a well-formed off-host request is decided
-    by :func:`~llm.consent.classify_off_host_evidence_read`, beside the minting
-    path it guards; this function supplies the operator-facing wording and the
-    binding to the document's content address. Both flags absent is the
-    overwhelmingly common call and returns ``None`` immediately: no token, no
-    provider override, behaviour identical to before this option existed.
-
-    Nothing here is stored. There is no config key and no profile field behind
-    either flag -- a stored acknowledgement would be exactly the standing
-    enablement the default-off posture exists to prevent, and it would decay
-    into consent nobody remembers granting.
-
-    Returns:
-        The minted token, or ``None`` when no off-host read was requested.
+    by :func:`~llm.consent.classify_off_host_evidence_read`; the registered
+    worker owns profile eligibility, content binding and token minting.
 
     Raises:
         typer.BadParameter: When the flags are supplied incompletely, when the
-            provider names the on-host default, when the read has no
-            content-addressable evidence record behind it, or when the consent
-            gate refuses this invocation.
+            provider names the on-host default, or when an off-host read has no
+            persisted evidence reference to bind to.
     """
     outcome = classify_off_host_evidence_read(provider=off_host_provider, acknowledged=acknowledged)
     if outcome is OffHostEvidenceReadOutcome.ON_HOST_DEFAULT:
-        return None
+        return
     refusal_key = _OFF_HOST_REFUSAL_LOCALE_KEYS.get(outcome)
     if refusal_key is not None:
         raise bad(tr(refusal_key))
-    # Only the one consented outcome may reach the minting path below. The
+    # Only the one consented outcome may reach the request constructor below. The
     # wording table above covers the refusals that exist today, so reaching
     # here with anything else means an outcome was added to the classifier and
-    # not given a sentence -- and the default for an unclassified answer on a
-    # consent gate has to be refusal. Falling through on the strength of "no
-    # refusal wording was found" would mint a token authorising financial
-    # evidence to leave this host, which is the one thing the default-off
-    # posture exists to prevent.
+    # not given a sentence. A consent request without a classified outcome must
+    # fail closed.
     if outcome is not OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED:
         raise bad(tr("cli.app.ledger.evidence.extract_off_host_unclassified", outcome=outcome.value))
 
-    # The token binds to the BYTES, so a read with no content-addressable record
-    # behind it cannot mint one. An attachment-only extract is exactly that case:
-    # an id names the bytes but does not fingerprint them, and recording one as
-    # the other would let a later withdrawal believe it had proved a match it
-    # never checked.
     if evidence_id is None:
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"),
-        )
-    record = PurchaseInvoiceEvidenceService(ports=evidence_ports).view(
-        bucket_id=bucket_id,
-        evidence_id=evidence_id,
-    )
-    content_address = record.source_sha256
-    if not content_address:
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_off_host_needs_content_address"),
-        )
-
-    return mint_evidence_consent_token(
-        settings=load_settings(),
-        # The SINGLE production reading of the standing per-profile bar. Passed
-        # through rather than re-decided here: the minting path refuses when it
-        # is false, so a surface cannot widen the posture by forgetting it.
-        profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
-        acknowledged=acknowledged,
-        surface=_EXTRACT_CONSENT_SURFACE,
-        evidence_content_address=content_address,
-    )
+        raise bad(tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"))
 
 
 def _require_exact_evidence_reference(evidence_id: str | None, attachment_id: str | None) -> None:
     """Require exactly one secure evidence reference for a read or confirm."""
     if (evidence_id is None) == (attachment_id is None):
         raise bad(tr("cli.app.ledger.evidence.extract_reference_required"))
-
-
-def _extract_evidence_draft(
-    *,
-    bucket_id: str,
-    evidence_id: str | None,
-    attachment_id: str | None,
-    off_host_provider: LLMProvider | None,
-    consent_token: EvidenceConsentToken | None,
-    evidence_ports: LedgerEvidencePorts,
-    operation: PinnedAuthorityOperation,
-    legends: tuple[RegimeLegend, ...],
-) -> InvoiceDraft:
-    """Run the application-owned evidence reader for one secure reference."""
-    return extract_invoice_draft_from_evidence(
-        bucket_id=bucket_id,
-        evidence_id=evidence_id,
-        attachment_id=attachment_id,
-        off_host_provider=off_host_provider,
-        consent_token=consent_token,
-        ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
-        operation=operation,
-        legends=legends,
-    )
 
 
 def _display_optional(value: object) -> object:
@@ -403,43 +318,99 @@ def _display_text(value: str | None) -> str:
     return value or "-"
 
 
-def _display_suggested_kind(draft: InvoiceDraft) -> str:
+def _display_suggested_kind(draft: InvoiceDraftProjectionV1) -> str:
     """Render the optional application-derived invoice kind."""
     return "-" if draft.suggested_kind is None else draft.suggested_kind.value
+
+
+def _decimal_text(value: PublicDecimal | None) -> str | None:
+    """Render a tagged decimal as its exact public scalar spelling."""
+    return None if value is None else value.decimal
+
+
+def _decimal_rows(
+    rows: tuple[BaseModel, ...],
+    *,
+    decimal_fields: tuple[str, ...],
+) -> list[dict[str, object]]:
+    """Flatten tagged decimal values in one already-typed DTO sequence."""
+    payloads: list[dict[str, object]] = []
+    for row in rows:
+        payload = row.model_dump(mode="json")
+        for field in decimal_fields:
+            payload[field] = _decimal_text(getattr(row, field))
+        payloads.append(payload)
+    return payloads
+
+
+def _draft_payload(draft: InvoiceDraftProjectionV1) -> dict[str, object]:
+    """Render every application draft fact into the established CLI scalar shape."""
+    payload = {str(key): value for key, value in draft.model_dump(mode="json").items()}
+    for field in (
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "grand_total",
+        "recargo_amount",
+        "retencion_rate",
+        "retencion_amount",
+        "suplidos_amount",
+    ):
+        payload[field] = _decimal_text(getattr(draft, field))
+    payload["lines"] = _decimal_rows(
+        draft.lines,
+        decimal_fields=("quantity", "unit_price", "taxable_base", "iva_rate", "iva_amount", "recargo_rate", "recargo_amount"),
+    )
+    payload["iva_breakdown"] = _decimal_rows(
+        draft.iva_breakdown,
+        decimal_fields=("iva_rate", "taxable_base", "iva_amount", "recargo_rate", "recargo_amount"),
+    )
+    discrepancies: list[dict[str, object]] = []
+    for finding in draft.discrepancies:
+        payload_row = finding.model_dump(mode="json")
+        payload_row["expected"] = _decimal_text(finding.expected)
+        payload_row["observed"] = _decimal_text(finding.observed)
+        discrepancies.append(payload_row)
+    payload["discrepancies"] = discrepancies
+    return payload
 
 
 def _evidence_extract_payload(
     *,
     bucket_id: str,
-    evidence_id: str | None,
-    attachment_id: str | None,
-    off_host_provider: LLMProvider | None,
-    consent_token: EvidenceConsentToken | None,
-    draft: InvoiceDraft,
+    projection: LedgerEvidenceExtractProjection,
 ) -> dict[str, object]:
-    """Project the application draft and one-read consent provenance."""
-    draft_payload = {str(key): value for key, value in draft.model_dump(mode="json").items()}
+    """Project the full operation DTO, its exact digests and consent effect."""
     return {
         "bucket_id": bucket_id,
-        "evidence_id": evidence_id,
-        "attachment_id": attachment_id,
-        **draft_payload,
-        "off_host_provider": None if consent_token is None else off_host_provider,
-        "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
+        "evidence_id": projection.evidence_id,
+        "attachment_id": projection.attachment_id,
+        "source_sha256": projection.source_sha256,
+        "draft_review_sha256": projection.draft_review_sha256,
+        "consent_audit_effect": projection.consent_audit_effect,
+        **_draft_payload(projection.draft),
+        "off_host_provider": projection.off_host_provider,
+        "off_host_acknowledged_surface": (
+            f"runtime:{LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID}"
+            if projection.off_host_provider is not None
+            else None
+        ),
     }
 
 
 def _evidence_extract_lines(
     bucket_id: str,
-    evidence_id: str | None,
-    attachment_id: str | None,
-    draft: InvoiceDraft,
+    projection: LedgerEvidenceExtractProjection,
 ) -> list[str]:
     """Render the stable tabular projection of one extracted draft."""
+    draft = projection.draft
     return [
         f"bucket_id\t{bucket_id}",
-        f"evidence_id\t{_display_text(evidence_id)}",
-        f"attachment_id\t{_display_text(attachment_id)}",
+        f"evidence_id\t{_display_text(projection.evidence_id)}",
+        f"attachment_id\t{_display_text(projection.attachment_id)}",
+        f"source_sha256\t{projection.source_sha256}",
+        f"draft_review_sha256\t{projection.draft_review_sha256}",
+        f"consent_audit_effect\t{projection.consent_audit_effect.value}",
         f"supplier_tax_id\t{_display_text(draft.supplier_tax_id)}",
         f"supplier_name\t{_display_text(draft.supplier_name)}",
         f"customer_tax_id\t{_display_text(draft.customer_tax_id)}",
@@ -447,14 +418,14 @@ def _evidence_extract_lines(
         f"invoice_number\t{_display_text(draft.invoice_number)}",
         f"invoice_series\t{_display_text(draft.invoice_series)}",
         f"invoice_date\t{_display_text(draft.invoice_date)}",
-        f"taxable_base\t{_display_optional(draft.taxable_base)}",
-        f"iva_rate\t{_display_optional(draft.iva_rate)}",
-        f"iva_amount\t{_display_optional(draft.iva_amount)}",
-        f"grand_total\t{_display_optional(draft.grand_total)}",
+        f"taxable_base\t{_display_optional(_decimal_text(draft.taxable_base))}",
+        f"iva_rate\t{_display_optional(_decimal_text(draft.iva_rate))}",
+        f"iva_amount\t{_display_optional(_decimal_text(draft.iva_amount))}",
+        f"grand_total\t{_display_optional(_decimal_text(draft.grand_total))}",
         f"currency\t{_display_optional(draft.currency)}",
-        f"retencion_rate\t{_display_optional(draft.retencion_rate)}",
-        f"retencion_amount\t{_display_optional(draft.retencion_amount)}",
-        f"suplidos_amount\t{_display_optional(draft.suplidos_amount)}",
+        f"retencion_rate\t{_display_optional(_decimal_text(draft.retencion_rate))}",
+        f"retencion_amount\t{_display_optional(_decimal_text(draft.retencion_amount))}",
+        f"suplidos_amount\t{_display_optional(_decimal_text(draft.suplidos_amount))}",
         f"suggested_kind\t{_display_suggested_kind(draft)}",
         f"transcription_sha256\t{_display_text(draft.transcription_sha256)}",
         f"provenance_fields\t{len(draft.provenance)}",
@@ -463,7 +434,12 @@ def _evidence_extract_lines(
     ]
 
 
-def _evidence_extract_notices(reference: str, draft: InvoiceDraft) -> list[Notice]:
+def _domain_provenance(draft: InvoiceDraftProjectionV1) -> tuple[FieldProvenance, ...]:
+    """Restore the validated provenance records for the existing notice projector."""
+    return tuple(FieldProvenance.model_validate(row.model_dump(mode="python")) for row in draft.provenance)
+
+
+def _evidence_extract_notices(reference: str, draft: InvoiceDraftProjectionV1) -> list[Notice]:
     """Project review and field-degradation notices for one extracted draft."""
     notices: list[Notice] = [
         Notice(
@@ -473,7 +449,7 @@ def _evidence_extract_notices(reference: str, draft: InvoiceDraft) -> list[Notic
             context={"reference": reference},
         ),
     ]
-    notices.extend(field_degradation_notices(draft.provenance))
+    notices.extend(field_degradation_notices(_domain_provenance(draft)))
     return notices
 
 

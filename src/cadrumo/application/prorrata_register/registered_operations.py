@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, replace
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, ValidationError, model_validator
@@ -30,6 +30,8 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
     general_prorrata_register_regime,
     opcion_prorrata_transition,
+    prorrata_electable_provenances,
+    prorrata_sector_letters,
     require_prorrata_provenance,
     revocacion_prorrata_transition,
 )
@@ -68,10 +70,14 @@ from ..operations.registry import (
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .election import ProrrataElectionError
-from .ports import ProrrataRegisterRepositoryFactory
+from .ports import ProrrataPriorSettlementSnapshotRepositoryProtocol, ProrrataRegisterRepositoryFactory
 from .sector_lifecycle import ProrrataSectorLifecycleUnavailableError
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
-from .service import ProrrataRegisterService, ProrrataWholeSeedUnavailableError
+from .service import (
+    ProrrataRegisterService,
+    ProrrataWholeSeedUnavailableError,
+    ProrrataWholeSeedUnavailableReason,
+)
 
 PRORRATA_LIST_OPERATION_DEFINITION_ID = "ledger.prorrata.list"
 PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID = "ledger.prorrata.declare_sector"
@@ -107,9 +113,14 @@ type ProrrataRefusalReason = Literal[
     "seed_source_blocked",
     "seed_existing_blocked",
     "regulated_override_standing",
-    "sector_requires_seed_sector",
     "sector_prior_definitive_absent",
     "sector_settlement_entry_absent",
+]
+type ProrrataRefusalCode = Literal[
+    "REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
+    "REFUSED_PRORRATA_ELECTION",
+    "REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
+    "REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
 ]
 
 
@@ -163,7 +174,6 @@ class ProrrataSeedRequest(_ProfileRequest):
     """Carry whole-entity prior definitive from the pinned 303 observation."""
 
     ejercicio: int
-    sector_id: str | None = None
 
 
 class ProrrataSeedSectorRequest(_ProfileRequest):
@@ -336,18 +346,20 @@ class ProrrataRefusalProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    code: Literal[
-        "REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
-        "REFUSED_PRORRATA_ELECTION",
-        "REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
-        "REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
-    ]
+    code: ProrrataRefusalCode
     reason: ProrrataRefusalReason
     detail: str
     ejercicio: int | None = None
     sector_id: str | None = None
     findings: tuple[ProrrataFindingProjection, ...] = ()
     accepted_provenances: tuple[str, ...] = ()
+    existing_provenance: str | None = None
+
+    @model_validator(mode="after")
+    def _standing_provenance_is_exact(self) -> ProrrataRefusalProjection:
+        if (self.reason == "regulated_override_standing") != (self.existing_provenance is not None):
+            raise ValueError("whole-seed standing refusal must retain the actual provisional provenance")
+        return self
 
 
 class ProrrataOperationExecutionResult(BaseModel):
@@ -551,6 +563,10 @@ class _CommittedMutation:
 
 
 class _ProrrataPreflightRefusalError(Exception):
+    reason: ProrrataRefusalReason
+    detail: str
+    accepted_provenances: tuple[str, ...]
+
     def __init__(
         self,
         reason: ProrrataRefusalReason,
@@ -576,7 +592,8 @@ def _refusal(
     sector_id: str | None = None,
     findings: tuple[ProrrataSeedFinding, ...] = (),
     accepted_provenances: tuple[str, ...] = (),
-    code: str = PRORRATA_VALIDATION_REFUSAL_CODE,
+    existing_provenance: str | None = None,
+    code: ProrrataRefusalCode = PRORRATA_VALIDATION_REFUSAL_CODE,
 ) -> ProrrataRefusalProjection:
     return ProrrataRefusalProjection(
         code=code,
@@ -586,6 +603,7 @@ def _refusal(
         sector_id=sector_id,
         findings=tuple(ProrrataFindingProjection.from_finding(item) for item in findings),
         accepted_provenances=accepted_provenances,
+        existing_provenance=existing_provenance,
     )
 
 
@@ -594,9 +612,7 @@ def _build_election_entry(
     payload: _ProrrataElectionRequest,
 ) -> ProrrataRegisterEntry:
     carried = carried_prior_definitiva_prorrata_provenance()
-    accepted_provenances = tuple(
-        item.value for item in prorrata_electable_provenances() if item != carried
-    )
+    accepted_provenances = tuple(item.value for item in prorrata_electable_provenances() if item != carried)
     if payload.provenance is None:
         raise _ProrrataPreflightRefusalError(
             "provenance_required",
@@ -662,8 +678,8 @@ def _build_election_entry(
         raise _ProrrataPreflightRefusalError("validation", str(exc)) from exc
 
 
-def _from_whole_seed_reason(reason: str) -> ProrrataRefusalReason:
-    mapping: dict[str, ProrrataRefusalReason] = {
+def _from_whole_seed_reason(reason: ProrrataWholeSeedUnavailableReason) -> ProrrataRefusalReason:
+    mapping: dict[ProrrataWholeSeedUnavailableReason, ProrrataRefusalReason] = {
         "source_absent": "seed_source_absent",
         "source_blocked": "seed_source_blocked",
         "existing_blocked": "seed_existing_blocked",
@@ -812,6 +828,9 @@ class ProrrataOperationExecutor:
                             ejercicio=getattr(payload, "ejercicio", None),
                             sector_id=getattr(payload, "sector_id", None),
                             findings=exc.findings,
+                            existing_provenance=(
+                                exc.existing_provenance.value if exc.existing_provenance is not None else None
+                            ),
                             code=PRORRATA_WHOLE_SEED_REFUSAL_CODE,
                         ),
                     )
@@ -879,9 +898,15 @@ class ProrrataOperationExecutor:
         context: OperationExecutorContext,
     ) -> object:
         if operation_id == "declare_sector" and isinstance(payload, ProrrataDeclareSectorRequest):
+            letter = next((item for item in prorrata_sector_letters() if item.value == payload.letra), None)
+            if letter is None:
+                raise _ProrrataPreflightRefusalError(
+                    "validation",
+                    "sector letter is not present in the pinned prorrata authority",
+                )
             return SectorDefinition(
                 sector_id=payload.sector_id,
-                letra=payload.letra,
+                letra=letter,
                 member_activity_codes=payload.member_activity_codes,
             )
         if operation_id in {"elect_especial", "elect_general", "revoke_especial"}:
@@ -903,11 +928,6 @@ class ProrrataOperationExecutor:
                 period="4T",
             ).snapshot_ref
         if operation_id == "seed" and isinstance(payload, ProrrataSeedRequest):
-            if payload.sector_id is not None:
-                raise _ProrrataPreflightRefusalError(
-                    "sector_requires_seed_sector",
-                    "a differentiated sector must use the seed_sector operation",
-                )
             if self._calculation_action_ports_factory is None:
                 raise RuntimeError("whole-entity prorrata seed has no observation source capability")
             return None
@@ -951,9 +971,12 @@ class ProrrataOperationExecutor:
                 bucket_id=str(payload.profile_id),
                 operation=context.authority_operation,
             )
+            observation_repository = calculation_ports.observation_repository
+            if not callable(getattr(observation_repository, "load_prior_m303_settlement_snapshot", None)):
+                raise RuntimeError("whole-entity prorrata seed has no source-snapshot capability")
             commit = service.seed_whole_carried(
                 payload.ejercicio,
-                observation_repository=calculation_ports.observation_repository,
+                observation_repository=cast(ProrrataPriorSettlementSnapshotRepositoryProtocol, observation_repository),
             )
             return _CommittedMutation(
                 register=commit.register,
@@ -1190,6 +1213,8 @@ def _shape_access(
     if shape is None or type(payload) is not shape.request_type:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.definition_id != definition_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if not isinstance(payload, _ProfileRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
     if not mutation:

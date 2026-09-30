@@ -26,6 +26,7 @@ from .declarations.models import DeclarationsRefreshSnapshotV1
 from .declarations.routes import declarations_screen_factory
 from .home import HomeScreen
 from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
+from .ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from .ledger.runtime_invoice_add import compose_runtime_invoice_add_door
 from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
@@ -146,11 +147,13 @@ class RuntimeWorkbenchRoot:
             factories["workbench.ledger"] = ledger_screen_factory(
                 generation.ledger.projection,
                 review_action=_action("operator.ledger.review"),
+                evidence_action=_action("operator.ledger.evidence.review.list"),
                 activity_asset_actions=actividad_asset_tui_actions(client=self._client, profile_label=self._label),
                 invoice_add_door=compose_runtime_invoice_add_door(
                     client=self._client,
                     profile_label=self._label,
                 ),
+                evidence_door=RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label),
             )
         if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             current = [generation]

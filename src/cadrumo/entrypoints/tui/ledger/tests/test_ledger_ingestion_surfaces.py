@@ -316,6 +316,8 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             records.focus()
             records.move_cursor(row=0)
             await pilot.press("enter")
+            await pilot.pause()
+            assert screen.query_one("#ledger-evidence-confirm", Button).disabled
             screen.query_one("#ledger-evidence-extract", Button).press()
             await pilot.pause()
             refusal = str(screen.query_one("#ledger-refusal", Static).render())
@@ -343,6 +345,57 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
                 )
             ]
             assert refreshes == [1, 1]
+
+
+@pytest.mark.asyncio
+async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record() -> None:
+    door = _EvidenceDoor(ready=True)
+    first = LedgerEvidenceRecordRowV1(
+        evidence_id="8747cbf318cf0adb",
+        media_kind="pdf",
+        file_name="invoice_A-0003.pdf",
+        supplier=None,
+        invoice_number=None,
+        created_at="2026-09-16",
+        status=LedgerEvidenceRecordStatus.UNMEASURED,
+    )
+    door.records.extend(
+        (
+            first,
+            first.model_copy(update={"evidence_id": "a747cbf318cf0adc", "file_name": "invoice_B-0004.pdf"}),
+        )
+    )
+    screen = _evidence_screen(door, [])
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
+            await pilot.pause()
+            records = screen.query_one("#ledger-evidence-records", DataTable)
+            for _ in range(_ROW_REFRESH_PAUSES):
+                if len(records.ordered_rows) == 2:
+                    break
+                await pilot.pause(0.05)
+            assert len(records.ordered_rows) == 2
+            records.focus()
+            records.move_cursor(row=0)
+            await pilot.press("enter")
+            await pilot.pause()
+            confirm = screen.query_one("#ledger-evidence-confirm", Button)
+            assert confirm.disabled
+
+            screen.query_one("#ledger-evidence-extract", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert not confirm.disabled
+            assert screen.draft is not None and screen.draft.evidence_id == first.evidence_id
+
+            records.move_cursor(row=1)
+            await pilot.press("enter")
+            await pilot.pause()
+            assert confirm.disabled
+            assert screen.draft is None
+            confirm.press()
+            await pilot.pause()
+            assert not door.confirmed
 
 
 class _ExclusionDoor:

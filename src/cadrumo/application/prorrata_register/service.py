@@ -32,7 +32,12 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
+from ...core.prorrata_register import (
+    ProrrataProvisionalProvenance,
+)
+from ...core.prorrata_register import (
+    ProrrataRegisterRegime as _ProrrataRegisterRegime,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     aeat_autorizada_prorrata_provenance as _aeat_autorizada_provenance,
@@ -73,15 +78,21 @@ ProrrataWholeSeedUnavailableReason = Literal[
 class ProrrataWholeSeedUnavailableError(ProrrataRegisterValidationError):
     """A whole-entity carry lacks a safe, current canonical source or target."""
 
+    reason: ProrrataWholeSeedUnavailableReason
+    findings: tuple[ProrrataSeedFinding, ...]
+    existing_provenance: ProrrataProvisionalProvenance | None
+
     def __init__(
         self,
         reason: ProrrataWholeSeedUnavailableReason,
         *,
         findings: tuple[ProrrataSeedFinding, ...] = (),
+        existing_provenance: ProrrataProvisionalProvenance | None = None,
     ) -> None:
         """Record the finite refusal reason and canonical source findings."""
         self.reason = reason
         self.findings = findings
+        self.existing_provenance = existing_provenance
         super().__init__(f"whole-entity prorrata carry refused: {reason}")
 
 
@@ -289,7 +300,11 @@ class ProrrataRegisterService:
                     existing.provisional_provenance is not None
                     and existing.provisional_provenance != carried_prior_definitiva_prorrata_provenance()
                 ):
-                    raise ProrrataWholeSeedUnavailableError("regulated_override_standing", findings=cross_findings)
+                    raise ProrrataWholeSeedUnavailableError(
+                        "regulated_override_standing",
+                        findings=cross_findings,
+                        existing_provenance=existing.provisional_provenance,
+                    )
                 findings = (*findings, *cross_findings)
             require_prorrata_entry_coordinates_current(seed.entry, operation=self._operation)
             retained = tuple(

@@ -24,7 +24,7 @@ from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...aggregation.retenciones import RetencionObservation
-from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
+from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor, aggregate_per_modelo
 from ...aggregation.withholding_observation_service import (
     WithholdingMutationMode,
     WithholdingObservationMutationError,
@@ -163,14 +163,21 @@ class _RetencionRepository:
 
 
 class _WindowService:
-    def __init__(self, *, generation: int = 0) -> None:
+    def __init__(self, *, generation: int = 0, observations: tuple[RetencionObservation, ...] = ()) -> None:
         self.generation = generation
+        self.observations = observations
+        self.baseline = _BASELINE
         self.reads: list[WithholdingWindowScope] = []
         self.audit_reads: list[tuple[WithholdingWindowScope, str]] = []
 
     def read_window(self, scope: WithholdingWindowScope):
         self.reads.append(scope)
-        return SimpleNamespace(scope=scope, baseline=_BASELINE, generation=self.generation)
+        return SimpleNamespace(
+            scope=scope,
+            baseline=self.baseline,
+            generation=self.generation,
+            entries=tuple(SimpleNamespace(retencion=row) for row in self.observations),
+        )
 
     def read_generation(self, scope: WithholdingWindowScope, generation_id: str):
         self.audit_reads.append((scope, generation_id))
@@ -194,7 +201,7 @@ def _ports(
             transaction_repository or _TransactionRepository(),
         ),
         retencion_observation_repository=cast(object, _RetencionRepository(observations)),
-        withholding_observation_service=cast(object, window_service or _WindowService()),
+        withholding_observation_service=cast(object, window_service or _WindowService(observations=observations)),
     )
 
 
@@ -212,16 +219,6 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
             events=events,
             operands=operands,
         ),
-    )
-
-
-def _safe_aggregate_result(*, modelo: str = "111"):
-    return SimpleNamespace(
-        modelo=modelo,
-        period=_PERIOD,
-        provider=PerModeloAggregationContributor.RETENCIONES,
-        source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-        log_fields=SimpleNamespace(observation_count=1, result_row_count=1),
     )
 
 
@@ -424,7 +421,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     result_ref = asyncio.run(executor.execute(request, context))
 
     assert result_ref == _RESULT_REF
-    assert retenciones.loads == [("111", _PERIOD)]
+    assert retenciones.loads == []
     assert window_service.reads == [_SCOPE]
     assert events.effects == [OperationEffect.NONE]
     report = operands.values[0]
@@ -440,24 +437,78 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     assert not {"perceptor_nif", "perceptor_name", "taxable_base", "retencion_amount", "observations"} & set(serialized)
 
 
+def _snapshot_observation() -> RetencionObservation:
+    return RetencionObservation(
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+        source_object_id="1" * 64,
+        perceptor_nif="11111111H",
+        perceptor_name="Synthetic recipient",
+        scheme=RetencionScheme("actividades_profesionales"),
+        taxable_base=Decimal("100.00"),
+        retencion_amount=Decimal("15.00"),
+        accrued_on="2025-01-15",
+    )
+
+
+def test_read_aggregate_retains_rows_and_generation_from_prepared_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    events = _Events()
+    operands = _Operands()
+    service = _WindowService(generation=1, observations=(_snapshot_observation(),))
+    ports = _ports(window_service=service)
+    executor = ModeloAggregateExecutor(
+        cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kwargs: ports))
+    )
+    context = _executor_context(events, operands)
+    context.authority_operation = authority_operation
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+
+    def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
+        result = aggregate_per_modelo(command, operation=operation)
+        service.generation = 2
+        service.observations = ()
+        service.baseline = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="f" * 64)
+        return result
+
+    monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", aggregate_then_advance)
+
+    asyncio.run(executor.execute(_request(), context))
+
+    report = operands.values[0]
+    assert isinstance(report, ModeloAggregateReport)
+    assert report.projection.observation_count == 1
+    assert report.projection.withholding_window is not None
+    assert report.projection.withholding_window.generation == 1
+    assert report.projection.withholding_window.baseline.generation_id == _BASELINE.generation_id
+    assert service.generation == 2
+    assert service.reads == [_SCOPE]
+    assert service.audit_reads == [(_SCOPE, _BASELINE.generation_id)]
+
+
 @pytest.mark.parametrize(
     ("replayed", "expected_effect"),
     ((False, OperationEffect.UPDATED), (True, OperationEffect.NONE)),
 )
 def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
     monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
     events = _Events()
     operands = _Operands()
-    window_service = _WindowService(generation=2)
+    window_service = _WindowService(generation=2, observations=(_snapshot_observation(),))
     ports = _ports(window_service=window_service)
     executor = ModeloAggregateExecutor(
         cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kwargs: ports))
     )
     request = _request(command=_command(), ledger_payment=_capital_capture_request())
     context = _executor_context(events, operands)
+    context.authority_operation = authority_operation
     prepared = SimpleNamespace(
         ports=ports,
         aggregate_command=_command(),
@@ -470,14 +521,23 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         lambda: str(_PROFILE),
     )
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
-    monkeypatch.setattr(executor, "_aggregate", lambda *_args: _safe_aggregate_result())
+
+    def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
+        result = aggregate_per_modelo(command, operation=operation)
+        window_service.generation = 3
+        window_service.observations = ()
+        window_service.baseline = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="f" * 64)
+        return result
+
+    monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.aggregate_per_modelo", aggregate_then_advance)
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
             self.service = service
 
-        def capture(self, _command: object, *, cadence: object):
+        def capture(self, _command: object, *, cadence: object, source_catalogue_revision_id: str):
             assert cadence is prepared.cadence
+            assert source_catalogue_revision_id == prepared.capture.catalogue_read_revision_id
             return SimpleNamespace(scope=_SCOPE, mutation=SimpleNamespace(replayed=replayed))
 
     monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.WithholdingProducer", _Producer)
@@ -494,13 +554,23 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
     assert projection.observation_count == 1
     assert projection.withholding_window is not None
     assert projection.withholding_window.generation == 2
+    assert projection.withholding_window.baseline.generation_id == _BASELINE.generation_id
+    assert window_service.generation == 3
+    assert window_service.audit_reads == [(_SCOPE, _BASELINE.generation_id)]
     assert projection.withholding_window.generation_audit is not None
     assert not {"perceptor_nif", "perceptor_name", "transaction_id", "entries"} & set(
         projection.model_dump(mode="json")
     )
 
 
-def test_ambiguous_ledger_write_keeps_effect_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "refusal_code",
+    ("storage_delivery_ambiguous", "source_revision_changed", "source_revision_unavailable"),
+)
+def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+    refusal_code: str,
+) -> None:
     events = _Events()
     operands = _Operands()
     ports = _ports()
@@ -526,17 +596,31 @@ def test_ambiguous_ledger_write_keeps_effect_unknown(monkeypatch: pytest.MonkeyP
         def __init__(self, *, service: object) -> None:
             self.service = service
 
-        def capture(self, _command: object, *, cadence: object):
+        def capture(self, _command: object, *, cadence: object, source_catalogue_revision_id: str):
             del cadence
-            raise WithholdingObservationMutationError("storage_delivery_ambiguous")
+            assert source_catalogue_revision_id == prepared.capture.catalogue_read_revision_id
+            raise WithholdingObservationMutationError(refusal_code)
 
     monkeypatch.setattr("cadrumo.application.modelo.aggregate_operation.WithholdingProducer", _Producer)
 
-    with pytest.raises(WithholdingObservationMutationError):
-        asyncio.run(executor.execute(request, context))
+    if refusal_code == "source_revision_changed":
+        result = asyncio.run(executor.execute(request, context))
+        assert result.refusal_code == "REFUSED_LEDGER_PAYMENT_WITHHOLDING_EVIDENCE"
+        assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
+        report = operands.values[0]
+        assert isinstance(report, ModeloAggregateReport)
+        projection = project_modelo_aggregate_result(
+            report,
+            _terminal_receipt(effect=OperationEffect.NONE, refused=True, refusal_code=result.refusal_code),
+        )
+        assert projection.refusal_reason == "source_revision_changed"
+        assert ports.withholding_observation_service.reads == []
+    else:
+        with pytest.raises(WithholdingObservationMutationError):
+            asyncio.run(executor.execute(request, context))
 
-    assert events.effects == [OperationEffect.UNKNOWN]
-    assert operands.values == []
+        assert events.effects == [OperationEffect.UNKNOWN]
+        assert operands.values == []
 
 
 def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
@@ -578,3 +662,39 @@ def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
     assert isinstance(report, ModeloAggregateReport)
     assert report.projection.outcome == "refused"
     assert report.projection.refusal_reason == "transaction_catalogue_revision_changed"
+
+
+def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    events = _Events()
+    operands = _Operands()
+    repository = _TransactionRepository()
+    repository.revisions = ["b" * 64]
+    ports = _ports(transaction_repository=repository)
+    executor = ModeloAggregateExecutor(
+        cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kwargs: ports))
+    )
+    request = _request(ledger_payment=_capital_capture_request())
+    public_payload = request.payload.model_dump(mode="python")
+    public_payload["ledger_payment"]["income_kind"] = WithholdingIncomeKind.PROFESSIONAL
+    request = request.model_copy(update={"payload": ModeloAggregateOperationRequest.model_validate(public_payload)})
+    context = _executor_context(events, operands)
+    context.authority_operation = authority_operation
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+
+    result = asyncio.run(executor.execute(request, context))
+
+    assert result.refusal_code == "REFUSED_LEDGER_PAYMENT_WITHHOLDING_EVIDENCE"
+    assert events.effects == [OperationEffect.NONE]
+    assert repository.revisions == ["b" * 64]
+    report = operands.values[0]
+    assert isinstance(report, ModeloAggregateReport)
+    projection = project_modelo_aggregate_result(
+        report,
+        _terminal_receipt(effect=OperationEffect.NONE, refused=True, refusal_code=result.refusal_code),
+    )
+    assert projection.refusal_reason == "invalid_evidence"

@@ -7,7 +7,7 @@ Core types:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -22,6 +22,7 @@ from ....application.aggregation.withholding_observation_service import (
     WithholdingMutationMode,
     WithholdingObservationMutationError,
     WithholdingProjectionEntry,
+    WithholdingSourceCatalogueBaseline,
     WithholdingWindowBaseline,
     WithholdingWindowScope,
     WithholdingWindowState,
@@ -35,7 +36,7 @@ from ....core.time.clock import now
 from ..storage.envelope.contract import parameterized_envelope_type
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from ..storage.secure_object_namespaces import WITHHOLDING_WORKFLOW_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectDeletion
+from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
 from ..storage.sql.secure_objects import SecureObjectRepository
 from .percepciones_observations import PercepcionObservationRepositoryAdapter
 from .retencion_observations import RetencionObservationRepositoryAdapter
@@ -95,6 +96,10 @@ class WithholdingObservationWorkflowAdapter:
         objects: SecureObjectRepository,
         retenciones: RetencionObservationRepositoryAdapter,
         percepciones: PercepcionObservationRepositoryAdapter,
+        source_catalogue_assertions: Callable[
+            [WithholdingSourceCatalogueBaseline], tuple[SecureObjectRevisionAssertion, ...]
+        ]
+        | None = None,
     ) -> None:
         """Bind all workflow rows to one secure-object transaction boundary."""
         if retenciones.secure_object_repository is not objects or percepciones.secure_object_repository is not objects:
@@ -102,6 +107,7 @@ class WithholdingObservationWorkflowAdapter:
         self._objects = objects
         self._retenciones = retenciones
         self._percepciones = percepciones
+        self._source_catalogue_assertions = source_catalogue_assertions
 
     def load_window(self, scope: WithholdingWindowScope) -> WithholdingWindowState:
         """Load and cross-check an active window and its projection rows."""
@@ -286,9 +292,19 @@ class WithholdingObservationWorkflowAdapter:
                 deletions.append(
                     self._percepciones.to_secure_object_deletion(self._percepcion_key(envelope.scope, entry))
                 )
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = ()
+        if envelope.source_catalogue_baseline is not None:
+            if self._source_catalogue_assertions is None:
+                raise WithholdingObservationMutationError("source_revision_unavailable")
+            assertions = self._source_catalogue_assertions(envelope.source_catalogue_baseline)
+            if not assertions:
+                raise WithholdingObservationMutationError("source_revision_unavailable")
         try:
-            self._objects.apply_batch(tuple(writes), tuple(deletions))
+            self._objects.apply_batch(tuple(writes), tuple(deletions), assertions=assertions)
         except SecureObjectRevisionConflictError as exc:
+            namespace = (exc.context or {}).get("namespace")
+            if any(assertion.namespace == namespace for assertion in assertions):
+                raise WithholdingObservationMutationError("source_revision_changed") from exc
             raise WithholdingObservationMutationError("concurrent_write") from exc
         except StorageError as exc:
             raise WithholdingObservationMutationError("persistence_failure") from exc

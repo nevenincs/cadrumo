@@ -106,6 +106,14 @@ cli:
         confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
           segítő heurisztika; általában kötelező).
         confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
+        confirm_expected_source_sha256_help: A bizonylatkinyerés során visszaadott SHA-256 lenyomat; ellenőrzi, hogy a bájtok változatlanok.
+        confirm_expected_draft_review_sha256_help: Az áttekintett pontos tervezet ellenőrzési lenyomata, amelyet a kinyerés adott vissza.
+        confirm_iva_amount_help: Felülírja a kinyert áfaösszeget; elhagyásával megőrzi azt.
+        confirm_iva_category_help: A számlához rögzítendő áfakategória azonosítója.
+        confirm_operation_date_help: Az adóköteles ügylet dátuma (ISO ÉÉÉÉ-HH-NN).
+        confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
+        confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
+        confirm_recargo_amount_help: A számlán szereplő egyenértékűségi pótdíj összege.
         confirm_currency_help: ISO-4217 pénznemkód.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
         confirm_invoice_class_help: Adja meg a számla osztályát, ha a dokumentum nem
@@ -452,6 +460,8 @@ cli:
         seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
           év végleges százalékából (LIVA 105.Uno cikk), a lepecsételt előző 303-as
           modell elszámolási megfigyeléséből olvasva.
+        seed_sector_requires_route: Ágazat nem adható meg a teljes tevékenység átvezetéséhez;
+          elkülönített ágazathoz használd a seed-sector parancsot.
         seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {filing_year}
           {period} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno cikk).
           Ez nem az AEAT által erre az adóévre kiadott százalék.

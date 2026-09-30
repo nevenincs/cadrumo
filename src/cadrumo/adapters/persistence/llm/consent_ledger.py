@@ -43,6 +43,7 @@ See Also:
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from uuid import uuid4
 
 from ....core.external_constants import UTF_8_ENCODING
@@ -71,6 +72,24 @@ class EvidenceConsentLedger:
     best-effort posture, and deliberately: run-telemetry losing a row costs a
     diagnostic, this losing a row costs the audit trail its completeness claim.
     """
+
+    def __init__(
+        self,
+        *,
+        before_save: Callable[[], None] | None = None,
+        after_save: Callable[[bool], None] | None = None,
+    ) -> None:
+        """Optionally report exact write custody to a registered operation.
+
+        The callbacks surround only the secure-object save, not token minting,
+        model inference, or cache access. ``after_save(False)`` means the save
+        raised and its committed extent is unknown; callers must retain that
+        uncertainty in their effect record. Both hooks are required together.
+        """
+        if (before_save is None) != (after_save is None):
+            raise ValueError("consent-ledger custody requires both save callbacks")
+        self._before_save = before_save
+        self._after_save = after_save
 
     def append(
         self,
@@ -113,21 +132,29 @@ class EvidenceConsentLedger:
             surface=surface,
             recorded_at=now(),
         )
+        if self._before_save is not None:
+            self._before_save()
+        saved = False
         try:
-            secure_object_repository_for_active_bucket().save(
-                namespace=_NAMESPACE,
-                object_key=evidence_consent_ledger_entry_object_key(entry),
-                classification=_SENSITIVITY,
-                schema_version=_VERSION,
-                written_at=entry.recorded_at,
-                payload=canonical_json_bytes({"entry": entry.model_dump(mode="json")}),
-            )
-        except Exception as exc:  # any storage failure must refuse the dispatch, never degrade it
-            msg = (
-                "Failed to record the off-host evidence-consent entry; the dispatch is refused rather "
-                "than transmitted without an audit trail."
-            )
-            raise LLMConsentError(msg) from exc
+            try:
+                secure_object_repository_for_active_bucket().save(
+                    namespace=_NAMESPACE,
+                    object_key=evidence_consent_ledger_entry_object_key(entry),
+                    classification=_SENSITIVITY,
+                    schema_version=_VERSION,
+                    written_at=entry.recorded_at,
+                    payload=canonical_json_bytes({"entry": entry.model_dump(mode="json")}),
+                )
+            except Exception as exc:  # any storage failure must refuse the dispatch, never degrade it
+                msg = (
+                    "Failed to record the off-host evidence-consent entry; the dispatch is refused rather "
+                    "than transmitted without an audit trail."
+                )
+                raise LLMConsentError(msg) from exc
+            saved = True
+        finally:
+            if self._after_save is not None:
+                self._after_save(saved)
         return entry
 
     def load_entries(self) -> tuple[EvidenceConsentLedgerEntry, ...]:

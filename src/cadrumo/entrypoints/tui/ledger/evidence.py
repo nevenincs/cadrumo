@@ -78,6 +78,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         super().__init__(controller, id="ledger-evidence-screen")
         self.selected_evidence_id: str | None = None
         self.selected_record_id: str | None = None
+        self._reviewed_evidence_id: str | None = None
         self.requested_review: LedgerEvidenceReviewRequested | None = None
         self._records: tuple[LedgerEvidenceRecordRowV1, ...] | None = None
         self.draft: LedgerEvidenceDraftV1 | None = None
@@ -228,6 +229,10 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
 
     def _select_record(self, evidence_id: str) -> None:
         record = next(item for item in self._records or () if item.evidence_id == evidence_id)
+        if evidence_id != self.selected_record_id:
+            self._reviewed_evidence_id = None
+            self.draft = None
+            self.query_one("#ledger-evidence-draft", Static).update("")
         self.selected_record_id = evidence_id
         self.query_one("#ledger-evidence-record-detail", Static).update(
             ledger_copy(
@@ -239,7 +244,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             )
         )
         self.query_one("#ledger-evidence-extract", Button).disabled = False
-        self.query_one("#ledger-evidence-confirm", Button).disabled = False
+        self.query_one("#ledger-evidence-confirm", Button).disabled = self._reviewed_evidence_id != evidence_id
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Add, read or confirm a document; reading waits on the reader's readiness."""
@@ -249,6 +254,12 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             case "ledger-evidence-extract" if self.selected_record_id is not None:
                 self._start(self._extract(self.selected_record_id), ledger_copy("tui.ledger.evidence.reading"))
             case "ledger-evidence-confirm" if self.selected_record_id is not None:
+                if (
+                    self._reviewed_evidence_id != self.selected_record_id
+                    or self.draft is None
+                    or self.draft.evidence_id != self.selected_record_id
+                ):
+                    return
                 confirmation = self._confirmation(self.selected_record_id)
                 if confirmation is not None:
                     self._start(self._confirm(confirmation), ledger_copy("tui.ledger.evidence.confirming"))
@@ -296,24 +307,39 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
 
     async def _extract(self, evidence_id: str) -> None:
         status = self.query_one("#ledger-flow-status", Static)
+        self._reviewed_evidence_id = None
+        self.draft = None
+        self.query_one("#ledger-evidence-draft", Static).update("")
+        self.query_one("#ledger-evidence-confirm", Button).disabled = True
         try:
             draft = await self.controller.extract_evidence(evidence_id)
         except (CadrumoError, ValidationError) as error:
             status.update(ledger_copy("tui.ledger.evidence.read_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
-            self.draft = draft
             status.update(ledger_copy("tui.ledger.evidence.read_done"))
-            self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
-            if draft.suggested_kind is not None:
-                self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
-            counterparty = self.query_one("#ledger-evidence-counterparty", Input)
-            if not counterparty.value and draft.supplier_name:
-                counterparty.value = draft.supplier_name
+            if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
+                self.draft = draft
+                self._reviewed_evidence_id = evidence_id
+                self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
+                self.query_one("#ledger-evidence-confirm", Button).disabled = False
+                if draft.suggested_kind is not None:
+                    self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
+                counterparty = self.query_one("#ledger-evidence-counterparty", Input)
+                if not counterparty.value and draft.supplier_name:
+                    counterparty.value = draft.supplier_name
         finally:
             self.reading = False
 
     async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
+        if (
+            self._reviewed_evidence_id != confirmation.evidence_id
+            or self.draft is None
+            or self.draft.evidence_id != confirmation.evidence_id
+        ):
+            return
+        self._reviewed_evidence_id = None
+        self.query_one("#ledger-evidence-confirm", Button).disabled = True
         status = self.query_one("#ledger-flow-status", Static)
         try:
             confirmed = await self.controller.confirm_evidence(confirmation)

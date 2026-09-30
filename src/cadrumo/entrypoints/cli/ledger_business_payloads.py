@@ -38,6 +38,7 @@ from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
@@ -369,6 +370,8 @@ class EvidenceConfirmResult(OutputSchema):
     bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
+    source_sha256: Hex64Str
+    reviewed_draft_sha256: Hex64Str
     created: bool
     invoice_id: InvoiceId
     kind: str

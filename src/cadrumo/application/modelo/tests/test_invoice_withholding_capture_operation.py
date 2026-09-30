@@ -26,7 +26,7 @@ from ...aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
 )
 from ...aggregation.retenciones import RetencionObservation
-from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
+from ...aggregation.service import PerModeloAggregationCommand, aggregate_per_modelo
 from ...aggregation.withholding_filing_cadence import WithholdingFilerCadence
 from ...aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
@@ -323,10 +323,35 @@ def _executor_context(events: _Events, operands: _Operands) -> OperationExecutor
 
 
 class _WithholdingService:
-    def read_window(self, scope: WithholdingWindowScope):
-        return SimpleNamespace(scope=scope, baseline=_BASELINE, generation=1)
+    def __init__(self) -> None:
+        self.generation = 1
+        self.baseline = _BASELINE
+        self.reads: list[WithholdingWindowScope] = []
+        self.audit_reads: list[tuple[WithholdingWindowScope, str]] = []
+        self.observations = (
+            RetencionObservation(
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
+                source_object_id="b" * 64,
+                perceptor_nif="11111111H",
+                perceptor_name="Synthetic recipient",
+                scheme=RetencionScheme("actividades_profesionales"),
+                taxable_base=Decimal("100.00"),
+                retencion_amount=Decimal("15.00"),
+                accrued_on="2024-01-15",
+            ),
+        )
 
-    def read_generation(self, _scope: WithholdingWindowScope, _generation_id: str):
+    def read_window(self, scope: WithholdingWindowScope):
+        self.reads.append(scope)
+        return SimpleNamespace(
+            scope=scope,
+            baseline=self.baseline,
+            generation=self.generation,
+            entries=tuple(SimpleNamespace(retencion=row) for row in self.observations),
+        )
+
+    def read_generation(self, scope: WithholdingWindowScope, generation_id: str):
+        self.audit_reads.append((scope, generation_id))
         return None
 
 
@@ -338,22 +363,12 @@ def _prepared() -> _PreparedCapture:
         retencion_observation_repository=SimpleNamespace(load_observations=lambda _modelo, _period: ()),
         withholding_observation_service=service,
     )
-    capture = SimpleNamespace(command=object(), scope=_SCOPE)
+    capture = SimpleNamespace(command=object(), scope=_SCOPE, catalogue_read_revision_id="b" * 64)
     return _PreparedCapture(
         ports=cast(ModeloInvoiceWithholdingCapturePorts, cast(object, ports)),
         cadence=cast(WithholdingFilerCadence, object()),
         capture=cast(InvoiceWithholdingCapture, cast(object, capture)),
         aggregate_command=_command(),
-    )
-
-
-def _safe_aggregate_result():
-    return SimpleNamespace(
-        modelo="111",
-        period=_PERIOD.to_period(),
-        provider=PerModeloAggregationContributor.RETENCIONES,
-        source_kinds=(BindingSourceKind.PAYABLE_INVOICE,),
-        log_fields=SimpleNamespace(observation_count=1, result_row_count=1),
     )
 
 
@@ -389,6 +404,7 @@ def _terminal_receipt(*, effect: OperationEffect, refused: bool = False) -> Oper
 )
 def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
     replayed: bool,
     expected_effect: OperationEffect,
 ) -> None:
@@ -398,19 +414,34 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
     )
     prepared = _prepared()
+    service = prepared.ports.withholding_observation_service
+    context = _executor_context(events, operands)
+    context.authority_operation = authority_operation
     monkeypatch.setattr(
         "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
-    monkeypatch.setattr(executor, "_aggregate", lambda *_args: _safe_aggregate_result())
+
+    def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
+        result = aggregate_per_modelo(command, operation=operation)
+        service.generation = 2
+        service.observations = ()
+        service.baseline = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="f" * 64)
+        return result
+
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.invoice_withholding_capture_operation.aggregate_per_modelo",
+        aggregate_then_advance,
+    )
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
             self.service = service
 
-        def capture(self, _command: object, *, cadence: object):
+        def capture(self, _command: object, *, cadence: object, source_catalogue_revision_id: str):
             del cadence
+            assert source_catalogue_revision_id == prepared.capture.catalogue_read_revision_id
             return SimpleNamespace(scope=_SCOPE, mutation=SimpleNamespace(replayed=replayed))
 
     monkeypatch.setattr(
@@ -418,7 +449,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
         _Producer,
     )
 
-    result_ref = asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
+    result_ref = asyncio.run(executor.execute(_request(), context))
 
     assert result_ref == _OPERAND_REF
     assert events.effects == [OperationEffect.UNKNOWN, expected_effect]
@@ -432,6 +463,11 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     assert projected.outcome == "captured"
     assert projected.observation_count == 1
     assert projected.withholding_window is not None
+    assert projected.withholding_window.generation == 1
+    assert projected.withholding_window.baseline.generation_id == _BASELINE.generation_id
+    assert service.generation == 2
+    assert service.reads == [_SCOPE]
+    assert service.audit_reads == [(_SCOPE, _BASELINE.generation_id)]
     assert not {"perceptor_nif", "perceptor_name", "retencion_amount", "entries"} & set(
         projected.model_dump(mode="json")
     )
@@ -483,7 +519,13 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
     }
 
 
-def test_mutation_port_error_keeps_effect_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "refusal_code", ("persistence_failure", "source_revision_changed", "source_revision_unavailable")
+)
+def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+    refusal_code: str,
+) -> None:
     events = _Events()
     operands = _Operands()
     executor = ModeloInvoiceWithholdingCaptureExecutor(
@@ -493,23 +535,38 @@ def test_mutation_port_error_keeps_effect_unknown(monkeypatch: pytest.MonkeyPatc
         "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: _prepared())
+    prepared = _prepared()
+    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
             self.service = service
 
-        def capture(self, _command: object, *, cadence: object):
+        def capture(self, _command: object, *, cadence: object, source_catalogue_revision_id: str):
             del cadence
-            raise WithholdingObservationMutationError("persistence_failure")
+            assert source_catalogue_revision_id == prepared.capture.catalogue_read_revision_id
+            raise WithholdingObservationMutationError(refusal_code)
 
     monkeypatch.setattr(
         "cadrumo.application.modelo.invoice_withholding_capture_operation.WithholdingProducer",
         _Producer,
     )
 
-    with pytest.raises(WithholdingObservationMutationError):
-        asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
+    if refusal_code == "source_revision_changed":
+        result = asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
+        assert result.refusal_code == MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE
+        assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
+        report = operands.values[0]
+        assert isinstance(report, ModeloInvoiceWithholdingCaptureReport)
+        projection = project_modelo_invoice_withholding_capture_result(
+            report,
+            _terminal_receipt(effect=OperationEffect.NONE, refused=True),
+        )
+        assert projection.refusal_reason == "source_revision_changed"
+        assert prepared.ports.withholding_observation_service.reads == []
+    else:
+        with pytest.raises(WithholdingObservationMutationError):
+            asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
 
-    assert events.effects == [OperationEffect.UNKNOWN]
-    assert operands.values == []
+        assert events.effects == [OperationEffect.UNKNOWN]
+        assert operands.values == []

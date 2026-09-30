@@ -454,6 +454,7 @@ class ModeloAggregateExecutor:
                         WithholdingProducer(service=prepared.ports.withholding_observation_service).capture,
                         capture.command,
                         cadence=prepared.cadence,
+                        source_catalogue_revision_id=capture.catalogue_read_revision_id,
                     )
                 except (WithholdingProducerError, WithholdingRecognitionError) as error:
                     # Producer validation and recognition finish before service.apply;

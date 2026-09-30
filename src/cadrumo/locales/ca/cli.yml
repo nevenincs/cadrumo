@@ -110,6 +110,14 @@ cli:
         confirm_counterparty_name_help: Nom de la contrapart (sense heurística d'extracció
           encara; normalment obligatori).
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
+        confirm_expected_source_sha256_help: SHA-256 del justificant retornat per extract; verifica que els bytes no han canviat.
+        confirm_expected_draft_review_sha256_help: Empremta de revisió de l'esborrany exacte que ha revisat, retornada per extract.
+        confirm_iva_amount_help: Sobreescriu l'import d'IVA extret; ometi l'opció per conservar-lo.
+        confirm_iva_category_help: Identificador de la categoria d'IVA que es registrarà per a aquesta factura.
+        confirm_operation_date_help: Data de l'operació gravada (ISO AAAA-MM-DD).
+        confirm_retention_rate_help: Percentatge de retenció d'IRPF de la factura.
+        confirm_retention_amount_help: Import de retenció d'IRPF de la factura.
+        confirm_recargo_amount_help: Import del recàrrec d'equivalència de la factura.
         confirm_currency_help: Codi de moneda ISO-4217.
         confirm_help: Torna a extreure el justificant en local i confirma'l com a
           factura real del catàleg.
@@ -453,6 +461,8 @@ cli:
         seed_help: Arrossega a l'exercici la prorrata provisional a partir del percentatge
           definitiu de l'any anterior (LIVA art. 105.Uno), llegit de l'observació
           segellada de la liquidació del Model 303 anterior.
+        seed_sector_requires_route: No es pot passar un sector a l'arrossegament de
+          tota l'activitat; fes servir seed-sector per a un sector diferenciat.
         seed_local_authority: El percentatge provisional s'ha arrossegat localment
           des de la teva observació desada de la liquidació {modelo} {filing_year}
           {period} (LIVA art. 105.Uno). No és un percentatge emès per l'AEAT per a

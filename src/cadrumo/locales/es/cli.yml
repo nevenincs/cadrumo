@@ -111,6 +111,14 @@ cli:
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
+        confirm_expected_source_sha256_help: SHA-256 del justificante devuelto por extract; verifica que los bytes no han cambiado.
+        confirm_expected_draft_review_sha256_help: Huella de revisión del borrador exacto que ha revisado, devuelta por extract.
+        confirm_iva_amount_help: Sobrescribe el importe de IVA extraído; omita la opción para conservarlo.
+        confirm_iva_category_help: Identificador de la categoría de IVA que se registrará para esta factura.
+        confirm_operation_date_help: Fecha de la operación gravada (ISO AAAA-MM-DD).
+        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
+        confirm_retention_amount_help: Importe de retención de IRPF de la factura.
+        confirm_recargo_amount_help: Importe del recargo de equivalencia de la factura.
         confirm_currency_help: Código de moneda ISO-4217.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
@@ -455,6 +463,8 @@ cli:
         seed_help: Arrastra al ejercicio la prorrata provisional a partir del porcentaje
           definitivo del año anterior (LIVA art. 105.Uno), leído de la observación
           sellada de la liquidación del Modelo 303 anterior.
+        seed_sector_requires_route: No se puede pasar un sector al arrastre de toda
+          la actividad; usa seed-sector para un sector diferenciado.
         seed_local_authority: El porcentaje provisional se ha arrastrado localmente
           desde tu observación almacenada de la liquidación {modelo} {filing_year}
           {period} (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para

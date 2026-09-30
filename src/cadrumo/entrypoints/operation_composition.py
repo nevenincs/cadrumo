@@ -158,6 +158,14 @@ from ..application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
+from ..application.ledger.invoice_evidence_operation import (
+    build_ledger_evidence_confirm_definition,
+    build_ledger_evidence_confirm_registration,
+    build_ledger_evidence_extract_definition,
+    build_ledger_evidence_extract_registration,
+    build_ledger_evidence_reader_readiness_definition,
+    build_ledger_evidence_reader_readiness_registration,
+)
 from ..application.ledger.list_operation import build_ledger_list_definition, build_ledger_list_registration
 from ..application.ledger.merge_operation import build_ledger_merge_definition, build_ledger_merge_registration
 from ..application.ledger.participation_operation import (
@@ -298,6 +306,7 @@ from ..application.live.verify_read_operation import (
     build_verify_view_definition,
     build_verify_view_registration,
 )
+from ..application.local_reader import read_local_reader_status
 from ..application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
@@ -455,6 +464,7 @@ from ..application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
+from ..application.operations.registry_schema_validation import operation_schema_compilation_scope
 from ..application.overview.pipeline_operation import (
     build_overview_pipeline_definition,
     build_overview_pipeline_registration,
@@ -466,6 +476,18 @@ from ..application.overview.read_operation import (
     build_overview_read_registration,
 )
 from ..application.overview.read_ports import OverviewReadPortsFactory
+from ..application.prorrata_register.registered_operations import (
+    build_prorrata_declare_sector_definition,
+    build_prorrata_elect_especial_definition,
+    build_prorrata_elect_general_definition,
+    build_prorrata_list_definition,
+    build_prorrata_list_registration,
+    build_prorrata_mutation_registration,
+    build_prorrata_revoke_especial_definition,
+    build_prorrata_seed_definition,
+    build_prorrata_seed_sector_definition,
+    build_prorrata_settle_sector_definition,
+)
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
 from ..application.user_profile.automation_operations import (
@@ -542,6 +564,7 @@ from .adapter_composition import (
     build_withholding_observation_service,
 )
 from .auth_read_composition import compose_auth_read_ports
+from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 from .invoice_inspection_composition import build_invoice_inspection_read_ports
 from .justificante_composition import (
     build_justificante_authenticity_verifier,
@@ -669,6 +692,7 @@ def build_auth_operation_ports(operator_scope_ports: OperatorScopePorts | None =
     )
 
 
+@operation_schema_compilation_scope()
 def build_production_operation_registry(
     *,
     settings: Settings | None = None,
@@ -759,6 +783,16 @@ def build_production_operation_registry(
     inventory_list_definition = build_inventory_list_definition(build_inventory_service_ports)
     bienes_inversion_list_definition = build_bienes_inversion_list_definition(build_bienes_inversion_repository)
     bienes_inversion_declare_definition = build_bienes_inversion_declare_definition(build_bienes_inversion_repository)
+    prorrata_list_definition = build_prorrata_list_definition(build_prorrata_register_repository)
+    prorrata_mutation_definitions = (
+        build_prorrata_declare_sector_definition(build_prorrata_register_repository),
+        build_prorrata_elect_especial_definition(build_prorrata_register_repository),
+        build_prorrata_elect_general_definition(build_prorrata_register_repository),
+        build_prorrata_revoke_especial_definition(build_prorrata_register_repository),
+        build_prorrata_seed_definition(build_prorrata_register_repository, calculation_action_ports_factory),
+        build_prorrata_seed_sector_definition(build_prorrata_register_repository),
+        build_prorrata_settle_sector_definition(build_prorrata_register_repository),
+    )
     inventory_create_definition = build_inventory_create_definition(build_inventory_service_ports)
     inventory_movement_add_definition = build_inventory_movement_add_definition(build_inventory_service_ports)
     inventory_valuation_preview_definition = build_inventory_valuation_preview_definition(build_inventory_service_ports)
@@ -1023,6 +1057,15 @@ def build_production_operation_registry(
     ledger_evidence_view_definition = build_ledger_evidence_view_definition(build_ledger_evidence_ports)
     ledger_evidence_update_definition = build_ledger_evidence_update_definition(build_ledger_evidence_ports)
     ledger_evidence_remove_definition = build_ledger_evidence_remove_definition(build_ledger_evidence_ports)
+    ledger_evidence_reader_readiness_definition = build_ledger_evidence_reader_readiness_definition(
+        read_local_reader_status
+    )
+    ledger_evidence_extract_definition = build_ledger_evidence_extract_definition(
+        build_invoice_evidence_operation_ports
+    )
+    ledger_evidence_confirm_definition = build_ledger_evidence_confirm_definition(
+        build_invoice_evidence_operation_ports
+    )
     ledger_split_definition = build_ledger_split_definition(ledger_action_ports_factory)
     ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
     ledger_update_definition = build_ledger_update_definition(ledger_action_ports_factory)
@@ -1104,6 +1147,8 @@ def build_production_operation_registry(
                 inventory_list_definition,
                 bienes_inversion_list_definition,
                 bienes_inversion_declare_definition,
+                prorrata_list_definition,
+                *prorrata_mutation_definitions,
                 inventory_create_definition,
                 inventory_movement_add_definition,
                 inventory_valuation_preview_definition,
@@ -1186,6 +1231,9 @@ def build_production_operation_registry(
                 ledger_evidence_view_definition,
                 ledger_evidence_update_definition,
                 ledger_evidence_remove_definition,
+                ledger_evidence_reader_readiness_definition,
+                ledger_evidence_extract_definition,
+                ledger_evidence_confirm_definition,
                 ledger_split_definition,
                 ledger_merge_definition,
                 ledger_update_definition,
@@ -1244,6 +1292,8 @@ def build_production_operation_registry(
                 build_inventory_list_registration(inventory_list_definition),
                 build_bienes_inversion_list_registration(bienes_inversion_list_definition),
                 build_bienes_inversion_declare_registration(bienes_inversion_declare_definition),
+                build_prorrata_list_registration(prorrata_list_definition),
+                *(build_prorrata_mutation_registration(definition) for definition in prorrata_mutation_definitions),
                 build_inventory_create_registration(inventory_create_definition),
                 build_inventory_movement_add_registration(inventory_movement_add_definition),
                 build_inventory_valuation_preview_registration(inventory_valuation_preview_definition),
@@ -1330,6 +1380,9 @@ def build_production_operation_registry(
                 build_ledger_evidence_view_registration(ledger_evidence_view_definition),
                 build_ledger_evidence_update_registration(ledger_evidence_update_definition),
                 build_ledger_evidence_remove_registration(ledger_evidence_remove_definition),
+                build_ledger_evidence_reader_readiness_registration(ledger_evidence_reader_readiness_definition),
+                build_ledger_evidence_extract_registration(ledger_evidence_extract_definition),
+                build_ledger_evidence_confirm_registration(ledger_evidence_confirm_definition),
                 build_ledger_split_registration(ledger_split_definition),
                 build_ledger_merge_registration(ledger_merge_definition),
                 build_ledger_update_registration(ledger_update_definition),

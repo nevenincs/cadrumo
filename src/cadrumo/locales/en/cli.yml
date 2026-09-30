@@ -101,6 +101,14 @@ cli:
         confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
           yet; normally required).
         confirm_counterparty_nif_help: Override the extracted supplier tax id.
+        confirm_expected_source_sha256_help: SHA-256 of the evidence source returned by extract; verifies that the bytes are unchanged.
+        confirm_expected_draft_review_sha256_help: Review digest of the exact draft you inspected, returned by extract.
+        confirm_iva_amount_help: Override the extracted IVA amount; omit to keep it.
+        confirm_iva_category_help: IVA category token to record for this invoice.
+        confirm_operation_date_help: Date of the taxable operation (ISO YYYY-MM-DD).
+        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
+        confirm_retention_amount_help: Income-tax withholding amount from the invoice.
+        confirm_recargo_amount_help: Equivalence surcharge amount from the invoice.
         confirm_currency_help: ISO-4217 currency code.
         confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
           Invoice.
@@ -423,6 +431,8 @@ cli:
         seed_help: Seed the ejercicio's provisional prorrata from the prior year's
           definitive percentage (LIVA art. 105.Uno), read from the stamped prior Modelo
           303 settlement observation.
+        seed_sector_requires_route: A sector cannot be passed to whole-entity seed;
+          use seed-sector for a differentiated sector.
         seed_local_authority: The provisional percentage was carried locally from
           your stored {modelo} {filing_year} {period} settlement observation (LIVA
           art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.

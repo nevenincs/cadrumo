@@ -376,10 +376,11 @@ class ModeloInvoiceWithholdingCaptureExecutor:
                         WithholdingProducer(service=prepared.ports.withholding_observation_service).capture,
                         prepared.capture.command,
                         cadence=prepared.cadence,
+                        source_catalogue_revision_id=prepared.capture.catalogue_read_revision_id,
                     )
                 except (WithholdingProducerError, WithholdingRecognitionError) as error:
                     # These two canonical validation boundaries run before the
-                    # producer calls service.apply. Mutation-port failures stay
+                    # producer calls service.apply. Storage failures stay
                     # UNKNOWN because their delivery outcome is not inferred.
                     await context.events.effect(OperationEffect.NONE)
                     return await self._record_refusal(payload, context, _bounded_reason(error))

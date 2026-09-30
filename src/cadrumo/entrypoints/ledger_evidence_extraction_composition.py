@@ -9,14 +9,20 @@ from ..adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ..adapters.outbound.llm.client import LLMClient
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
 from ..adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
-from ..adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
+from ..adapters.outbound.llm.evidence_draft_vision import (
+    VISION_TRANSCRIPTION_PROMPT_ID,
+    LocalVisionDocumentTranscriber,
+    transcribe_document_images,
+)
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -80,8 +86,10 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
-def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> InvoiceDraftExtractionPorts:
-    """Bind the CLI evidence commands to their concrete adapters."""
+def invoice_draft_extraction_ports(
+    *, evidence_ports: LedgerEvidencePorts, consent_ledger: EvidenceConsentLedger | None = None
+) -> InvoiceDraftExtractionPorts:
+    """Bind evidence readers, optionally tracking exact off-host consent writes."""
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
 
     def resolve_evidence_input(
@@ -143,6 +151,16 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
                     settings=settings,
                     authority_values=authority_values,
                     consent_token=require_llm_consent_token(consent_token),
+                    client=(
+                        None
+                        if consent_ledger is None
+                        else LLMClient(
+                            settings=settings,
+                            caller="cadrumo.adapters.outbound.llm.evidence_draft_text",
+                            prompt_id="ledger-invoice-text-extract",
+                            consent_ledger=consent_ledger,
+                        )
+                    ),
                 ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -177,6 +195,18 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
                 model=settings.cadrumo_llm_cloud_vision_model,
                 settings=settings,
                 consent_token=require_llm_consent_token(consent_token),
+                client=(
+                    None
+                    if consent_ledger is None
+                    else LLMClient(
+                        settings=settings.model_copy(
+                            update={"cadrumo_llm_default_timeout_s": settings.cadrumo_llm_vision_read_timeout_s}
+                        ),
+                        caller="cadrumo.adapters.outbound.llm.evidence_vision_transcription",
+                        prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
+                        consent_ledger=consent_ledger,
+                    )
+                ),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc

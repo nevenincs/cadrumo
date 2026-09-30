@@ -1,25 +1,25 @@
-"""CLI surface tests for the cross-period IVA prorrata register verbs.
-
-Exercises ``aeat app ledger prorrata elect-especial / elect-general / list``
-through the real Typer surface against an isolated encrypted backend (state is
-verified by reading it back through the ``list`` verb, the same session the
-write ran under), and pins the ``upsert_entry`` sector-definition preservation
-fix through the real encrypted repository under an in-process bucket session.
-"""
+"""Native CLI acceptance for the cross-period IVA prorrata register."""
 
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
+from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.prorrata_register.registered_operations import ProrrataEntryProjection
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
@@ -27,435 +27,408 @@ from ....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from ....tests.cli_envelope import unwrap_cli_result as _json
+from ....tests.cli_envelope import unwrap_cli_result
 from .._prorrata_register_cli import _entry_payload
-from ._cli_surface_support import (
-    _invoke,
+from .._prorrata_register_payloads import (
+    ProrrataDeclareSectorResult,
+    ProrrataElectGeneralResult,
+    ProrrataEntryPayload,
+    ProrrataListResult,
+    ProrrataSeedResult,
+    ProrrataSeedSectorResult,
+    ProrrataSeedSourcePayload,
+    ProrrataSettleSectorResult,
+    SectorDefinitionPayload,
 )
-
-# The CLI surface profile, published as a capsule with a derived test key rather
-# than enrolled and unlocked through the passphrase KDF on every test.
-_isolated_backend = active_profile_isolated_backend_fixture(
-    display_name="operator",
-    settings_overrides={
-        "cadrumo_auth_provider": None,
-        "cadrumo_certificate_path": None,
-        "cadrumo_certificate_password_secret": None,
-        "cadrumo_clave_movil_dni_nie": None,
-        "cadrumo_clave_movil_dni_fecha": None,
-        "cadrumo_clave_movil_nie_soporte": None,
-    },
-    profile_overrides={
-        "identity.name": "Operator",
-        "identity.surnames": "Example",
-        "activities.description": "Test",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    },
-)
-
-__all__ = ["_isolated_backend"]
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-#: A manual election names the art. 105 source it stands on; the carried prior
-#: definitive percentage is recorded by ``seed`` from its filed evidence.
-_AUTHORISED_PROVENANCE = ("--provenance", "aeat_autorizada", "--reference", "AEAT-PRORRATA-2025-0001")
+_SOURCE_KIND = "aeat_sede_justificante"
+_CAPTURED_AT = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_WHOLE_SEED_CURRENT_YEAR = 2026
+_WHOLE_SEED_PRIOR_YEAR = 2025
+_SECTOR_PRIOR_YEAR = 2024
+_SECTOR_CURRENT_YEAR = 2025
+_SETTLEMENT_PERIOD = "4T"
+_PRIOR_DEFINITIVE = Decimal("87")
+_PORCENTAJE_ID: CasillaId = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="native prorrata register CLI test casilla id",
+)
+_SECTOR_ID = "arrendamiento"
+_SECTOR_AUTHORIZATION = "AEAT-PRORRATA-2024-0001"
+_PROFILE_FACTS = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Native",
+    "identity.surnames": "Prorrata",
+    "activities.description": "synthetic prorrata register profile",
+    "censo.activity_start_date": "2020-01-01",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+}
 
 
-def test_a_bare_election_refuses_and_points_to_its_evidenced_routes() -> None:
-    result = _invoke(["app", "ledger", "prorrata", "elect-general", "--ejercicio", "2025", "--percentage", "75"])
-
-    assert result.exit_code != 0
-    assert "--provenance" in result.output
-    assert "prorrata seed" in result.output
-
-
-def _prorrata_list() -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "prorrata", "list"])
-    assert result.exit_code == 0, result.output
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(_json(result))
+@pytest.fixture
+def native_prorrata_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    """Register one encrypted profile and supervise its native runtime worker."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-prorrata-register", facts=_PROFILE_FACTS)
+        yield profile
 
 
-def _prorrata_entries() -> list[dict[str, object]]:
-    """Return the list response's JSON objects after proving their wire shape."""
-
-    raw_entries = _prorrata_list()["entries"]
-    assert isinstance(raw_entries, list)
-    entries: list[dict[str, object]] = []
-    for raw_entry in raw_entries:
-        assert isinstance(raw_entry, dict)
-        entries.append({str(key): value for key, value in raw_entry.items()})
-    return entries
-
-
-def test_elect_especial_persists_especial_register_entry() -> None:
-    result = _invoke(
-        [
+def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
+    if profile.label is None:
+        raise AssertionError("native prorrata profile must be registered before invocation")
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        (
+            "--language",
+            "en",
             "--format",
             "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--evidence-reference",
-            "modelo-303-2025-prorrata-opcion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+            "--profile",
+            profile.label,
+            "--profile-secrets-stdin",
+            *command,
+        ),
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
-    assert result.exit_code == 0, result.output
-    payload = _json(result)
-    assert payload["entry"]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
-    assert payload["entry"]["provisional_percentage"] == "60"
-    assert payload["entry"]["provisional_provenance"] == (
-        ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value
+    assert profile.passphrase not in result.output
+    return result
+
+
+def _error_context(result: Result) -> dict[str, object]:
+    assert result.exit_code != 0, result.output
+    document = STR_KEYED_MAPPING_ADAPTER.validate_python(json.loads(result.output))
+    error = STR_KEYED_MAPPING_ADAPTER.validate_python(document["error"])
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(error["context"])
+
+
+def _assert_registered_refusal(
+    context: dict[str, object],
+    *,
+    operation_id: str,
+    reason: str,
+    refusal_code: str,
+) -> None:
+    assert context["operation_id"] == operation_id
+    assert context["reason"] == reason
+    assert context["effect"] == "none"
+    assert context["terminal_condition"] == "refused"
+    assert context["refusal_code"] == refusal_code
+
+
+def _law_determined_prior_revision_id() -> str:
+    snapshot = published_snapshot(
+        Modelo("303").value,
+        filing_year=_WHOLE_SEED_PRIOR_YEAR,
+        period=_SETTLEMENT_PERIOD,
     )
-    assert payload["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
-        "evidence_reference": "modelo-303-2025-prorrata-opcion",
-    }
-
-    # The election reaches the persisted register read back through the list
-    # verb: a subsequent live aggregation would read this ESPECIAL entry and
-    # fire the art. 106 apportionment.
-    entries = _prorrata_entries()
-    assert len(entries) == 1
-    assert entries[0]["ejercicio"] == 2025
-    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
-    assert entries[0]["provisional_percentage"] == "60"
-    assert entries[0]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
-        "evidence_reference": "modelo-303-2025-prorrata-opcion",
-    }
+    return str(snapshot.revision.id)
 
 
-def test_evidence_reference_persists_the_explicit_option_and_revocation() -> None:
-    """The option and its revocation each reach the register through one verb."""
-    option = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "60",
-            "--evidence-reference",
-            "operator-option-2025",
-            *_AUTHORISED_PROVENANCE,
-        ]
+def _store_prior_settlement_observation() -> None:
+    """Write one locally stamped, registry-grounded prior 303 settlement observation."""
+    repository = CalculationObservationRepository()
+    casilla_values, source_headers = modelo_303_filed_disposition(
+        {_PORCENTAJE_ID: _PRIOR_DEFINITIVE},
+        source_locator="native-prorrata-prior-settlement",
     )
-    assert option.exit_code == 0, option.output
-    assert _json(option)["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
-        "evidence_reference": "operator-option-2025",
-    }
-
-    revocation = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "revoke-especial",
-            "--ejercicio",
-            "2026",
-            "--percentage",
-            "60",
-            "--evidence-reference",
-            "operator-revocation-2026",
-            *_AUTHORISED_PROVENANCE,
-        ]
+    observation = registry_grounded_modelo_observation(
+        modelo=Modelo("303").value,
+        filing_year=_WHOLE_SEED_PRIOR_YEAR,
+        period=_SETTLEMENT_PERIOD,
+        casilla_values=casilla_values,
     )
-    assert revocation.exit_code == 0, revocation.output
-    entries = _prorrata_entries()
-    assert entries[-1]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
-        "evidence_reference": "operator-revocation-2026",
-    }
-
-
-def test_elect_especial_without_evidence_records_an_explicit_continuation() -> None:
-    """An especial regime already in force continues without manufacturing an option."""
-    first = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "60",
-            "--evidence-reference",
-            "operator-option-2025",
-            *_AUTHORISED_PROVENANCE,
-        ]
+    repository.save(
+        repository.prepare_observation_envelope(
+            observation,
+            source_kind=_SOURCE_KIND,
+            captured_at=_CAPTURED_AT,
+            source_headers=source_headers,
+            stamped_revision_id=_law_determined_prior_revision_id(),
+        )
     )
-    assert first.exit_code == 0, first.output
 
-    continuation = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2026",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ]
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
+    native_prorrata_profile: NativeCliProfileFixture,
+) -> None:
+    _store_prior_settlement_observation()
+    prior_revision_id = _law_determined_prior_revision_id()
+
+    seeded_result = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "seed",
+        "--ejercicio",
+        str(_WHOLE_SEED_CURRENT_YEAR),
     )
-    assert continuation.exit_code == 0, continuation.output
-    assert _json(continuation)["entry"]["especial_transition"] is None
-
-
-def test_elect_general_persists_general_register_entry() -> None:
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-general",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "75",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    seeded = ProrrataSeedResult.model_validate(unwrap_cli_result(seeded_result))
+    expected_snapshot = RegistrySnapshotRef(
+        modelo=Modelo("303").value,
+        revision_id=prior_revision_id,
+        modelo_year=_WHOLE_SEED_PRIOR_YEAR,
+        period=_SETTLEMENT_PERIOD,
     )
-    assert result.exit_code == 0, result.output
-    entries = _prorrata_entries()
-    assert len(entries) == 1
-    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("general").value
-    assert entries[0]["provisional_percentage"] == "75"
-    assert entries[0]["especial_transition"] is None
-
-
-def test_elect_especial_for_sector_scopes_the_entry() -> None:
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--evidence-reference",
-            "modelo-303-2025-alquiler-opcion",
-            "--percentage",
-            "40",
-            "--sector",
-            "alquiler",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    expected_entry = ProrrataEntryPayload(
+        ejercicio=_WHOLE_SEED_CURRENT_YEAR,
+        regime=ProrrataRegisterRegime.from_registry("general").value,
+        especial_transition=None,
+        sector_id=None,
+        interrupted=False,
+        provisional_percentage=str(_PRIOR_DEFINITIVE),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva").value,
+        authorisation_reference=None,
+        definitive_percentage=None,
+        definitive_volume_con_derecho=None,
+        definitive_volume_sin_derecho=None,
+        source_observation_ref=f"303:{_WHOLE_SEED_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}",
+        source_registry_snapshot_refs=(expected_snapshot,),
+        schema_version="2",
     )
-    assert result.exit_code == 0, result.output
-    payload = _json(result)
-    assert payload["entry"]["sector_id"] == "alquiler"
-    entries = _prorrata_entries()
-    assert len(entries) == 1
-    assert entries[0]["sector_id"] == "alquiler"
-    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
-
-
-def test_elect_especial_requires_nonblank_evidence_reference() -> None:
-    """A supplied option reference must say something.
-
-    Omitting it is not refused: LIVA art. 103.Dos.2.º makes the special rule
-    mandatory without any option, so an especial year needs no option evidence.
-    """
-    blank = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--evidence-reference",
-            " ",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    expected_source = ProrrataSeedSourcePayload(
+        modelo=Modelo("303").value,
+        filing_year=_WHOLE_SEED_PRIOR_YEAR,
+        period=_SETTLEMENT_PERIOD,
+        casilla_id=str(_PORCENTAJE_ID),
+        stamped_revision_id=prior_revision_id,
+        authority="local_prior_observation",
     )
-    assert blank.exit_code != 0
-    assert _prorrata_entries() == []
+    assert seeded.entry == expected_entry
+    assert seeded.source == expected_source
+    assert seeded.findings == []
+    assert seeded.count == 1
 
-
-def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
-    refused = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "revoke-especial",
-            "--ejercicio",
-            "2026",
-            "--evidence-reference",
-            "modelo-303-2026-prorrata-revocacion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    absent = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "seed",
+        "--ejercicio",
+        str(_WHOLE_SEED_CURRENT_YEAR + 1),
     )
-    assert refused.exit_code != 0
-    assert "prior-year especial" in refused.output
-
-    option = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--evidence-reference",
-            "modelo-303-2025-prorrata-opcion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    absent_context = _error_context(absent)
+    _assert_registered_refusal(
+        absent_context,
+        operation_id="seed",
+        reason="seed_source_absent",
+        refusal_code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
     )
-    assert option.exit_code == 0, option.output
+    assert absent_context["prior_ejercicio"] == _WHOLE_SEED_CURRENT_YEAR
 
-    revoked = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "revoke-especial",
-            "--ejercicio",
-            "2026",
-            "--evidence-reference",
-            "modelo-303-2026-prorrata-revocacion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    listed_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
+    listed = ProrrataListResult.model_validate(unwrap_cli_result(listed_result))
+    assert str(listed.bucket_id) == str(seeded.bucket_id)
+    assert listed.entries == [expected_entry]
+    assert listed.sectors == []
+    assert listed.count == 1
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
+    native_prorrata_profile: NativeCliProfileFixture,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    declared_result = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "declare-sector",
+        "--sector-id",
+        _SECTOR_ID,
+        "--letra",
+        SectorDiferenciadoLetra.from_registry("a").value,
+        "--activity-code",
+        "6820",
+        "--activity-code",
+        "6810",
     )
-    assert revoked.exit_code == 0, revoked.output
-    payload = _json(revoked)
-    assert payload["entry"]["regime"] == ProrrataRegisterRegime.from_registry("general").value
-    assert payload["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
-        "evidence_reference": "modelo-303-2026-prorrata-revocacion",
-    }
-    entries = _prorrata_entries()
-    assert len(entries) == 2
-    assert entries[1]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
-        "evidence_reference": "modelo-303-2026-prorrata-revocacion",
-    }
-
-
-def test_especial_transitions_refuse_conflicting_evidence_references() -> None:
-    first = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--sector",
-            "retail",
-            "--evidence-reference",
-            "modelo-303-2025-retail-opcion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    declared = ProrrataDeclareSectorResult.model_validate(unwrap_cli_result(declared_result))
+    expected_sector = SectorDefinitionPayload(
+        sector_id=_SECTOR_ID,
+        letra=SectorDiferenciadoLetra.from_registry("a").value,
+        member_activity_codes=["6820", "6810"],
     )
-    assert first.exit_code == 0, first.output
+    assert declared.sector == expected_sector
+    assert declared.count == 1
 
-    conflicting = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--sector",
-            "wholesale",
-            "--evidence-reference",
-            "modelo-303-2025-wholesale-opcion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
+    missing_prior = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "seed-sector",
+        "--ejercicio",
+        str(_SECTOR_CURRENT_YEAR),
+        "--sector-id",
+        _SECTOR_ID,
     )
-    assert conflicting.exit_code != 0
-    assert "conflicting prorrata especial transition evidence references" in conflicting.output
-
-
-def test_referenced_provenance_without_reference_refuses() -> None:
-    result = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-general",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "50",
-            "--provenance",
-            ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value,
-        ],
+    missing_context = _error_context(missing_prior)
+    _assert_registered_refusal(
+        missing_context,
+        operation_id="seed_sector",
+        reason="sector_prior_definitive_absent",
+        refusal_code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
     )
-    assert result.exit_code != 0
-    assert "reference" in result.output.lower()
+    assert missing_context["ejercicio"] == _SECTOR_CURRENT_YEAR
+    assert missing_context["sector_id"] == _SECTOR_ID
 
-
-def test_interrupted_provenance_is_not_operator_electable() -> None:
-    result = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-general",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "50",
-            "--provenance",
-            ProrrataProvisionalProvenance.from_registry("interrumpida_tres_ultimos").value,
-        ],
+    sector_alias = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "seed",
+        "--ejercicio",
+        str(_SECTOR_CURRENT_YEAR),
+        "--sector",
+        _SECTOR_ID,
     )
-    assert result.exit_code != 0
+    alias_context = _error_context(sector_alias)
+    assert alias_context["reason"] == "sector_requires_seed_sector"
+    assert alias_context["sector_id"] == _SECTOR_ID
+    assert alias_context["ejercicio"] == _SECTOR_CURRENT_YEAR
+    assert "operation_id" not in alias_context
+
+    unchanged_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
+    unchanged = ProrrataListResult.model_validate(unwrap_cli_result(unchanged_result))
+    assert unchanged.entries == []
+    assert unchanged.sectors == [expected_sector]
+    assert unchanged.count == 0
+
+    elected_result = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "elect-general",
+        "--ejercicio",
+        str(_SECTOR_PRIOR_YEAR),
+        "--percentage",
+        "50",
+        "--sector",
+        _SECTOR_ID,
+        "--provenance",
+        ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value,
+        "--reference",
+        _SECTOR_AUTHORIZATION,
+    )
+    elected = ProrrataElectGeneralResult.model_validate(unwrap_cli_result(elected_result))
+    expected_election_entry = ProrrataEntryPayload(
+        ejercicio=_SECTOR_PRIOR_YEAR,
+        regime=ProrrataRegisterRegime.from_registry("general").value,
+        especial_transition=None,
+        sector_id=_SECTOR_ID,
+        interrupted=False,
+        provisional_percentage="50",
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value,
+        authorisation_reference=_SECTOR_AUTHORIZATION,
+        definitive_percentage=None,
+        definitive_volume_con_derecho=None,
+        definitive_volume_sin_derecho=None,
+        source_observation_ref=None,
+        source_registry_snapshot_refs=(),
+        schema_version="2",
+    )
+    assert elected.entry == expected_election_entry
+    assert elected.count == 1
+    assert str(elected.bucket_id) == str(declared.bucket_id)
+
+    settlement_snapshot = operation.snapshot(
+        Modelo("303").value,
+        filing_year=_SECTOR_PRIOR_YEAR,
+        period=_SETTLEMENT_PERIOD,
+    ).snapshot_ref
+    settled_result = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "settle-sector",
+        "--ejercicio",
+        str(_SECTOR_PRIOR_YEAR),
+        "--sector-id",
+        _SECTOR_ID,
+        "--con-derecho-volume",
+        "80000.00",
+        "--sin-derecho-volume",
+        "20000.00",
+    )
+    settled = ProrrataSettleSectorResult.model_validate(unwrap_cli_result(settled_result))
+    expected_settled_entry = expected_election_entry.model_copy(
+        update={
+            "definitive_percentage": "80",
+            "definitive_volume_con_derecho": "80000.00",
+            "definitive_volume_sin_derecho": "20000.00",
+            "source_registry_snapshot_refs": (settlement_snapshot,),
+        }
+    )
+    assert settled.entry == expected_settled_entry
+    assert settled.count == 1
+
+    seeded_result = _invoke(
+        native_prorrata_profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "seed-sector",
+        "--ejercicio",
+        str(_SECTOR_CURRENT_YEAR),
+        "--sector-id",
+        _SECTOR_ID,
+    )
+    seeded = ProrrataSeedSectorResult.model_validate(unwrap_cli_result(seeded_result))
+    expected_seeded_entry = ProrrataEntryPayload(
+        ejercicio=_SECTOR_CURRENT_YEAR,
+        regime=ProrrataRegisterRegime.from_registry("general").value,
+        especial_transition=None,
+        sector_id=_SECTOR_ID,
+        interrupted=False,
+        provisional_percentage="80",
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva").value,
+        authorisation_reference=None,
+        definitive_percentage=None,
+        definitive_volume_con_derecho=None,
+        definitive_volume_sin_derecho=None,
+        source_observation_ref=f"prorrata-register:{_SECTOR_PRIOR_YEAR}:{_SECTOR_ID}",
+        source_registry_snapshot_refs=(settlement_snapshot,),
+        schema_version="2",
+    )
+    assert seeded.entry == expected_seeded_entry
+    assert seeded.prior_ejercicio == _SECTOR_PRIOR_YEAR
+    assert seeded.count == 2
+
+    listed_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
+    listed = ProrrataListResult.model_validate(unwrap_cli_result(listed_result))
+    assert str(listed.bucket_id) == str(seeded.bucket_id)
+    assert listed.entries == [expected_settled_entry, expected_seeded_entry]
+    assert listed.sectors == [expected_sector]
+    assert listed.count == 2
 
 
 def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
@@ -497,54 +470,6 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         assert {entry.ejercicio for entry in reloaded.entries} == {2024, 2025}
 
 
-def test_declare_sector_persists_partition_and_sectorizes_register() -> None:
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "prorrata",
-            "declare-sector",
-            "--sector-id",
-            "arrendamiento",
-            "--letra",
-            SectorDiferenciadoLetra.from_registry("a").value,
-            "--activity-code",
-            "6820",
-            "--activity-code",
-            "6810",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json(result)
-    assert payload["sector"]["sector_id"] == "arrendamiento"
-    assert payload["sector"]["letra"] == SectorDiferenciadoLetra.from_registry("a").value
-    assert payload["sector"]["member_activity_codes"] == ["6820", "6810"]
-
-    listing = _invoke(["--format", "json", "app", "ledger", "prorrata", "list"])
-    assert listing.exit_code == 0, listing.output
-    sectors = _json(listing)["sectors"]
-    assert isinstance(sectors, list) and len(sectors) == 1
-    assert sectors[0]["sector_id"] == "arrendamiento"
-
-
-def test_declare_sector_requires_at_least_one_activity_code() -> None:
-    result = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "declare-sector",
-            "--sector-id",
-            "arrendamiento",
-            "--letra",
-            SectorDiferenciadoLetra.from_registry("a").value,
-        ],
-    )
-    assert result.exit_code != 0
-
-
 def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="77873c85-0589-4b50-b184-7e8f33dc4471"):
         repository = ProrrataRegisterRepository()
@@ -573,110 +498,6 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         assert reloaded.sector_ids() == ("comercio",)
 
 
-def _add_row(*, key: str, sector: str | None = None, input_classification: str | None = None):
-    args = [
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-05-03",
-        "--amount",
-        "121.00",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "supplier invoice",
-        "--idempotency-key",
-        key,
-    ]
-    if sector is not None:
-        args += ["--sector", sector]
-    if input_classification is not None:
-        args += ["--input-classification", input_classification]
-    return _invoke(args)
-
-
-def _envelope_notice_codes(result) -> set[str]:
-    payload = json.loads(result.output)
-    return {notice["code"] for notice in payload.get("notices", [])}
-
-
-def test_sector_tag_is_part_of_the_idempotency_identity() -> None:
-    first = _add_row(key="tx-sector-id", sector="alquiler")
-    assert first.exit_code == 0, first.output
-
-    # Same key, same sector: guarded idempotent no-op (proves the tag persisted).
-    replay = _add_row(key="tx-sector-id", sector="alquiler")
-    assert replay.exit_code == 0, replay.output
-    assert _json(replay)["bucket_event_ids"] == []
-
-    # Same key, different sector: content differs, so the add is refused — proving
-    # prorrata_sector_id participates in the persisted identity, not silently dropped.
-    conflict = _add_row(key="tx-sector-id", sector="comercio")
-    assert conflict.exit_code != 0
-
-
-def test_input_classification_without_especial_election_warns() -> None:
-    result = _add_row(key="tx-inert", input_classification="exclusively_deductible")
-    assert result.exit_code == 0, result.output
-    assert "ledger.add.input_classification_inert" in _envelope_notice_codes(result)
-
-
-def test_input_classification_with_especial_election_is_not_inert() -> None:
-    elected = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2026",
-            "--evidence-reference",
-            "modelo-303-2026-prorrata-opcion",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
-    )
-    assert elected.exit_code == 0, elected.output
-
-    result = _add_row(key="tx-especial", input_classification="exclusively_deductible")
-    assert result.exit_code == 0, result.output
-    assert "ledger.add.input_classification_inert" not in _envelope_notice_codes(result)
-
-
-def test_sector_tag_naming_absent_sector_warns() -> None:
-    # No sector declared: the tag matches nothing, so the input would silently
-    # deduct at the common-use percentage. The advisory makes that visible.
-    result = _add_row(key="tx-sector-typo", sector="comercio-typo")
-    assert result.exit_code == 0, result.output
-    assert "ledger.add.sector_unmatched" in _envelope_notice_codes(result)
-
-
-def test_sector_tag_naming_declared_sector_is_silent() -> None:
-    declared = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "declare-sector",
-            "--sector-id",
-            "arrendamiento",
-            "--letra",
-            SectorDiferenciadoLetra.from_registry("a").value,
-            "--activity-code",
-            "6820",
-        ],
-    )
-    assert declared.exit_code == 0, declared.output
-
-    result = _add_row(key="tx-sector-declared", sector="arrendamiento")
-    assert result.exit_code == 0, result.output
-    assert "ledger.add.sector_unmatched" not in _envelope_notice_codes(result)
-
-
 @pytest.mark.parametrize(
     ("regime", "kind", "expected_token"),
     [
@@ -701,7 +522,7 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
 
     ``ProrrataEspecialTransitionPayload.kind`` is enum-typed under the strict
     :class:`OutputSchema` config, so projecting a register entry must reconstruct
-    the enum member rather than hand it the bare string ``model_dump(mode="json")``
+    the enum member rather than hand it the bare string ``model_dump(mode='json')``
     renders. The emitted value stays the untranslated transport token.
     """
     entry = ProrrataRegisterEntry(
@@ -714,7 +535,7 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
         source_registry_snapshot_refs=(),
     )
 
-    payload = _entry_payload(entry)
+    payload = _entry_payload(ProrrataEntryProjection.from_entry(entry))
 
     assert payload.especial_transition is not None
     assert payload.especial_transition.kind == kind

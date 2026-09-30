@@ -386,5 +386,6 @@ def test_ledger_payroll_capture_refuses_a_large_company_whose_modelo_111_is_mont
 
         assert exit_code != 0, output
         error = json.loads(output)["error"]
-        assert error["code"] == "REFUSED_WITHHOLDING_FILING_CADENCE", output
+        assert error["code"] == "REFUSED_CLI_BOUNDARY", output
+        assert error["message"] == "Invalid value: withholding_quarterly_window_not_scheduled", output
         assert _stored_q1_retenciones(session, authority_operation) == ()

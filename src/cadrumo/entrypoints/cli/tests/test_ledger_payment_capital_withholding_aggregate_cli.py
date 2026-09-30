@@ -192,13 +192,12 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
         tmp_path,
         scope_for_destination=_capture_scope,
         prepare_profile=_capital_profile_preparer(authority_operation),
-        profile_label="M123 ledger capital",
     ) as session:
         transaction = session.prepared
         payload = capital_request(transaction).model_dump_json()
 
         exit_code, output = _aggregate(session, "123", _Q2, "--ledger-payment-withholding", payload)
-        assert exit_code == 0, output
+        assert exit_code == 0, f"{output}\n{session.runtime_failure_observations!r}"
         captured_window = json.loads(output)["result"]["withholding_window"]
         read_code, read_output = _aggregate(session, "123", _Q2)
         assert read_code == 0, read_output
@@ -219,7 +218,11 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
 
     assert calculated_code != 0, calculated_output
     error = json.loads(calculated_output)["error"]
-    assert error["code"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
+    assert error["code"] == "REFUSED_CLI_BOUNDARY", calculated_output
+    context = error["context"]
+    assert context["reason"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
+    assert context["terminal_condition"] == "refused", calculated_output
+    assert isinstance(context["operation_id"], str) and context["operation_id"], calculated_output
     assert "casilla_values" not in calculated_output
 
 
@@ -231,7 +234,6 @@ def test_ledger_capital_capture_refuses_the_wrong_modelo_and_other_123_transport
         tmp_path,
         scope_for_destination=_capture_scope,
         prepare_profile=_capital_profile_preparer(authority_operation),
-        profile_label="M123 ledger capital",
     ) as session:
         transaction = session.prepared
         payload = capital_request(transaction).model_dump_json()

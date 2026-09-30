@@ -948,18 +948,41 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
 
 def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObservationService:
     """Compose the one atomic withholding-window mutation service for a bucket."""
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectRevisionAssertion
+    from ..application.aggregation.withholding_observation_service import (
+        WithholdingObservationMutationError,
+        WithholdingObservationService,
+        WithholdingSourceCatalogueBaseline,
+    )
+    from ..application.ledger.persistence_ports import LedgerPersistenceConflictError
+    from ..core.aggregation import BindingSourceKind
 
     objects = secure_object_repository_for_bucket(bucket_id.strip())
+
+    def source_assertions(baseline: WithholdingSourceCatalogueBaseline) -> tuple[SecureObjectRevisionAssertion, ...]:
+        if baseline.source_kind is BindingSourceKind.PAYABLE_INVOICE:
+            return InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects).revision_assertions(
+                expected_revision_id=baseline.revision_id
+            )
+        try:
+            return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).revision_assertions(
+                expected_revision_id=baseline.revision_id
+            )
+        except LedgerPersistenceConflictError as exc:
+            raise WithholdingObservationMutationError("source_revision_changed") from exc
+
     return WithholdingObservationService(
         WithholdingObservationWorkflowAdapter(
             objects=objects,
             retenciones=RetencionObservationRepositoryAdapter(objects=objects),
             percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
+            source_catalogue_assertions=source_assertions,
         ),
     )
 
