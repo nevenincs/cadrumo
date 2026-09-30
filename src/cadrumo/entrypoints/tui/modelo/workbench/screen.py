@@ -143,7 +143,7 @@ from .progress import (
     workbench_progress,
 )
 from .result import WorkbenchResultScreen, result_lines
-from .review import EditReviewScreen, ReviewDecision, ReviewNote, recalculation_risk_text
+from .review import EditReviewScreen, ReviewDecision, ReviewNote, UnattributedBoxes, recalculation_risk_text
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
 from .session import Rebase, StagedChange, StageRefusal, WorkbenchEditSession
 from .sorting import SORT_LOCALE_KEYS, SortOrder, next_order, sorted_items
@@ -212,6 +212,8 @@ _SELF_REPORTING_OPERATIONS: Final[frozenset[str]] = frozenset(
 )
 """Operations whose notice says what they concluded, read from the declaration once it is read again."""
 _NAV_MIN_LABEL: Final[int] = 12
+_DIALOG_FRAME: Final[int] = 4
+"""Cells a full-width confirmation dialog's border and padding take across, around its message."""
 _FRAGMENT_SEPARATOR: Final[str] = " … "
 _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.ALL,
@@ -1665,17 +1667,29 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Whether the declaration holds a calculation that does not record which values the filer typed."""
         return form.calculation_revision_id is not None and not form.operator_entries_known
 
-    @staticmethod
-    def _unattributed_boxes(form: ModeloWorkForm, *, excluding: frozenset[AddressKey] = frozenset()) -> tuple[str, ...]:
+    def _unattributed_boxes(
+        self, form: ModeloWorkForm, *, excluding: frozenset[AddressKey] = frozenset()
+    ) -> UnattributedBoxes:
         """The boxes holding a value nobody is recorded as having typed, which a recalculation returns to source.
 
         Every such box is named, a zero in an optional box as much as an
-        assumed value: the question is what applying changes, not what is to do.
+        assumed value: the question is what applying changes, not what is to
+        do. Each carries the heading of the section it sits in, for a list too
+        long to name box by box.
         """
-        return tuple(
-            f"[{field.box}]" if field.box else field.label.text
-            for field in form.fields()
-            if field.unattributed and address_key(field.address) not in excluding
+        sections: dict[AddressKey, str] = {}
+        for page in self._pages:
+            for section in page.sections:
+                for field in section_fields(section):
+                    sections.setdefault(address_key(field.address), section.heading.text)
+            for field in page.fields():
+                sections.setdefault(address_key(field.address), page.heading.text)
+        chosen = [
+            field for field in form.fields() if field.unattributed and address_key(field.address) not in excluding
+        ]
+        return UnattributedBoxes(
+            boxes=tuple(f"[{field.box}]" if field.box else field.label.text for field in chosen),
+            sections=tuple(sections.get(address_key(field.address), "") for field in chosen),
         )
 
     def _box_of(self, address: ModeloFormAddressV1 | None) -> str | None:
@@ -1780,7 +1794,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.app.push_screen(
             ConfirmScreen(
                 title=tr("tui.modelo.workbench.calculate.at_risk_title"),
-                message=recalculation_risk_text(self._unattributed_boxes(form)),
+                message=recalculation_risk_text(
+                    self._unattributed_boxes(form),
+                    console=self.app.console,
+                    width=max(self._width() - _DIALOG_FRAME, 1),
+                ),
                 confirm_label=tr("tui.modelo.workbench.calculate.at_risk_proceed"),
                 cancel_label=tr("tui.modelo.workbench.calculate.at_risk_cancel"),
             ),

@@ -49,7 +49,7 @@ from ..casilla_list import CasillaList
 from ..issues import WorkbenchIssuesScreen, issue_lines
 from ..ports import WorkbenchChange, WorkbenchFinding, WorkbenchPreflight
 from ..result import ResultGroup, result_lines
-from ..review import EditReviewScreen, at_risk_text
+from ..review import EditReviewScreen, UnattributedBoxes, at_risk_text
 from ..screen import ModeloWorkbenchScreen
 from ..session import WorkbenchEditSession
 from ..vocabulary import editability_text
@@ -184,7 +184,8 @@ async def test_an_unattributed_declaration_names_what_applying_returns_to_source
             review.query_one("#review-acknowledge", Checkbox).value = True
             await _settle(pilot)
             after_acknowledging = review.query_one("#review-apply", Button).disabled
-        expected_warning = at_risk_text(("[07]",))
+            one_box = UnattributedBoxes(boxes=("[07]",), sections=("",))
+            expected_warning = at_risk_text(one_box, console=app.console, width=_SIZE[0])
 
     assert "[07]" in warning
     assert warning == expected_warning
