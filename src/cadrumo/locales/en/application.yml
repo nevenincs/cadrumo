@@ -155,6 +155,14 @@ application:
           active profile tax identity; clear auth sessions and authenticate the matching
           profile before live AEAT reads.
   calculations:
+    bienes_inversion_regularizacion:
+      register_advisory: '%{count} capital good(s) in the regularisation period (LIVA
+        arts. 107-110) for %{year}: %{computed} computed, %{pending} awaiting the
+        definitive prorrata. Regularisation proposed for box %{casilla}: %{value}.
+        Confirm the value before filing.'
+      transmision_advisory: '%{count} capital good(s) transferred in %{year} require
+        the single transfer regularisation (LIVA art. 110). Regularisation proposed
+        for box %{casilla}: %{value}. Confirm the value before filing.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'Observations for different modelo, year or
@@ -297,6 +305,15 @@ application:
           {period}.
         taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
           wallet decision key.
+    prorrata_regularizacion:
+      advisory: 'Prorrata regularisation by definitive percentage (LIVA arts. 104-105)
+        for %{year}: provisional prorrata %{provisional}% → definitive %{definitiva}%
+        (%{sentido}). Regularisation proposed for %{target}: %{value}. Confirm the
+        value before filing.'
+      sentido_deduccion: additional deduction
+      sentido_ingreso: payment due
+      target_casilla: box %{number}
+      target_declared: the declared regularisation box
     row_set:
       errors:
         grouping_dispatch_fell_through: 'The row-set grouping {grouping} resolved
@@ -520,7 +537,9 @@ application:
         invoice_id_required: An invoice id is required.
         invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
         remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
-          linked to transactions: %{linked_transaction_ids}. Unlink them first.'
+          linked to transactions: %{linked_transaction_ids}. There is no unlink command:
+          remove those transactions with `aeat app ledger remove`, which releases
+          the link, then remove the invoice.'
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -583,6 +602,10 @@ application:
         or omit the key to append a deliberate duplicate.
       purchase_evidence_already_set: Purchase invoice evidence is immutable once attached.
         Remove the ledger transaction and re-add it with the correct evidence.
+      split_requires_image_evidence: The on-host reader can only propose a split for
+        transaction %{transaction_id} from scanned or image evidence, and this transaction
+        has none it can read. Attach a scanned or image invoice and re-run with --read-evidence,
+        or state the split yourself with --child-amount and --child-description.
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
       transaction_id_prefix_empty: transaction id prefix is empty
@@ -1085,6 +1108,11 @@ application:
       m210_official_tipo_renta_selection_mismatch: Modelo 210 official tipo-renta
         code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta};
         received %{tipo_renta}.
+      m303_filing_evidence_exonerado_390_missing: 'Modelo 303 filing-instance evidence
+        failed validation: period %{period} of filing year %{filing_year} is the year''s
+        last settlement period and requires the Modelo 390 applicability attestation.
+        Run `aeat app modelo work attest-m303-exonerado-390 --year %{filing_year}
+        --period %{period} --observed-at TIMESTAMP` to record it, then retry the calculation.'
       m303_filing_evidence_invalid: Modelo 303 filing-instance evidence failed validation.
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on revision %{revision_id}: the registry declares a binding source no enrolled
@@ -1130,7 +1158,7 @@ application:
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
-        --year %{year} separately and use a period token such as 0A, Q1, 1T, or 01.
+        --year %{year} separately and use a period token such as 0A, 1T, or 01.
       work_unit_already_discarded: The work unit is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded work unit, so the target cannot be resumed.
@@ -1158,6 +1186,34 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+    finding_fact:
+      box_unnumbered: without a number
+      date_unknown: a date not recorded
+      modelo_unknown: not known
+      period:
+        annual: annual
+        instalment_1: 1st instalment
+        instalment_2: 2nd instalment
+        instalment_3: 3rd instalment
+        instalment_4: 4th instalment
+        month_01: January
+        month_02: February
+        month_03: March
+        month_04: April
+        month_05: May
+        month_06: June
+        month_07: July
+        month_08: August
+        month_09: September
+        month_10: October
+        month_11: November
+        month_12: December
+        other: outside the usual calendar
+        quarter_1: 1st quarter
+        quarter_2: 2nd quarter
+        quarter_3: 3rd quarter
+        quarter_4: 4th quarter
+      value_absent: an empty value
     findings:
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
@@ -1376,6 +1432,7 @@ application:
       stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
     work_form:
+      additional_data_for_box: Additional data for box {box}
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.

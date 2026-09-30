@@ -13,9 +13,11 @@ pinned non-canonical port, and never scans away from the strict target port.
 
 from __future__ import annotations
 
+import fnmatch
 import http.server
 import ipaddress
 import os
+import shutil
 import socket
 import socketserver
 import threading
@@ -27,6 +29,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from ..serve import (
     _DEFAULT_HOST,
     _DEFAULT_PORT,
@@ -34,6 +37,7 @@ from ..serve import (
     Resolution,
     ServeAction,
     ServeState,
+    _build_env,
     _looks_like_sphinx,
     _probe_host,
     classify_probe,
@@ -80,6 +84,29 @@ def test_serve_command_excludes_self_regenerated_trees() -> None:
     # The docs/cli ignore must be anchored so it does not also swallow changes
     # to the unrelated src/cadrumo/entrypoints/cli source tree.
     assert f"*{sep}cli{sep}*" not in ignores
+
+
+@pytest.mark.parametrize("scope", ["user", "full"])
+def test_the_live_preview_renders_goldens_without_executing_them(scope: str) -> None:
+    """Each rebuild skips sequence execution explicitly and builds the scope it was asked for."""
+    env = _build_env(_REPO_ROOT, scope=scope)
+    try:
+        assert env[SEQUENCE_CHECK_SKIP_ENV] == "1"
+        assert env["CADRUMO_DOCS_SCOPE"] == scope
+    finally:
+        shutil.rmtree(env["CADRUMO_LOCAL_STORAGE_ROOT"], ignore_errors=True)
+
+
+def test_serve_command_ignores_every_build_written_surface() -> None:
+    """Generated references, API stubs and the CLI-tree projection never retrigger a rebuild."""
+    command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope="full")
+    ignores = [command[index + 1] for index, flag in enumerate(command) if flag == "--ignore"]
+    sep = os.sep
+    assert f"*{sep}docs{sep}_generated{sep}*" in ignores
+    assert f"*{sep}docs{sep}api{sep}*.rst" in ignores
+    assert f"*{sep}docs{sep}_static{sep}cli-tree.json" in ignores
+    # The hand-written API overview stays watched.
+    assert not any(fnmatch.fnmatch(str(_REPO_ROOT / "docs" / "api" / "index.md"), pattern) for pattern in ignores)
 
 
 def test_serve_command_open_browser_flag_is_optional() -> None:

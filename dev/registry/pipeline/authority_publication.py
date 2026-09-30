@@ -5,25 +5,24 @@ complete compiler input receipt, validates that exact candidate, and holds one
 destination lock through the atomic artifact replacement. The artifact is
 generated output.
 
-The indexed generation records the candidate identity it was compiled from, and
+The indexed generation records the legal identity it was compiled from, and
 :func:`authority_database_currency` compares that record with the identity of
 the inputs as they stand now. The identity is content-addressed and
 checkout-independent: it folds every registry and source-evidence file's
-root-relative path and content digest, never an absolute path, a size, or a
-modification time. A fresh clone with the same compiler and declared runtime
-environment derives the recorded identity. Registry files use CRLF endings folded
-to LF, because the repository normalises the registry tree to LF while a
-Windows working copy may still hold CRLF; source evidence is byte-exact legal
-evidence and is digested raw.
+root-relative path and content digest and the profile schema, never an absolute
+path, a size, or a modification time, so a fresh clone of the same sources
+derives the recorded identity. Registry files use CRLF endings folded to LF,
+because the repository normalises the registry tree to LF while a Windows
+working copy may still hold CRLF; source evidence is byte-exact legal evidence
+and is digested raw.
 
-Currency includes the compiler identity as well as the data inputs. The
-compiler identity hashes the closure of compiler source files loaded to compile
-the candidate, recorded in the generation with the interpreter and dependency
-environment; currency re-hashes exactly those recorded files rather than
-compiling again. Every publication compiles in the same canonical child
-interpreter, so that closure never depends on which tool launched it. The
-source receipt and compiler receipt are distinct, and their combined digest
-identifies the build; the artifact frame separately hashes its output.
+The identity names the law, not the software that compiled it: neither the
+compiler code nor the interpreter or dependency set enters it, so only a change
+to the legal sources makes a generation stale. A compiler change reaches an
+authority when that authority is republished, and the database file, addressed
+by its own bytes, then changes under the same generation. Every publication
+compiles in the same canonical child interpreter, isolated from the tool that
+launched it.
 """
 
 from __future__ import annotations
@@ -46,12 +45,10 @@ from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
 )
-from cadrumo.domain.calculations.registry.authority_compiler_closure import AuthorityCompilerClosure
 from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityDescriptor,
     AuthorityStoreError,
@@ -64,7 +61,6 @@ from cadrumo.domain.calculations.registry.source_byte_availability import embedd
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
-from ..compiler.build_identity import live_compiler_closure, observe_compiler_closure
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
@@ -97,7 +93,6 @@ def require_evidence_closure(artifact: AuthorityArtifact) -> None:
 
 
 __all__ = [
-    "AuthorityBuildInput",
     "AuthorityDatabaseCurrency",
     "AuthorityDatabaseCurrencyStatus",
     "AuthorityPublicationReceipt",
@@ -132,43 +127,24 @@ class AuthorityDatabaseCurrencyStatus(StrEnum):
     STALE = "stale"
     UNREADABLE = "unreadable"
     UNSUPPORTED_FORMAT = "unsupported_format"
-    """The generation predates persisted build receipts; its build identity is unknown."""
-
-
-class AuthorityBuildInput(StrEnum):
-    """One compiler input whose drift a stale generation can name.
-
-    The component-dependency receipt is derived from these two, so it drifts
-    exactly when one of them does and is never reported on its own.
-    """
-
-    SOURCE = "source"
-    COMPILER = "compiler"
+    """The database is written in a format this runtime does not read; its identity is unknown."""
 
 
 @dataclass(frozen=True, slots=True)
 class AuthorityDatabaseCurrency:
-    """One indexed generation's recorded identity against the candidate's live identity.
+    """One indexed generation's recorded legal identity against the live sources' identity.
 
-    ``recorded_identity_digest`` is ``None`` only when the descriptor could not
-    be read, in which case ``detail`` names the refusal.  ``recorded_build_identity``
-    is ``None`` whenever the generation's receipts are unknown: unreadable, or an
-    older format that never recorded them.  The live compiler identity is the
-    recorded compiler closure re-hashed in this checkout, so the candidate
-    identities are ``None`` exactly when the recorded ones are; the live source
-    identity is always known.  ``drifted_inputs`` names every input whose
-    recorded receipt differs from the live one.
+    ``candidate_identity_digest`` is the identity a publication of the legal
+    sources as they stand now would record, and is always known.
+    ``recorded_identity_digest`` is ``None`` only when the generation could not
+    be admitted, in which case ``detail`` names the refusal.
     """
 
     descriptor_path: Path
     status: AuthorityDatabaseCurrencyStatus
-    candidate_source_identity_digest: str
-    candidate_identity_digest: str | None
+    candidate_identity_digest: str
     recorded_identity_digest: str | None
-    candidate_build_identity: AuthorityBuildIdentity | None
-    recorded_build_identity: AuthorityBuildIdentity | None
     detail: str
-    drifted_inputs: tuple[AuthorityBuildInput, ...] = ()
 
     @property
     def is_current(self) -> bool:
@@ -207,9 +183,7 @@ def validate_authority_candidate(
 ) -> ValidatedAuthorityCandidate:
     """Compile and validate a candidate, refusing inputs that change mid-validation.
 
-    The compiler closure is observed after the complete compile, validation and
-    evidence projection, so it names every compiler module this process loaded
-    to produce the artifact.
+    The artifact's identity is the source identity captured around the compile.
     """
     # Import at the compile boundary so tooling discovery does not load validators.
     from ..compiler.authority import compile_validated_authority
@@ -243,7 +217,6 @@ def validate_authority_candidate(
         authority.catalogues.sources,
         source_root=resolved_source_root,
     )
-    compiler_closure = observe_compiler_closure()
     receipt_after = _capture_receipt(
         resolved_registry_root,
         resolved_source_root,
@@ -253,16 +226,10 @@ def validate_authority_candidate(
         raise RegistryValidationError(
             "registry candidate changed while it was being validated; authority publication is refused",
         )
-    build_identity = AuthorityBuildIdentity.from_inputs(
-        receipt_after.source_identity_digest,
-        compiler_closure.identity_digest,
-    )
     artifact = AuthorityArtifact(
         modelos=authority.modelos,
         catalogues=authority.catalogues,
-        identity_digest=build_identity.identity_digest,
-        build_identity=build_identity,
-        compiler_closure=compiler_closure,
+        identity_digest=receipt_after.source_identity_digest,
         evidence=evidence,
         profile_schema=authority.profile_schema(),
     )
@@ -284,7 +251,6 @@ class PreparedAuthorityCandidate:
     profile_schema_path: Path
     receipt: AuthorityPublicationReceipt
     descriptor_path: Path
-    compiler_closure: AuthorityCompilerClosure
     eager_baseline_path: Path | None = None
 
 
@@ -345,15 +311,14 @@ def prepare_authority_candidate(
     try:
         reader = SQLiteAuthorityReader(descriptor_path)
         try:
-            build_identity = reader.build_identity()
-            compiler_closure = reader.compiler_closure()
+            staged_generation = reader.pin().logical_generation
         finally:
             reader.close()
     except AuthorityStoreError as exc:
         raise RegistryValidationError(
             f"the canonical authority compiler staged an inadmissible candidate: {exc}"
         ) from exc
-    if build_identity.source_identity_digest != receipt.source_identity_digest:
+    if staged_generation != receipt.source_identity_digest:
         raise RegistryValidationError(
             "the staged candidate records other source inputs than this publication captured; publication is refused"
         )
@@ -363,7 +328,6 @@ def prepare_authority_candidate(
         profile_schema_path=resolved_profile_schema,
         receipt=receipt,
         descriptor_path=descriptor_path,
-        compiler_closure=compiler_closure,
         eager_baseline_path=eager_baseline_path,
     )
 
@@ -414,12 +378,10 @@ def authority_source_identity(
     source_root: Path,
     profile_schema_path: Path | None = None,
 ) -> str:
-    """Return the content-addressed source identity a publication of these inputs would record.
+    """Return the content-addressed legal identity a publication of these inputs would record.
 
     Costs a content read of every registry and source-evidence file and no
-    compilation. The compiler half of a generation's identity is known only
-    from a recorded compiler closure, which :func:`authority_database_currency`
-    re-hashes.
+    compilation.
     """
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
     return _capture_receipt(
@@ -435,14 +397,12 @@ def authority_database_currency(
     registry_root: Path,
     source_root: Path,
     profile_schema_path: Path | None = None,
-    compiler_source_roots: Mapping[str, Path] | None = None,
 ) -> AuthorityDatabaseCurrency:
-    """Compare an admitted indexed generation with the exact live compiler receipt.
+    """Compare an admitted indexed generation with the legal identity of the live sources.
 
-    Nothing is compiled. The live compiler identity re-hashes the generation's
-    recorded compiler closure under ``compiler_source_roots``, which default to
-    this checkout's package and ``dev/registry`` directories; an edit outside
-    that closure cannot change what the compiler loads and so is not drift.
+    Nothing is compiled. Only the registry sources, the source evidence and the
+    profile schema are read, so an edit to the compiler or to the development
+    environment never makes a generation stale.
     """
     roots = canonical_authoring_root_pair(registry_root, source_root)
     receipt = _capture_receipt(*roots, profile_schema_path=profile_schema_path)
@@ -450,8 +410,6 @@ def authority_database_currency(
         reader = SQLiteAuthorityReader(descriptor_path)
         try:
             recorded_identity = reader.pin().logical_generation
-            recorded_build = reader.build_identity()
-            recorded_closure = reader.compiler_closure()
         finally:
             reader.close()
     except AuthorityStoreFormatError as exc:
@@ -460,47 +418,17 @@ def authority_database_currency(
         )
     except (AuthorityStoreError, OSError, ValueError) as exc:
         return _unknown_generation_currency(descriptor_path, AuthorityDatabaseCurrencyStatus.UNREADABLE, receipt, exc)
-    candidate_build = AuthorityBuildIdentity.from_inputs(
-        receipt.source_identity_digest,
-        live_compiler_closure(recorded_closure, roots=compiler_source_roots).identity_digest,
-    )
-    status = (
-        AuthorityDatabaseCurrencyStatus.CURRENT
-        if recorded_identity == candidate_build.identity_digest
-        else AuthorityDatabaseCurrencyStatus.STALE
-    )
-    drifted = tuple(
-        build_input
-        for build_input, recorded, candidate in (
-            (
-                AuthorityBuildInput.SOURCE,
-                recorded_build.source_identity_digest,
-                candidate_build.source_identity_digest,
-            ),
-            (
-                AuthorityBuildInput.COMPILER,
-                recorded_build.compiler_identity_digest,
-                candidate_build.compiler_identity_digest,
-            ),
-        )
-        if recorded != candidate
-    )
-    detail = (
-        "the indexed generation matches the live source manifest, compiler build, and component dependencies"
-        if status is AuthorityDatabaseCurrencyStatus.CURRENT
-        else "the indexed generation logical identity differs from the live complete-authority receipt; drifted: "
-        + (", ".join(build_input.value for build_input in drifted) or "none")
-    )
+    current = recorded_identity == receipt.source_identity_digest
     return AuthorityDatabaseCurrency(
         descriptor_path=descriptor_path,
-        status=status,
-        candidate_source_identity_digest=receipt.source_identity_digest,
-        candidate_identity_digest=candidate_build.identity_digest,
+        status=AuthorityDatabaseCurrencyStatus.CURRENT if current else AuthorityDatabaseCurrencyStatus.STALE,
+        candidate_identity_digest=receipt.source_identity_digest,
         recorded_identity_digest=recorded_identity,
-        candidate_build_identity=candidate_build,
-        recorded_build_identity=recorded_build,
-        detail=detail,
-        drifted_inputs=drifted,
+        detail=(
+            "the indexed generation records the live legal sources"
+            if current
+            else "the legal sources changed since the indexed generation was published"
+        ),
     )
 
 
@@ -510,15 +438,12 @@ def _unknown_generation_currency(
     receipt: AuthorityPublicationReceipt,
     refusal: Exception,
 ) -> AuthorityDatabaseCurrency:
-    """Report a generation whose receipts and compiler closure could not be admitted."""
+    """Report a generation that could not be admitted, so its recorded identity is unknown."""
     return AuthorityDatabaseCurrency(
         descriptor_path=descriptor_path,
         status=status,
-        candidate_source_identity_digest=receipt.source_identity_digest,
-        candidate_identity_digest=None,
+        candidate_identity_digest=receipt.source_identity_digest,
         recorded_identity_digest=None,
-        candidate_build_identity=None,
-        recorded_build_identity=None,
         detail=f"{type(refusal).__name__}: {refusal}",
     )
 
@@ -647,11 +572,6 @@ def _require_candidate_receipt(candidate: PreparedAuthorityCandidate) -> None:
     if current != candidate.receipt:
         raise RegistryValidationError(
             "registry candidate input receipt changed after validation; descriptor publication is refused"
-        )
-    recorded = candidate.compiler_closure
-    if live_compiler_closure(recorded) != recorded:
-        raise RegistryValidationError(
-            "authority compiler sources changed after validation; descriptor publication is refused"
         )
 
 

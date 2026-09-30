@@ -8,7 +8,7 @@ is about why the boundary sits where it does.
 
 ## The boundary is permanent
 
-The tool can never submit a return, register anything, or change a single value at the agency. This is not a cautious default you could switch off later. There is no setting, no flag, and no expert mode that turns it on. The submit path is built to refuse, every time, with a clear error rather than a quiet attempt.
+The tool can never submit a return, register anything, or change a single value at the agency. This is not a cautious default you could switch off later. There is no setting, no flag, and no expert mode that turns it on. Cadrumo has no submission path at all, so there is nothing to switch on.
 
 That refusal is deliberate. Filing a tax return is a legal act with your name on it. A piece of software that could press the button on your behalf would carry a risk you can never fully see. By making submission impossible, the tool removes that risk entirely and keeps you in the chair where the law expects you to be.
 
@@ -20,7 +20,7 @@ Nothing flows the other way. The connection has no path that writes, edits, or r
 
 ## You upload the file yourself
 
-The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve (the Spanish government's shared identity login). You sign in as yourself, you upload the file the tool prepared, and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
+The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve (the Spanish government's shared identity login). You sign in as yourself, you upload the file the tool prepared (or key in its figures, where the agency won't accept the file), and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
 
 For the steps, see [File your modelo at the AEAT portal](../how-to/file-at-aeat.md).
 
@@ -34,22 +34,23 @@ It changes nothing at the agency. It does not submit, re-send, or confirm anythi
 
 When you file, the agency gives you a justificante - the official receipt confirming what it received. The tool can compare your local figures against that receipt to catch any disagreement. This is checking your record against the agency's receipt.
 
-The comparison reads only the receipt you supply. It does not contact the agency to do its work. You hand it the justificante; it reports whether your record matches, diverges, or doesn't line up with any receipt yet.
+You supply the justificante as a PDF, or let the tool fetch it from the agency with a read-only request. Either way, the tool reports whether your record matches or mismatches, and names each field that differs.
 
 For the steps, see [Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
 
 ## What this comparison can and can't tell you
 
 The comparison confirms that your local record matches the receipt's header
-fields - the modelo, the filing year, the period, and your tax ID - and
-names any field that disagrees. It does not compare individual box values,
-and it is not a live re-check of your maths against the agency: none of
-these steps re-derives your tax; they confirm what was filed and keep proof
-of it. The precise scope and the mismatch-handling steps are in
+fields - the modelo, the filing year, the period, and your tax ID - and, where
+the modelo declares its result box, the receipt's total. It names any field that
+disagrees. It does not compare individual box values, unless you reconcile
+against the filed declaration for a modelo that supports it. It is not a live
+re-check of your maths against the agency: none of these steps re-derives your
+tax; they confirm what was filed and keep proof of it. The precise scope and the mismatch-handling steps are in
 [Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
 
 ## Where this sits in the journey
 
 This is the end of the pipeline that the [overview](index.md) lays out. Everything before it - building the modelo, checking it, recording the result - is yours to do locally; this page is where that local work meets the real agency, across a line the tool will not cross.
 
-If a comparison turns up a mismatch and you fix it, re-checking the corrected version is covered in [Editing and verifying a calculation](editing-and-verifying.md). And once a filing is recorded, it becomes evidence the tool can lean on for later returns, which [How filings build on earlier ones](building-on-earlier-filings.md) explains.
+If a comparison turns up a mismatch, correct the filed return with an amendment, which [Editing and verifying a calculation](editing-and-verifying.md) explains. And once a filing is recorded, it becomes evidence the tool can lean on for later returns, which [How filings build on earlier ones](building-on-earlier-filings.md) explains.

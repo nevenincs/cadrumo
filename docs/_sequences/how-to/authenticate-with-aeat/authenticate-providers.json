@@ -17,19 +17,19 @@
         "result": {
           "providers": [
             {
-              "description": "auth.catalogue.certificate_description",
+              "description": "X.509 client certificate authentication (FNMT-RCM or any recognised authority). Supports every Sede flow.",
               "id": "certificate",
-              "label": "auth.catalogue.certificate_label"
+              "label": "Digital certificate"
             },
             {
-              "description": "auth.catalogue.clave_movil_description",
+              "description": "Push-approval authentication via the holder's phone registered with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.",
               "id": "clave_movil",
-              "label": "auth.catalogue.clave_movil_label"
+              "label": "Cl@ve Móvil"
             },
             {
-              "description": "auth.catalogue.clave_permanente_description",
+              "description": "DNI/NIE and password authentication via the Cl@ve Permanente identity provider. Headless-automatable for AEAT read paths; requires DNI/NIE and password.",
               "id": "clave_permanente",
-              "label": "auth.catalogue.clave_permanente_label"
+              "label": "Cl@ve Permanente"
             }
           ]
         },

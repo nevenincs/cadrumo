@@ -25,6 +25,8 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ..site_chrome import site_chrome
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
@@ -43,6 +45,9 @@ def _switcher_context(language: str) -> dict[str, object]:
         "cadrumo_docs_language_is_default": language == "en",
         "cadrumo_docs_languages": [{"code": code, "label": _LANGUAGE_LABELS[code]} for code in order],
         "cadrumo_docs_language_label": _LANGUAGE_LABELS[language],
+        # The switcher's accessible name is resolved chrome, so the real mapping
+        # the build hands the template is supplied here rather than a stub.
+        "cadrumo_chrome": site_chrome(OutputLanguage(language), language_endonym=_LANGUAGE_LABELS[language]),
     }
 
 
@@ -106,6 +111,11 @@ def _assert_dropdown_shape(html: str, language: str) -> None:
     summary = _switcher_summary(html)
     # Fixed-footprint trigger: the current code, no anchors, no other language.
     assert f'lang="{language}">{language.upper()}</span>' in summary
+    # The trigger's accessible name is this root's own chrome, not English.
+    accessible_name = re.search(r'<summary[^>]*aria-label="([^"]*)"', summary)
+    assert accessible_name is not None, "the switcher trigger carries no accessible name"
+    expected_chrome = site_chrome(OutputLanguage(language), language_endonym=_LANGUAGE_LABELS[language])
+    assert accessible_name.group(1) == expected_chrome["aria_language"]
     assert "<a" not in summary
     assert all(f'lang="{other}"' not in summary for other in _LANGUAGE_LABELS if other != language)
     # Open panel: every language present, the current one a non-link current marker.

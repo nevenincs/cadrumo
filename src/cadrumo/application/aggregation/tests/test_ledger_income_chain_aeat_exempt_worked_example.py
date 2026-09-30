@@ -195,9 +195,6 @@ _NON_LEDGER_INGRESO_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 _BASE_BINDINGS: dict[str, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-cotizaciones-ss-madre": Decimal("0"),
@@ -212,9 +209,6 @@ _BASE_BINDINGS: dict[str, Decimal] = {
 }
 
 _RELATIONS: dict[str, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }

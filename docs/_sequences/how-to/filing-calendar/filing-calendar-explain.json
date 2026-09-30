@@ -3,6 +3,28 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01",
+        "--irpf-income-categories",
+        "actividad_economica"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -18,11 +40,13 @@
         "command": "overview.explain",
         "notices": [],
         "result": {
-          "applicable": false,
+          "applicable": true,
           "generated_at": "2026-04-01T09:00:00Z",
           "legal_refs": [
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
             "ley-35-2006:art-99",
-            "ley-27-2014:art-124"
+            "trlirnr-rdleg-5-2004:art-2"
           ],
           "modelo": "130",
           "out_of_plazo_warning": null,
@@ -33,7 +57,7 @@
             "entity_type": "natural_person",
             "has_employees": false,
             "irpf_estimation_regime": "",
-            "irpf_income_categories": "",
+            "irpf_income_categories": "actividad_economica",
             "iva.group_dominant_entity_enrolled": false,
             "iva.group_member_enrolled": false,
             "iva.intracommunity_operations_exceed_50000_eur": false,
@@ -50,9 +74,9 @@
             "tax_id": "sha256:1c9f9632",
             "third_party_transactions_above_347_threshold": ""
           },
-          "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso, las categorías de renta del IRPF.",
+          "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",
           "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",
-          "verdict": "incomplete",
+          "verdict": "applicable",
           "year": 2026
         },
         "schema_version": "2",

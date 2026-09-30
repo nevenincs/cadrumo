@@ -3,16 +3,17 @@
 This page covers the quarterly Modelo 130 filing: the complete
 create-calculate-verify-file chain, the cumulative year-to-date behaviour
 that makes each quarter build on the ones before it, and the prior-period
-values a later quarter carries in. Modelo 130 is the IRPF payment on account
+values a later quarter carries in. Modelo 130 is the IRPF (personal income tax) payment on account
 for self-employed activity under estimación directa; the registry's official
 title is "Impuesto sobre la Renta de las Personas Físicas. Actividades
 económicas en estimación directa. Pago fraccionado."
 
 `aeat` does not submit Modelo 130 to AEAT. It can produce the registry-backed
-fichero-BOE upload file locally; you still present that file through the
-official AEAT channel yourself.
+fichero-BOE file locally, with the software-identity fields left blank. You
+present the Modelo 130 through the official AEAT channel yourself, by importing
+that file where the portal accepts it or by entering the figures in the form.
 
-The tool needs a master-key passphrase and prompts for it.
+The tool needs your passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile with self-employed activity under
 estimación directa. Create one with `aeat config profile create <name>` before
@@ -20,16 +21,18 @@ you start. [Set up your taxpayer profile](profile-setup.md) walks through it.
 
 ## The complete first-quarter chain
 
-This is the full path from an empty store to a verified draft for a
-first-period filer. The preparation below sets up a self-employed profile and a
-classified ledger, then creates the draft, calculates it, and verifies it. Each
-load-bearing detail is explained under the sequence.
+This is the full path from a classified ledger to a verified draft for a
+first-period filer. The example starts from a self-employed profile with an
+activity start date and a classified first-quarter ledger: one business sale
+and one deductible expense with its supplier invoice attached. It then creates
+the draft, calculates it, and verifies it. The details that make the example
+work follow it.
 
 ```{cli-sequence} modelo-130-quarterly
 :verify: Confirm the draft passed verification before you file it.
 ```
 
-Load-bearing details:
+Load-bearing details for building this state yourself:
 
 - Create the profile with `--quiet` for the non-interactive form. The profile
   MUST carry `--name` and `--surnames`, or filing later refuses with
@@ -44,9 +47,9 @@ Load-bearing details:
   first period does not have: earlier quarters' negative results, earlier
   instalments paid, and last year's net income (used for the minoración).
   Later quarters resolve them from your own filed history instead - see
-  [the cumulative behaviour](#each-quarter-is-cumulative) below.
-- With the two rows above, calculate reports cumulative income (casilla `01`)
-  of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income base
+  [the cumulative behaviour](#each-quarter-is-cumulative).
+- With the example's two rows, calculate reports cumulative income (casilla `01`)
+  of `1000`, rendimiento neto (casilla `03`) of `500.00` - income base
   minus expense base - and a pago fraccionado (casilla `04`) of `100.00`,
   20 percent of the net.
 - `verify` reports `completeness complete` and `granted true`. `export` then
@@ -56,7 +59,11 @@ Load-bearing details:
 
 - [Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a
   profile with self-employed activity under estimación directa; check
-  applicability with `aeat app overview explain 130`.
+  applicability with `aeat app overview explain 130`. If at least 70 percent
+  of a professional activity's income was subject to withholding in the
+  previous calendar year (in your first year of activity, in the period the
+  instalment covers), you make no instalment for that activity (art. 109 of the
+  IRPF regulation). Agricultural and forestry activities have their own rule.
 - [Plan your filing calendar](filing-calendar.md). Modelo 130 uses quarterly
   periods `1T` through `4T` only.
 - [Import or add your transactions](import-bank-statements.md), then
@@ -73,7 +80,7 @@ prior instalments already paid this year (casilla `05`) and withholdings you
 suffered (casilla `06`) come off; the minoración by net-income level
 (casilla `13`) and negative results from earlier quarters (casilla `15`)
 adjust the figure; and casilla `19` is the final result. A negative
-casilla-17 balance is carried forward as
+balance in casilla `17` is carried forward as
 `saldo-negativo-fin-periodo` for later quarters.
 
 The ledger feeds the cumulative income, expense, and withholding figures
@@ -99,7 +106,7 @@ calculation to confirm your value landed:
 
 `--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
 (like casilla `02`) refuses the override. Check a box's kind with `aeat app
-modelo casillas 130` (the inspect sequence above shows this), and see
+modelo casillas 130` (the inspection example shows this), and see
 [Review and supply calculation inputs](review-calculation-values.md) for the
 full input workflow.
 
@@ -141,12 +148,14 @@ revisions behave. In short:
 
 Once the draft verifies, record the filed marker. Verification refuses until
 every deductible-expense row carries linked purchase-invoice evidence (see
-[Attach invoices and receipts](ledger-evidence.md)), so this example registers
-the supplier invoice and attaches it before it calculates. Attach in that
-order: a draft bundles its evidence when you verify it, so an invoice attached
-afterwards does not reach the filing.
+[Attach invoices and receipts](ledger-evidence.md)), so the example starts with
+the supplier invoice already attached. Attach evidence before you verify: a
+draft bundles its evidence when you verify it, so an invoice attached afterwards
+does not reach the filing.
 
-The sequence below exports the verified draft, then records the filed marker.
+The following example exports the verified draft, then records the filed marker.
+Export refuses to overwrite an existing file unless you add `--replace`, and
+refuses when the output folder does not exist.
 
 ```{cli-sequence} modelo-130-export-file
 :verify: Confirm the local export succeeds and the filing marker remains an internal record.

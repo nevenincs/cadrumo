@@ -6,11 +6,11 @@ Fix wrong transactions in your ledger without losing track of what changed. Ever
 
 You need:
 
-- An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
+- An active taxpayer profile. Every command on this page works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
+- Your passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - A ledger with transactions in it.
 
-To find the transaction you want to fix, list your transactions and view one in detail. The sequence below records an example expense, lists the ledger, and inspects that row:
+To find the transaction you want to fix, list your transactions and view one in detail. The following sequence records an example expense, lists the ledger, and inspects that row:
 
 ```{cli-sequence} correct-find-transaction
 :verify: Confirm the inspected transaction is the one you want to fix.
@@ -26,6 +26,7 @@ The `view` command reports the id, amount, direction, description, and lifecycle
 - If one payment covers two different things, [split it](#split-one-transaction-into-parts).
 - If you split something and want it back together, [merge the parts](#merge-split-parts-back).
 - If you're unsure about a transaction and want it out of the way, [stash it](#stash-a-transaction-you-are-unsure-about).
+- If you reviewed a transaction and it does not belong in any filing, [exclude it](#exclude-a-transaction-from-filing).
 - If you want to keep a transaction in history but out of everyday lists, [archive it](#archive-a-transaction).
 - If you stashed or archived a transaction by mistake, [restore it to active](#restore-a-stashed-or-archived-transaction).
 
@@ -40,7 +41,7 @@ Change one or more fields directly. The sequence records a chair at the wrong pr
 
 Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
 
-An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction, exactly as the `view` above does. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
+An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction, exactly as the `view` in the update sequence does. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
 
 Update works on active transactions only. Archived and stashed transactions refuse it, as does a split parent - the active parts of a split can be updated normally.
 
@@ -53,7 +54,7 @@ Remove deletes a transaction from your active records. Preview it first with `--
 :verify: Confirm the removed transaction no longer resolves.
 ```
 
-A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row.
+A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row. Remove also refuses a row that a verified or presented calculation cites. Removing a transaction releases its links to catalogue invoices.
 
 (split-one-transaction-into-parts)=
 ## Split one transaction into parts
@@ -66,10 +67,12 @@ When one payment covers two different things - for example, a card payment that 
 
 The original transaction becomes the split parent, and the parts carry the balance from then on. The split output prints one `child_transactions` row per part, each with a short `display_id` and a full `full_id`. Copy those ids - the merge command needs them to undo the split.
 
+To let a local model propose the split from an attached invoice, see [Classify transactions with an LLM](classify-with-llm.md).
+
 (merge-split-parts-back)=
 ## Merge split parts back
 
-To undo a split, merge the parts back together using the child ids the split printed. Name every sibling part - the command refuses a partial merge. The sequence splits a payment, then merges the parts into one fresh transaction:
+To undo a split, merge the parts back together using the child ids the split printed. Name every sibling part - the command refuses a partial merge. The example starts from a payment that is already split into two parts, then merges the parts into one fresh transaction:
 
 ```{cli-sequence} correct-merge-parts
 :verify: Confirm the merge produced a single active transaction carrying the full amount.
@@ -88,6 +91,17 @@ Stash sets a transaction aside for later. A stashed transaction is kept out of o
 
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active. The `stash` command prints the transaction's fields but not its new lifecycle state, so `view` is how you confirm the change took effect.
 
+(exclude-a-transaction-from-filing)=
+## Exclude a transaction from filing
+
+`exclude` records that you reviewed a transaction and found it irrelevant to every filing, such as a private transfer. The row stays active and visible with review status `excluded`, leaves the review queue, and no tax calculation counts it:
+
+```{cli-sequence} correct-exclude-transaction
+:verify: Confirm the excluded row stays active and carries the excluded state.
+```
+
+Exclude works on active rows only, refuses a row that is already excluded, and refuses a row that a verified or presented calculation cites. To count the row again, classify it with `aeat app ledger classify`.
+
 (archive-a-transaction)=
 ## Archive a transaction
 
@@ -102,7 +116,7 @@ Like stash, the command prints the transaction's fields but not its new lifecycl
 (restore-a-stashed-or-archived-transaction)=
 ## Restore a stashed or archived transaction
 
-If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals. The sequence stashes a row and then restores it:
+If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals. The example starts with a stashed row and restores it:
 
 ```{cli-sequence} correct-restore-transaction
 :verify: Confirm the restored transaction is active again.
@@ -114,13 +128,13 @@ Restore refuses a row that is already active, and it refuses a row whose period 
 
 ## Review what changed
 
-Every correction is recorded. To see every action on a transaction in order, run `ledger history`. The sequence splits a payment, then reads the history with the sibling flag to follow the whole split family:
+Every correction is recorded. To see every action on a transaction in order, run `ledger history`. The example starts from a payment that is already split, reads its history, then adds the sibling flag to follow the whole split family:
 
 ```{cli-sequence} correct-review-history
 :verify: Confirm the history records the transaction's events in order.
 ```
 
-The history lists each action in order with its timestamp and event reference. Details such as the reason and the new values are in the JSON output. To see a value before a change, read the earlier events in the history. The [CLI reference](../cli/index.rst) covers every field the history shows.
+The history lists each action with its timestamp, event type, and event reference. Details such as the reason and the new values are in the JSON output. To see a value before a change, read the earlier events in the history. `aeat app ledger track <transaction-id>` shows the event lineage of one transaction. The [CLI reference](../cli/index.rst) covers every field the history shows.
 
 ## Evidence and corrections
 
@@ -128,7 +142,7 @@ An attached evidence record - a receipt or invoice - is not deleted when you cor
 
 ## Start over as a last resort
 
-If the ledger is beyond repair - for example, after importing the wrong files repeatedly - clear it and rebuild. Preview first, then confirm. The sequence records a row, previews the reset, clears the ledger, and confirms nothing remains:
+If the ledger is beyond repair - for example, after importing the wrong files repeatedly - clear it and rebuild. Preview first, then confirm. The example starts with one row, previews the reset, clears the ledger, and confirms nothing remains:
 
 ```{cli-sequence} correct-reset-ledger
 :verify: Confirm the reset cleared the active ledger.
@@ -138,11 +152,11 @@ Reset clears the whole ledger for the active profile. Use the [transactions guid
 
 ## Where to get help
 
-If a command refuses or fails, check the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are explained in the {doc}`glossary </_generated/glossary>`. Before sharing command output with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+If a command refuses or fails, check the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are explained in the {doc}`glossary </_generated/glossary>`. Before sharing command output with anyone, strip tax identifiers such as your NIF, DNI, or NIE.
 
 ## Next steps
 
 - [Import and manage transactions](import-bank-statements.md) - bring in new transactions.
-- [Attach evidence to transactions](ledger-evidence.md) - back your corrections with receipts.
+- [Attach invoices and receipts](ledger-evidence.md) - back your corrections with receipts.
 - [Classify transactions](classify-transactions.md) - prepare corrected rows for tax calculations.
 - [CLI reference](../cli/index.rst) - full field detail for every ledger command.

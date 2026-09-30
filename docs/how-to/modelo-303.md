@@ -1,11 +1,12 @@
 # Prepare a Modelo 303 IVA filing
 
 Use this guide when the active profile must prepare Modelo 303. Modelo 303 is
-the Spanish IVA self-assessment (`autoliquidacion`) used here to calculate
-standard quarterly IVA filings; monthly IVA-liquidation profiles such as REDEME
-or large-company taxpayers use monthly Modelo 303 periods. Voluntary SII
-enrolment alone remains quarterly. The registry's official title is "Modelo 303.
-Impuesto sobre el Valor Anadido. Autoliquidacion."
+the Spanish IVA (value-added tax) self-assessment (`autoliquidación`) used here
+to calculate standard quarterly IVA filings. Monthly IVA-liquidation profiles,
+such as those in the Registro de Devolución Mensual (REDEME) or large-company
+taxpayers, use monthly Modelo 303 periods. Voluntary enrolment in the
+Suministro Inmediato de Información (SII) alone remains quarterly. The registry's official title is "Modelo 303.
+Impuesto sobre el Valor Añadido. Autoliquidación."
 
 Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). `export` writes the filing layout, but its envelope header
@@ -14,7 +15,7 @@ holds no AEAT software-developer registration, so AEAT will not accept the
 file. Read the calculated box values back and enter them through the official
 AEAT channel yourself.
 
-The tool needs a master-key passphrase and prompts for it.
+The tool needs your passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile. Create one with
 `aeat config profile create <name>` before you start. [Set up your
@@ -23,11 +24,11 @@ profile](profile-setup.md) walks through it step by step.
 ## The complete first-quarter chain
 
 This is the full path from a classified, evidenced ledger to a filed quarter for
-a first-period filer. The preparation below sets up a self-employed profile,
-classifies the quarter's income and expense rows, and attaches the supplier's
-purchase invoice as encrypted evidence. The sequence then creates the draft,
-calculates it, verifies it, and records the local filed marker. Each
-load-bearing detail is explained under the sequence.
+a first-period filer. The example starts from a self-employed profile with a
+classified first-quarter ledger: one sale and one purchase, with the supplier's
+purchase invoice attached as encrypted evidence. It then creates the draft,
+calculates it, verifies it, records the local filed marker, and exports. The
+details that make the example work follow it.
 
 The Modelo 303 export writes a review file whose envelope carries the all-zero
 development software identity. Enter the calculated box values at the AEAT
@@ -37,7 +38,7 @@ portal, as [File your modelo at the AEAT portal](file-at-aeat.md) describes.
 :verify: Confirm the draft verifies, files locally, and exports with the development identity.
 ```
 
-Load-bearing details:
+Load-bearing details for building this state yourself:
 
 - Create the profile with `--quiet` for the non-interactive form. A bare
   `aeat config profile create me` opens an interactive wizard. The profile MUST
@@ -50,6 +51,10 @@ Load-bearing details:
   taxable base plus IVA equals the gross to the cent.
 - A deductible-expense row needs `--category-id`. List the valid ids with
   `aeat app ledger categories`. The example uses `material_oficina`.
+- Modelo 303 makes you state whether the return is a joint self-assessment
+  (autoliquidación conjunta). The example passes `--no-joint-return-elected`
+  for no. Cadrumo never assumes the answer, and `work calculate` refuses
+  without one of `--joint-return-elected` or `--no-joint-return-elected`.
 - Calculation charges 210.00 of IVA on the sale (`IVA repercutido`) and deducts
   105.00 on the purchase (`IVA soportado`), so casilla 71 (Resultado final) is
   105.00, the IVA due for the quarter. The deductible IVA counts at calculate
@@ -65,8 +70,7 @@ Load-bearing details:
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
   automatically for a común-territory profile, so casilla 66 and the headline
   casilla 71 (Resultado final) carry the full régimen-general result. This tool
-  supports común-territory profiles only; foral regimes are refused at profile
-  creation.
+  supports común-territory profiles only.
 
 The rest of this guide explains each step and the checks around it.
 
@@ -127,8 +131,7 @@ reverse-charge. Rows that are unclassified or missing required IVA fields can
 block calculation or produce missing binding guidance.
 
 When you add a row by hand, pass the GROSS amount on `--amount` and the IVA
-detail explicitly with `aeat app ledger add`. The complete-chain sequence above
-runs this from the seed ledger.
+detail explicitly with `aeat app ledger add`.
 
 `--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses the row
 if they do not match to the cent. A deductible-expense row also needs a
@@ -139,7 +142,7 @@ if they do not match to the cent. A deductible-expense row also needs a
 Create or reuse the saved workspace for the active profile, modelo, filing year,
 period, and registry revision. This needs an active profile; create one first
 if you have none with `aeat config profile create`, then open the work unit with
-`aeat app modelo work create`. Both run in the complete-chain sequence above.
+`aeat app modelo work create`. The complete chain runs `work create`.
 
 The command is idempotent for the same visible target. If a work unit already
 exists for the active profile, Modelo 303, year, period, and resolved registry
@@ -186,7 +189,10 @@ Cadrumo does not silently choose a quarter from today's date. The work unit's
 ## Calculate the draft
 
 Run calculation for the same target with `aeat app modelo work calculate`. The
-complete-chain sequence above runs this.
+complete chain runs this. Modelo 303 always needs `--joint-return-elected` or
+`--no-joint-return-elected`. In the last period of the year (`4T` or `12`) it
+also needs the Modelo 390 attestation flags - see
+[Prepare the annual Modelo 390 IVA summary](modelo-390.md).
 
 Calculation resolves the registry revision for that work unit, reads the active
 profile's ledger for the target period, resolves profile and
@@ -231,7 +237,9 @@ typed observations where available, formula ids, operands, legal/source
 references, source transaction ids, and, after verification, ledger snapshot and
 evidence fields.
 
-For a spreadsheet review loop, see
+For a local calculation report, run `aeat app modelo work report --output FILE`
+on a verified or filed work unit; it writes CSV by default and is not official
+AEAT evidence. For a spreadsheet review loop, see
 [Review calculations with Google Sheets](review-with-google-sheets.md). For
 manual inputs, bindings, offsets, and revision selection, see
 [Review and supply calculation inputs](review-calculation-values.md).
@@ -239,7 +247,7 @@ manual inputs, bindings, offsets, and revision selection, see
 ## Verify and file
 
 Verify the selected calculation with `aeat app modelo work verify`. The
-complete-chain sequence above runs verify and file end to end.
+complete chain runs verify and file end to end.
 
 Verification checks the selected draft against the verified-complete contract.
 The report exposes the calculation revision id, completeness status, whether
@@ -259,9 +267,18 @@ reports `software_identity_grade` as `development_mock`, and warns with
 product-release fact, not taxpayer or presenter data, so the command never
 takes it from the active profile. AEAT does not accept a file carrying it.
 
+Export refuses to overwrite an existing file unless you add `--replace`, and
+refuses when the output folder does not exist. `--payment-election` (`ingreso`
+or `domiciliacion`) and `--refund-election` (`compensar` or `devolver`) choose
+how a positive or negative result is settled. The defaults are `ingreso` and
+`compensar`. `cuenta_corriente` is not supported yet and is refused. `devolver`
+is accepted only in a period where a refund is allowed (the last period of the
+year, or any period for a REDEME profile) and needs a refund account on the
+profile.
+
 Read the verified figures back with `aeat app modelo work revision` and enter
 them at the AEAT portal. Verification, the local filed marker, and the evidence
-capture described above all still apply.
+capture all still apply.
 
 If you need to mark the verified revision as filed in local history after you
 submit through AEAT, record the local marker with `aeat app modelo work file`.
@@ -288,10 +305,10 @@ The source-backed behavior is:
   contents needed for evidence are preserved through snapshot/evidence records.
 
 Invalid or unsupported period tokens are rejected, and `4T` is distinct from
-annual periods such as `0A`. What was not found in the current Modelo 303
-operator surface is a Modelo 303-specific double-accounting reconciliation
-across periods beyond date-window filtering, source transaction id handling,
-import duplicate diagnostics, and finalized-revision staleness/edit guards.
+annual periods such as `0A`. Cadrumo does not cross-check Modelo 303 periods
+for an operation declared twice. It relies on date windows, source transaction
+ids, import duplicate diagnostics, and the guards on finalized revisions, so
+check for double counting yourself when you move rows between periods.
 
 If you are trying to handle an ambiguous period, a rollover between periods, or
 possible double accounting, do not invent a workaround in the Modelo 303 guide.

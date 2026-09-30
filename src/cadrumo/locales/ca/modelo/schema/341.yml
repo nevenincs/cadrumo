@@ -17,6 +17,8 @@ modelo:
             label: Import de la compensació [09]
           codigo-cuenta-cliente:
             label: Codi de compte de client (C.C.C.)
+          filing-period:
+            label: Període de liquidació a què es refereix l'autoliquidació
           filing-year:
             label: Exercici a què es refereix l'autoliquidació
           letras-etiqueta-persona-fisica:
@@ -31,8 +33,6 @@ modelo:
             label: Import de les operacions [01]
           reagp-porcentaje-compensacion:
             label: Percentatge de compensació [04]
-          tipo-declaracion-resultado:
-            label: Període de liquidació a què es refereix l'autoliquidació
       construct:
         modelo-341-autoliquidacion:
           field:

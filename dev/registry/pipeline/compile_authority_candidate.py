@@ -1,9 +1,7 @@
 """Compile, validate and stage one authority candidate in a fresh interpreter.
 
-Every publication runs this module as its own process, so the compiler closure
-the candidate records is exactly what compiling it imports. Whatever the
-launching tool had already loaded cannot reach the record, which keeps the
-logical generation a function of the sources and the compiler alone.
+Every publication runs this module as its own process, so whatever the
+launching tool had already loaded or configured cannot reach the compile.
 
 The candidate is written as a complete descriptor and content-addressed
 database pair into an output directory the parent owns; the parent admits it

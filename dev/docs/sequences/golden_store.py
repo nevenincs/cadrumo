@@ -46,7 +46,6 @@ Storage policy per frame kind:
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
@@ -59,6 +58,7 @@ from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 from dev._paths import REPO_ROOT, UTF_8
 
 from .errors import SequenceGoldenError
+from .json_layout import format_sequence_json
 from .runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from .schema import FrameKind, SequenceId
 
@@ -648,15 +648,16 @@ def write_golden(
 
     This is the ONLY sanctioned writer (the refresh CLI mode drives it); a
     hand-edited golden drifts from the executed truth and is overwritten by the
-    next refresh. The file is canonical JSON — key-sorted, two-space indent,
-    UTF-8, trailing newline — so review diffs are stable and minimal.
+    next refresh. The file is key-sorted UTF-8 JSON with a trailing newline.
+    Large arrays use bounded, one-record-per-line rows to limit whitespace and
+    keep individual observation changes reviewable.
     """
     target = golden_path(page, transcript.sequence_id, goldens_root=goldens_root)
     golden = build_golden(transcript)
     document = golden.model_dump(mode="json")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
-        json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        format_sequence_json(document) + "\n",
         encoding=_UTF_8,
         newline="\n",
     )

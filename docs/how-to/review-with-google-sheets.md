@@ -7,9 +7,13 @@ edits without persisting them. This workflow is for reviewing calculated values 
 and transactions are ready. It is not a bank statement import or bulk edit
 tool.
 
-Google Sheets is the review surface. The codebase also contains an offline
-`.xlsx` serializer, but the current operator command surface does not expose
-it. Use Google Sheets when you want to review and adjust.
+Cadrumo has two spreadsheet routes for the same calculation surface.
+`aeat app modelo spreadsheet push` creates a Google Sheets workbook in your
+Drive, and `pull` and `calculate` read your edits back. `aeat app modelo
+spreadsheet export` writes an offline `.xlsx` workbook with live formulas to a
+local path. It needs no Google account, but no command reads an edited local
+workbook back. Use Google Sheets to review and adjust, and see
+[Export an offline workbook](#export-an-offline-workbook) for the other route.
 
 The local configuration commands on this page (status, folder binding, logout)
 and the ledger readiness checks run live at build time. The commands that reach
@@ -23,6 +27,7 @@ You need:
 - an active profile; see [Set up your taxpayer profile](profile-setup.md)
 - classified transaction data; see [Import and manage transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
+- the `google` extra, installed with `pip install "cadrumo[google]"`
 - a Google API credentials file (a Desktop OAuth client JSON from the
   [Google Cloud Console](https://console.cloud.google.com/))
 - the ID of a Google Drive folder where Cadrumo should create spreadsheets
@@ -42,8 +47,8 @@ flow. Both reach Google, so they are display-only here:
 
 Check the Google status and set the Drive folder where Cadrumo will create
 spreadsheets. These are local configuration commands, so they run here. On an
-unconfigured profile the status reads not-connected, and the folder you set
-reads back verbatim:
+unconfigured profile the status shows `client_registered` and `session_present`
+as false, and the folder you set reads back verbatim:
 
 ```{cli-sequence} sheets-folder
 :verify: Confirm the Drive folder binding reads back the value you set.
@@ -72,7 +77,27 @@ ledger export` when you need a CSV, JSONL, or XLSX snapshot of ledger rows.
 
 Use `--prefill-relations` only when you want the spreadsheet to include values
 carried from related filings, such as annual summaries or prior-quarter
-carryovers.
+carryovers. Add `--dry-run` to preview what the export would clear and rewrite
+in the workbook without writing anything.
+
+(export-an-offline-workbook)=
+## Export an offline workbook
+
+To review without Google, write the same calculation surface to a local `.xlsx`
+workbook with live formulas. Nothing is uploaded:
+
+```text
+aeat app modelo spreadsheet export --modelo 303 --year 2026 --period 1T --output modelo-303-2026-1T.xlsx
+```
+
+The result prints the file path, size, SHA-256 checksum, and casilla count. The
+command refuses to overwrite an existing file unless you add `--replace`, and
+it refuses an `--output` path whose parent directory does not exist. The
+refusal reads `The export output path is not valid` and names the reason.
+
+The offline workbook is a review copy. `pull`, `calculate`, and `verify` work
+only with a Google Sheet, so edits you make in the local file do not flow back
+into Cadrumo. It accepts `--prefill-relations` like `push`.
 
 ## Pull your edits back
 
@@ -86,18 +111,19 @@ not persist those observations:
 
 The pull command checks that the spreadsheet belongs to the current profile and
 matches the expected filing period. If it refuses, re-export and retry from the
-new spreadsheet.
+new spreadsheet. To use a pulled edit in a filing, supply it to `aeat app modelo
+work calculate` with `--casilla`, `--binding`, or `--relation`.
 
 ## Compute casilla values from the Sheet
 
-Run `compute` when you want Cadrumo to calculate casilla values from the edits
-in the Sheet. It pulls the operator-edited cells, runs the calculation engine
+Run `aeat app modelo spreadsheet calculate` when you want Cadrumo to calculate
+casilla values from the edits in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing:
 
 ```{cli-sequence} sheets-calculate
 ```
 
-The compute command checks that the spreadsheet matches the expected filing
+The `calculate` command checks that the spreadsheet matches the expected filing
 period. If it refuses, re-export and retry from the new spreadsheet.
 
 ## Check the spreadsheet calculation
@@ -110,8 +136,12 @@ de Administración Tributaria (AEAT) outputs, pass it explicitly with
 ```{cli-sequence} sheets-verify
 ```
 
-Verification compares the calculation surfaces implemented by the app. It does
-not submit a filing to AEAT.
+Verification rewrites that period's workbook with your scenario file's inputs,
+then compares the workbook's formula results with the local calculation engine
+and, when the scenario supplies AEAT-published expected outputs, with those as
+well. It overwrites edits made in the pushed sheet, so pull your edits before
+you verify.
+It does not submit a filing to AEAT.
 
 ## Back up your encrypted records to Drive
 
@@ -131,12 +161,13 @@ copy and never reads Drive back as a source of truth for your records.
 ## Sign out of Google
 
 Clear the Google session for the active profile. Logout is a local command, so
-it runs here. It removes the saved session token and its metadata. The
-registered OAuth client is kept on purpose, so a later `aeat config google
-login` can sign in again without re-importing the Cloud Console JSON:
+it runs here. If a session exists, it removes the saved session token and its
+metadata. The registered OAuth client is kept on purpose, so a later `aeat
+config google login` can sign in again without re-importing the Cloud Console
+JSON:
 
 ```{cli-sequence} sheets-logout
-:verify: Confirm the Google session clears for the active profile.
+:verify: Confirm logout keeps the registered client; with no saved session it removes nothing.
 ```
 
 ## Where this fits
@@ -145,7 +176,7 @@ Use this after transaction review and classification. Confirm the period is
 ready before you rely on the calculation workbook:
 
 ```{cli-sequence} sheets-readiness
-:verify: Confirm the period's readiness before relying on the workbook.
+:verify: Confirm the preflight reports the imported rows as not ready for calculation.
 ```
 
 If the ledger still has missing categories, IVA fields, currency, or

@@ -484,6 +484,11 @@ def generate_formula(
   test do
     assert_predicate bin/"aeat", :executable?
     assert_match "CADRUMO #{{version}}", shell_output("#{{bin}}/aeat --version")
+    # `pip_install_and_link` links every console script the distribution
+    # declares, so the MCP server needs no shim of its own here -- but nothing
+    # else proves it arrived on PATH, and an entry point dropped upstream would
+    # otherwise ship silently.
+    assert_predicate bin/"cadrumo-mcp", :executable?
   end
 end
 '''

@@ -17,8 +17,9 @@ You need:
 - An active profile - see [set up your taxpayer profile](profile-setup.md).
 - Your current profile passphrase.
 
-Use `--language en`, `es`, `ca`, or `hu` when you need a specific output
-language.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you [choose another
+language](profile-setup.md#choose-the-output-language).
 
 ## Store your passphrase safely
 
@@ -47,8 +48,8 @@ choose whether to add the code.
 
 When you create a profile at a terminal, Cadrumo asks once whether to set up a
 recovery code and defaults to no. The full-screen registration asks the same
-question on its own screen with a `Skip for now` choice. Either way you can
-decide later.
+question on its own screen with a `Skip for now` choice. Either way, the choice
+stays open: enable it later.
 
 To enable it on the active profile:
 
@@ -71,8 +72,9 @@ aeat config profile recovery status
 aeat config profile recovery disable
 ```
 
-Disabling asks for the current passphrase. Enabling again issues a fresh code;
-the old one stops working.
+Disabling asks for the current passphrase. Enabling refuses while a code is
+enrolled. To replace a code, disable recovery and enable it again; the new code
+is fresh and the old one stops working.
 
 The code stays valid across ordinary passphrase changes. It does not travel
 inside a backup archive: a restored profile always starts without recovery, and
@@ -88,7 +90,8 @@ aeat config passphrase reset PROFILE
 
 Enter the recovery code, then the new passphrase twice. Nothing is echoed. The
 existing key is re-wrapped under the new passphrase, so no record is
-re-encrypted and the recovery code keeps working afterwards. A wrong code, a
+re-encrypted and the recovery code keeps working afterwards. Archives exported
+before the reset still open with the passphrase they were sealed under. A wrong code, a
 profile without recovery, a new passphrase that is too short, or two copies
 that do not match all refuse and leave the profile untouched.
 
@@ -154,7 +157,7 @@ variable or command-line argument. The CLI does not use
 There are two separate option pairs:
 
 - Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself owns
-  the secret. The leaf commands and their exact objects are listed below.
+  the secret. The following table lists the leaf commands and their exact objects.
 - Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before
   `config` when a profile-bound command needs to authenticate a selected
   profile after its persisted session cannot resume. Its object is
@@ -183,8 +186,7 @@ Each object must contain exactly the fields shown. Profile creation through a
 machine channel never asks about recovery; enable it afterwards with the
 handoff pair described in [enable recovery without a
 terminal](#enable-recovery-without-a-terminal). Duplicate, missing, extra,
-oversized, malformed, or non-UTF-8 input is refused. The former restore field
-`password` and certificate field `secret` are not accepted.
+oversized, malformed, or non-UTF-8 input is refused.
 
 Inspect the current flags without supplying a secret:
 
@@ -248,7 +250,7 @@ HANDLE:
 
 ```text
 python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
-python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile recovery enable --quiet --secrets-stdin
+python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile recovery enable --secrets-stdin
 ```
 
 Omit `--profile-handle` or `--secrets-handle` when the invocation needs only

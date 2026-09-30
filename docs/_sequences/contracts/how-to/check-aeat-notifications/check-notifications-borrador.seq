@@ -1,9 +1,12 @@
-@step Download and list the active borrador snapshots.
+@step Import the borrador PDF you downloaded from the AEAT sede.
+@static aeat app live borrador 100 import --file ./borrador-renta-2025.pdf --filing-year 2025
+@blocked operator-artifact Needs the operator's own borrador PDF downloaded from the AEAT sede; a taxpayer's borrador cannot be committed as a fixture.
+@step List the imported borrador snapshots that are still active.
 @static aeat app live borrador 100 list --state active
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step View a specific borrador's box values.
+@blocked operator-artifact Reads snapshots that exist only after the operator's own borrador PDF was imported.
+@step View one borrador's box values.
 @static aeat app live borrador 100 view <snapshot-id>
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step Show the latest active draft for a filing year.
-@static aeat app live borrador 100 latest --filing-year 2026
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
+@blocked operator-artifact Reads snapshots that exist only after the operator's own borrador PDF was imported.
+@step Show the latest active borrador for a filing year.
+@static aeat app live borrador 100 latest --filing-year 2025
+@blocked operator-artifact Reads snapshots that exist only after the operator's own borrador PDF was imported.

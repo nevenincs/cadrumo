@@ -296,7 +296,7 @@ def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSou
             revision=_without_fact(
                 _m130_revision(),
                 "ledger_renta_income_aggregation",
-                "withheld_amount_sum",
+                "declared_withheld_amount_sum",
             ),
         ),
     )
@@ -315,7 +315,7 @@ _ENROLLED: tuple[_EnrolledFamily, ...] = (
     _EnrolledFamily(
         family="renta-income",
         reason="unrouted_declarable_quantity",
-        dropped_fact="withheld_amount_sum",
+        dropped_fact="declared_withheld_amount_sum",
         resolve=_resolve_renta,
     ),
 )

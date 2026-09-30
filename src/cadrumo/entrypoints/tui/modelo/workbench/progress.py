@@ -142,8 +142,8 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     counts = to_do_counts(form)
     to_fill = counts.needs_input
     assumed = counts.default_to_confirm
+    blocked = counts.blocked
     blocking = blocking_count(form)
-    blocked = max(counts.blocked, blocking)
     clean = staged == 0
     filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
@@ -160,7 +160,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         elif not current_found:
             current_found = True
             is_blocked = step is WorkbenchStep.REVIEW and (
-                blocked > 0 or form.verification is VerificationCompletenessStatus.BLOCKED
+                blocked > 0 or blocking > 0 or form.verification is VerificationCompletenessStatus.BLOCKED
             )
             steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
         else:
@@ -208,7 +208,7 @@ def _next(
         return NextAction.EXPORT, 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
-    if blocked or form.verification in _UNRESOLVED_VERDICTS:
+    if blocked or blocking or form.verification in _UNRESOLVED_VERDICTS:
         # The header's chip counts what blocks filing; boxes the check marked
         # stand in only when no finding is left to count.
         return NextAction.RESOLVE, blocking or blocked

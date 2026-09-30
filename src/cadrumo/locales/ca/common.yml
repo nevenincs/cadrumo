@@ -620,6 +620,42 @@ entries:
     label: AEAT Seu Electrònica
     purpose: Pàgina d'inici de la Seu Electrònica de l'AEAT.
 filing:
+  applicability:
+    impatriado_m100_suppressed: 'El Model 100 no aplica: el contribuent té actiu el
+      règim especial de treballadors, professionals, emprenedors i inversors desplaçats
+      a territori espanyol (LIRPF Art. 93) dins la finestra de sis exercicis. Durant
+      aquesta finestra tributa per les regles de l''IRNR mantenint la condició de
+      contribuent de l''IRPF, i la declaració anual corresponent és el Model 151,
+      no el Model 100.'
+    impatriado_m151_applicable: 'El Model 151 aplica: el contribuent té actiu el règim
+      especial d''impatriats de l''Art. 93 LIRPF dins la finestra de sis exercicis
+      de l''any d''opció i els cinc següents; la declaració anual del règim es presenta
+      pel Model 151.'
+    impatriado_m151_not_applicable: 'El Model 151 no aplica: el perfil no té actiu
+      el règim especial d''impatriats de l''Art. 93 LIRPF dins la seva finestra de
+      sis exercicis. Fora d''aquesta finestra, o sense opció pel règim, la persona
+      física resident torna a la ruta ordinària de l''IRPF i al Model 100 quan escaigui.'
+    incomplete_no_rule: 'No es pot determinar l''aplicabilitat d''aquest model: encara
+      no se n''ha derivat cap regla d''aplicabilitat. La cobertura de regles és deliberadament
+      reduïda (el conjunt inicial de persones) i l''ampliació per entitat i règim
+      està pendent. No és una afirmació sobre el vostre perfil: el vostre tipus de
+      contribuent pot estar correctament declarat.'
+    incomplete_undeclared_taxpayer: 'No es pot determinar l''aplicabilitat: el tipus
+      de contribuent no està declarat. Falten el tipus d''entitat i, si escau, les
+      categories de renda de l''IRPF.'
+    incomplete_undetermined_fact: 'No es pot determinar l''aplicabilitat d''aquest
+      model a partir del model de contribuent declarat: depèn d''un fet que el perfil
+      no expressa amb certesa. El model només s''afirma aplicable quan aquest fet
+      es declara positivament; altrament no es conjectura cap obligació.'
+    incomplete_undetermined_fact_required: 'Fet requerit per a aquest model: %{fact}.'
+    incomplete_undetermined_periods_missing: 'Períodes sense declarar: %{periods}.'
+    payer_fact:
+      iva_group_dominant_entity: està inscrit com a entitat dominant d'un grup d'IVA
+      iva_group_member: està inscrit com a entitat membre d'un grup d'IVA
+      oss_enrolled: està inscrit en un règim de finestreta única (OSS/IOSS) de l'IVA
+      pays_rent_with_retencion: paga lloguers subjectes a retenció
+      pays_withheld_income: paga retribucions subjectes a retenció
+      trades_intracommunity: realitza operacions intracomunitàries
   validation:
     deadline_missed: Termini de presentació vençut
     formula_divergence: Divergència en el càlcul de la fórmula
@@ -2236,6 +2272,8 @@ tui:
           fill: Obre cada casella i escriu-ne el valor. Si el valor correcte és zero,
             escriu 0.
           fill_by_section: Obre cada secció i escriu-hi els valors que necessita.
+          records_at_source: Obre la taula, afegeix o corregeix el registre al seu
+            origen i torna a calcular.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
         detail:
@@ -2257,7 +2295,12 @@ tui:
           more: Mostra'n més
         missing: La declaració necessita valors en aquestes caselles i ningú no els
           ha donat.
+        open_records: Obrir la taula
         open_section: Obrir la secció
+        records:
+          field_missing: Un registre d'aquesta taula no té aquesta dada.
+          none: Aquesta taula encara no té registres, i cada registre necessita aquesta
+            dada.
         technical: Detalls tècnics
         title: Incidències per revisar
         verdict:
@@ -2270,6 +2313,7 @@ tui:
         where:
           declaration: Tota la declaració
           not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
+          record_value: Una dada que necessita cada registre d'una taula
           unnumbered: 'Valors sense número de casella: {count}'
       key:
         back: Tornar

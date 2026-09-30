@@ -9,7 +9,7 @@
 @step Find any manual casillas still missing.
 @static aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
 @blocked unconverted Refused: no registry revision covers modelo 100 filing year 2026 period 0A. The registry carries 2024 and 2025 only.
-@step Verify, export, file, and reconcile, the same five moves that closed every quarter.
+@step Verify, export, file, and reconcile, the same moves that closed every quarter.
 @static aeat app modelo work verify --modelo 100 --year 2026 --period 0A
 @blocked unconverted Refused for want of a work unit, because create refused first: no registry revision covers modelo 100 filing year 2026 period 0A.
 @static aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026.boe

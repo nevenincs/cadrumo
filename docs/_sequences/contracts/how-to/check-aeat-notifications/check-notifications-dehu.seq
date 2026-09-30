@@ -1,12 +1,12 @@
 @step Download your notifications and save them locally.
 @static aeat app live notifications pull
 @blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step Download your current DEHu notifications.
+@step List the notification snapshots you have saved.
 @static aeat app live notifications list
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step View a specific saved download by its reference number.
+@blocked operator-artifact Reads notification snapshots captured from the operator's own AEAT account by `notifications pull`; none can be committed as a fixture.
+@step View one saved snapshot by its snapshot id.
 @static aeat app live notifications view <snapshot-id>
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
+@blocked operator-artifact Reads notification snapshots captured from the operator's own AEAT account by `notifications pull`; none can be committed as a fixture.
 @step Show the most recent snapshot in the active profile.
 @static aeat app live notifications latest
-@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
+@blocked operator-artifact Reads notification snapshots captured from the operator's own AEAT account by `notifications pull`; none can be committed as a fixture.

@@ -1,0 +1,3 @@
+@step Link the registered invoice to the expense row.
+@static aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id <evidence-id>
+@blocked sandbox-posture On this page the example ledger already links this invoice for the calculation that follows, and attach refuses to link a row twice; the import guide runs the same command in its own sandbox.

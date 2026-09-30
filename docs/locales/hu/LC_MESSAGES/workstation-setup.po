@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-29 22:18+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -19,88 +19,101 @@ msgstr ""
 
 #: ../../workstation-setup.md:1
 msgid "Install Cadrumo"
-msgstr "A Cadrumo telepítése"
+msgstr "Cadrumo telepítése"
 
 #: ../../workstation-setup.md:3
 msgid ""
-"This page covers installation only: get the package, install the `aeat` "
-"command, add the optional extras you want, and (if you use an AI "
-"assistant) install the separate agent harness. If you do not have Cadrumo"
-" on your machine yet, start at [Get Cadrumo](download.md) for the "
-"acquisition paths and their current availability. Configuration and first"
-" use start in the [quickstart](how-to/quickstart.md) once the install "
-"checks pass."
+"This page covers installation only: install the `aeat` command, confirm "
+"it runs, and add the optional extras you want. If you do not have Cadrumo"
+" on your machine yet, start at [Get Cadrumo](download.md) for the install"
+" channels. Configuration and first use start in the [quickstart](how-"
+"to/quickstart.md) once the install checks pass."
 msgstr ""
-"Ez az oldal csak a telepítéssel foglalkozik: szerezze be a csomagot, "
-"telepítse az `aeat` parancsot, adja hozzá a kívánt opcionális "
-"kiegészítőket, és (ha AI-asszisztenst használ) telepítse a különálló "
-"ügynöki keretrendszert. Ha a Cadrumo még nincs a gépén, kezdje itt: [A "
-"Cadrumo beszerzése](download.md), amely bemutatja a beszerzési "
-"útvonalakat és azok aktuális elérhetőségét. A konfigurálás és az első "
-"használat a [gyorsindítóban](how-to/quickstart.md) kezdődik, miután a "
-"telepítési ellenőrzések sikeresen lefutottak."
+"Ez az oldal csak a telepítésről szól: telepítsd az `aeat` parancsot, "
+"ellenőrizd, hogy fut, és add hozzá a kívánt opcionális extrákat. Ha a "
+"Cadrumo még nincs a gépeden, a telepítési csatornákért kezdd a [Cadrumo "
+"beszerzése](download.md) oldalon. A konfigurálás és az első használat a "
+"[gyorsindítóban](how-to/quickstart.md) kezdődik, miután a telepítési "
+"ellenőrzések sikeresen lefutottak."
 
-#: ../../workstation-setup.md:10
+#: ../../workstation-setup.md:9
 msgid ""
 "Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, cloud LLM upload, and the separate agent harness are all opt-in. "
-"The core filing workflow runs with none of them."
+"vision, and cloud LLM upload are all optional, and so is connecting an AI"
+" assistant. The core filing workflow runs with none of them."
 msgstr ""
-"A Cadrumo bármilyen opcionális szolgáltatás nélkül működik. A Google "
-"export, a helyi (on-host) LLM-alapú képfeldolgozás, a felhőbeli LLM-"
-"feltöltés és a különálló ügynöki keretrendszer mind választható. Az "
-"alapvető benyújtási munkafolyamat egyikük nélkül is fut."
+"A Cadrumo bármilyen opcionális szolgáltatás nélkül működik. A Google-"
+"export, a helyi gépen futó LLM-es képfeldolgozás és a felhőbeli LLM-"
+"feltöltés egyaránt opcionális, és az AI-asszisztens csatlakoztatása is "
+"az. Az alapvető benyújtási munkafolyamat ezek nélkül is fut."
 
-#: ../../workstation-setup.md:14
+#: ../../workstation-setup.md:13
 msgid "Before you start"
-msgstr "Mielőtt hozzákezd"
+msgstr "Mielőtt hozzákezdesz"
 
-#: ../../workstation-setup.md:16
+#: ../../workstation-setup.md:15
 msgid "You need:"
-msgstr "Szüksége lesz a következőkre:"
+msgstr "Ezekre lesz szükséged:"
+
+#: ../../workstation-setup.md:17
+msgid "Python 3.13 or newer."
+msgstr "Python 3.13 vagy újabb."
 
 #: ../../workstation-setup.md:18
-msgid "Python 3.13 or newer, with `pip` available."
-msgstr "Python 3.13 vagy újabb, elérhető `pip`-pel."
-
-#: ../../workstation-setup.md:19
-msgid "Around 200 MB of free disk space."
-msgstr "Körülbelül 200 MB szabad lemezterület."
+msgid ""
+"Several hundred megabytes of free disk space for Cadrumo and its "
+"dependencies. The package download alone is about 76 MB."
+msgstr ""
+"Néhány száz megabájt szabad lemezterület a Cadrumónak és a függőségeinek."
+" Maga a csomag letöltése is nagyjából 76 MB."
 
 #: ../../workstation-setup.md:21
 msgid "Install the CLI"
 msgstr "A CLI telepítése"
 
 #: ../../workstation-setup.md:23
-msgid "The beta installs from the project repository:"
-msgstr "A béta a projekt tárolójából települ:"
-
-#: ../../workstation-setup.md:32
 msgid ""
-"Registry listings for the packaged channels (PyPI, Scoop, Homebrew, and "
-"the plugin marketplace) open with the public launch; see [Get "
-"Cadrumo](download.md) for each channel's current status."
+"Pick one channel from the table in [Get Cadrumo](download.md#install-"
+"channels) and run the command it lists. A `uv` tool install keeps Cadrumo"
+" out of your global Python environment. Homebrew and Scoop packages are "
+"not published yet, so use a Python package channel on every platform for "
+"now."
 msgstr ""
-"A csomagolt csatornák (PyPI, Scoop, Homebrew és a beépülőpiactér) "
-"registry-listázásai a nyilvános indulással nyílnak meg; az egyes "
-"csatornák aktuális állapotát lásd az [A Cadrumo beszerzése](download.md) "
-"oldalon."
+"Válassz egy csatornát a [Cadrumo beszerzése](download.md#install-"
+"channels) oldal táblázatából, és futtasd a hozzá tartozó parancsot. A "
+"`uv`-eszközként végzett telepítés távol tartja a Cadrumót a globális "
+"Python-környezetedtől. A Homebrew- és a Scoop-csomagok még nincsenek "
+"kiadva, ezért egyelőre minden platformon Python-csomagcsatornát használj."
 
-#: ../../workstation-setup.md:36
+#: ../../workstation-setup.md:28
+msgid ""
+"The Python package installs both the `aeat` command and the `cadrumo-mcp`"
+" server."
+msgstr ""
+"A Python-csomag az `aeat` parancsot és a `cadrumo-mcp` szervert is "
+"telepíti."
+
+#: ../../workstation-setup.md:31
+msgid "If you contribute to Cadrumo, work from a source checkout instead:"
+msgstr ""
+"Ha hozzájárulsz a Cadrumo fejlesztéséhez, inkább forráskód-másolatból "
+"dolgozz:"
+
+#: ../../workstation-setup.md:40
 msgid "Confirm the install"
 msgstr "A telepítés megerősítése"
 
-#: ../../workstation-setup.md:38
+#: ../../workstation-setup.md:42
 msgid ""
 "No taxpayer profile is needed for these checks; you create one with `aeat"
 " config profile create` after installing. See [Set up a profile](how-to"
 "/profile-setup.md)."
 msgstr ""
-"Ezekhez az ellenőrzésekhez nincs szükség adózói profilra; egyet a "
-"telepítés után az `aeat config profile create` paranccsal hoz létre. "
-"Lásd: [Profil beállítása](how-to/profile-setup.md)."
+"Ezekhez az ellenőrzésekhez nincs szükség adózói profilra; a telepítés "
+"után az `aeat config profile create` paranccsal hozol létre egyet. Lásd: "
+"[Profil beállítása](how-to/profile-setup.md)."
 
-#: ../../workstation-setup.md:42
+#: ../../workstation-setup.md:46
 msgid ""
 "Confirm the command is on your path and the capability posture is "
 "readable. Then run the workstation check on your own machine. Its "
@@ -109,183 +122,237 @@ msgid ""
 "system settings. Use the machine-readable form for scripted setup checks "
 "(`--format json` is a global flag, so it goes before the command):"
 msgstr ""
-"Erősítse meg, hogy a parancs elérhető az elérési útján, és hogy a "
-"képességek állapota olvasható. Ezután futtassa a munkaállomás-ellenőrzést"
-" a saját gépén. Annak függőségi és platformsorai szándékosan azt a "
-"munkaállomást tükrözik, beleértve az elérési útján lévő eszközöket, a "
-"telepített böngészőelemeket és az operációs rendszer beállításait. A "
-"szkriptelt beállítási ellenőrzésekhez használja a gépi olvasható formát "
-"(a `--format json` globális kapcsoló, ezért a parancs elé kerül):"
+"Ellenőrizd, hogy a parancs elérhető az elérési utadon, és hogy a "
+"képességek állapota olvasható. Ezután futtasd a munkaállomás-ellenőrzést "
+"a saját gépeden. A függőségeket és a platformot vizsgáló sorok "
+"szándékosan az adott munkaállomást tükrözik, beleértve az elérési utadon "
+"lévő eszközöket, a telepített böngészőkomponenseket és az operációs "
+"rendszer beállításait. Szkriptelt beállítás-ellenőrzésekhez használd a "
+"géppel olvasható formát (a `--format json` globális kapcsoló, ezért a "
+"parancs elé kerül):"
 
-#: ../../workstation-setup.md:53
-msgid "Install optional extras from the checkout"
-msgstr "Opcionális kiegészítők telepítése a forráskód-kimásolásból"
+#: ../../workstation-setup.md:56
+msgid "Install optional extras"
+msgstr "Opcionális extrák telepítése"
 
-#: ../../workstation-setup.md:55
+#: ../../workstation-setup.md:58
+msgid "The core install is lean. Each optional extra adds one capability:"
+msgstr "Az alaptelepítés karcsú. Minden opcionális extra egy képességgel bővít:"
+
+#: ../../workstation-setup.md:60
+msgid "`google` - Google Drive and Sheets export."
+msgstr "`google` - Google Drive- és Sheets-export."
+
+#: ../../workstation-setup.md:61
+msgid "`browser` - live AEAT reads through browser automation."
+msgstr "`browser` - élő AEAT-lekérdezések böngészőautomatizálással."
+
+#: ../../workstation-setup.md:62
 msgid ""
-"The core install is lean. Google export, the live AEAT browser, the "
-"Anthropic-API provider, and OFX/QFX bank-statement import are optional "
-"package extras. Name the extras you need when you install:"
+"`anthropic` - the Anthropic API as a hosted provider for `aeat app ledger"
+" evidence extract --off-host-provider`, which sends a document off your "
+"machine only when you acknowledge it for that one read."
 msgstr ""
-"Az alaptelepítés karcsú. A Google export, az élő AEAT-böngésző, az "
-"Anthropic-API szolgáltató és az OFX/QFX bankkivonat-importálás opcionális"
-" csomagkiegészítők. A telepítéskor nevezze meg a szükséges kiegészítőket:"
+"`anthropic` - az Anthropic API mint felhőszolgáltató az `aeat app ledger "
+"evidence extract --off-host-provider` parancshoz; ez csak akkor küld "
+"dokumentumot a gépedről, ha az adott egy beolvasáshoz kifejezetten "
+"jóváhagyod."
 
-#: ../../workstation-setup.md:63
+#: ../../workstation-setup.md:65
+msgid "`ofx` - OFX and QFX bank-statement import."
+msgstr "`ofx` - OFX- és QFX-bankkivonat-import."
+
+#: ../../workstation-setup.md:66
+msgid "`llm` - on-host document reading with a local model runtime."
+msgstr ""
+"`llm` - dokumentumok olvasása a helyi gépen, helyi modellfuttató "
+"környezettel."
+
+#: ../../workstation-setup.md:67
 msgid ""
-"The available extras are `google`, `browser`, `anthropic`, `ofx`, and "
-"`all`. `aeat config check` lists each extra and prints the exact install "
-"command for any that is missing. A feature whose extra is not installed "
-"refuses with the same hint instead of failing obscurely."
+"`pdf` - writing the calculation-summary PDF. Reading and verifying a "
+"summary needs no extra."
 msgstr ""
-"Az elérhető kiegészítők: `google`, `browser`, `anthropic`, `ofx` és "
-"`all`. Az `aeat config check` felsorolja az egyes kiegészítőket, és "
-"kiírja a pontos telepítési parancsot minden hiányzóhoz. Az a funkció, "
-"amelynek kiegészítője nincs telepítve, ugyanezzel a tippel utasítja el a "
-"kérést, ahelyett, hogy homályosan meghiúsulna."
+"`pdf` - a számítási összesítő PDF megírása. Az összesítő olvasásához és "
+"ellenőrzéséhez nincs szükség extrára."
 
-#: ../../workstation-setup.md:68
-msgid "Two extras need a further provisioning step after the pip install:"
+#: ../../workstation-setup.md:69
+msgid "`all` - every extra in this list."
+msgstr "`all` - a listában szereplő összes extra."
+
+#: ../../workstation-setup.md:71
+msgid ""
+"Name the extras you need when you install: in your channel's install "
+"command, write the package as `cadrumo[google,browser]` instead of "
+"`cadrumo`. Extras install into the same environment as Cadrumo, so use "
+"the channel you installed with. In a source checkout, add extras with `uv"
+" sync --extra google --extra browser`."
 msgstr ""
-"Két kiegészítőhöz a pip-telepítés után további előkészítési lépésre van "
-"szükség:"
+"A telepítéskor add meg a kellő extrákat: a csatornád telepítőparancsában "
+"a `cadrumo` helyett `cadrumo[google,browser]` formában írd a csomagot. Az"
+" extrák ugyanabba a környezetbe települnek, mint a Cadrumo, ezért azt a "
+"csatornát használd, amellyel telepítetted. Forráskód-másolatban az "
+"extrákat a `uv sync --extra google --extra browser` paranccsal adhatod "
+"hozzá."
 
-#: ../../workstation-setup.md:70
+#: ../../workstation-setup.md:76
+msgid ""
+"`aeat config check` reports each extra as `extra:<name>` available or "
+"missing. Install a missing one by repeating your channel's install "
+"command with that extra named."
+msgstr ""
+"Az `aeat config check` minden extrát `extra:<name>` néven, elérhetőként "
+"vagy hiányzóként jelez. A hiányzót úgy telepítheted, hogy megismétled a "
+"csatornád telepítőparancsát az adott extra megnevezésével."
+
+#: ../../workstation-setup.md:80
+msgid "Two extras need a further provisioning step after the install:"
+msgstr "Két extrához a telepítés után további előkészítési lépés kell:"
+
+#: ../../workstation-setup.md:82
 msgid ""
 "The `browser` extra drives a Chromium build for live AEAT reads. Download"
 " the exact build the installed extra launches with:"
 msgstr ""
-"A `browser` extra egy Chromium-építést használ az élő AEAT-olvasásokhoz. "
-"Töltse le pontosan azt az építést, amelyet a telepített extra indít:"
+"A `browser` extra egy Chromium-buildet vezérel az élő AEAT-"
+"lekérdezésekhez. Töltsd le pontosan azt a buildet, amellyel a telepített "
+"extra indul:"
 
-#: ../../workstation-setup.md:76
+#: ../../workstation-setup.md:88
 msgid ""
 "It does nothing when that build is already present. With the browser "
 "channel set to `chromium`, a browser read that finds the build missing "
 "refuses and names this command."
 msgstr ""
-"Semmit sem tesz, ha az az építés már megvan. Ha a böngészőcsatorna "
-"`chromium`, akkor az az olvasás, amely nem találja az építést, elutasít, "
-"és megnevezi ezt a parancsot."
+"Nem csinál semmit, ha az a build már megvan. Ha a böngészőcsatorna "
+"`chromium`, és egy böngészős lekérdezés nem találja a buildet, elutasítja"
+" a futást, és megnevezi ezt a parancsot."
 
-#: ../../workstation-setup.md:80
+#: ../../workstation-setup.md:92
 msgid ""
-"On-host invoice reading uses a local model runtime (Ollama) with a text "
-"model for text-layer PDFs and a vision model for scans. Run `aeat config "
-"provision status` to see where you stand: whether the runtime is "
-"installed, whether it answers, and which reader models are present."
+"On-host invoice reading uses a local model runtime (Ollama) with one "
+"model for each reader role: vision transcription, text extraction, "
+"tabular mapping, and supply-nature proposal. Run `aeat config provision "
+"status` to see where you stand: whether the runtime is installed, whether"
+" it answers, and which reader models are present."
 msgstr ""
-"A gépen belüli számlaolvasás helyi modellfuttatókörnyezetet (Ollama) "
-"használ: szövegmodellt a szövegréteges PDF-ekhez és képmodellt a "
-"beolvasott képekhez. Az `aeat config provision status` megmutatja, hol "
-"áll: telepítve van-e a futtatókörnyezet, válaszol-e, és mely "
-"olvasómodellek vannak meg."
+"A helyi gépen történő számlaolvasás helyi modellfuttató környezetet "
+"(Ollama) használ, olvasói szerepkörönként egy-egy modellel: képi átírás, "
+"szövegkinyerés, táblázatos leképezés és az ellátás jellegére vonatkozó "
+"javaslat. Az `aeat config provision status` megmutatja, hol tartasz: "
+"telepítve van-e a futtatókörnyezet, válaszol-e, és mely olvasómodellek "
+"vannak meg."
 
-#: ../../workstation-setup.md:85
+#: ../../workstation-setup.md:98
 msgid ""
-"Then close whatever that report shows as missing. `aeat config provision "
-"install` installs the runtime through `winget` on Windows or Homebrew on "
-"macOS, and only with `--confirm`; it does nothing when the runtime is "
-"already installed. On Linux, install Ollama with its upstream installer, "
-"which needs root. `aeat config provision start` starts an installed "
-"runtime that is not answering, and does nothing when it already answers. "
-"`aeat config provision pull` downloads every reader role's model, a few "
-"GB in total; narrow it with `--role` to fetch one role's model at a time."
-" `aeat config provision verify` confirms each model loads and answers."
+"To close every gap in one run, use `aeat config provision setup`. It "
+"installs the runtime, starts it, downloads every role's model, loads the "
+"models, and verifies them. Steps that are already done report unchanged, "
+"and the first step that fails stops the run. Setup installs the runtime "
+"only when you pass `--confirm`."
 msgstr ""
-"Ezután pótolja mindazt, amit a jelentés hiányzóként mutat. Az `aeat "
-"config provision install` a futtatókörnyezetet Windowson `winget`, macOS-"
-"en Homebrew segítségével telepíti, és csak a `--confirm` kapcsolóval; ha "
-"a futtatókörnyezet már telepített, semmit sem tesz. Linuxon az Ollamát a "
-"saját telepítőjével kell felrakni, amely rendszergazdai jogot kér. Az "
-"`aeat config provision start` elindít egy telepített, de nem válaszoló "
-"futtatókörnyezetet, és semmit sem tesz, ha az már válaszol. Az `aeat "
-"config provision pull` minden olvasó szerepkör modelljét letölti, "
-"összesen néhány GB-ot; a `--role` kapcsolóval egyszerre egy szerepkör "
-"modelljére szűkítheti. Az `aeat config provision verify` ellenőrzi, hogy "
-"minden modell betölt és válaszol."
+"Ha egyetlen futtatással szeretnél minden hiányosságot pótolni, használd "
+"az `aeat config provision setup` parancsot. Telepíti a "
+"futtatókörnyezetet, elindítja, letölti minden szerepkör modelljét, "
+"betölti a modelleket, és ellenőrzi őket. Az már elvégzett lépések "
+"változatlanként jelennek meg, és az első sikertelen lépés leállítja a "
+"futtatást. A beállítás csak akkor telepíti a futtatókörnyezetet, ha "
+"megadod a `--confirm` kapcsolót."
 
-#: ../../workstation-setup.md:96
+#: ../../workstation-setup.md:104
 msgid ""
-"For cloud LLM classification, put the provider's own CLI on `PATH` and "
-"sign in with that provider's flow. See [Classify transactions with an LLM"
-"](how-to/classify-with-llm.md#set-up-a-provider)."
+"To go step by step, run the commands one at a time. `aeat config "
+"provision install` installs the runtime through `winget` on Windows or "
+"Homebrew on macOS, and only with `--confirm`; it does nothing when the "
+"runtime is already installed. On Linux, install Ollama with its upstream "
+"installer, which needs root. `aeat config provision start` starts an "
+"installed runtime that is not answering, and does nothing when it already"
+" answers. `aeat config provision pull` downloads every reader role's "
+"model, a few GB in total. Narrow it with `--role` to one of "
+"`vision_transcription`, `text_extraction`, `column_role_mapping`, or "
+"`supply_nature_proposal`. `aeat config provision verify` confirms each "
+"model loads and answers."
 msgstr ""
-"A felhőbeli LLM-alapú besoroláshoz helyezze a szolgáltató saját CLI-jét a"
-" `PATH`-ra, és jelentkezzen be a szolgáltató folyamatával. Lásd: "
-"[Tranzakciók besorolása LLM-mel](how-to/classify-with-llm.md#set-"
-"up-a-provider)."
+"Ha lépésenként szeretnél haladni, futtasd a parancsokat egyenként. Az "
+"`aeat config provision install` a futtatókörnyezetet Windowson "
+"`winget`-tel, macOS-en Homebrew-val telepíti, és csak a `--confirm` "
+"kapcsolóval; ha a futtatókörnyezet már telepítve van, nem csinál semmit. "
+"Linuxon az Ollamát a saját telepítőjével telepítsd, amelyhez "
+"rendszergazdai jog kell. Az `aeat config provision start` elindít egy "
+"telepített, de nem válaszoló futtatókörnyezetet, és nem csinál semmit, ha"
+" az már válaszol. Az `aeat config provision pull` letölti minden olvasói "
+"szerepkör modelljét, összesen néhány GB-ot. A `--role` kapcsolóval "
+"leszűkítheted a `vision_transcription`, `text_extraction`, "
+"`column_role_mapping` vagy `supply_nature_proposal` értékek egyikére. Az "
+"`aeat config provision verify` ellenőrzi, hogy minden modell betöltődik "
+"és válaszol."
 
-#: ../../workstation-setup.md:100
+#: ../../workstation-setup.md:116
+msgid ""
+"LLM classification runs only on this local reader; no cloud provider is "
+"involved. See [Classify transactions with an LLM](how-to/classify-with-"
+"llm.md#set-up-the-local-reader)."
+msgstr ""
+"Az LLM-es besorolás kizárólag ezen a helyi olvasón fut; felhőszolgáltató "
+"nem vesz részt benne. Lásd: [Tranzakciók besorolása LLM-mel](how-to"
+"/classify-with-llm.md#set-up-the-local-reader)."
+
+#: ../../workstation-setup.md:120
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
 msgstr ""
-"Minden változtatás után futtassa újra az `aeat config check` parancsot, "
-"hogy megerősítse a hiányosság megszűnését."
+"Minden változtatás után futtasd újra az `aeat config check` parancsot, "
+"hogy megbizonyosodj róla, a hiányosság megszűnt."
 
-#: ../../workstation-setup.md:102
-msgid "Run the Model Context Protocol (MCP) surface"
-msgstr "A Model Context Protocol (MCP) felület futtatása"
+#: ../../workstation-setup.md:122
+msgid "Connect an AI assistant"
+msgstr "AI-asszisztens csatlakoztatása"
 
-#: ../../workstation-setup.md:104
+#: ../../workstation-setup.md:124
 msgid ""
-"Cadrumo's separate `cadrumo-harness` distribution provides the MCP "
-"server, `cadrumo-mcp`, so an AI assistant can operate the same local, "
-"gated commands the CLI exposes, together with an agent harness: the "
-"operator rules, taxpayer-situation skills, and scoped agent personas that"
-" keep the assistant inside the safety boundary."
+"The Cadrumo package includes `cadrumo-mcp`, the Model Context Protocol "
+"(MCP) server that lets an AI assistant operate the same gated commands as"
+" the CLI. It needs no separate install. Run `cadrumo-mcp --help` to "
+"confirm it is on your path, then follow [Connect an agent](how-to"
+"/connect-an-agent.md) to register it with your assistant. On Windows, "
+"install with `pip` or `uv tool install` to get the command on your path."
 msgstr ""
-"A Cadrumo különálló `cadrumo-harness` disztribúciója biztosítja a "
-"`cadrumo-mcp` MCP-kiszolgálót, így egy MI-asszisztens ugyanazokat a "
-"helyi, korlátozott parancsokat kezelheti, amelyeket a CLI elérhetővé "
-"tesz, egy ügynöki keretrendszerrel együtt: az operátori szabályok, az "
-"adózói helyzethez tartozó készségek és a meghatározott hatókörű "
-"ügynökszerepkörök a biztonsági határon belül tartják az asszisztenst."
+"A Cadrumo-csomag tartalmazza a `cadrumo-mcp` szervert, a Model Context "
+"Protocol (MCP) szervert, amellyel egy AI-asszisztens ugyanazokat a védett"
+" parancsokat használhatja, mint a CLI. Nem kell külön telepíteni. A "
+"`cadrumo-mcp --help` paranccsal ellenőrizheted, hogy elérhető-e az "
+"elérési utadon, majd az [Ügynök csatlakoztatása](how-to/connect-an-"
+"agent.md) oldalt követve regisztráld az asszisztensednél. Windowson a "
+"parancs elérési útra kerüléséhez `pip`-pel vagy `uv tool install`-lal "
+"telepíts."
 
-#: ../../workstation-setup.md:110
-msgid ""
-"In the beta, synchronize that workspace member and run the server from "
-"the same repository checkout:"
-msgstr ""
-"A bétában szinkronizálja ezt a munkaterületi tagot, és futtassa a "
-"kiszolgálót ugyanabból a repozitórium-munkapéldányból:"
-
-#: ../../workstation-setup.md:118
-msgid ""
-"[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
-"registration and explains what the agent can and cannot do."
-msgstr ""
-"A [Kapcsolódás ügynökhöz](how-to/connect-an-agent.md) oldal megmutatja a "
-"forrás-checkout regisztrációját, és elmagyarázza, mire képes az ügynök, "
-"illetve mire nem."
-
-#: ../../workstation-setup.md:121
+#: ../../workstation-setup.md:131
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:123
+#: ../../workstation-setup.md:133
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
 msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
-"modelo fájlig."
+"modelofájlig."
 
-#: ../../workstation-setup.md:125
+#: ../../workstation-setup.md:135
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
 msgstr ""
 "[Profil beállítása](how-to/profile-setup.md) - beleértve a profilonkénti "
-"szolgáltatásképességeket (Google export, LLM-alapú képfeldolgozás, "
+"szolgáltatási képességeket (Google-export, LLM-es képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:127
+#: ../../workstation-setup.md:137
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
-msgstr "[Kapcsolódás ügynökhöz](how-to/connect-an-agent.md)"
+msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:128
+#: ../../workstation-setup.md:138
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
 

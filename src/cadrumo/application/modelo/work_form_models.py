@@ -512,6 +512,8 @@ class ModeloFormAttention(StrEnum):
 
     #: It must be resolved before the declaration can be recorded as filed.
     BLOCKS = "blocks"
+    #: A value the declaration requires is missing; giving it resolves the finding.
+    MISSING = "missing"
     #: A warning worth checking; it does not stop the filing.
     CHECK = "check"
     #: An explanation of what the calculation did; nothing to act on.
@@ -551,10 +553,13 @@ keys; a key it names that no catalogue carries fails its guard test.
 def finding_attention(finding: ModeloVerificationFinding) -> ModeloFormAttention:
     """Classify one verification finding on the filer's attention scale.
 
-    A blocking finding blocks. A warning is worth checking, unless it is an
-    advisory the verification emits to explain an admitted or scoped-out
-    dependency, which is for information only.
+    A required value that is missing sits with the other missing values, since
+    giving it is all it asks. Any other blocking finding blocks. A warning is
+    worth checking, unless it is an advisory the verification emits to explain
+    an admitted or scoped-out dependency, which is for information only.
     """
+    if finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA:
+        return ModeloFormAttention.MISSING
     if finding.severity is ModeloVerificationFindingSeverity.BLOCKING:
         return ModeloFormAttention.BLOCKS
     if (

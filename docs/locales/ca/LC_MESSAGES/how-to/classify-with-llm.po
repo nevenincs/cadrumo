@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-30 05:24+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -20,175 +20,216 @@ msgstr ""
 
 #: ../../how-to/classify-with-llm.md:1
 msgid "Classify transactions with an LLM"
-msgstr "Classifica els moviments amb un LLM"
+msgstr "Classifica les transaccions amb un LLM"
 
 #: ../../how-to/classify-with-llm.md:3
 msgid ""
-"This page covers the LLM-assisted classification workflow: setting up a "
-"provider, previewing a suggestion for one transaction, the review loop "
-"(apply, reject, or override), saturating the IVA tax fields, and reading "
-"an attached invoice with a model, on your own machine or, with explicit "
-"consent, through a cloud provider. The suggestion is always a starting "
-"point: you confirm or correct it, and the model never sets a euro amount."
+"This page covers large language model (LLM) assisted classification: "
+"setting up the local reader, previewing a suggestion for one transaction,"
+" the review loop (apply, reject, or override), saturating the IVA tax "
+"fields, and reading an attached invoice with a model. Every model runs on"
+" your own machine. The suggestion is always a starting point: you confirm"
+" or correct it, and the model never sets a euro amount."
 msgstr ""
-"Aquesta pàgina tracta el flux de treball de classificació assistida per "
-"LLM: configurar un proveïdor, previsualitzar un suggeriment per a un "
-"moviment, el bucle de revisió (aplicar, rebutjar o sobreescriure), "
-"saturar els camps fiscals d'IVA i llegir una factura adjunta amb un "
-"model, a la teva pròpia màquina o, amb consentiment explícit, mitjançant "
-"un proveïdor al núvol. El suggeriment sempre és un punt de partida: el "
-"confirmes o el corregeixes, i el model mai no estableix cap import en "
-"euros."
+"Aquesta pàgina tracta la classificació assistida per un model de "
+"llenguatge gran (LLM): configurar el lector local, previsualitzar un "
+"suggeriment per a una transacció, el bucle de revisió (aplicar, rebutjar "
+"o sobreescriure), saturar els camps fiscals de l'IVA i llegir una factura"
+" adjunta amb un model. Tots els models s'executen a la teva pròpia "
+"màquina. El suggeriment sempre és un punt de partida: el confirmes o el "
+"corregeixes, i el model mai no estableix cap import en euros."
 
 #: ../../how-to/classify-with-llm.md:10
 msgid ""
-"Classification does not contact AEAT and does not submit anything. The "
-"provider CLI may contact its own external service depending on your "
-"provider setup; see [the privacy boundary](#privacy-boundary) before "
-"using real taxpayer data."
+"Classification does not contact AEAT and does not submit anything. It "
+"also sends nothing to a cloud service. See [the privacy boundary"
+"](#privacy-boundary) for the one command that can."
 msgstr ""
-"La classificació no contacta amb l'AEAT i no envia res. La CLI del "
-"proveïdor pot contactar amb el seu propi servei extern segons la "
-"configuració del proveïdor; consulta [el límit de privadesa](#privacy-"
-"boundary) abans d'utilitzar dades reals de contribuent."
+"La classificació no contacta amb l'AEAT i no presenta res. Tampoc no "
+"envia res a cap servei al núvol. Consulta [el límit de privadesa"
+"](#privacy-boundary) per veure l'única ordre que sí que ho pot fer."
 
-#: ../../how-to/classify-with-llm.md:15
+#: ../../how-to/classify-with-llm.md:14
 msgid ""
-"The LLM and vision commands on this page need a provider CLI or a local "
-"vision model that the documentation sandbox does not run, so they are "
-"shown as display-only frames. The local commands around them run live at "
-"build time."
+"The LLM commands on this page need a local model runtime that the "
+"documentation sandbox does not run, so they are shown as display-only "
+"frames. The local commands around them run live at build time."
 msgstr ""
-"Les ordres d'LLM i de visió d'aquesta pàgina necessiten una CLI de "
-"proveïdor o un model de visió local que l'entorn de proves de la "
-"documentació no executa, de manera que es mostren com a marcs de només "
-"visualització. Les ordres locals que les envolten s'executen en directe "
-"en el moment de la compilació."
+"Les ordres d'LLM d'aquesta pàgina necessiten un entorn d'execució de "
+"models local que l'entorn de proves de la documentació no executa, de "
+"manera que es mostren com a marcs de només visualització. Les ordres "
+"locals que les envolten s'executen en directe en el moment de la "
+"compilació."
 
-#: ../../how-to/classify-with-llm.md:19
+#: ../../how-to/classify-with-llm.md:18
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../how-to/classify-with-llm.md:21
+#: ../../how-to/classify-with-llm.md:20
 msgid "You need:"
-msgstr "Necessita:"
+msgstr "Necessites:"
 
-#: ../../how-to/classify-with-llm.md:23
+#: ../../how-to/classify-with-llm.md:22
 msgid ""
 "An active profile, see [set up your taxpayer profile](profile-setup.md), "
 "and at least one transaction in its ledger to classify. See [Import and "
 "manage transactions](import-bank-statements.md)."
 msgstr ""
-"Un perfil actiu, consulta [configura el teu perfil de contribuent"
-"](profile-setup.md), i com a mínim un moviment al seu ledger per "
-"classificar. Consulta [Importa i gestiona els moviments](import-bank-"
+"Un perfil actiu (consulta [configura el teu perfil de contribuent"
+"](profile-setup.md)) i almenys una transacció al seu ledger per "
+"classificar. Consulta [Importa i gestiona les transaccions](import-bank-"
 "statements.md)."
 
-#: ../../how-to/classify-with-llm.md:26
+#: ../../how-to/classify-with-llm.md:25
 msgid ""
-"Your master-key passphrase. The command opens the encrypted ledger, so it"
-" prompts for the passphrase."
+"Your passphrase. The command opens the encrypted ledger, so it prompts "
+"for the passphrase."
 msgstr ""
-"La contrasenya de la clau mestra. L'ordre obre el ledger xifrat, de "
-"manera que et demana la contrasenya."
+"La teva frase de contrasenya. L'ordre obre el ledger xifrat, de manera "
+"que et demana la frase de contrasenya."
 
-#: ../../how-to/classify-with-llm.md:28
-msgid "A provider CLI installed, on `PATH`, and logged in."
-msgstr "Una CLI de proveïdor instal·lada, al `PATH` i amb la sessió iniciada."
-
-#: ../../how-to/classify-with-llm.md:30
-msgid "The runtime emits help, prompts, and messages in Spanish."
-msgstr "El runtime emet l'ajuda, els avisos i els missatges en castellà."
-
-#: ../../how-to/classify-with-llm.md:33
-msgid "Set up a provider"
-msgstr "Configura un proveïdor"
-
-#: ../../how-to/classify-with-llm.md:35
+#: ../../how-to/classify-with-llm.md:27
 msgid ""
-"`aeat` does not store LLM credentials and has no separate LLM account "
-"configuration. It runs a provider CLI that is already installed and "
-"authenticated on your system. The classification command accepts provider"
-" names such as `claude`, `antigravity`, and `codex`; `antigravity` uses "
-"Google's `agy` CLI, the supported successor to the retired standalone "
-"`gemini` CLI."
+"The `llm` extra, installed through your install channel, for example `pip"
+" install \"cadrumo[llm]\"`."
 msgstr ""
-"`aeat` no emmagatzema credencials d'LLM i no té cap configuració de "
-"compte d'LLM separada. Executa una CLI de proveïdor que ja està "
-"instal·lada i autenticada al teu sistema. L'ordre de classificació "
-"accepta noms de proveïdor com ara `claude`, `antigravity` i `codex`; "
-"`antigravity` utilitza la CLI `agy` de Google, el successor admès de la "
-"CLI autònoma `gemini`, ja retirada."
+"L'extra `llm`, instal·lat pel teu canal d'instal·lació, per exemple `pip "
+"install \"cadrumo[llm]\"`."
 
-#: ../../how-to/classify-with-llm.md:42
+#: ../../how-to/classify-with-llm.md:29
+msgid "A local model runtime with its models, set up in the next section."
+msgstr ""
+"Un entorn d'execució de models local amb els seus models, que es "
+"configura a la secció següent."
+
+#: ../../how-to/classify-with-llm.md:31
 msgid ""
-"Check which provider CLIs are visible on `PATH` with `aeat config check`."
-" It lists each provider as `disponible` or `ausente` with the fix for "
-"each problem, alongside the profile service capabilities. This reports "
-"discoverability only, not account login. The local vision reader appears "
-"there too: it shows `ausente` until the runtime answers. `aeat config "
-"provision status` reports the runtime and each reader model in detail."
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
 msgstr ""
-"Comproveu quines CLI de proveïdors són visibles a `PATH` amb `aeat config"
-" check`. Mostra cada proveïdor com a `disponible` o `ausente` amb la "
-"solució per a cada problema, al costat de les capacitats del servei de "
-"perfil. Això només informa de la detecció, no de l'inici de sessió del "
-"compte. El lector de visió local també hi apareix: mostra `ausente` fins "
-"que l'entorn d'execució respon. `aeat config provision status` informa "
-"amb detall de l'entorn d'execució i de cada model lector."
+"Els exemples d'aquesta documentació estan enregistrats en anglès. `aeat` "
+"mostra els seus missatges en espanyol tret que [triïs un altre idioma"
+"](profile-setup.md#choose-the-output-language)."
 
-#: ../../how-to/classify-with-llm.md:49
+#: ../../how-to/classify-with-llm.md:36
+msgid "Set up the local reader"
+msgstr "Configura el lector local"
+
+#: ../../how-to/classify-with-llm.md:38
 msgid ""
-"Install and authenticate the provider with its own CLI or account flow. "
-"The login command and data-retention settings belong to the provider, not"
-" to `aeat`. Then smoke-test with a preview, which saves nothing:"
+"`aeat` sends every classification prompt to a model runtime on your own "
+"computer, over a loopback connection. It stores no LLM credentials and "
+"needs no account. The `llm` extra provides the client, and `aeat config "
+"provision` installs the runtime and its models."
 msgstr ""
-"Instal·la i autentica el proveïdor amb la seva pròpia CLI o flux de "
-"compte. L'ordre d'inici de sessió i la configuració de retenció de dades "
-"pertanyen al proveïdor, no a `aeat`. Després fes una prova ràpida amb una"
-" previsualització, que no desa res:"
+"`aeat` envia cada prompt de classificació a un entorn d'execució de "
+"models al teu propi ordinador, mitjançant una connexió de loopback. No "
+"desa cap credencial d'LLM i no cal cap compte. L'extra `llm` proporciona "
+"el client, i `aeat config provision` instal·la l'entorn d'execució i els "
+"seus models."
 
-#: ../../how-to/classify-with-llm.md:56
+#: ../../how-to/classify-with-llm.md:43
+msgid "To set up everything in one run, use:"
+msgstr "Per configurar-ho tot d'una vegada, usa:"
+
+#: ../../how-to/classify-with-llm.md:48
 msgid ""
-"A logged-out provider makes the command refuse and relay the provider's "
-"own error (for example `La clasificacion por LLM fallo: claude CLI exited"
-" with 1: 'Not logged in ...'`). Complete that provider's login and retry."
+"Setup installs the runtime with the platform package manager (winget on "
+"Windows, Homebrew on macOS), starts it, downloads a model for each reader"
+" role, loads the models, and verifies them. On Linux, install the runtime"
+" yourself. Without `--confirm`, setup stops before it installs anything. "
+"Steps that are already done are reported as unchanged. See [Install "
+"Cadrumo](../workstation-setup.md) for the whole sequence."
 msgstr ""
-"Un proveïdor amb la sessió tancada fa que l'ordre es negui i transmeti "
-"l'error propi del proveïdor (per exemple `La clasificacion por LLM fallo:"
-" claude CLI exited with 1: 'Not logged in ...'`). Completa l'inici de "
-"sessió d'aquell proveïdor i torna-ho a provar."
+"La configuració instal·la l'entorn d'execució amb el gestor de paquets de"
+" la plataforma (winget a Windows, Homebrew a macOS), l'inicia, descarrega"
+" un model per a cada rol de lector, carrega els models i els verifica. A "
+"Linux, instal·la tu mateix l'entorn d'execució. Sense `--confirm`, la "
+"configuració s'atura abans d'instal·lar res. Els passos que ja estan fets"
+" s'informen com a sense canvis. Consulta [Instal·la Cadrumo"
+"](../workstation-setup.md) per veure tota la seqüència."
 
-#: ../../how-to/classify-with-llm.md:60
-msgid "Ask for a suggestion"
-msgstr "Demana un suggeriment"
+#: ../../how-to/classify-with-llm.md:55
+msgid ""
+"Text reads use the `qwen3:1.7b` model by default. Scanned and image reads"
+" use `qwen3-vl:2b`. Check the result with `aeat config check`. It reports"
+" the profile's service capabilities, whether each local reader is "
+"available, and the fix for each problem. `aeat config provision status` "
+"reports the runtime and each reader model in detail. If it reports that "
+"no fitness check is recorded for the text model, run `aeat config "
+"provision verify`."
+msgstr ""
+"Les lectures de text fan servir per defecte el model `qwen3:1.7b`. Les "
+"lectures d'escanejats i d'imatges fan servir `qwen3-vl:2b`. Comprova el "
+"resultat amb `aeat config check`. Informa de les capacitats de servei del"
+" perfil, de si cada lector local està disponible i de la solució per a "
+"cada problema. `aeat config provision status` informa amb detall de "
+"l'entorn d'execució i de cada model de lector. Si informa que no hi ha "
+"cap comprovació d'aptitud registrada per al model de text, executa `aeat "
+"config provision verify`."
 
 #: ../../how-to/classify-with-llm.md:62
 msgid ""
+"The profile capability `llm_vision` is on by default. To stop `aeat` from"
+" reading scanned or image evidence, turn that capability off with `aeat "
+"config profile capabilities set`, naming `llm_vision` and `off`. Reads of"
+" scanned or image evidence then refuse."
+msgstr ""
+"La capacitat de perfil `llm_vision` està activada per defecte. Per evitar"
+" que `aeat` llegeixi proves escanejades o en imatge, desactiva aquesta "
+"capacitat amb `aeat config profile capabilities set`, indicant "
+"`llm_vision` i `off`. Després, les lectures de proves escanejades o en "
+"imatge es rebutgen."
+
+#: ../../how-to/classify-with-llm.md:67
+msgid "Smoke-test the setup with a preview, which saves nothing:"
+msgstr ""
+"Fes una prova ràpida de la configuració amb una previsualització, que no "
+"desa res:"
+
+#: ../../how-to/classify-with-llm.md:72
+msgid ""
+"If the runtime is not running or a model is missing, the command refuses "
+"and reads nothing. The refusal points to `aeat config provision status`, "
+"then to `aeat config provision start` and `aeat config provision pull`. "
+"Fix the gap and retry."
+msgstr ""
+"Si l'entorn d'execució no s'està executant o falta un model, l'ordre es "
+"nega i no llegeix res. El rebuig remet a `aeat config provision status` i"
+" després a `aeat config provision start` i `aeat config provision pull`. "
+"Soluciona la mancança i torna-ho a provar."
+
+#: ../../how-to/classify-with-llm.md:77
+msgid "Ask for a suggestion"
+msgstr "Demana un suggeriment"
+
+#: ../../how-to/classify-with-llm.md:79
+msgid ""
 "Find a row that still needs classification and inspect it. Then send that"
-" one row to the provider for a preview:"
+" one row to the local model for a preview:"
 msgstr ""
 "Troba una fila que encara necessiti classificació i inspecciona-la. "
-"Després envia aquella fila al proveïdor per a una previsualització:"
+"Després envia aquesta fila al model local per a una previsualització:"
 
-#: ../../how-to/classify-with-llm.md:69
+#: ../../how-to/classify-with-llm.md:86
 msgid ""
-"`aeat` sends that one row to the selected provider CLI, which suggests a "
+"`aeat` sends that one row to the local text model, which suggests a "
 "classification (`BUSINESS`, `PERSONAL`, or `MIXED`), an expense category "
 "when it can choose one from the allowed list, a confidence, and a short "
 "reason. In preview mode nothing is saved. For the full machine-readable "
-"record, including the `provenance` (`llm:<provider>`) and `persisted` "
-"fields, put the global JSON flag before the subcommand:"
+"record, including the `provenance` (`llm:local-text:<model>`) and "
+"`persisted` fields, put the global JSON flag before the subcommand:"
 msgstr ""
-"`aeat` envia aquella fila a la CLI del proveïdor seleccionat, que "
-"suggereix una classificació (`BUSINESS`, `PERSONAL` o `MIXED`), una "
-"categoria de despesa quan en pot triar una de la llista permesa, una "
-"confiança i una raó breu. En mode de previsualització no es desa res. Per"
-" obtenir el registre complet llegible per màquina, inclosos els camps "
-"`provenance` (`llm:<provider>`) i `persisted`, posa l'indicador JSON "
-"global abans de la subordre:"
+"`aeat` envia aquesta fila al model de text local, que suggereix una "
+"classificació (`BUSINESS`, `PERSONAL` o `MIXED`), una categoria de "
+"despesa quan en pot triar una de la llista permesa, una confiança i una "
+"raó breu. En mode de previsualització no es desa res. Per obtenir el "
+"registre complet llegible per màquina, inclosos els camps `provenance` "
+"(`llm:local-text:<model>`) i `persisted`, posa l'opció JSON global abans "
+"de la subordre:"
 
-#: ../../how-to/classify-with-llm.md:79
+#: ../../how-to/classify-with-llm.md:96
 msgid ""
 "Use the row description, amount, direction, counterparty, and source "
 "documents to decide whether the suggestion makes sense. For the "
@@ -196,19 +237,19 @@ msgid ""
 "transactions.md)."
 msgstr ""
 "Utilitza la descripció, l'import, la direcció, la contrapart i els "
-"documents font de la fila per decidir si el suggeriment té sentit. Per "
-"als conceptes manuals subjacents, consulta [Classifica els moviments"
-"](classify-transactions.md)."
+"documents d'origen de la fila per decidir si el suggeriment té sentit. "
+"Per als conceptes manuals subjacents, consulta [Classifica les "
+"transaccions](classify-transactions.md)."
 
-#: ../../how-to/classify-with-llm.md:83
+#: ../../how-to/classify-with-llm.md:100
 msgid "Review, apply, reject, or override"
 msgstr "Revisa, aplica, rebutja o sobreescriu"
 
-#: ../../how-to/classify-with-llm.md:85
+#: ../../how-to/classify-with-llm.md:102
 msgid "The review loop has four terminals:"
-msgstr "El bucle de revisió té quatre terminals:"
+msgstr "El bucle de revisió té quatre desenllaços possibles:"
 
-#: ../../how-to/classify-with-llm.md:87
+#: ../../how-to/classify-with-llm.md:104
 msgid ""
 "**Review.** Preview without `--apply`. Nothing is saved; walking away "
 "leaves the row unchanged."
@@ -216,19 +257,19 @@ msgstr ""
 "**Revisar.** Previsualitza sense `--apply`. No es desa res; si marxes, la"
 " fila queda inalterada."
 
-#: ../../how-to/classify-with-llm.md:89
+#: ../../how-to/classify-with-llm.md:106
 msgid ""
 "**Apply.** Persist the suggestion after review. The apply output shows "
-"the transaction id, `clasificado-por llm:<provider>`, and the new review "
-"status; provenance, confidence, and reason are recorded with the "
-"classification event."
+"the transaction id, a `classified-by` line with `llm:local-text:<model>`,"
+" and the new review status. Provenance, confidence, and reason are "
+"recorded with the classification event."
 msgstr ""
-"**Aplicar.** Persisteix el suggeriment després de revisar-lo. La sortida "
-"d'aplicar mostra l'id del moviment, `clasificado-por llm:<provider>` i el"
-" nou estat de revisió; la procedència, la confiança i la raó es registren"
-" amb l'esdeveniment de classificació."
+"**Aplicar.** Desa el suggeriment després de revisar-lo. La sortida "
+"d'aplicar mostra l'id de la transacció, una línia `classified-by` amb "
+"`llm:local-text:<model>` i el nou estat de revisió. La procedència, la "
+"confiança i la raó es registren amb l'esdeveniment de classificació."
 
-#: ../../how-to/classify-with-llm.md:92
+#: ../../how-to/classify-with-llm.md:110
 msgid ""
 "**Reject.** Record that the model was wrong, with your reason, as an "
 "audit event; the row stays unclassified and the record stays in history. "
@@ -241,7 +282,7 @@ msgstr ""
 "Previsualitzar i marxar tampoc no canvia res, però `--reject` és el que "
 "escriu el rastre d'auditoria."
 
-#: ../../how-to/classify-with-llm.md:96
+#: ../../how-to/classify-with-llm.md:114
 msgid ""
 "**Override.** Classify manually whenever the suggestion is wrong or "
 "incomplete. Manual classification always wins and supersedes a derived or"
@@ -251,40 +292,40 @@ msgstr ""
 "incorrecte o incomplet. La classificació manual sempre guanya i preval "
 "sobre un valor derivat o aplicat pel model."
 
-#: ../../how-to/classify-with-llm.md:100
+#: ../../how-to/classify-with-llm.md:118
 msgid ""
-"Apply and reject both run the provider, so they are shown as display-only"
-" frames:"
+"Apply and reject both run the model, so they are shown as display-only "
+"frames:"
 msgstr ""
-"Aplicar i rebutjar executen tots dos el proveïdor, de manera que es "
-"mostren com a marcs de només visualització:"
+"Aplicar i rebutjar executen tots dos el model, de manera que es mostren "
+"com a marcs de només visualització:"
 
-#: ../../how-to/classify-with-llm.md:106
+#: ../../how-to/classify-with-llm.md:124
 msgid ""
-"Override runs entirely on your machine. Classify the row by hand with the"
-" classification and category you choose:"
+"Override runs without the model. Classify the row by hand with the "
+"classification and category you choose:"
 msgstr ""
-"Sobreescriure s'executa completament a la teva màquina. Classifica la "
-"fila a mà amb la classificació i la categoria que tries:"
+"Sobreescriure s'executa sense el model. Classifica la fila a mà amb la "
+"classificació i la categoria que triïs:"
 
-#: ../../how-to/classify-with-llm.md:113
+#: ../../how-to/classify-with-llm.md:131
 msgid ""
-"If the row is mixed-use, the LLM suggestion alone is not enough; supply "
+"If the row is mixed-use, the LLM suggestion alone is not enough. Supply "
 "the business share through the normal [mixed-use workflow](classify-"
 "transactions.md#classify-mixed-use-transactions). After important "
 "corrections, re-run preflight for the period:"
 msgstr ""
 "Si la fila és d'ús mixt, el suggeriment de l'LLM per si sol no n'hi ha "
-"prou; proporciona la proporció de negoci mitjançant el [flux de treball "
-"d'ús mixt](classify-transactions.md#classify-mixed-use-transactions) "
-"habitual. Després de correccions importants, torna a executar el "
-"preflight per al període:"
+"prou. Aporta la proporció de negoci amb el [flux de treball d'ús mixt"
+"](classify-transactions.md#classify-mixed-use-transactions) habitual. "
+"Després de correccions importants, torna a executar el preflight per al "
+"període:"
 
-#: ../../how-to/classify-with-llm.md:122
+#: ../../how-to/classify-with-llm.md:140
 msgid "Fill in the tax fields automatically"
 msgstr "Emplena els camps fiscals automàticament"
 
-#: ../../how-to/classify-with-llm.md:124
+#: ../../how-to/classify-with-llm.md:142
 msgid ""
 "A plain applied suggestion saves the classification and the expense "
 "category; it does not fill in the regulated tax fields. Add `--saturate` "
@@ -298,156 +339,157 @@ msgstr ""
 "seleccionar també una categoria d'IVA i derivar la base imposable, el "
 "tipus d'IVA i l'import d'IVA. El model mai no inventa cap número: només "
 "selecciona la categoria d'IVA; el tipus prové del registre, i la base i "
-"l'import d'IVA es calculen a partir del total del moviment:"
+"l'import d'IVA es calculen a partir del total de la transacció:"
 
-#: ../../how-to/classify-with-llm.md:134
+#: ../../how-to/classify-with-llm.md:152
 msgid ""
 "The preview adds the selected IVA category and, when the category has a "
-"Spanish rate, the derived figures; base and IVA always add up to the "
+"Spanish rate, the derived figures. Base and IVA always add up to the "
 "transaction total. A category with no simple Spanish rate (an intra-"
 "community supply, a reverse-charge purchase) shows a note instead of "
 "numbers, and you complete those by hand. The model may also decline and "
-"return `unknown` rather than guess; re-run, or pick the category "
+"return `unknown` rather than guess. Re-run, or pick the category "
 "yourself."
 msgstr ""
 "La previsualització afegeix la categoria d'IVA seleccionada i, quan la "
-"categoria té un tipus espanyol, les xifres derivades; la base i l'IVA "
-"sempre sumen el total del moviment. Una categoria sense un tipus espanyol"
-" simple (una entrega intracomunitària, una compra amb inversió del "
-"subjecte passiu) mostra una nota en lloc de números, i les completes a "
-"mà. El model també pot declinar i retornar `unknown` en lloc d'endevinar;"
-" torna-ho a executar o tria tu mateix la categoria."
+"categoria té un tipus espanyol, les xifres derivades. La base i l'IVA "
+"sempre sumen el total de la transacció. Una categoria sense un tipus "
+"espanyol simple (una entrega intracomunitària, una compra amb inversió "
+"del subjecte passiu) mostra una nota en lloc de números, i les completes "
+"tu a mà. El model també pot negar-se a respondre i retornar `unknown` en "
+"lloc d'endevinar. Torna a executar-ho o tria tu mateix la categoria."
 
-#: ../../how-to/classify-with-llm.md:141
+#: ../../how-to/classify-with-llm.md:159
 msgid ""
-"When you already know the IVA category, or the model returned `unknown`, "
-"classify the row as business first, then let the system derive the "
-"numbers without any `--llm`. This derives the figures from the official "
-"rate exactly as the model path does and records them as system-derived. "
-"It only touches the IVA fields, and the row must already be classified "
+"If you already know the IVA category, or the model returned `unknown`, "
+"classify the row as business first. Then let the system derive the "
+"numbers without `--llm`. This derives the figures from the official rate "
+"exactly as the model path does and records them as system-derived. It "
+"only touches the IVA fields, and the row must already be classified "
 "business or mixed:"
 msgstr ""
-"Quan ja coneixes la categoria d'IVA, o el model ha retornat `unknown`, "
-"classifica primer la fila com a negoci i després deixa que el sistema "
-"derivi els números sense cap `--llm`. Això deriva les xifres del tipus "
+"Si ja coneixes la categoria d'IVA, o el model ha retornat `unknown`, "
+"classifica primer la fila com a negoci. Després deixa que el sistema "
+"derivi els números sense `--llm`. Això deriva les xifres del tipus "
 "oficial exactament com ho fa la via del model i les registra com a "
 "derivades pel sistema. Només toca els camps d'IVA, i la fila ja ha "
 "d'estar classificada com a negoci o mixta:"
 
-#: ../../how-to/classify-with-llm.md:151
+#: ../../how-to/classify-with-llm.md:169
 msgid ""
 "To override any field by hand, classify manually with the figures "
 "yourself. The taxable base plus IVA must equal the transaction total to "
 "the cent:"
 msgstr ""
-"Per sobreescriure qualsevol camp a mà, classifica manualment amb les "
-"xifres tu mateix. La base imposable més l'IVA ha de ser igual al total "
-"del moviment fins al cèntim:"
+"Per sobreescriure qualsevol camp a mà, classifica manualment aportant tu "
+"les xifres. La base imposable més l'IVA ha de ser igual al total de la "
+"transacció fins al cèntim:"
 
-#: ../../how-to/classify-with-llm.md:158
+#: ../../how-to/classify-with-llm.md:176
 msgid ""
 "IRPF category is still entered manually in [Classify transactions"
 "](classify-transactions.md). Use [Review and supply calculation inputs"
 "](review-calculation-values.md) when a modelo later reports missing "
 "values."
 msgstr ""
-"La categoria d'IRPF encara s'introdueix manualment a [Classifica els "
-"moviments](classify-transactions.md). Utilitza [Revisa i proporciona les "
-"dades de càlcul](review-calculation-values.md) quan un model informi més "
-"endavant de valors que falten."
+"La categoria d'IRPF encara s'introdueix manualment a [Classifica les "
+"transaccions](classify-transactions.md). Utilitza [Revisa i aporta "
+"entrades de càlcul](review-calculation-values.md) quan un modelo informi "
+"més endavant de valors que falten."
 
-#: ../../how-to/classify-with-llm.md:163
+#: ../../how-to/classify-with-llm.md:181
+msgid ""
+"An IVA category does not by itself make input IVA deductible. To deduct "
+"it, also pass `--deduction-kind` (for example `domestic_current`) on "
+"`aeat app ledger classify` or `add`. The kind `domestic_current` needs a "
+"linked purchase invoice evidence record. See [Attach invoices and "
+"receipts](ledger-evidence.md)."
+msgstr ""
+"Una categoria d'IVA no fa, per si sola, deduïble l'IVA suportat. Per "
+"deduir-lo, passa també `--deduction-kind` (per exemple "
+"`domestic_current`) a `aeat app ledger classify` o `add`. El tipus "
+"`domestic_current` necessita un registre de prova de factura de compra "
+"vinculat. Consulta [Adjunta factures i rebuts](ledger-evidence.md)."
+
+#: ../../how-to/classify-with-llm.md:187
 msgid "Read the attached invoice"
 msgstr "Llegeix la factura adjunta"
 
-#: ../../how-to/classify-with-llm.md:165
+#: ../../how-to/classify-with-llm.md:189
 msgid ""
 "Attach a purchase invoice or receipt to a transaction (see [Attach "
 "invoices and receipts](ledger-evidence.md)), then let the model read it "
 "while classifying with `--read-evidence`. The model chooses the spending "
 "category and the IVA situation from what it reads; `aeat` derives every "
-"euro amount from the registry. How the document is read depends on the "
-"file:"
+"euro amount from the registry. Both kinds of document are read on your "
+"own machine:"
 msgstr ""
-"Adjunta una factura de compra o un rebut a un moviment (consulta [Adjunta"
-" factures i rebuts](ledger-evidence.md)) i, tot seguit, deixa que el "
-"model la llegeixi mentre classifica amb `--read-evidence`. El model tria "
-"la categoria de despesa i la situació d'IVA a partir del que llegeix; "
-"`aeat` deriva del registre cada import en euros. Com es llegeix el "
-"document depèn del fitxer:"
+"Adjunta una factura de compra o un rebut a una transacció (consulta "
+"[Adjunta factures i rebuts](ledger-evidence.md)) i, tot seguit, deixa que"
+" el model la llegeixi mentre classifiques amb `--read-evidence`. El model"
+" tria la categoria de despesa i la situació d'IVA a partir del que "
+"llegeix; `aeat` deriva del registre cada import en euros. Tots dos tipus "
+"de document es llegeixen a la teva pròpia màquina:"
 
-#: ../../how-to/classify-with-llm.md:171
+#: ../../how-to/classify-with-llm.md:196
 msgid ""
-"**A scanned PDF or an image** is read on your own machine by a local "
-"vision model. Nothing leaves the machine, no acknowledgement is needed, "
-"no `--llm` provider is needed, and it works in gestor and professional "
-"deployments."
+"**A scanned PDF or an image** is read by the local vision model. The "
+"`llm_vision` capability must be on, which is the default."
 msgstr ""
-"**Un PDF escanejat o una imatge** el llegeix a la teva pròpia màquina un "
-"model de visió local. No surt res de la màquina, no cal cap "
-"reconeixement, no cal cap proveïdor `--llm` i funciona en desplegaments "
-"de gestor i professionals."
+"**Un PDF escanejat o una imatge** el llegeix el model de visió local. La "
+"capacitat `llm_vision` ha d'estar activada, que és el valor per defecte."
 
-#: ../../how-to/classify-with-llm.md:175
+#: ../../how-to/classify-with-llm.md:198
 msgid ""
-"**A text-layer PDF** has its text extracted and sent to a cloud provider "
-"(the same `--llm` providers). This sends the text off your machine, so it"
-" is off by default, barred for gestor deployments, and gated behind an "
-"explicit per-run acknowledgement."
+"**A text-layer PDF** has its text extracted and read by the local text "
+"model."
 msgstr ""
-"**Un PDF amb capa de text** té el seu text extret i enviat a un proveïdor"
-" al núvol (els mateixos proveïdors `--llm`). Això envia el text fora de "
-"la teva màquina, de manera que està desactivat per defecte, barrat per "
-"als desplegaments de gestor i condicionat a un reconeixement explícit per"
-" execució."
+"**Un PDF amb capa de text** en té el text extret i llegit pel model de "
+"text local."
 
-#: ../../how-to/classify-with-llm.md:180
+#: ../../how-to/classify-with-llm.md:201
 msgid ""
-"Prefer the on-host path. Provision the local runtime first: install it "
-"with `aeat config provision install`, start it with `aeat config "
-"provision start`, and fetch the vision model with `aeat config provision "
-"pull`, narrowed to the vision role with `--role`. See [Set up a "
-"workstation](../workstation-setup.md) for the whole sequence."
+"Neither read needs an acknowledgement, and both work in gestor and "
+"professional deployments. `--read-evidence` on its own is enough. `--llm`"
+" without `--read-evidence` classifies from the transaction row only and "
+"never reads the attached document. To read the attached document with the"
+" vision model you provisioned, preview first:"
 msgstr ""
-"Preferiu la via local a l'equip. Proveïu primer l'entorn d'execució "
-"local: instal·leu-lo amb `aeat config provision install`, inicieu-lo amb "
-"`aeat config provision start` i descarregueu el model de visió amb `aeat "
-"config provision pull`, limitat al rol de visió amb `--role`. Consulteu "
-"[Configurar una estació de treball](../workstation-setup.md) per veure la"
-" seqüència completa."
+"Cap de les dues lectures no requereix cap confirmació, i totes dues "
+"funcionen en desplegaments de gestor i professionals. N'hi ha prou amb "
+"`--read-evidence` sol. `--llm` sense `--read-evidence` classifica només a"
+" partir de la fila de la transacció i mai no llegeix el document adjunt. "
+"Per llegir el document adjunt amb el model de visió que has configurat, "
+"previsualitza primer:"
 
-#: ../../how-to/classify-with-llm.md:186
+#: ../../how-to/classify-with-llm.md:210
 msgid ""
-"The default vision model, `qwen3-vl:2b`, is about 2 GB and runs on a "
-"consumer GPU or on CPU. To use a larger model on a GPU with room for it, "
-"name it with the pull command's `--model` option. Then classify from the "
-"attached image, previewing first. Override the vision model for one run "
-"with `--vision-model qwen2.5vl:7b`:"
+"Pull a different model with `aeat config provision pull --model <model>`."
+" For example, use `qwen2.5vl:7b` on a computer with room for it. To use "
+"it for one scanned or image read, add `--vision-model qwen2.5vl:7b` to "
+"the classify command."
 msgstr ""
-"El model de visió predeterminat, `qwen3-vl:2b`, ocupa uns 2 GB i funciona"
-" en una GPU de consum o en CPU. Per fer servir un model més gran en una "
-"GPU amb prou espai, indiqueu-lo amb l'opció `--model` de l'ordre de "
-"descàrrega. Després classifiqueu a partir de la imatge adjunta, amb una "
-"previsualització primer. Anul·leu el model de visió per a una sola "
-"execució amb `--vision-model qwen2.5vl:7b`:"
+"Baixa un model diferent amb `aeat config provision pull --model <model>`."
+" Per exemple, usa `qwen2.5vl:7b` en un ordinador que tingui prou espai "
+"per a aquest model. Per fer-lo servir en una sola lectura d'escanejats o "
+"d'imatges, afegeix `--vision-model qwen2.5vl:7b` a l'ordre de "
+"classificar."
 
-#: ../../how-to/classify-with-llm.md:195
+#: ../../how-to/classify-with-llm.md:215
 msgid ""
-"Evidence is read on-host only. There is no path that uploads an invoice "
-"off the machine: a transaction with no attached evidence sends nothing "
-"extra either, so the provider receives only the transaction row, exactly "
-"as in the plain suggestion flow."
+"A transaction with no attached evidence sends nothing extra: the model "
+"receives only the transaction row, exactly as in the plain suggestion "
+"flow."
 msgstr ""
-"Les evidències es llegeixen només a l'equip. No hi ha cap ruta que enviï "
-"una factura fora de la màquina: una transacció sense evidència adjunta "
-"tampoc no envia res addicional, de manera que el proveïdor rep únicament "
-"la fila de la transacció, igual que en el flux de suggeriment simple."
+"Una transacció sense proves adjuntes no envia res addicional: el model "
+"només rep la fila de la transacció, exactament com en el flux de "
+"suggeriment simple."
 
-#: ../../how-to/classify-with-llm.md:200
+#: ../../how-to/classify-with-llm.md:218
 msgid "Split a multi-line invoice automatically"
-msgstr "Divideix una factura de múltiples línies automàticament"
+msgstr "Divideix automàticament una factura de diverses línies"
 
-#: ../../how-to/classify-with-llm.md:202
+#: ../../how-to/classify-with-llm.md:220
 msgid ""
 "When the model reads an invoice with several lines at different rates or "
 "categories, the preview adds a `split recommended` note with the exact "
@@ -462,26 +504,26 @@ msgstr ""
 "d'esdevenir la seva pròpia entrada perquè el seu IVA deduïble i la "
 "despesa segons el tipus base es presentin de manera independent. Per "
 "actuar-hi en un sol pas, afegeix `--auto-split`. `--auto-split` requereix"
-" `--read-evidence` i no es pot combinar amb els indicadors de "
+" `--read-evidence` i no es pot combinar amb les opcions de "
 "sobreescriptura manual:"
 
-#: ../../how-to/classify-with-llm.md:212
+#: ../../how-to/classify-with-llm.md:230
 msgid ""
 "A multi-line invoice previews one child transaction per line, each with "
 "its own category, IVA category, and registry-derived base and IVA; the "
 "children sum exactly to the original amount. A single-line invoice is "
 "classified in place with no split."
 msgstr ""
-"Una factura de múltiples línies previsualitza un moviment fill per línia,"
-" cadascun amb la seva pròpia categoria, categoria d'IVA i base i IVA "
-"derivats del registre; els fills sumen exactament l'import original. Una "
-"factura d'una sola línia es classifica al mateix lloc sense divisió."
+"Una factura de diverses línies previsualitza una transacció filla per "
+"línia, cadascuna amb la seva pròpia categoria, categoria d'IVA i base i "
+"IVA derivats del registre; les filles sumen exactament l'import original."
+" Una factura d'una sola línia es classifica al mateix lloc sense divisió."
 
-#: ../../how-to/classify-with-llm.md:217
+#: ../../how-to/classify-with-llm.md:235
 msgid "How `aeat` protects the documents it reads"
 msgstr "Com protegeix `aeat` els documents que llegeix"
 
-#: ../../how-to/classify-with-llm.md:219
+#: ../../how-to/classify-with-llm.md:237
 msgid ""
 "Invoice bytes live only in encrypted secure storage. Reading decrypts "
 "them into memory for the one call and never writes them to a temp file, a"
@@ -491,59 +533,34 @@ msgstr ""
 "lectura els desxifra a la memòria per a l'única crida i mai no els escriu"
 " en un fitxer temporal, un registre ni una memòria cau."
 
-#: ../../how-to/classify-with-llm.md:222
+#: ../../how-to/classify-with-llm.md:240
 msgid ""
-"A scanned or image read sends the image only to the local model over a "
-"loopback connection on your machine. Nothing leaves the machine."
+"A read sends the image or the extracted text only to the local model over"
+" a loopback connection on your machine. Nothing leaves the machine."
 msgstr ""
-"Una lectura escanejada o d'imatge envia la imatge només al model local "
+"Una lectura envia la imatge o el text extret només al model local "
 "mitjançant una connexió de loopback a la teva màquina. No surt res de la "
 "màquina."
 
-#: ../../how-to/classify-with-llm.md:224
-msgid ""
-"A text-layer read sends only the extracted text, and only to a cloud "
-"provider you explicitly permitted and acknowledged. It never sends the "
-"PDF bytes."
-msgstr ""
-"Una lectura amb capa de text envia només el text extret, i només a un "
-"proveïdor al núvol que hagis permès i reconegut explícitament. Mai no "
-"envia els bytes del PDF."
-
-#: ../../how-to/classify-with-llm.md:227
+#: ../../how-to/classify-with-llm.md:242
 msgid ""
 "The model selects only the classification, the category, the IVA "
 "category, and a split proportion. `aeat` derives every rate, base, and "
 "IVA amount from the registry, and refuses to persist a result whose parts"
 " do not add up. When the printed IVA does not match the computed IVA, the"
-" review shows an advisory so you can check before filing."
+" review shows an advisory to check before filing."
 msgstr ""
 "El model selecciona només la classificació, la categoria, la categoria "
 "d'IVA i una proporció de divisió. `aeat` deriva del registre cada tipus, "
-"base i import d'IVA, i es nega a persistir un resultat les parts del qual"
-" no quadren. Quan l'IVA imprès no coincideix amb l'IVA calculat, la "
-"revisió mostra un avís perquè puguis comprovar-ho abans de presentar."
+"base i import d'IVA, i es nega a desar un resultat les parts del qual no "
+"quadren. Quan l'IVA imprès no coincideix amb l'IVA calculat, la revisió "
+"mostra un avís perquè ho comprovis abans de presentar."
 
-#: ../../how-to/classify-with-llm.md:233
-msgid "Evidence deployment settings"
-msgstr "Configuració de desplegament de l'evidència"
-
-#: ../../how-to/classify-with-llm.md:235
-msgid ""
-"Consent and model settings are deployment configuration, off by default "
-"and administered outside this workflow. The full list lives in the "
-"[environment overrides reference](../reference/environment-overrides.md)."
-msgstr ""
-"El consentiment i la configuració del model són configuració de "
-"desplegament, desactivats per defecte i administrats fora d'aquest flux "
-"de treball. La llista completa és a la [referència de sobreescriptures "
-"d'entorn](../reference/environment-overrides.md)."
-
-#: ../../how-to/classify-with-llm.md:239
+#: ../../how-to/classify-with-llm.md:248
 msgid "See how each suggestion was produced"
 msgstr "Consulta com s'ha produït cada suggeriment"
 
-#: ../../how-to/classify-with-llm.md:241
+#: ../../how-to/classify-with-llm.md:250
 msgid ""
 "Every applied result records how it was produced, so a later review shows"
 " the source:"
@@ -551,17 +568,15 @@ msgstr ""
 "Cada resultat aplicat registra com s'ha produït, de manera que una "
 "revisió posterior mostra la font:"
 
-#: ../../how-to/classify-with-llm.md:244
-msgid "`llm:local-vision:<model>`: read on-host by the local vision model."
-msgstr ""
-"`llm:local-vision:<model>`: llegit a la mateixa màquina pel model de "
-"visió local."
+#: ../../how-to/classify-with-llm.md:253
+msgid "`llm:local-vision:<model>`: read by the local vision model."
+msgstr "`llm:local-vision:<model>`: llegit pel model de visió local."
 
-#: ../../how-to/classify-with-llm.md:245
-msgid "`llm:<provider>:<model>`: classified by a cloud provider."
-msgstr "`llm:<provider>:<model>`: classificat per un proveïdor al núvol."
+#: ../../how-to/classify-with-llm.md:254
+msgid "`llm:local-text:<model>`: classified by the local text model."
+msgstr "`llm:local-text:<model>`: classificat pel model de text local."
 
-#: ../../how-to/classify-with-llm.md:246
+#: ../../how-to/classify-with-llm.md:255
 msgid ""
 "`derived:iva-category`: you chose the IVA category and `aeat` derived the"
 " rest."
@@ -569,19 +584,19 @@ msgstr ""
 "`derived:iva-category`: has triat la categoria d'IVA i `aeat` ha derivat "
 "la resta."
 
-#: ../../how-to/classify-with-llm.md:248
+#: ../../how-to/classify-with-llm.md:257
 msgid "`manual`: you set the classification by hand."
 msgstr "`manual`: has establert la classificació a mà."
 
-#: ../../how-to/classify-with-llm.md:250
+#: ../../how-to/classify-with-llm.md:259
 msgid "Inspect a transaction and its history at any time:"
-msgstr "Inspecciona un moviment i el seu historial en qualsevol moment:"
+msgstr "Inspecciona una transacció i el seu historial en qualsevol moment:"
 
-#: ../../how-to/classify-with-llm.md:256
+#: ../../how-to/classify-with-llm.md:265
 msgid "Limits and batch alternatives"
 msgstr "Límits i alternatives per lots"
 
-#: ../../how-to/classify-with-llm.md:258
+#: ../../how-to/classify-with-llm.md:267
 msgid ""
 "The LLM path is single-transaction only; it cannot be combined with "
 "`--file` or manual `--classification` flags. For bulk work use the CSV-"
@@ -591,57 +606,80 @@ msgid ""
 "covered in [Classify transactions](classify-transactions.md)."
 msgstr ""
 "La ruta amb LLM funciona només amb una transacció; no es pot combinar amb"
-" `--file` ni amb indicadors manuals `--classification`. Per a treball per"
-" lots feu servir la ruta manual basada en CSV (`aeat app ledger classify "
+" `--file` ni amb opcions manuals `--classification`. Per a treball per "
+"lots fes servir la ruta manual basada en CSV (`aeat app ledger classify "
 "--file ./classifications.csv`) o regles deterministes desades (`aeat app "
 "ledger rule add`, després `rule apply --dry-run` i tot seguit `rule "
-"apply`); totes dues s'expliquen a [Classificar transaccions](classify-"
+"apply`); totes dues s'expliquen a [Classifica les transaccions](classify-"
 "transactions.md)."
 
-#: ../../how-to/classify-with-llm.md:266
+#: ../../how-to/classify-with-llm.md:275
 msgid "Privacy boundary"
 msgstr "Límit de privadesa"
 
-#: ../../how-to/classify-with-llm.md:268
+#: ../../how-to/classify-with-llm.md:277
 msgid ""
-"LLM classification calls the selected provider CLI on your machine. That "
-"CLI may send prompt data to the provider's cloud service, depending on "
-"how that provider works and how your account is configured. Treat "
-"transaction descriptions, counterparties, amounts, categories, and any "
-"profile context in the prompt as taxpayer data. Do not use production "
-"data with an LLM provider unless your provider setup and privacy policy "
-"permit it."
+"Classification calls only the model runtime on your own machine, over a "
+"loopback connection. No transaction description, counterparty, amount, or"
+" document leaves the machine, and `aeat` needs no LLM account or key for "
+"it. This holds for the default endpoint: if you point "
+"`CADRUMO_LLM_OLLAMA_CHAT_URL` at a runtime on another host, reads go to "
+"that host."
 msgstr ""
-"La classificació per LLM crida la CLI del proveïdor seleccionat a la teva"
-" màquina. Aquesta CLI pot enviar dades del prompt al servei al núvol del "
-"proveïdor, segons com funcioni aquell proveïdor i com estigui configurat "
-"el teu compte. Tracta les descripcions de moviments, les contraparts, els"
-" imports, les categories i qualsevol context de perfil del prompt com a "
-"dades de contribuent. No utilitzis dades de producció amb un proveïdor "
-"d'LLM tret que la configuració del teu proveïdor i la política de "
-"privadesa ho permetin."
+"La classificació només crida l'entorn d'execució de models de la teva "
+"pròpia màquina, mitjançant una connexió de loopback. Cap descripció de "
+"transacció, contrapart, import o document no surt de la màquina, i `aeat`"
+" no necessita cap compte ni clau d'LLM per a això. Això és vàlid per a "
+"l'endpoint per defecte: si apuntes `CADRUMO_LLM_OLLAMA_CHAT_URL` a un "
+"entorn d'execució en un altre servidor, les lectures van a aquest "
+"servidor."
 
-#: ../../how-to/classify-with-llm.md:275
+#: ../../how-to/classify-with-llm.md:283
+msgid ""
+"One command can send a document off your machine: `aeat app ledger "
+"evidence extract --off-host-provider <provider>`. It reads invoice "
+"fields, not classifications, and it is off by default. It runs only when "
+"the deployment permits off-host reads, the profile's "
+"`cloud_evidence_upload` capability is on, and you pass `--acknowledge-"
+"off-host` for that one read. Gestor deployments never allow it. Reading "
+"with the Anthropic API also needs the `anthropic` extra. Treat the "
+"document as taxpayer data before you use it. The settings that govern it "
+"are in the [environment overrides reference](../reference/environment-"
+"overrides.md)."
+msgstr ""
+"Una ordre pot enviar un document fora de la teva màquina: `aeat app "
+"ledger evidence extract --off-host-provider <provider>`. Llegeix camps de"
+" factura, no classificacions, i està desactivada per defecte. Només "
+"s'executa quan el desplegament permet lectures fora de l'equip, la "
+"capacitat `cloud_evidence_upload` del perfil està activada i passes "
+"`--acknowledge-off-host` per a aquesta lectura concreta. Els "
+"desplegaments de gestor no ho permeten mai. Llegir amb l'API d'Anthropic "
+"també necessita l'extra `anthropic`. Tracta el document com a dades del "
+"contribuent abans d'utilitzar-lo. Els paràmetres que la regulen són a la "
+"[referència de substitucions d'entorn](../reference/environment-"
+"overrides.md)."
+
+#: ../../how-to/classify-with-llm.md:293
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/classify-with-llm.md:277
+#: ../../how-to/classify-with-llm.md:295
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr "[Classifica els moviments](classify-transactions.md)"
+msgstr "[Classifica les transaccions](classify-transactions.md)"
 
-#: ../../how-to/classify-with-llm.md:278
+#: ../../how-to/classify-with-llm.md:296
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
 msgstr "[Adjunta factures i rebuts](ledger-evidence.md)"
 
-#: ../../how-to/classify-with-llm.md:279
+#: ../../how-to/classify-with-llm.md:297
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
+msgstr "[Importa i gestiona les transaccions](import-bank-statements.md)"
 
-#: ../../how-to/classify-with-llm.md:280
+#: ../../how-to/classify-with-llm.md:298
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Revisa i proporciona les dades de càlcul](review-calculation-values.md)"
+msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/classify-with-llm.md:281
+#: ../../how-to/classify-with-llm.md:299
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
 

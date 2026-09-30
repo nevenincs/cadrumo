@@ -21,12 +21,25 @@ counts: none on a page that does not apply this period.
 A declaration recorded as filed asks nothing more of the filer: its list has
 no missing or assumed values and counts nothing left to do.
 
+A required value that is missing sits with the missing values rather than
+with what blocks filing, since giving it is all it asks; a box the missing
+values already list is not listed a second time for its finding. A finding
+about one value of a table's records, such as a Modelo 349 operator's country
+code, is named by that value's heading, says whether the table has any records,
+and says to change them where they come from.
+
+Every fact in a finding's sentence reads in words: a period by its name, a date
+in the language's order, an amount with the language's marks, a box by its
+number or the words the form gives it. Every blocking mark is drawn in the
+theme's error colour.
+
 Enter always acts. A finding that names a box on the form, the missing or
 assumed values and each of their sections return the first such box to the
-workbench; a finding about the whole declaration opens its detail in place; a
-finding whose box is not on the form says so there. Codes, facts and legal
-references never reach the list: ``t`` shows them for the selected finding
-only.
+workbench, and a finding about a table's records returns the value's address,
+which leads to the table; a finding about the whole declaration opens its
+detail in place; a finding whose box is not on the form says so there. Codes,
+facts and legal references never reach the list: ``t`` shows them for the
+selected finding only.
 """
 
 from __future__ import annotations
@@ -45,22 +58,26 @@ from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
+from .....application.modelo.finding_message_text import finding_message_text
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormIssue,
     ModeloFormOrigin,
+    ModeloFormRepeatingBlock,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
     section_fields,
 )
-from .....core.i18n.render import tr
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from .....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -73,7 +90,16 @@ from .keys import describe_bindings
 from .navigator import applicable_fields, presented_form
 from .page_items import workbench_pages
 from .sources import BoxNumbers
-from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, INFO_MARK, MISSING_MARK, WorkbenchMark
+from .vocabulary import (
+    ATTENTION_ROLES,
+    BLOCKS_MARK,
+    CHECK_MARK,
+    CONFIRM_MARK,
+    INFO_MARK,
+    MISSING_MARK,
+    Attention,
+    WorkbenchMark,
+)
 
 
 class IssueLevel(StrEnum):
@@ -103,6 +129,7 @@ TO_DO_LEVELS: Final[frozenset[IssueLevel]] = frozenset({IssueLevel.BLOCKS, Issue
 _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProxyType(
     {
         ModeloFormAttention.BLOCKS: IssueLevel.BLOCKS,
+        ModeloFormAttention.MISSING: IssueLevel.MISSING,
         ModeloFormAttention.CHECK: IssueLevel.CHECK,
         ModeloFormAttention.INFO: IssueLevel.INFO,
     }
@@ -132,6 +159,7 @@ _VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = Mapp
 _ENTER_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "go": "tui.modelo.workbench.issues.go_to_box",
+        "records": "tui.modelo.workbench.issues.open_records",
         "section": "tui.modelo.workbench.issues.open_section",
         "more": "tui.modelo.workbench.issues.key.more",
         "less": "tui.modelo.workbench.issues.key.less",
@@ -167,6 +195,12 @@ _INTRO_SUFFIX: Final[str] = "-intro"
 _SECTION_INFIX: Final[str] = "-section-"
 _ISSUE_ID_PREFIX: Final[str] = "issue-"
 _INDENT: Final[int] = 2
+_BLOCKS_STYLE: Final[str] = f"${ATTENTION_ROLES[Attention.BLOCKED].value}"
+"""The style of every blocking mark: the error role the mark registry gives it, as the active theme resolves it."""
+_RECORDS_NONE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.none"
+_RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.records.field_missing"
+_RECORDS_ACTION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.action.records_at_source"
+_RECORD_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.record_value"
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,6 +219,8 @@ class IssueLine:
     detail: str
     technical: str
     key: AddressKey | None
+    #: Whether ``key`` is a value of a table's records, so Enter leads to the table rather than a box.
+    in_records: bool = False
 
     @property
     def blocking(self) -> bool:
@@ -219,6 +255,52 @@ class UnenteredBoxes:
     def by_section(self) -> bool:
         """Whether there are too many to list by number, so the list names their sections instead."""
         return len(self.keys) > ASSUMED_BOXES_BEFORE_SECTIONS
+
+
+@dataclass(frozen=True, slots=True)
+class _RecordValue:
+    """One value every record of a table carries: its heading and whether the table holds any record."""
+
+    heading: str
+    has_records: bool
+
+
+def _record_values(form: ModeloWorkForm) -> dict[str, _RecordValue]:
+    """Every value a table of records carries, by the casilla its column shows."""
+    values: dict[str, _RecordValue] = {}
+    for page in form.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if not isinstance(block, ModeloFormRepeatingBlock):
+                    continue
+                for column, casilla_id in zip(block.columns, block.column_casilla_ids, strict=True):
+                    if casilla_id is None:
+                        continue
+                    heading = (
+                        tr(_RECORD_VALUE_LOCALE_KEY)
+                        if column.heading.disclosure is ModeloFormTextDisclosure.TECHNICAL
+                        else column.heading.text
+                    )
+                    values.setdefault(casilla_id, _RecordValue(heading=heading, has_records=bool(block.rows)))
+    return values
+
+
+def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dict[str, str]:
+    """How a finding's sentence names each box: its printed number, else the words the form shows it with."""
+    words = {casilla_id: value.heading for casilla_id, value in records.items()}
+    for field in form.fields():
+        if not isinstance(field.address, ModeloFormCasillaAddressV1):
+            continue
+        if field.box:
+            words[str(field.address.casilla_id)] = field.box
+        elif field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
+            words.setdefault(str(field.address.casilla_id), field.label.text)
+    return words
+
+
+def blocks_marked(text: str) -> Content:
+    """``text`` as drawn, every blocking mark in it in the theme's error colour."""
+    return Content(text).highlight_regex(re.escape(BLOCKS_MARK.glyph), style=_BLOCKS_STYLE)
 
 
 def issue_level(issue: ModeloFormIssue) -> IssueLevel:
@@ -257,12 +339,43 @@ def _not_on_form(finding_box: str | None, casilla_id: str) -> tuple[str, str, st
     return number, f"[{number}]", tr("tui.modelo.workbench.issues.box_not_on_form", box=f"[{number}]")
 
 
+def _record_issue_line(issue: ModeloFormIssue, value: _RecordValue, *, message: str) -> IssueLine:
+    """A finding about one value of a table's records, named by that value's heading, leading to the table."""
+    finding = issue.finding
+    action_key = issue.action_locale_key
+    if finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA:
+        message = tr(_RECORDS_FIELD_MISSING_LOCALE_KEY if value.has_records else _RECORDS_NONE_LOCALE_KEY)
+        action_key = _RECORDS_ACTION_LOCALE_KEY
+    key = None if finding.casilla_id is None else address_key(ModeloFormCasillaAddressV1(casilla_id=finding.casilla_id))
+    return IssueLine(
+        level=issue_level(issue),
+        box="·",
+        where=value.heading,
+        message=message,
+        action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(action_key)),
+        detail=tr(_DETAIL_LOCALE_KEYS[finding.kind]),
+        technical=technical_text(finding),
+        key=key,
+        in_records=True,
+    )
+
+
 def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
-    """The form's findings on the scale, most urgent first, each rendered in the filer's language."""
+    """The form's findings on the scale, most urgent first, each rendered in the filer's language.
+
+    A missing value's finding whose box the missing values already list is
+    left out: that entry names the box, and Enter there leads to it.
+    """
+    language = OutputLanguage(output_language())
     shown = {address_key(field.address): field for field in form.fields()}
+    records = _record_values(form)
+    box_words = _box_words(form, records)
+    missing = unentered_boxes(form, IssueLevel.MISSING)
+    listed = frozenset(() if missing is None else missing.keys)
     lines: list[IssueLine] = []
     for issue in form.issues:
         finding = issue.finding
+        message = finding_message_text(finding, language, box_words=box_words)
         detail = tr(_DETAIL_LOCALE_KEYS[finding.kind])
         key: AddressKey | None = None
         box = issue.box or "·"
@@ -270,19 +383,26 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
             where = tr("tui.modelo.workbench.issues.where.declaration")
         else:
             candidate = address_key(ModeloFormCasillaAddressV1(casilla_id=finding.casilla_id))
+            record = records.get(str(finding.casilla_id))
+            if record is not None:
+                lines.append(_record_issue_line(issue, record, message=message))
+                continue
+            if issue_level(issue) is IssueLevel.MISSING and candidate in listed:
+                continue
             field = shown.get(candidate)
             if field is None:
-                box, where, missing = _not_on_form(issue.box, str(finding.casilla_id))
-                detail = f"{missing} {detail}".strip()
+                box, where, not_shown = _not_on_form(issue.box, str(finding.casilla_id))
+                detail = f"{not_shown} {detail}".strip()
             else:
                 key = candidate
+                box = field.box or box
                 where = _field_name(field) or f"[{box}]"
         lines.append(
             IssueLine(
                 level=issue_level(issue),
                 box=box,
                 where=where,
-                message=tr(finding.message_locale_key, **finding.message_facts),
+                message=message,
                 action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(issue.action_locale_key)),
                 detail=detail,
                 technical=technical_text(finding),
@@ -500,7 +620,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
             if self._status_line is not None:
                 yield Static(self._status_line, id="issues-status", markup=False)
             title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
-            yield Static(title, id="issues-title", markup=False)
+            yield Static(blocks_marked(title), id="issues-title", markup=False)
             yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
@@ -531,7 +651,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
             heading = level_words(level)
             if not (self._recorded and level in TO_DO_LEVELS):
                 heading = f"{heading} ({count})"
-            options.append(Option(heading, id=f"level-{level.value}", disabled=True))
+            options.append(Option(blocks_marked(heading), id=f"level-{level.value}", disabled=True))
             if unentered is not None:
                 options.extend(self._unentered_options(unentered))
             options.extend(
@@ -589,6 +709,8 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         index = self._issue_index(option_id)
         if self._section(option_id) is not None:
             choice = "section"
+        elif index is not None and self._lines[index].in_records:
+            choice = "records"
         elif self._listed(option_id) is not None or (index is not None and self._lines[index].key is not None):
             choice = "go"
         elif index is not None and index in self._expanded:
@@ -668,6 +790,7 @@ __all__ = [
     "UnenteredBoxes",
     "UnenteredSection",
     "WorkbenchIssuesScreen",
+    "blocks_marked",
     "issue_level",
     "issue_lines",
     "level_counts",

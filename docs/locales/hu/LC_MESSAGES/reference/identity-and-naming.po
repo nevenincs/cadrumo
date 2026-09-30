@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-09-29 18:34+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -50,7 +50,7 @@ msgstr "Megjelenítendő név"
 
 #: ../../reference/identity-and-naming.md
 msgid "`Cadrumo`"
-msgstr "A `Cadrumo` termék neve"
+msgstr "`Cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Python package"
@@ -58,7 +58,7 @@ msgstr "Python-csomag"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo`"
-msgstr "A `cadrumo` kisbetűs névalak"
+msgstr "`cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Root distribution"
@@ -70,7 +70,7 @@ msgstr "Emberi CLI-végrehajtható"
 
 #: ../../reference/identity-and-naming.md
 msgid "`aeat`"
-msgstr "Az `aeat` parancs neve"
+msgstr "`aeat`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Repository"
@@ -78,7 +78,7 @@ msgstr "Tároló"
 
 #: ../../reference/identity-and-naming.md
 msgid "`nevenincs/cadrumo`"
-msgstr "A `nevenincs/cadrumo` tárházazonosító"
+msgstr "`nevenincs/cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP server identity"
@@ -86,15 +86,19 @@ msgstr "MCP-szerverazonosság"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP executable"
-msgstr "Emberi CLI-végrehajtható"
+msgstr "MCP-végrehajtható"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo-mcp`"
-msgstr "`cadrumo`"
+msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP tool prefix"
 msgstr "MCP-eszközelőtag"
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo_`"
+msgstr "`cadrumo_`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP resource scheme"
@@ -110,7 +114,7 @@ msgstr "Termék környezeti előtag"
 
 #: ../../reference/identity-and-naming.md
 msgid "`CADRUMO_`"
-msgstr "A `CADRUMO_` környezeti változó-előtag"
+msgstr "`CADRUMO_`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Companion distributions"
@@ -118,7 +122,7 @@ msgstr "Kísérő terjesztések"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo-data-manuals`, `cadrumo-data-official`"
-msgstr "A `cadrumo-data-manuals` és `cadrumo-data-official` adatcsomagok"
+msgstr "`cadrumo-data-manuals`, `cadrumo-data-official`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Companion Python namespace"
@@ -126,7 +130,7 @@ msgstr "Kísérő Python-névtér"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo_data`"
-msgstr "A `cadrumo_data` adatkönyvtár"
+msgstr "`cadrumo_data`"
 
 #: ../../reference/identity-and-naming.md:24
 msgid ""
@@ -142,7 +146,7 @@ msgstr "Termék- és hivatali nevek"
 
 #: ../../reference/identity-and-naming.md
 msgid "Referent"
-msgstr "Referens"
+msgstr "Megnevezett dolog"
 
 #: ../../reference/identity-and-naming.md
 msgid "Use"
@@ -174,7 +178,7 @@ msgstr "Spanyol adóhatóság"
 
 #: ../../reference/identity-and-naming.md
 msgid "`AEAT`"
-msgstr "Az `AEAT` rövidítés"
+msgstr "`AEAT`"
 
 #: ../../reference/identity-and-naming.md
 msgid ""
@@ -191,7 +195,7 @@ msgid ""
 "official period or classification tokens keep their AEAT meaning inside "
 "Cadrumo."
 msgstr ""
-"Az AEAT külső hatóság és partner, nem az alkalmazás neve. A hivatal "
+"Az AEAT külső hatóság és ellenoldal, nem az alkalmazás neve. A hivatal "
 "tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a "
 "*justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a"
 " Cadrumón belül megtartják AEAT-jelentésüket."

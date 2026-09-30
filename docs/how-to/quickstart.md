@@ -40,8 +40,9 @@ the passphrase and the tool reuses it for the rest of the session. For
 unattended runs after creation, see
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
-The CLI emits its help and messages in Spanish. The English text on this page
-describes what each step does.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you
+[choose another language](profile-setup.md#choose-the-output-language).
 
 ## 1. Create your taxpayer profile
 
@@ -75,10 +76,15 @@ are two ways to add them.
 The simplest is to add each row directly with its tax fields. `--amount` is the
 gross total (taxable base plus IVA); an expense row also needs a `--category-id`
 from the recognised expense families. The `--idempotency-key` on each row makes
-it safe to re-run without adding a duplicate:
+it safe to re-run without adding a duplicate.
+
+The expense claims deductible IVA, so it needs its supplier invoice. Register
+the invoice first, then pass the `evidence_id` it returns to the expense row
+with `--purchase-invoice-evidence-id`. The invoice takes its IVA rate as a
+percentage (`--iva-rate 21`), while `ledger add` takes a decimal (`0.21`):
 
 ```{cli-sequence} quickstart-transactions
-:verify: Confirm both classified rows land in the ledger.
+:verify: Confirm the invoice registers and both classified rows land in the ledger.
 ```
 
 List the recognised expense categories any time:
@@ -147,14 +153,15 @@ Read the frames in order:
 - Calculate the values. Modelo 130 needs three prior-period figures; for a first
   filing they are all zero, passed as bindings so the calculation has no missing
   inputs. The tool fills the boxes from your ledger: casilla `01` is the
-  quarter's income (`1000.00`, the taxable base, since IVA is never part of your
+  quarter's income (`1000`, the taxable base, since IVA is never part of your
   income), casilla `03` the net yield (`500.00`), and casilla `04` the
   instalment (`100.00`, twenty percent of the net).
 - Verify the draft. Verification is a local check. It does not send anything to
   AEAT. When the draft is complete the report reads `completeness_status
-  complete` and `granted_verificado_completo true`. A first filing also shows one
-  advisory noting that the period falls before your activity start date; this is
-  informational and does not block filing.
+  complete` and `granted_verificado_completo true`. The report also carries two
+  advisories, which do not block filing. One notes that the earlier Modelo 100
+  is set aside because your activity started in 2026. The other notes that the
+  income row has no supporting evidence.
 
 Review every saved box with:
 
@@ -168,34 +175,35 @@ covers entering missing box values and handling figures carried forward from
 earlier quarters. For how the tool organises filing work behind the scenes, see
 [The filing workflow](filing-spine.md).
 
-## 5. Record the quarter as filed
+## 5. Export the verified draft
 
-Export the verified Modelo 130 fichero-BOE artefact, then record the quarter as
-filed locally:
+Export the verified Modelo 130 fichero-BOE artefact:
 
 ```{cli-sequence} quickstart-export
-:verify: Confirm the export succeeds and the local filing marker is recorded.
+:verify: Confirm the export succeeds and writes a fichero-BOE file.
 ```
 
 The exported file is a local artefact, not evidence that AEAT accepted the
-return. Present it through the AEAT portal, as step 7 describes.
+return. Present it through the AEAT portal, as step 7 describes. Export refuses
+to overwrite an existing file unless you add `--replace`. It also refuses when
+the output directory does not exist.
 
-This example uses a deductible-IVA expense, so it links the purchase invoice
-before calculating. Verification refuses a deducted IVA row that carries no
-invoice (the message reads `Deductible IVA ledger rows require linked purchase
-invoice evidence`).
+Step 2 linked the purchase invoice before you calculated. Verification refuses
+a deducted IVA row that carries no invoice (the message reads `Deductible IVA
+ledger rows require linked purchase invoice evidence`).
 
-Link the invoice while you record the expense, before you calculate. A draft
-bundles its evidence when you verify it, so an invoice attached afterwards does
-not reach a draft that is already verified. [Attach invoices and
+A draft bundles its evidence when you verify it, so an invoice attached
+afterwards does not reach a draft that is already verified. [Attach invoices and
 receipts](ledger-evidence.md) and [Prepare a Modelo 303 IVA
 filing](modelo-303.md) walk through the evidence workflow end to end.
 
 ## 6. Check what else is due (optional)
 
 Use the local calendar to see what may be due for the active profile. On a fresh
-profile, pass `--allow-incomplete` so the agenda runs before every profile fact
-is filled in:
+profile, first declare that your income comes from an economic activity, the
+fact that decides Modelo 130. Then pass `--allow-incomplete` so the agenda runs
+before every profile fact is filled in. The last command explains why Modelo 130
+applies:
 
 ```{cli-sequence} quickstart-agenda
 :verify: Confirm the agenda and the Modelo 130 explanation read back.
@@ -226,11 +234,11 @@ After a real filing, record the local filing marker:
 
 `work file` refuses a deducted IVA row whose invoice is not linked
 (`Deductible IVA ledger rows require linked purchase invoice evidence`). The
-draft verified above already carries its invoice, so the marker records.
+draft verified in step 4 already carries its invoice, so the marker records.
 
 This only records the action on your own computer. It does not contact AEAT.
 To compare your local record with the AEAT receipt, see
-[How to reconcile a filed modelo against its justificante](reconcile.md).
+[Reconcile a filed modelo against its justificante](reconcile.md).
 
 ## Next steps
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-03 05:07+0200\n"
+"POT-Creation-Date: 2026-09-29 19:17+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/censo-update.md:1
 msgid "Maintain Modelo 036 census facts in your profile"
-msgstr "A Modelo 036 censo-adatok karbantartása a profiljában"
+msgstr "Tartsd karban a profilod Modelo 036 censo-adatait"
 
 #: ../../how-to/censo-update.md:3
 #, python-brace-format
@@ -29,7 +29,7 @@ msgid ""
 "correct in the active local profile. In Spain, the censo is tied to "
 "Modelo 036 registration and changes."
 msgstr ""
-"Ezzel az útmutatóval tarthatja helyesen az AEAT censo-adatait - a "
+"Ezzel az útmutatóval tarthatod helyesen az AEAT censo-adataidat - a "
 "{term}`censo`-t - az aktív helyi profilban. Spanyolországban a censo a "
 "Modelo 036 szerinti nyilvántartásba vételhez és annak változásaihoz "
 "kötődik."
@@ -46,16 +46,17 @@ msgstr ""
 msgid ""
 "You fill census facts three ways: pull them from AEAT, read them from a "
 "certificate you downloaded, or enter them by hand. The pull reads AEAT's "
-"own *Mis Datos Censales* consulta and fills your identity and address; it"
-" cannot reach the regime facts, so you enter those yourself."
+"own *Mis Datos Censales* consulta and fills your address; it cannot reach"
+" the regime facts, so you enter those yourself. Reading a certificate is "
+"not yet active."
 msgstr ""
-"Háromféleképpen töltheted ki a cenzusadatokat: lekérheted őket az AEAT-"
-"tól, beolvashatod a letöltött igazolásból, vagy kézzel adhatod meg őket. "
-"A lekérés az AEAT saját *Mis Datos Censales* lekérdezését olvassa, és "
-"kitölti az azonosító- és címadataidat; a rendszeradatokhoz nem fér hozzá,"
-" ezért azokat neked kell megadnod."
+"Háromféleképpen töltheted ki a censo-adatokat: lekérheted őket az AEAT-"
+"tól, beolvashatod egy letöltött igazolásból, vagy kézzel adhatod meg "
+"őket. A lekérés az AEAT saját *Mis Datos Censales* consultáját olvassa, "
+"és kitölti a címedet; a rendszeradatokhoz nem fér hozzá, ezért azokat "
+"neked kell megadnod. Az igazolás beolvasása még nem aktív."
 
-#: ../../how-to/censo-update.md:15
+#: ../../how-to/censo-update.md:16
 msgid ""
 "The tool never files Modelo 036, never submits changes to AEAT, and never"
 " modifies AEAT records. The pull reads and stops there."
@@ -64,68 +65,71 @@ msgstr ""
 "AEAT-nek, és nem módosítja az AEAT nyilvántartásait. A lekérés csak "
 "olvas, majd leáll."
 
-#: ../../how-to/censo-update.md:18
+#: ../../how-to/censo-update.md:19
 msgid "Before you start"
-msgstr "Mielőtt hozzákezd"
+msgstr "Mielőtt hozzákezdesz"
 
-#: ../../how-to/censo-update.md:20
+#: ../../how-to/censo-update.md:21
 msgid "You need:"
-msgstr "Szüksége lesz a következőkre:"
+msgstr "Szükséged lesz a következőkre:"
 
-#: ../../how-to/censo-update.md:22
+#: ../../how-to/censo-update.md:23
 msgid ""
 "an active taxpayer profile; see [Set up your taxpayer profile](profile-"
 "setup.md)"
 msgstr ""
-"egy aktív adózói profil; lásd [Az adózói profil beállítása](profile-"
+"egy aktív adózói profil; lásd: [Állítsd be az adózói profilodat](profile-"
 "setup.md)"
 
-#: ../../how-to/censo-update.md:23
-msgid "the taxpayer's fiscal ID (NIF, CIF, DNI, or NIE) saved in that profile"
-msgstr "az adózó abban a profilban mentett adóazonosítója (NIF, CIF, DNI vagy NIE)"
-
 #: ../../how-to/censo-update.md:24
+msgid "the taxpayer's fiscal ID (NIF or NIE) saved in that profile"
+msgstr "az adózó adóazonosítója (NIF vagy NIE), mentve az adott profilban"
+
+#: ../../how-to/censo-update.md:25
 msgid ""
 "your censo facts as AEAT holds them: activity description and start date,"
 " tax regime, IVA regime, and enrollment facts. Read them from your Modelo"
 " 036 copy or from the AEAT sede."
 msgstr ""
-"a censo-adatai úgy, ahogy az AEAT vezeti őket: a tevékenység leírása és "
+"a censo-adataid úgy, ahogy az AEAT vezeti őket: a tevékenység leírása és "
 "kezdő dátuma, az adózási rendszer, az IVA-rendszer és a nyilvántartásba "
-"vételi adatok. Ezeket a Modelo 036 másolatából vagy az AEAT sedéjéről "
-"olvassa ki."
+"vételi adatok. Ezeket a Modelo 036 másolatodból vagy az AEAT sedéről "
+"olvasd ki."
 
-#: ../../how-to/censo-update.md:28
+#: ../../how-to/censo-update.md:29
 msgid ""
-"Every command on this page needs your master-key passphrase; the tool "
-"prompts for it. The tool's messages are in Spanish."
+"Every command on this page needs your passphrase; the tool prompts for "
+"it. The examples in this documentation are recorded in English. `aeat` "
+"prints its messages in Spanish unless you [choose another language"
+"](profile-setup.md#choose-the-output-language)."
 msgstr ""
-"Az ezen az oldalon szereplő minden parancshoz szükség van a mesterkulcs-"
-"jelmondatára; az eszköz bekéri Öntől. Az eszköz üzenetei spanyolul "
-"jelennek meg."
+"Az ezen az oldalon szereplő parancsok mindegyikéhez szükség van a "
+"jelmondatodra; az eszköz bekéri. A dokumentációban szereplő példák angol "
+"nyelven készültek. Az `aeat` az üzeneteit spanyolul írja ki, hacsak nem "
+"[választasz másik nyelvet](profile-setup.md#choose-the-output-language)."
 
-#: ../../how-to/censo-update.md:31
+#: ../../how-to/censo-update.md:34
 msgid ""
 "If you have no profile yet, create one non-interactively with `--quiet` "
 "(a bare `profile create NAME` opens an interactive wizard instead):"
 msgstr ""
-"Ha még nincs profilja, hozzon létre egyet nem interaktív módon a "
-"`--quiet` kapcsolóval (egy önálló `profile create NAME` helyette "
-"interaktív varázslót nyit meg):"
+"Ha még nincs profilod, hozz létre egyet nem interaktív módon a `--quiet` "
+"kapcsolóval (a csupasz `profile create NAME` helyette interaktív "
+"varázslót nyit meg):"
 
-#: ../../how-to/censo-update.md:37
+#: ../../how-to/censo-update.md:40
 msgid "Check the active profile first:"
-msgstr "Először ellenőrizze az aktív profilt:"
+msgstr "Először ellenőrizd az aktív profilt:"
 
-#: ../../how-to/censo-update.md:43
+#: ../../how-to/censo-update.md:46
 msgid "Why census facts matter"
 msgstr "Miért fontosak a censo-adatok"
 
-#: ../../how-to/censo-update.md:45
+#: ../../how-to/censo-update.md:48
 msgid "Census facts drive profile-dependent workflows:"
 msgstr "A censo-adatok határozzák meg a profilfüggő munkafolyamatokat:"
 
-#: ../../how-to/censo-update.md:47
+#: ../../how-to/censo-update.md:50
 msgid ""
 "the activity start date keeps the filing calendar from showing "
 "obligations before your registered activity start"
@@ -134,7 +138,7 @@ msgstr ""
 "nyilvántartásba vett tevékenységkezdés előtti kötelezettségeket "
 "megjelenítsen"
 
-#: ../../how-to/censo-update.md:49
+#: ../../how-to/censo-update.md:52
 msgid ""
 "the tax regime, IVA regime, and Renta/IRPF regime select which modelos "
 "and which calculation paths apply"
@@ -142,13 +146,13 @@ msgstr ""
 "az adózási rendszer, az IVA-rendszer és a Renta/IRPF-rendszer választja "
 "ki, mely modelók és mely számítási útvonalak érvényesek"
 
-#: ../../how-to/censo-update.md:51
+#: ../../how-to/censo-update.md:54
 msgid "enrollment facts feed the filing calendar's obligation derivation"
 msgstr ""
 "a nyilvántartásba vételi adatok táplálják a benyújtási naptár "
 "kötelezettség-levezetését"
 
-#: ../../how-to/censo-update.md:53
+#: ../../how-to/censo-update.md:56
 msgid ""
 "Enter them carefully. The application treats your entries as operator-"
 "declared facts, not as AEAT-verified facts. The filing calendar reports "
@@ -156,97 +160,93 @@ msgid ""
 "and refuses strict projection until you accept that basis; see [Plan your"
 " filing calendar](filing-calendar.md)."
 msgstr ""
-"Vigye be őket gondosan. Az alkalmazás a bejegyzéseit felhasználó által "
-"közölt adatokként kezeli, nem AEAT által ellenőrzött adatokként. A "
-"benyújtási naptár a censo-függő kötelezettségeket egy "
-"`censo.enrolment_unverified` figyelmeztetéssel jelenti, és elutasítja a "
-"szigorú előrejelzést, amíg el nem fogadja ezt az alapot; lásd [Tervezze "
-"meg a benyújtási naptárát](filing-calendar.md)."
+"Add meg őket gondosan. Az alkalmazás a bevitt adatokat a felhasználó "
+"által megadott tényként kezeli, nem az AEAT által ellenőrzött tényként. A"
+" benyújtási naptár a censo-függő kötelezettségeket "
+"`censo.enrolment_unverified` figyelmeztetéssel jelzi, és elutasítja a "
+"szigorú vetítést, amíg el nem fogadod ezt az alapot; lásd: [Tervezd meg a"
+" benyújtási naptáradat](filing-calendar.md)."
 
-#: ../../how-to/censo-update.md:59
+#: ../../how-to/censo-update.md:62
 msgid "Enter or correct census facts"
 msgstr "Censo-adatok bevitele vagy javítása"
 
-#: ../../how-to/censo-update.md:61
+#: ../../how-to/censo-update.md:64
 msgid "Edit the active profile with the wizard:"
-msgstr "Szerkessze az aktív profilt a varázslóval:"
+msgstr "Szerkeszd az aktív profilt a varázslóval:"
 
-#: ../../how-to/censo-update.md:66
+#: ../../how-to/censo-update.md:69
 msgid ""
 "The wizard walks the profile fields, including the census-backed ones. "
-"For a scripted update, pass the field flags with `--quiet`. Name your own"
-" profile in place of `docs-sequence-sandbox`:"
+"For a scripted update, pass the field flags with `--quiet`. Without a "
+"profile name, the edit applies to the active profile:"
 msgstr ""
-"A varázsló végigvezeti a profil mezőin, beleértve a censo-alapúakat is. "
-"Szkriptelt frissítéshez adja meg a mezőkapcsolókat a `--quiet` "
-"kapcsolóval. Adja meg a saját profilja nevét a `docs-sequence-sandbox` "
-"helyett:"
+"A varázsló végigvezet a profil mezőin, beleértve a censo-alapúakat is. "
+"Szkriptelt frissítéshez add meg a mezőkapcsolókat a `--quiet` "
+"kapcsolóval. Profilnév nélkül a szerkesztés az aktív profilra vonatkozik:"
 
-#: ../../how-to/censo-update.md:74
+#: ../../how-to/censo-update.md:77
 msgid ""
 "Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do "
 "not guess a regime or a start date."
 msgstr ""
-"Másoljon minden értéket pontosan a Modelo 036 másolatából vagy az AEAT "
-"sedéjéről. Ne találgassa ki a rendszert vagy a kezdő dátumot."
+"Minden értéket pontosan a Modelo 036 másolatodból vagy az AEAT sedéből "
+"másolj át. Ne találgasd a rendszert vagy a kezdő dátumot."
 
-#: ../../how-to/censo-update.md:77
+#: ../../how-to/censo-update.md:80
 msgid "Pull your census facts from AEAT"
-msgstr "Miért fontosak a censo-adatok"
+msgstr "Censo-adatok lekérése az AEAT-tól"
 
-#: ../../how-to/censo-update.md:79
+#: ../../how-to/censo-update.md:82
 msgid ""
 "AEAT publishes your current census position at *Mis Datos Censales*. Pull"
-" it into the active profile. The first step previews; the second performs"
-" a new authenticated read and records that read's eligible facts:"
+" it into the active profile. Both steps read your record from AEAT over "
+"an authenticated session. The first step previews and writes nothing. The"
+" second opens the proposal for your review and records the facts you "
+"approve:"
 msgstr ""
-"Az AEAT a *Mis Datos Censales* felületen teszi közzé aktuális "
-"nyilvántartási helyzetedet. Töltsd be az aktív profilba. Az első lépés "
-"előnézetet ad; a második új hitelesített olvasást végez, és annak "
-"felhasználható tényeit rögzíti:"
+"Az AEAT a *Mis Datos Censales* felületen teszi közzé az aktuális censo-"
+"helyzetedet. Töltsd be az aktív profilba. Mindkét lépés hitelesített "
+"munkamenetben olvassa ki a rekordodat az AEAT-tól. Az első lépés "
+"előnézetet ad, és nem ír semmit. A második megnyitja a javaslatot az "
+"áttekintésedhez, és rögzíti az általad jóváhagyott adatokat:"
 
-#: ../../how-to/censo-update.md:86
-msgid "Nothing is written until you add `--apply`."
-msgstr "Semmi nem íródik ki, amíg hozzá nem adod a `--apply` kapcsolót."
-
-#: ../../how-to/censo-update.md:89
+#: ../../how-to/censo-update.md:90
 msgid ""
-"The current CLI does not turn the first command's preview into a saved "
-"approval. The `--apply` command reads AEAT again and applies that new "
-"observation. Review the `--apply` result itself before relying on the "
-"updated profile. Work is in progress to expose the application's "
-"captured, exact-baseline reviewed-apply lifecycle on this command; until "
-"that lands, do not treat the earlier preview as the operand that was "
-"applied."
+"Nothing is written until you add `--apply`. The `--apply` command "
+"performs a new read, prints each field with its intent (`adopt` or "
+"`preserve`), and asks whether to apply that exact proposal. The default "
+"answer is no, which writes nothing. The preview and the `--apply` "
+"proposal come from separate reads, so review the `--apply` proposal "
+"itself."
 msgstr ""
-"A jelenlegi CLI nem alakítja az első parancs előnézetét mentett "
-"jóváhagyássá. A `--apply` parancs újra lekérdezi az AEAT-t, és ezt az új "
-"megfigyelést alkalmazza. Mielőtt a frissített profilra támaszkodnál, "
-"ellenőrizd magát a `--apply` eredményét. Folyamatban van, hogy ezen a "
-"parancson elérhetővé váljon az alkalmazás által rögzített, pontos "
-"alapvonalú felülvizsgálati és alkalmazási életciklus; amíg ez nem készül "
-"el, ne tekintsd a korábbi előnézetet alkalmazott operandusnak."
+"Semmi nem íródik, amíg nem adod hozzá az `--apply` kapcsolót. Az "
+"`--apply` parancs új olvasást végez, kiírja minden mezőt a szándékával "
+"(`adopt` vagy `preserve`), és megkérdezi, alkalmazza-e pontosan ezt a "
+"javaslatot. Az alapértelmezett válasz a nem, ami nem ír semmit. Az "
+"előnézet és az `--apply` javaslat külön olvasásokból származik, ezért "
+"magát az `--apply` javaslatot nézd át."
 
-#: ../../how-to/censo-update.md:97
+#: ../../how-to/censo-update.md:96
 msgid ""
 "Authenticate first; see [Authenticate with AEAT](authenticate-with-"
 "aeat.md). The pull reads your own record and takes your fiscal ID from "
 "the authenticated session, so you cannot point it at another taxpayer."
 msgstr ""
-"Előbb hitelesítsd magad; lásd a [Hitelesítés az AEAT-vel](authenticate-"
-"with-aeat.md) oldalt. A lekérés a saját rekordodat olvassa, és a "
-"hitelesített munkamenetből veszi az adóazonosítódat, ezért nem "
-"irányítható más adózóhoz."
+"Előbb hitelesítsd magad; lásd: [Hitelesítés az AEAT-nál](authenticate-"
+"with-aeat.md). A lekérés a saját rekordodat olvassa, és a hitelesített "
+"munkamenetből veszi az adóazonosítódat, ezért nem irányítható más "
+"adózóhoz."
 
-#: ../../how-to/censo-update.md:102
+#: ../../how-to/censo-update.md:101
 msgid "What the pull reports"
 msgstr "Mit jelent a lekérés eredménye"
 
-#: ../../how-to/censo-update.md:104
+#: ../../how-to/censo-update.md:103
 msgid "Every field comes back as one of three outcomes."
 msgstr "Minden mező háromféle eredmény egyikével tér vissza."
 
-#: ../../how-to/censo-update.md:106
+#: ../../how-to/censo-update.md:105
 msgid ""
 "**Adopted**: the profile had no answer, or the value came from an earlier"
 " censal read, so `--apply` writes AEAT's current value. A preview only "
@@ -257,11 +257,11 @@ msgstr ""
 "aktuális értékét írja be. Az előnézet csak azt jelzi, mi lenne "
 "felhasználható."
 
-#: ../../how-to/censo-update.md:110
+#: ../../how-to/censo-update.md:109
 msgid "**Unchanged**: you and AEAT already agree."
 msgstr "**Változatlan**: te és az AEAT már egyeztek."
 
-#: ../../how-to/censo-update.md:112
+#: ../../how-to/censo-update.md:111
 msgid ""
 "**Diverging**: you and AEAT disagree. The pull reports the difference and"
 " writes nothing. You decide which is right, then correct the profile or "
@@ -271,11 +271,11 @@ msgid ""
 msgstr ""
 "**Eltérés**: te és az AEAT nem egyeztek. A lekérés jelzi a különbséget, "
 "és semmit sem ír ki. Döntsd el, melyik a helyes, majd javítsd a profilt "
-"vagy a cenzusadatot. A saját magad által megadott érték soha nem íródik "
+"vagy a censódat. A saját magad által megadott érték soha nem íródik "
 "felül. A szándékosan törölt mező üres marad, és a lekérés jelzi, ha az "
 "AEAT még mindig tárol hozzá értéket."
 
-#: ../../how-to/censo-update.md:117
+#: ../../how-to/censo-update.md:116
 msgid ""
 "Once the pull has filled a blank field, a later pull refreshes that same "
 "field when AEAT's value changes. It filled it, so it may update it. "
@@ -285,17 +285,22 @@ msgstr ""
 "ugyanazt a mezőt, amikor az AEAT értéke megváltozik. A mezőt a lekérés "
 "töltötte ki, ezért frissítheti. Amit te adtál meg, az továbbra is a tiéd."
 
-#: ../../how-to/censo-update.md:121
+#: ../../how-to/censo-update.md:120
 msgid "What the pull cannot fill"
 msgstr "Mit nem tud kitölteni a lekérés"
 
-#: ../../how-to/censo-update.md:123
-msgid "The pull fills your fiscal address, postcode, and cadastral reference."
+#: ../../how-to/censo-update.md:122
+msgid ""
+"The pull fills your fiscal address, postcode, and cadastral reference. It"
+" reports these as the fields `contact.fiscal_address`, "
+"`contact.postcode`, and `contact.fiscal_address_cadastral_reference`."
 msgstr ""
-"A lekérés kitölti az adóügyi címedet, az irányítószámot és a kataszteri "
-"hivatkozást."
+"A lekérés kitölti az adóügyi lakcímedet, az irányítószámodat és a "
+"kataszteri hivatkozásodat. Ezeket a `contact.fiscal_address`, "
+"`contact.postcode` és `contact.fiscal_address_cadastral_reference` "
+"mezőként jelzi."
 
-#: ../../how-to/censo-update.md:125
+#: ../../how-to/censo-update.md:126
 msgid ""
 "It does not fill your fiscal ID. It reads your fiscal ID to confirm the "
 "record AEAT returned is yours, and never writes it."
@@ -304,18 +309,20 @@ msgstr ""
 "megerősítse: az AEAT által visszaadott rekord a tiéd, de soha nem írja "
 "azt át."
 
-#: ../../how-to/censo-update.md:128
+#: ../../how-to/censo-update.md:129
 msgid ""
 "It does not fill your regime facts: activity, tax regime, IVA regime, "
 "enrollment. AEAT publishes no read-only surface that carries them. Enter "
-"those by hand as described below."
+"those by hand as described in [Enter or correct census facts](#enter-or-"
+"correct-census-facts)."
 msgstr ""
-"A rendszeradatokat sem tölti ki: tevékenység, adózási rendszer, IVA-"
-"rendszer és bejelentkezés. Az AEAT nem tesz közzé olyan csak olvasható "
-"felületet, amely ezeket tartalmazza. Add meg őket kézzel az alábbiak "
-"szerint."
+"A rendszeradatokat nem tölti ki: tevékenység, adózási rendszer, IVA-"
+"rendszer, nyilvántartásba vétel. Az AEAT nem tesz közzé olyan csak "
+"olvasható felületet, amely ezeket tartalmazza. Ezeket kézzel add meg, a "
+"[Censo-adatok bevitele vagy javítása](#enter-or-correct-census-facts) "
+"szakaszban leírtak szerint."
 
-#: ../../how-to/censo-update.md:132
+#: ../../how-to/censo-update.md:133
 msgid ""
 "It does not split your name. AEAT returns surnames and given names as one"
 " string, and a wrong split is worse than a blank field, so the pull "
@@ -325,7 +332,7 @@ msgstr ""
 "egy karakterláncként adja vissza, a hibás szétválasztás pedig rosszabb "
 "egy üres mezőnél, ezért a lekérés mindkettőt érintetlenül hagyja."
 
-#: ../../how-to/censo-update.md:136
+#: ../../how-to/censo-update.md:137
 msgid ""
 "If a pull returns a record whose fiscal ID is not your profile's, it "
 "refuses outright rather than reporting a difference. A read of someone "
@@ -333,13 +340,13 @@ msgid ""
 msgstr ""
 "Ha a lekérés olyan rekordot ad vissza, amelynek adóazonosítója nem "
 "egyezik a profilodéval, eltérés jelzése helyett azonnal elutasítja. Más "
-"személy cenzusának olvasása nem mérlegelendő nézeteltérés."
+"személy censójának olvasása nem mérlegelendő nézeteltérés."
 
-#: ../../how-to/censo-update.md:141
+#: ../../how-to/censo-update.md:142
 msgid "Import a Certificado de Situación Censal"
 msgstr "Certificado de Situación Censal importálása"
 
-#: ../../how-to/censo-update.md:143
+#: ../../how-to/censo-update.md:144
 msgid ""
 "The sede issues a *Certificado de Situación Censal* (procedure G313) that"
 " states your census facts as AEAT holds them. Download it yourself from "
@@ -347,19 +354,19 @@ msgid ""
 "previews; the second records:"
 msgstr ""
 "A sede olyan *Certificado de Situación Censal* igazolást ad ki (G313 "
-"eljárás), amely az AEAT által nyilvántartott cenzusadatokat tartalmazza. "
+"eljárás), amely az AEAT által nyilvántartott censo-adatokat tartalmazza. "
 "Töltsd le az igazolást a sedéről, majd olvasd be a fájlból a profilodba. "
 "Az első lépés előnézetet mutat, a második rögzít:"
 
-#: ../../how-to/censo-update.md:151
+#: ../../how-to/censo-update.md:152
 msgid ""
 "The command previews the census facts the certificate carries without "
 "writing anything. Add `--apply` to record them onto the active profile."
 msgstr ""
-"A parancs írás nélkül előnézetben megmutatja az igazolás cenzusadatait. "
+"A parancs írás nélkül előnézetben megmutatja az igazolás censo-adatait. "
 "Add hozzá a `--apply` kapcsolót, hogy az aktív profilba rögzítsd őket."
 
-#: ../../how-to/censo-update.md:154
+#: ../../how-to/censo-update.md:155
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -377,25 +384,28 @@ msgstr ""
 "válaszodtól, a profil megőrzi az eltérés rekordját, és az `aeat config "
 "profile view` figyelmeztet a rendezésig."
 
-#: ../../how-to/censo-update.md:162
+#: ../../how-to/censo-update.md:163
 msgid ""
 "Reading the certificate's contents is not yet active: the command "
 "currently refuses every document while layout coverage for AEAT-issued "
 "certificates is being completed, and tells you so. Until then, enter the "
-"facts by hand as described above. The command's interface is stable, and "
-"this page applies unchanged once reading activates."
+"facts by hand as described in [Enter or correct census facts](#enter-or-"
+"correct-census-facts). The command's interface is stable, and this page "
+"applies unchanged once reading activates."
 msgstr ""
 "Az igazolás tartalmának olvasása még nem aktív: a parancs jelenleg minden"
 " dokumentumot elutasít, amíg az AEAT által kiadott igazolások "
 "formátumtámogatása elkészül, és ezt közli veled. Addig kézzel add meg az "
-"adatokat a fentiek szerint. A parancs felülete stabil, és ez az oldal "
-"változtatás nélkül érvényes lesz, amikor az olvasás aktiválódik."
+"adatokat a [Censo-adatok bevitele vagy javítása](#enter-or-correct-"
+"census-facts) szakaszban leírtak szerint. A parancs felülete stabil, és "
+"ez az oldal változtatás nélkül érvényes lesz, amikor az olvasás "
+"aktiválódik."
 
-#: ../../how-to/censo-update.md:169
+#: ../../how-to/censo-update.md:170
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "A Cadrumón kívül benyújtott Modelo 036 rögzítése"
 
-#: ../../how-to/censo-update.md:171
+#: ../../how-to/censo-update.md:172
 msgid ""
 "If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
 "record that fact locally so later filings can rely on it. [Record a "
@@ -404,83 +414,89 @@ msgid ""
 "change. After you record a filing, update the profile fields the filing "
 "changed."
 msgstr ""
-"Ha egy Modelo 036 altát, modificaciont vagy baját nyújt be az AEAT "
-"sedéjén, rögzítse ezt a tényt helyileg, hogy a későbbi benyújtások "
-"támaszkodhassanak rá. A [Rögzítsen egy AEAT-nál benyújtott Modelo 036 "
-"bevallást](modelo-036.md) tartalmazza a parancsokat, a sikeres kimenetet,"
+"Ha egy Modelo 036 altát, modificaciónt vagy baját nyújtasz be az AEAT "
+"sedéjén, rögzítsd ezt a tényt helyileg, hogy a későbbi benyújtások "
+"támaszkodhassanak rá. Az [Az AEAT-nál benyújtott Modelo 036 bevallás "
+"rögzítése](modelo-036.md) tartalmazza a parancsokat, a sikeres kimenetet,"
 " valamint azt, hogy a rögzítés mit változtat meg és mit nem. Miután "
-"rögzített egy benyújtást, frissítse azokat a profilmezőket, amelyeket a "
-"benyújtás megváltoztatott."
+"rögzítettél egy benyújtást, frissítsd azokat a profilmezőket, amelyeket a"
+" benyújtás megváltoztatott."
 
-#: ../../how-to/censo-update.md:177
+#: ../../how-to/censo-update.md:178
 msgid "Check the profile afterwards"
-msgstr "Utána ellenőrizze a profilt"
+msgstr "Utána ellenőrizd a profilt"
 
-#: ../../how-to/censo-update.md:179
+#: ../../how-to/censo-update.md:180
 msgid "Validate the active profile after editing census facts:"
-msgstr "Ellenőrizze az aktív profilt a censo-adatok szerkesztése után:"
+msgstr "Ellenőrizd az aktív profilt a censo-adatok szerkesztése után:"
 
-#: ../../how-to/censo-update.md:185
+#: ../../how-to/censo-update.md:186
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
-"Ha a profil továbbra is hiányzó adatokat jelez, szerkessze közvetlenül "
+"Ha a profil továbbra is hiányzó adatokat jelez, szerkeszd közvetlenül "
 "azokat a mezőket:"
 
-#: ../../how-to/censo-update.md:190
+#: ../../how-to/censo-update.md:191
 msgid "For modelo-specific readiness, use modelo readiness:"
 msgstr ""
-"A modelóspecifikus felkészültséghez használja a modell felkészültségi "
+"A modelóspecifikus készenlét ellenőrzéséhez használd a modelo készenléti "
 "ellenőrzését:"
 
-#: ../../how-to/censo-update.md:196
-msgid "Keep the facts current"
-msgstr "Tartsa naprakészen az adatokat"
-
-#: ../../how-to/censo-update.md:198
-msgid "Your AEAT census can change - a new activity, a regime change, a baja."
-msgstr ""
-"Az AEAT-cenzusod változhat: új tevékenység, rendszer- vagy "
-"jogviszonyváltás, kijelentkezés."
-
-#: ../../how-to/censo-update.md:200
+#: ../../how-to/censo-update.md:197
 msgid ""
-"Pull again to catch drift in your identity and address. The pull reports "
-"anything AEAT now holds that your profile does not."
+"The command exits with status 2 while the modelo is not ready. "
+"`profile_ready` covers profile facts only, so read `missing_bindings` for"
+" the source inputs that are still missing."
 msgstr ""
-"Kérd le újra az adatokat, hogy észrevedd az azonosító- és címadataid "
-"eltérését. A lekérés jelzi mindazt, amit az AEAT már tárol, de a profilod"
-" nem."
+"A parancs 2-es kilépési kóddal áll le, amíg a modelo nem áll készen. A "
+"`profile_ready` csak a profiladatokat fedi le, ezért a még hiányzó "
+"forrásbemenetekért nézd a `missing_bindings` mezőt."
+
+#: ../../how-to/censo-update.md:201
+msgid "Keep the facts current"
+msgstr "Tartsd naprakészen az adatokat"
 
 #: ../../how-to/censo-update.md:203
+msgid "Your AEAT census can change - a new activity, a regime change, a baja."
+msgstr "A censód az AEAT-nál változhat - új tevékenység, rendszerváltás, baja."
+
+#: ../../how-to/censo-update.md:205
+msgid ""
+"Pull again to catch drift in your address. The pull reports anything AEAT"
+" now holds that your profile does not."
+msgstr ""
+"Kérd le újra az adatokat, hogy észrevedd a címed eltérését. A lekérés "
+"jelzi mindazt, amit az AEAT már tárol, de a profilod nem."
+
+#: ../../how-to/censo-update.md:208
 msgid ""
 "The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
 "you plan a new filing year."
 msgstr ""
-"Az AEAT censója változhat - egy új tevékenység, egy rendszerváltás, egy "
-"baja. Az alkalmazás ezt az eltérést nem tudja észlelni. Vesse össze újra "
-"a profilt a legutóbbi Modelo 036 másolatával minden alkalommal, amikor "
-"censo-változást nyújt be, és mielőtt egy új benyújtási évet megtervez."
+"A lekérés nem látja a rendszerváltást, ezért minden censo-változás "
+"benyújtásakor, és mielőtt új benyújtási évet terveznél, vesd össze újra "
+"ezeket a mezőket a legutóbbi Modelo 036 másolatoddal."
 
-#: ../../how-to/censo-update.md:207
+#: ../../how-to/censo-update.md:212
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/censo-update.md:209
+#: ../../how-to/censo-update.md:214
 msgid "[Set up your taxpayer profile](profile-setup.md)"
-msgstr "[Az adózói profil beállítása](profile-setup.md)"
+msgstr "[Állítsd be az adózói profilodat](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:210
+#: ../../how-to/censo-update.md:215
 msgid "[Plan your filing calendar](filing-calendar.md)"
-msgstr "[Tervezze meg a benyújtási naptárát](filing-calendar.md)"
+msgstr "[Tervezd meg a benyújtási naptáradat](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:211
+#: ../../how-to/censo-update.md:216
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:212
+#: ../../how-to/censo-update.md:217
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
-"[Számítási bemenetek áttekintése és megadása](review-calculation-"
+"[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
