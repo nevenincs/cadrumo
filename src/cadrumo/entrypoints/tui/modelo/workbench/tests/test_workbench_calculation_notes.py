@@ -21,7 +21,11 @@ from textual.pilot import Pilot
 from textual.widgets import OptionList
 
 from ......application.aggregation.source_mesh import CalculationSourceDiagnosticReason
-from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
+from ......application.modelo.calculation_notes import (
+    CALCULATION_NOTE_ATTENTION,
+    what_locale_key,
+    what_to_do_locale_key,
+)
 from ......application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCalculationNote,
@@ -30,6 +34,7 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ......core.i18n.render import lookup_translation
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -117,6 +122,18 @@ def test_no_language_falls_back_to_the_english_sentence(language: str) -> None:
     ]
 
     assert not same
+
+
+@pytest.mark.parametrize("language", [str(language) for language in SUPPORTED_OUTPUT_LANGUAGES])
+def test_every_reason_has_its_own_sentences_in_every_language(language: str) -> None:
+    unworded = [
+        key
+        for reason in _REASONS
+        for key in (what_locale_key(reason), what_to_do_locale_key(reason))
+        if not lookup_translation(key, locale=language)
+    ]
+
+    assert unworded == []
 
 
 def test_notes_join_the_findings_on_one_scale() -> None:

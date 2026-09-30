@@ -145,12 +145,6 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
-_WORDED_REASONS: Final[frozenset[str]] = frozenset(
-    set(CALCULATION_NOTE_ATTENTION)
-    - {"inferred_retencion_excluded_from_credit", "unresolved_retencion_substrate", "advisory_retencion_credit_grade"}
-)
-"""The reasons with sentences of their own; the others read the general sentences."""
-
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
@@ -180,12 +174,12 @@ def note_attention(reason: str, *, printed_box: bool) -> ModeloFormAttention:
 
 def what_locale_key(reason: str) -> str:
     """The catalogue key of the sentence saying what the calculation noticed."""
-    return f"{_KEY_ROOT}.{reason if reason in _WORDED_REASONS else 'fallback'}.what"
+    return f"{_KEY_ROOT}.{reason}.what"
 
 
 def what_to_do_locale_key(reason: str) -> str:
     """The catalogue key of the sentence saying what to do about it."""
-    return f"{_KEY_ROOT}.{reason if reason in _WORDED_REASONS else 'fallback'}.what_to_do"
+    return f"{_KEY_ROOT}.{reason}.what_to_do"
 
 
 def durable_binding_source(diagnostic: CalculationSourceDiagnostic) -> BindingSourceKind | None:

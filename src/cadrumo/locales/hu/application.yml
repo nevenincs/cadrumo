@@ -821,6 +821,11 @@ application:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
         what_to_do: Hasonlítsa össze a kulcsot a hivatalos útmutatóval, és szükség
           esetén javítsa a tételt.
+      advisory_retencion_credit_grade:
+        what: 'A kiállított számláiból származó levonási jóváírás nincs teljesen megerősítve:
+          a Cadrumo még nem erősítette meg, melyik adóévhez tartozik.'
+        what_to_do: Benyújtás előtt vesse össze az összeget az egyes ügyfelek levonási
+          igazolásával erre az adóévre.
       aggregation_activity_undeclared:
         what: A(z) {box} rovat nullát mutat, pedig ebben az időszakban vannak tevékenységtípus
           nélküli bevételei.
@@ -861,10 +866,12 @@ application:
         what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az Ön adataiban.
         what_to_do: A nyilvántartásán nincs mit változtatnia. Jelezze a hibát, mielőtt
           a számokra támaszkodna.
-      fallback:
-        what: A Cadrumo számolás közben valamit talált, amit érdemes átnézni.
-        what_to_do: Számoljon újra. Ha nem változik, nézze át kézzel a nyilatkozatot,
-          és jelezze.
+      inferred_retencion_excluded_from_credit:
+        what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
+          összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
+          többet fizethet.
+        what_to_do: Rögzítse az ügyfele által minden kiállított számlán alkalmazott
+          levonást, vagy kérje el az igazolását, majd számoljon újra.
       inferred_retencion_rate_unmatched:
         what: A Cadrumo egy befizetés hiányából becsült egy levonást, amely egyetlen
           hivatalos kulcsnak sem felel meg.
@@ -1023,6 +1030,12 @@ application:
           kiszámolni.
         what_to_do: Ellenőrizze, hogy a hozzá szükséges értékek ki vannak-e töltve,
           majd számoljon újra.
+      unresolved_retencion_substrate:
+        what: Néhány kiállított számlánál a Cadrumo nem tudja, mennyit vontak le,
+          ezért a levonási jóváírásból ismeretlen összeg hiányozhat, és a szükségesnél
+          többet fizethet.
+        what_to_do: Adja meg a nyilvántartásában az érintett számlák alapját és a
+          levonást, majd számoljon újra.
       unrouted_declarable_quantity:
         what: Egy tétel egy része, például egy levonás vagy egy adóalap, egyetlen
           rovatba sem kerül be ebben a nyilatkozatban.

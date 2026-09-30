@@ -114,7 +114,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.duplicate_binding_owner.what",
         "application.modelo.calc_diagnostic.duplicate_bound_casilla_owner.what",
         "application.modelo.calc_diagnostic.duplicate_relation_owner.what",
-        "application.modelo.calc_diagnostic.fallback.what",
         "application.modelo.calc_diagnostic.inferred_retencion_rate_unmatched.what",
         "application.modelo.calc_diagnostic.inferred_retencion_sectoral_rate_unconfirmed.what",
         "application.modelo.calc_diagnostic.m349_clave_inferred_from_category.what",
@@ -127,6 +126,8 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unhandled_binding_source.what",
         "application.modelo.calc_diagnostic.unresolved_binding.what",
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
+        "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
+        "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
     },
     "en": {
         "docs.site.footer.note",
@@ -179,7 +180,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.duplicate_binding_owner.what",
         "application.modelo.calc_diagnostic.duplicate_bound_casilla_owner.what",
         "application.modelo.calc_diagnostic.duplicate_relation_owner.what",
-        "application.modelo.calc_diagnostic.fallback.what",
         "application.modelo.calc_diagnostic.inferred_retencion_rate_unmatched.what",
         "application.modelo.calc_diagnostic.inferred_retencion_sectoral_rate_unconfirmed.what",
         "application.modelo.calc_diagnostic.m349_clave_inferred_from_category.what",
@@ -192,6 +192,8 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unhandled_binding_source.what",
         "application.modelo.calc_diagnostic.unresolved_binding.what",
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
+        "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
+        "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
     },
     "es": {
         "docs.site.footer.note",
@@ -243,7 +245,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.duplicate_binding_owner.what",
         "application.modelo.calc_diagnostic.duplicate_bound_casilla_owner.what",
         "application.modelo.calc_diagnostic.duplicate_relation_owner.what",
-        "application.modelo.calc_diagnostic.fallback.what",
         "application.modelo.calc_diagnostic.inferred_retencion_rate_unmatched.what",
         "application.modelo.calc_diagnostic.inferred_retencion_sectoral_rate_unconfirmed.what",
         "application.modelo.calc_diagnostic.m349_clave_inferred_from_category.what",
@@ -256,6 +257,8 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unhandled_binding_source.what",
         "application.modelo.calc_diagnostic.unresolved_binding.what",
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
+        "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
+        "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
     },
     "hu": {
         "docs.site.footer.note",
@@ -300,7 +303,6 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.duplicate_binding_owner.what",
         "application.modelo.calc_diagnostic.duplicate_bound_casilla_owner.what",
         "application.modelo.calc_diagnostic.duplicate_relation_owner.what",
-        "application.modelo.calc_diagnostic.fallback.what",
         "application.modelo.calc_diagnostic.inferred_retencion_rate_unmatched.what",
         "application.modelo.calc_diagnostic.inferred_retencion_sectoral_rate_unconfirmed.what",
         "application.modelo.calc_diagnostic.m349_clave_inferred_from_category.what",
@@ -313,6 +315,8 @@ _PROSE_KEYS = {
         "application.modelo.calc_diagnostic.unhandled_binding_source.what",
         "application.modelo.calc_diagnostic.unresolved_binding.what",
         "application.modelo.calc_diagnostic.unresolved_derived_binding.what",
+        "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
+        "application.modelo.calc_diagnostic.unresolved_retencion_substrate.what",
     },
 }
 

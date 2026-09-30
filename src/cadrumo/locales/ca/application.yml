@@ -856,6 +856,11 @@ application:
           el que correspon.
         what_to_do: Compara aquest tipus amb les instruccions oficials i corregeix
           el registre si cal.
+      advisory_retencion_credit_grade:
+        what: 'La deducció per retencions de les teves factures emeses no està del
+          tot confirmada: Cadrumo encara no ha confirmat a quin exercici correspon.'
+        what_to_do: Compara l'import amb el certificat de retencions de cada client
+          per a aquest exercici abans de presentar.
       aggregation_activity_undeclared:
         what: La casella {box} mostra zero, tot i que tens ingressos en aquest període
           sense tipus d'activitat.
@@ -899,9 +904,12 @@ application:
           no en les teves dades.
         what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
           de les xifres.
-      fallback:
-        what: Cadrumo ha trobat alguna cosa per revisar en calcular.
-        what_to_do: Torna a calcular. Si continua, revisa la declaració a mà i avisa'ns.
+      inferred_retencion_excluded_from_credit:
+        what: Part de la retenció de les teves factures emeses s'ha calculat a partir
+          del que va pagar el client, així que s'ha deixat fora de la teva deducció
+          i podries pagar més del necessari.
+        what_to_do: Registra la retenció que et va aplicar el client en cada factura
+          emesa, o aconsegueix-ne el certificat, i torna a calcular.
       inferred_retencion_rate_unmatched:
         what: Cadrumo ha estimat una retenció a partir del que faltava en un cobrament,
           i no coincideix amb cap tipus oficial.
@@ -1059,6 +1067,12 @@ application:
         what: No s'ha pogut calcular una xifra que Cadrumo treu a partir d'altres.
         what_to_do: Comprova que les xifres de les quals depèn estan emplenades i
           torna a calcular.
+      unresolved_retencion_substrate:
+        what: En algunes factures emeses Cadrumo no pot saber quant es va retenir,
+          així que a la teva deducció per retencions li pot faltar un import desconegut
+          i podries pagar més del necessari.
+        what_to_do: Indica als teus registres la base i la retenció de cadascuna d'aquestes
+          factures i torna a calcular.
       unrouted_declarable_quantity:
         what: Una part d'un registre, com una retenció o una base imposable, no arriba
           a cap casella d'aquesta declaració.

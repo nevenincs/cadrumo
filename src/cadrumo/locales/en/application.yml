@@ -778,6 +778,11 @@ application:
           the rate that applies.
         what_to_do: Check that rate against the official instructions and correct
           the record if needed.
+      advisory_retencion_credit_grade:
+        what: 'The withholding credit from your issued invoices is not fully confirmed:
+          Cadrumo has not yet confirmed which tax year it belongs to.'
+        what_to_do: Compare the amount with the withholding certificate from each
+          client for this filing year before you file.
       aggregation_activity_undeclared:
         what: Box {box} shows zero, although you have income this period with no type
           of activity.
@@ -822,10 +827,12 @@ application:
           data.
         what_to_do: Nothing to change in your records. Report it before you rely on
           the figures.
-      fallback:
-        what: Cadrumo found something to look at while calculating.
-        what_to_do: Calculate again. If it stays, check the declaration by hand and
-          report it.
+      inferred_retencion_excluded_from_credit:
+        what: Some withholding on your issued invoices was worked out from what the
+          client paid, so it was left out of your credit and you may pay more than
+          needed.
+        what_to_do: Record the withholding your client applied on each issued invoice,
+          or get their certificate, then calculate again.
       inferred_retencion_rate_unmatched:
         what: Cadrumo estimated a withholding from a shortfall in a payment, and it
           matches no official rate.
@@ -980,6 +987,12 @@ application:
           out.
         what_to_do: Check that the figures it depends on are filled in, then calculate
           again.
+      unresolved_retencion_substrate:
+        what: For some issued invoices Cadrumo cannot tell how much was withheld,
+          so your withholding credit may be missing an unknown amount and you may
+          pay more than needed.
+        what_to_do: Enter the invoice base and the withholding for each of those invoices
+          in your records, then calculate again.
       unrouted_declarable_quantity:
         what: Part of a record, such as a withholding or a tax base, reaches no box
           of this declaration.
