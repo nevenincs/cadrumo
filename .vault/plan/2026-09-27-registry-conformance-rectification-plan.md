@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:6868137103a38db36e8585179df3c02dfb5b933e5c3a2fc951475dde970bfe27'
+body_hash: 'sha256:7b0c3a421266564424a120e073f560b82100789ecaceda678cdd5aea2a53df0d'
 ---
 
 # `registry-conformance-rectification` plan
@@ -88,7 +88,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 
 - [x] `P05.S14` - Resolve the authority root without the profile and storage-root settings, so the MCP server and CLI boot beside retired aeat data (D1); `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `P05.S15` - Keep the installed-oracle authority fallback and prove each oracle names the generation it consumed (D2); `dev/packaging/tests/test_installed_oracles.py`.
-- [ ] `P05.S16` - Remove a passing run's scratch folder when the run finishes and keep a failing run's (D3); `dev/test_runs/`.
+- [x] `P05.S16` - Remove a passing run's scratch folder when the run finishes and keep a failing run's (D3); `dev/test_runs/`.
 - [ ] `P05.S17` - Ground the Modelo 100 late-authoring rulings per year: the 193 relation and renta-dep-193, the B4 and B5 items, the 0604 legal refs, the amending-law catalogue entries and the 2024 DA 18 period-end condition (rulings 2, 3, 4, 7, 8, 10); `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S18` - Give the accelerated DA 18 regime its own refusal token (ruling 9); `src/cadrumo/domain/renta/actividad_asset/`.
 - [ ] `P05.S19` - Resolve each support-range cell by evidence: projection, a grounded delta edition, or the modelo's own later start (ruling 6); `src/cadrumo/_data/registry/aeat/modelos/`.

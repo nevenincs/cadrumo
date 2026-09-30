@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f43c2bca3b4a061f38e666be719c623ad9707fe0803e48dd4548be57c7edb93'
+body_hash: 'sha256:61d6e450dc88dae88835f12c22f6f08ae395e664c2cbe4b06a46e8addbbaa056'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -370,6 +370,16 @@ related:
 - `S29` `M` `src/cadrumo/locales/es/cli.yml`
 - `S29` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S29` `verify:` `report and calculation parity for 180, 190 and 193 on real stores and resolvers; empty store warns, stored zero counts; 1239 aggregation and CLI tests passed` -> `pass`
+- `S16` `M` `conftest.py`
+- `S16` `A` `dev/test_runs/tests/authority_probe.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/shared_authority_isolation.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_release.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py`
+- `S16` `M` `src/cadrumo_harness/mcp/server.py`
+- `S16` `A` `src/cadrumo_harness/mcp/tests/test_server_shutdown_release.py`
+- `S16` `verify:` `passing -n0 and -n 2 runs log SCRATCH REMOVED on Windows, failing run keeps its folder; MCP and TUI host release tests; check-symbol-usage and check-export-consumption only the pre-existing text_fold finding, module reachability and import boundaries clean` -> `pass`
 
 ## Notes
 
