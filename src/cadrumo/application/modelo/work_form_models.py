@@ -254,7 +254,7 @@ class ModeloFormRate(_FormModel):
     and the rate box prints. ``binding_id`` is that base binding.
     """
 
-    ratio: Decimal = Field(ge=0, le=1)
+    ratio: Decimal = Field(ge=Decimal(0), le=Decimal(1))
     unit: ModeloFormRateUnit = ModeloFormRateUnit.FRACTION
     binding_id: BindingId
 
@@ -274,7 +274,7 @@ class ModeloFormPrintedRate(_FormModel):
     the calculation applies it.
     """
 
-    ratio: Decimal = Field(gt=0, le=1)
+    ratio: Decimal = Field(gt=Decimal(0), le=Decimal(1))
     unit: ModeloFormRateUnit = ModeloFormRateUnit.FRACTION
     literal: str = Field(min_length=1)
 
