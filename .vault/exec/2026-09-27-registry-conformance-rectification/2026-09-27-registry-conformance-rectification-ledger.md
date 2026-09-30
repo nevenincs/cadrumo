@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:15f047cbcb50fbe779b6e98b3b58b9016ba761f7bbb064eb9a5505f0ca595976'
+body_hash: 'sha256:8420994e511f74c00f10abc5f221bedcc3a02d2f2dabd35d0cd6dee844bee28d'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -328,6 +328,32 @@ related:
 - `S11` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
 - `S11` `M` `src/cadrumo/locales/hu/modelo/schema/490.yml`
 - `S11` `verify:` `220/322/490 hydration and 4-locale labels unchanged except the intended 220 move; 490 converter proof, apply, no-op; candidate inspection publication_valid; runtime 184 passed, dev 455 passed (10 failures in resident search golden queries)` -> `pass`
+- `S30` `M` `dev/test_runs/command.py`
+- `S30` `M` `dev/test_runs/tests/test_command.py`
+- `S30` `verify:` `runner keeps a 300000-character line whole where HEAD raised; just check-locales completes (existing findings reported)` -> `pass`
+- `S24` `M` `.github/workflows/release.yml`
+- `S24` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S24` `M` `dev/ingest_harness/_driver.py`
+- `S24` `M` `dev/ingest_harness/_key.py`
+- `S24` `M` `dev/ingest_harness/tests/test_corpus_anchors.py`
+- `S24` `A` `dev/ingest_harness/tests/test_corpus_recipe_refusal.py`
+- `S24` `A` `dev/ingest_harness/tests/test_corpus_root.py`
+- `S24` `M` `dev/ingest_harness/tests/test_driver.py`
+- `S24` `M` `dev/ingest_harness/tests/test_field_mapping.py`
+- `S24` `M` `dev/ingest_harness/tests/test_scoring.py`
+- `S24` `M` `dev/ingest_harness/tests/test_tabular_truth.py`
+- `S24` `M` `dev/tests/test_lane_reachability.py`
+- `S24` `M` `justfile`
+- `S24` `M` `pyproject.toml`
+- `S24` `M` `src/cadrumo/tests/README.md`
+- `S24` `verify:` `test-ingest-corpus 71 passed with the corpus configured, 10 failed and 61 errored unset, no skips; lane reachability and CI workflow contracts pass` -> `pass`
+- `S16` `M` `dev/test_runs/logging.py`
+- `S16` `M` `dev/test_runs/paths.py`
+- `S16` `M` `dev/test_runs/reaper.py`
+- `S16` `A` `dev/test_runs/tests/failing_probe.py`
+- `S16` `M` `dev/test_runs/tests/test_logging.py`
+- `S16` `M` `dev/test_runs/tests/test_paths.py`
+- `S16` `verify:` `passing run removes scratch and failing run keeps it (live); reaper reclaims kept folders; 218 lane tests passed` -> `pass`
 
 ## Notes
 
@@ -347,3 +373,4 @@ related:
 - `S11` 202 INCN binding authored at 2019-2022 (every design prints the 6M flag); cuota-base relation kept at 2025 because its source box sits on DP200014 before 2023; 222/2025 root reuses 2024 non-structural families; its 18% modality row inherits the open 2023 row
 - `S11` 296/2024 root reuses 2023 storage (124 to 56 stated); 308 roots already stored by baseline, stale cause tokens dropped as false; 604 root reason corrected, storage reuse deferred to the converter fix; 216 unchanged; all late-authoring candidates genuinely new
 - `S11` 220 T22009001 34 boxes authored at 2024 (identical 2024 and 2025 layout); 490/2023 root reuses 2022-2t-4t storage (386 to 33 casillas stated); 322 and 490 2022 roots already reused storage, reasons corrected and positions pruned; 220 boxes 02796 and 02797 left for P05.S34
+- `S16` a passing -n0 run that opens the authority leaves the frozen sqlite snapshot on Windows until the reader closes; closing it at session end is the remaining S16 work
