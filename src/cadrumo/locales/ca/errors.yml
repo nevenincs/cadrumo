@@ -1005,6 +1005,11 @@ errors:
     refused_active_profile_pointer_manual_recovery: El punter de perfil actiu {path}
       no es pot llegir, així que no es pot esborrar sense perdre'n la revisió; cal
       recuperar-lo manualment.
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: En aquest
+      període impositiu, la DA 18 LIS concedeix als vehicles elèctrics nous i als
+      punts de recàrrega amortització accelerada al doble del coeficient lineal màxim,
+      no llibertat d'amortització. Cadrumo no calcula aquest règim, per la qual cosa
+      no s'ha calculat cap amortització.
     refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
       amb les ja registrades per a l'actiu.
     refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta

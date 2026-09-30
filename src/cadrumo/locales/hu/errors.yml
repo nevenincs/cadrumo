@@ -945,6 +945,11 @@ errors:
     refused_active_profile_pointer_manual_recovery: Az aktív profil mutatója ({path})
       nem olvasható, ezért a revíziója elvesztése nélkül nem törölhető; kézi helyreállítást
       igényel.
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: Ebben az adóévben
+      a LIS DA 18 az új elektromos járművekre és töltőpontokra a maximális lineáris
+      leírási kulcs kétszeresével számolt gyorsított értékcsökkenést biztosít, nem
+      szabad értékcsökkenést. A Cadrumo ezt a kedvezményt nem számítja ki, ezért nem
+      készült értékcsökkenési számítás.
     refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
       az eszköz már rögzített elszámolásaival.
     refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik

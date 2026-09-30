@@ -923,6 +923,10 @@ errors:
     refused_active_profile_pointer_manual_recovery: The active-profile pointer {path}
       cannot be read, so it cannot be cleared without losing its revision; it needs
       manual recovery.
+    refused_actividad_asset_accelerated_da18_depreciation_not_computed: For this tax
+      period, LIS DA 18 grants new electric vehicles and charging points accelerated
+      depreciation at twice the maximum linear coefficient, not free depreciation.
+      Cadrumo does not compute that regime, so no charge was calculated.
     refused_actividad_asset_claim_conflict: The amortization claim conflicts with
       the asset's recorded claims.
     refused_actividad_asset_incomplete: The activity-asset schedule lacks a fact it
