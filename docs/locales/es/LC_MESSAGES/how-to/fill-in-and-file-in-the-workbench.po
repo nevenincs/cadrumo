@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 08:34+0200\n"
+"POT-Creation-Date: 2026-09-30 10:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -346,7 +346,7 @@ msgid "`s`"
 msgstr "`s`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:111
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:132
 msgid "See where the values come from"
 msgstr "Ver de dónde salen los valores"
 
@@ -381,6 +381,14 @@ msgstr "F8"
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Run the next step"
 msgstr "Ejecutar el siguiente paso"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`i`"
+msgstr "`i`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "List what verification found"
+msgstr "Listar lo que encontró la verificación"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`c`"
@@ -422,19 +430,19 @@ msgstr "F3"
 msgid "Switch between the light and the dark appearance"
 msgstr "Cambiar entre la apariencia clara y la oscura"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:86
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:87
 msgid "The footer shows as many keys as fit the width of the terminal."
 msgstr "El pie muestra tantas teclas como caben en el ancho del terminal."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:88
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:89
 msgid "Fill in boxes"
 msgstr "Rellenar casillas"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:90
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
 msgid "Move to a box with the arrow keys or with `n`, then press Enter."
 msgstr "Ve a una casilla con las flechas o con `n` y pulsa Intro."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:92
 msgid ""
 "Type the value the way you write numbers in your language, for example "
 "`1.234,56` in Spanish or `1,234.56` in English. The editor shows how it "
@@ -444,13 +452,13 @@ msgstr ""
 "`1.234,56` en español o `1,234.56` en inglés. El editor muestra cómo "
 "leerá el valor, o dice por qué no puede leerlo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:94
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:95
 msgid "Choose **Add to changes**. The box shows Δ with the value it replaces."
 msgstr ""
 "Elige **Guardar en cambios**. La casilla muestra Δ con el valor que "
 "sustituye."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:96
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:97
 msgid ""
 "Nothing is saved yet. When a box cannot be typed into, the help band says"
 " why: a value that follows your records, for example, is corrected in the"
@@ -460,23 +468,65 @@ msgstr ""
 " banda de ayuda dice por qué: un valor que sigue tus registros, por "
 "ejemplo, se corrige en el libro registro y después se recalcula."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:100
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:101
 msgid "Review and apply your changes"
 msgstr "Revisar y aplicar tus cambios"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:102
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:103
 msgid ""
-"Press `R`. The review lists each change with its box, how it read before,"
-" how it will read after, and what the change does. It warns you when your"
-" value replaces an imported or a calculated one: your value keeps winning"
-" until you restore the source."
+"Press `R`. Cadrumo first checks your changes against the declaration as "
+"it stands. The review then lists each change with its box, how it read "
+"before, how it will read after, and what the change does. It warns you "
+"when your value replaces an imported or a calculated one: your value "
+"keeps winning until you restore the source."
 msgstr ""
-"Pulsa `R`. La revisión lista cada cambio con su casilla, cómo estaba "
-"antes, cómo quedará después y qué hace el cambio. Te avisa cuando tu "
-"valor sustituye a uno importado o calculado: tu valor manda hasta que "
+"Pulsa `R`. Cadrumo comprueba primero tus cambios con la declaración tal "
+"como está. Después, la revisión lista cada cambio con su casilla, cómo "
+"estaba antes, cómo quedará después y qué hace el cambio. Te avisa cuando "
+"tu valor sustituye a uno importado o calculado: tu valor manda hasta que "
 "restauras el origen."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:107
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:109
+msgid ""
+"Under the changes, the review lists what the check found. An item marked "
+"▲ would stop the changes from being applied, so **Apply and recalculate**"
+" stays unavailable until you resolve it."
+msgstr ""
+"Debajo de los cambios, la revisión lista lo que encontró la comprobación."
+" Un elemento marcado con ▲ impediría aplicar los cambios, así que "
+"**Aplicar y recalcular** no está disponible hasta que lo resuelvas."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:113
+msgid ""
+"The review asks you to tick **I have checked what applying does** before "
+"you apply in two cases:"
+msgstr ""
+"La revisión te pide marcar **He comprobado lo que hace aplicar** antes de"
+" aplicar en dos casos:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:116
+msgid ""
+"The declaration was last calculated outside the workbench. Cadrumo cannot"
+" tell which of its values you typed, so the review names the boxes whose "
+"values go back to what their source says. To keep one, enter its value "
+"first."
+msgstr ""
+"La declaración se calculó por última vez fuera del banco de trabajo. "
+"Cadrumo no puede saber qué valores escribiste, así que la revisión nombra"
+" las casillas cuyos valores vuelven a lo que diga su origen. Para "
+"conservar uno, introdúcelo antes."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:120
+msgid ""
+"The declaration changed after you staged your changes. Your changes are "
+"kept, a change that no longer applies is removed, and the lines whose box"
+" now reads differently are marked."
+msgstr ""
+"La declaración cambió después de que prepararas tus cambios. Tus cambios "
+"se conservan, un cambio que ya no se aplica se quita y se marcan las "
+"líneas cuya casilla muestra ahora otro valor."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:124
 msgid ""
 "Choose **Apply and recalculate** to save the changes and recalculate the "
 "declaration, or **Discard all** to drop them. If you leave the workbench "
@@ -486,7 +536,17 @@ msgstr ""
 "declaración, o **Descartar todo** para desecharlos. Si sales del banco de"
 " trabajo con cambios sin aplicar, primero te pregunta."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:113
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:128
+msgid ""
+"After an apply or a recalculation, the workbench lists every box that "
+"changed and why: your change, recalculated, from your sources, or another"
+" change. Press Enter on a line to go to its box."
+msgstr ""
+"Tras aplicar o recalcular, el banco de trabajo lista cada casilla que ha "
+"cambiado y por qué: tu cambio, recalculada, de tus orígenes u otro "
+"cambio. Pulsa Intro en una línea para ir a su casilla."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:134
 msgid ""
 "Press `s` on any box. The sources view groups every source by family: "
 "your records, the registers you keep, your profile, earlier filings, the "
@@ -501,7 +561,7 @@ msgstr ""
 "qué puedes hacer con sus valores y si ha aportado datos, y lista las "
 "casillas que alimenta."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:119
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:140
 msgid ""
 "Press Enter to go to a box, or `o` to open the area that owns the source,"
 " such as the ledger or your profile."
@@ -509,11 +569,11 @@ msgstr ""
 "Pulsa Intro para ir a una casilla, u `o` para abrir el apartado al que "
 "pertenece el origen, como el libro registro o tu perfil."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:122
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:143
 msgid "Calculate, verify, file and export"
 msgstr "Calcular, verificar, presentar y exportar"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:124
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:145
 msgid ""
 "Press F8 to run the step the journey line offers, or `c` to recalculate "
 "at any time once your changes are applied. The values you entered are "
@@ -523,7 +583,17 @@ msgstr ""
 "para recalcular en cualquier momento cuando tus cambios estén aplicados. "
 "Los valores que introdujiste se conservan."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:126
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:147
+msgid ""
+"If the declaration was last calculated outside the workbench, "
+"recalculating asks first, and names the boxes whose values go back to "
+"their source."
+msgstr ""
+"Si la declaración se calculó por última vez fuera del banco de trabajo, "
+"recalcular pregunta antes y nombra las casillas cuyos valores vuelven a "
+"su origen."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:149
 msgid ""
 "The first Modelo 303 calculation asks the filing answers its period "
 "needs: whether you file a joint return and, in the last period of the "
@@ -533,21 +603,27 @@ msgstr ""
 "periodo: si presentas una declaración conjunta y, en el último periodo "
 "del año, si estás exento del Modelo 390."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:129
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:152
 msgid ""
 "Verification checks the declaration. A box that stops you from filing "
-"shows ▲, and the navigator counts it on its section."
+"shows ▲, and the navigator counts it on its section. When verification "
+"finds something, the next line says so: press `i` or F8 to list the "
+"findings, those that block filing first, and Enter to go to the box a "
+"finding names."
 msgstr ""
 "La verificación comprueba la declaración. Una casilla que te impide "
-"presentar muestra ▲, y el navegador la cuenta en su apartado."
+"presentar muestra ▲, y el navegador la cuenta en su apartado. Cuando la "
+"verificación encuentra algo, la línea siguiente lo dice: pulsa `i` o F8 "
+"para listar los hallazgos, primero los que impiden presentar, e Intro "
+"para ir a la casilla que nombra un hallazgo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:131
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:156
 msgid "Filing asks you to confirm, then records the filing in Cadrumo."
 msgstr ""
 "La presentación te pide confirmación y después registra la presentación "
 "en Cadrumo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:132
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:157
 msgid ""
 "Once the declaration is verified, `e` exports it: choose where to save "
 "it, which file to write and, for Modelo 303, the refund, payment and "
@@ -559,21 +635,23 @@ msgstr ""
 "devolución, pago y domiciliación. Después, el resultado de la exportación"
 " indica lo que vale el fichero."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:136
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:161
 msgid "When something looks unexpected"
 msgstr "Cuando algo no es lo esperado"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:138
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:163
 msgid ""
 "**Default, please confirm.** For a declaration calculated outside the "
 "workbench, Cadrumo cannot tell which values you typed. Enter the value to"
-" confirm it."
+" confirm it; otherwise the next apply or recalculation returns it to its "
+"source."
 msgstr ""
 "**Por defecto, confírmala.** En una declaración calculada fuera del banco"
 " de trabajo, Cadrumo no puede saber qué valores escribiste. Introduce el "
-"valor para confirmarlo."
+"valor para confirmarlo; si no, la próxima aplicación o recálculo lo "
+"devuelve a su origen."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:141
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:167
 msgid ""
 "**fixed.** The official design prints the value of the box; you cannot "
 "change it."
@@ -581,7 +659,7 @@ msgstr ""
 "**fijado.** El diseño oficial imprime el valor de la casilla; no puedes "
 "cambiarlo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:143
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:169
 msgid ""
 "**pages arranged automatically.** The pages were arranged from the "
 "official design by Cadrumo and have not been reviewed by hand. Every box "
@@ -591,7 +669,7 @@ msgstr ""
 "partir del diseño oficial y no se han revisado a mano. Cada casilla sigue"
 " apareciendo exactamente una vez."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:146
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:172
 msgid ""
 "A declaration whose modelo has no arrangement opens with every box in box"
 " number order, for viewing only."
