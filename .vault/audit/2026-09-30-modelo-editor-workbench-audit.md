@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:06840fae80987a01596f418e50ec437a6a8a9058ce2b165631897faf6fba8eac'
+body_hash: 'sha256:4b8643d1053605de2fdd12055792c82182c16b203cf9474f353ec1313d86b5d9'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -234,8 +234,9 @@ A section whose boxes wait on an import or a calculation reads as done in the na
 needing input in the list, and `n` walks to boxes the filer cannot type into
 (`src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py:253`,
 `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:274`). Seen on 111, 303, 115, 100
-and a calculated 130. Open: one classification shared by the navigator, the list, the header and
-`n`.
+and a calculated 130. Resolved in b48f9f6db8: one standing per origin in
+`src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py:200` serves the navigator, the list
+headings, the grid row edge, `n` and the header; a waiting box is never marked done.
 
 ### filed-origin-words | medium | a filed declaration still asks the filer to confirm
 
@@ -243,45 +244,89 @@ On a 303 recorded as filed, an assumed box reads "Assumed, please confirm" on it
 panel, and the sources map files it under Calculated
 (`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py:1067`,
 `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py:273`). The D4 amendment already has a
-filed declaration ask for nothing, so the wording follows it without a new decision. Open.
+filed declaration ask for nothing, so the wording follows it without a new decision. Resolved in
+b48f9f6db8 and 1ffb77f6ea: rows, panel, help band, sources map and search say what the box holds.
 
 ### bulk-confirm-dead-end | medium | F8 on the confirm step can open an empty dialog with an untrue note
 
 On a 131 whose only assumed value is a typed manual input, F8 lists no boxes and says boxes filled
 from a source update from it (`src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py:42`,
-`src/cadrumo/application/modelo/work_form.py:491`). Open.
+`src/cadrumo/application/modelo/work_form.py:491`). Resolved in 630c000efd: one `confirmable`
+rule in `src/cadrumo/application/modelo/work_form_models.py` admits typed binding inputs, a binding
+amount reads as a number, and with nothing confirmable F8 opens the box's panel.
 
 ### issues-levels | low | the findings list has no missing level and counts pages that do not apply
 
 Missing boxes the header counts are not listed, and assumed boxes on a page that does not apply
 this period are listed but not counted (`src/cadrumo/entrypoints/tui/modelo/workbench/issues.py:75`).
-Open.
+Resolved in b48f9f6db8: a missing level, drawn from the boxes the header counts.
 
 ### rate-before-value | low | a rate box shows its grounded rate in place of its own value
 
 For a rate box that is not a design constant, the grounded rate hides the box's value, including
 a typed or failed one (`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py:340`). The
 preview shows the grid's rate cells inconsistent as well: [154] "0.00" and [169] "0" beside
-"2 %". Open.
+"2 %". Resolved in b48f9f6db8: only a design constant shows its rate as its value.
 
 ### grid-row-labels | low | the 303 grid's rate bands have no row label at full width
 
 At full width the rows below [150] leave the label column empty, while the narrow fallback names
-them ("General regime · 2 %"). Open.
+them ("General regime · 2 %"). Resolved in b48f9f6db8.
 
 ### unnamed-boxes | medium | Modelo 390's first-page boxes show their registry ids as labels
 
 Thirty-two preview frames of 390 show labels such as
 "modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual"; their panel says no explanation
-exists and that dates and years cannot be entered, for what reads as a registration flag. Open:
-find whether the label is missing from the catalogue or dropped by the read model, and route a
-registry gap to its owner.
+exists and that dates and years cannot be entered, for what reads as a registration flag. Resolved at
+the read model in 630c000efd: the label is absent from the registry, whose binding definitions
+carry no label (`src/cadrumo/domain/calculations/registry/schema.py:281`), and 6,621 binding
+inputs no casilla owns now read "Unnamed box" (714: 3,884; 369: 1,413; 390: 707; 353: 166;
+131: 150; 360: 146; 232: 140; 720: 11; 100: 4). The panel's "dates and years" reason was a
+free-text input's and now names values of this kind. Open for the registry's owner: a label and
+help key on binding definitions, 390 and 131 first. Open for the workbench: name an input that
+feeds exactly one casilla after that casilla before falling back.
 
 ### blocker-preview | low | no documented sequence produces a blocking finding
 
 Every sequence golden verifies complete, so no preview shows a row, section or findings group
 marked as blocking, and the error colour against the blue brand cannot be judged on a real
-blocker. Open: a documented blocked-verification sequence.
+blocker. The documented sequence `verification-reports-blocked` (c8acf88c5d) and its preview scenario
+(77752aa749) now produce one; the render is pending.
+
+### year-and-date-channels | medium | manual year and date boxes can be neither typed nor confirmed
+
+The calculation refuses a year casilla input (`src/cadrumo/application/modelo/_registry_helpers.py:67`
+accepts decimal, money, integer and ratio only), and no layer carries a date. Proven on a real 136.
+None of the required manual year or date boxes in 190, 193, 270, 349 and 360 can hold an assumed
+value today, so no journey is stuck on one. Open for the calculation boundary.
+
+### negative-yield-boxes | low | Modelo 130's later boxes are filled when the net yield is negative
+
+The S25 note that boxes 13 to 19 stay empty when a result is negative did not reproduce: with
+[03] = -500.00 and with [07] = -150.00 they are all filled (sequence
+`first-quarter-expenses-exceed-income`). Withdrawn.
+
+### verify-crash-missing-invoice | high | verification crashes on a deductible expense without its invoice
+
+Outside this plan's changes, found while authoring sequences: a deductible expense added with
+`ledger add` and no invoice evidence, then a 303 calculated and verified, ends verify with exit 6
+`INTERNAL_CLI_UNEXPECTED_BOUNDARY` instead of a blocking finding; reproduced twice. Open for the
+verification owner.
+
+### ledger-drift-coverage | high | a sale added after calculating is not seen by verification
+
+Outside this plan's changes: verification reports drift only for entries changed or removed after
+the calculation, so a sale added afterwards is granted complete on the old figures, a silent
+under-declaration. A recalculation after archiving a duplicate row still reported drift, possibly
+from a reused revision snapshot (unconfirmed), and correcting one sale's price reads "0 entries
+changed and 1 removed". Open for the verification owner.
+
+### docs-build-warnings | low | two nitpicky build warnings predate this phase
+
+The nitpicky docs build also reports `summary_layout` failing to import under the mocked
+`reportlab`, and an unterminated inline literal at a docstring's line 16 that no module changed
+on this branch carries (checked by a napoleon-aware scan shown to catch a planted case). The
+phase's own warning, a rate unit read as a type, is fixed in aaec46451a. Open for their owners.
 
 ## Recommendations
 
