@@ -141,6 +141,15 @@ SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
         SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified", assumes=True),
         SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
+        SequenceScenario(
+            "first-quarter-expenses-exceed-income",
+            "130",
+            "Modelo 130, first quarter, expenses exceed income, verified",
+        ),
+        SequenceScenario(
+            "verification-reports-incomplete-report", "349", "Modelo 349 whose verification is incomplete"
+        ),
+        SequenceScenario("verification-reports-blocked", "303", "Modelo 303 whose verification blocks filing"),
     )
 }
 """Every scenario, by the sequence id it runs. The sequence is the definition;

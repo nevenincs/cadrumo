@@ -146,6 +146,7 @@ Submodules
    cadrumo.application.modelo.reconciliation_parsing
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
+   cadrumo.application.modelo.required_inputs
    cadrumo.application.modelo.result_disposition_resolution
    cadrumo.application.modelo.result_summary
    cadrumo.application.modelo.result_summary_payload
@@ -180,7 +181,9 @@ Submodules
    cadrumo.application.modelo.work_create_policy
    cadrumo.application.modelo.work_form
    cadrumo.application.modelo.work_form_models
+   cadrumo.application.modelo.work_form_result
    cadrumo.application.modelo.work_form_service
+   cadrumo.application.modelo.work_form_sources
    cadrumo.application.modelo.work_lifecycle
    cadrumo.application.modelo.work_lifecycle_ports
    cadrumo.application.modelo.work_plazo
