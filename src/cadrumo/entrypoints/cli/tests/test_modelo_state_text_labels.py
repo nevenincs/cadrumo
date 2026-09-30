@@ -110,9 +110,9 @@ def test_calculation_revision_text_lines_render_human_state_label_but_payload_ke
         observation_lines = calculation_observation_lines(revision, operation=operation)
 
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in lines
-    assert "state\tverified complete" in lines
+    assert "state\tchecked and complete" in lines
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in observation_lines
-    assert "state\tverified complete" in observation_lines
+    assert "state\tchecked and complete" in observation_lines
     assert (
         calculation_revision_payload(revision, include_result_summary=False, operation=operation).state
         == CalculationRevisionState.VERIFICADO_COMPLETO.value
@@ -140,6 +140,6 @@ def test_filed_work_unit_text_state_uses_profile_language_without_changing_paylo
     with override_settings(cadrumo_output_language="hu"):
         lines = work_unit_lines(unit)
 
-    assert "state\tBeadva" in lines
+    assert "state\tBenyújtottként rögzítve" in lines
     assert f"state\t{CalculationRevisionState.PRESENTADO.value}" not in lines
     assert work_unit_payload(unit).state == CalculationRevisionState.PRESENTADO.value

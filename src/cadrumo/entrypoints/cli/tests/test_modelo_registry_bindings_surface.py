@@ -48,7 +48,7 @@ def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
     # The expected text is that key's English value: the assertion previously
     # copied the prose of the docstring above, which names the category
     # "ledger source", and no locale has ever rendered the key that way.
-    assert "ledger data" in result.output
+    assert "data from your records" in result.output
     # Every binding row ends in either ``True`` or ``False`` for the
     # new column. Detect by matching the binding-id prefix on at
     # least one row.
@@ -67,7 +67,7 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     assert text.exit_code == 0, text.output
     assert "binding_count\t" in text.output
     assert (
-        "notice\twarning\tmodelo.bindings.list.unscoped_revision\tThe binding list is not scoped by --year, --period;"
+        "notice\twarning\tmodelo.bindings.list.unscoped_revision\tThe list of box sources is not scoped by --year, --period;"
     ) in text.output
     assert "action_target=modelo.bindings.list\taction_bindings=modelo=303" in text.output
 
@@ -194,7 +194,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     assert "missing_filter\tTrue" in result.output
     assert "\tmodelo-200-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
     assert "\tmodelo-200-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
-    assert "relation_guidance\tSome bindings below are fed by registry relations" in result.output
+    assert "relation_guidance\tSome box sources below are fed by relations in the modelo definitions" in result.output
     assert "--relation RELATION_ID=VALUE before calculating." in result.output
     assert (
         "relation_input\tmodelo-200-pagos-fraccionados-anuales\t"
@@ -404,7 +404,7 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
     assert resolved.exit_code == 0, resolved.output
     ledger_rows = [row for row in _payload(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"]
     assert ledger_rows
-    assert {row["readiness"] for row in ledger_rows} == {"datos del libro"}
+    assert {row["readiness"] for row in ledger_rows} == {"datos de tus registros"}
 
 
 def test_bindings_resolve_rejects_unknown_binding_with_suggestion_list() -> None:
