@@ -38,9 +38,6 @@ modelo:
               account statements applicable to credit institutions [00068].
             label: 'Credit institution account statements: entities that are not credit
               institutions but use the account statements applicable to them [00068]'
-          00081:
-            label: Subsidiary of a multinational group or large-scale domestic group
-              [00081]
           00095:
             label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
               - Increase - Adjustments for the tax year - Permanent [00095]
@@ -10384,6 +10381,8 @@ modelo:
                 infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
                 Adjustments for the tax year - Temporary (originating in this tax
                 year) [00077]
+            00081:
+              label: Subsidiary of a multinational group [00081]
             00091:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
@@ -12298,6 +12297,9 @@ modelo:
                 infrastructure (DA 18 LIS RDL 5/2023 and RDL 7/2026) - Increase -
                 Adjustments for the tax year - Temporary (originating in the current
                 tax year)
+            00081:
+              label: Subsidiary of a multinational group or large-scale domestic group
+                [00081]
             00091:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Offset

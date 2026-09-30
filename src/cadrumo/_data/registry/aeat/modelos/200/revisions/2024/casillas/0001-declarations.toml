@@ -640,9 +640,9 @@ semantic_role = "is_identificacion_regimen_flag"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00081"
-continuidad_id = "00081"
+continuidad_id = "is-filial-grupo"
 number = "00081"
-section = ["filial_grupo_multinacional_o_grupo_nacional_de_gra"]
+section = ["filial_grupo_multinacional"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -6928,51 +6928,39 @@ id = '00922'
 continuidad_id = "ric-2019-opening"
 # AEAT aeat-dr-200-2024 DP200022 : 6 | 13 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Pendiente de materializar RIC a principio de período [00922]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00922'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2019',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions.2024.casillas]]
 id = '00923'
 continuidad_id = "ric-2019-materialization-a-b"
 # AEAT aeat-dr-200-2024 DP200022 : 7 | 30 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [00923]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00923'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2019',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions.2024.casillas]]
 id = '00924'
 continuidad_id = "ric-2019-materialization-bbis-c-d"
 # AEAT aeat-dr-200-2024 DP200022 : 8 | 47 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [00924]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00924'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2019',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions."2024".casillas]]
 id = "00925"
@@ -7121,10 +7109,10 @@ id = '00939'
 continuidad_id = "canary-investment-2006-generated"
 # AEAT aeat-dr-200-2024 DP200016B : 78 | 1237 | 17 | Num | Deducciones inversión Canarias - Inversiones Canarias 2006 - Deducción pendiente/generada [00939]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '00939'
-semantic_role = 'is_balance_activo_importe'
+semantic_role = 'is_deduccion_inversion_canarias_importe'
 section = [
-    'balance_activo_i',
-    'activo',
+    'deducciones_inversion_canarias',
+    'inversiones_canarias_2006',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -7138,10 +7126,10 @@ id = '00940'
 continuidad_id = "canary-investment-2006-applied"
 # AEAT aeat-dr-200-2024 DP200016B : 79 | 1254 | 17 | Num | Deducciones inversión Canarias - Inversiones Canarias 2006 - Aplicado en esta liquidación [00940]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '00940'
-semantic_role = 'is_balance_activo_importe'
+semantic_role = 'is_deduccion_inversion_canarias_importe'
 section = [
-    'balance_activo_i',
-    'activo',
+    'deducciones_inversion_canarias',
+    'inversiones_canarias_2006',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -7587,17 +7575,13 @@ id = '00996'
 continuidad_id = "ric-2020-remaining"
 # AEAT aeat-dr-200-2024 DP200022 : 14 | 149 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Pendiente de materializar RIC al final de período [00996]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00996'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2020',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions.2024.casillas]]
 id = '00997'
@@ -8769,17 +8753,13 @@ id = '01106'
 continuidad_id = "capitalization-reserve-2022-generated"
 # AEAT aeat-dr-200-2024 DP200020B : 18 | 217 | 17 | Num | Reserva Capitalización - 2022 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01106]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
 number = '01106'
-semantic_role = 'is_reserva_capitalizacion_importe'
+semantic_role = 'is_reserva_capitalizacion_derecho_generado'
 section = [
-    'liquidacion_iii',
-    'base_imponible',
+    'reserva_capitalizacion',
+    '2022',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-25',
 ]
 [[revisions.2024.casillas]]
 id = '01107'
@@ -8788,15 +8768,11 @@ continuidad_id = "capitalization-reserve-2022-applied"
 number = '01107'
 semantic_role = 'is_reserva_capitalizacion_importe'
 section = [
-    'liquidacion_iii',
-    'base_imponible',
+    'reserva_capitalizacion',
+    '2022',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-25',
 ]
 [[revisions."2024".casillas]]
 id = "01109"
@@ -10815,10 +10791,10 @@ id = '01356'
 continuidad_id = "canary-fixed-assets-2010-remaining"
 # AEAT aeat-dr-200-2024 DP200016B : 8 | 47 | 17 | Num | Deducciones inversión Canarias - Activos fijos 2010 - Pendiente de aplicación en periodos futuros [01356]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '01356'
-semantic_role = 'is_balance_activo_importe'
+semantic_role = 'is_deduccion_inversion_canarias_pendiente'
 section = [
-    'balance_activo_i',
-    'activo',
+    'deducciones_inversion_canarias',
+    'activos_fijos_2010',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -11134,17 +11110,13 @@ id = '01403'
 continuidad_id = "capitalization-reserve-2023-remaining"
 # AEAT aeat-dr-200-2024 DP200020B : 22 | 285 | 17 | Num | Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
 number = '01403'
-semantic_role = 'is_reserva_capitalizacion_importe'
+semantic_role = 'is_reserva_capitalizacion_pendiente_futuros'
 section = [
-    'liquidacion_iii',
-    'base_imponible',
+    'reserva_capitalizacion',
+    '2023',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-25',
 ]
 [[revisions."2024".casillas]]
 id = "01404"
@@ -13209,14 +13181,27 @@ number = '01708'
 semantic_role = 'is_reserva_inversiones_illes_balears_importe'
 section = [
     'reg_especial_reserva_inversiones_illes_balears',
-    'riib_2023',
+    'riib_2024',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
+    'ley-27-2014:art-29',
+    'ley-27-2014:art-30',
     'ley-27-2014:art-39',
     'ley-27-2014:art-19',
+    'ley-27-2014:art-36',
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
+    'ley-27-2014:art-12',
+    'ley-27-2014:art-15',
+    'ley-27-2014:art-21',
+    'ley-27-2014:art-22',
+    'ley-27-2014:art-31',
+    'ley-27-2014:art-32',
+    'ley-27-2014:art-13',
+    'ley-27-2014:art-16',
+    'ley-27-2014:art-25',
+    'ley-27-2014:art-26',
 ]
 [[revisions."2024".casillas]]
 id = "01709"
@@ -14829,17 +14814,13 @@ id = '01963'
 continuidad_id = "ric-2019-noncompliance"
 # AEAT aeat-dr-200-2024 DP200022 : 9 | 64 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [01963]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '01963'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2019',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions.2024.casillas]]
 id = '01964'
@@ -15006,10 +14987,10 @@ id = '01982'
 continuidad_id = "unused-operating-profit-2019-opening"
 # AEAT aeat-dr-200-2024 DP200020 : 96 | 1543 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Pendiente aplicación a principio del período [01982]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '01982'
-semantic_role = 'is_gastos_financieros_pendiente_deducir'
+semantic_role = 'is_correccion_limite_beneficio_operativo_saldo_inicial'
 section = [
-    'limitacion_deducibilidad_gastos_financieros_gastos',
-    'ejercicio_generacion_2021',
+    'pendiente_adicion_por_limite_beneficio_operativo_n',
+    'ejercicio_generacion_2019',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -15023,10 +15004,10 @@ id = '01983'
 continuidad_id = "unused-operating-profit-2019-applied"
 # AEAT aeat-dr-200-2024 DP200020 : 97 | 1560 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Aplicado en esta liquidación [01983]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '01983'
-semantic_role = 'is_gastos_financieros_pendiente_deducir'
+semantic_role = 'is_correccion_limite_beneficio_operativo_pendiente_adicion_aplicado'
 section = [
-    'limitacion_deducibilidad_gastos_financieros_gastos',
-    'ejercicio_generacion_2021',
+    'pendiente_adicion_por_limite_beneficio_operativo_n',
+    'ejercicio_generacion_2019',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -16285,17 +16266,13 @@ id = '02238'
 continuidad_id = "levelling-reserve-2019-reduction-opening"
 # AEAT aeat-dr-200-2024 DP200020B : 33 | 472 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo [02238]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '02238'
-semantic_role = 'is_reserva_capitalizacion_importe'
+semantic_role = 'is_reserva_nivelacion_adicion_pendiente'
 section = [
-    'liquidacion_iii',
-    'base_imponible',
+    'reserva_de_nivelacion',
+    'reduccion_base_imponible',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-27-2014:art-105',
 ]
 [[revisions.2024.casillas]]
 id = '02239'
@@ -16455,10 +16432,10 @@ id = '02260'
 continuidad_id = "unused-operating-profit-2020-remaining"
 # AEAT aeat-dr-200-2024 DP200020 : 100 | 1611 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2020 - Pendiente aplicación períodos futuros [02260]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '02260'
-semantic_role = 'is_gastos_financieros_pendiente_deducir'
+semantic_role = 'is_correccion_limite_beneficio_operativo_pendiente'
 section = [
-    'limitacion_deducibilidad_gastos_financieros_gastos',
-    'ejercicio_generacion_2021',
+    'pendiente_adicion_por_limite_beneficio_operativo_n',
+    'ejercicio_generacion_2020',
 ]
 legal_refs = [
     'ley-27-2014:art-41',
@@ -23995,17 +23972,13 @@ id = '03312'
 continuidad_id = "ric-2024-current-advance-materialization"
 # AEAT aeat-dr-200-2024 DP200022 : 30 | 421 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones anticipadas consideradas materialización de la RIC en esta liquidación [03312]. Comparado con aeat-dr-200-2025: 2025DP200022/DP200022B conserva el saldo de la cohorte2024 y pasa su dotacion/inversion a detalle historico. Ya no imprime esta columna especifica de operacion corriente2024. Los destinos de materializacion historica y los saldos de inversiones anticipadas son magnitudes distintas; no se declara identidad ni conversion entre ellas.
 number = '03312'
-semantic_role = 'is_cooperativa_base_imponible'
+semantic_role = 'is_reserva_inversiones_canarias_importe'
 section = [
-    'reg_cooperativas',
-    'determ_base_imponible',
+    'reg_especial_reserva_inversiones_canarias',
+    'ric_2024',
 ]
 legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
+    'ley-19-1994:art-27',
 ]
 [[revisions."2024".casillas]]
 id = "03313"

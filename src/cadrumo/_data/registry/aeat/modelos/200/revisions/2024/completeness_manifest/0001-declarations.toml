@@ -10,7 +10,7 @@
 
 
 [revisions."2024".completeness_manifest]
-source_ref = "aeat-dr-200-2025"
+source_ref = "aeat-dr-200-2024"
 legal_refs = [
     "ley-27-2014:art-10",
     "ley-27-2014:art-11",
@@ -39,7 +39,7 @@ legal_refs = [
     "ley-49-2002:art-10",
     "rd-634-2015:art-3",
 ]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "DP200014:00552"

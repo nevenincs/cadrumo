@@ -40,9 +40,6 @@ modelo:
             label: 'Estats de comptes d''entitats de crèdit: entitats que, sense ser
               entitats de crèdit, utilitzen els estats de comptes aplicables a aquestes
               [00068]'
-          00081:
-            label: Filial d'un grup multinacional o grup nacional de gran magnitud
-              [00081]
           00095:
             label: Reserva per a inversions a les Illes Balears (DA 70a Llei 31/2022)
               - Augment - Correccions de l'exercici - Permanents [00095]
@@ -10267,6 +10264,8 @@ modelo:
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 5/2023 i RDL 7/2026) - Augment - Correccions
                 de l'exercici - Temporànies (amb origen en l'exercici) [00077]
+            00081:
+              label: Filial d'un grup multinacional [00081]
             00091:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -12084,6 +12083,9 @@ modelo:
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 5/2023 i RDL 7/2026) - Augment - Correccions
                 de l'exercici - Temporànies (amb origen en l'exercici)
+            00081:
+              label: Filial d'un grup multinacional o grup nacional de gran magnitud
+                [00081]
             00091:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació

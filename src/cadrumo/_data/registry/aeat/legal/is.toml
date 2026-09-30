@@ -697,6 +697,30 @@ required_text = [
     "1 millón de euros",
 ]
 
+# Ley 7/2024, de 20 de diciembre, art. 6: subjects of the Impuesto Complementario,
+# which names the grupo nacional de gran magnitud beside the grupo multinacional.
+[legal."ley-7-2024:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-7-2024-art-6.html#a6"
+document_id = "BOE-A-2024-26694"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694#a6"
+published_at = 2024-12-21
+effective_from = 2024-12-22
+governs_periods_from = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled consolidated BOE-A-2024-26694 art 6; pending operator re-stamp)"
+notes = """Ley 7/2024 art 6 (sujetos pasivos y reglas de sujeción del Impuesto Complementario): the constituent entity located in Spain that belongs to a grupo multinacional or to a grupo nacional de gran magnitud whose consolidated INCN reaches 750 million euros in two of the four preceding periods. The law enters into force the day after its BOE publication of 2024-12-21 and has effects for periods starting on or after 2023-12-31 (disposición final vigésima segunda), hence governs_periods_from. The AEAT Sociedades 2025 manual cites this article for widening Modelo 200 keys [00081] and [00082] to filiales and sociedades matriz última of a grupo nacional de gran magnitud; the 2024 manual cites it for the grupo mercantil section of page 1 bis."""
+required_text = [
+    "Sujetos pasivos y reglas de sujeción",
+    "que forme parte de un grupo multinacional o de un grupo nacional de gran magnitud",
+    "750 millones de euros",
+]
+corpus_tier = "provision_excerpt"
+
 [legal."ley-27-2014:art-101"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1815,6 +1839,30 @@ applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "pending_review"
+
+[legal."orden-hac-529-2026:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026-art-1.html#a1"
+document_id = "BOE-A-2026-11583"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+governs_periods_from = 2025-01-01
+governs_periods_to = 2025-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2026-11583 art 1; pending operator re-stamp)"
+notes = """Orden HAC/529/2026 art 1 approves Modelo 200, the declaration of the Impuesto sobre Sociedades and of the IRNR for establecimientos permanentes and entidades en atribución de rentas constituidas en el extranjero, and its documento de ingreso o devolución, for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 (apartado 1.a).1.º and 1.b).1.º, anexo I); apartado 2 makes it applicable to every IS and IRNR-EP contributor obliged to declare. It is the approval clause of Modelo 200's 2025 edition. The orden enters into force on 2026-07-01 (disposición final segunda) and governs only the periods its own article 1 names. The excerpt is sliced verbatim from the as-published text; BOE holds no consolidated text for this orden."""
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",
+    "que figura en el anexo I",
+    "es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+corpus_tier = "provision_excerpt"
 
 [legal."orden-hac-529-2026:art-3"]
 evidence_tier = "legal_authority"

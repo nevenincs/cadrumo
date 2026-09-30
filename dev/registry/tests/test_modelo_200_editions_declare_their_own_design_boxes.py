@@ -149,16 +149,45 @@ def _chain(revision: ModeloRevision, casilla_id: str) -> str | None:
     return next(casilla.continuidad_id for casilla in revision.casillas if str(casilla.id) == casilla_id)
 
 
-def test_the_widened_sociedad_matriz_box_keeps_one_chain_with_a_label_evolution() -> None:
+_WIDENED_GROUP_KEYS = ("00081", "DP200001:00082")
+"""The two 'otros caracteres' keys the later design widens to the grupo nacional de gran magnitud."""
+
+_WIDENING_PROVISION = "ley-7-2024:art-6"
+"""The Impuesto Complementario article whose wording the later design's keys adopt."""
+
+
+def _printed_description(revision_id: str, sheet: str, number: str) -> str:
+    """Return the one description the edition's own design prints for ``[number]`` on ``sheet``."""
+    revision = compiled_bundled_authority().modelo(_MODELO).revisions[revision_id]
+    sources = compiled_bundled_authority().catalogues.sources
+    (design,) = [ref for ref in revision.source_refs if sources[ref].kind == "record_design"]
+    extraction = extract_record_design(bundled_path() / sources[design].corpus_path)
+    (description,) = [
+        field.description
+        for design_sheet in extraction.require_complete()
+        if design_sheet.name.strip() == sheet
+        for field in design_sheet.fields
+        if f"[{number}]" in field.description
+    ]
+    return description
+
+
+@pytest.mark.parametrize("box", _WIDENED_GROUP_KEYS)
+def test_a_widened_group_key_keeps_one_chain_with_a_label_evolution_grounded_in_the_law(box: str) -> None:
     earlier, later = _consecutive_editions()[-1]
-    box = "DP200001:00082"
     before = next(casilla for casilla in earlier.casillas if str(casilla.id) == box)
     after = next(casilla for casilla in later.casillas if str(casilla.id) == box)
-    assert before.continuidad_id == after.continuidad_id is not None
+    sheet = before.segmento or "DP200001"
+    assert "gran magnitud" not in _printed_description(str(earlier.id), sheet, str(before.number))
+    assert "gran magnitud" in _printed_description(str(later.id), sheet, str(after.number))
+    chain = before.continuidad_id
+    assert chain is not None
+    assert after.continuidad_id == chain
+    assert not _NUMBERED.fullmatch(chain), "a seeded number is not a grounded identity"
     assert "gran magnitud" not in before.label
     assert "gran magnitud" in after.label
-    assert any(
-        evolution.continuidad_id == before.continuidad_id
-        and evolution.evolution_kind is CasillaEvolutionKind.LABEL_EVOLVED
-        for evolution in later.casilla_continuidad_evolutions
-    )
+    assert before.section != after.section
+    evolutions = [evolution for evolution in later.casilla_continuidad_evolutions if evolution.continuidad_id == chain]
+    assert [evolution.evolution_kind for evolution in evolutions] == [CasillaEvolutionKind.LABEL_EVOLVED]
+    assert _WIDENING_PROVISION in evolutions[0].legal_refs
+    assert _WIDENING_PROVISION in compiled_bundled_authority().catalogues.legal

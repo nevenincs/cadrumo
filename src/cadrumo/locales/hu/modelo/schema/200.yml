@@ -37,9 +37,6 @@ modelo:
               alkalmazandó beszámolókat használják [00068].
             label: 'Hitelintézeti beszámolók: nem hitelintézet szervezetek, amelyek
               a hitelintézetekre alkalmazandó beszámolókat használják [00068]'
-          00081:
-            label: Multinacionális csoport vagy nagy méretű belföldi csoport leányvállalata
-              [00081]
           00095:
             label: Baleár-szigeteki beruházási tartalék (31/2022. törvény 70. kiegészítő
               rendelkezés) - Növekedés - Évi korrekciók - Végleges [00095]
@@ -10358,6 +10355,8 @@ modelo:
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés, RDL 5/2023 és RDL 7/2026) - Növekedés
                 - Évi korrekciók - Időleges (az évben keletkezett) [00077]
+            00081:
+              label: Multinacionális csoport leányvállalata [00081]
             00091:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A 2024. évi különleges
@@ -12279,6 +12278,9 @@ modelo:
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés, RDL 5/2023 és RDL 7/2026) - Növekedés
                 - Évi korrekciók - Átmeneti (a tárgyévben keletkezett)
+            00081:
+              label: Multinacionális csoport vagy nagy méretű belföldi csoport leányvállalata
+                [00081]
             00091:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A 2024. évi különleges
