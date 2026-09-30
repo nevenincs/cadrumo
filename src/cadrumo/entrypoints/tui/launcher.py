@@ -1008,11 +1008,28 @@ def _modelo_lifecycle_door(
     bucket_id: str,
     refresh_after_success: Callable[[], object] | None = None,
 ) -> object:
-    """Bind one lifecycle read to the session's operation services without repository access."""
+    """Bind one lifecycle read to the session's operation services without repository access.
+
+    Edit admission is not run here. The door receives admission, renewal and
+    preflight as callables that read the catalogues when an edit session
+    starts, so composing the declarations workbench admits nothing, a baseline
+    never ages while the screen merely stays open, and an admission refusal
+    reaches the editor instead of vanishing.
+    """
     from datetime import datetime
 
-    from ...application.modelo.edit_admission import admit_modelo_edit_baseline
-    from ...application.modelo.edit_models import ModeloEditAdmittedV1
+    from ...application.modelo.edit_admission import (
+        ModeloEditRenewalResultV1,
+        admit_modelo_edit_baseline,
+        renew_modelo_edit_baseline,
+    )
+    from ...application.modelo.edit_models import (
+        ModeloEditAdmissionResultV1,
+        ModeloEditBaselineV1,
+        ModeloEditPreflightResultV1,
+        ModeloEditSubmissionV1,
+    )
+    from ...application.modelo.edit_preflight import preflight_modelo_edit
     from ...application.modelo.m303_exonerado_390_applicability_attestation import (
         M303Exonerado390ApplicabilityAttestationAdmission,
         M303Exonerado390ApplicabilityAttestationRequest,
@@ -1023,6 +1040,7 @@ def _modelo_lifecycle_door(
     from ...application.modelo.work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
     from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
     from ...domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
+    from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
     from ..adapter_composition import build_attachment_store, build_calculation_action_ports
     from .modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
@@ -1032,13 +1050,33 @@ def _modelo_lifecycle_door(
         bucket_id=bucket_id,
         operation=operation_runtime.authority_operation,
     )
-    admission = admit_modelo_edit_baseline(
-        work_unit_id=str(lifecycle.target.work_unit_id),
-        work_catalogue=ports.work_unit_repository.load(),
-        calculation_catalogue=ports.calculation_repository.load(),
-        operation=operation_runtime.authority_operation,
-        operation_contracts=operation_runtime.public_contracts,
-    )
+    edited_work_unit_id = str(lifecycle.target.work_unit_id)
+
+    def admit_edit() -> ModeloEditAdmissionResultV1:
+        return admit_modelo_edit_baseline(
+            work_unit_id=edited_work_unit_id,
+            work_catalogue=ports.work_unit_repository.load(),
+            calculation_catalogue=ports.calculation_repository.load(),
+            operation=operation_runtime.authority_operation,
+            operation_contracts=operation_runtime.public_contracts,
+        )
+
+    def renew_edit(baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
+        return renew_modelo_edit_baseline(
+            baseline,
+            work_catalogue=ports.work_unit_repository.load(),
+            calculation_catalogue=ports.calculation_repository.load(),
+            operation=operation_runtime.authority_operation,
+            operation_contracts=operation_runtime.public_contracts,
+        )
+
+    def preflight_edit(submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:
+        return preflight_modelo_edit(
+            submission,
+            work_catalogue=ports.work_unit_repository.load(),
+            calculation_catalogue=ports.calculation_repository.load(),
+            tax_id_format=runtime_tax_id_format(authority=operation_runtime.authority_operation),
+        )
 
     target = lifecycle.target
 
@@ -1080,7 +1118,9 @@ def _modelo_lifecycle_door(
         calculation_revision_id=lifecycle.calculation_revision_id,
         verification_report_id=lifecycle.verification_report_id,
         refresh_after_success=refresh_after_success,
-        edit_baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
+        edit_admission=admit_edit,
+        edit_renewal=renew_edit,
+        edit_preflight=preflight_edit,
         m303_exonerado_390_attestation_admission=admit_attestation,
         asks_modelo_390=str(target.modelo) == "303"
         and modelo_390_question_asked(target.period, operation=operation_runtime.authority_operation),

@@ -18,7 +18,13 @@ from textual.widgets._select import SelectOverlay
 from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ......application.modelo.edit_models import ModeloEditWritableScalarSurfaceEntryV1
+from ......application.modelo.edit_models import (
+    ModeloEditAdmittedV1,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
+    ModeloEditWritableScalarSurfaceEntryV1,
+    ModeloScalarEditIntentV1,
+)
 from ......application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from ......application.modelo.workspace import graded_snapshot_refusal, modelo_workspace_recovery_action
 from ......application.modelo.workspace_models import (
@@ -352,7 +358,7 @@ class _DottedCasillaEditActions:
     """A lifecycle door whose edit surface admits one semantic, dotted casilla id."""
 
     def __init__(self) -> None:
-        self.edit_baseline = SimpleNamespace(
+        self.baseline = SimpleNamespace(
             permitted_surface=(
                 ModeloEditWritableScalarSurfaceEntryV1.model_construct(
                     casilla_id="iva.prorrata-volumen-con-derecho", data_type="money", allowed_intents=("set",)
@@ -360,6 +366,9 @@ class _DottedCasillaEditActions:
             )
         )
         self.applied: list[dict[str, object]] = []
+
+    def edit_admission(self) -> ModeloEditAdmittedV1:
+        return ModeloEditAdmittedV1.model_construct(baseline=self.baseline)
 
     async def apply_edits(self, **kwargs: object) -> object:
         self.applied.append(kwargs)
@@ -392,7 +401,19 @@ async def test_a_dotted_semantic_casilla_edit_control_composes_and_submits_its_v
         await pilot.pause()
         await app.workers.wait_for_complete()
 
-    assert actions.applied == [{"scalar_values": {"iva.prorrata-volumen-con-derecho": "150.00"}, "binding_values": {}}]
+    assert actions.applied == [
+        {
+            "baseline": actions.baseline,
+            "scalar_intents": (
+                ModeloScalarEditIntentV1(
+                    address=ModeloEditScalarAddressV1(casilla_id="iva.prorrata-volumen-con-derecho"),
+                    kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                    value="150.00",
+                ),
+            ),
+            "binding_intents": (),
+        }
+    ]
 
 
 @pytest.mark.asyncio
