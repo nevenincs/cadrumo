@@ -630,7 +630,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
 ) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
-    retenciones_trabajo_binding = "renta-modelo-111-retenciones-periodicas"
+    retenciones_trabajo_binding = "renta-certificado-trabajo-retenciones"
     retenciones_trabajo_casilla = "0596"
     retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
@@ -664,7 +664,6 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 binding_values={
                     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
                     retenciones_trabajo_binding: retenciones_trabajo_amount,
-                    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
                     zero_binding: Decimal("0"),
                 },
                 clock=_CLOCK,

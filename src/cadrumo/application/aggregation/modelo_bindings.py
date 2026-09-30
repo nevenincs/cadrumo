@@ -73,6 +73,8 @@ from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindin
 from ...domain.calculations.registry.ledger_renta_income_bindings import (
     LedgerRentaIncomeProvider,
     UngroundedRentaIncome,
+    WithholdingDerivationPartition,
+    ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unrouted_ledger_renta_income_quantities,
@@ -657,6 +659,11 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # taxpayer's whole retención credit can disappear with both other
         # screens clean.
         unrouted_quantities = unrouted_ledger_renta_income_quantities(context.revision, aggregation.observations)
+        # Fourth screen, reading the one axis the three above cannot: a row the
+        # retención binding DOES consume, by a binding that deliberately leaves
+        # its figure out. An excluded row and a row that suffered nothing both
+        # contribute nothing, so the difference has to travel beside the value.
+        derivation = ledger_renta_withholding_derivation_partition(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -702,6 +709,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 for quantity in unrouted_quantities
             )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
+            + _withholding_derivation_diagnostics(derivation, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
@@ -759,6 +767,104 @@ def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
     return "bank cash stood in for the base imponible, which is not the ingresos íntegros this casilla declares"
 
 
+INFERRED_RETENCION_EXCLUDED_SOURCE_KIND = "inferred_actividad_retencion_excluded"
+"""Source kind for the retención rows a declared-only credit leaves out."""
+
+UNRESOLVED_RETENCION_SOURCE_KIND = "unresolved_actividad_retencion"
+"""Source kind for the retención rows whose figure is unknown rather than zero."""
+
+ADVISORY_RETENCION_CREDIT_SOURCE_KIND = "advisory_actividad_retencion_credit"
+"""Source kind for the grade the issued-invoice retención credit carries."""
+
+
+def _withholding_derivation_diagnostics(
+    derivation: WithholdingDerivationPartition,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report what the declared-only retención credit left out, and its grade.
+
+    Three findings, each about a distinct state the resolved value cannot carry.
+
+    An INFERRED row holds a figure reconstructed from invoice gross minus cash
+    received. It is excluded on purpose, and it is also recoverable: the operator
+    records the retención on the invoice and the figure becomes a declared one.
+    So the count and the amount are both reported, because the amount is what
+    the taxpayer is currently not claiming.
+
+    An UNRESOLVED row has no determinable figure at all: no substrate to derive
+    one from, or an inference the registry's maximum supported rate refused.
+    Reporting it as zero would assert a proven nothing-withheld, which is exactly
+    the collapse ``no-silent-under-declaration`` forbids.
+
+    The GRADE finding travels with every non-zero credit. Which year credits a
+    retención when the payment and the accrual fall in different ejercicios is
+    not yet grounded against the LIRPF, the RIRPF and a DGT consulta, so the
+    figure is advisory: an operator may read it, and no consumer may promote it
+    to a filing-grade claim.
+
+    Returns an empty tuple when the revision declares no declared-only retención
+    binding and the rows carried nothing, which is how a revision without the
+    credit stays silent.
+    """
+    findings: list[CalculationSourceDiagnostic] = []
+    if derivation.inferred_observations:
+        sampled = sorted(observation.transaction_id for observation in derivation.inferred_observations)
+        findings.append(
+            CalculationSourceDiagnostic(
+                reason="inferred_retencion_excluded_from_credit",
+                resolver_id=resolver_id,
+                source_kind=INFERRED_RETENCION_EXCLUDED_SOURCE_KIND,
+                message=(
+                    f"{len(derivation.inferred_observations)} issued-invoice row(s) carry "
+                    f"{derivation.inferred_total} EUR of retención reconstructed from invoice gross minus "
+                    f"cash received. A reconstruction is not the recorded figure a credit against the cuota "
+                    f"rests on, so that amount is NOT claimed. Transactions: {', '.join(sampled)}"
+                ),
+                remedy=(
+                    "Record the retención the client practised on each issued invoice, or obtain the "
+                    "payer's certificate, and recalculate; the figure then enters the credit as a "
+                    "declared one."
+                ),
+            ),
+        )
+    if derivation.unresolved_observations:
+        sampled = sorted(observation.transaction_id for observation in derivation.unresolved_observations)
+        findings.append(
+            CalculationSourceDiagnostic(
+                reason="unresolved_retencion_substrate",
+                resolver_id=resolver_id,
+                source_kind=UNRESOLVED_RETENCION_SOURCE_KIND,
+                message=(
+                    f"{len(derivation.unresolved_observations)} issued-invoice row(s) leave the retención "
+                    f"UNKNOWN rather than absent: the substrate does not determine one, or the implied rate "
+                    f"exceeded the maximum the registry supports and the figure was refused. Neither is a "
+                    f"proven nothing withheld. Transactions: {', '.join(sampled)}"
+                ),
+                remedy=(
+                    "Record the invoice base and the retención for each transaction, then recalculate; "
+                    "until then the credit is incomplete by an unknown amount."
+                ),
+            ),
+        )
+    if derivation.declared_total > Decimal("0"):
+        findings.append(
+            CalculationSourceDiagnostic(
+                reason="advisory_retencion_credit_grade",
+                resolver_id=resolver_id,
+                source_kind=ADVISORY_RETENCION_CREDIT_SOURCE_KIND,
+                message=(
+                    f"the issued-invoice retención credit of {derivation.declared_total} EUR is ADVISORY: "
+                    f"which ejercicio credits a retención when the payment and the accrual fall in "
+                    f"different years is not yet grounded, so the figure must not be filed as a "
+                    f"filing-grade claim without checking it against the payer's certificate"
+                ),
+                remedy="Check the figure against the payer's certificate for the ejercicio before filing.",
+            ),
+        )
+    return tuple(findings)
+
+
 def _ungrounded_income_diagnostics(
     ungrounded: UngroundedRentaIncome,
     *,
@@ -788,7 +894,7 @@ def _ungrounded_income_diagnostics(
     ``CASH_FALLBACK`` (no declared ``taxable_base``), and the withheld-amount
     inference in ``_renta_income_ledger`` refuses to run without that same
     base -- so each of these rows *also* contributes zero to the
-    ``withheld_amount_sum`` binding, silently dropping the ISSUED-side
+    ``declared_withheld_amount_sum`` binding, silently dropping the ISSUED-side
     retención credit (RIRPF art. 110.3.a) alongside the income figure. This is
     the credit the taxpayer is owed on income already invoiced to a client; it
     is unrelated to the per-perceptor retenedor-liability store a RECEIVED

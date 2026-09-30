@@ -10,6 +10,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -28,6 +29,7 @@ _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 _LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
 _INTERRUPTED_EXIT_STATUS: Final[int] = 130
 _CHILD_STOP_TIMEOUT_SECONDS: Final[float] = 5.0
+_STREAM_CHUNK_BYTES: Final[int] = 64 * 1024
 _DIAGNOSTIC_RE: Final[re.Pattern[str]] = re.compile(r"^\[([A-Z][A-Z0-9_]*)\]")
 _DIAGNOSTIC_DETAIL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\[(?P<code>[A-Z][A-Z0-9_]*)\] (?P<path>.+):(?P<line>\d+): (?P<message>.*)$"
@@ -1277,6 +1279,26 @@ async def _stop_interrupted_process(process: asyncio.subprocess.Process) -> None
         pass
 
 
+async def _stream_lines(stream: asyncio.StreamReader) -> AsyncIterator[bytes]:
+    """Yield each newline-terminated line of ``stream`` whatever its length.
+
+    ``StreamReader.readline`` refuses a line longer than the reader's buffer
+    limit, and a child's machine-readable payload is one JSON line of unbounded
+    size. The final line is yielded even without a trailing newline.
+    """
+    pending = bytearray()
+    while chunk := await stream.read(_STREAM_CHUNK_BYTES):
+        scanned = len(pending)
+        pending.extend(chunk)
+        start = 0
+        while (end := pending.find(b"\n", max(start, scanned))) != -1:
+            yield bytes(pending[start : end + 1])
+            start = end + 1
+        del pending[:start]
+    if pending:
+        yield bytes(pending)
+
+
 async def _stream_process(
     command: tuple[str, ...],
     *,
@@ -1297,7 +1319,7 @@ async def _stream_process(
     )
     assert process.stdout is not None
     try:
-        while line := await process.stdout.readline():
+        async for line in _stream_lines(process.stdout):
             decoded = line.decode(_UTF_8, errors="replace")
             if processor is None:
                 print(decoded, end="", flush=True)

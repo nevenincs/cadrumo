@@ -3186,3 +3186,85 @@ applies_from = 2021-01-01
 applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/dr390e2021.xlsx"
 review_status = "pending_review"
+
+# AEAT Manual práctico de IVA, one edition per exercise. Each part is the
+# edition's single PDF, pinned by the corpus manifest it was captured with; the
+# committed corpus-text sidecar under manual_corpus_text holds its normalised text.
+
+[sources."aeat-manual-iva-2020"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2020/source.pdf"
+sha256 = "10592f1847599552a1cfc3136d86ba1e3b6eb022d4554fd7eab930ba8ba39753"
+bytes = 4765246
+retrieved_at = 2026-06-30
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2020.pdf"
+review_status = "pending_review"
+
+[sources."aeat-manual-iva-2021"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2021/source.pdf"
+sha256 = "079716c2523fa24a16e346a3694a15ab4c8c096e02af3f2252bc44167f4a90fe"
+bytes = 1953133
+retrieved_at = 2026-06-30
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/ManualIVA2021.pdf"
+review_status = "pending_review"
+
+[sources."aeat-manual-iva-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2022/source.pdf"
+sha256 = "ef3dcb5237241b8d5e99458218d1d1938df1db05a4a49d8aa9db12a9a48907b9"
+bytes = 5042176
+retrieved_at = 2026-06-30
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2022.pdf"
+review_status = "pending_review"
+
+[sources."aeat-manual-iva-2023"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2023/source.pdf"
+sha256 = "c0bcca66876c8696f733c9ce20f2c1d3ec2e3a3ec5725d97554ed33dbbd3d407"
+bytes = 5421056
+retrieved_at = 2026-06-30
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf"
+review_status = "pending_review"
+
+[sources."aeat-manual-iva-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2024/source.pdf"
+sha256 = "62027f7fe6a4c15f627e3016db3a7b93601fe9033b9dd140b388fc3d11401da3"
+bytes = 6348800
+retrieved_at = 2026-06-30
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf"
+review_status = "pending_review"
+
+[sources."aeat-manual-iva-2025"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/iva/2025/source.pdf"
+sha256 = "e4f800972e06466ac39f893ed6a4118bf9594b0bad52301bc763eacb92db18a3"
+bytes = 6296576
+retrieved_at = 2026-06-08
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf"
+review_status = "pending_review"

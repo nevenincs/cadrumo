@@ -12,6 +12,7 @@ from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
+    LedgerWithholdingDerivation,
 )
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
@@ -78,8 +79,14 @@ class LedgerRentaIncomeProvider(BaseModel):
       nothing to this sum;
       :func:`ungrounded_ledger_renta_income_observations` surfaces every such
       row so the omission is visible rather than silent.
-    - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
-      net-paid professional receipts.
+    - ``"declared_withheld_amount_sum"`` sums the IRPF retención soportada of
+      the rows whose linked sales invoice DECLARES it. A ledger row records no
+      retención of its own, so every other figure on that surface is
+      reconstructed from invoice gross minus cash received; a reconstruction is
+      not a recorded fact and may not enter a credit against the cuota. The
+      excluded rows keep their derivation marker, so
+      :func:`ledger_renta_withholding_derivation_partition` can report them
+      instead of letting them read as zeroes.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -150,7 +157,7 @@ def _renta_ledger_income_selector(binding: BindingDefinition) -> LedgerRentaInco
 # never name different sets. Covers both M130 and M100, which is why the name
 # carries no modelo segment.
 _RENTA_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"},
+    {"ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "declared_withheld_amount_sum"},
 )
 
 
@@ -218,6 +225,17 @@ class RentaIncomeObservationProtocol(Protocol):
         ...
 
     @property
+    def withheld_derivation(self) -> LedgerWithholdingDerivation:
+        """Return how the row's retención figure was arrived at.
+
+        Declared on the protocol because the retención facts read it: a figure
+        the linked invoice states and one reconstructed from cash received are
+        both ``Decimal`` and carry different legal weight, so the resolver
+        cannot total them together.
+        """
+        ...
+
+    @property
     def grounding(self) -> LedgerIncomeGrounding:
         """Return the substrate-grounding marker for the income observation."""
         ...
@@ -258,8 +276,18 @@ def _renta_income_aggregate(
             (observation.taxable_base_amount for observation in matched if observation.taxable_base_amount is not None),
             Decimal("0"),
         )
-    if selector.fact == "withheld_amount_sum":
-        return sum((observation.withheld_amount for observation in matched), Decimal("0"))
+    if selector.fact == "declared_withheld_amount_sum":
+        # Only a declared figure. An inferred one is reported by the derivation
+        # partition and a refused or substrate-less one is unresolved, so
+        # neither may be folded in here as though it were nothing withheld.
+        return sum(
+            (
+                observation.withheld_amount
+                for observation in matched
+                if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+            ),
+            Decimal("0"),
+        )
     # cash_received_sum: the raw bank-credited magnitude, ignoring any declared
     # base. ``fact`` is a required closed Literal, so this is that member alone.
     return sum((observation.gross_amount for observation in matched), Decimal("0"))
@@ -276,8 +304,9 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     when declared, else ``observation.gross_amount`` (per-observation
     fallback); ``"cash_received_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (a base-less
-    row contributes nothing); ``"withheld_amount_sum"`` →
-    ``observation.withheld_amount``. Delegates the filter/aggregate skeleton to
+    row contributes nothing); ``"declared_withheld_amount_sum"`` →
+    ``observation.withheld_amount`` for the rows whose retención their linked
+    sales invoice declares. Delegates the filter/aggregate skeleton to
     :func:`resolve_ledger_family_binding_values`, shared by every ledger
     family resolver.
 
@@ -341,8 +370,8 @@ def unsupported_ledger_renta_income_observations(
 # ``ingresos_integros_sum`` substitutes the raw bank cash (net of retención,
 # possibly IVA-inclusive — wrong in a direction that depends on the invoice),
 # and ``taxable_base_sum`` contributes nothing at all (always under-declares).
-# ``cash_received_sum`` and ``withheld_amount_sum`` never read the base, so a
-# base-less row is not an ungrounded contribution for them.
+# ``cash_received_sum`` and ``declared_withheld_amount_sum`` never read the
+# base, so a base-less row is not an ungrounded contribution for them.
 _RENTA_INCOME_BASE_READING_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "taxable_base_sum"})
 
 
@@ -425,10 +454,10 @@ def ungrounded_ledger_renta_income_observations(
 # screen, so the claim is written at the site rather than inferred from an
 # absence.
 #
-# ``withheld_amount_sum`` is deliberately absent from this mapping, and that is
-# the whole point: the retención a taxpayer suffered is an INDEPENDENT quantity
-# carried on the same observation, not an alternative measure of its income.
-# Nothing else can stand in for it.
+# ``declared_withheld_amount_sum`` is deliberately absent from this mapping,
+# and that is the whole point: the retención a taxpayer suffered is an
+# INDEPENDENT quantity carried on the same observation, not an alternative
+# measure of its income. Nothing else can stand in for it.
 _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
     "ingresos_integros_sum": (
         "measures the row's income as its declared taxable base, falling back to bank cash; "
@@ -459,8 +488,12 @@ _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_
 #: selector-fact vocabulary the resolver dispatches on
 #: (:func:`_renta_income_aggregate`), so a fact cannot be screened under one
 #: reading and resolved under another.
+# Reads the retención the row CARRIES, declared or inferred, not the narrower
+# figure the fact totals. The screen asks whether the quantity reaches any
+# binding at all; a revision that draws none loses the whole credit, and an
+# inferred figure it would have lost is exactly as invisible as a declared one.
 _RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationProtocol], Decimal]] = {
-    "withheld_amount_sum": lambda observation: observation.withheld_amount,
+    "declared_withheld_amount_sum": lambda observation: observation.withheld_amount,
 }
 
 assert_quantity_readers_cover_independent_facts(
@@ -488,7 +521,7 @@ def unrouted_ledger_renta_income_quantities(
     bindings fragment). A row therefore matches the income bindings on that key
     and counts as consumed — while a SECOND, independent quantity it carries,
     the retención suffered, reaches nothing at all. Drop the
-    ``withheld_amount_sum`` binding from a revision and the row-level screen
+    ``declared_withheld_amount_sum`` binding from a revision and the row-level screen
     stays silent: every row is still consumed, for its income. The taxpayer's
     whole retención credit disappears with a clean screen on both sides, which
     is precisely the silent under-declaration the screens exist to prevent.
@@ -524,9 +557,116 @@ def unrouted_ledger_renta_income_quantities(
     )
 
 
-# Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at
-# registry load time so a binding targeting any other casilla surfaces before
-# any calculation runs.
+# The markers a reconstructed retención carries. Excluded from the declared-only
+# fact and reported instead, because a figure derived from cash received is not
+# the recorded fact a credit against the cuota rests on.
+_INFERRED_WITHHOLDING_DERIVATIONS: frozenset[LedgerWithholdingDerivation] = frozenset(
+    {
+        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
+        LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
+    },
+)
+# The markers that leave the retención UNKNOWN rather than absent: no substrate
+# to determine it from, and an inference the registry's maximum supported rate
+# refused. Both are ``Decimal("0")`` on the row and neither is a proven nothing.
+_UNRESOLVED_WITHHOLDING_DERIVATIONS: frozenset[LedgerWithholdingDerivation] = frozenset(
+    {
+        LedgerWithholdingDerivation.NO_SUBSTRATE,
+        LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE,
+    },
+)
+
+
+class WithholdingDerivationPartition(NamedTuple):
+    """The retención rows a declared-only binding consumes, split by derivation.
+
+    ``declared_total`` is the figure the binding resolves to, restated here so a
+    caller can report the excluded amounts beside the credit they are missing
+    from. ``inferred_observations`` carry a reconstructed figure and
+    ``inferred_total`` its sum: the operator can turn each of them into a
+    declared one by recording the retención on the invoice. ``unresolved_observations``
+    carry no determinable figure at all and must never be read as a zero.
+
+    Every tuple is empty when the revision declares no ``declared_withheld_amount_sum``
+    binding, which is how a revision without the credit stays silent rather than
+    reporting an absence it never claimed.
+    """
+
+    declared_total: Decimal
+    inferred_total: Decimal
+    inferred_observations: tuple[RentaIncomeObservationProtocol, ...]
+    unresolved_observations: tuple[RentaIncomeObservationProtocol, ...]
+
+
+def ledger_renta_withholding_derivation_partition(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> WithholdingDerivationPartition:
+    """Partition the retención rows a declared-only binding on ``revision`` consumes.
+
+    The fourth renta-income screen, and the only one that reads the withholding
+    derivation. The three before it ask whether a row is consumed, whether it
+    carried the substrate its fact assumes, and whether the quantity reaches any
+    binding. None of them can see that a row IS consumed, by a binding that
+    deliberately leaves its figure out.
+
+    That exclusion is correct — a retención reconstructed from invoice gross
+    minus cash received is not a recorded fact, and the credit against the cuota
+    rests on one — but it is also invisible in the resolved value: an excluded
+    row and a row that genuinely suffered nothing both contribute nothing. This
+    screen carries the difference alongside the value, which is the whole of
+    ``no-silent-under-declaration`` at this boundary.
+
+    Changes no value. The caller surfaces the inferred rows as an advisory the
+    operator can act on, and the unresolved rows as unresolved rather than zero.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose declared-only retención
+            bindings decide which rows are in play.
+        observations: Actividad-económica income observations to partition.
+
+    Returns:
+        A :class:`WithholdingDerivationPartition`. Every member is empty or zero
+        when the revision declares no declared-only retención binding.
+    """
+    matchers: list[Callable[[RentaIncomeObservationProtocol], bool]] = []
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
+            continue
+        selector = _renta_ledger_income_selector(binding)
+        if selector.fact != "declared_withheld_amount_sum":
+            continue
+        matchers.append(_renta_income_build_matcher(selector))
+    if not matchers:
+        return WithholdingDerivationPartition(
+            declared_total=Decimal("0"),
+            inferred_total=Decimal("0"),
+            inferred_observations=(),
+            unresolved_observations=(),
+        )
+    consumed = tuple(observation for observation in observations if any(matcher(observation) for matcher in matchers))
+    inferred = tuple(
+        observation for observation in consumed if observation.withheld_derivation in _INFERRED_WITHHOLDING_DERIVATIONS
+    )
+    unresolved = tuple(
+        observation
+        for observation in consumed
+        if observation.withheld_derivation in _UNRESOLVED_WITHHOLDING_DERIVATIONS
+    )
+    declared_total = sum(
+        (
+            observation.withheld_amount
+            for observation in consumed
+            if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+        ),
+        Decimal("0"),
+    )
+    return WithholdingDerivationPartition(
+        declared_total=declared_total,
+        inferred_total=sum((observation.withheld_amount for observation in inferred), Decimal("0")),
+        inferred_observations=inferred,
+        unresolved_observations=unresolved,
+    )
 
 
 def validate_ledger_renta_income_aggregation_binding(binding: BindingDefinition) -> list[str]:

@@ -192,11 +192,7 @@ class SecureObjectWriteOperations:
                     SecureObjectRow.payload_hash,
                 ).where(SecureObjectRow.namespace == namespace),
             ).all()
-        hashes: dict[bytes, str | None] = {}
-        for object_key, payload_hash in rows:
-            digest = object_key if isinstance(object_key, bytes) else bytes(object_key)
-            hashes[digest] = payload_hash
-        return hashes
+        return {object_key: payload_hash for object_key, payload_hash in rows}
 
     def apply_batch(
         self,

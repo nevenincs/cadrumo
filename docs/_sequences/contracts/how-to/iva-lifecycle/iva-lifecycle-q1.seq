@@ -1,6 +1,6 @@
 :seed: iva-evidence-2026
 @step Open the first-quarter Modelo 303 draft.
-aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
 @step Calculate the quarter's IVA from the classified, evidenced ledger.
 aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @expect result.casilla_values.71 == "105.00"
@@ -8,7 +8,7 @@ aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1
 aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
 @step Record the local filed marker after you upload through AEAT yourself.
-aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+aeat app modelo work file --modelo 303 --year 2026 --period 1T
 @step Export the filed revision; its envelope carries Cadrumo's all-zero development software identity.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303-2026-1T.boe
 @expect exit_code == 0

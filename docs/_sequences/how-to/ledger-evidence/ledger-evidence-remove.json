@@ -30,34 +30,8 @@
           "value": "4fbeef4e52f5c0a8"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "d5baea11f0b9580be35d100c7e676ffed105b1cd1947d0b3299c5cbf13d4b520"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "4fbeef4e52f5c0a8",
-          "invoice_date": "2026-03-10",
-          "invoice_number": "2026-0142",
-          "iva_amount": "21.00",
-          "iva_rate": "21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papelería Sol SL",
-          "taxable_base": "100.00",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -134,6 +108,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "ledger-evidence-remove"
 }

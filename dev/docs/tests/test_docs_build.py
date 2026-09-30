@@ -625,7 +625,6 @@ def _sequence_golden_json() -> str:
                 kind=FrameKind.SETUP,
                 argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
                 exit_code=0,
-                text="Imported 3 transactions.",
             ),
             GoldenFrame(
                 kind=FrameKind.COMMAND,

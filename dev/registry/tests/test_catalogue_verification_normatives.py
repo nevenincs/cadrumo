@@ -23,6 +23,7 @@ from .catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,
     _FORMAL_WITHHOLDING_MODELOS,
     _FRACTIONAL_PAYMENT_ARTICLE_REF,
+    _FRACTIONAL_PAYMENT_MODELOS,
     _catalogues,
 )
 
@@ -600,38 +601,70 @@ def _modelo_100_revisions() -> dict[str, ModeloRevision]:
     return {str(revision_id): revision for revision_id, revision in modelo.revisions.items()}
 
 
-def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None:
-    offenders: list[str] = []
-    missing_formal_article: list[str] = []
-    checked: dict[str, set[str]] = {}
+def _modelo_100_cross_modelo_imports(revision: ModeloRevision) -> list[tuple[str, str, tuple[str, ...]]]:
+    """Return every declaration on ``revision`` that names another modelo as its source.
+
+    Bindings and dependency classifications are read together because they carry
+    the same import in two shapes: the dependency states that the other modelo is
+    required, the binding draws the figure. A defect authored into either one is
+    the same defect.
+    """
+    imports: list[tuple[str, str, tuple[str, ...]]] = []
+    for binding in revision.bindings:
+        source_modelo = getattr(binding.provider, "source_modelo", None)
+        if source_modelo is not None:
+            imports.append((str(binding.id), str(source_modelo), tuple(binding.legal_refs)))
+    for dependency in revision.dependency_classifications:
+        imports.append((str(dependency.id), str(dependency.source_modelo), tuple(dependency.legal_refs)))
+    return imports
+
+
+def test_modelo_100_imports_no_formal_withholding_return() -> None:
+    """The annual return draws nothing from the declarant's own payer-side returns.
+
+    Modelos 111, 115, 123, 180, 190 and 193 report withholdings the declarant
+    PRACTISED on other people under RIRPF art. 108. That money is already the
+    Tesoro's and is not the declarant's own credit, so importing any of it into
+    the annual declaration would credit the declarant with tax someone else
+    suffered. The prohibition is asserted over every authored revision, because
+    an import reinstated in one edition inherits forward silently.
+    """
+    payer_side = [
+        f"{revision_id}:{declaration_id}"
+        for revision_id, revision in _modelo_100_revisions().items()
+        for declaration_id, source_modelo, _legal_refs in _modelo_100_cross_modelo_imports(revision)
+        if source_modelo in _FORMAL_WITHHOLDING_MODELOS
+    ]
+
+    assert payer_side == []
+
+
+def test_modelo_100_fractional_payment_imports_do_not_cite_the_formal_withholding_article() -> None:
+    """The pagos fraccionados are grounded in their own article, not the withholding one.
+
+    What the annual return legitimately imports is the tax the taxpayer paid on
+    account through Modelos 130 and 131, whose obligation is RIRPF art. 109 and
+    whose computation is art. 110. Citing the formal-withholding article for one
+    of those would ground the credit in an obligation the taxpayer never had,
+    and it is the exact confusion that let payer-side returns in previously.
+    """
+    miscited: list[str] = []
+    reached: dict[str, set[str]] = {}
 
     for revision_id, revision in _modelo_100_revisions().items():
-        imports: list[tuple[str, str, tuple[str, ...]]] = []
-        for binding in revision.bindings:
-            source_modelo = getattr(binding.provider, "source_modelo", None)
-            if source_modelo is not None and "retenciones" in str(binding.id):
-                imports.append((str(binding.id), str(source_modelo), tuple(binding.legal_refs)))
-        for dependency in revision.dependency_classifications:
-            imports.append((str(dependency.id), str(dependency.source_modelo), tuple(dependency.legal_refs)))
-        for declaration_id, source_modelo, legal_refs in imports:
-            if source_modelo not in _FORMAL_WITHHOLDING_MODELOS:
+        for declaration_id, source_modelo, legal_refs in _modelo_100_cross_modelo_imports(revision):
+            if source_modelo not in _FRACTIONAL_PAYMENT_MODELOS:
                 continue
-            site = f"{revision_id}:{declaration_id}"
-            checked.setdefault(revision_id, set()).add(source_modelo)
-            if _FRACTIONAL_PAYMENT_ARTICLE_REF in legal_refs:
-                offenders.append(site)
-            if _FORMAL_WITHHOLDING_ARTICLE_REF not in legal_refs:
-                missing_formal_article.append(site)
+            reached.setdefault(revision_id, set()).add(source_modelo)
+            if _FORMAL_WITHHOLDING_ARTICLE_REF in legal_refs:
+                miscited.append(f"{revision_id}:{declaration_id}")
 
-    # Every surviving revision folds the periodic 111/123 withholdings in, and the
-    # annual summaries join as their filing years adopt them; a revision missing
-    # from this map would mean the scan stopped reaching the imports at all.
-    assert {revision_id: {"111", "123"} <= sources for revision_id, sources in checked.items()} == dict.fromkeys(
-        _modelo_100_revisions(), True
+    # Every authored revision folds both pagos-fraccionados modelos in; a revision
+    # missing from this map would mean the scan stopped reaching the imports at all.
+    assert {revision_id: sources == _FRACTIONAL_PAYMENT_MODELOS for revision_id, sources in reached.items()} == (
+        dict.fromkeys(_modelo_100_revisions(), True)
     )
-    assert {"190", "193"} <= checked["2025"]
-    assert offenders == []
-    assert missing_formal_article == []
+    assert miscited == []
 
 
 def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_article() -> None:

@@ -325,26 +325,6 @@ def resolve_withholding_detail_absence(
     )
 
 
-def _absence_message_facts(absence: WithholdingDetailAbsence) -> dict[str, str | int | bool]:
-    """Project the classified absence into locale-neutral finding facts.
-
-    Every key is populated unconditionally: a fact supplied conditionally renders
-    as its own placeholder in front of an operator, and "there is no periodic
-    source" has to read differently from a blank one.
-    """
-    return {
-        "modelo": absence.modelo,
-        "filing_year": absence.filing_year,
-        "source_family": _WITHHOLDING_SOURCE.value,
-        "source_modelo": absence.source_modelo or _ABSENT_FACT,
-        "attestation_profile_path": absence.attestation_profile_path or _ABSENT_FACT,
-        "attested_periods": "|".join(absence.attested_periods) if absence.attested_periods else _ABSENT_FACT,
-        "unattested_periods": "|".join(absence.unattested_periods) if absence.unattested_periods else _ABSENT_FACT,
-        "contradicting_invoice_count": len(absence.contradicting_invoice_ids),
-        "contradicting_ledger_row_count": len(absence.contradicting_ledger_row_ids),
-    }
-
-
 def withholding_detail_absence_finding(
     absence: WithholdingDetailAbsence,
     *,
@@ -364,7 +344,20 @@ def withholding_detail_absence_finding(
     the catalogue coverage scanner -- so a computed value is invisible to each.
     """
     legal_refs, source_refs = withholding_binding_grounding(snapshot.revision)
-    facts = _absence_message_facts(absence)
+    # Every fact is populated unconditionally: a fact supplied on some branches
+    # renders as its own placeholder in front of an operator, and "there is no
+    # periodic source" has to read differently from a blank one.
+    facts = {
+        "modelo": absence.modelo,
+        "filing_year": absence.filing_year,
+        "source_family": _WITHHOLDING_SOURCE.value,
+        "source_modelo": absence.source_modelo or _ABSENT_FACT,
+        "attestation_profile_path": absence.attestation_profile_path or _ABSENT_FACT,
+        "attested_periods": "|".join(absence.attested_periods) if absence.attested_periods else _ABSENT_FACT,
+        "unattested_periods": "|".join(absence.unattested_periods) if absence.unattested_periods else _ABSENT_FACT,
+        "contradicting_invoice_count": len(absence.contradicting_invoice_ids),
+        "contradicting_ledger_row_count": len(absence.contradicting_ledger_row_ids),
+    }
     if absence.contradicted_by_ledger:
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,

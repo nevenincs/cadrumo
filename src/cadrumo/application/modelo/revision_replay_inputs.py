@@ -110,7 +110,7 @@ def revision_filing_replay_inputs(
                 operation=indexed_operation,
             )
     snapshot = _snapshot_for_work_unit(work_unit, operation=operation)
-    bound_binding_replay_inputs = _observation_backed_bound_binding_replay_inputs(
+    bound_binding_replay_inputs = _bound_binding_replay_inputs(
         revision=revision,
         snapshot=snapshot,
     )
@@ -141,10 +141,10 @@ def _casilla_replay_inputs(
     snapshot: RegistrySnapshot | None,
     bound_binding_replay_inputs: dict[BindingId, str],
 ) -> dict[str, str]:
-    """Return stored casilla inputs, excluding migrated observation-backed bound projections."""
+    """Return stored casilla inputs, excluding migrated bound-casilla projections."""
     if snapshot is None:
         return dict(revision.input_values_by_casilla_id)
-    migrated_bound_casillas = _observation_backed_bound_casillas_with_replay_binding(
+    migrated_bound_casillas = _bound_casillas_with_replay_binding(
         snapshot=snapshot,
         binding_ids=frozenset(bound_binding_replay_inputs) | frozenset(revision.binding_overrides),
     )
@@ -157,12 +157,12 @@ def _casilla_replay_inputs(
     }
 
 
-def _observation_backed_bound_binding_replay_inputs(
+def _bound_binding_replay_inputs(
     *,
     revision: CalculationRevision,
     snapshot: RegistrySnapshot | None,
 ) -> dict[BindingId, str]:
-    """Recover missing binding replay values for observation-backed bound casillas.
+    """Recover missing binding replay values for caller-channel bound casillas.
 
     Some persisted revisions carry the bound-casilla projection in
     ``input_values_by_casilla_id`` but lack the matching binding value in
@@ -184,7 +184,7 @@ def _observation_backed_bound_binding_replay_inputs(
         binding_ids = bound_casilla_binding_ids(casilla)
         if existing_binding_ids.intersection(binding_ids):
             continue
-        if not _has_observation_backed_binding(binding_ids, bindings_by_id):
+        if not _replays_through_the_binding_channel(casilla, bindings_by_id):
             continue
         replay_binding_id = _replay_binding_id_for_bound_casilla(casilla, bindings_by_id)
         if replay_binding_id is None:
@@ -203,7 +203,7 @@ def _bound_casilla_replay_value(revision: CalculationRevision, casilla_id: Casil
     return canonical_decimal_string(verified_value)
 
 
-def _observation_backed_bound_casillas_with_replay_binding(
+def _bound_casillas_with_replay_binding(
     *,
     snapshot: RegistrySnapshot,
     binding_ids: frozenset[BindingId],
@@ -216,19 +216,44 @@ def _observation_backed_bound_casillas_with_replay_binding(
         casilla_binding_ids = bound_casilla_binding_ids(casilla)
         if not binding_ids.intersection(casilla_binding_ids):
             continue
-        if _has_observation_backed_binding(casilla_binding_ids, bindings_by_id):
+        if _replays_through_the_binding_channel(casilla, bindings_by_id):
             migrated.add(casilla.id)
     return frozenset(migrated)
 
 
-def _has_observation_backed_binding(
-    binding_ids: tuple[BindingId, ...],
+def _replays_through_the_binding_channel(
+    casilla: CasillaDefinition,
     bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> bool:
-    return any(
+    """Decide whether a bound casilla's stored value belongs on the binding channel.
+
+    Two source families reach a casilla through a value the caller supplies: an
+    observation-backed slot, projected from a filed source filing, and an
+    operator-keyed ``manual_input`` binding that names the casilla it fills.
+    Every other family is resolved from the bucket and refuses a caller value,
+    so its stored casilla value must stay a casilla input.
+    """
+    binding_ids = bound_casilla_binding_ids(casilla)
+    if any(
         (binding := bindings_by_id.get(binding_id)) is not None
         and binding.source in OBSERVATION_BACKED_BINDING_SOURCE_KINDS
         for binding_id in binding_ids
+    ):
+        return True
+    return bool(_manual_casilla_binding_ids(casilla, bindings_by_id))
+
+
+def _manual_casilla_binding_ids(
+    casilla: CasillaDefinition,
+    bindings_by_id: dict[BindingId, BindingDefinition],
+) -> tuple[BindingId, ...]:
+    """Return the casilla's ``manual_input`` bindings that name it as their target."""
+    return tuple(
+        binding.id
+        for binding_id in bound_casilla_binding_ids(casilla)
+        if (binding := bindings_by_id.get(binding_id)) is not None
+        and isinstance(binding.provider, ManualInputProvider)
+        and binding.provider.casilla_id == casilla.id
     )
 
 
@@ -236,18 +261,12 @@ def _replay_binding_id_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> BindingId | None:
-    binding_ids = bound_casilla_binding_ids(casilla)
-    manual_casilla_bindings = tuple(
-        binding.id
-        for binding_id in binding_ids
-        if (binding := bindings_by_id.get(binding_id)) is not None
-        and isinstance(binding.provider, ManualInputProvider)
-        and binding.provider.casilla_id == casilla.id
-    )
+    manual_casilla_bindings = _manual_casilla_binding_ids(casilla, bindings_by_id)
     if manual_casilla_bindings:
         return manual_casilla_bindings[0]
     if casilla.binding in bindings_by_id:
         return casilla.binding
+    binding_ids = bound_casilla_binding_ids(casilla)
     return next((binding_id for binding_id in binding_ids if binding_id in bindings_by_id), None)
 
 

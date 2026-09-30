@@ -299,6 +299,30 @@ def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
+@pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
+def test_revision_replay_inputs_replay_an_override_for_a_binding_the_registry_retired(filing_year: int) -> None:
+    """A sealed revision naming a retired binding stays replayable.
+
+    A revision sealed under an earlier registry generation can name a binding a
+    later generation no longer declares. Stored binding overrides replay
+    verbatim, so the figure the operator filed survives the retirement and the
+    filed declaration can still be rendered and exported.
+    """
+    work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
+    resolved = _resolved_revision(modelo="100", filing_year=filing_year, period_code="0A")
+    assert _M100_M111_RETENCIONES_BINDING not in {binding.id for binding in resolved.bindings}
+    revision = _revision(
+        work_unit,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        binding_overrides={_M100_M111_RETENCIONES_BINDING: "4500.00"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00")},
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs[_M100_M111_RETENCIONES_BINDING] == "4500.00"
+
+
 def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfield() -> None:
     work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
     revision = _revision(

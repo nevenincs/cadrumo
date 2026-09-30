@@ -805,12 +805,21 @@ def _build_export_producer_snapshot(
             ),
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
+        # A typed cause (FilingProducerSnapshotError, e.g. the M202 producer-facts
+        # completeness refusal) may already carry structured context -- the
+        # missing fact identifiers, a reason -- that a bare `cause_type` would
+        # otherwise discard. Merge it forward so the operator-visible refusal
+        # names what is actually missing instead of only that something failed.
+        context: dict[str, object] = {
+            "calculation_revision_id": command.calculation_revision_id,
+            "cause_type": type(exc).__name__,
+        }
+        cause_context = getattr(exc, "context", None)
+        if cause_context:
+            context.update(cause_context)
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause_type": type(exc).__name__,
-            },
+            context=context,
         ) from exc
 
 

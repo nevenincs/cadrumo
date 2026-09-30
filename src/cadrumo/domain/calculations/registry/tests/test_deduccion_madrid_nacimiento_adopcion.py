@@ -62,9 +62,6 @@ _BASE_BINDINGS = {
 }
 
 _REL = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }

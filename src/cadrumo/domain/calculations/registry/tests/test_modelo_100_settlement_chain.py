@@ -149,9 +149,6 @@ _EXPECTED_0670 = _EXPECTED_0610
 _TOLERANCE = Decimal("0.02")
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -160,9 +157,6 @@ _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
 def _binding_values() -> dict[BindingId, Decimal]:
     return {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),

@@ -1069,9 +1069,6 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-profile-deduccion-maternidad": Decimal("0"),
     }
     relation_values = {
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
         "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }

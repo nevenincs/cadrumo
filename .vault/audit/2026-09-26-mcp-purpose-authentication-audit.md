@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d19bc45079803aca55431ac0b604571d9a837bf7284e4bd019ebe7cad610028a'
+body_hash: 'sha256:9772d3552448f84a094bf579e0d5f9b444f68a8926e87a3cddd5ca36483b8ecb'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
@@ -688,3 +688,14 @@ Review for the operator-requested commit and merge of main on 2026-09-30 covers 
 
 The catalogue/conformance/MCP run 20260930T143957.516890Z-pytest-13576-4ec8a098 was interrupted after catalogue failures: eight declared prorrata operations are not registered, six frontend claims have no discovered surface, prorrata CLI references are unclaimed, and the full-screen ownership census fails. Completed conformance cases do not establish a passing cohort. The replacement adapter receives its own bounded test run. Verdict: PENDING for implementation acceptance; this Git checkpoint does not close a Step, assert platform readiness, or grant live filing authority.
 The bounded replacement-adapter suite passed all 15 tests: uv run --no-sync pytest -q -n0 -m "(unit or integration) and not external_tool and not os_keychain and not resident_service" --tb=short --show-capture=no src/cadrumo_harness/mcp/tests, exit 0, run 20260930T144302.475211Z-pytest-89968-f2f23063. This proves the selected adapter contracts only.
+
+
+### main-merge-checkpoint | medium | Conflict reconciliation verified with implementation limits retained
+
+The operator explicitly requested a commit, merge of main, and conflict reconciliation on 2026-09-30. The implementation checkpoint is 3bb3b64787; the incoming main head is e673e371be. Resolved 35 conflicted paths: installation-owned governance was regenerated with vaultspec-core 0.3.2 through previewed install --upgrade and sync --force, the modelo export CLI retains the registered runtime route, report verification consumes main's shared trusted-public-key validator, and the merged dependency lock passes uv lock --check. Main's documentation captures and authority-source changes remain integrated. No Step is closed. Concurrent source edits arising after checkpoint staging remain outside this merge commit.
+
+The local registry pipeline published validated authority identity 661ce96206a1f3f3ecd3b725ce15ece77df36ceef10e3896f5c8ebda049fea15, database 484cff208361fa9ab002998245b61f722d5afebb0c371626703edca0b031509d, with exit 0. Before publication, six selected tests failed because the old artifact encoded the retired withholding fact; 33 selected tests passed. After publication, the public authority query passed and five CLI tests reached runtime_unavailable instead of their intended export behavior (run 20260930T145432.532941Z-pytest-52556-72f619bf, exit 1). Those five results are an unresolved verification limitation, not export acceptance.
+
+The existing isolated native runtime fixture then verified real CLI filing-file export, calculation-report generation and review-package generation with canonical receipts: uv run --no-sync pytest -q -n0 -m integration --tb=short --show-capture=no src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py::test_native_cli_export_and_review_package_publish_canonical_receipts; one passed, exit 0, run 20260930T145625.784066Z-pytest-86308-2c165701. This uses synthetic encrypted profiles and the fixture's credential port; it does not establish native credential-store or installed background-manager acceptance.
+
+Focused Ruff lint/format and ty win32 checks pass on reconciled CLI and application paths; generated API stubs conform, and the feature vault check exits 0 with two markdown warnings. The repository-wide vault check exits 1 with 27 errors and 523 warnings; all 17 error-bearing documents match one of the parent revisions, rather than a new merged edit. Two trailing-blank-line findings in incoming modelo 303 TOML files are likewise inherited from main. The earlier repository type and catalogue failures remain visible; additional concurrent prorrata edits changed the global lint subject and are not this merge's verification evidence. Verdict: PASS for conflict reconciliation and the isolated export-runtime integration, PENDING for overall MCP implementation acceptance.

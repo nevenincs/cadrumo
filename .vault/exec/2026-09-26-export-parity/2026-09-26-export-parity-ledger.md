@@ -336,4 +336,3 @@ related:
 - `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
 - `S10` CLI/TUI parity is split by the import boundary: a CLI test checks the envelope against the operation result, TUI pilots check the visible table against independently measured file facts. The unverified-completeness case uses a hand-built service result (no verified-revision fixture exists for 165/185/189).
 - `S12` Integration fixes: the absent-value label dropped its em dash (operator rule: no em dash on a rendered page) and three PDF statements that name the producing software joined the product-identity inventory. The TUI PDF option is not wired yet; the hook is recorded for the next Step.
-

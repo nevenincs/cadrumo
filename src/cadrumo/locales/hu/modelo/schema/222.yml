@@ -350,8 +350,8 @@ modelo:
               LIS).
             label: A LIS 40.3. cikke szerinti módszer - ÖSSZESEN - Csökkenések
           tipo-declaracion-resultado:
-            label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
-              adóalap)
+            label: 'Bevallás típusa: az eredmény kódja (I befizetés, U csoportos beszedés,
+              G befizetés adófolyószámlán, N nemleges bevallás)'
       construct:
         modelo-222-declaration-construct:
           field:

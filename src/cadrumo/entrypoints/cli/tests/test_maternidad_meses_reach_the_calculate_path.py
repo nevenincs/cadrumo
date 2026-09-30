@@ -82,9 +82,6 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # is refused as a misrouted input channel.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
-    "--binding", "renta-modelo-111-retenciones-periodicas=0",
-    "--binding", "renta-modelo-123-retenciones-periodicas=0",
-    "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
     "--binding", "renta-profile-guarderia-gastos-reales=0",

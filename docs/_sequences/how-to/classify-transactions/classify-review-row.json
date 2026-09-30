@@ -17,7 +17,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+      "text": null
     },
     {
       "argv": [
@@ -104,6 +104,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "classify-review-row"
 }

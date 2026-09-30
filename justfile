@@ -1112,10 +1112,10 @@ test-resident-service:
 test-registry-live:
     @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo dev/corpus/tests
 
-# Run the produce, verify, and export end-to-end smoke tests.
+[doc('Run the end-to-end smoke journey: the installed CLI calculates, verifies and exports an ordinary Modelo 303 quarter.')]
 [group('test')]
 test-smoke:
-    uv run --no-sync pytest -v src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py
+    uv run --no-sync pytest -v -n0 -m integration dev/acceptance/iva/tests/test_cli_journey.py
 
 # Run the LibreOffice workbook parity tests. These carry `external_tool`
 # alongside the mandatory `unit` execution marker, so the default

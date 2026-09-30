@@ -11,13 +11,13 @@
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0142 --invoice-date 2026-06-05 --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
 @capture material_evidence_id result.evidence_id
 @step Record the second quarter's three movements.
-aeat --format json app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
-aeat --format json app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat --format json app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50 --purchase-invoice-evidence-id {material_evidence_id}
+aeat app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
+aeat app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+aeat app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50 --purchase-invoice-evidence-id {material_evidence_id}
 @step Create the second-quarter draft.
-aeat --format json app modelo work create --modelo 130 --year 2026 --period 2T
+aeat app modelo work create --modelo 130 --year 2026 --period 2T
 @step Calculate it with no binding zeros; the carries resolve from the filed first quarter.
-aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 2T
+aeat app modelo work calculate --modelo 130 --year 2026 --period 2T
 @step Verify the second quarter, exactly as in the first.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 2T
 @expect result.granted_verificado_completo == true

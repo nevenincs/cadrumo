@@ -58,7 +58,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "df01d8fa4627d7dbc15bbe1c2f50cc06aa6e7f8ab8ac3d8b420be638ae475973",
+            "digest": "e237d9dd14cb8544d0012d71b776c681308a6b9c840518df4cea3b267111510b",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850
@@ -76,6 +76,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "profile-setup-delete"
 }

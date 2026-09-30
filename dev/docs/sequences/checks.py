@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
@@ -28,6 +29,9 @@ from .compare import check_transcript, evaluate_expectations
 from .contracts import read_sequence_contract
 from .errors import SequenceEngineError, SequenceParseError
 from .golden_store import (
+    GoldenFrame,
+    SequenceGolden,
+    build_golden,
     read_golden,
     write_golden,
 )
@@ -39,9 +43,10 @@ from .runner import (
     execute_page_sequences,
     execute_sequence,
 )
-from .schema import ParsedSequence, SequenceId
+from .schema import FrameKind, ParsedSequence, SequenceId
 
 __all__ = [
+    "READER_FRAME_OUTPUT_ADVISORY_BYTES",
     "DiscoveredSequence",
     "check_page_coherence",
     "check_page_coherence_in_subprocess",
@@ -49,6 +54,8 @@ __all__ = [
     "check_sequences_in_subprocess",
     "default_docs_root",
     "discover_sequences",
+    "oversized_frame_advisories",
+    "recorded_output_bytes",
     "refresh_sequences",
     "unused_capture_advisories",
 ]
@@ -69,6 +76,15 @@ _PROFILE_COMMAND_MENTION: str = "aeat config profile"
 _PROFILE_LINK_RE = re.compile(r"\[[^\]]*\]\([^)]*profile[^)]*\)", re.IGNORECASE)
 
 COHERENCE_TIER_PREFIX: str = "page-coherence (cumulative page run, not the golden tier)"
+
+#: Recorded output above which a reader-facing frame draws an advisory.
+#:
+#: A reader-facing frame's recorded output is what the rendered page shows, so
+#: a frame this large is a wall of output no reader follows, and it dominates
+#: the committed golden tree. It is an advisory rather than a failure: some
+#: commands legitimately print a lot, and only the author can judge whether a
+#: text view or a narrower command serves the page better.
+READER_FRAME_OUTPUT_ADVISORY_BYTES: Final[int] = 64 * 1024
 
 
 class DiscoveredSequence(BaseModel):
@@ -319,6 +335,35 @@ def unused_capture_advisories(item: DiscoveredSequence) -> tuple[str, ...]:
     )
 
 
+def recorded_output_bytes(frame: GoldenFrame) -> int:
+    """Measure a golden frame's recorded output in UTF-8 bytes.
+
+    The recorded output is the frame's stored golden content: the canonical
+    JSON of its envelope plus its stdout text plus its stderr text. Absent
+    streams count as empty.
+    """
+    envelope = canonicalise(frame.envelope) if frame.envelope is not None else ""
+    return sum(len(part.encode(_UTF_8)) for part in (envelope, frame.text or "", frame.stderr_text or ""))
+
+
+def oversized_frame_advisories(page: str, golden: SequenceGolden) -> tuple[str, ...]:
+    """Report reader-facing frames whose recorded output exceeds the advisory limit.
+
+    A named advisory, never a failure. Setup frames are not reader-facing and
+    record no output, so only the other executed frames are measured; the frame
+    index is the golden's, the same index a check failure names.
+    """
+    return tuple(
+        f"page {page!r} sequence {golden.sequence_id!r} frame {index} (argv: {' '.join(frame.argv)}): "
+        f"recorded output is {size} bytes, over the {READER_FRAME_OUTPUT_ADVISORY_BYTES}-byte "
+        "reader-facing limit; print the text output instead of JSON, or narrow the command to what "
+        "the page needs to show"
+        for index, frame in enumerate(golden.frames)
+        if frame.kind is not FrameKind.SETUP
+        and (size := recorded_output_bytes(frame)) > READER_FRAME_OUTPUT_ADVISORY_BYTES
+    )
+
+
 def refresh_sequences(
     *,
     docs_root: Path | None = None,
@@ -348,6 +393,7 @@ def refresh_sequences(
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
         written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
+        advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
     return tuple(written), tuple(all_problems), tuple(advisories)
 
 
@@ -384,6 +430,7 @@ def check_sequences(
         except SequenceEngineError as exc:
             all_problems.append(str(exc))
             continue
+        advisories.extend(oversized_frame_advisories(item.page, golden))
         try:
             with _sequence_progress_scope(item.page):
                 transcript = _execute_in_fresh_sandbox(item.sequence)

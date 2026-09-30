@@ -28,7 +28,7 @@ def _requirement(periods: tuple[str, ...]) -> RegistryFoldRequirement:
         filing_year=2025,
         periods=periods,
         source_casilla_ids=(_TOTAL_RETENCIONES,),
-        target_bindings=("renta-modelo-111-retenciones-periodicas",),
+        target_bindings=("renta-certificado-trabajo-retenciones",),
         aggregation_op=RelationAggregationOp.SUM,
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),

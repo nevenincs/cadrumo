@@ -14,7 +14,6 @@ as well. It exits non-zero whenever the verdict is a refusal.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
@@ -35,13 +34,12 @@ from ...application.modelo.calculation_report_verification import (
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.external_constants import OutputLanguage
-from ...core.hex import HEX_PATTERN_64
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_behavior_support import require_active_profile
-from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
+from ._modelo_cli_support import resolve_explicit_or_active_bucket_id, validate_trusted_public_key
 from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
 from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
 from .state_projection_support import (
@@ -250,9 +248,7 @@ def work_report_verify(
 ) -> None:
     """Verify a calculation summary PDF, and trace it to the active profile's store."""
     activate_subcommand_output_language(ctx, output_language)
-    trusted_public_key_hex = None if trusted_key is None else trusted_key.strip().lower()
-    if trusted_public_key_hex is not None and re.fullmatch(HEX_PATTERN_64, trusted_public_key_hex) is None:
-        raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.trusted_key_invalid"))
+    trusted_public_key_hex = validate_trusted_public_key(trusted_key)
     if not path.is_file():
         raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.file_not_found", path=str(path)))
     from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
