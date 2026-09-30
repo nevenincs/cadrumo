@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:61d6e450dc88dae88835f12c22f6f08ae395e664c2cbe4b06a46e8addbbaa056'
+body_hash: 'sha256:f245d63da55650340ef27248b75cd5f1a0d53013d049ad426edc9ce3059b0b4f'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -380,6 +380,33 @@ related:
 - `S16` `M` `src/cadrumo_harness/mcp/server.py`
 - `S16` `A` `src/cadrumo_harness/mcp/tests/test_server_shutdown_release.py`
 - `S16` `verify:` `passing -n0 and -n 2 runs log SCRATCH REMOVED on Windows, failing run keeps its folder; MCP and TUI host release tests; check-symbol-usage and check-export-consumption only the pre-existing text_fold finding, module reachability and import boundaries clean` -> `pass`
+- `S36` `M` `src/cadrumo/application/aggregation/service.py`
+- `S36` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S36` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S36` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S36` `D` `src/cadrumo/entrypoints/cli/tests/test_modelo_190_clave_breakdown.py`
+- `S36` `D` `src/cadrumo/entrypoints/cli/tests/test_withholding_producer.py`
+- `S36` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S36` `M` `src/cadrumo/locales/en/cli.yml`
+- `S36` `M` `src/cadrumo/locales/es/cli.yml`
+- `S36` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S36` `verify:` `S36 suites 62 passed; CLI reference regenerated without the option` -> `pass`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S23` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S23` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S23` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/tests/ledger_ux_support.py`
+- `S23` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S23` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py`
+- `S23` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S23` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S23` `M` `src/cadrumo/locales/en/errors.yml`
+- `S23` `M` `src/cadrumo/locales/es/errors.yml`
+- `S23` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S23` `verify:` `application ledger, composition and core errors 1134 passed; label-reading CLI 6 passed; detector proves no load request on refusal` -> `pass`
 
 ## Notes
 
@@ -401,3 +428,4 @@ related:
 - `S11` 220 T22009001 34 boxes authored at 2024 (identical 2024 and 2025 layout); 490/2023 root reuses 2022-2t-4t storage (386 to 33 casillas stated); 322 and 490 2022 roots already reused storage, reasons corrected and positions pruned; 220 boxes 02796 and 02797 left for P05.S34
 - `S16` a passing -n0 run that opens the authority leaves the frozen sqlite snapshot on Windows until the reader closes; closing it at session end is the remaining S16 work
 - `S29` invoice refusal names 111 and 115, since 123 already refuses invoice evidence; --withholding-observation is equally unpersisted and is removed under ruling 14's precedent (P05.S36)
+- `S23` busy refusal and persistence of the degradation fact for batch and TUI follow in P05.S37

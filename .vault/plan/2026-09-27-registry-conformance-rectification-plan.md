@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:7b0c3a421266564424a120e073f560b82100789ecaceda678cdd5aea2a53df0d'
+body_hash: 'sha256:ab321abbaeee1e86d76cf12a51a2df6dbe35cf7798a8489facf973ceef0d47f8'
 ---
 
 # `registry-conformance-rectification` plan
@@ -37,10 +37,10 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - 11, upheld: 2026 refuses renewable free depreciation, as the accepted amendment requires for a year no authored edition covers.
 - 12, upheld: the settled-row gate over-refuses rather than admitting a settled row.
 - 13: Modelo 200's 2024 rows move to the edition 2024 resolves to; the 2025 root reuses storage and keys only its differences (P05.S20).
-- 14: the option is removed, not kept as a refusal, because no compatibility floor is released (P05.S21).
+- 14: the option is removed, not kept as a refusal, because no compatibility floor is released (P05.S21); the equally unpersisted --withholding-observation follows it (P05.S36).
 - 15: every defect is reported, through the one projection path (P05.S22).
 - 16: already resolved on `main`, which deleted the unwired linkage.
-- 17, yes: a headroom refusal is respected by not loading the model, and the label reading stands with a visible notice, as for an unreachable runtime (P05.S23).
+- 17, yes: a headroom refusal is respected by not loading the model, and the label reading stands with a visible notice, as for an unreachable runtime (P05.S23); a busy refusal of the optional fill degrades the same way, and the degradation is kept with the draft so batch results and the TUI show it too (P05.S37).
 - 18: a capability marker excluded from every lane, a configured corpus root with no machine default, and a dedicated recipe that fails rather than skips (P05.S24).
 - 5 (F2 and P1) is not ruled: its content is not in any persisted record.
 - Found in P04.S11: Modelo 131's 2026 parameter rows open like every other edition's, as P02.S07 set and the support declaration's horizon requires, keying only the annual values such as the general reduction; its 2022 and 2023 modulos engine is authored once the modulos orden provisions are catalogued (P05.S26).
@@ -95,7 +95,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S20` - Relocate Modelo 200's 2024 rows to the edition 2024 resolves to and store the 2025 edition as a delta (ruling 13); `src/cadrumo/_data/registry/aeat/modelos/200/`.
 - [x] `P05.S21` - Remove the unpersisted --retencion-observation option (ruling 14); `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 - [x] `P05.S22` - Report every invoice withholding defect through the one projection path (ruling 15); `src/cadrumo/application/aggregation/invoice_retencion.py`.
-- [ ] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
+- [x] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
 - [x] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
 - [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count the design's type-2 records instead of an unproduced retención window, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
 - [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
@@ -108,7 +108,9 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S33` - Complete the Modelo 604 2024 and Modelo 308 2019 construct memberships from their designs, and re-measure 604's storage reuse once the converter keeps its layout per edition; `src/cadrumo/_data/registry/aeat/modelos/604/`.
 - [ ] `P05.S34` - Withdraw the 2025 Modelo 220 jurisdiction assignment of boxes 02796 and 02797, which rests on an identical ambiguous caption, and leave the pair unauthored in both editions until an official source states the foral column; `src/cadrumo/_data/registry/aeat/modelos/220/`.
 - [ ] `P05.S35` - Re-review the Modelo 184 2022, 182 2024 and 220 2024 editions against their new members and restamp them through the conformance stamp command; `src/cadrumo/_data/registry/aeat/modelos/`.
-- [ ] `P05.S36` - Remove the unpersisted --withholding-observation option under ruling 14's precedent, and correct the clave breakdown docstring that still names only Modelo 190; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [x] `P05.S36` - Remove the unpersisted --withholding-observation option under ruling 14's precedent, and correct the clave breakdown docstring that still names only Modelo 190; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [ ] `P05.S37` - Extend the label-reading fallback to a busy refusal of the optional model fill, and persist the degradation fact with the draft so batch results and the TUI draft row show it; `src/cadrumo/application/ledger/invoice_draft_extraction.py`.
+- [ ] `P05.S38` - Correct the aggregate help that still describes the retired retención observation values, and the mis-encoded accents in the withholding bindings module; `src/cadrumo/locales/`.
 
 ## Parallelization
 
