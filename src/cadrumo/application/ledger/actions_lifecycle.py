@@ -576,11 +576,14 @@ def reset_ledger_catalogue(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
+    max_receipt_items: int | None = None,
 ) -> LedgerCatalogueResetReport:
     """Reset one bucket's ledger catalogue after finalized-modelo checks.
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerCatalogueResetReport`.
     """
+    if max_receipt_items is not None and max_receipt_items < 1:
+        raise ValueError("max_receipt_items must be positive when provided")
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger reset")
     trimmed_source_command = require_source_command(source_command, operation="ledger reset")
@@ -655,6 +658,24 @@ def reset_ledger_catalogue(
         occurred_at=now,
     )
     events = (*removal_events, reset_event)
+    if max_receipt_items is not None:
+        receipt_counts = {
+            "removed_transaction_ids": len(removed_ids),
+            "cascaded_purchase_invoice_evidence_ids": len(purchase_evidence_ids),
+            "cascaded_attachment_ids": len(attachment_ids),
+            "stale_draft_revision_references": len(draft_advisories),
+            "bucket_event_ids": len(events),
+        }
+        over_limit = {name: count for name, count in receipt_counts.items() if count > max_receipt_items}
+        if over_limit:
+            raise TransactionValidationError(
+                "ledger catalogue reset refused because its result exceeds the registered receipt limit",
+                context={
+                    "max_receipt_items": str(max_receipt_items),
+                    "over_limit_collections": ",".join(sorted(over_limit)),
+                    "over_limit_counts": ",".join(f"{name}:{over_limit[name]}" for name in sorted(over_limit)),
+                },
+            )
     _persist_catalogue_reset(
         repository=repository,
         event_repository=event_repository,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import struct
@@ -68,6 +69,7 @@ from ...application.runtime.profile_access import (
     RuntimeAccessRefusal,
     RuntimeProfileLogin,
     RuntimeProfileStatus,
+    RuntimeProfileStatusTransfer,
     RuntimeReply,
     RuntimeSecretReady,
     RuntimeSessionRequest,
@@ -76,6 +78,8 @@ from ...application.runtime.profile_access import (
 from ...application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SUBMISSION_PAYLOAD_MAX_BYTES,
+    SubmissionPayloadBuffer,
+    SubmissionPayloadChunk,
     SubmissionPayloadDescriptor,
 )
 from ...application.runtime.transport import RuntimeStatusRequest, RuntimeTransportStatus
@@ -124,6 +128,69 @@ def write_document(channel: RuntimeByteChannel, document: BaseModel, *, deadline
     except BaseException:
         channel.close()
         raise
+
+
+def write_profile_status(channel: RuntimeByteChannel, status: RuntimeProfileStatus, *, deadline: float) -> None:
+    """Retain the complete effective scope while every individual frame stays bounded."""
+    payload = canonical_json_bytes(status.model_dump(mode="json"))
+    if len(payload) <= MAXIMUM_FRAME_BYTES:
+        write_document(channel, status, deadline=deadline)
+        return
+    try:
+        header = RuntimeProfileStatusTransfer(
+            request_id=status.request_id,
+            runtime_boot_id=status.runtime_boot_id,
+            connection_id=status.connection_id,
+            byte_count=len(payload),
+            payload_digest=sha256_hex(payload),
+        )
+        write_document(channel, header, deadline=deadline)
+        for offset in range(0, len(payload), SUBMISSION_PAYLOAD_CHUNK_BYTES):
+            write_document(
+                channel,
+                SubmissionPayloadChunk(
+                    offset=offset,
+                    encoded=base64.b64encode(payload[offset : offset + SUBMISSION_PAYLOAD_CHUNK_BYTES]).decode("ascii"),
+                ),
+                deadline=deadline,
+            )
+    except (ValueError, TypeError):
+        channel.close()
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+    except BaseException:
+        channel.close()
+        raise
+
+
+def read_profile_status(
+    channel: RuntimeByteChannel, header: RuntimeProfileStatusTransfer, *, deadline: float
+) -> RuntimeProfileStatus:
+    """Release only a complete, strictly decoded status matching its transfer identity."""
+    buffer = SubmissionPayloadBuffer(
+        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest)
+    )
+    try:
+        for _ in range(0, header.byte_count, SUBMISSION_PAYLOAD_CHUNK_BYTES):
+            buffer.append(read_document(channel, SubmissionPayloadChunk, deadline=deadline))
+        document = json.loads(
+            buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
+        )
+        status = RuntimeProfileStatus.model_validate_json(canonical_json_bytes(document))
+        if (status.request_id, status.runtime_boot_id, status.connection_id) != (
+            header.request_id,
+            header.runtime_boot_id,
+            header.connection_id,
+        ):
+            raise ValueError("profile status transfer identity mismatch")
+        return status
+    except (ValueError, TypeError, RecursionError):
+        channel.close()
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+    except BaseException:
+        channel.close()
+        raise
+    finally:
+        buffer.close()
 
 
 def write_secret(channel: RuntimeByteChannel, secret: bytearray, *, deadline: float) -> None:
@@ -254,6 +321,8 @@ class VerifiedRuntimeConnection:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
         result = read_document(self._channel, RuntimeReply, deadline=deadline)
         self._verify_reply(request_id, result.root.request_id, result.root.runtime_boot_id, result.root.connection_id)
+        if isinstance(result.root, RuntimeProfileStatusTransfer):
+            result = RuntimeReply(read_profile_status(self._channel, result.root, deadline=deadline))
         return result
 
     def _verify_reply(self, expected: UUID, received: UUID, boot: UUID, connection: UUID) -> None:

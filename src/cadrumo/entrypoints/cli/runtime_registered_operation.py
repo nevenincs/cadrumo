@@ -117,7 +117,7 @@ def _result[ResultT: BaseModel](
     return success.projection
 
 
-def run_registered_operation[ResultT: BaseModel](
+def _run_registered_operation[ResultT: BaseModel](
     client: RuntimeFrontendClient,
     payload: BaseModel,
     *,
@@ -128,6 +128,7 @@ def run_registered_operation[ResultT: BaseModel](
     result_version: int,
     timeout: float,
     allow_refusal_detail: bool = False,
+    secret: bytearray | None = None,
 ) -> RegisteredOperationCompletion[ResultT]:
     """Run one registered operation with exact contract and result correlation."""
     deadline = _deadline(timeout)
@@ -144,7 +145,7 @@ def run_registered_operation[ResultT: BaseModel](
         or contract.request_schema != expected_request
         or contract.result_schema != expected_result
         or frontend not in contract.permitted_frontends
-        or contract.ephemeral_secret_required
+        or contract.ephemeral_secret_required is not (secret is not None)
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     try:
@@ -173,8 +174,19 @@ def run_registered_operation[ResultT: BaseModel](
     effect: OperationEffect | None = None
     refusal_code: str | None = None
     try:
-        if submitted.receipt.secret_requirement is not None:
+        requirement = submitted.receipt.secret_requirement
+        if (requirement is None) is not (secret is None):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if requirement is not None and secret is not None:
+            if (
+                requirement.identity.operation_id != operation_id
+                or requirement.identity.definition_id != definition_id
+                or requirement.identity.subject_ref != subject_ref
+            ):
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            acknowledged = client.submit_secret(requirement, secret, timeout=min(20, _remaining(deadline)))
+            if acknowledged.operation_id != operation_id:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         started = client.operation(
             RuntimeOperationControl(
                 action="operation_start",
@@ -262,6 +274,38 @@ def run_registered_operation[ResultT: BaseModel](
     raise submitted_operation_error(
         operation_id, code, terminal_condition=condition, effect=effect, refusal_code=refusal_code
     )
+
+
+def run_registered_operation[ResultT: BaseModel](
+    client: RuntimeFrontendClient,
+    payload: BaseModel,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    result_type: type[ResultT],
+    request_version: int,
+    result_version: int,
+    timeout: float,
+    allow_refusal_detail: bool = False,
+    secret: bytearray | None = None,
+) -> RegisteredOperationCompletion[ResultT]:
+    """Run an exact registered operation and wipe any one-shot secret on every exit."""
+    try:
+        return _run_registered_operation(
+            client,
+            payload,
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            result_type=result_type,
+            request_version=request_version,
+            result_version=result_version,
+            timeout=timeout,
+            allow_refusal_detail=allow_refusal_detail,
+            secret=secret,
+        )
+    finally:
+        if secret is not None:
+            secret[:] = bytes(len(secret))
 
 
 __all__ = ["RegisteredOperationCompletion", "run_registered_operation", "submitted_operation_error"]

@@ -1,11 +1,11 @@
 # AEAT operator agent-harness data
 
-This tree is the **operating layer** for an LLM tax-advisor agent that drives the
-deterministic `aeat` CLI. It is reviewed product data shipped inside the wheel and
-read through the bundled-data boundary (`aeat.agent`). It carries no code and no
-secrets.
+This tree is the **operating layer** for an LLM tax-advisor agent that uses
+Cadrumo's profile-bound MCP server. It is reviewed product data shipped inside
+the wheel and read through the bundled-data boundary (`aeat.agent`). It carries
+no code and no secrets.
 
-The `aeat` CLI is the **backbone**: it computes the tax deterministically. The
+The Cadrumo engine computes tax deterministically for both CLI and MCP. The
 harness is the **operating layer**: the agent orchestrates, extracts, classifies,
 narrates, and hands off — but never computes a tax value itself.
 

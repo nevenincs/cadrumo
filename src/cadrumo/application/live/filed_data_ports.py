@@ -18,8 +18,10 @@ from .filed_observation_ports import (
     FiledObservationArtefactProtocol,
     FiledObservationProtocol,
 )
+from .session import SessionWriteReporter
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
 
 
@@ -101,6 +103,23 @@ class FiledDeclarationAvailabilityReportProtocol(Protocol):
 
 
 FiledArtefactSink = Callable[..., FiledObservationArtefactProtocol]
+FiledEffectGuard = Callable[[], AbstractAsyncContextManager[None]]
+
+
+class DeferredFiledObservation(Protocol):
+    """Remote capture whose source bytes remain local until an authorized write."""
+
+    def persist_artefacts(self, sink: FiledArtefactSink) -> FiledObservationProtocol:
+        """Persist captured bytes and return the observation with secure references."""
+        ...
+
+
+class DeferredFiledObservations(Protocol):
+    """A source capture batch whose artefact bytes await local authorization."""
+
+    def persist_artefacts(self, sink: FiledArtefactSink) -> tuple[FiledObservationProtocol, ...]:
+        """Persist the entire captured batch under one local effect fence."""
+        ...
 
 
 class FiledDataRegisterPort(Protocol):
@@ -124,11 +143,24 @@ class FiledDataRegisterPort(Protocol):
         """Capture one register row's evidence through the authenticated session."""
         ...
 
+    async def capture_observation_deferred(
+        self, declaration: FiledRegisterDeclarationProtocol
+    ) -> DeferredFiledObservation:
+        """Capture one row without writing local artefacts during remote I/O."""
+        ...
+
 
 class FiledDataCapturePort(Protocol):
     """Outer-composed Sede capability for filed-data acquisition."""
 
-    def open_register(self, *, operation: str) -> AbstractAsyncContextManager[FiledDataRegisterPort]:
+    def open_register(
+        self,
+        *,
+        operation: str,
+        authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> AbstractAsyncContextManager[FiledDataRegisterPort]:
         """Open one reusable register session for a walk or capture sweep."""
         ...
 
@@ -136,6 +168,8 @@ class FiledDataCapturePort(Protocol):
         self,
         *,
         operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> FiledDeclarationAvailabilityReportProtocol:
         """Read the register's offered modelo/year options."""
         ...
@@ -148,6 +182,8 @@ class FiledDataCapturePort(Protocol):
         period: Period,
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> tuple[FiledObservationProtocol, ...]:
         """Capture registry-selected previous-filing and relation sources.
 
@@ -156,12 +192,28 @@ class FiledDataCapturePort(Protocol):
         """
         ...
 
+    async def capture_source_observations_deferred(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> DeferredFiledObservations:
+        """Fetch source rows and bytes without any local artefact persistence."""
+        ...
+
 
 __all__ = [
+    "DeferredFiledObservation",
+    "DeferredFiledObservations",
     "FiledArtefactSink",
     "FiledDataCapturePort",
     "FiledDataRegisterPort",
     "FiledDeclarationAvailabilityProtocol",
     "FiledDeclarationAvailabilityReportProtocol",
+    "FiledEffectGuard",
     "FiledRegisterDeclarationProtocol",
 ]

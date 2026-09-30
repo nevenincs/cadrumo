@@ -11,7 +11,7 @@ records to the persisted-session service.
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
@@ -170,6 +170,23 @@ class SessionStoreProtocol(Protocol):
         """Delete persisted session data at ``path``, returning True when removed."""
         ...
 
+    def defer_writes(self) -> AbstractContextManager[SessionWriteStage]:
+        """Stage provider writes until an authorized caller publishes them."""
+        ...
+
+
+class SessionWriteStage(Protocol):
+    """Transient provider state awaiting one guarded publication."""
+
+    @property
+    def has_changes(self) -> bool:
+        """Whether provider authentication staged any durable session change."""
+        ...
+
+    def publish(self) -> None:
+        """Apply the staged encrypted session changes under the caller's effect guard."""
+        ...
+
 
 _BOUND_SESSION_STORE: ContextVar[SessionStoreProtocol] = ContextVar("cadrumo_auth_session_store")
 
@@ -202,6 +219,7 @@ __all__ = [
     "BrowserSessionPort",
     "PersistedSessionDataProtocol",
     "SessionStoreProtocol",
+    "SessionWriteStage",
     "bind_session_store",
     "session_store",
 ]

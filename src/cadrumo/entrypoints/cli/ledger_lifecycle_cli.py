@@ -18,12 +18,9 @@ from pydantic import ValidationError
 from ...application.ledger.actions_lifecycle import (
     archive_manual_transaction,
     mark_transaction_reviewed_excluded,
-    remove_manual_transaction,
-    reset_ledger_catalogue,
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from ...application.ledger.actions_split_merge import merge_transactions, split_transaction
 from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.models import SplitChildCommand
@@ -50,9 +47,8 @@ from .ledger_llm_composition import compose_ledger_llm
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
-    from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.llm_classification_ports import LLMSplitSuggestion
-    from ...application.ledger.models import SplitTransactionResult
+    from ...application.ledger.split_operation import LedgerSplitOperationResult
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -572,30 +568,20 @@ def ledger_remove(
     yes: bool = False,
     actor: str | None = None,
 ) -> None:
-    """Remove one ledger transaction through the bucket-scoped backend."""
+    """Remove one ledger transaction through the registered profile worker."""
     if not dry_run and not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    report = remove_manual_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
+    from ._ledger_payloads import LedgerRemoveResult
+    from .runtime_ledger_remove import run_ledger_remove
+
+    removal = run_ledger_remove(
+        ctx,
+        transaction_id=transaction_id,
         reason=reason,
         dry_run=dry_run,
-        source_command="aeat app ledger remove",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        invoice_repository=ports.invoice_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
+        actor=actor or resolve_active_bucket_id() or "operator",
     )
-    from ._ledger_payloads import LedgerRemoveResult
+    report = removal.report
 
     emit_envelope(
         ctx,
@@ -617,27 +603,13 @@ def ledger_reset(
     yes: bool = False,
     actor: str | None = None,
 ) -> None:
-    """Reset the active bucket ledger catalogue through the backend."""
+    """Reset the authenticated profile ledger catalogue through its worker."""
     if not dry_run and not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(
-        bucket_id=transaction_repository.bucket_id,
-        operation=authority_operation(ctx),
-    )
-    report = reset_ledger_catalogue(
-        bucket_id=transaction_repository.bucket_id,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        reason=reason,
-        dry_run=dry_run,
-        source_command="aeat app ledger reset",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        invoice_repository=ports.invoice_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
-    )
+    from .runtime_ledger_reset import run_ledger_reset
+
+    reset = run_ledger_reset(ctx, reason=reason, dry_run=dry_run, actor=actor)
+    report = reset.report
     from ._ledger_payloads import LedgerResetResult
 
     emit_envelope(
@@ -668,47 +640,14 @@ def _validate_manual_split_options(
         raise bad(tr("cli.ledger.split.errors.min_two_children"))
 
 
-def _run_manual_split(
-    *,
-    bucket_id: str,
-    resolved_id: str,
-    child_amount: tuple[str, ...],
-    child_description: tuple[str, ...],
-    reason: str,
-    actor: str | None,
-    ports: LedgerActionPorts,
-) -> SplitTransactionResult:
-    """Parse manual children and invoke the single-writer split mutation."""
-    try:
-        children = tuple(
-            SplitChildCommand(
-                amount=parse_decimal_amount(amount_raw, label="child-amount"),
-                description=description_raw,
-            )
-            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
-        )
-        result = split_transaction(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            children=children,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger split",
-            reason=reason,
-            ports=ports,
-        )
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
-    return result
-
-
-def _emit_manual_split_result(ctx: typer.Context, result: SplitTransactionResult) -> None:
+def _emit_manual_split_result(ctx: typer.Context, result: LedgerSplitOperationResult) -> None:
     """Project the persisted split result and its classification advisory."""
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(result.child_transaction_ids)
-    notices = _split_classification_dropped_notices(result.parent_transaction.business_classification)
+    notices = _split_classification_dropped_notices(result.parent_business_classification)
     lines = [
-        f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+        f"{tr('cli.ledger.labels.bucket')}\t{result.profile_id}",
         f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
         f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
@@ -721,7 +660,7 @@ def _emit_manual_split_result(ctx: typer.Context, result: SplitTransactionResult
         command="ledger.split",
         result=LedgerSplitResult.model_validate(
             {
-                "bucket_id": result.bucket_id,
+                "bucket_id": str(result.profile_id),
                 "parent_transaction_id": result.parent_transaction_id,
                 "split_group_id": result.split_group_id,
                 "child_transaction_ids": list(result.child_transaction_ids),
@@ -767,18 +706,24 @@ def ledger_split(
         child_description=child_description,
         yes=yes,
     )
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = _run_manual_split(
-        bucket_id=transaction_repository.bucket_id,
-        resolved_id=resolved_id,
-        child_amount=child_amount,
-        child_description=child_description,
+    try:
+        children = tuple(
+            SplitChildCommand(
+                amount=parse_decimal_amount(amount_raw, label="child-amount"),
+                description=description_raw,
+            )
+            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
+        )
+    except ValidationError as exc:
+        raise ledger_validation_bad(exc) from exc
+    from .runtime_ledger_split import run_ledger_split
+
+    result = run_ledger_split(
+        ctx,
+        transaction_id=transaction_id,
+        children=children,
         reason=reason,
         actor=actor,
-        ports=ports,
     )
     _emit_manual_split_result(ctx, result)
 
@@ -1044,17 +989,13 @@ def ledger_merge(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_id) < 2:
         raise bad(tr("cli.ledger.merge.errors.min_two_children"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_ids = tuple(resolve_id(transaction_repository, raw) for raw in child_id)
-    result = merge_transactions(
-        bucket_id=transaction_repository.bucket_id,
-        child_transaction_ids=resolved_ids,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger merge",
+    from .runtime_ledger_merge import run_ledger_merge
+
+    result = run_ledger_merge(
+        ctx,
+        child_ids=child_id,
         reason=reason,
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerMergeResult
 
@@ -1063,7 +1004,7 @@ def ledger_merge(
         command="ledger.merge",
         result=LedgerMergeResult.model_validate(
             {
-                "bucket_id": result.bucket_id,
+                "bucket_id": str(result.profile_id),
                 "split_group_id": result.split_group_id,
                 "parent_transaction_id": result.parent_transaction_id,
                 "merged_transaction_id": result.merged_transaction_id,
@@ -1072,7 +1013,7 @@ def ledger_merge(
             },
         ),
         lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+            f"{tr('cli.ledger.labels.bucket')}\t{result.profile_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
             f"{tr('cli.ledger.labels.merged_id')}\t{result.merged_transaction_id}",

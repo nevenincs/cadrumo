@@ -115,7 +115,7 @@ from .bienes_inversion import BienesInversionIvaRegisterRepository
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ....core.secure_object_write import SecureObjectWrite
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-    from ..storage.sql.secure_object_records import SecureObjectDeletion
+    from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -347,11 +347,18 @@ def _translating_storage_failures[**P, R](method: Callable[P, R]) -> Callable[P,
 
     @functools.wraps(method)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+
         try:
             return method(*args, **kwargs)
         except _INTEGRITY_REFUSALS:
             # Tampered or foreign stored bytes are an integrity refusal, never a
             # degradable read failure.
+            raise
+        except LedgerPersistenceConflictError:
+            # Secure-object revision conflicts inherit both storage and ledger
+            # conflict errors. Preserve the ledger conflict at this boundary so
+            # application guarded-write retry loops can recognize it.
             raise
         except StorageError as exc:
             raise LedgerStorageError(
@@ -441,24 +448,38 @@ class TransactionCatalogueRepository:
         listed row is missing, or a row predates recorded revisions -- and a
         caller must then treat the catalogue as changed.
         """
-        index_key = transaction_index_object_key(self._bucket_id)
-        index_ids = self._load_index_ids()
-        row_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
-        }
-        revisions = self._objects.peek_many_revision_ids(
-            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            (index_key, *row_keys.values()),
-        )
-        if not index_ids and index_key not in revisions:
-            return sha256_hex(b"transaction-catalogue:absent")
-        stated = [revisions.get(index_key)]
-        stated.extend(revisions.get(key) for key in row_keys.values())
-        if any(revision is None for revision in stated):
-            return None
-        lines = [f"index\t{revisions[index_key]}"]
-        lines.extend(f"{transaction_id}\t{revisions[row_keys[transaction_id]]}" for transaction_id in sorted(row_keys))
-        return sha256_hex("\n".join(lines).encode(UTF_8_ENCODING))
+        revision, _assertions = self._catalogue_revision_snapshot(include_assertions=False)
+        return revision
+
+    def revision_assertions(self, *, expected_revision_id: str) -> tuple[SecureObjectRevisionAssertion, ...]:
+        """Prepare in-batch assertions for a previously read full catalogue."""
+        from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+
+        revision, assertions = self._catalogue_revision_snapshot(include_assertions=True)
+        if revision is None or revision != expected_revision_id:
+            raise LedgerPersistenceConflictError("transaction catalogue changed since its source read")
+        return assertions
+
+    @_translating_storage_failures
+    def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
+        """Return a catalogue whose entire decode is bracketed by one revision.
+
+        Revision ids are append-only, so equal full-catalogue revisions before
+        and after ``load`` prove that no transaction row or membership index
+        changed while the decoded catalogue was assembled. Unstable or
+        revision-less snapshots are retried briefly, then refused.
+        """
+        from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+
+        for _attempt in range(3):
+            before = self.load_revision()
+            if before is None:
+                continue
+            catalogue = self.load()
+            after = self.load_revision()
+            if after is not None and before == after:
+                return catalogue, before
+        raise LedgerPersistenceConflictError("transaction catalogue changed while loading its snapshot")
 
     @_translating_storage_failures
     def load(self) -> TransactionCatalogue:
@@ -801,6 +822,112 @@ class TransactionCatalogueRepository:
             len(deletions),
             len(extra_writes),
         )
+
+    @_translating_storage_failures
+    def save_if_revision_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        *,
+        expected_revision_id: str,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist a full catalogue only while every loaded row is unchanged.
+
+        The membership index and every row revision are asserted in the same
+        serializable batch that writes the catalogue and its related secure
+        objects. This prevents a stale full-catalogue diff from deleting a
+        concurrent addition or overwriting a concurrent edit to another row.
+        """
+        from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+
+        current_revision, assertions = self._catalogue_revision_snapshot(include_assertions=True)
+        if current_revision is None or current_revision != expected_revision_id:
+            raise LedgerPersistenceConflictError("transaction catalogue changed since the snapshot was loaded")
+        writes, deletions = self._reconcile(catalogue)
+        self._objects.apply_batch((*writes, *extra_writes), deletions, assertions=assertions)
+        try:
+            self._sync_date_index(catalogue)
+        except Exception:
+            # The index is a rebuildable routing cache. The guarded catalogue
+            # and audit batch has committed; reporting failure now could invite
+            # an unsafe retry of a successful split or other full-catalogue edit.
+            _log.warning(
+                "transaction date index refresh failed after committed catalogue write bucket_id=%s",
+                self._bucket_id,
+            )
+        _log.info(
+            "saved guarded transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d extra_writes=%d",
+            self._bucket_id,
+            len(catalogue.transactions),
+            len(writes),
+            len(deletions),
+            len(extra_writes),
+        )
+
+    def _catalogue_revision_snapshot(
+        self,
+        *,
+        include_assertions: bool,
+    ) -> tuple[str | None, tuple[SecureObjectRevisionAssertion, ...]]:
+        """Read the full revision digest and optional in-batch row assertions."""
+        from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+        from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
+
+        index_key = transaction_index_object_key(self._bucket_id)
+        transaction_ids = tuple(sorted(self._load_index_ids()))
+        row_keys = {
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
+            for transaction_id in transaction_ids
+        }
+        revisions = self._objects.peek_many_revision_ids(
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            (index_key, *row_keys.values()),
+        )
+        index_revision = revisions.get(index_key)
+        if not transaction_ids and index_revision is None:
+            assertions = (
+                (
+                    SecureObjectRevisionAssertion(
+                        namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                        object_key=index_key,
+                        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+                    ),
+                )
+                if include_assertions
+                else ()
+            )
+            return sha256_hex(b"transaction-catalogue:absent"), assertions
+        row_revisions = {transaction_id: revisions.get(row_keys[transaction_id]) for transaction_id in transaction_ids}
+        if index_revision is None:
+            return None, ()
+        resolved_row_revisions: dict[str, str] = {}
+        for transaction_id, row_revision in row_revisions.items():
+            if row_revision is None:
+                return None, ()
+            resolved_row_revisions[transaction_id] = row_revision
+        lines = [f"index\t{index_revision}"]
+        lines.extend(
+            f"{transaction_id}\t{resolved_row_revisions[transaction_id]}" for transaction_id in transaction_ids
+        )
+        revision = sha256_hex("\n".join(lines).encode(UTF_8_ENCODING))
+        if not include_assertions:
+            return revision, ()
+        assertions = (
+            SecureObjectRevisionAssertion(
+                namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                object_key=index_key,
+                expected_revision_id=index_revision,
+            ),
+            *(
+                SecureObjectRevisionAssertion(
+                    namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                    object_key=row_keys[transaction_id],
+                    expected_revision_id=resolved_row_revisions[transaction_id],
+                )
+                for transaction_id in transaction_ids
+            ),
+        )
+        return revision, assertions
 
     def replace_if_current_with_secure_object_writes(
         self,

@@ -15,6 +15,8 @@ Submodules
 
    cadrumo.application.actividad_asset.history
    cadrumo.application.actividad_asset.modality
+   cadrumo.application.actividad_asset.operation_dtos
    cadrumo.application.actividad_asset.operations
    cadrumo.application.actividad_asset.ports
+   cadrumo.application.actividad_asset.registered_operations
    cadrumo.application.actividad_asset.service

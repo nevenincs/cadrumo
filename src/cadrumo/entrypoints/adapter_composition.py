@@ -1304,7 +1304,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         ExpedientesPorts,
         ExpedientesRegisterProtocol,
     )
-    from ..domain.calculations.registry.authority import bundled_indexed_authority
+    from ..application.user_profile.access_errors import ProfileAccessRefusedError
 
     def snapshot_repository_factory(bucket: str) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
         """Bind one encrypted snapshot repository to the requested bucket."""
@@ -1364,7 +1364,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
             try:
                 rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
                 return tuple(translate_declaration(row) for row in rows)
-            except LiveApplicationError:
+            except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:
                 raise LiveApplicationError(
@@ -1377,20 +1377,21 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
         @asynccontextmanager
         @override
-        async def open_register(self, session: AeatSession, *, settings: Settings):
+        async def open_register(
+            self, session: AeatSession, *, settings: Settings, authority_operation: PinnedAuthorityOperation
+        ):
             try:
-                with bundled_indexed_authority().operation() as operation:
-                    async with (
-                        shared_playwright(session) as playwright,
-                        open_declarations_register(
-                            session,
-                            operation=operation,
-                            settings=settings,
-                            playwright=playwright,
-                        ) as register,
-                    ):
-                        yield SedeExpedientesRegister(register)
-            except LiveApplicationError:
+                async with (
+                    shared_playwright(session) as playwright,
+                    open_declarations_register(
+                        session,
+                        operation=authority_operation,
+                        settings=settings,
+                        playwright=playwright,
+                    ) as register,
+                ):
+                    yield SedeExpedientesRegister(register)
+            except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:
                 raise LiveApplicationError(

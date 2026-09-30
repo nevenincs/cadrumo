@@ -74,6 +74,7 @@ from ..calculations.ports import ObservedCasillaValueProtocol
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ..operations.events import OperationEventCode, OperationLogSeverity
 from ..operations.models import OperationDiagnosticReference
+from ..runtime.contracts import RuntimeRefusalError
 from ..storage.sync_runs.persist import record_sync_run
 from ..storage.sync_runs.records import (
     SyncRunRecordReference,
@@ -82,6 +83,8 @@ from ..storage.sync_runs.records import (
     coverage_of,
     sync_run_record_key,
 )
+from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .filed_data import (
@@ -92,9 +95,11 @@ from .filed_data import (
     select_declarations_for_capture,
 )
 from .filed_data_ports import (
+    DeferredFiledObservation,
     FiledDataCapturePort,
     FiledDataRegisterPort,
     FiledDeclarationAvailabilityReportProtocol,
+    FiledEffectGuard,
     FiledRegisterDeclarationProtocol,
 )
 from .filed_observation_persistence import (
@@ -110,6 +115,7 @@ from .remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from .remote_state_outcomes import bounded_context_text
+from .session import SessionWriteReporter
 
 if TYPE_CHECKING:
     from datetime import date
@@ -375,7 +381,7 @@ async def _walk_or_failure_row(
     :func:`_await_filed_register_walk` already is.
 
     Shared bulk-path arm behind :func:`list_filed_data_bulk` and
-    :func:`capture_filed_data_bulk`: on any walk failure the exception is folded
+    :func:`capture_filed_data_bulk`: on a remote walk failure the exception is folded
     into ``failures`` as a :class:`FiledDataCaptureFailureRow` and ``None`` is
     returned so the caller can skip the pair.
 
@@ -393,6 +399,8 @@ async def _walk_or_failure_row(
             year=year,
             timeout_ms=timeout_ms,
         )
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        raise
     except Exception as exc:
         failures.append(filed_data_capture_failure_row(modelo=modelo, year=year, error=exc))
         return None
@@ -608,6 +616,9 @@ async def list_filed_data(
     modelo: str,
     year_from: int,
     year_to: int,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
 ) -> FiledDataListingReport:
     """List declarations via AEAT and return a :class:`FiledDataListingReport`."""
     if year_from > year_to:
@@ -616,7 +627,19 @@ async def list_filed_data(
         )
 
     rows: list[FiledDataListingRow] = []
-    async with filed_data_port.open_register(operation="live-expedientes-read") as register:
+    register_scope = (
+        filed_data_port.open_register(
+            operation="live-expedientes-read",
+            authority_operation=authority_operation,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
+        )
+        if authority_operation is not None
+        else filed_data_port.open_register(
+            operation="live-expedientes-read", effect_guard=effect_guard, on_session_write=on_session_write
+        )
+    )
+    async with register_scope as register:
         for year in range(year_to, year_from - 1, -1):
             declarations = await _await_filed_register_walk(
                 register.walk(modelo=modelo, ejercicio=year),
@@ -641,6 +664,8 @@ async def list_filed_data_bulk(
     year_to: int,
     modelos: tuple[str, ...] | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
 ) -> BulkFiledDataListingReport:
     """List filed declarations across modelos with one authenticated register session.
 
@@ -652,6 +677,8 @@ async def list_filed_data_bulk(
             the indexed bundled authority when omitted.
         filed_data_port: Composed register acquisition capability. Its outer
             implementation owns session and browser lifecycles.
+        effect_guard: Commit guard for encrypted session writes during authentication.
+        on_session_write: Effect receipt callback for a published session write.
 
     Returns:
         A :class:`BulkFiledDataListingReport` of the per-modelo rows and failures.
@@ -669,6 +696,8 @@ async def list_filed_data_bulk(
                 year_to=year_to,
                 modelos=modelos,
                 operation=indexed_operation,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
             )
     resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
     rows: list[FiledDataListingRow] = []
@@ -690,7 +719,12 @@ async def list_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    async with filed_data_port.open_register(operation="live-expedientes-read") as register:
+    async with filed_data_port.open_register(
+        operation="live-expedientes-read",
+        authority_operation=operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+    ) as register:
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
                 register.walk(modelo=code, ejercicio=year),
@@ -724,6 +758,8 @@ async def capture_filed_data(
     period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> FiledDataCaptureReport:
     """Capture filed-declaration artefacts and return a :class:`FiledDataCaptureReport`.
@@ -744,12 +780,16 @@ async def capture_filed_data(
                 period=period,
                 expediente_id=expediente_id,
                 limit=limit,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
                 operation=indexed_operation,
             )
     accumulator = FiledCaptureAccumulator(operation=operation)
     bucket_id = require_active_bucket_id()
 
-    async with filed_data_port.open_register(operation="live-filed-read") as register:
+    async with filed_data_port.open_register(
+        operation="live-filed-read", effect_guard=effect_guard, on_session_write=on_session_write
+    ) as register:
         declarations = await _await_filed_register_walk(
             register.walk(modelo=modelo, ejercicio=year),
             modelo=modelo,
@@ -763,18 +803,35 @@ async def capture_filed_data(
             limit=limit,
         )
         for declaration in selected:
-            observation = await register.capture_observation(
-                declaration,
-                artefact_sink=ports.observation_persistence.persist_artefact,
-            )
-            accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
+            if effect_guard is None:
+                observation = await register.capture_observation(
+                    declaration,
+                    artefact_sink=ports.observation_persistence.persist_artefact,
+                )
+                accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
+            else:
+                # Download remote bytes without holding a commit fence. Persist
+                # the artefacts and their local evidence under one fresh fence.
+                deferred = await register.capture_observation_deferred(declaration)
+                async with effect_guard():
+                    observation = deferred.persist_artefacts(ports.observation_persistence.persist_artefact)
+                    accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
 
-    finalization = finalize_filed_capture(
-        tuple(accumulator.observations_for_calculation),
-        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
-        policy=FiledCaptureFailurePolicy.FAIL_FAST,
-        ports=ports,
-    )
+    if effect_guard is None:
+        finalization = finalize_filed_capture(
+            tuple(accumulator.observations_for_calculation),
+            justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
+            policy=FiledCaptureFailurePolicy.FAIL_FAST,
+            ports=ports,
+        )
+    else:
+        async with effect_guard():
+            finalization = finalize_filed_capture(
+                tuple(accumulator.observations_for_calculation),
+                justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
+                policy=FiledCaptureFailurePolicy.FAIL_FAST,
+                ports=ports,
+            )
     calculation_observation_keys = finalization.calculation_observation_keys
 
     return FiledDataCaptureReport(
@@ -819,6 +876,7 @@ async def _absorb_declarations(
     modelo: str,
     year: int,
     failures: list[FiledDataCaptureFailureRow],
+    effect_guard: FiledEffectGuard | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> None:
     """Capture and absorb one batch, recording a per-declaration failure as a row.
@@ -837,11 +895,18 @@ async def _absorb_declarations(
         unit_code=FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     )
     for declaration_completed, declaration in enumerate(declarations, start=1):
+        deferred: DeferredFiledObservation | None = None
+        observation: FiledObservationProtocol | None = None
         try:
-            observation = await opened_register.capture_observation(
-                declaration,
-                artefact_sink=None if dry_run else ports.observation_persistence.persist_artefact,
-            )
+            if effect_guard is not None and not dry_run:
+                deferred = await opened_register.capture_observation_deferred(declaration)
+            else:
+                observation = await opened_register.capture_observation(
+                    declaration,
+                    artefact_sink=None if dry_run else ports.observation_persistence.persist_artefact,
+                )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
         except Exception as exc:
             failures.append(
                 filed_data_capture_failure_row(
@@ -853,13 +918,27 @@ async def _absorb_declarations(
             )
             await _emit_filed_history_refusal(events, FILED_HISTORY_DECLARATION_REFUSAL_CODE)
         else:
-            accumulator.absorb(
-                observation,
-                ports=ports,
-                bucket_id=bucket_id,
-                output_root=output_root,
-                dry_run=dry_run,
-            )
+            if effect_guard is not None and not dry_run:
+                if deferred is None:
+                    raise InternalInvariantError("deferred filed capture was not returned")
+                async with effect_guard():
+                    observation = deferred.persist_artefacts(ports.observation_persistence.persist_artefact)
+                    accumulator.absorb(
+                        observation,
+                        ports=ports,
+                        bucket_id=bucket_id,
+                        output_root=output_root,
+                    )
+            else:
+                if observation is None:
+                    raise InternalInvariantError("filed capture observation was not returned")
+                accumulator.absorb(
+                    observation,
+                    ports=ports,
+                    bucket_id=bucket_id,
+                    output_root=output_root,
+                    dry_run=dry_run,
+                )
         await _emit_filed_history_progress(
             events,
             completed=declaration_completed,
@@ -875,6 +954,7 @@ def _empty_bulk_filed_capture_report(
     year_from: int,
     year_to: int,
     failures: Sequence[FiledDataCaptureFailureRow],
+    dry_run: bool = False,
 ) -> BulkFiledDataCaptureReport:
     """Build the local-boundary result when no pair can reach the register."""
     return BulkFiledDataCaptureReport(
@@ -897,6 +977,7 @@ def _empty_bulk_filed_capture_report(
         calculation_observation_count=0,
         calculation_observation_keys=(),
         failures=tuple(failures),
+        dry_run=dry_run,
     )
 
 
@@ -940,6 +1021,7 @@ async def _capture_filed_data_query_pair(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
+    effect_guard: FiledEffectGuard | None,
     events: FiledHistoryEventSink | None,
     pair_completed: int,
     pair_total: int,
@@ -988,6 +1070,7 @@ async def _capture_filed_data_query_pair(
         modelo=code,
         year=year,
         failures=failures,
+        effect_guard=effect_guard,
         events=events,
     )
     return pair_completed, limit is not None and accumulator.reached_count >= limit
@@ -1004,6 +1087,8 @@ async def _capture_filed_data_query_pairs(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
     pair_completed: int = 0,
     pair_total: int | None = None,
@@ -1013,7 +1098,9 @@ async def _capture_filed_data_query_pairs(
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_REGISTER_ACCESS)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PAIR_WALK)
     phase_state = _CapturePairPhaseState()
-    async with filed_data_port.open_register(operation="live-expedientes-read") as opened_register:
+    async with filed_data_port.open_register(
+        operation="live-expedientes-read", effect_guard=effect_guard, on_session_write=on_session_write
+    ) as opened_register:
         for code, year in query_pairs:
             pair_completed, limit_reached = await _capture_filed_data_query_pair(
                 code,
@@ -1027,6 +1114,7 @@ async def _capture_filed_data_query_pairs(
                 limit=limit,
                 dry_run=dry_run,
                 failures=failures,
+                effect_guard=effect_guard,
                 events=events,
                 pair_completed=pair_completed,
                 pair_total=total,
@@ -1164,6 +1252,8 @@ async def capture_filed_data_bulk(
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: FiledHistoryEventSink | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
@@ -1195,6 +1285,8 @@ async def capture_filed_data_bulk(
         events: Optional operation event emitter. The composed filed-history
             pull supplies it to publish phase, safe unit-count, and refusal-scope
             facts at the canonical workflow boundaries.
+        effect_guard: Optional authorization fence around each local persisted effect.
+        on_session_write: Record a provider session write in the operation receipt.
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
@@ -1214,6 +1306,8 @@ async def capture_filed_data_bulk(
                 dry_run=dry_run,
                 sync_run_repository=sync_run_repository,
                 events=events,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
                 operation=indexed_operation,
             )
     resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
@@ -1237,6 +1331,7 @@ async def capture_filed_data_bulk(
             year_from=year_from,
             year_to=year_to,
             failures=failures,
+            dry_run=dry_run,
         )
 
     bucket_id = _require_bulk_capture_dependencies(
@@ -1254,6 +1349,8 @@ async def capture_filed_data_bulk(
         limit=limit,
         dry_run=dry_run,
         failures=failures,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
         events=events,
         pair_completed=len(failures),
         pair_total=pair_total,
@@ -1275,6 +1372,19 @@ async def capture_filed_data_bulk(
         )
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_FINALIZATION)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PROVENANCE)
+    if effect_guard is not None:
+        async with effect_guard():
+            return _persisted_bulk_filed_capture_report(
+                output_root=output_root,
+                modelos=resolved_modelos,
+                year_from=year_from,
+                year_to=year_to,
+                accumulator=accumulator,
+                failures=failures,
+                bucket_id=bucket_id,
+                sync_run_repository=sync_run_repository,
+                ports=ports,
+            )
     return _persisted_bulk_filed_capture_report(
         output_root=output_root,
         modelos=resolved_modelos,
@@ -1296,6 +1406,8 @@ async def capture_source_filed_data(
     period: Period,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> SourceFiledDataCaptureReport:
     """Capture source observations and return a :class:`SourceFiledDataCaptureReport`.
@@ -1313,6 +1425,8 @@ async def capture_source_filed_data(
                 period=period,
                 output_root=output_root,
                 ports=ports,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
                 operation=indexed_operation,
             )
     revision = operation.snapshot(
@@ -1324,31 +1438,64 @@ async def capture_source_filed_data(
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
 
-    observations = await filed_data_port.capture_source_observations(
-        revision,
-        filing_year=year,
-        period=period,
-        artefact_sink=ports.observation_persistence.persist_artefact,
-        operation="live-filed-read",
-    )
-    for observation in observations:
-        key = (
-            observation.modelo,
-            observation.ejercicio,
-            observation.period.registry_token,
-            observation.expediente_id,
+    if effect_guard is None:
+        observations = await filed_data_port.capture_source_observations(
+            revision,
+            filing_year=year,
+            period=period,
+            artefact_sink=ports.observation_persistence.persist_artefact,
+            operation="live-filed-read",
         )
-        if key in seen:
-            continue
-        seen.add(key)
-        accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
+    else:
+        deferred = await filed_data_port.capture_source_observations_deferred(
+            revision,
+            filing_year=year,
+            period=period,
+            operation="live-filed-read",
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
+        )
+        async with effect_guard():
+            observations = deferred.persist_artefacts(ports.observation_persistence.persist_artefact)
+            for observation in observations:
+                key = (
+                    observation.modelo,
+                    observation.ejercicio,
+                    observation.period.registry_token,
+                    observation.expediente_id,
+                )
+                if key in seen:
+                    continue
+                seen.add(key)
+                accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
+    if effect_guard is None:
+        for observation in observations:
+            key = (
+                observation.modelo,
+                observation.ejercicio,
+                observation.period.registry_token,
+                observation.expediente_id,
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
 
-    finalization = finalize_filed_capture(
-        tuple(accumulator.observations_for_calculation),
-        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
-        policy=FiledCaptureFailurePolicy.FAIL_FAST,
-        ports=ports,
-    )
+    if effect_guard is None:
+        finalization = finalize_filed_capture(
+            tuple(accumulator.observations_for_calculation),
+            justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
+            policy=FiledCaptureFailurePolicy.FAIL_FAST,
+            ports=ports,
+        )
+    else:
+        async with effect_guard():
+            finalization = finalize_filed_capture(
+                tuple(accumulator.observations_for_calculation),
+                justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
+                policy=FiledCaptureFailurePolicy.FAIL_FAST,
+                ports=ports,
+            )
     calculation_observation_keys = finalization.calculation_observation_keys
 
     return SourceFiledDataCaptureReport(
@@ -1367,6 +1514,9 @@ async def discover_filed_history(
     filed_data_port: FiledDataCapturePort,
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
 ) -> FiledHistoryDiscoveryReport:
     """Discover what history to walk, unioning both signals into one grid.
 
@@ -1392,6 +1542,10 @@ async def discover_filed_history(
         today: Reference date for applicability and the year span's upper bound.
             Defaults to the Madrid civil date the rest of the CLI resolves
             filing dates against.
+        operation: Caller-held generation-pinned registry authority for both
+            profile-derived coverage signals.
+        effect_guard: Optional authorization fence around provider session publication.
+        on_session_write: Record any provider session write in the operation receipt.
 
     Returns:
         The union :class:`FiledHistoryDiscoveryReport`.
@@ -1402,15 +1556,17 @@ async def discover_filed_history(
     """
     from ...core.time.clock import today_madrid
 
-    availability = await filed_data_port.discover_availability(operation="live-expedientes-read")
+    availability = await filed_data_port.discover_availability(
+        operation="live-expedientes-read", effect_guard=effect_guard, on_session_write=on_session_write
+    )
     resolved_today = today or today_madrid()
     expected = (
-        expected_filed_declaration_grid(profile, today=resolved_today)
+        expected_filed_declaration_grid(profile, today=resolved_today, operation=operation)
         if profile is not None
         else ExpectedFiledDeclarationGrid()
     )
     scoping_signal = (
-        classify_register_scoping_signal(profile, availability, today=resolved_today)
+        classify_register_scoping_signal(profile, availability, today=resolved_today, operation=operation)
         if profile is not None
         else RegisterScopingSignal.INCONCLUSIVE
     )
@@ -1574,6 +1730,7 @@ def expected_filed_declaration_grid(
     profile: TaxpayerProfile,
     *,
     today: date,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ExpectedFiledDeclarationGrid:
     """Derive the taxpayer-specific candidate grid from the profile's declared facts.
 
@@ -1601,6 +1758,7 @@ def expected_filed_declaration_grid(
         profile: The taxpayer's declared three-axis :class:`TaxpayerProfile`.
         today: Reference date for applicability evaluation and the year span's
             upper bound.
+        operation: Caller-held generation-pinned registry authority.
 
     Returns:
         The :class:`ExpectedFiledDeclarationGrid`. When the profile declared no
@@ -1612,7 +1770,7 @@ def expected_filed_declaration_grid(
     # The same reason _coverage.py defers its own application.modelo lookup.
     from ..overview.coverage import CoverageAdviceReason, build_obligation_coverage
 
-    coverage = build_obligation_coverage(profile, (), today=today)
+    coverage = build_obligation_coverage(profile, (), today=today, operation=operation)
     candidates = {
         *coverage.surfaced,
         *(item.modelo for item in coverage.advised if item.reason is not CoverageAdviceReason.REGISTRY_UNMODELED),
@@ -1710,6 +1868,7 @@ def classify_register_scoping_signal(
     availability: FiledDeclarationAvailabilityReportProtocol,
     *,
     today: date,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegisterScopingSignal:
     """Say what the offered modelo set SUGGESTS about its own scoping, for free.
 
@@ -1741,6 +1900,7 @@ def classify_register_scoping_signal(
             positively-excluded modelo set.
         availability: The register's offered option set.
         today: Reference date for applicability evaluation.
+        operation: Caller-held generation-pinned registry authority.
 
     Returns:
         The :class:`~core.register_scoping_signal.RegisterScopingSignal` reading.
@@ -1750,7 +1910,7 @@ def classify_register_scoping_signal(
     from ..overview.coverage import build_obligation_coverage
 
     offered = {item.modelo for item in availability.items}
-    excluded = set(build_obligation_coverage(profile, (), today=today).confidently_excluded)
+    excluded = set(build_obligation_coverage(profile, (), today=today, operation=operation).confidently_excluded)
     if not offered or not excluded:
         return RegisterScopingSignal.INCONCLUSIVE
     if offered & excluded:
@@ -2030,6 +2190,8 @@ class FiledHistoryDiscoveryPort(Protocol):
         filed_data_port: FiledDataCapturePort,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> FiledHistoryDiscoveryReport: ...
 
 
@@ -2079,6 +2241,8 @@ async def _capture_discovered_filed_history(
     limit: int | None,
     dry_run: bool,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture the discovered grid with its original modelo order and year span."""
@@ -2094,6 +2258,8 @@ async def _capture_discovered_filed_history(
         limit=limit,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
         events=events,
     )
 
@@ -2111,6 +2277,8 @@ async def _capture_filed_history_iva_wallet(
     iva_remote_state_port: IvaRemoteStatePort,
     resolved_today: date,
     output_root: Path,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryIvaWalletStage:
     """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
@@ -2122,7 +2290,11 @@ async def _capture_filed_history_iva_wallet(
             target_year=resolved_today.year,
             target_period=Period.from_year_and_code(resolved_today.year, "1T"),
             output_root=output_root,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
         )
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        raise
     except Exception as exc:
         await _emit_filed_history_refusal(events, FILED_HISTORY_IVA_WALLET_REFUSAL_CODE)
         return _FiledHistoryIvaWalletStage(
@@ -2151,6 +2323,8 @@ async def _capture_filed_history_notifications(
     browser_session_factory: BrowserSessionFactoryPort,
     notifications_ports: NotificationsPorts,
     operator_scope_ports: OperatorScopePorts,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
     events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
@@ -2163,7 +2337,11 @@ async def _capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
         )
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        raise
     except Exception as exc:
         await _emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
@@ -2194,6 +2372,8 @@ async def pull_filed_history(
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: FiledHistoryEventSink | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
 ) -> FiledHistoryOnboardingRun:
     """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
 
@@ -2236,6 +2416,8 @@ async def pull_filed_history(
             bulk capture after discovery finds a supported pair.
         events: Optional operation event emitter that receives only stable stage
             identifiers, safe unit counters, and stable refusal scopes.
+        effect_guard: Optional authorization fence around each local persisted effect.
+        on_session_write: Record provider session writes from each authenticated stage.
 
     Returns:
         The composed :class:`FiledHistoryOnboardingRun`.
@@ -2248,6 +2430,8 @@ async def pull_filed_history(
         filed_data_port=filed_data_port,
         profile=profile,
         today=resolved_today,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
     )
     walk_pairs = discovery.walk_pairs
     if not walk_pairs:
@@ -2268,6 +2452,8 @@ async def pull_filed_history(
         limit=limit,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
         events=events,
     )
     pairs = _filed_history_pair_outcomes(discovery, capture)
@@ -2281,6 +2467,8 @@ async def pull_filed_history(
                 iva_remote_state_port=iva_remote_state_port,
                 resolved_today=resolved_today,
                 output_root=output_root,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
                 events=events,
             )
         else:
@@ -2291,6 +2479,8 @@ async def pull_filed_history(
             browser_session_factory=browser_session_factory,
             notifications_ports=notifications_ports,
             operator_scope_ports=operator_scope_ports,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
             events=events,
         )
     stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)

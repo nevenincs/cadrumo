@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import AsyncGenerator, Awaitable, Mapping
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,8 +18,13 @@ from ...core.period import Period
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
+from ..runtime.contracts import RuntimeRefusalError
+from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from .filed_data_ports import FiledEffectGuard
 from .iva_remote_state_ports import IvaRemoteStatePort
 from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,
@@ -34,6 +39,7 @@ from .remote_state_models import (
 from .remote_state_outcomes import auth_outcome as _auth_outcome
 from .remote_state_outcomes import evidence_ref as _evidence_ref
 from .remote_state_outcomes import surface_outcome as _surface_outcome
+from .session import SessionWriteReporter
 
 _LIVE_STATE_IVA_REMOTE_STATE_DIRNAME = Path(_storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE).subpath).name
 _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
@@ -42,6 +48,24 @@ _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
 _IVA_REMOTE_STATE_WALLET_DIRNAME = Path(
     _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET).subpath
 ).name
+
+
+class _LocalEffectTracker:
+    """Identify failures raised inside an authorized local persistence fence."""
+
+    def __init__(self, guard: FiledEffectGuard) -> None:
+        self._guard = guard
+        self.failed = False
+
+    @asynccontextmanager
+    async def enter(self) -> AsyncGenerator[None]:
+        """Propagate local write failures instead of reporting a remote miss."""
+        try:
+            async with self._guard():
+                yield
+        except BaseException:
+            self.failed = True
+            raise
 
 
 def list_iva_compensation_history(
@@ -58,12 +82,40 @@ async def capture_iva_compensation_history(
     year_from: int,
     year_to: int,
     output_root: Path,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> IvaCompensationHistoryCaptureReport:
     """Capture filed Modelo 303 history using the composed remote-state port."""
     if year_from > year_to:
         raise LiveApplicationInputError(translated_message="live.errors.year_range_invalid")
     with ports.active_storage_span():
-        session, settings = await ports.active_verified_session(operation="live-filed-read", target_url=None)
+        if authority_operation is not None:
+            session, settings = await ports.active_verified_session(
+                operation="live-filed-read",
+                target_url=None,
+                authority_operation=authority_operation,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
+            )
+        else:
+            session, settings = await ports.active_verified_session(
+                operation="live-filed-read",
+                target_url=None,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
+            )
+        if effect_guard is not None or authority_operation is not None:
+            return await ports.capture_history(
+                session,
+                settings=settings,
+                year_from=year_from,
+                year_to=year_to,
+                output_root=output_root,
+                progress_context=None,
+                effect_guard=effect_guard,
+                authority_operation=authority_operation,
+            )
         return await ports.capture_history(
             session,
             settings=settings,
@@ -89,14 +141,40 @@ async def capture_iva_compensation_wallet(
     target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> IvaWalletCaptureReport:
     """Live-fetch AEAT's IVA wallet using the entrypoint-composed port."""
     _assert_target_period_year(target_year=target_year, target_period=target_period)
     with ports.active_storage_span():
-        session, settings = await ports.active_verified_session(
-            operation="live-iva-wallet-read",
-            target_url=ports.wallet_target_url,
-        )
+        if authority_operation is not None:
+            session, settings = await ports.active_verified_session(
+                operation="live-iva-wallet-read",
+                target_url=ports.wallet_target_url,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
+                authority_operation=authority_operation,
+            )
+        else:
+            session, settings = await ports.active_verified_session(
+                operation="live-iva-wallet-read",
+                target_url=ports.wallet_target_url,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
+            )
+        if effect_guard is not None or authority_operation is not None:
+            return await ports.capture_wallet(
+                session,
+                settings=settings,
+                target_year=target_year,
+                target_period=target_period,
+                taxpayer_nif=taxpayer_nif,
+                output_root=output_root,
+                progress_context=None,
+                effect_guard=effect_guard,
+                authority_operation=authority_operation,
+            )
         return await ports.capture_wallet(
             session,
             settings=settings,
@@ -117,6 +195,9 @@ async def capture_iva_remote_state(
     target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Acquire filed-history and wallet state, retaining independent outcomes."""
     _assert_target_period_year(target_year=target_year, target_period=target_period)
@@ -129,6 +210,9 @@ async def capture_iva_remote_state(
             target_period=target_period,
             taxpayer_nif=taxpayer_nif,
             output_root=output_root,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
+            authority_operation=authority_operation,
         )
 
 
@@ -141,11 +225,14 @@ async def _capture_iva_remote_state_for_active_storage(
     target_period: Period,
     taxpayer_nif: str | None,
     output_root: Path | None,
+    effect_guard: FiledEffectGuard | None,
+    on_session_write: SessionWriteReporter | None,
+    authority_operation: PinnedAuthorityOperation | None,
 ) -> IvaRemoteStateAcquisitionReport:
     settings = _load_settings()
     async with suppress_live_iva_playwright_cancellation_noise(
         drain_ms=settings.cadrumo_live_iva_cancellation_drain_ms,
-        restore_on_exit=False,
+        restore_on_exit=effect_guard is not None,
     ):
         if year_from > year_to:
             raise LiveApplicationInputError(translated_message="live.errors.year_range_invalid")
@@ -154,15 +241,29 @@ async def _capture_iva_remote_state_for_active_storage(
         auth_result: _AuthenticatedAeatSessionResult | None = None
         auth_error: BaseException | None = None
         try:
-            auth_result = await ports.ensure_authenticated_session(
-                settings,
-                operation="live-iva-remote-state-read",
-                target_url=ports.wallet_target_url,
-            )
+            if authority_operation is not None:
+                auth_result = await ports.ensure_authenticated_session(
+                    settings,
+                    operation="live-iva-remote-state-read",
+                    target_url=ports.wallet_target_url,
+                    authority_operation=authority_operation,
+                    effect_guard=effect_guard,
+                    on_session_write=on_session_write,
+                )
+            else:
+                auth_result = await ports.ensure_authenticated_session(
+                    settings,
+                    operation="live-iva-remote-state-read",
+                    target_url=ports.wallet_target_url,
+                    effect_guard=effect_guard,
+                    on_session_write=on_session_write,
+                )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
             auth_error = exc
         if auth_result is None:
-            return _persist_report(
+            return await _persist_report_with_guard(
                 build_iva_remote_state_acquisition_report(
                     output_root=store_root,
                     year_from=year_from,
@@ -172,6 +273,7 @@ async def _capture_iva_remote_state_for_active_storage(
                     auth_error=auth_error,
                 ),
                 ports=ports,
+                effect_guard=effect_guard,
             )
         filed_history: IvaCompensationHistoryCaptureReport | None = None
         wallet: IvaWalletCaptureReport | None = None
@@ -183,8 +285,9 @@ async def _capture_iva_remote_state_for_active_storage(
             "year_from": year_from,
             "year_to": year_to,
         }
+        filed_tracker = _LocalEffectTracker(effect_guard) if effect_guard is not None else None
         try:
-            filed_history = await await_live_iva_surface(
+            filed_awaitable = (
                 ports.capture_history(
                     auth_result.session,
                     settings=settings,
@@ -192,20 +295,39 @@ async def _capture_iva_remote_state_for_active_storage(
                     year_to=year_to,
                     output_root=store_root / _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME,
                     progress_context=filed_progress,
-                ),
+                    effect_guard=filed_tracker.enter if filed_tracker is not None else None,
+                    authority_operation=authority_operation,
+                )
+                if filed_tracker is not None or authority_operation is not None
+                else ports.capture_history(
+                    auth_result.session,
+                    settings=settings,
+                    year_from=year_from,
+                    year_to=year_to,
+                    output_root=store_root / _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME,
+                    progress_context=filed_progress,
+                )
+            )
+            filed_history = await await_live_iva_surface(
+                filed_awaitable,
                 surface=LiveIvaReadSurface.FILED_HISTORY,
                 timeout_ms=filed_history_surface_timeout_ms(settings, year_from=year_from, year_to=year_to),
                 progress_context=filed_progress,
             )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
+            if filed_tracker is not None and filed_tracker.failed:
+                raise
             filed_error = exc
         wallet_progress: dict[str, object] = {
             "stage": "not_started",
             "target_year": target_year,
             "target_period": target_period.registry_token,
         }
+        wallet_tracker = _LocalEffectTracker(effect_guard) if effect_guard is not None else None
         try:
-            wallet = await await_live_iva_surface(
+            wallet_awaitable = (
                 ports.capture_wallet(
                     auth_result.session,
                     settings=settings,
@@ -214,14 +336,33 @@ async def _capture_iva_remote_state_for_active_storage(
                     taxpayer_nif=taxpayer_nif,
                     output_root=store_root / _IVA_REMOTE_STATE_WALLET_DIRNAME,
                     progress_context=wallet_progress,
-                ),
+                    effect_guard=wallet_tracker.enter if wallet_tracker is not None else None,
+                    authority_operation=authority_operation,
+                )
+                if wallet_tracker is not None or authority_operation is not None
+                else ports.capture_wallet(
+                    auth_result.session,
+                    settings=settings,
+                    target_year=target_year,
+                    target_period=target_period,
+                    taxpayer_nif=taxpayer_nif,
+                    output_root=store_root / _IVA_REMOTE_STATE_WALLET_DIRNAME,
+                    progress_context=wallet_progress,
+                )
+            )
+            wallet = await await_live_iva_surface(
+                wallet_awaitable,
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
                 timeout_ms=settings.cadrumo_live_iva_surface_timeout_ms,
                 progress_context=wallet_progress,
             )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
         except (TimeoutError, _CadrumoError, OSError) as exc:
+            if wallet_tracker is not None and wallet_tracker.failed:
+                raise
             wallet_error = exc
-        return _persist_report(
+        return await _persist_report_with_guard(
             build_iva_remote_state_acquisition_report(
                 output_root=store_root,
                 year_from=year_from,
@@ -235,7 +376,21 @@ async def _capture_iva_remote_state_for_active_storage(
                 wallet_error=wallet_error,
             ),
             ports=ports,
+            effect_guard=effect_guard,
         )
+
+
+async def _persist_report_with_guard(
+    report: IvaRemoteStateAcquisitionReport,
+    *,
+    ports: IvaRemoteStatePort,
+    effect_guard: FiledEffectGuard | None,
+) -> IvaRemoteStateAcquisitionReport:
+    """Fence the final acquisition manifest separately from either surface."""
+    if effect_guard is not None:
+        async with effect_guard():
+            return _persist_report(report, ports=ports)
+    return _persist_report(report, ports=ports)
 
 
 def _persist_report(

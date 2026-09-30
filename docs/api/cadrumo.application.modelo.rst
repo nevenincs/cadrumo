@@ -51,6 +51,8 @@ Submodules
    cadrumo.application.modelo._work_review_assembly
    cadrumo.application.modelo._workspace_model_validation
    cadrumo.application.modelo.action_errors
+   cadrumo.application.modelo.aggregate_operation
+   cadrumo.application.modelo.aggregate_public
    cadrumo.application.modelo.amendment_action_ports
    cadrumo.application.modelo.amendment_actions
    cadrumo.application.modelo.amendment_context_operation
@@ -107,18 +109,28 @@ Submodules
    cadrumo.application.modelo.filing_actions
    cadrumo.application.modelo.filing_chain_reconciliation
    cadrumo.application.modelo.filing_projection
+   cadrumo.application.modelo.filing_record_import_operation
+   cadrumo.application.modelo.filing_record_list_operation
+   cadrumo.application.modelo.filing_record_view_operation
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.filing_selection_operation
    cadrumo.application.modelo.history
    cadrumo.application.modelo.history_operation
    cadrumo.application.modelo.history_ports
+   cadrumo.application.modelo.invoice_withholding_capture_operation
+   cadrumo.application.modelo.invoice_withholding_capture_public
+   cadrumo.application.modelo.iva_wallet_balance_operation
+   cadrumo.application.modelo.iva_wallet_correction_operation
    cadrumo.application.modelo.iva_wallet_gate
+   cadrumo.application.modelo.iva_wallet_override_operation
    cadrumo.application.modelo.iva_wallet_seed
+   cadrumo.application.modelo.iva_wallet_seed_operation
    cadrumo.application.modelo.iva_wallet_seed_ports
    cadrumo.application.modelo.justificante_repository
    cadrumo.application.modelo.lifecycle_advisories
    cadrumo.application.modelo.lifecycle_clock_gate
    cadrumo.application.modelo.local_observation_actions
+   cadrumo.application.modelo.local_observation_operation
    cadrumo.application.modelo.local_observation_spreadsheet
    cadrumo.application.modelo.m036_lifecycle
    cadrumo.application.modelo.m036_lifecycle_ports
@@ -156,7 +168,10 @@ Submodules
    cadrumo.application.modelo.recipient_encryption
    cadrumo.application.modelo.reconcile_casilla
    cadrumo.application.modelo.reconciliation
+   cadrumo.application.modelo.reconciliation_import_operation
+   cadrumo.application.modelo.reconciliation_list_operation
    cadrumo.application.modelo.reconciliation_parsing
+   cadrumo.application.modelo.reconciliation_pull_operation
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
    cadrumo.application.modelo.result_disposition_resolution
@@ -185,12 +200,14 @@ Submodules
    cadrumo.application.modelo.settlement_casilla
    cadrumo.application.modelo.stored_row_field_input_gate
    cadrumo.application.modelo.taxation_comparison
+   cadrumo.application.modelo.taxation_comparison_operation
    cadrumo.application.modelo.taxation_comparison_ports
    cadrumo.application.modelo.verification_actions
    cadrumo.application.modelo.verification_cross_period
    cadrumo.application.modelo.verification_preconditions
    cadrumo.application.modelo.verification_predicates
    cadrumo.application.modelo.verification_projection
+   cadrumo.application.modelo.verification_report_read_operation
    cadrumo.application.modelo.verification_repository_ports
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.withholding_detail_gate

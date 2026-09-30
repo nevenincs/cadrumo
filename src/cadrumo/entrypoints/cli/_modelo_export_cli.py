@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.export import ModeloExportResult
-from ...application.modelo.export_projection import ModeloExportPublicResultV2
+from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.operation_definitions import ModeloExportRequest
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
@@ -141,7 +141,7 @@ def modelo_export_verb(
         ),
         work_unit_id=selected_revision.unit.work_unit_id,
     )
-    if not isinstance(completed.projection, ModeloExportPublicResultV2):
+    if not isinstance(completed.projection, ModeloExportPublicResultV3):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     receipt = completed.projection.fichero_boe
     if receipt is None:

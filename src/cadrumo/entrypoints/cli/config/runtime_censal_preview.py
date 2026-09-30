@@ -17,7 +17,7 @@ from .runtime_censal_prepare import prepare_censal_review
 
 
 def preview_censal_with_runtime(ctx: typer.Context) -> CensalPreviewOperationResult:
-    """Read and reconcile the bound profile's live census without local effects."""
+    """Read and reconcile the bound profile's live census and auth session receipt."""
     client = bound_profile_client(ctx)
     prepared = prepare_censal_review(ctx)
     request = CensalPreviewOperationRequest(
@@ -37,7 +37,7 @@ def preview_censal_with_runtime(ctx: typer.Context) -> CensalPreviewOperationRes
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.NONE
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
         or projection.profile_id != client.profile_id
     ):
         raise submitted_operation_error(

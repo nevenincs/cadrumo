@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Generator, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....core.config import override_settings
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_validation_support import open_bucket_session
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture
 from .cli_runner import invoke_cached_cli
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -59,6 +61,24 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
     return invoke_cached_cli(args, env=env)
 
 
+def _invoke_exact_profile(
+    profile: NativeCliProfileFixture,
+    args: Sequence[str],
+    *,
+    env: Mapping[str, str] | None = None,
+) -> Result:
+    """Invoke a command under one explicitly selected test profile."""
+    assert profile.label is not None
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
+        env=env,
+    )
+    assert profile.passphrase not in result.output
+    return result
+
+
 @contextmanager
 def open_ledger_ux_session(tmp_path: Path) -> Generator[None]:
     with open_bucket_session(tmp_path):
@@ -102,15 +122,25 @@ def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> s
 
 
 def _imported_transaction_id(tmp_path: Path) -> str:
+    """Seed a row through the legacy active-profile CLI helper."""
+    return _seeded_transaction_id(tmp_path, invoke=_invoke)
+
+
+def _imported_transaction_id_exact_profile(profile: NativeCliProfileFixture, tmp_path: Path) -> str:
+    """Seed a row through one explicitly selected exact profile."""
+    return _seeded_transaction_id(tmp_path, invoke=lambda args: _invoke_exact_profile(profile, args))
+
+
+def _seeded_transaction_id(tmp_path: Path, *, invoke: Callable[[Sequence[str]], Result]) -> str:
     statement = tmp_path / "statement.csv"
     statement.write_text(
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
         newline="\n",
     )
-    imported = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    imported = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
+    listed = invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     assert isinstance(payload, dict), listed.output

@@ -22,6 +22,8 @@ Submodules
    cadrumo.application.auth.apoderado_text
    cadrumo.application.auth.catalogue
    cadrumo.application.auth.certificate_secret_backend
+   cadrumo.application.auth.certificate_secret_operation
+   cadrumo.application.auth.certificate_source_operation
    cadrumo.application.auth.certificate_source_operations
    cadrumo.application.auth.certificate_sources
    cadrumo.application.auth.credentials
@@ -45,6 +47,7 @@ Submodules
    cadrumo.application.auth.provider_configure_operation_access
    cadrumo.application.auth.providers
    cadrumo.application.auth.read_operation
+   cadrumo.application.auth.session_acquire_operation_access
    cadrumo.application.auth.session_types
    cadrumo.application.auth.sessions
    cadrumo.application.auth.teardown_operation_access

@@ -4,12 +4,24 @@ from __future__ import annotations
 
 import asyncio
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....application.live.filed_history_operation import (
+    FILED_HISTORY_OPERATION_DEFINITION_ID,
+    FiledHistoryOperationRequest,
+    FiledHistoryPublicResultV1,
+)
+from ....application.live.notifications_read_operation import (
+    NOTIFICATIONS_LIST_DEFINITION_ID,
+    NotificationsListPublicResultV1,
+    NotificationsListRequest,
+)
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import OperationObservationRefusalV1, OperationObservationSuccessV1
 from ....application.operations.registry import (
     OperationFrontendProjection,
@@ -38,12 +50,19 @@ from ....core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ....core.time.clock import today_madrid
 from ..operations.runtime_controller import RuntimeOperationController
 from .models import AeatSyncOperationHandoffV1, AeatSyncOperationRequestV1
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 
+_FILED_HISTORY_ACTION_ID = "operator.live.filed.pull_all"
+_FILED_HISTORY_ACTION = ActionReference(action_id=_FILED_HISTORY_ACTION_ID)
+_NOTIFICATIONS_LIST_ACTION_ID = "operator.live.notifications.list"
+_NOTIFICATIONS_LIST_ACTION = ActionReference(action_id=_NOTIFICATIONS_LIST_ACTION_ID)
 _CENSAL_REVIEW_ACTION_ID = "operator.profile.edit"
 _CENSAL_REVIEW_ACTION = ActionReference(action_id=_CENSAL_REVIEW_ACTION_ID)
 _CONTRACT_TIMEOUT_SECONDS = 10.0
@@ -92,21 +111,6 @@ def _censal_review_contract_matches(contract: OperationPublicDefinitionContractV
         and contract.interaction_kinds == frozenset({OperationInteractionKind.REVIEW})
         and contract.review_projection_schema == CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
         and contract.interaction_response_schema == CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-    )
-
-
-def _controller_still_bound(
-    controller: RuntimeOperationController,
-    client: RuntimeFrontendClient,
-    *,
-    profile_id: UUID,
-    session_id: UUID,
-) -> bool:
-    """Require the submitted controller to retain the same client and session."""
-    return (
-        controller.client is client
-        and controller.session_id == session_id
-        and _client_still_bound(client, profile_id=profile_id, session_id=session_id)
     )
 
 
@@ -161,8 +165,6 @@ async def _prepare_censal_request(
         expected_session_id=session_id,
         deadline=deadline,
     )
-    if not _controller_still_bound(controller, client, profile_id=profile_id, session_id=session_id):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     await _current_contract(
         client,
         definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,
@@ -171,12 +173,7 @@ async def _prepare_censal_request(
         session_id=session_id,
         deadline=deadline,
     )
-    started_id = await controller.start()
-    if (
-        started_id != controller.operation_id
-        or not _controller_still_bound(controller, client, profile_id=profile_id, session_id=session_id)
-    ):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    await controller.start()
 
     while True:
         remaining = deadline - time.monotonic()
@@ -194,9 +191,7 @@ async def _prepare_censal_request(
             model_type=CensalPrepareOperationRequest,
         )
         if (
-            not _controller_still_bound(controller, client, profile_id=profile_id, session_id=session_id)
-            or projection.operation_id != controller.operation_id
-            or observed.event_page.operation_id != controller.operation_id
+            projection.operation_id != controller.operation_id
             or projection.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID
             or projection.subject_ref != subject_ref
             or projection.definition_contract != contract
@@ -234,8 +229,40 @@ async def _prepare_censal_request(
         await asyncio.sleep(min(0.05, remaining))
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _RuntimeNotificationsListController(RuntimeOperationController):
+    """Resolve only the list result bound to its admitted contract and profile."""
+
+    profile_id: UUID
+    expected_contract: OperationPublicDefinitionContractV1
+
+    async def read_notifications_list_result(
+        self, projection: OperationPublicProjectionV1, /
+    ) -> NotificationsListPublicResultV1:
+        """Return exact-profile public summaries from a settled list operation."""
+        if (
+            self.client.frontend is not OperationFrontendProjection.TUI
+            or self.client.profile_id != self.profile_id
+            or self.client.session_id != self.session_id
+            or projection.definition_id != NOTIFICATIONS_LIST_DEFINITION_ID
+            or projection.definition_contract != self.expected_contract
+            or projection.subject_ref != profile_operation_subject(str(self.profile_id))
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        result = await self.read_settled_result(
+            projection,
+            NotificationsListPublicResultV1,
+            result_version=1,
+        )
+        if result.bucket_id != str(self.profile_id) or result.count != len(result.rows):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return result
+
+
 def compose_runtime_aeat_sync_handoff(
     client: RuntimeFrontendClient,
+    *,
+    output_root: Path,
 ) -> tuple[AeatSyncOperationHandoffV1 | None, OperationPublicContractSetV1 | None]:
     """Bind only the enrolled AEAT Sync operations to the originating TUI session.
 
@@ -247,7 +274,40 @@ def compose_runtime_aeat_sync_handoff(
     if client.frontend is not OperationFrontendProjection.TUI:
         return None, None
     profile_id, session_id = client.profile_id, client.session_id
+    candidates = (
+        (
+            FILED_HISTORY_OPERATION_DEFINITION_ID,
+            _FILED_HISTORY_ACTION,
+            FiledHistoryOperationRequest,
+            FiledHistoryPublicResultV1,
+        ),
+        (
+            NOTIFICATIONS_LIST_DEFINITION_ID,
+            _NOTIFICATIONS_LIST_ACTION,
+            NotificationsListRequest,
+            NotificationsListPublicResultV1,
+        ),
+    )
     admitted: dict[str, OperationPublicDefinitionContractV1] = {}
+    for definition_id, action, request_type, result_type in candidates:
+        try:
+            contract = client.contract(
+                definition_id,
+                deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+            )
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+            continue
+        if not _client_still_bound(client, profile_id=profile_id, session_id=session_id):
+            return None, None
+        if _contract_matches(
+            contract,
+            definition_id=definition_id,
+            action=action,
+            request_type=request_type,
+            result_type=result_type,
+        ):
+            admitted[definition_id] = contract
+
     # CENSO review is exposed only when its worker-side baseline preparation is
     # also admitted. The preparation operation has no user action join and is
     # kept out of the screen's action contract set.
@@ -283,24 +343,42 @@ def compose_runtime_aeat_sync_handoff(
         if candidate_censal_contract is not None and _censal_review_contract_matches(candidate_censal_contract):
             admitted[CENSAL_OPERATION_DEFINITION_ID] = candidate_censal_contract
 
-    if CENSAL_OPERATION_DEFINITION_ID not in admitted:
+    if not admitted:
         return None, None
     operation_contracts = OperationPublicContractSetV1.build(tuple(admitted.values()))
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> RuntimeOperationController:
-        if request.action != _CENSAL_REVIEW_ACTION or request.operation != CENSAL_OPERATION_DEFINITION_ID:
+        subject_ref = profile_operation_subject(str(profile_id))
+        if request.action == _FILED_HISTORY_ACTION and request.operation == FILED_HISTORY_OPERATION_DEFINITION_ID:
+            definition_id = FILED_HISTORY_OPERATION_DEFINITION_ID
+            contract = admitted.get(definition_id)
+            payload = FiledHistoryOperationRequest(
+                profile_id=profile_id,
+                output_root=output_root,
+                today=today_madrid(),
+                limit=None,
+                dry_run=False,
+            )
+        elif request.action == _NOTIFICATIONS_LIST_ACTION and request.operation == NOTIFICATIONS_LIST_DEFINITION_ID:
+            definition_id = NOTIFICATIONS_LIST_DEFINITION_ID
+            contract = admitted.get(definition_id)
+            payload = NotificationsListRequest(profile_id=profile_id)
+        elif request.action == _CENSAL_REVIEW_ACTION and request.operation == CENSAL_OPERATION_DEFINITION_ID:
+            definition_id = CENSAL_OPERATION_DEFINITION_ID
+            contract = admitted.get(definition_id)
+            if contract is None or prepare_contract is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            payload = await _prepare_censal_request(
+                client,
+                profile_id=profile_id,
+                session_id=session_id,
+                contract=prepare_contract,
+            )
+            subject_ref = str(profile_id)
+        else:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        definition_id = CENSAL_OPERATION_DEFINITION_ID
-        contract = admitted.get(definition_id)
-        if contract is None or prepare_contract is None:
+        if contract is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        payload = await _prepare_censal_request(
-            client,
-            profile_id=profile_id,
-            session_id=session_id,
-            contract=prepare_contract,
-        )
-        subject_ref = str(profile_id)
         await _current_contract(
             client,
             definition_id=definition_id,
@@ -317,8 +395,6 @@ def compose_runtime_aeat_sync_handoff(
             payload=payload,
             expected_session_id=session_id,
         )
-        if not _controller_still_bound(controller, client, profile_id=profile_id, session_id=session_id):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         # Submission is inert until start. Recheck the immutable contract after
         # the controller's own contract-bound submission before authorizing it
         # to execute, so a session whose installed contract changed stays idle.
@@ -331,12 +407,16 @@ def compose_runtime_aeat_sync_handoff(
             deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
         )
 
-        started_id = await controller.start()
-        if (
-            started_id != controller.operation_id
-            or not _controller_still_bound(controller, client, profile_id=profile_id, session_id=session_id)
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if definition_id == NOTIFICATIONS_LIST_DEFINITION_ID:
+            controller = _RuntimeNotificationsListController(
+                client=client,
+                operation_id=controller.operation_id,
+                session_id=session_id,
+                deadline=controller.deadline,
+                profile_id=profile_id,
+                expected_contract=contract,
+            )
+        await controller.start()
         return controller
 
     return handoff, operation_contracts

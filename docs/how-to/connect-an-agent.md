@@ -1,64 +1,59 @@
 # Connect an agent (MCP)
 
-Use this when you want an AI assistant, such as Claude, to operate Cadrumo with
-you. The assistant reads your records, asks the engine to run calculations, and
-explains results in plain language. Every figure still comes from the
-deterministic engine, and nothing is ever submitted to the Agencia Estatal de
-Administración Tributaria (AEAT): the agent surface exposes the same local,
-gated commands the CLI does.
+The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's local
+runtime. Each connection is bound to one profile ID. The client can discover and
+run only operations allowed by its current grant and session; a later switch of
+the human active profile does not retarget it.
 
-## What the agent connection is
-
-Installing Cadrumo installs two commands: `aeat`, the application, and
-`cadrumo-mcp`, an MCP (Model Context Protocol) server that exposes it. MCP is an
-open standard that lets assistants call tools. Any MCP-capable client can
-connect; Claude is one such client.
-
-The server exposes the CLI's read and prepare operations as tools, plus grounded
-search over the bundled BOE and AEAT legal corpus. It refuses live submission by
-construction, exactly like the CLI.
-
-## Check the server is installed
+## Check the installation
 
 ```bash
 cadrumo-mcp --help
+aeat app runtime status
 ```
 
-If the command is not found, install Cadrumo first — see
-[Get Cadrumo](../download.md).
+If `cadrumo-mcp` is unavailable, install Cadrumo first. The command and the
+`aeat` CLI ship in the same Cadrumo distribution. Start or provision the local
+runtime using the controls described in [Workstation setup](../workstation-setup.md).
 
-## Register the server
+## Register one profile-bound server
 
-Register `cadrumo-mcp` as a stdio server. In clients that accept a JSON server
-definition:
+Find the intended profile ID in Cadrumo, then register `cadrumo-mcp` as a stdio
+server in your MCP client. For clients that accept a JSON server definition:
 
 ```json
 {
   "mcpServers": {
     "cadrumo": {
-      "command": "cadrumo-mcp"
+      "command": "cadrumo-mcp",
+      "args": ["--profile-id", "YOUR-PROFILE-UUID"]
     }
   }
 }
 ```
 
-That is the whole configuration. The command is on your `PATH` after
-installation, and it finds your profile the same way `aeat` does, so it needs
-no working directory and no path of its own.
+Use a separate server entry for each profile. The profile ID is required; the
+server does not select the human's active profile. Keep credentials out of the
+configuration and conversation. An approved protected credential reference can
+be supplied with `--credential-reference` for a later connection, while its
+grant and the profile remain eligible.
 
-## Before the first agent session
+## Authorize the connection
 
-The server uses the same local encrypted store and the same active profile
-as the CLI. A server cannot answer a passphrase prompt, so configure the
-passphrase for unattended runs first - see
-[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
+On a first connection, ask the agent to use `status`, then
+`authorization_prepare` and `authorization_request` for the operations, periods
+and disclosures it needs. Review and approve that request in Cadrumo's CLI or
+TUI. The agent uses `authorization_poll` to receive the protected reference and
+`authenticate` to start an independently tracked session. A password or stored
+credential alone is not an authenticated agent session.
 
-## What the agent can and cannot do
+After admission, `search` lists permitted operations, `describe` shows a
+registered operation's input contract, `execute` submits it, and `observe`
+tracks its result. The separate `authority` tool reads published tax authority
+data. Operation grants, session locks, profile suspension, provider checks and
+human review still apply. Retain operation IDs and reconcile uncertain effects
+after a disconnect instead of submitting the same effect blindly.
 
-The agent can import and classify records, run calculations, verify drafts, and
-prepare exports, because those are local operations. It cannot file, notify, or
-submit anything to AEAT, and it cannot invent a figure: calculations always run
-inside the deterministic engine, and every value keeps its legal references.
-You review and file yourself, exactly as in the
-[Quickstart](quickstart.md) and the
-[filing guide](file-at-aeat.md).
+To rotate or narrow an existing grant, reconnect with its protected credential
+reference and prepare a new authorization request. Human approval is required
+for the change. Revoking the grant prevents future admission under that key.

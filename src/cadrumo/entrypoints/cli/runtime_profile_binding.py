@@ -34,9 +34,7 @@ def bound_profile_client(ctx: typer.Context) -> RuntimeFrontendClient:
 
 def require_profile_client(ctx: typer.Context, *, expected_profile_id: UUID) -> RuntimeFrontendClient:
     """Return only the connection bound to this command's exact target."""
-    client = ctx.meta.get(_CONTEXT_KEY)
-    if not isinstance(client, RuntimeFrontendClient):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    if client.profile_id != expected_profile_id or client.frontend is not OperationFrontendProjection.CLI:
+    client = bound_profile_client(ctx)
+    if client.profile_id != expected_profile_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return client

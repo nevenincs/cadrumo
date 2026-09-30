@@ -30,6 +30,8 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZone,
 )
+from ....application.live.notifications_read_operation import NotificationsListPublicResultV1
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.filing_year import FilingYear
@@ -77,6 +79,7 @@ _LABEL_PREFIXES: Final[Mapping[type[Enum], str]] = {
 _OPERATION_LABEL_KEYS: Final = {
     ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
     ("operator.live.filed.pull_all", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed_all",
+    ("operator.live.notifications.list", "live.notifications.list"): "tui.search.action.list_notifications",
 }
 
 
@@ -170,6 +173,16 @@ class _OperationRow(Protocol):
     supported_operations: tuple[OperationDefinitionId, ...]
 
 
+class _NotificationsListResultReader(Protocol):
+    """Typed public result door offered by the installed runtime handoff."""
+
+    async def read_notifications_list_result(
+        self, projection: OperationPublicProjectionV1, /
+    ) -> NotificationsListPublicResultV1:
+        """Read the exact settled notifications-list result."""
+        ...
+
+
 class _NaturalRow(Protocol):
     """Public declaration coordinate needed for a safe display label."""
 
@@ -223,6 +236,8 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         super().__init__(id=id)
         self.controller = controller
         self._requests: dict[str, AeatSyncOperationRequestV1] = {}
+        self._active_operation_request: AeatSyncOperationRequestV1 | None = None
+        self._active_operation_controller: OperationControllerPort | None = None
         self._operation_button_epoch = 0
         self._consumed_request_ids: set[str] = set()
         self._consumed_notification_ids: set[str] = set()
@@ -328,6 +343,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self._operation_button_epoch += 1
         self._requests.clear()
         self._consumed_request_ids.clear()
+        self._consumed_notification_ids.clear()
         self._notification_rows.clear()
         navigation.clear(columns=False)
         rows.clear(columns=True)
@@ -345,12 +361,6 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         """Render an explicit mutation button only for a closed admitted pair."""
         request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
         if request is None:
-            if (
-                tuple(str(action.action_id) for action in row.supported_actions)
-                == ("operator.live.notifications.list",)
-                and not row.supported_operations
-            ):
-                return
             if row.supported_actions or row.supported_operations:
                 self.query_one("#aeat-sync-status", Static).update(
                     aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
@@ -396,8 +406,12 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
         try:
             controller = await handoff(request)
+            self._active_operation_request = request
+            self._active_operation_controller = controller
             self._show_operation_modal(controller)
         except Exception:  # host boundary must not disclose protected diagnostics
+            self._active_operation_request = None
+            self._active_operation_controller = None
             status.update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
         else:
             status.update(aeat_sync_copy("tui.aeat_sync.operation.handed_off"))
@@ -407,27 +421,80 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             event.button.disabled = True
 
     def _show_operation_modal(self, controller: OperationControllerPort) -> None:
-        """Mount the canonical progress surface for the host-started operation."""
+        """Mount the canonical progress surface for a host-started operation."""
         self.app.push_screen(OperationModal(controller), self._on_operation_settled)
 
     def _on_operation_settled(self, outcome: OperationModalOutcomeV1 | None) -> None:
-        """Refresh the originating workspace after a successful operation."""
+        """Project an exact notifications-list result and refresh after success."""
+        request, operation_controller = self._active_operation_request, self._active_operation_controller
+        self._active_operation_request = None
+        self._active_operation_controller = None
         if not isinstance(outcome, OperationModalSettledOutcomeV1):
             return
-        if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+        projection = outcome.view_model.projection
+        if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
             return
-        self.run_worker(self._refresh_after_success(), group="aeat-sync-refresh", exclusive=True)
+        self.run_worker(
+            self._refresh_after_success(
+                projection,
+                request=request,
+                operation_controller=operation_controller,
+            ),
+            group="aeat-sync-refresh",
+            exclusive=True,
+        )
 
-    async def _refresh_after_success(self) -> None:
-        """Read and apply a fresh snapshot outside the UI event loop."""
+    async def _refresh_after_success(
+        self,
+        operation_projection: OperationPublicProjectionV1,
+        *,
+        request: AeatSyncOperationRequestV1 | None,
+        operation_controller: OperationControllerPort | None,
+    ) -> None:
+        """Read the safe list summaries before rebuilding the workspace snapshot."""
         refresh = self.controller.refresh_snapshot
-        if refresh is None:
-            return
-        try:
-            refreshed = await asyncio.to_thread(refresh)
-            self.refresh_projection(refreshed)
-        except Exception:  # The installed host may lose the bound session during refresh.
+        notification_list = request is not None and (
+            request.action.action_id == "operator.live.notifications.list"
+            and request.operation == "live.notifications.list"
+        )
+        notification_summary: str | None = None
+        result_failed = False
+        if notification_list:
+            if operation_controller is None:
+                result_failed = True
+            else:
+                try:
+                    result = await cast(
+                        _NotificationsListResultReader, operation_controller
+                    ).read_notifications_list_result(operation_projection)
+                    notification_summary = self._notifications_list_summary(result)
+                except Exception:  # do not disclose protected operation result details
+                    result_failed = True
+
+        if refresh is not None:
+            try:
+                refreshed = await asyncio.to_thread(refresh)
+                self.refresh_projection(refreshed)
+            except Exception:  # The installed host may lose the bound session during refresh.
+                self.query_one("#aeat-sync-status", Static).update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
+                return
+        if result_failed:
             self.query_one("#aeat-sync-status", Static).update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
+        elif notification_summary is not None:
+            self.query_one("#aeat-sync-status", Static).update(notification_summary)
+
+    @staticmethod
+    def _notifications_list_summary(result: NotificationsListPublicResultV1) -> str:
+        """Render only snapshot capture times and public notification-row counts."""
+        lines = [
+            f"{aeat_sync_copy('tui.aeat_sync.notifications.title')} · "
+            f"{aeat_sync_copy('tui.aeat_sync.status.items', count=result.count)}"
+        ]
+        lines.extend(
+            f"{row.captured_at.isoformat()} · {aeat_sync_copy('tui.aeat_sync.status.items', count=row.row_count)}"
+            for row in result.rows
+        )
+        return "\n".join(lines)
 
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:
         """Make the one-shot operation guard visible during a host handoff."""

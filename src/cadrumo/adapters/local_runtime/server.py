@@ -43,10 +43,15 @@ from ...application.runtime.operation_access import (
     RuntimeOperationSubmitPayload,
 )
 from ...application.runtime.owner_control import RuntimeOwnerControl, RuntimeStopConfirm, RuntimeStopPreviewRequest
-from ...application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileHandler, RuntimeRequest
+from ...application.runtime.profile_access import (
+    RuntimeAccessRefusal,
+    RuntimeProfileHandler,
+    RuntimeProfileStatus,
+    RuntimeRequest,
+)
 from ...application.runtime.transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
 from ...core.time.clock import now
-from .framing import accept_runtime_handshake, read_document, write_document
+from .framing import accept_runtime_handshake, read_document, write_document, write_profile_status
 from .login import capture_runtime_login
 
 
@@ -253,7 +258,10 @@ class RuntimeTransportServer:
                         connection_id=context.connection_id,
                         code=RuntimeRefusalCode.UNAVAILABLE,
                     )
-                write_document(channel, status, deadline=time.monotonic() + 5)
+                if isinstance(status, RuntimeProfileStatus):
+                    write_profile_status(channel, status, deadline=time.monotonic() + 5)
+                else:
+                    write_document(channel, status, deadline=time.monotonic() + 5)
         except RuntimeRefusalError:
             # No peer input or secret bytes become a diagnostic. Incompatible,
             # malformed, disconnected and timed-out connections end locally.

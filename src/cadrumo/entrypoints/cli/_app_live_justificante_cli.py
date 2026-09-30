@@ -1,22 +1,19 @@
-"""Behavior handlers for live :class:`JustificanteCaptureSnapshot` commands.
+"""Behavior handlers for exact-profile live justificante operations.
 
-The pull command delegates to :func:`capture_justificante_snapshot_outcome`;
-the list and view commands read :class:`JustificanteCaptureSnapshotService`
-storage. The emitted payloads are :class:`JustificanteCaptureResult`,
+Pull uses the registered capture worker; list and view use registered local
+snapshot reads. The emitted payloads are :class:`JustificanteCaptureResult`,
 :class:`JustificanteListResult`, and :class:`JustificanteViewResult`.
 """
 
 from __future__ import annotations
 
-import asyncio
-
 import typer
 
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
-from ._app_live_auth_preflight import emit_live_auth_preflight
-from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import authority_operation, certificate_secret_backend_factory, operator_scope_ports
+from .common import emit_envelope
+from .runtime_justificante_capture import capture_justificante_for_cli
+from .runtime_profile_binding import bound_profile_client
 
 
 def _period_option(period: str, *, year: int) -> Period:
@@ -32,76 +29,53 @@ def justificante_pull(
     year: int,
     period: str,
 ) -> None:
-    """Pull one signed AEAT receipt into a persisted :class:`JustificanteCaptureSnapshot`.
-
-    The command delegates to :func:`capture_justificante_snapshot_outcome`, so
-    the remote read, content-addressed snapshot write, parsed justificante
-    metadata registration, and optional local filing-evidence stamp share the
-    same application boundary before emitting :class:`JustificanteCaptureResult`.
-    """
-    from ...application.live.justificante import capture_justificante_snapshot_outcome
+    """Pull one signed AEAT receipt through the exact-profile worker."""
     from ._app_live_justificante_payloads import JustificanteCaptureResult
-    from .app_live_justificante_composition import (
-        build_justificante_authenticity_verifier,
-        build_justificante_capture_service,
-        build_justificante_live_read_port,
-        build_justificante_registration_ports,
-    )
 
-    bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(ctx)
-    outcome = asyncio.run(
-        capture_justificante_snapshot_outcome(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            year=year,
-            period=_period_option(period, year=year),
-            service=build_justificante_capture_service(bucket_id),
-            read_port=build_justificante_live_read_port(
-                certificate_secret_backend_factory(ctx),
-                operator_scope_ports(ctx),
-                authority_operation(ctx),
-            ),
-            registration_ports=build_justificante_registration_ports(),
-            verifier=build_justificante_authenticity_verifier(),
-        ),
-    )
-    persisted = outcome.snapshot
+    profile_id = bound_profile_client(ctx).profile_id
+    bucket_id = str(profile_id)
+    persisted = capture_justificante_for_cli(
+        ctx,
+        profile_id=profile_id,
+        modelo=modelo,
+        year=year,
+        period=_period_option(period, year=year),
+    ).projection
     result = JustificanteCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
         modelo=Modelo(persisted.modelo),
         filing_year=persisted.filing_year,
-        period=persisted.period.registry_token,
+        period=persisted.period,
         expediente_id=persisted.expediente_id,
         csv=persisted.csv,
         pdf_sha256=persisted.pdf_sha256,
         source_kind=persisted.source_kind,
         state=persisted.state,
         captured_at=persisted.captured_at,
-        justificante_metadata_registered=outcome.justificante_metadata_registered,
-        calendar_evidence_available=outcome.justificante_metadata_registered,
-        modelo_filing_record_required=not outcome.filing_evidence_stamped,
-        filing_evidence_stamped=outcome.filing_evidence_stamped,
-        filing_record_id=outcome.filing_record_id,
+        justificante_metadata_registered=persisted.justificante_metadata_registered,
+        calendar_evidence_available=persisted.calendar_evidence_available,
+        modelo_filing_record_required=persisted.modelo_filing_record_required,
+        filing_evidence_stamped=persisted.filing_evidence_stamped,
+        filing_record_id=persisted.filing_record_id,
     )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{persisted.snapshot_id}",
         f"modelo\t{persisted.modelo}",
         f"filing_year\t{persisted.filing_year}",
-        f"period\t{persisted.period.registry_token}",
+        f"period\t{persisted.period}",
         f"expediente_id\t{persisted.expediente_id}",
         f"pdf_sha256\t{persisted.pdf_sha256}",
         f"source_kind\t{persisted.source_kind}",
         f"captured_at\t{persisted.captured_at.isoformat()}",
-        f"justificante_metadata_registered\t{str(outcome.justificante_metadata_registered).lower()}",
-        f"calendar_evidence_available\t{str(outcome.justificante_metadata_registered).lower()}",
-        f"modelo_filing_record_required\t{str(not outcome.filing_evidence_stamped).lower()}",
-        f"filing_evidence_stamped\t{str(outcome.filing_evidence_stamped).lower()}",
+        f"justificante_metadata_registered\t{str(persisted.justificante_metadata_registered).lower()}",
+        f"calendar_evidence_available\t{str(persisted.calendar_evidence_available).lower()}",
+        f"modelo_filing_record_required\t{str(persisted.modelo_filing_record_required).lower()}",
+        f"filing_evidence_stamped\t{str(persisted.filing_evidence_stamped).lower()}",
     ]
-    if outcome.filing_record_id is not None:
-        lines.append(f"filing_record_id\t{outcome.filing_record_id}")
+    if persisted.filing_record_id is not None:
+        lines.append(f"filing_record_id\t{persisted.filing_record_id}")
     else:
         lines.append(
             "modelo_filing_record_import\t"
@@ -112,38 +86,35 @@ def justificante_pull(
 
 
 def justificante_list(ctx: typer.Context) -> None:
-    """List active captures from :class:`JustificanteCaptureSnapshotService`.
+    """List the active receipt summaries returned by the registered profile read.
 
-    Rows are :class:`JustificanteSnapshotSummaryPayload` projections emitted in
-    a :class:`JustificanteListResult` envelope.
+    Rows are projected into the existing :class:`JustificanteListResult` envelope.
     """
+    from ...application.live.snapshot_base import SnapshotLifecycleState
     from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
-    from .app_live_justificante_composition import build_justificante_capture_service
+    from .runtime_justificante_read import read_justificante_list_for_cli
 
-    bucket_id = active_bucket_id_or_refuse()
-    rows = build_justificante_capture_service(bucket_id).list_snapshots()
+    projection = read_justificante_list_for_cli(ctx).projection
+    bucket_id = projection.bucket_id
     result = JustificanteListResult(
         bucket_id=bucket_id,
-        count=len(rows),
+        count=projection.count,
         rows=[
             JustificanteSnapshotSummaryPayload(
                 snapshot_id=row.snapshot_id,
                 modelo=Modelo(row.modelo),
                 filing_year=row.filing_year,
-                period=row.period.registry_token,
+                period=row.period,
                 pdf_sha256=row.pdf_sha256,
-                state=row.state,
+                state=SnapshotLifecycleState(row.state),
                 captured_at=row.captured_at,
             )
-            for row in rows
+            for row in projection.rows
         ],
     )
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for row in rows:
-        lines.append(
-            f"{row.snapshot_id}\t{row.modelo}\t{row.filing_year}\t{row.period.registry_token}"
-            f"\t{row.captured_at.isoformat()}"
-        )
+    lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
+    for row in projection.rows:
+        lines.append(f"{row.snapshot_id}\t{row.modelo}\t{row.filing_year}\t{row.period}\t{row.captured_at.isoformat()}")
     emit_envelope(ctx, command="app.live.justificante.list", result=result, lines=lines)
 
 
@@ -151,27 +122,28 @@ def justificante_view(
     ctx: typer.Context,
     snapshot_id: str,
 ) -> None:
-    """Show one :class:`JustificanteCaptureSnapshot` provenance record.
+    """Show one receipt provenance record through the registered profile read.
 
-    The snapshot is resolved through :class:`JustificanteCaptureSnapshotService`
-    and projected as :class:`JustificanteViewResult`.
+    The bounded result is emitted as :class:`JustificanteViewResult`.
     """
+    from ...application.calculations.observations_repository import ObservationSourceKind
+    from ...application.live.snapshot_base import SnapshotLifecycleState
     from ._app_live_justificante_payloads import JustificanteViewResult
-    from .app_live_justificante_composition import build_justificante_capture_service
+    from .runtime_justificante_read import read_justificante_show_for_cli
 
-    bucket_id = active_bucket_id_or_refuse()
-    record = build_justificante_capture_service(bucket_id).show(snapshot_id)
+    record = read_justificante_show_for_cli(ctx, snapshot_id=snapshot_id).projection
+    bucket_id = record.bucket_id
     result = JustificanteViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
         modelo=Modelo(record.modelo),
         filing_year=record.filing_year,
-        period=record.period.registry_token,
+        period=record.period,
         expediente_id=record.expediente_id,
         csv=record.csv,
         pdf_sha256=record.pdf_sha256,
-        source_kind=record.source_kind,
-        state=record.state,
+        source_kind=ObservationSourceKind(record.source_kind),
+        state=SnapshotLifecycleState(record.state),
         captured_at=record.captured_at,
     )
     lines = [
@@ -179,11 +151,11 @@ def justificante_view(
         f"snapshot_id\t{record.snapshot_id}",
         f"modelo\t{record.modelo}",
         f"filing_year\t{record.filing_year}",
-        f"period\t{record.period.registry_token}",
+        f"period\t{record.period}",
         f"expediente_id\t{record.expediente_id}",
         f"pdf_sha256\t{record.pdf_sha256}",
         f"source_kind\t{record.source_kind}",
-        f"state\t{record.state.value}",
+        f"state\t{record.state}",
         f"captured_at\t{record.captured_at.isoformat()}",
     ]
     emit_envelope(ctx, command="app.live.justificante.view", result=result, lines=lines)

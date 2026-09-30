@@ -22,6 +22,12 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import (
+    ExternalEvidenceKind,
+    FilingDeclarationKind,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
 from ....domain.modelos.verification_report import VerificationReportCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -32,12 +38,14 @@ from ...operations.registry import OperationFrontendProjection, OperationRegistr
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import work_addressing
+from ..external_import_actions import build_external_filing_record
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..revision_selection_operation import (
     MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionExecutor,
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
+    _filed_external_without_report,
     build_modelo_work_revision_definition,
     build_modelo_work_revision_registration,
 )
@@ -80,6 +88,76 @@ def _projection() -> ModeloWorkRevisionProjection:
         verification_report_id=_REPORT_ID,
         granted_verificado_completo=True,
     )
+
+
+def test_external_import_revision_requires_matching_confirmed_filing_receipt() -> None:
+    """A report-free verified revision is accepted only with its own AEAT receipt."""
+    unit = _unit()
+    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=str(unit.modelo),
+            revision_id=unit.revision_id,
+            modelo_year=unit.filing_year,
+            period=unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.PRESENTADO,
+        created_at=instant,
+        updated_at=instant,
+        verified_at=instant,
+        verified_by="source operator",
+        filed_at=instant,
+        filed_by="source operator",
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    filing_id = derive_filing_record_id(
+        work_unit_id=unit.work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="source operator",
+    )
+    record = build_external_filing_record(
+        filing_record_id=filing_id,
+        work_unit=unit,
+        calculation_revision_id=revision_id,
+        filed_at=instant,
+        filed_by="source operator",
+        evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+        evidence_reference_id="TEST-CSV-RECEIPT",
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
+    )
+
+    class FilingRepository:
+        bucket_id = str(_PROFILE)
+
+        def __init__(self, catalogue: ModeloRecordCatalogue) -> None:
+            self.catalogue = catalogue
+
+        def load(self) -> ModeloRecordCatalogue:
+            return self.catalogue
+
+    repository = FilingRepository(ModeloRecordCatalogue(records={filing_id: record}))
+    bundle = cast(VerificationRepositoryBundle, cast(object, SimpleNamespace(filing=repository)))
+    assert _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+
+    repository.catalogue = ModeloRecordCatalogue()
+    assert not _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+
+    repository.catalogue = ModeloRecordCatalogue(records={filing_id: record})
+    repository.bucket_id = str(_OTHER_PROFILE)
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _filed_external_without_report(revision, unit, bundle, profile_id=_PROFILE)
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
 def test_registered_projection_roundtrips_without_financial_values_or_report_contents() -> None:

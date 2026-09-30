@@ -1,20 +1,20 @@
 {
   "mcpServers": {
     "vaultspec-core": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
-        "--from",
-        "vaultspec-core",
+        "run",
+        "--no-sync",
         "python",
         "-m",
         "vaultspec_core.mcp_server.app"
       ]
     },
     "vaultspec-rag": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
-        "--from",
-        "vaultspec-rag[gpu,mcp]",
+        "run",
+        "--no-sync",
         "python",
         "-m",
         "vaultspec_rag.server"

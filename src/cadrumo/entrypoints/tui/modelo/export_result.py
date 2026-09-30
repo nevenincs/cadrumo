@@ -25,7 +25,7 @@ from textual.widgets import Button, Static
 from ....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
 )
 from ....core.i18n.render import tr
 from ....core.modelo_export_artefact import ModeloExportArtefact
@@ -94,7 +94,7 @@ EXPORT_RESULT_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
 }
 
 
-def export_result_values(result: ModeloExportPublicResultV2) -> dict[str, str]:
+def export_result_values(result: ModeloExportPublicResultV3) -> dict[str, str]:
     """Return each row's displayed value, copied from the result and named in the operator's words."""
     return {
         "calculation_revision_id": result.calculation_revision_id,
@@ -109,7 +109,7 @@ def export_result_values(result: ModeloExportPublicResultV2) -> dict[str, str]:
     }
 
 
-def export_result_warnings(result: ModeloExportPublicResultV2 | None) -> tuple[NoticePresentation, ...]:
+def export_result_warnings(result: ModeloExportPublicResultV3 | None) -> tuple[NoticePresentation, ...]:
     """Return every limit the result states on the file, most fundamental first.
 
     No export is official AEAT evidence, so that warning is always present. The
@@ -145,7 +145,7 @@ class ModeloExportResultScreen(ModalScreen[None]):
     DEFAULT_CSS = _EXPORT_RESULT_CSS
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
 
-    def __init__(self, result: ModeloExportPublicResultV2 | None) -> None:
+    def __init__(self, result: ModeloExportPublicResultV3 | None) -> None:
         """Hold the resolved result, or ``None`` when it could not be read."""
         super().__init__()
         self._result = result

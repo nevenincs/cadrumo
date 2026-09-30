@@ -100,22 +100,18 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 
 ## Run the Model Context Protocol (MCP) surface
 
-Cadrumo's separate `cadrumo-harness` distribution provides the MCP server,
-`cadrumo-mcp`, so an AI assistant can operate the same local, gated commands
-the CLI exposes, together with an agent harness: the operator rules,
-taxpayer-situation skills, and scoped agent personas that keep the assistant
-inside the safety boundary.
-
-In the beta, synchronize that workspace member and run the server from the
-same repository checkout:
+Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an agent
+to registered operations through the local runtime and binds each connection
+to an explicit profile ID. In a source checkout, check the installed entrypoint
+with:
 
 ```bash
-uv sync --package cadrumo-harness
-uv run --package cadrumo-harness cadrumo-mcp --help
+uv sync
+uv run --no-sync cadrumo-mcp --help
 ```
 
-[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout
-registration and explains what the agent can and cannot do.
+[Connect an agent](how-to/connect-an-agent.md) shows profile-bound registration
+and the grant request flow.
 
 ## Next steps
 

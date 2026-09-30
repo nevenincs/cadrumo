@@ -15,4 +15,5 @@ Submodules
 
    cadrumo.application.bienes_inversion.declare_command
    cadrumo.application.bienes_inversion.ports
+   cadrumo.application.bienes_inversion.registered_operation
    cadrumo.application.bienes_inversion.service

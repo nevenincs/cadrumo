@@ -46,7 +46,8 @@ from __future__ import annotations
 
 import base64
 import binascii
-from collections.abc import Callable, Sequence
+from collections.abc import AsyncGenerator, Callable, Sequence
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -58,7 +59,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
-    from ..modelo.reconciliation import ModeloReconciliationReport
 
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError, pydantic_validation_boundary
@@ -81,6 +81,7 @@ from .errors import (
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
+from .filed_data_ports import FiledEffectGuard
 from .justificante_ports import (
     JustificanteAuthenticityVerifierPort,
     JustificanteDeclaration,
@@ -89,6 +90,7 @@ from .justificante_ports import (
     JustificanteRegistrationPorts,
     JustificanteSnapshotPersistencePort,
 )
+from .session import SessionWriteReporter
 from .snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
@@ -102,6 +104,16 @@ JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = "cadrumo.application.live.justificante
 # ``is_official_aeat`` capability lets a dependent period whose upstream evidence
 # is this capture clear the ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker.
 JUSTIFICANTE_CAPTURE_SOURCE_KIND = ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE
+
+
+@asynccontextmanager
+async def _local_effect_boundary(effect_guard: FiledEffectGuard | None) -> AsyncGenerator[None]:
+    """Enter a caller's fresh local write fence when one was supplied."""
+    if effect_guard is None:
+        yield
+    else:
+        async with effect_guard():
+            yield
 
 
 class JustificanteAuthenticity(StrEnum):
@@ -661,42 +673,6 @@ def register_capture_justificante_metadata(
     return justificante
 
 
-def reconcile_capture(
-    *,
-    work_unit_id: str,
-    snapshot: JustificanteCaptureSnapshot,
-    actor: str = "operator",
-    operation: PinnedAuthorityOperation,
-) -> ModeloReconciliationReport:
-    """Reconcile a work unit against a persisted live capture.
-
-    Reads the captured PDF from secure storage into memory and delegates to the
-    existing local-only reconciler; the reconciler never contacts AEAT and never
-    writes the plaintext receipt to disk. This is the live-sourced equivalent of
-    the operator hand-passing a downloaded justificante via the local
-    ``reconcile import --file PATH`` surface.
-
-    Returns:
-        A :class:`ModeloReconciliationReport` for the in-memory receipt comparison.
-    """
-    from ..modelo.reconciliation import (
-        ModeloReconciliationBytesCommand,
-        modelo_reconcile_bytes,
-    )
-    from ..modelo.reconciliation_records import ModeloReconciliationEvidenceKind
-
-    return modelo_reconcile_bytes(
-        ModeloReconciliationBytesCommand(
-            work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
-            source_bytes=snapshot.decoded_pdf_bytes(),
-            source_ref=_capture_secure_reference(snapshot),
-            actor=actor,
-        ),
-        operation=operation,
-    )
-
-
 def _justificante_matches_capture_axis(
     justificante: Justificante,
     snapshot: JustificanteCaptureSnapshot,
@@ -708,14 +684,11 @@ def _justificante_matches_capture_axis(
     )
 
 
-def _capture_secure_reference(snapshot: JustificanteCaptureSnapshot) -> str:
-    return f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
-
-
 def register_capture_as_filing_evidence(
     *,
     snapshot: JustificanteCaptureSnapshot,
     ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRecord:
     """Confirm the period's filing with a persisted live capture of its receipt.
 
@@ -760,7 +733,7 @@ def register_capture_as_filing_evidence(
 
     justificante = parse_capture_to_justificante(snapshot, ports=ports)
     _require_receipt_csv_matches_capture(justificante, snapshot)
-    expected_tax_id = _expected_tax_id_for_filing_record(current)
+    expected_tax_id = _expected_tax_id_for_filing_record(current, authority_operation=authority_operation)
     if not _justificante_matches_filing_record(
         justificante,
         current,
@@ -824,6 +797,7 @@ def register_capture_as_filing_evidence(
         ),
         actor="aeat-live-capture",
         clock=now(),
+        authority_operation=authority_operation,
     )
     settled = (
         ports.filing.load().get(result.filing_record_id)
@@ -844,21 +818,29 @@ def register_capture_as_filing_evidence(
     return settled
 
 
-def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
+def _expected_tax_id_for_filing_record(
+    filing: ModeloRecord, *, authority_operation: PinnedAuthorityOperation | None = None
+) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
         return tax_id_identity_token(filing.member_nif)
     from ...core.errors.hierarchy import CadrumoError
     from ...domain.calculations.registry.authority import bundled_indexed_authority
+    from ..user_profile.access_errors import ProfileAccessRefusedError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_values
 
-    with bundled_indexed_authority().operation() as operation:
+    if authority_operation is None:
+        with bundled_indexed_authority().operation() as operation:
+            return _expected_tax_id_for_filing_record(filing, authority_operation=operation)
+    with nullcontext(authority_operation) as operation:
         try:
             profile_decode_context = operation.profile_decode_context()
             record = ProfileRecordRepository.for_current_session(
                 filing.bucket_id,
                 profile_decode_context=profile_decode_context,
             ).load(filing.bucket_id)
+        except ProfileAccessRefusedError:
+            raise
         except (CadrumoError, OSError) as exc:
             raise LiveApplicationInputError(
                 translated_message="application.live.justificante.errors.filing_identity_unresolved",
@@ -921,6 +903,7 @@ def stamp_capture_evidence_if_filed(
     snapshot: JustificanteCaptureSnapshot,
     *,
     ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> ModeloRecord | None:
     """Best-effort filing-evidence registration for an already persisted capture."""
     from ...domain.justificante.errors import JustificanteParseError
@@ -936,7 +919,9 @@ def stamp_capture_evidence_if_filed(
         return None
 
     try:
-        return register_capture_as_filing_evidence(snapshot=snapshot, ports=ports)
+        return register_capture_as_filing_evidence(
+            snapshot=snapshot, ports=ports, authority_operation=authority_operation
+        )
     except JustificanteParseError:
         return None
 
@@ -948,6 +933,7 @@ async def verify_capture_authenticity(
     verifier: JustificanteAuthenticityVerifierPort,
     browser: object | None = None,
     browser_session_factory: Callable[[], object] | None = None,
+    effect_guard: FiledEffectGuard | None = None,
 ) -> JustificanteCaptureSnapshot:
     """Ask AEAT's public cotejo viewer about ``snapshot`` and stamp the verdict.
 
@@ -974,6 +960,7 @@ async def verify_capture_authenticity(
             ``None``, the verifier builds and closes its own.
         browser_session_factory: Optional no-argument factory for the
             self-owned verifier path. Ignored when ``browser`` is supplied.
+        effect_guard: Fresh local COMMIT fence entered only for the verdict stamp.
 
     Returns:
         The stamped :class:`JustificanteCaptureSnapshot`.
@@ -985,14 +972,11 @@ async def verify_capture_authenticity(
             browser_session_factory=browser_session_factory,
         )
     except JustificanteVerificationError:
-        return service.stamp_authenticity(
-            snapshot=snapshot,
-            authenticity=JustificanteAuthenticity.UNAVAILABLE,
-        )
-    return service.stamp_authenticity(
-        snapshot=snapshot,
-        authenticity=(JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED),
-    )
+        authenticity = JustificanteAuthenticity.UNAVAILABLE
+    else:
+        authenticity = JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED
+    async with _local_effect_boundary(effect_guard):
+        return service.stamp_authenticity(snapshot=snapshot, authenticity=authenticity)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1029,6 +1013,8 @@ async def capture_justificante_snapshot(
     read_port: JustificanteLiveReadPort,
     registration_ports: JustificanteRegistrationPorts,
     verifier: JustificanteAuthenticityVerifierPort,
+    effect_guard: FiledEffectGuard | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> JustificanteCaptureSnapshot:
     """Capture and persist the official justificante for one filed work unit."""
     outcome = await capture_justificante_snapshot_outcome(
@@ -1040,6 +1026,8 @@ async def capture_justificante_snapshot(
         read_port=read_port,
         registration_ports=registration_ports,
         verifier=verifier,
+        effect_guard=effect_guard,
+        authority_operation=authority_operation,
     )
     return outcome.snapshot
 
@@ -1054,9 +1042,14 @@ async def capture_justificante_snapshot_outcome(
     read_port: JustificanteLiveReadPort,
     registration_ports: JustificanteRegistrationPorts,
     verifier: JustificanteAuthenticityVerifierPort,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> JustificanteCaptureOutcome:
     """Capture a justificante and report the separate metadata and filing-evidence outcomes."""
-    declarations, expedientes = await read_port.declarations_and_expedientes(modelo=modelo, year=year)
+    declarations, expedientes = await read_port.declarations_and_expedientes(
+        modelo=modelo, year=year, effect_guard=effect_guard, on_session_write=on_session_write
+    )
     expediente = resolve_period_expediente(
         declarations=declarations,
         expedientes=expedientes,
@@ -1064,19 +1057,26 @@ async def capture_justificante_snapshot_outcome(
         period=period,
     )
     capture = await read_port.capture(expediente_id=expediente.expediente_id)
-    persisted = service.capture(
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        expediente_id=capture.expediente_id,
-        csv=capture.csv,
-        pdf_bytes=capture.pdf_bytes,
-        pdf_sha256=capture.pdf_sha256,
-        captured_at=now(),
+    async with _local_effect_boundary(effect_guard):
+        persisted = service.capture(
+            modelo=modelo,
+            filing_year=year,
+            period=period,
+            expediente_id=capture.expediente_id,
+            csv=capture.csv,
+            pdf_bytes=capture.pdf_bytes,
+            pdf_sha256=capture.pdf_sha256,
+            captured_at=now(),
+        )
+    persisted = await verify_capture_authenticity(
+        snapshot=persisted, service=service, verifier=verifier, effect_guard=effect_guard
     )
-    persisted = await verify_capture_authenticity(snapshot=persisted, service=service, verifier=verifier)
-    justificante = register_capture_justificante_metadata(snapshot=persisted, ports=registration_ports)
-    filing_record = stamp_capture_evidence_if_filed(persisted, ports=registration_ports)
+    async with _local_effect_boundary(effect_guard):
+        justificante = register_capture_justificante_metadata(snapshot=persisted, ports=registration_ports)
+    async with _local_effect_boundary(effect_guard):
+        filing_record = stamp_capture_evidence_if_filed(
+            persisted, ports=registration_ports, authority_operation=authority_operation
+        )
     return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
 
 
@@ -1094,7 +1094,6 @@ __all__ = [
     "derive_justificante_capture_snapshot_id",
     "justificante_capture_snapshot_object_key",
     "parse_capture_to_justificante",
-    "reconcile_capture",
     "register_capture_as_filing_evidence",
     "register_capture_justificante_metadata",
     "resolve_period_expediente",

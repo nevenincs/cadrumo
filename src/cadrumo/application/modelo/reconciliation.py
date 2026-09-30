@@ -49,6 +49,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -103,6 +104,7 @@ _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
     from ...core.period import Period
+    from ...domain.buckets.event import BucketEvent
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -258,6 +260,20 @@ class ModeloReconciliationReport(BaseModel):
     narrative: str = ""
 
 
+@dataclass(frozen=True, slots=True)
+class PreparedModeloReconciliation:
+    """Compared evidence awaiting its single atomic record/event write."""
+
+    report: ModeloReconciliationReport
+    record: ModeloReconciliationRecord
+    event: BucketEvent
+
+    def persist(self) -> ModeloReconciliationReport:
+        """Commit the prepared record and event in one persistence unit."""
+        modelo_reconciliation_persistence().persist_with_event(self.record, self.event)
+        return self.report
+
+
 class ReconciliationEvidenceInvalidError(CadrumoError):
     """Raised when the supplied external evidence cannot be parsed.
 
@@ -363,6 +379,15 @@ def modelo_reconcile(
     Returns:
         A :class:`ModeloReconciliationReport`.
     """
+    return prepare_modelo_reconcile(command, operation=operation).persist()
+
+
+def prepare_modelo_reconcile(
+    command: ModeloReconciliationCommand,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> PreparedModeloReconciliation:
+    """Parse and compare a local PDF without writing the reconciliation."""
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         catalogue, bucket_id = _active_reconciliation_catalogue()
         work_unit = _require_declaration_enrolled_modelo(
@@ -388,7 +413,7 @@ def modelo_reconcile(
             )
         except ReconciliationDeclaracionParseError as exc:
             raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
-        return reconcile_parsed_declaracion(
+        return prepare_parsed_declaracion(
             work_unit=work_unit,
             source_kind=command.source_kind,
             source_ref=str(command.source_path),
@@ -402,7 +427,7 @@ def modelo_reconcile(
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
     catalogue, bucket_id = _active_reconciliation_catalogue()
-    return reconcile_parsed_justificante(
+    return prepare_parsed_justificante(
         work_unit=_resolve_work_unit_for_reconciliation(
             work_unit_id=command.work_unit_id,
             catalogue=catalogue,
@@ -441,6 +466,15 @@ def modelo_reconcile_bytes(
         The :class:`ModeloReconciliationReport` comparing the parsed
         justificante metadata to the work unit and active profile.
     """
+    return prepare_modelo_reconcile_bytes(command, operation=operation).persist()
+
+
+def prepare_modelo_reconcile_bytes(
+    command: ModeloReconciliationBytesCommand,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> PreparedModeloReconciliation:
+    """Parse and compare secure-storage bytes without writing a record."""
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
@@ -451,7 +485,7 @@ def modelo_reconcile_bytes(
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=command.source_ref) from exc
     catalogue, bucket_id = _active_reconciliation_catalogue()
-    return reconcile_parsed_justificante(
+    return prepare_parsed_justificante(
         work_unit=_resolve_work_unit_for_reconciliation(
             work_unit_id=command.work_unit_id,
             catalogue=catalogue,
@@ -475,6 +509,26 @@ def reconcile_parsed_justificante(
     operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
     """Reconcile parsed justificante evidence with the selected work unit."""
+    return prepare_parsed_justificante(
+        work_unit=work_unit,
+        source_kind=source_kind,
+        source_ref=source_ref,
+        actor=actor,
+        justificante=justificante,
+        operation=operation,
+    ).persist()
+
+
+def prepare_parsed_justificante(
+    *,
+    work_unit: WorkUnit,
+    source_kind: ModeloReconciliationEvidenceKind,
+    source_ref: str,
+    actor: str,
+    justificante: Justificante,
+    operation: PinnedAuthorityOperation,
+) -> PreparedModeloReconciliation:
+    """Compare parsed justificante evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
 
     diffs: list[ModeloReconciliationDiff] = []
@@ -504,7 +558,7 @@ def reconcile_parsed_justificante(
     diffs.extend(total_diffs)
     advisories.extend(total_advisories)
 
-    return _finalise_reconciliation(
+    return _prepare_reconciliation(
         work_unit=work_unit,
         source_kind=source_kind,
         source_ref=source_ref,
@@ -525,6 +579,26 @@ def reconcile_parsed_declaracion(
     operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
     """Reconcile parsed declaration evidence with the selected work unit."""
+    return prepare_parsed_declaracion(
+        work_unit=work_unit,
+        source_kind=source_kind,
+        source_ref=source_ref,
+        actor=actor,
+        declaracion=declaracion,
+        operation=operation,
+    ).persist()
+
+
+def prepare_parsed_declaracion(
+    *,
+    work_unit: WorkUnit,
+    source_kind: ModeloReconciliationEvidenceKind,
+    source_ref: str,
+    actor: str,
+    declaracion: ReconciliationDeclaracionObservation,
+    operation: PinnedAuthorityOperation,
+) -> PreparedModeloReconciliation:
+    """Compare parsed declaration evidence without writing it."""
     active_bucket_id = work_unit.bucket_id
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
@@ -564,7 +638,7 @@ def reconcile_parsed_declaracion(
     diffs.extend(casilla_diffs)
     advisories.extend(casilla_advisories)
 
-    return _finalise_reconciliation(
+    return _prepare_reconciliation(
         work_unit=work_unit,
         source_kind=source_kind,
         source_ref=source_ref,
@@ -643,7 +717,7 @@ def _identity_header_diffs(
     return diffs
 
 
-def _finalise_reconciliation(
+def _prepare_reconciliation(
     *,
     work_unit: WorkUnit,
     source_kind: ModeloReconciliationEvidenceKind,
@@ -652,12 +726,13 @@ def _finalise_reconciliation(
     diffs: list[ModeloReconciliationDiff],
     advisories: list[ModeloReconciliationAdvisory],
     narrative_subject: str,
-) -> ModeloReconciliationReport:
-    """Build the report, persist record and event together, and return the report.
+) -> PreparedModeloReconciliation:
+    """Build the report, record and event for one later atomic write.
 
     Shared tail of every reconcile path (justificante or declaración): both
     compute their own ``diffs`` / ``advisories`` lists upstream, then converge
-    on the same verdict derivation, report assembly, and persistence.
+    on the same verdict derivation and report assembly. Preparation performs
+    no write; the caller later persists the returned pair.
 
     The :class:`ModeloReconciliationRecord` and the append-only
     ``MODELO_RECONCILED`` :class:`~domain.buckets.event.BucketEvent` land in ONE
@@ -741,9 +816,7 @@ def _finalise_reconciliation(
         actor=actor,
         reconciled_at=reconciled_at,
     )
-    modelo_reconciliation_persistence().persist_with_event(record, event)
-
-    return report
+    return PreparedModeloReconciliation(report=report, record=record, event=event)
 
 
 def _extraction_profile_provisional_advisory(

@@ -31,7 +31,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -74,9 +74,6 @@ from .work_selection import ModeloWorkSelectionMode, ModeloWorkSelectorRequest, 
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-
-OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
-"""Non-official source kind for operator-supplied local observations."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,7 +203,7 @@ def record_operator_local_observation[CasillaKey](
     )
     payload = repo.prepare_observation_envelope(
         observation,
-        source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+        source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         captured_at=captured_at,
         stamped_revision_id=revision.id,
         member_nif=member_nif,
@@ -246,7 +243,7 @@ def record_operator_local_observation[CasillaKey](
         member_nif=member_nif,
         revision_id=revision.id,
         observation_key=key,
-        source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+        source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         casilla_values=dict(canonical_values),
         captured_at=captured_at,
         captured_by=captured_by,
@@ -557,7 +554,6 @@ def _observation_rows(
 
 
 __all__ = [
-    "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
     "LocalObservationPorts",
     "ModeloLocalObservationClearResult",
     "ModeloLocalObservationResult",

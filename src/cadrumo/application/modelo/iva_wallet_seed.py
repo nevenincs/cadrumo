@@ -37,8 +37,8 @@ from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
+from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
@@ -165,6 +165,7 @@ def seed_iva_compensation_period_for_bucket(
     period: Period,
     amount: Decimal,
     ports: ModeloIvaWalletSeedPorts,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationPeriodState:
     """Seed local IVA compensation history for the bucket taxpayer.
 
@@ -187,14 +188,13 @@ def seed_iva_compensation_period_for_bucket(
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.seed")
-    with bundled_indexed_authority().operation() as operation:
-        return seed_iva_compensation_period(
-            taxpayer_nif=taxpayer_nif,
-            period=period,
-            amount=amount,
-            repository=ports.iva_compensation_history_repository,
-            operation=operation,
-        )
+    return seed_iva_compensation_period(
+        taxpayer_nif=taxpayer_nif,
+        period=period,
+        amount=amount,
+        repository=ports.iva_compensation_history_repository,
+        operation=operation,
+    )
 
 
 def _sealed_modelo_303_blocker_for_period(
@@ -251,6 +251,7 @@ def correct_iva_compensation_period_for_bucket(
     amount: Decimal,
     reason: str,
     ports: ModeloIvaWalletSeedPorts,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationPeriodState:
     """Correct a wrong opening IVA compensation balance, guarded and audited.
 
@@ -318,14 +319,13 @@ def correct_iva_compensation_period_for_bucket(
             },
         )
 
-    with bundled_indexed_authority().operation() as operation:
-        state = correct_iva_compensation_period(
-            taxpayer_nif=taxpayer_nif,
-            period=period,
-            amount=amount,
-            repository=history_repository,
-            operation=operation,
-        )
+    state = correct_iva_compensation_period(
+        taxpayer_nif=taxpayer_nif,
+        period=period,
+        amount=amount,
+        repository=history_repository,
+        operation=operation,
+    )
 
     _emit_iva_wallet_corrected_event(
         bucket_id=bucket_id,
@@ -390,7 +390,7 @@ def record_iva_compensation_override_for_bucket(
     reason: str,
     evidence_locator: str,
     ports: ModeloIvaWalletSeedPorts,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
@@ -447,18 +447,12 @@ def record_iva_compensation_override_for_bucket(
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return record_iva_compensation_override_for_bucket(
-                bucket_id=bucket_id,
-                period=period,
-                amount=amount,
-                reason=reason,
-                evidence_locator=evidence_locator,
-                ports=ports,
-                operation=indexed_operation,
-            )
     _require_non_negative_wallet_amount(amount)
+    for field_name, value in (("reason", reason), ("evidence_locator", evidence_locator)):
+        if len(value) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+            # The same values are written to the audit event after the decision.
+            # Refuse before either write when the event cannot represent them.
+            raise ValueError(f"{field_name} exceeds the bucket-event payload limit")
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")

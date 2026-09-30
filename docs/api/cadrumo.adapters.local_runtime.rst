@@ -45,3 +45,4 @@ Submodules
    cadrumo.adapters.local_runtime.workbench_generation
    cadrumo.adapters.local_runtime.worker_authorization
    cadrumo.adapters.local_runtime.worker_authorization_client
+   cadrumo.adapters.local_runtime.worker_lease_transfer

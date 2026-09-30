@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Awaitable, Callable
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
@@ -27,11 +28,13 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import UserProfileRecord
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
+from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -154,7 +157,7 @@ class CensalProfileBaseline(BaseModel):
 #: bare default so the number has one home: a reader can find every site bound
 #: to this shape, and a bump cannot land on the model while a writer stamping
 #: the old number silently disagrees with it.
-CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[1]] = 1
+CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
 class CensalReviewedOperand(BaseModel):
@@ -162,10 +165,11 @@ class CensalReviewedOperand(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-    schema_version: Literal[1] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
+    schema_version: Literal[2] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]
+    session_write_recorded: bool = False
     proposed_effect_digest: ContentDigestOrAbsent = ""
 
     @field_validator("field_intents")
@@ -474,14 +478,11 @@ class CensalOperationExecutor:
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         """Initialize the executor with its acquisition, apply, and boundary hooks."""
-        self._acquire = acquire or (
-            lambda: _pull_censal_datos(
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                browser_session_factory=browser_session_factory,
-                operator_scope_ports=operator_scope_ports,
-                censal_fetch_port=censal_fetch_port,
-            )
-        )
+        self._acquire = acquire
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._browser_session_factory = browser_session_factory
+        self._operator_scope_ports = operator_scope_ports
+        self._censal_fetch_port = censal_fetch_port
         self._apply = apply
         self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
 
@@ -502,7 +503,20 @@ class CensalOperationExecutor:
             return None
         await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
         await context.events.phase(CENSAL_PHASE_REMOTE_READ)
-        acquired = await self._acquire()
+        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        acquired = (
+            await self._acquire()
+            if self._acquire is not None
+            else await _pull_censal_datos(
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
+                operator_scope_ports=self._operator_scope_ports,
+                censal_fetch_port=self._censal_fetch_port,
+                authority_operation=context.authority_operation,
+                effect_guard=context.cancellation.irreversible_section,
+                on_session_write=session_receipt,
+            )
+        )
         if isinstance(acquired, CensalOperationAcquisition):
             observation = acquired.observation
             if acquired.resource is not None:
@@ -530,6 +544,7 @@ class CensalOperationExecutor:
             observation=observation,
             baseline=CensalProfileBaseline.from_record(record),
             field_intents=request.payload.field_intents,
+            session_write_recorded=session_receipt.written,
         )
         await context.events.phase(CENSAL_PHASE_INTERACTION_WAIT)
         continuation_digest = content_hash_hex(
@@ -569,7 +584,9 @@ class CensalOperationExecutor:
         operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
         if checkpoint.response_action == "reject":
             await context.events.phase(CENSAL_PHASE_REJECT)
-            await context.events.effect(OperationEffect.NONE)
+            await context.events.effect(
+                OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
+            )
             await context.events.phase(CENSAL_PHASE_SETTLEMENT)
             return f"censo-review:{proposal_digest}:{CensalOperationOutcome.REJECTED.value}"
         await context.events.phase(CENSAL_PHASE_APPLY)
@@ -602,7 +619,9 @@ class CensalOperationExecutor:
                 return None
             raise
         if stale_conflict is not None:
-            await context.events.effect(OperationEffect.NONE)
+            await context.events.effect(
+                OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
+            )
             raise stale_conflict
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase(CENSAL_PHASE_SETTLEMENT)
@@ -615,6 +634,9 @@ async def _pull_censal_datos(
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: SessionWriteReporter,
 ) -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live.censo import pull_censal_datos
@@ -624,6 +646,9 @@ async def _pull_censal_datos(
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
         censal_fetch_port=censal_fetch_port,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
     )
 
 
@@ -699,9 +724,7 @@ def build_censal_operation_definition(
         ),
         phase_codes=_CENSAL_PHASES,
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-        action_reference=ActionReference(
-            action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit").action_id
-        ),
+        action_reference=ActionReference(action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit").action_id),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RESUMABLE,
             cancellation=OperationCancellation.COOPERATIVE,

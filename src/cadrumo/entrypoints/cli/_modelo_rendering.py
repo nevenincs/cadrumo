@@ -950,7 +950,7 @@ def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
     )
 
 
-def filing_record_lines(record: ModeloRecord) -> list[str]:
+def filing_record_lines(record: ModeloRecord | ModeloRecordPayload) -> list[str]:
     """Render a :class:`~ModeloRecord` as stable text lines.
 
     External evidence, when present, is printed as explicit

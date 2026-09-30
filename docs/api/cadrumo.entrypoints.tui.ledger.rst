@@ -28,5 +28,7 @@ Submodules
    cadrumo.entrypoints.tui.ledger.record_views
    cadrumo.entrypoints.tui.ledger.review
    cadrumo.entrypoints.tui.ledger.routes
+   cadrumo.entrypoints.tui.ledger.runtime_actividad_asset
+   cadrumo.entrypoints.tui.ledger.runtime_invoice_add
    cadrumo.entrypoints.tui.ledger.workspace_injection
    cadrumo.entrypoints.tui.ledger.workspace_presentation

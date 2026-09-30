@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6f0878de566c508b2c64eaf61b5c82a1dcb32d47730fc33d19de631e816292f'
+body_hash: 'sha256:1b5d959343afc93d9d37d621b0f572636bcb860e440d0ac5d9a24ebee259a40b'
 related: []
 ---
-
 # mcp-purpose-authentication reference: current authentication and process boundaries
 
 Inspected the working tree on 2026-09-26, branch feature/mcp, base commit ef8ad07c1911ff68a46b0ee41f73b15a5a96624c. This is source evidence, not an execution or security certification. The worktree contains unrelated edits. Semantic search returned index_unverifiable; discovery continued through the complete paged ADR inventory and targeted source reads. No taxpayer data or secrets were inspected.
@@ -432,7 +431,7 @@ Historical observation before runtime route migration. The later runtime-boundar
 Counts in this observation: {'not-applicable': 51, 'resume-fallback': 258, 'self-authenticating': 4}. Counts are observations only; repeat the graph walk for subsequent enrollment work.
 
 
-Current parsed-command graph census after invoice-update enrollment: 394 nodes, 322 leaves, 263 RESUME_FALLBACK leaves, of which 187 are outside the current runtime-profile key set. The largest remaining cohorts are app.ledger (68), app.modelo (46), and app.live (31). These are current routing counts, not declarations that every remaining route needs a new executor: registered-operation availability and authoritative per-effect admission still require route-level matching. The remaining live filed-history sweep continues to need its recorded per-effect authorization prerequisite.
+Current parsed-command graph census on 2026-09-30 after certificate, ratios, recovery-status, report, inventory and activity-asset admission enrollment: 397 nodes, including 325 leaves and 329 executable nodes. Derived RESUME_FALLBACK posture applies to 269 executable nodes (266 leaves and three executable groups); 102 remain outside the runtime-profile key set (101 leaves and one executable group). Remaining cohorts include app.ledger (34), app.modelo (33), config.google (9), app.diagnostics (6), config.auth (5), app.live (4), config.profile (4), config.collab (3), app.review (2), app.quickfile (1) and config.check (1). These source-routing counts do not establish executor, TUI or installed acceptance; the ledger records verification.
 
 
 ## Lifecycle follow-up and automation custody, 2026-09-26
@@ -655,3 +654,34 @@ Installed runtime, credential and manager composition resides in adapters, share
 
 
 Invoice correction now has an application-owned `ledger.invoice.update` definition in `application/invoices/catalogue_update_operation.py`. It calls the existing atomic catalogue/audit mutation under the runtime COMMIT fence and retains UPDATED plus encrypted result publication through cancellation settlement. Its public patch carries explicit selected fields and wire-safe decimal values, preserving omission, explicit null and zero across full serialization. CLI update enrollment replaces its direct lifecycle call and retains effect receipts through guarded rendering. The unused TUI `LedgerRecordDoors` direct-storage implementation has been deleted; its protocols and record screens remain, and canonical persistence assertions no longer depend on that production adapter. This addition does not close the private-entrypoint census or establish TUI parity.
+
+
+## Complete-scope transport and additional worker routes
+
+`application/runtime/profile_worker.py` declares a finite lease-transfer envelope. `adapters/local_runtime/worker_lease_transfer.py` transfers the entire original human/install/refresh/share command as ordered 16 KiB chunks, bounded to 1 MiB total. It verifies digest, strict JSON and original request identity before custody sees any lease. The worker accepts this transfer only on its verified parent control channel. `application/runtime/profile_access.py` and `adapters/local_runtime/framing.py` likewise transfer oversized profile-status replies without dropping effective-scope permissions. Request, runtime boot and connection identities must reproduce; incomplete or corrupt transfers close the channel. Individual IPC frames retain their 64 KiB limit. Custody still checks complete child-scope narrowing and the runtime remains the live authority owner.
+
+`application/auth/certificate_source_operation.py` and `certificate_secret_operation.py` register source registration/list/selection/removal/check and secret set/removal over existing authentication services. Password material uses the registered secure-input broker. `entrypoints/cli/config` consumes these operations through the exact selected profile client. `application/ledger/ratios_operation.py` registers list/set/unset/eligible/validate, resolving category tokens under the retained authority pin. Its CLI replacement preserves existing result presentation; mutation preflight and publication use fresh commit authority.
+
+`application/user_profile/recovery_status_operation.py` registers an exact-profile, read-only recovery-wrapper status query. It discloses only canonical enrollment status under explicit PROFILE_VALUES permission, without acquiring recovery proof. `entrypoints/cli/config/runtime_recovery_status.py` replaces direct status storage access. Recovery mutation and key handover retain their separate authentication contracts.
+
+`ModeloExportPublicResultV3` in `application/modelo/export_projection.py` carries the complete canonical BOE or calculation-report receipt. `ModeloExportRequest.report_language` transports the caller-selected report language into worker execution. `entrypoints/cli/_modelo_work_report_cli.py` selects the current revision through registered metadata and reuses `modelo.export`; the frontend renders its correlated report receipt without reopening domain stores. TUI export consumers use the same V3 projection. Report verification remains a separate private route.
+
+`application/inventory/registered_operation.py` exposes list/create/movement-add/valuation-preview/closing-authority-record over the existing inventory service. Movement and closing-authority validation execute against the latest repository CAS candidate. Closing-authority writes report the actual changed flag, preserving a no-effect exact replay; valuation preview retains its canonical audit-event effect. `entrypoints/cli/runtime_ledger_inventory.py` and `_ledger_inventory_cli.py` replace direct service execution. Closed decimal and evidence DTOs preserve canonical request meaning while public outputs omit private source evidence. Complete frontend acceptance remains separate from these source bindings.
+
+
+### Activity-asset worker execution
+
+`application/actividad_asset/registered_operations.py` exposes create, inspect, correct, forecast, claim and filing handoff through existing asset services. `operation_dtos.py` preserves canonical asset history, forecasts, claims and handoff projections through closed wire-safe fields. `entrypoints/actividad_asset_composition.py` constructs the exact-profile encrypted history repository and profile read ports under the retained operation pin. Corrections validate consecutive revision identity and direct predecessor against the latest CAS candidate. Claim computation and publication share one captured immutable history; repository commit rejects a changed baseline while allowing an exact deterministic replay. CLI runtime bridges replace the corresponding direct service calls.
+
+### Deferred provider-session publication
+
+`application/live/session.py::ensure_live_authenticated_session` stages browser-session writes during guarded remote acquisition through the existing session-store deferred-write capability. Publication then requires fresh COMMIT authority. `LiveSessionWriteReceipt` records UNKNOWN before publication and UPDATED after completion, and keeps a completed session write visible when later capture deduplication has no domain effect. `adapters/outbound/aeat/auth/session_store.py` owns staged change detection and encrypted publication. Registered censo, filed-data, IVA, notification, expediente and justificante callers propagate this receipt. Censo reviewed operands retain the session-write fact in their encrypted version-2 representation so rejection or resumed processing cannot erase an earlier effect.
+
+
+### Installed asset TUI and invoice-withholding request boundary
+
+`entrypoints/tui/ledger/runtime_actividad_asset.py` implements the existing asset action protocol through `RuntimeOperationController`. The workbench injects its retained TUI client and profile label. Each action verifies the original profile/session binding before submission and after result release, correlates the terminal receipt, and reconstructs the complete existing screen model from the registered projection. The displaced TUI `ActivityAssetOperations` adapter is removed; session-loss presentation clears private asset facts.
+
+`application/modelo/invoice_withholding_capture_public.py` defines closed command and evidence DTOs for the received-invoice withholding operation, including every annual-recipient field and optional M180/M193 evidence. Decimal and period wrappers preserve canonical meaning; opaque JSON request strings are removed. Caller-authored observation collections are refused because this operation derives its observations from the exact encrypted invoice. `invoice_withholding_capture_operation.py` rehydrates registry-governed evidence and builds the canonical capture under the retained operation pin. Its catalogue lookup requires all-period authority, consistent with the existing invoice readers; the requested filing period still governs capture and aggregation.
+
+`entrypoints/tui/ledger/runtime_invoice_add.py` binds the installed invoice-entry form to `ledger.invoice.add` through the workbench's retained runtime client. It carries every form field and line, checks the originating profile/session before submission and after result release, and correlates canonical invoice facts with the terminal receipt. Validation and session-loss errors retain operation receipt context; `ledger/invoice_entry.py` discards entered values, lines and reviewed summary on session loss. The evidence door remains uninjected: extraction and confirmation need registered equivalents that preserve their source provenance and confirmation audit writes.

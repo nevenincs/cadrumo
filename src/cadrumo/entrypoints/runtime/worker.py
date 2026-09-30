@@ -17,6 +17,7 @@ from ...adapters.local_runtime.framing import VerifiedRuntimeConnection, read_do
 from ...adapters.local_runtime.profile_worker import worker_operation_namespace
 from ...adapters.local_runtime.windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
 from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.local_runtime.worker_lease_transfer import read_worker_lease
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.operation_access import operation_management_action
@@ -28,6 +29,7 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerHumanOutcome,
     ProfileWorkerIdentity,
     ProfileWorkerLeaseRequest,
+    ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObservation,
     ProfileWorkerObserveRequest,
@@ -67,9 +69,18 @@ from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 
-async def _receive(channel: WindowsRuntimeChannel, failed: asyncio.Event) -> ProfileWorkerRequest:
+async def _receive(
+    channel: WindowsRuntimeChannel, failed: asyncio.Event, *, control: bool = False
+) -> ProfileWorkerRequest:
     def read() -> ProfileWorkerRequest:
-        return read_document(channel, ProfileWorkerRequest, deadline=time.monotonic() + 5)
+        deadline = time.monotonic() + 5
+        request = read_document(channel, ProfileWorkerRequest, deadline=deadline)
+        if isinstance(request.root, ProfileWorkerLeaseTransferRequest):
+            if not control:
+                channel.close()
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            return read_worker_lease(channel, request.root, deadline=deadline)
+        return request
 
     while not failed.is_set():
         if channel.read_ready():
@@ -311,7 +322,7 @@ async def _serve(
     )
     try:
         while not failed.is_set():
-            request = (await _receive(channel, failed)).root
+            request = (await _receive(channel, failed, control=True)).root
             if failed.is_set():
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             try:

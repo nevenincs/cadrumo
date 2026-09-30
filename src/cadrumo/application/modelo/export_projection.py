@@ -1,4 +1,4 @@
-"""Public result of a locally written Modelo export, and the fichero-BOE receipt it carries."""
+"""Public Modelo export result with its canonical BOE or calculation-report receipt."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ...core.calculation_report_format import CalculationReportDocumentFormat
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
@@ -23,6 +25,7 @@ from ...domain.filing.schema import ModeloCasillaProvenance
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
+from .calculation_report_export import ModeloCalculationReportResult
 from .export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 
 
@@ -200,6 +203,64 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
         )
 
 
+class ModeloCalculationReportPublicReceipt(BaseModel):
+    """Complete calculation-report receipt without report contents or taxpayer identity."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
+    verification_report_id: str | None
+    filing_record_id: FilingRecordId | None
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: FilingYear
+    period: PublicPeriod
+    document_format: CalculationReportDocumentFormat
+    report_language: OutputLanguage
+    output_path: str = Field(min_length=1, max_length=4096)
+    byte_size: NonNegativeInt
+    file_sha256: ContentDigest
+    report_sha256: ContentDigest
+    row_count: NonNegativeInt
+    software_identity_grade: AeatSoftwareIdentityGrade | None
+    local_calculation_notice: str = Field(min_length=1)
+    signing_key_fingerprint: ContentDigest | None = None
+
+    @classmethod
+    def from_result(cls, result: ModeloCalculationReportResult) -> Self:
+        """Preserve the canonical report receipt in strict transport types."""
+        return cls(
+            calculation_revision_id=result.calculation_revision_id,
+            work_unit_id=result.work_unit_id,
+            verification_report_id=result.verification_report_id,
+            filing_record_id=result.filing_record_id,
+            modelo=str(result.modelo),
+            filing_year=result.filing_year,
+            period=PublicPeriod.from_period(result.period),
+            document_format=result.document_format,
+            report_language=result.report_language,
+            output_path=str(result.output_path),
+            byte_size=result.byte_size,
+            file_sha256=result.file_sha256,
+            report_sha256=result.report_sha256,
+            row_count=result.row_count,
+            software_identity_grade=result.software_identity_grade,
+            local_calculation_notice=result.local_calculation_notice,
+            signing_key_fingerprint=result.signing_key_fingerprint,
+        )
+
+    def to_result(self) -> ModeloCalculationReportResult:
+        """Restore the existing rendering contract without reopening published authority."""
+        return ModeloCalculationReportResult.model_validate(
+            {
+                **self.model_dump(mode="python"),
+                "period": self.period.to_period(),
+                "output_path": Path(self.output_path),
+            },
+            strict=True,
+        )
+
+
 class ModeloExportEvidenceStatus(StrEnum):
     """What one exported artefact is worth as evidence, in the export service's own terms.
 
@@ -240,7 +301,7 @@ class ModeloExportCompleteness(StrEnum):
     NOT_ASSESSED = "not_assessed"
 
 
-class ModeloExportPublicResultV2(BaseModel):
+class ModeloExportPublicResultV3(BaseModel):
     """Evidence that one export happened and what it could establish, without the exported material.
 
     Custody of the artefact is the operator's from the moment it lands: this
@@ -250,14 +311,13 @@ class ModeloExportPublicResultV2(BaseModel):
     its completeness and the grade of the software identity in its header -- so
     an incomplete or development-grade export is stated, never implied.
 
-    A fichero-BOE export also carries the service's complete receipt, so a
-    frontend reached through the runtime renders the same receipt the export
-    service returned instead of re-deriving it from the summary.
+    Each export carries its service's complete receipt so CLI and TUI can
+    render the canonical publication facts through the runtime.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-    result_version: int = 2
+    result_version: int = 3
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     artefact: ModeloExportArtefact
     #: The receipt's own format token: ``fichero-boe`` or the report's
@@ -275,20 +335,33 @@ class ModeloExportPublicResultV2(BaseModel):
     completeness: ModeloExportCompleteness
     #: Present exactly when the artefact is the fichero-BOE.
     fichero_boe: ModeloFicheroBoePublicReceipt | None = None
+    calculation_report: ModeloCalculationReportPublicReceipt | None = None
     handoff_required: bool = True
 
     @model_validator(mode="after")
     def _receipt_matches_artefact(self) -> Self:
-        """Refuse a fichero-BOE result without its receipt, or a report result carrying one."""
+        """Require the artefact's complete receipt and a matching summary."""
         if (self.artefact is ModeloExportArtefact.FICHERO_BOE) != (self.fichero_boe is not None):
             raise ValueError("a fichero-BOE export result carries exactly its receipt")
+        if (self.artefact is not ModeloExportArtefact.FICHERO_BOE) != (self.calculation_report is not None):
+            raise ValueError("a calculation-report export result carries exactly its receipt")
+        receipt = self.fichero_boe if self.fichero_boe is not None else self.calculation_report
+        if receipt is None or (
+            receipt.calculation_revision_id != self.calculation_revision_id
+            or receipt.output_path != self.output_path
+            or receipt.byte_size != self.byte_size
+            or receipt.file_sha256 != self.file_sha256
+            or receipt.software_identity_grade != self.software_identity_grade
+        ):
+            raise ValueError("export summary contradicts its canonical receipt")
         return self
 
 
 __all__ = [
+    "ModeloCalculationReportPublicReceipt",
     "ModeloExportCompleteness",
     "ModeloExportEvidenceStatus",
-    "ModeloExportPublicResultV2",
+    "ModeloExportPublicResultV3",
     "ModeloFicheroBoePublicReceipt",
     "ModeloIvaWalletDecisionPublicProvenance",
     "ModeloPriorDomiciliationPublicProvenance",

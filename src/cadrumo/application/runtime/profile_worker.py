@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, JsonValue, RootModel
 
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -43,6 +44,16 @@ class ProfileWorkerLeaseRequest(BaseModel):
     action: Literal["install", "refresh", "share"]
     request_id: UUID
     lease: AccessSession
+
+
+class ProfileWorkerLeaseTransferRequest(BaseModel):
+    """Finite transfer of one complete lease command on the private control pipe."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["lease_transfer"] = "lease_transfer"
+    request_id: UUID
+    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    payload_digest: ContentDigest
 
 
 class ProfileWorkerRetireRequest(BaseModel):
@@ -243,6 +254,7 @@ class ProfileWorkerRequest(
     RootModel[
         Annotated[
             ProfileWorkerLeaseRequest
+            | ProfileWorkerLeaseTransferRequest
             | ProfileWorkerRetireRequest
             | ProfileWorkerSettlementRequest
             | ProfileWorkerControlRequest

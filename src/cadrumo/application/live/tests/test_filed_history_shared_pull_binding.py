@@ -9,10 +9,15 @@ settle anything other than the canonical onboarding run.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import cast
+from uuid import UUID
 
 import pytest
+
+from cadrumo.core.operations import OperationEffect
 
 from ...auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...auth.operator_scope_ports import OperatorScopePorts
@@ -20,7 +25,7 @@ from ...auth.protocols import BrowserSessionFactoryPort
 from ...operations.owner import OperationEventEmitter
 from ...storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..filed_data_capture import FiledHistoryEventSink, FiledHistoryOnboardingRun
-from ..filed_data_ports import FiledDataCapturePort
+from ..filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ..filed_history_operation import (
     FiledHistoryOperationRequest,
     FiledHistoryPull,
@@ -29,6 +34,7 @@ from ..filed_history_operation import (
 from ..filed_observation_ports import FiledObservationPersistencePorts
 from ..iva_remote_state_ports import IvaRemoteStatePort
 from ..notification_ports import NotificationsPorts
+from ..session import SessionWriteReporter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,6 +66,8 @@ class _RecordingSharedPull:
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        effect_guard: FiledEffectGuard,
+        on_session_write: SessionWriteReporter,
         /,
     ) -> object:
         self.calls.append(
@@ -75,13 +83,20 @@ class _RecordingSharedPull:
                 certificate_secret_backend_factory,
                 browser_session_factory,
                 operator_scope_ports,
+                effect_guard,
+                on_session_write,
             )
         )
         return self.result
 
 
 def _request() -> FiledHistoryOperationRequest:
-    return FiledHistoryOperationRequest(output_root=Path("filed-history-output"), limit=3, dry_run=True)
+    return FiledHistoryOperationRequest(
+        profile_id=UUID("11111111-1111-4111-8111-111111111111"),
+        output_root=Path("filed-history-output"),
+        limit=3,
+        dry_run=True,
+    )
 
 
 def _dependencies() -> tuple[object, ...]:
@@ -106,6 +121,13 @@ async def _invoke(
     request: FiledHistoryOperationRequest,
     markers: tuple[object, ...],
 ) -> FiledHistoryOnboardingRun:
+    @asynccontextmanager
+    async def effect_guard() -> AsyncIterator[None]:
+        yield
+
+    async def on_session_write(_effect: OperationEffect) -> None:
+        return None
+
     return await pull(
         request,
         None,
@@ -118,6 +140,8 @@ async def _invoke(
         cast(CertificateSecretBackendFactory, markers[6]),
         cast(BrowserSessionFactoryPort, markers[7]),
         cast(OperatorScopePorts, markers[8]),
+        effect_guard,
+        on_session_write,
     )
 
 
@@ -135,7 +159,7 @@ def test_the_binding_forwards_every_argument_with_the_request_as_payload() -> No
     # The submitted request itself is the payload -- not a projection of it.
     assert forwarded[0] is request
     assert forwarded[1] is None
-    assert len(forwarded) == 2 + len(markers)
+    assert len(forwarded) == 4 + len(markers)
     for position, marker in enumerate(markers, start=2):
         assert forwarded[position] is marker
 

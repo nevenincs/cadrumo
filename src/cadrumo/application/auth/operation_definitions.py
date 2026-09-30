@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -328,20 +329,44 @@ class AuthSessionAcquireOperationExecutor:
     ) -> str:
         _require_active_profile_subject(request)
         await context.events.phase("auth.acquire.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
-        result = await self._acquire(
-            request.payload.provider.value if request.payload.provider is not None else None,
-            fresh=request.payload.fresh,
-            reset_lock=request.payload.reset_lock,
-            certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
-            browser_session_factory=self._ports.browser_session_factory,
-            operator_probe_ports=self._ports.operator_probe_ports,
-            operator_scope_ports=self._ports.operator_scope_ports,
-        )
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase("auth.acquire.settlement")
-        return await _result_reference(result, context)
+        effect_started = False
+
+        @asynccontextmanager
+        async def guarded_effect() -> AsyncGenerator[None]:
+            nonlocal effect_started
+            async with context.cancellation.irreversible_section():
+                if not effect_started:
+                    await context.events.effect(OperationEffect.UNKNOWN)
+                    effect_started = True
+                yield
+
+        async def acquire_and_settle() -> str:
+            result = await self._acquire(
+                request.payload.provider.value if request.payload.provider is not None else None,
+                fresh=request.payload.fresh,
+                reset_lock=request.payload.reset_lock,
+                certificate_secret_backend_factory=self._ports.certificate_secret_backend_factory,
+                browser_session_factory=self._ports.browser_session_factory,
+                operator_probe_ports=self._ports.operator_probe_ports,
+                operator_scope_ports=self._ports.operator_scope_ports,
+                effect_guard=guarded_effect,
+                authority_operation=context.authority_operation,
+            )
+            if (
+                type(result) is not AuthLoginResult
+                or not result.authenticated
+                or result.removed_sessions < 0
+                or (request.payload.provider is not None and result.provider != request.payload.provider.value)
+            ):
+                raise ValueError("provider acquisition returned an invalid result")
+            result = AuthLoginResult.model_validate_json(result.model_dump_json(), strict=True)
+            async with guarded_effect():
+                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.phase("auth.acquire.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(acquire_and_settle(), task_name="auth-acquire-publication")
 
 
 class AuthLogoutOperationExecutor:
@@ -532,6 +557,7 @@ def build_auth_operation_definitions(
             build=lambda: AuthSessionAcquireOperationExecutor(ports=ports, acquire=acquire),
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -584,6 +610,12 @@ def build_auth_operation_registrations(
         project_auth_configure_result,
         resolve_auth_configure_access,
     )
+    from .session_acquire_operation_access import (
+        AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+        AuthSessionAcquireOperationProjection,
+        project_auth_session_acquire_result,
+        resolve_auth_session_acquire_access,
+    )
     from .teardown_operation_access import resolve_auth_teardown_access
 
     return tuple(
@@ -621,6 +653,22 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_auth_configure_access,
                 )
                 if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
+                else OperationPublicDefinitionRegistrationV1.compose(
+                    definition=definition,
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=AuthSessionAcquireOperationRequest,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+                        schema_version=1,
+                        model_type=AuthSessionAcquireOperationProjection,
+                    ),
+                    result_projector=project_auth_session_acquire_result,
+                    access_resolver=resolve_auth_session_acquire_access,
+                )
+                if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
                 else OperationPublicDefinitionRegistrationV1.compose(
                     definition=definition,
                     request_schema=OperationSchemaBindingV1.bind(

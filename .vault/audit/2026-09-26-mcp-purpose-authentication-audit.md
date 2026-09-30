@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf54dfa4e6919b416b5aa07b40ad28dc07d9ced9b25b825dab76266008200d88'
+body_hash: 'sha256:d19bc45079803aca55431ac0b604571d9a837bf7284e4bd019ebe7cad610028a'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
@@ -13,7 +13,6 @@ related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
 ---
-
 # `mcp-purpose-authentication` audit: profile authorization and custody
 
 ## Scope
@@ -615,6 +614,9 @@ Focused evidence: five patch/census cases, one real-supervisor update case, five
 The frozen generated/import cohort passed with 15/15 contracts kept and 3,102/3,102 modules loaded, zero hard findings and matching source fingerprints; generated API documentation is conformant. The subsequent LedgerEvidenceDoor change only annotates the existing optional tuple of string sets, preserving the same expression and behavior. Its scoped static recheck is recorded separately in the execution ledger; the import fingerprint belongs to the preceding frozen cohort. No import-topology or generated API changes follow that cohort.
 
 
+Final TUI typing cleanup is complete: an optional tuple annotation plus explicit `frozenset[str]()` constructors resolves both checkers without changing runtime values or imports. All five scoped static checks pass; Pyrefly reports zero errors and one hidden warning. All delegated work is finished. The operator requested closure and a fresh Sol-high execution session; the subsequent filed-history investigation changed no source and supplies no implementation acceptance. Plan completion remains 7/20 with S08 next.
+
+
 ## Recommendations
 
 Continue the authorized plan at P03.S08/S09. Host the completed custody/admission services behind authenticated local transport and immutable profile workers, retaining the existing operation supervisor, journals and response authority. Resolve the phase-two-installed-boundary finding through S08-S11 and P04/P05, using fresh native observations and real installed acceptance. Preserve the current entrypoint census and its migration obligations.
@@ -678,3 +680,11 @@ Five calendar failures were traced to a synthetic profile identity differing fro
 ### Auth registration correction and MCP journey | low | Registry and native MCP checks pass
 
 The auth teardown registration defect above is corrected: public schemas reuse the canonical result models without a redundant projector, while exact-profile result validation precedes effect publication. Current registry construction succeeds. The authenticated MCP SDK journey passes against a real Windows profile worker and synthetic encrypted custody, including discovery/schema, execute, observation, result, disconnect and a newly admitted session using the protected reference. Its native-secret port is the existing in-memory test port, so this evidence does not establish OS credential-store acceptance. The Windows managed-stop and auth/calendar checks, frozen generated/import gate, remaining private-entrypoint census and platform matrix remain open; no Phase close is asserted.
+
+
+### integration-checkpoint-verification | medium | Pending runtime implementation checks remain visible
+
+Review for the operator-requested commit and merge of main on 2026-09-30 covers the pending runtime operation migrations and their interaction with MCP discovery and frontend routing. This is a partial checkpoint; P03.S08 and later acceptance remain open. Ruff passes after six mechanical import fixes; generated API stubs match the source, git diff whitespace validation passes, and the feature vault check exits 0 with two markdown warnings. Repository type analysis exits 1 with 233 diagnostics (209 ty, five pyrefly, 19 basedpyright), already present before the main merge. Global formatting also finds committed baseline drift outside this checkpoint; pending-change files have been formatted.
+
+The catalogue/conformance/MCP run 20260930T143957.516890Z-pytest-13576-4ec8a098 was interrupted after catalogue failures: eight declared prorrata operations are not registered, six frontend claims have no discovered surface, prorrata CLI references are unclaimed, and the full-screen ownership census fails. Completed conformance cases do not establish a passing cohort. The replacement adapter receives its own bounded test run. Verdict: PENDING for implementation acceptance; this Git checkpoint does not close a Step, assert platform readiness, or grant live filing authority.
+The bounded replacement-adapter suite passed all 15 tests: uv run --no-sync pytest -q -n0 -m "(unit or integration) and not external_tool and not os_keychain and not resident_service" --tb=short --show-capture=no src/cadrumo_harness/mcp/tests, exit 0, run 20260930T144302.475211Z-pytest-89968-f2f23063. This proves the selected adapter contracts only.

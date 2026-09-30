@@ -78,6 +78,7 @@ from .actions_common import (
     resolve_attachment_store,
     resolve_bucket_event_repository,
     resolve_invoice_repository,
+    resolve_revision_guarded_transaction_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
@@ -100,7 +101,10 @@ from .models import (
     ManualLedgerTransactionResult,
 )
 from .preflight import preflight_ledger_tax_readiness
-from .protocols import TransactionCatalogueCoCommitWriterProtocol
+from .protocols import (
+    RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
+)
 from .review_projection import ledger_transaction_review_status, project_ledger_review_query
 from .usage_ratio_repository import UsageRatioProfileLoader
 
@@ -129,6 +133,7 @@ def create_manual_transaction(
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
+    require_revision_guard: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket.
 
@@ -140,7 +145,17 @@ def create_manual_transaction(
     event_repository = resolve_bucket_event_repository(
         bucket_id=command.bucket_id, repository=ports.bucket_event_repository
     )
-    catalogue = repository.load()
+    if require_revision_guard:
+        guarded_repository = resolve_revision_guarded_transaction_repository(
+            bucket_id=command.bucket_id,
+            repository=repository,
+        )
+        catalogue, catalogue_revision = guarded_repository.load_revisioned()
+    elif isinstance(repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+        catalogue, catalogue_revision = repository.load_revisioned()
+    else:
+        catalogue = repository.load()
+        catalogue_revision = None
     if command.idempotency_key is not None:
         # The idempotency key is authoritative for row identity: a keyed row
         # carries the clock-free provider id `manual:{bucket}:{key}` on
@@ -201,6 +216,7 @@ def create_manual_transaction(
         event_repository=event_repository,
         catalogue=upsert_transaction(catalogue, transaction),
         events=(event,),
+        expected_catalogue_revision=catalogue_revision,
     )
     _record_attachment_back_references(transaction, attachment_store=ports.attachment_store)
     return build_manual_ledger_result(command.bucket_id, transaction, (event.event_id,))

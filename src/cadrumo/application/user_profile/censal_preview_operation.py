@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from uuid import UUID
 
@@ -27,7 +27,7 @@ from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
-from ..live.session import active_verified_session
+from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter, active_verified_session
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -168,7 +168,10 @@ class CensalPreviewOperationResult(BaseModel):
         return self
 
 
-type CensalPreviewAcquire = Callable[[PinnedAuthorityOperation], Awaitable[CensalObservation]]
+type CensalPreviewAcquire = Callable[
+    [PinnedAuthorityOperation, Callable[[], AbstractAsyncContextManager[None]], SessionWriteReporter],
+    Awaitable[CensalObservation],
+]
 type CensalPreviewProviderPreflight = Callable[[UUID, PinnedAuthorityOperation], None]
 
 
@@ -280,6 +283,8 @@ async def _acquire_censal_observation(
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
     authority_operation: PinnedAuthorityOperation,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: SessionWriteReporter,
 ) -> CensalObservation:
     """Use canonical authenticated-session and censal-fetch application ports."""
     from ..live.censo import LIVE_CENSAL_READ_OPERATION
@@ -290,6 +295,8 @@ async def _acquire_censal_observation(
         operator_scope_ports=operator_scope_ports,
         operation=LIVE_CENSAL_READ_OPERATION,
         authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
     )
     return await censal_fetch_port(session, taxpayer_nif=session.identity_nif, settings=settings)
 
@@ -341,7 +348,10 @@ class CensalPreviewOperationExecutor:
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         with browser_resources.activate():
             await context.events.effect(OperationEffect.UNKNOWN)
-            observation = await self._acquire(context.authority_operation)
+            session_receipt = LiveSessionWriteReceipt(context.events.effect)
+            observation = await self._acquire(
+                context.authority_operation, context.cancellation.irreversible_section, session_receipt
+            )
 
         await context.events.phase(CENSAL_PREVIEW_PHASE_RECONCILIATION)
         current = await asyncio.to_thread(
@@ -355,7 +365,7 @@ class CensalPreviewOperationExecutor:
 
         await context.events.phase(CENSAL_PREVIEW_PHASE_RESULT)
         result_ref = await context.operands.put(result, written_at=now())
-        await context.events.effect(OperationEffect.NONE)
+        await context.events.effect(session_receipt.combine(OperationEffect.NONE))
         await context.events.phase(CENSAL_PREVIEW_PHASE_SETTLEMENT)
         return result_ref
 
@@ -372,13 +382,19 @@ def build_censal_preview_operation_definition(
 ) -> OperationDefinition:
     """Build the recorded census preview with worker-scoped browser custody."""
 
-    async def default_acquire(authority_operation: PinnedAuthorityOperation) -> CensalObservation:
+    async def default_acquire(
+        authority_operation: PinnedAuthorityOperation,
+        effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+        on_session_write: SessionWriteReporter,
+    ) -> CensalObservation:
         return await _acquire_censal_observation(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
             censal_fetch_port=censal_fetch_port,
             authority_operation=authority_operation,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
         )
 
     bound_acquire = acquire or default_acquire
@@ -411,7 +427,7 @@ def build_censal_preview_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,

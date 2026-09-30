@@ -43,7 +43,9 @@ def _remaining(deadline: float) -> float:
     return remaining
 
 
-def _client(ctx: typer.Context) -> RuntimeFrontendClient:
+def _client(ctx: typer.Context, *, expected_profile_id: UUID | None = None) -> RuntimeFrontendClient:
+    if expected_profile_id is not None:
+        return require_profile_client(ctx, expected_profile_id=expected_profile_id)
     target = resolve_active_bucket_id()
     if target is None:
         raise no_active_profile_refusal()
@@ -126,9 +128,10 @@ def read_modelo_work_unit(
     period: str | None,
     revision: str | None,
     bucket_id: str | None,
+    expected_profile_id: UUID | None = None,
 ) -> WorkUnit:
     """Read one CLI-selected unit through its exact bound runtime profile."""
-    client = _client(ctx)
+    client = _client(ctx, expected_profile_id=expected_profile_id)
     try:
         return _read_unit(
             client,

@@ -23,7 +23,8 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -156,6 +157,42 @@ def _unit(
     return unit
 
 
+def _filed_external_without_report(
+    revision: CalculationRevision,
+    unit: WorkUnit,
+    bundle: VerificationRepositoryBundle,
+    *,
+    profile_id: UUID,
+) -> bool:
+    """Recognize a co-committed AEAT import by its exact filing receipt."""
+    if (
+        revision.amendment_identity is not None
+        or revision.state not in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        or revision.verified_at is None
+        or revision.filed_at is None
+        or revision.filed_by is None
+    ):
+        return False
+    if bundle.filing.bucket_id != str(profile_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    matching = tuple(
+        record
+        for record in bundle.filing.load().values()
+        if record.bucket_id == str(profile_id)
+        and record.work_unit_id == unit.work_unit_id
+        and record.calculation_revision_id == revision.calculation_revision_id
+        and record.modelo == unit.modelo
+        and record.filing_year == unit.filing_year
+        and record.period == unit.period
+        and record.origin is FilingOrigin.AEAT
+        and record.confirmation is AeatConfirmationState.CONFIRMADA
+        and record.external_evidence is not None
+        and record.filed_at == revision.filed_at
+        and record.filed_by == revision.filed_by
+    )
+    return len(matching) == 1
+
+
 def _capture(
     payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
 ) -> ModeloWorkRevisionProjection:
@@ -190,7 +227,25 @@ def _capture(
         bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
     ).for_calculation_revision(revision.calculation_revision_id)
     granting = tuple(report for report in reports if report.granted_verificado_completo)
-    if len(granting) > 1 or (revision.verified_at is not None) != bool(granting):
+    # The amendment transaction verifies and files its own new revision without
+    # creating a standalone VerificationReport. Its recorded amendment identity
+    # and filed state distinguish that path from a broken ordinary verification.
+    filed_amendment_without_report = (
+        revision.amendment_identity is not None
+        and revision.state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+        and revision.verified_at is not None
+        and not granting
+    )
+    filed_external_without_report = (
+        not granting
+        and not filed_amendment_without_report
+        and _filed_external_without_report(revision, unit, bundle, profile_id=payload.profile_id)
+    )
+    if len(granting) > 1 or (
+        (revision.verified_at is not None) != bool(granting)
+        and not filed_amendment_without_report
+        and not filed_external_without_report
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return ModeloWorkRevisionProjection(
         profile_id=payload.profile_id,

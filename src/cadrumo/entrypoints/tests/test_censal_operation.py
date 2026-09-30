@@ -90,9 +90,7 @@ _VALUES = {
 
 
 def test_censal_review_contract_joins_the_tui_profile_edit_action() -> None:
-    assert _test_censal_operation_definition().action_reference == ActionReference(
-        action_id="operator.profile.edit"
-    )
+    assert _test_censal_operation_definition().action_reference == ActionReference(action_id="operator.profile.edit")
 
 
 def _test_censal_operation_definition() -> OperationDefinition:
@@ -222,9 +220,9 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
             divergences=(),
             profile_decode_context=decode_context,
         )
-        record = ProfileRecordRepository.for_current_session(
-            profile_id, profile_decode_context=decode_context
-        ).load(profile_id)
+        record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
+            profile_id
+        )
         html = (FIXTURES_DIR / "aeat-sede" / "censal-datos-mdcacceso.html").read_text(encoding="utf-8")
         observation = parse_censal_datos(
             html.replace("Y0000001Z", "12345678Z"),
@@ -234,15 +232,14 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
             observation=observation,
             baseline=CensalProfileBaseline.from_record(record),
             field_intents=tuple(
-                CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.PRESERVE)
-                for path in _PATHS
+                CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.PRESERVE) for path in _PATHS
             ),
         )
 
         apply_cotejo(None, reviewed_proposal=proposal, profile_decode_context=decode_context)
-        updated = ProfileRecordRepository.for_current_session(
-            profile_id, profile_decode_context=decode_context
-        ).load(profile_id)
+        updated = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
+            profile_id
+        )
         divergences = open_censo_divergences(updated)
 
         assert record_to_path_values(updated)["contact.postcode"] == "28001"

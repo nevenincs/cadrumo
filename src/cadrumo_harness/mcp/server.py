@@ -413,22 +413,21 @@ class RuntimeMcpAdapter:
 
     async def _authenticate(self, args: dict[str, Any]) -> dict[str, Any]:
         credential_reference = UUID(args["credential_reference"])
-        if self.client is not None:
-            old_client = self.client
-            self.client = None
-            await await_cancellation_complete(asyncio.to_thread(old_client.close), task_name="mcp-reauth-close")
         client = await open_installed_credential_client(
             profile_id=self.profile_id,
             credential_reference=credential_reference,
             frontend=OperationFrontendProjection.MCP,
         )
-        self.client = client
         try:
-            return await self._wire(lambda: {"outcome": "authenticated", "status": _public(client.status().status)})
+            result = await self._wire(lambda: {"outcome": "authenticated", "status": _public(client.status().status)})
         except BaseException:
-            self.client = None
             await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-admission-close")
             raise
+        old_client = self.client
+        self.client = client
+        if old_client is not None:
+            await await_cancellation_complete(asyncio.to_thread(old_client.close), task_name="mcp-reauth-close")
+        return result
 
     def _call_admitted(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         if name == "status" and self.client is None:

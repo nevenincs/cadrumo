@@ -22,11 +22,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.actividad_asset_composition
    cadrumo.entrypoints.adapter_composition
    cadrumo.entrypoints.auth_read_composition
    cadrumo.entrypoints.diagnostics_run_health_composition
    cadrumo.entrypoints.exchange_rate_composition
    cadrumo.entrypoints.invoice_inspection_composition
+   cadrumo.entrypoints.justificante_composition
    cadrumo.entrypoints.ledger_action_composition
    cadrumo.entrypoints.ledger_evidence_extraction_composition
    cadrumo.entrypoints.ledger_llm_diagnostics_composition

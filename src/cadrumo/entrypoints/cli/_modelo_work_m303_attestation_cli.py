@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import cast
 from uuid import UUID
 
 import typer
 
 from ...application.modelo.m303_attestation_operation import (
-    ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
 from ...application.operations.public_period import PublicPeriod

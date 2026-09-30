@@ -14,14 +14,17 @@ from typing import TYPE_CHECKING, Protocol
 
 from ...core.config import Settings
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.session_types import AeatSession
 from ..auth.sessions import AuthenticatedAeatSessionResult
+from .filed_data_ports import FiledEffectGuard
 from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionManifest,
     IvaWalletCaptureReport,
 )
+from .session import SessionWriteReporter
 
 if TYPE_CHECKING:
     pass
@@ -52,6 +55,9 @@ class IvaRemoteStatePort(Protocol):
         *,
         operation: str,
         target_url: str | None,
+        authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> Awaitable[tuple[AeatSession, Settings]]:
         """Open the active verified AEAT session for an operation."""
         ...
@@ -62,6 +68,9 @@ class IvaRemoteStatePort(Protocol):
         *,
         operation: str,
         target_url: str | None,
+        authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> Awaitable[AuthenticatedAeatSessionResult]:
         """Ensure an AEAT session is authenticated for an operation."""
         ...
@@ -75,6 +84,8 @@ class IvaRemoteStatePort(Protocol):
         year_to: int,
         output_root: Path,
         progress_context: dict[str, object] | None,
+        effect_guard: FiledEffectGuard | None = None,
+        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> Awaitable[IvaCompensationHistoryCaptureReport]:
         """Capture IVA compensation history for the requested year range."""
         ...
@@ -89,6 +100,8 @@ class IvaRemoteStatePort(Protocol):
         taxpayer_nif: str | None,
         output_root: Path | None,
         progress_context: dict[str, object] | None,
+        effect_guard: FiledEffectGuard | None = None,
+        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> Awaitable[IvaWalletCaptureReport]:
         """Capture IVA wallet state for one target year and period."""
         ...

@@ -447,20 +447,12 @@ override-dependencies = [
   "tree-sitter-language-pack<1.6.2",
 ]
 
-[[tool.uv.index]]
-name = "pytorch-cu130"
-url = "https://download.pytorch.org/whl/cu130"
-explicit = true
-
 # `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
 # (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
 # hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
 # `src/cadrumo/_data/corpus` under a mirrored `cadrumo_data` namespace. They author
 # nothing and only repackage the base product's mandatory corpus payload.
 [tool.uv.sources]
-torch = [
-    {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
-]
 # The two data companions are not yet on PyPI, so the development resolver builds
 # each from its in-repo project. These source overrides never reach published wheel
 # metadata, whose mandatory dependencies resolve the exact-version companion
@@ -468,9 +460,6 @@ torch = [
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
 
-
-[tool.vaultspec-rag]
-managed-torch-direct-dependency = true
 [dependency-groups]
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
@@ -497,12 +486,6 @@ dev = [
   "alembic>=1.16,<2",
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.25.1",
-  # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
-  # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
-  # so production installs stay lean — a PEP 735 group is a valid direct-dep location
-  # for the `[tool.uv.sources]` cu130 pin per vaultspec-rag's torch_config, and
-  # `just setup` installs the dev group so contributors still get GPU torch.
-  "torch>=2.4",
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
   # the architecture boundary checks.
@@ -699,7 +682,6 @@ allowed-confusables = [
   "∪",  # UNION -- set notation in explanatory comments
 ]
 
-
 [tool.ruff.lint.pydocstyle]
 # Google-style docstrings are the project standard (matches napoleon in
 # docs/conf.py).
@@ -762,7 +744,6 @@ convention = "google"
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally in the
 # parameter default; B008 flags the documented usage.
 "src/cadrumo/entrypoints/cli/**/*.py" = ["B008"]
-
 
 # -- Documented subprocess / secret-heuristic grants -------------------------
 # Each entry below names a SPECIFIC file and a SPECIFIC rule, with the reason

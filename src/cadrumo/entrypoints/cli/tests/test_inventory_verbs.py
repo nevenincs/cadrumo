@@ -1,14 +1,19 @@
-"""CLI surface tests for `aeat app ledger inventory {list, create, movement add, valuation preview}`."""
+"""Inventory CLI verbs exercise one authenticated profile-worker journey."""
 
 from __future__ import annotations
 
 import json
+import os
+import sys
+from contextlib import suppress
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....domain.contribuyente.inventory.records import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -21,12 +26,36 @@ from ....domain.contribuyente.inventory.records import (
     fingerprint_prior_authoritative_closing,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
-from ._strict_cli_fixture_support import inventory_isolated_backend
+from ....tests.cli_envelope import unwrap_cli_result
+from ._runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    RuntimeFailureObservation,
+    native_cli_profile_scope,
+)
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["inventory_isolated_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+_PROFILE_FACTS = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Native",
+    "identity.surnames": "Inventory",
+    "activities.description": "synthetic inventory profile",
+    "censo.activity_start_date": "2025-01-01",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+}
 
 _ACQUISITION = json.dumps(
     {
@@ -64,7 +93,57 @@ _ACQUISITION = json.dumps(
 )
 
 
-def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") -> str:
+def _invoke(
+    profile: NativeCliProfileFixture,
+    *command: str,
+    input_text: str | None = None,
+) -> Result:
+    assert profile.label is not None
+    close_active_bucket_session()
+    arguments = ["--language", "en", "--format", "json", "--profile", profile.label]
+    profile_secret = json.dumps({"profile_passphrase": profile.passphrase}).encode("utf-8")
+    if input_text is None:
+        arguments.append("--profile-secrets-stdin")
+        cli_input = profile_secret.decode("utf-8")
+        result = invoke_cached_cli((*arguments, *command), input=cli_input)
+    else:
+        profile_secrets_read_fd, profile_secrets_write_fd = os.pipe()
+        try:
+            os.write(profile_secrets_write_fd, profile_secret)
+            os.close(profile_secrets_write_fd)
+            arguments.extend(("--profile-secrets-fd", str(profile_secrets_read_fd)))
+            result = invoke_cached_cli((*arguments, *command), input=input_text)
+        finally:
+            for descriptor in (profile_secrets_write_fd, profile_secrets_read_fd):
+                with suppress(OSError):
+                    os.close(descriptor)
+    assert profile.passphrase not in result.output
+    return result
+
+
+def _create_ledger(
+    profile: NativeCliProfileFixture,
+    actividad_id: str,
+    *,
+    opening_stock: str = "0",
+) -> Result:
+    return _invoke(
+        profile,
+        "app",
+        "ledger",
+        "inventory",
+        "create",
+        actividad_id,
+        "--year",
+        "2026",
+        "--valuation-method",
+        "fifo",
+        "--opening-stock",
+        opening_stock,
+    )
+
+
+def _authority_payload(actividad_id: str, *, reason: str = "Reviewed movement-derived closing.") -> str:
     from ....domain.contribuyente.inventory.closing_authority_records import (
         InventoryClosingAuthorityDecision,
         InventoryClosingAuthorityRecord,
@@ -73,14 +152,14 @@ def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") ->
 
     continuity_evidence = (
         PriorClosingContinuityEvidence(
-            reference=FilingEvidenceReference(reference="prior-secret-ref"),
+            reference=FilingEvidenceReference(reference=f"{actividad_id}-prior-secret-ref"),
             content_digest="f" * 64,
         ),
     )
     record = InventoryClosingAuthorityRecord(
         decision=InventoryClosingAuthorityDecision(
-            decision_id="decision-2026",
-            actividad_id="authority",
+            decision_id=f"decision-{actividad_id}-2026",
+            actividad_id=actividad_id,
             filing_year=2026,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             reason=reason,
@@ -89,21 +168,21 @@ def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") ->
             decided_at=datetime(2027, 1, 2, tzinfo=UTC),
             evidence=(
                 InventoryClosingDecisionEvidence(
-                    reference=FilingEvidenceReference(reference="decision-secret-ref"),
+                    reference=FilingEvidenceReference(reference=f"{actividad_id}-decision-secret-ref"),
                     role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
                     content_digest="e" * 64,
                 ),
             ),
         ),
         prior_closing_link=PriorAuthoritativeClosingLink(
-            actividad_id="authority",
+            actividad_id=actividad_id,
             current_filing_year=2026,
             prior_filing_year=2025,
             prior_authoritative_closing_value=Decimal("100.00"),
             current_opening_value=Decimal("100.00"),
             prior_authoritative_source_fingerprint="c" * 64,
             prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
-                actividad_id="authority",
+                actividad_id=actividad_id,
                 filing_year=2025,
                 authoritative_closing_value=Decimal("100.00"),
                 authoritative_source_fingerprint="c" * 64,
@@ -115,26 +194,26 @@ def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") ->
     return record.model_dump_json()
 
 
-def _physical_authority_payload() -> str:
+def _physical_authority_payload(actividad_id: str) -> str:
     from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
-    base = InventoryClosingAuthorityRecord.model_validate_json(_authority_payload())
+    base = InventoryClosingAuthorityRecord.model_validate_json(_authority_payload(actividad_id))
     observation = PhysicalClosingObservation(
-        observation_id="physical-2026",
+        observation_id=f"physical-{actividad_id}-2026",
         observed_on=date(2027, 1, 1),
         as_of_date=date(2026, 12, 31),
-        actividad_id="authority",
+        actividad_id=actividad_id,
         filing_year=2026,
         closing_value=Decimal("101.00"),
         valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
         evidence=(
             PhysicalClosingEvidence(
-                reference=FilingEvidenceReference(reference="physical-secret-count"),
+                reference=FilingEvidenceReference(reference=f"{actividad_id}-physical-secret-count"),
                 role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT,
                 content_digest="a" * 64,
             ),
             PhysicalClosingEvidence(
-                reference=FilingEvidenceReference(reference="physical-secret-value"),
+                reference=FilingEvidenceReference(reference=f"{actividad_id}-physical-secret-value"),
                 role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION,
                 content_digest="b" * 64,
             ),
@@ -153,90 +232,24 @@ def _physical_authority_payload() -> str:
     ).model_dump_json()
 
 
-def test_inventory_list_starts_empty() -> None:
-    result = invoke_cached_cli(["app", "ledger", "inventory", "list"])
-    assert result.exit_code == 0, result.output
-    assert "count\t0" in result.output
+def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
+    tmp_path: Path,
+) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        failures: list[RuntimeFailureObservation] = []
+        profile.failure_observer = failures.append
+        profile.register(label="native-inventory", facts=_PROFILE_FACTS)
 
+        created = _create_ledger(profile, "act-1", opening_stock="100.00")
+        assert created.exit_code == 0, (created.output, failures)
+        create_payload = unwrap_cli_result(created)
+        assert create_payload["actividad_id"] == "act-1"
+        assert create_payload["valuation_method"] == "fifo"
+        assert create_payload["opening_stock"] == "100.00"
+        assert len(create_payload["bucket_event_ids"]) == 1
 
-def test_inventory_create_persists() -> None:
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "create",
-            "act-1",
-            "--year",
-            "2026",
-            "--valuation-method",
-            "fifo",
-            "--opening-stock",
-            "100.00",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert "actividad_id\tact-1" in result.output
-    assert "valuation_method\tfifo" in result.output
-    assert "opening_stock\t100.00" in result.output
-
-    list_result = invoke_cached_cli(["app", "ledger", "inventory", "list"])
-    assert list_result.exit_code == 0, list_result.output
-    assert "act-1\t2026\tfifo" in list_result.output
-
-
-def test_inventory_create_refuses_duplicate() -> None:
-    invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "create",
-            "act-1",
-            "--year",
-            "2026",
-            "--valuation-method",
-            "fifo",
-            "--opening-stock",
-            "0",
-        ],
-    )
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "create",
-            "act-1",
-            "--year",
-            "2026",
-            "--valuation-method",
-            "fifo",
-            "--opening-stock",
-            "0",
-        ],
-    )
-    assert result.exit_code != 0
-
-
-def test_inventory_movement_add_records_against_existing_ledger() -> None:
-    invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "create",
-            "act-1",
-            "--year",
-            "2026",
-            "--valuation-method",
-            "fifo",
-            "--opening-stock",
-            "0",
-        ],
-    )
-    result = invoke_cached_cli(
-        [
+        purchase = _invoke(
+            profile,
             "app",
             "ledger",
             "inventory",
@@ -247,7 +260,7 @@ def test_inventory_movement_add_records_against_existing_ledger() -> None:
             "--year",
             "2026",
             "--movement-id",
-            "mov-1",
+            "purchase-1",
             "--date",
             "2026-03-15",
             "--kind",
@@ -255,26 +268,49 @@ def test_inventory_movement_add_records_against_existing_ledger() -> None:
             "--quantity",
             "10",
             "--acquisition-cost-stdin",
-        ],
-        input=_ACQUISITION,
-    )
-    assert result.exit_code == 0, result.output
-    assert "movements\t1" in result.output
+            input_text=_ACQUISITION,
+        )
+        assert purchase.exit_code == 0, purchase.output
+        assert "secret-ref" not in purchase.output
+        assert "a" * 64 not in purchase.output
+        acquisition_summary = unwrap_cli_result(purchase)["period_movements"][0]["acquisition_cost"]
+        assert acquisition_summary == {
+            "consideration_excluding_iva": "55.00",
+            "directly_attributable_cost_total": "0.00",
+            "nonrecoverable_iva_included": "0.00",
+            "recoverable_iva_excluded": "11.55",
+            "total_acquisition_cost": "55.00",
+            "component_count": 0,
+            "evidence_count": 3,
+            "complete": True,
+        }
 
+        duplicate = _create_ledger(profile, "act-1", opening_stock="999.00")
+        assert duplicate.exit_code != 0
+        duplicate_error = json.loads(duplicate.output)["error"]
+        assert duplicate_error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert duplicate_error["context"]["reason"] == "activity_conflict"
+        assert duplicate_error["context"]["refusal_code"] == "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT"
 
-def test_inventory_purchase_refuses_legacy_cost_authority() -> None:
-    invoke_cached_cli(
-        ["app", "ledger", "inventory", "create", "legacy", "--year", "2026", "--valuation-method", "fifo"]
-    )
-    result = invoke_cached_cli(
-        [
+        listed = _invoke(profile, "app", "ledger", "inventory", "list")
+        assert listed.exit_code == 0, listed.output
+        listed_payload = unwrap_cli_result(listed)
+        assert listed_payload["count"] == 1
+        assert listed_payload["rows"][0]["actividad_id"] == "act-1"
+        assert listed_payload["rows"][0]["year"] == 2026
+        assert listed_payload["rows"][0]["valuation_method"] == "fifo"
+        assert listed_payload["rows"][0]["opening_stock"] == "100.00"
+        assert listed_payload["rows"][0]["movement_count"] == 1
+
+        legacy_purchase = _invoke(
+            profile,
             "app",
             "ledger",
             "inventory",
             "movement",
             "add",
             "--actividad-id",
-            "legacy",
+            "act-1",
             "--year",
             "2026",
             "--movement-id",
@@ -287,180 +323,105 @@ def test_inventory_purchase_refuses_legacy_cost_authority() -> None:
             "1",
             "--unit-cost",
             "5.50",
-        ]
-    )
-    assert result.exit_code != 0
+        )
+        assert legacy_purchase.exit_code != 0
+        legacy_error = json.loads(legacy_purchase.output)["error"]
+        assert legacy_error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert legacy_error["context"]["reason"] == "inventory_validation"
+        assert legacy_error["context"]["refusal_code"] == "REFUSED_PROFILE_INVENTORY_VALIDATION"
+        assert legacy_error["context"]["movement_id"] == "legacy-1"
+        assert "5.50" not in legacy_purchase.output
 
-    ignored_rate = invoke_cached_cli(
-        [
+        preview = _invoke(
+            profile,
             "app",
             "ledger",
             "inventory",
-            "movement",
-            "add",
+            "valuation",
+            "preview",
             "--actividad-id",
-            "legacy",
+            "act-1",
             "--year",
             "2026",
-            "--movement-id",
-            "legacy-rate",
-            "--date",
-            "2026-03-15",
-            "--kind",
-            "purchase",
-            "--quantity",
-            "1",
-            "--iva-rate",
-            "7",
-            "--acquisition-cost-stdin",
-        ],
-        input=_ACQUISITION,
-    )
-    assert ignored_rate.exit_code != 0
+        )
+        assert preview.exit_code == 0, preview.output
+        preview_payload = unwrap_cli_result(preview)
+        assert preview_payload["derived_closing_value"] == "155.00"
+        assert preview_payload["cogs"] == "0.00"
+        assert len(preview_payload["bucket_event_ids"]) == 1
 
 
-def test_inventory_invalid_stdin_does_not_echo_acquisition_payload() -> None:
-    invoke_cached_cli(
-        ["app", "ledger", "inventory", "create", "invalid", "--year", "2026", "--valuation-method", "fifo"]
-    )
-    malformed_payload = '{"private-evidence":"must-not-echo"}'
-    result = invoke_cached_cli(
-        [
+def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-inventory-closing", facts=_PROFILE_FACTS)
+
+        created = _create_ledger(profile, "authority", opening_stock="100.00")
+        assert created.exit_code == 0, created.output
+        authority_file = tmp_path / "authority.json"
+        authority_file.write_text(_authority_payload("authority"), encoding="utf-8")
+        authority_command = (
             "app",
             "ledger",
             "inventory",
-            "movement",
-            "add",
-            "--actividad-id",
-            "invalid",
-            "--year",
-            "2026",
-            "--movement-id",
-            "invalid-1",
-            "--date",
-            "2026-03-15",
-            "--kind",
-            "purchase",
-            "--quantity",
-            "1",
-            "--acquisition-cost-stdin",
-        ],
-        input=malformed_payload,
-    )
-    assert result.exit_code != 0
-    assert "must-not-echo" not in result.output
-
-
-def test_inventory_json_output_withholds_acquisition_evidence_identity() -> None:
-    invoke_cached_cli(["app", "ledger", "inventory", "create", "safe", "--year", "2026", "--valuation-method", "fifo"])
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "inventory",
-            "movement",
-            "add",
-            "--actividad-id",
-            "safe",
-            "--year",
-            "2026",
-            "--movement-id",
-            "safe-1",
-            "--date",
-            "2026-03-15",
-            "--kind",
-            "purchase",
-            "--quantity",
-            "10",
-            "--acquisition-cost-stdin",
-        ],
-        input=_ACQUISITION,
-    )
-    assert result.exit_code == 0, result.output
-    assert "secret-ref" not in result.output
-    assert "a" * 64 not in result.output
-    summary = json.loads(result.output)["result"]["period_movements"][0]["acquisition_cost"]
-    assert summary == {
-        "consideration_excluding_iva": "55.00",
-        "directly_attributable_cost_total": "0.00",
-        "nonrecoverable_iva_included": "0.00",
-        "recoverable_iva_excluded": "11.55",
-        "total_acquisition_cost": "55.00",
-        "component_count": 0,
-        "evidence_count": 3,
-        "complete": True,
-    }
-
-
-def _create_authority_ledger() -> None:
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "create",
+            "closing-authority-record",
             "authority",
             "--year",
             "2026",
-            "--valuation-method",
-            "fifo",
-            "--opening-stock",
-            "100.00",
-        ],
-    )
-    assert result.exit_code == 0, result.output
+            "--file",
+            str(authority_file),
+        )
+        first = _invoke(profile, *authority_command)
+        replay = _invoke(profile, *authority_command)
+        assert first.exit_code == replay.exit_code == 0, (first.output, replay.output)
+        for canary in ("prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64, "f" * 64):
+            assert canary not in first.output
+            assert canary not in replay.output
+        first_authority = unwrap_cli_result(first)
+        repeated_authority = unwrap_cli_result(replay)
+        assert first_authority["authority_record_fingerprint"] == repeated_authority["authority_record_fingerprint"]
+        assert set(first_authority) == {
+            "actividad_id",
+            "year",
+            "authority_record_fingerprint",
+            "decision_fingerprint",
+            "physical_observation_fingerprint",
+            "prior_closing_link_fingerprint",
+        }
 
+        authority_file.write_text(_authority_payload("authority", reason="A different decision."), encoding="utf-8")
+        divergent = _invoke(profile, *authority_command)
+        assert divergent.exit_code != 0
+        divergent_error = json.loads(divergent.output)["error"]
+        assert divergent_error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert divergent_error["context"]["reason"] == "closing_authority_conflict"
+        assert divergent_error["context"]["refusal_code"] == "REFUSED_INVENTORY_SERVICE_INPUT"
+        assert "A different decision" not in divergent.output
 
-def _authority_file(tmp_path: Path, payload: str, *, name: str = "authority.json") -> Path:
-    path = tmp_path / name
-    path.write_text(payload, encoding="utf-8")
-    return path
+        physical_created = _create_ledger(profile, "authority-physical", opening_stock="100.00")
+        assert physical_created.exit_code == 0, physical_created.output
+        physical_file = tmp_path / "physical-authority.json"
+        physical_file.write_text(_physical_authority_payload("authority-physical"), encoding="utf-8")
+        physical_result = _invoke(
+            profile,
+            "app",
+            "ledger",
+            "inventory",
+            "closing-authority-record",
+            "authority-physical",
+            "--year",
+            "2026",
+            "--file",
+            str(physical_file),
+        )
+        assert physical_result.exit_code == 0, physical_result.output
+        physical_payload = unwrap_cli_result(physical_result)
+        assert physical_payload["physical_observation_fingerprint"] is not None
+        assert "physical-secret" not in physical_result.output
+        assert "a" * 64 not in physical_result.output
+        assert "b" * 64 not in physical_result.output
 
-
-def test_inventory_closing_authority_file_persists_replays_and_redacts(tmp_path: Path) -> None:
-    _create_authority_ledger()
-    authority_file = _authority_file(tmp_path, _authority_payload())
-    arguments = [
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "inventory",
-        "closing-authority-record",
-        "authority",
-        "--year",
-        "2026",
-        "--file",
-        str(authority_file),
-    ]
-    first = invoke_cached_cli(arguments)
-    replay = invoke_cached_cli(arguments)
-
-    assert first.exit_code == 0, first.output
-    assert replay.exit_code == 0, replay.output
-    for canary in ("prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64, "f" * 64):
-        assert canary not in first.output
-        assert canary not in replay.output
-    payload = json.loads(first.output)["result"]
-    assert set(payload) == {
-        "actividad_id",
-        "year",
-        "authority_record_fingerprint",
-        "decision_fingerprint",
-        "physical_observation_fingerprint",
-        "prior_closing_link_fingerprint",
-    }
-
-    authority_file.write_text(_authority_payload(reason="A different decision."), encoding="utf-8")
-    divergent = invoke_cached_cli(arguments)
-    assert divergent.exit_code != 0
-    assert "A different decision" not in divergent.output
-    movement = invoke_cached_cli(
-        [
-            "--format",
-            "json",
+        after_authority = _invoke(
+            profile,
             "app",
             "ledger",
             "inventory",
@@ -475,109 +436,15 @@ def test_inventory_closing_authority_file_persists_replays_and_redacts(tmp_path:
             "--date",
             "2026-03-15",
             "--kind",
-            "purchase",
+            "cogs",
             "--quantity",
             "1",
-            "--acquisition-cost-stdin",
-        ],
-        input=_ACQUISITION,
-    )
-    assert movement.exit_code == 0, movement.output
-    for canary in ("prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64, "f" * 64):
-        assert canary not in movement.output
-    assert json.loads(movement.output)["result"]["closing_authority_fingerprints"]["record"]
-
-
-def test_inventory_closing_authority_file_composes_physical_observation_without_leak(tmp_path: Path) -> None:
-    _create_authority_ledger()
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "inventory",
-            "closing-authority-record",
-            "authority",
-            "--year",
-            "2026",
-            "--file",
-            str(_authority_file(tmp_path, _physical_authority_payload())),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["result"]["physical_observation_fingerprint"] is not None
-    assert "physical-secret" not in result.output
-    assert "a" * 64 not in result.output
-    assert "b" * 64 not in result.output
-
-
-def test_inventory_closing_authority_requires_a_readable_file(tmp_path: Path) -> None:
-    _create_authority_ledger()
-    base = [
-        "app",
-        "ledger",
-        "inventory",
-        "closing-authority-record",
-        "authority",
-        "--year",
-        "2026",
-    ]
-    absent = invoke_cached_cli(base)
-    assert absent.exit_code != 0
-    unreadable = invoke_cached_cli([*base, "--file", str(tmp_path / "missing.json")])
-    assert unreadable.exit_code != 0
-
-
-@pytest.mark.parametrize(
-    "malformed",
-    [
-        "not-json-secret-canary",
-        '["non-object-secret-canary"]',
-        '{"unexpected":"extra-secret-canary"}',
-        '{"decision":{"decision_id":"missing-secret-canary"}}',
-    ],
-)
-def test_inventory_closing_authority_refuses_malformed_shapes_without_echo(malformed: str, tmp_path: Path) -> None:
-    _create_authority_ledger()
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "closing-authority-record",
-            "authority",
-            "--year",
-            "2026",
-            "--file",
-            str(_authority_file(tmp_path, malformed)),
-        ],
-    )
-    assert result.exit_code != 0
-    assert "secret-canary" not in result.output
-
-
-def test_inventory_closing_authority_coordinate_refusal_does_not_log_values(
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
-) -> None:
-    _create_authority_ledger()
-    mismatched = _authority_payload().replace('"actividad_id":"authority"', '"actividad_id":"other-secret"')
-    result = invoke_cached_cli(
-        [
-            "app",
-            "ledger",
-            "inventory",
-            "closing-authority-record",
-            "authority",
-            "--year",
-            "2026",
-            "--file",
-            str(_authority_file(tmp_path, mismatched)),
-        ],
-    )
-    assert result.exit_code != 0
-    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
-    for canary in ("other-secret", "prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64):
-        assert canary not in result.output
-        assert canary not in rendered_logs
+        )
+        assert after_authority.exit_code == 0, after_authority.output
+        post_authority_payload = unwrap_cli_result(after_authority)
+        assert (
+            post_authority_payload["closing_authority_fingerprints"]["record"]
+            == first_authority["authority_record_fingerprint"]
+        )
+        for canary in ("prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64, "f" * 64):
+            assert canary not in after_authority.output

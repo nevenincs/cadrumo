@@ -27,13 +27,6 @@ from ...application.modelo.operation_definitions import (
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,
 )
-from ...application.modelo.work_addressing import (
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
-)
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.bucket_pointer import require_active_bucket_id, resolve_active_bucket_id
@@ -43,18 +36,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
-from ._modelo_behavior_support import (
-    work_address_for_cli as _work_address_for_cli,
-)
 from ._modelo_cli_support import (
     parse_calculation_wire_row_spec,
     resolve_actor_option,
 )
 from ._modelo_cli_support import (
     parse_kv_spec as _parse_kv_spec,
-)
-from ._modelo_cli_support import (
-    selector_bad_parameter as _selector_bad_parameter,
 )
 from ._modelo_cli_support import (
     validate_casilla_key as _validate_casilla_key,
@@ -74,6 +61,7 @@ from ._modelo_rendering import (
 from .common import activate_subcommand_output_language, no_active_profile_refusal
 from .runtime_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
 from .runtime_modelo_metadata import read_modelo_work_unit
+from .runtime_modelo_taxation_comparison import compare_modelo_taxation
 from .runtime_modelo_work_history import read_modelo_work_history
 from .runtime_profile_binding import require_profile_client
 from .state_projection_support import authority_operation, modelo_history_ports_factory
@@ -99,51 +87,21 @@ def work_compare_taxation(
     and cuota diferencial (0610) for each mode plus the delta and a
     recommendation.
 
-    This is an ephemeral operation: no revision is persisted.
+    The registered operation records its receipt but persists no calculation revision.
     """
     from .common import activate_subcommand_output_language, emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 
-    from ...adapters.persistence.profile.taxation_comparison import build_taxation_comparison_ports
-    from ...application.modelo.action_errors import WorkUnitNotFoundError
-    from ...application.modelo.taxation_comparison import TaxationComparisonError, compare_taxation_for_work_address
-
-    try:
-        address = _work_address_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        comparison = compare_taxation_for_work_address(
-            address,
-            ports=build_taxation_comparison_ports(bucket_id=bucket_id or require_active_bucket_id()),
-        )
-    except (
-        ModeloWorkAddressNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-        ModeloWorkRevisionConflictError,
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkUnitNotFoundError,
-    ) as exc:
-        raise _selector_bad_parameter(exc) from exc
-    except WorkUnitNotFoundError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.compare_taxation_work_unit_not_found",
-                work_unit_id=work_unit_id or "",
-            ),
-        ) from exc
-    except TaxationComparisonError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.compare_taxation_error",
-                detail=str(exc),
-            ),
-        ) from exc
+    comparison = compare_modelo_taxation(
+        ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
 
     from ._payloads_modelo_reconcile import WorkCompareTaxationResult
 
@@ -166,14 +124,10 @@ def work_compare_taxation(
     # a single-earner unidad familiar. Surface it on the typed notices channel so
     # an operator is never misled into trusting a two-earner individual figure the
     # comparator cannot compute.
-    caveat_notice = (
-        advisory_notice(
-            "modelo.work.compare_taxation.individual_single_earner_only",
-            comparison.individual_branch_caveat,
-            context={"individual_branch_single_earner_only": "true"},
-        )
-        if comparison.individual_branch_single_earner_only
-        else None
+    caveat_notice = advisory_notice(
+        "modelo.work.compare_taxation.individual_single_earner_only",
+        comparison.individual_branch_caveat,
+        context={"individual_branch_single_earner_only": "true"},
     )
 
     lines = [
@@ -193,14 +147,13 @@ def work_compare_taxation(
             reason=comparison.recommendation_reason,
         ),
     ]
-    if caveat_notice is not None:
-        lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
+    lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
     emit_envelope(
         ctx,
         command="modelo.work.compare_taxation",
         result=result,
         lines=lines,
-        notices=[caveat_notice] if caveat_notice is not None else None,
+        notices=[caveat_notice],
     )
 
 

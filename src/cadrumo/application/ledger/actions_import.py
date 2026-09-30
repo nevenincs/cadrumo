@@ -12,6 +12,8 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -19,9 +21,11 @@ from pathlib import Path
 from typing import Final, NamedTuple
 
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
+from ...core.errors.severity import BaseSeverity
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr
+from ...core.i18n.translatable import Translatable
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
@@ -38,7 +42,11 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
-from ..transactions.diagnostics import LedgerImportDiagnostic
+from ..transactions.diagnostics import (
+    LedgerImportDiagnostic,
+    LedgerImportDiagnosticKind,
+    build_ledger_import_diagnostic,
+)
 from ..transactions.import_classification import classify_import_row
 from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 from .actions_common import (
@@ -108,6 +116,20 @@ class _LoadedSourceCatalogue(NamedTuple):
 
     repository: TransactionCatalogueCoCommitWriterProtocol | None
     catalogue: TransactionCatalogue
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class PreparedLedgerSourceImport:
+    """One parsed statement held in memory until the caller authorizes commit.
+
+    Parsed transaction facts are excluded from ``repr`` and are never a
+    persistence format. The exact rows prepared from the source path are the
+    rows later committed, even if that path changes in between.
+    """
+
+    command: LedgerSourceImportCommand = dataclass_field(repr=False)
+    ports: LedgerImportPorts = dataclass_field(repr=False)
+    source: _PreparedSourceImport = dataclass_field(repr=False)
 
 
 def _source_jurisdiction_from_raw_fields(raw_fields: Mapping[str, str]) -> str | None:
@@ -284,20 +306,34 @@ def _source_import_diagnostics(
     command: LedgerSourceImportCommand,
     parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     existing_catalogue: TransactionCatalogue,
+    source_verification: LedgerSourceVerificationReport,
 ) -> tuple[tuple[LedgerImportDiagnostic, ...], tuple[LedgerImportDiagnosticReport, ...]]:
-    """Run optional verification and return raw facts plus safe report rows."""
+    """Run optional verification from staged facts and return raw/report rows."""
     if not command.verify:
         return (), ()
     result = import_ledger_with_diagnostics(
         command.path,
         tuple(parsed.raw for parsed in parsed_rows),
         existing_catalogue,
-        original_source_path=command.source,
+        # ``original_source_path`` probes and reopens a caller-controlled path.
+        # Source verification was already completed during preparation; never
+        # repeat that read inside the commit fence.
+        original_source_path=None,
         import_fingerprints=tuple(
             derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
         ),
     )
-    raw_diagnostics = result.diagnostics
+    raw_diagnostics = list(result.diagnostics)
+    if source_verification.path is not None and source_verification.sha256 is not None:
+        raw_diagnostics.append(
+            build_ledger_import_diagnostic(
+                kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
+                severity=BaseSeverity.INFO,
+                message=Translatable("transactions.import.verified"),
+                source_path=Path(source_verification.path),
+            ),
+        )
+    raw_diagnostics = tuple(raw_diagnostics)
     return raw_diagnostics, tuple(_diagnostic_report(diagnostic) for diagnostic in raw_diagnostics)
 
 
@@ -504,12 +540,50 @@ def import_ledger_source(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
     """
-    prepared = _prepare_source_import(command, ports=ports)
+    staged = prepare_ledger_source_import(command, ports=ports)
+    return persist_prepared_ledger_source_import(
+        staged,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=bucket_event_repository,
+        currency_normalizer=currency_normalizer,
+    )
+
+
+def prepare_ledger_source_import(
+    command: LedgerSourceImportCommand,
+    *,
+    ports: LedgerImportPorts,
+) -> PreparedLedgerSourceImport:
+    """Read, validate, and parse one source without loading or changing a ledger.
+
+    Callers that need an authorization fence can prepare every source first,
+    then pass each returned value to :func:`persist_prepared_ledger_source_import`
+    inside a fresh fence. The immutable parsed rows remain pinned to these exact
+    source bytes, so persistence never has to reopen an untrusted path.
+    """
+    return PreparedLedgerSourceImport(
+        command=command,
+        ports=ports,
+        source=_prepare_source_import(command, ports=ports),
+    )
+
+
+def persist_prepared_ledger_source_import(
+    staged: PreparedLedgerSourceImport,
+    *,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
+) -> LedgerSourceImportResult:
+    """Evaluate and persist a previously parsed source without reopening it."""
+    command = staged.command
+    prepared = staged.source
     loaded = _load_source_catalogue(command, transaction_repository)
     raw_diagnostics, diagnostics = _source_import_diagnostics(
         command=command,
         parsed_rows=prepared.parsed_rows,
         existing_catalogue=loaded.catalogue,
+        source_verification=prepared.source_verification,
     )
     if command.dry_run:
         return _build_dry_run_source_result(
@@ -530,7 +604,7 @@ def import_ledger_source(
     return _persist_source_import(
         command=command,
         bucket_id=command.bucket_id,
-        ports=ports,
+        ports=staged.ports,
         parsed_rows=prepared.parsed_rows,
         repository=repository,
         event_repository=event_repository,
@@ -540,8 +614,8 @@ def import_ledger_source(
         source_verification=prepared.source_verification,
         diagnostics=diagnostics,
         # The catalogue this source was diagnosed against is the one it is
-        # imported into; loading it again decrypted and validated every stored
-        # row a second time per imported file.
+        # imported into; loading it again would make the persisted plan differ
+        # from the exact snapshot used for diagnosis.
         catalogue=loaded.catalogue,
     )
 
@@ -818,8 +892,11 @@ def plan_ledger_import_sources(path: Path) -> tuple[Path, ...]:
 __all__ = [
     "IMPORTABLE_SOURCE_EXTENSIONS",
     "LedgerProviderID",
+    "PreparedLedgerSourceImport",
     "aggregate_ledger_import_results",
     "import_ledger_source",
     "import_ledger_transactions",
+    "persist_prepared_ledger_source_import",
     "plan_ledger_import_sources",
+    "prepare_ledger_source_import",
 ]

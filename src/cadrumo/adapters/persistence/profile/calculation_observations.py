@@ -30,18 +30,23 @@ from cadrumo.application.calculations.observations_repository import (
     member_observation_key,
     member_observation_key_for_token,
     observation_key,
+    observation_key_for_token,
     require_decision_registry_coordinates_current,
     require_observation_period,
     validate_observation_casilla_ids,
 )
 from cadrumo.application.persistence_errors import PersistenceDegradationError
+from cadrumo.application.prorrata_register.ports import (
+    ProrrataPriorSettlementSourceSnapshot,
+    ProrrataSourceRevision,
+)
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.identity.tax_id import same_tax_identifier
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -51,7 +56,7 @@ from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconc
 
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import StorageError
+from ..storage.errors import SecureObjectRowIdentityError, StorageError
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -82,6 +87,26 @@ class _ObservationLayerStore(SecureBoundRepository[ObservationLayers]):
     @override
     def extract_identifier(self, payload: ObservationLayers) -> str:
         return member_observation_key_for_token(payload.modelo, payload.filing_year, payload.period, payload.member_nif)
+
+    def load_revisioned(self, identifier: str) -> tuple[ObservationLayers | None, str]:
+        """Read a validated layer row and its exact storage revision together."""
+        record = self.secure_object_repository.load(
+            self.namespace,
+            identifier,
+            expected_class=self.sensitivity,
+            max_supported_version=self.schema_version,
+        )
+        if record is None:
+            return None, ABSENT_SECURE_OBJECT_REVISION_ID
+        layers = self._validate_envelope(record.payload, subject=f"{self.namespace}/{identifier}").payload
+        actual_identifier = self.extract_identifier(layers)
+        if actual_identifier != identifier:
+            raise SecureObjectRowIdentityError(
+                self.namespace,
+                expected_identifier=identifier,
+                payload_identifier=actual_identifier,
+            )
+        return layers, record.revision_id
 
 
 def _layers_for(payload: ObservationEnvelopePayload) -> ObservationLayers:
@@ -189,6 +214,38 @@ class CalculationObservationRepository:
             period=filing_period.registry_token,
             member_nif=member_nif,
         )
+
+    def load_prior_m303_settlement_snapshot(self, prior_year: int) -> ProrrataPriorSettlementSourceSnapshot:
+        """Read both possible unmembered annual 303 source rows and revisions.
+
+        The 4T and 12 coordinates are both asserted at commit, including
+        absence. A newly captured higher-priority source therefore invalidates
+        a previously evaluated seed rather than escaping its source fence.
+        """
+
+        def _read() -> ProrrataPriorSettlementSourceSnapshot:
+            observations: list[ObservationEnvelopePayload] = []
+            revisions: list[ProrrataSourceRevision] = []
+            objects = self._layers.secure_object_repository
+            for period_token in ("4T", "12"):
+                identifier = observation_key_for_token("303", prior_year, period_token)
+                layers, revision = self._layers.load_revisioned(identifier)
+                if layers is not None and layers.effective is not None:
+                    observations.append(layers.effective)
+                revisions.append(
+                    ProrrataSourceRevision(
+                        namespace=self.namespace,
+                        object_key=identifier,
+                        expected_revision_id=revision,
+                    )
+                )
+            return ProrrataPriorSettlementSourceSnapshot(
+                observations=tuple(observations),
+                revisions=tuple(revisions),
+                backend_identity=objects.engine,
+            )
+
+        return _translate_storage_failure("calculation_observation_prorrata_source_snapshot", _read)
 
     def prepare_observation_envelope(
         self,

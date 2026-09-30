@@ -54,6 +54,9 @@ _RECONCILIATION_NOTICE_LOCALE_KEYS: Mapping[FilingReconciliationNoticeCode, str]
     FilingReconciliationNoticeCode.DECLARATION_KIND_UNDETERMINED: (
         "cli.app.modelo.filing_record.reconciliation_notice.declaration_kind_undetermined"
     ),
+    FilingReconciliationNoticeCode.FILING_INSTANCE_EVIDENCE_UNAVAILABLE: (
+        "cli.app.modelo.filing_record.reconciliation_notice.filing_instance_evidence_unavailable"
+    ),
     FilingReconciliationNoticeCode.CORRECTION_WITHOUT_CONFIRMED_BASELINE: (
         "cli.app.modelo.filing_record.reconciliation_notice.correction_without_confirmed_baseline"
     ),
@@ -135,7 +138,7 @@ def aeat_register_payload(register: AeatRegisterRef | None) -> AeatRegisterRefPa
     )
 
 
-def aeat_register_lines(register: AeatRegisterRef | None) -> list[str]:
+def aeat_register_lines(register: AeatRegisterRef | AeatRegisterRefPayload | None) -> list[str]:
     """Render an optional register reference as ``aeat_register.*`` lines."""
     if register is None:
         return []
@@ -169,7 +172,9 @@ def filing_reconciliation_payload(result: FilingReconciliationResult) -> FilingR
     )
 
 
-def filing_reconciliation_lines(results: Sequence[FilingReconciliationResult]) -> list[str]:
+def filing_reconciliation_lines(
+    results: Sequence[FilingReconciliationResult | FilingReconciliationPayload],
+) -> list[str]:
     """Render reconciliation outcomes as one tab-separated row per period."""
     lines = [
         f"reconciliation_count\t{len(results)}",
@@ -196,7 +201,10 @@ def filing_reconciliation_lines(results: Sequence[FilingReconciliationResult]) -
     return lines
 
 
-def _reconciliation_notice(result: FilingReconciliationResult, notice: FilingReconciliationNotice) -> Notice:
+def _reconciliation_notice(
+    result: FilingReconciliationResult | FilingReconciliationPayload,
+    notice: FilingReconciliationNotice | FilingReconciliationNoticePayload,
+) -> Notice:
     context = {
         "outcome": result.outcome.value,
         "modelo": result.modelo,
@@ -219,7 +227,7 @@ def _reconciliation_notice(result: FilingReconciliationResult, notice: FilingRec
     )
 
 
-def _contradiction_notice(result: FilingReconciliationResult) -> Notice:
+def _contradiction_notice(result: FilingReconciliationResult | FilingReconciliationPayload) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.filing_chain.contradicted",
@@ -241,7 +249,9 @@ def _contradiction_notice(result: FilingReconciliationResult) -> Notice:
     )
 
 
-def filing_reconciliation_notices(results: Iterable[FilingReconciliationResult]) -> list[Notice]:
+def filing_reconciliation_notices(
+    results: Iterable[FilingReconciliationResult | FilingReconciliationPayload],
+) -> list[Notice]:
     """Project reconciliation conditions onto the envelope notices channel.
 
     A contradiction is always a warning: the operator's pending entry lost to

@@ -30,7 +30,7 @@ from ..export_ports import ModeloExportPorts
 from ..export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
 from ..operation_definitions import (
@@ -191,21 +191,22 @@ def _export_registration() -> tuple[OperationDefinition, OperationPublicDefiniti
     return definition, build_modelo_export_registration(definition)
 
 
-def test_export_registration_binds_v2_to_the_public_wire_model() -> None:
+def test_export_registration_binds_v3_to_the_public_wire_model() -> None:
     definition, registration = _export_registration()
     OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
     assert definition.result_type is ModeloExportSettledResult
     assert registration.contract.result_schema is not None
     assert registration.contract.result_schema.schema_id == "modelo.export.result"
-    assert registration.contract.result_schema.schema_version == 2
+    assert registration.contract.result_schema.schema_version == 3
     result_binding = next(
         binding for binding in registration.schema_bindings if binding.identity.schema_id == "modelo.export.result"
     )
-    assert result_binding.model_type is ModeloExportPublicResultV2
+    assert result_binding.model_type is ModeloExportPublicResultV3
 
 
-def test_export_projection_carries_the_complete_fichero_boe_receipt() -> None:
+@pytest.mark.parametrize("fault", [None, "subject", "effect", "terminal"])
+def test_export_projection_carries_the_complete_fichero_boe_receipt(fault: str | None) -> None:
     canonical = _canonical_receipt(
         include_prior_proof=True,
         include_wallet_provenance=True,
@@ -217,18 +218,24 @@ def test_export_projection_carries_the_complete_fichero_boe_receipt() -> None:
     assert projector is not None
     terminal = OperationTerminalReceipt(
         identity=OperationIdentity(
-            operation_id="e" * 64, definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID, subject_ref=_WORK_UNIT_ID
+            operation_id="e" * 64,
+            definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
+            subject_ref="f" * 64 if fault == "subject" else _WORK_UNIT_ID,
         ),
         revision=4,
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.UPDATED,
+        condition=OperationTerminalCondition.FAILED if fault == "terminal" else OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UNKNOWN if fault == "effect" else OperationEffect.UPDATED,
         settled_at=_AT,
         result_ref="f" * 64,
     )
 
+    if fault is not None:
+        with pytest.raises(ValueError, match="export result contradicts"):
+            projector(ModeloExportSettledResult(fichero_boe=canonical), terminal)
+        return
     projected = projector(ModeloExportSettledResult(fichero_boe=canonical), terminal)
-    assert isinstance(projected, ModeloExportPublicResultV2)
-    restored = ModeloExportPublicResultV2.model_validate_json(projected.model_dump_json())
+    assert isinstance(projected, ModeloExportPublicResultV3)
+    restored = ModeloExportPublicResultV3.model_validate_json(projected.model_dump_json())
 
     assert restored.artefact is ModeloExportArtefact.FICHERO_BOE
     assert restored.evidence_status is ModeloExportEvidenceStatus.LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE
@@ -256,9 +263,9 @@ def test_export_public_result_refuses_a_receipt_that_does_not_match_its_artefact
     }
 
     with pytest.raises(ValueError, match="carries exactly its receipt"):
-        ModeloExportPublicResultV2.model_validate({**summary, "artefact": ModeloExportArtefact.FICHERO_BOE})
+        ModeloExportPublicResultV3.model_validate({**summary, "artefact": ModeloExportArtefact.FICHERO_BOE})
     with pytest.raises(ValueError, match="carries exactly its receipt"):
-        ModeloExportPublicResultV2.model_validate(
+        ModeloExportPublicResultV3.model_validate(
             {
                 **summary,
                 "artefact": ModeloExportArtefact.CALCULATION_REPORT_CSV,

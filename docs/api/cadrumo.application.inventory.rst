@@ -15,4 +15,5 @@ Submodules
 
    cadrumo.application.inventory.errors
    cadrumo.application.inventory.ports
+   cadrumo.application.inventory.registered_operation
    cadrumo.application.inventory.service

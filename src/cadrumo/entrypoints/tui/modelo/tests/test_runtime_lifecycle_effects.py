@@ -13,9 +13,10 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.modelo.export_projection import (
+    ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
 )
 from cadrumo.application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
@@ -36,10 +37,14 @@ from cadrumo.application.operations.frontend_requests import (
     OperationPublicEventPageV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.period import Period
 from cadrumo.entrypoints.tui.modelo import runtime_lifecycle
 from cadrumo.entrypoints.tui.modelo.lifecycle import (
     ModeloLifecycleActionUnavailableError,
@@ -272,8 +277,8 @@ def _settled_export_projection(condition: OperationTerminalCondition) -> Operati
     )
 
 
-def _report_result() -> ModeloExportPublicResultV2:
-    return ModeloExportPublicResultV2(
+def _report_result() -> ModeloExportPublicResultV3:
+    return ModeloExportPublicResultV3(
         calculation_revision_id="d" * 64,
         artefact=ModeloExportArtefact.CALCULATION_REPORT_CSV,
         export_format="csv",
@@ -283,6 +288,24 @@ def _report_result() -> ModeloExportPublicResultV2:
         software_identity_grade=None,
         evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
         completeness=ModeloExportCompleteness.NOT_ASSESSED,
+        calculation_report=ModeloCalculationReportPublicReceipt(
+            calculation_revision_id="d" * 64,
+            work_unit_id=_WORK_UNIT_ID,
+            verification_report_id=None,
+            filing_record_id=None,
+            modelo="303",
+            filing_year=2025,
+            period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
+            document_format=CalculationReportDocumentFormat.CSV,
+            report_language=OutputLanguage.ES,
+            output_path="C:/exports/report.csv",
+            byte_size=12,
+            file_sha256="e" * 64,
+            report_sha256="f" * 64,
+            row_count=1,
+            software_identity_grade=None,
+            local_calculation_notice="Local calculation report.",
+        ),
     )
 
 
@@ -290,7 +313,7 @@ def test_settled_export_result_is_read_through_the_runtime_reader() -> None:
     expected = _report_result()
     read: list[OperationPublicProjectionV1] = []
 
-    async def reader(projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+    async def reader(projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
         read.append(projection)
         return expected
 
@@ -306,10 +329,10 @@ def test_settled_export_result_is_read_through_the_runtime_reader() -> None:
 
 
 def test_settled_export_result_is_absent_without_a_readable_success() -> None:
-    async def refusing_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+    async def refusing_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
-    async def unreachable_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2:
+    async def unreachable_reader(_projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3:
         raise AssertionError("a refused export has no result to read")
 
     succeeded = _settled_export_projection(OperationTerminalCondition.SUCCEEDED)

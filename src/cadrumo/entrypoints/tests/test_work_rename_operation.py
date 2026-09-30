@@ -17,7 +17,7 @@ from ...adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
 from ...application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from ...application.modelo.export_projection import ModeloExportPublicResultV2
+from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from ...application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from ...application.modelo.operation_definitions import (
@@ -492,7 +492,7 @@ def _export_definition():
 
 def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
     """Custody of the artefact is the operator's; the result only proves which bytes."""
-    fields = set(ModeloExportPublicResultV2.model_fields)
+    fields = set(ModeloExportPublicResultV3.model_fields)
 
     assert {"result_version", "output_path", "byte_size", "file_sha256", "handoff_required"} <= fields
     for carrier in ("bytes", "content", "payload", "document"):

@@ -22,8 +22,13 @@ class ActivityAssetHistoryRepository(Protocol):
         """Append an immutable asset revision and return the reopened history."""
         ...
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        """Record or replay a claim according to its deterministic identity."""
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
+        """Record or replay a claim, optionally requiring its forecast history."""
         ...
 
 

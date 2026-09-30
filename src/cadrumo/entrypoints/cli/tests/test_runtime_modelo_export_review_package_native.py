@@ -20,7 +20,7 @@ from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import require_schema_envelope
 from ...tests import modelo_operation_test_support
-from ._runtime_profile_cli_fixture import native_cli_profile_scope
+from ._runtime_profile_cli_fixture import RuntimeFailureObservation, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -50,6 +50,8 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
 ) -> None:
     """Both side-effecting commands settle typed results through the real worker."""
     with native_cli_profile_scope(tmp_path) as fixture:
+        failures: list[RuntimeFailureObservation] = []
+        fixture.failure_observer = failures.append
         fixture.register(
             label=_LABEL,
             facts={
@@ -85,7 +87,7 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
             label=_LABEL,
             command=("app", "modelo", "export", work_unit_id, "--output", str(export_path)),
         )
-        assert exported.exit_code == 0, exported.output
+        assert exported.exit_code == 0, (exported.output, failures)
         export_result = require_schema_envelope(exported.output)
         assert export_result["calculation_revision_id"] == revision_id
         assert export_result["work_unit_id"] == work_unit_id
@@ -98,6 +100,35 @@ def test_native_cli_export_and_review_package_publish_canonical_receipts(
         assert len(exported_bytes) == export_result["byte_size"] > 0
         assert hashlib.sha256(exported_bytes).hexdigest() == export_result["file_sha256"]
         assert export_result["bucket_event_id"]
+        report_path = (tmp_path / "calculation-ca.csv").resolve()
+        report = _invoke_with_human_password(
+            fixture_passphrase=fixture.passphrase,
+            label=_LABEL,
+            command=(
+                "app",
+                "modelo",
+                "work",
+                "report",
+                work_unit_id,
+                "--output",
+                str(report_path),
+                "--output-language",
+                "ca",
+            ),
+        )
+        assert report.exit_code == 0, report.output
+        report_result = require_schema_envelope(report.output)
+        assert report_result["calculation_revision_id"] == revision_id
+        assert report_result["work_unit_id"] == work_unit_id
+        assert report_result["verification_report_id"] == report_id
+        assert report_result["report_language"] == "ca"
+        assert report_result["document_format"] == "csv"
+        assert report_result["row_count"] > 0
+        report_bytes = report_path.read_bytes()
+        assert report_result["file_sha256"] == hashlib.sha256(report_bytes).hexdigest()
+        assert report_result["byte_size"] == len(report_bytes)
+        assert len(report_result["report_sha256"]) == 64
+        assert report_result["local_calculation_notice"]
 
         package_path = (tmp_path / "modelo-review-package.zip").resolve()
         packaged = _invoke_with_human_password(

@@ -9,6 +9,26 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.prorrata_register.sector_lifecycle.ProrrataSectorLifecycleUnavailableError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_prorrata_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.prorrata_register.service.ProrrataWholeSeedUnavailableError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_prorrata_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.access_errors.ProfileAccessRefusedError",
         ErrorCode(
             code="REFUSED_PROFILE_ACCESS",

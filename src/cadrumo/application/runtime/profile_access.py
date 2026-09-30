@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel
 
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import AccessDenialCode, AccessScope, ProfileAccessStatus
@@ -111,6 +112,18 @@ class RuntimeProfileStatus(BaseModel):
     human_login: ProfileHumanLoginReceipt | None = None
 
 
+class RuntimeProfileStatusTransfer(BaseModel):
+    """Bounded full-scope status transfer, correlated before its chunks are read."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_status_transfer"] = "profile_status_transfer"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    byte_count: Annotated[int, Field(ge=2, le=1_048_576)]
+    payload_digest: ContentDigest
+
+
 class RuntimeSessionsLocked(BaseModel):
     """Acknowledge precisely the sessions retired by the application authority."""
 
@@ -141,6 +154,7 @@ class RuntimeReply(
             | RuntimeStopAccepted
             | RuntimeSecretReady
             | RuntimeProfileStatus
+            | RuntimeProfileStatusTransfer
             | RuntimeSessionsLocked
             | RuntimeOperationReply
             | RuntimeEnrollmentReply

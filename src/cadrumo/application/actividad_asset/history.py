@@ -62,9 +62,28 @@ class ActivityAssetHistory(BaseModel):
                 raise ValueError("asset revision supersession must point to the prior revision of the same asset")
 
     def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
-        """Append an exact revision once, preserving each asset's correction chain."""
+        """Append only a creation or the exact successor of the current revision.
+
+        The encrypted repository invokes this against the value read inside its
+        compare-and-swap mutation.  Checking the latest revision here therefore
+        closes the pre-read/write race for corrections made by concurrent
+        callers.
+        """
         if any(existing.revision_id == revision.revision_id for existing in self.revisions):
             return self
+        latest = max(
+            (item for item in self.revisions if item.asset_id == revision.asset_id),
+            key=lambda item: item.revision_number,
+            default=None,
+        )
+        if latest is None:
+            if revision.revision_number != 1 or revision.supersedes_revision_id is not None:
+                raise ActividadAssetValidationError("asset creation requires revision number one")
+        elif (
+            revision.revision_number != latest.revision_number + 1
+            or revision.supersedes_revision_id != latest.revision_id
+        ):
+            raise ActividadAssetClaimConflictError("asset correction must supersede the current revision")
         return ActivityAssetHistory(revisions=(*self.revisions, revision), claims=self.claims)
 
     def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:

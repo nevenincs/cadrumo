@@ -72,6 +72,7 @@ from .framing import accept_runtime_handshake, read_document, write_document, wr
 from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 from .worker_authorization import WorkerAuthorizationServer
+from .worker_lease_transfer import write_worker_lease
 
 _WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
 
@@ -229,7 +230,10 @@ class ProfileWorkerProcess:
                 if channel is None:
                     raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
                 wire_deadline = time.monotonic() + 10 if deadline is None else deadline
-                write_document(channel, request, deadline=wire_deadline)
+                if isinstance(request.root, ProfileWorkerLeaseRequest | ProfileWorkerHumanBindingRequest):
+                    write_worker_lease(channel, request, deadline=wire_deadline)
+                else:
+                    write_document(channel, request, deadline=wire_deadline)
                 if secret is not None:
                     write_secret(channel, secret, deadline=wire_deadline)
                 result = read_document(channel, ProfileWorkerReply, deadline=wire_deadline).root

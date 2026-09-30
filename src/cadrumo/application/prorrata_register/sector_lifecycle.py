@@ -36,7 +36,15 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
-from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ...domain.prorrata_register.register import (
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    ProrrataRegisterValidationError,
+)
+
+
+class ProrrataSectorLifecycleUnavailableError(ProrrataRegisterValidationError):
+    """A requested sector carry or settlement lacks its required register entry."""
 
 
 def seed_sector_carried_definitive_from_register(
@@ -136,6 +144,7 @@ def settle_sector_definitive(
 
 
 __all__ = [
+    "ProrrataSectorLifecycleUnavailableError",
     "seed_sector_carried_definitive_from_register",
     "settle_sector_definitive",
 ]

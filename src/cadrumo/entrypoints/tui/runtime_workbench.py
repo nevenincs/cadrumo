@@ -15,6 +15,7 @@ from ...application.operator_actions.catalogue import lookup_action
 from ...application.operator_actions.models import ActionReference
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
+from ...core.config import load_settings
 from ...core.external_constants import OutputLanguage
 from ...domain.user_profile.values import ProfileSetupState
 from .account import AccountSessionExpiredError
@@ -24,7 +25,8 @@ from .app import RootBindingV1, RootPresentationV1
 from .declarations.models import DeclarationsRefreshSnapshotV1
 from .declarations.routes import declarations_screen_factory
 from .home import HomeScreen
-from .ledger.routes import ledger_screen_factory
+from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
+from .ledger.runtime_invoice_add import compose_runtime_invoice_add_door
 from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
@@ -142,7 +144,13 @@ class RuntimeWorkbenchRoot:
             if generation.ledger.projection is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             factories["workbench.ledger"] = ledger_screen_factory(
-                generation.ledger.projection, review_action=_action("operator.ledger.review")
+                generation.ledger.projection,
+                review_action=_action("operator.ledger.review"),
+                activity_asset_actions=actividad_asset_tui_actions(client=self._client, profile_label=self._label),
+                invoice_add_door=compose_runtime_invoice_add_door(
+                    client=self._client,
+                    profile_label=self._label,
+                ),
             )
         if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             current = [generation]
@@ -207,7 +215,10 @@ class RuntimeWorkbenchRoot:
         if generation.aeat_sync_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             if generation.aeat_sync.projection is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(self._client)
+            operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(
+                self._client,
+                output_root=load_settings().cadrumo_filed_declarations_dir,
+            )
 
             def refresh_aeat_sync() -> AeatSyncWorkspaceProjectionV1:
                 captured = self._read().generation

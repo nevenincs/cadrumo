@@ -7,7 +7,6 @@ or pulling sheet rows against the live calculation schema.
 
 from __future__ import annotations
 
-import asyncio
 import json
 from decimal import Decimal
 from pathlib import Path
@@ -23,7 +22,6 @@ from ...adapters.outbound.storage.factory import build_google_credentials, resol
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal.coercion import coerce_decimal
-from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period, PeriodError
 from ...core.type_guards import is_object_dict
 from ...domain.calculations.registry.authority import (
@@ -45,6 +43,8 @@ from ._modelo_spreadsheet_payloads import (
 from .common import emit_envelope
 from .config.google_errors import google_refusal
 from .errors import CliRefusedBoundaryError
+from .runtime_modelo_spreadsheet_push import run_google_sheets_export
+from .runtime_profile_binding import bound_profile_client
 
 if TYPE_CHECKING:
     import typer
@@ -57,7 +57,6 @@ if TYPE_CHECKING:
         RelationEdit,
         RowSetEdit,
     )
-    from ...application.export.google_operation import GoogleSheetsExportPublicResultV1
     from ...application.storage.calc_sheets.casilla_parity import CasillaParity
     from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, ParityReport
     from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult
@@ -180,7 +179,8 @@ def modelo_spreadsheet_push(
     dry_run: bool = False,
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a Google Sheets workbook."""
-    active, result = execute_google_sheets_export(
+    active, result = run_google_sheets_export(
+        bound_profile_client(ctx),
         modelo=modelo,
         period=period,
         year=year,
@@ -289,115 +289,6 @@ def modelo_spreadsheet_export(
         f"casilla_count\t{export_result.casilla_count}",
     )
     emit_envelope(ctx, command="modelo.spreadsheet.export", result=export_result, lines=lines)
-
-
-def google_operation_error(code: str, *, diagnostic_ref: str | None) -> Exception:
-    """Project a supervised failure solely through canonical ErrorCode metadata."""
-    from ...core.errors.error_codes import ErrorCategory, get_registered_error_code_by_code
-    from ...core.errors.hierarchy import InternalInvariantError
-
-    error_code = get_registered_error_code_by_code(code)
-    if error_code.category not in {ErrorCategory.ERROR, ErrorCategory.INTERNAL}:
-        return CliRefusedBoundaryError(translated_message=error_code.message_key)
-    return InternalInvariantError(f"supervised Google Sheets export failed ({diagnostic_ref or 'no diagnostic'})")
-
-
-def execute_google_sheets_export(
-    *,
-    modelo: str,
-    period: str,
-    year: int,
-    prefill_relations: bool = False,
-    dry_run: bool = False,
-) -> tuple[str, GoogleSheetsExportPublicResultV1]:
-    """Submit the export through supervision and project its terminal result."""
-    from uuid import UUID
-
-    from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
-    from ...application.export.google_operation import (
-        GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-        GoogleSheetsExportOperationRequest,
-        GoogleSheetsExportPublicResultV1,
-    )
-    from ...application.operations.frontend_requests import (
-        OperationObservationRequestV1,
-        OperationObservationSuccessV1,
-        OperationResultProjectionRefusalV1,
-        OperationResultProjectionRequestV1,
-        OperationResultProjectionSuccessV1,
-    )
-    from ...application.operations.models import OperationRequest
-    from ...core.operations import OperationTerminalCondition, profile_operation_subject
-    from ..operation_composition import compose_operation_dependencies
-
-    active = resolve_active_profile()
-
-    async def run() -> GoogleSheetsExportPublicResultV1:
-        with bundled_indexed_authority().operation() as authority_operation:
-            services = compose_operation_dependencies(
-                authority_operation=authority_operation,
-                operator_scope_ports=build_operator_scope_ports(),
-            )
-            try:
-                request = OperationRequest(
-                    definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-                    subject_ref=profile_operation_subject(active),
-                    payload=GoogleSheetsExportOperationRequest(
-                        profile_id=UUID(active),
-                        modelo=modelo,
-                        filing_year=year,
-                        period=period,
-                        prefill_relations=prefill_relations,
-                        dry_run=dry_run,
-                    ),
-                )
-                submitted = await services.submission.submit(
-                    request,
-                    actor_ref="operator:modelo-spreadsheet-push",
-                )
-                await services.submission.start(submitted.receipt.operation_id)
-                await services.submission.settled(submitted.receipt.operation_id)
-                observed = await services.observation.observe(
-                    OperationObservationRequestV1(
-                        operation_id=submitted.receipt.operation_id,
-                        after_cursor=0,
-                        page_limit=64,
-                    )
-                )
-                if not isinstance(observed, OperationObservationSuccessV1):
-                    raise InternalInvariantError("supervised Google Sheets export observation is unavailable")
-                projection = observed.projection
-                code = projection.refusal_ref or projection.failure_error_code
-                if code is not None:
-                    raise google_operation_error(code, diagnostic_ref=projection.diagnostic_ref)
-                if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-                    raise InternalInvariantError(
-                        f"supervised Google Sheets export failed ({projection.diagnostic_ref or 'no diagnostic'})"
-                    )
-                result_schema = projection.definition_contract.result_schema
-                if result_schema is None:
-                    raise InternalInvariantError("supervised Google Sheets export has no public result schema")
-                resolved: (
-                    OperationResultProjectionSuccessV1[GoogleSheetsExportPublicResultV1]
-                    | OperationResultProjectionRefusalV1
-                ) = await services.result.resolve(
-                    OperationResultProjectionRequestV1(
-                        operation_id=projection.operation_id,
-                        terminal_revision=projection.revision,
-                        definition_contract_digest=projection.definition_contract.definition_contract_digest,
-                        result_schema=result_schema,
-                    ),
-                    GoogleSheetsExportPublicResultV1,
-                )
-                if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
-                    resolved.projection, GoogleSheetsExportPublicResultV1
-                ):
-                    raise InternalInvariantError("supervised Google Sheets export result is unavailable")
-                return resolved.projection
-            finally:
-                await services.shutdown()
-
-    return active, asyncio.run(run())
 
 
 def _scenario_decimal_value(value: object) -> Decimal:
@@ -960,8 +851,6 @@ def _assemble_pull_observations(
 
 
 __all__ = [
-    "execute_google_sheets_export",
-    "google_operation_error",
     "modelo_spreadsheet_calculate",
     "modelo_spreadsheet_export",
     "modelo_spreadsheet_pull",

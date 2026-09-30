@@ -11,10 +11,12 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
@@ -55,7 +57,7 @@ from ...application.live.filed_data_capture import (
     filed_history_discovery_report,
     pull_filed_history,
 )
-from ...application.live.filed_data_ports import FiledDataCapturePort
+from ...application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ...application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FILED_HISTORY_PHASE_CLEANUP,
@@ -74,7 +76,10 @@ from ...application.live.filed_history_operation import (
 from ...application.live.filed_observation_ports import FiledObservationPersistencePorts
 from ...application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ...application.live.notification_ports import NotificationsPorts
+from ...application.live.session import SessionWriteReporter
 from ...application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
+from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.capabilities import OperationOwnedResource
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -83,8 +88,17 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.owner import OperationEventEmitter
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationRegistry
+from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
+from ...application.user_profile.access_contracts import (
+    AccessAction,
+    AccessDenialCode,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+)
+from ...application.user_profile.access_errors import ProfileAccessRefusedError
+from ...application.user_profile.access_policy import operation_scope_refusal
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.operations import (
     OperationCancellation,
@@ -94,7 +108,9 @@ from ...core.operations import (
     OperationEventKind,
     OperationLifecycle,
     OperationTerminalCondition,
+    profile_operation_subject,
 )
+from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.deadlines.models import TaxpayerProfile
 
@@ -162,8 +178,11 @@ class _DeterministicFiledHistoryDiscovery:
         filed_data_port,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> FiledHistoryDiscoveryReport:
         del filed_data_port
+        assert effect_guard is not None and on_session_write is not None
         self.profile = profile
         del today
         if self._entered is not None:
@@ -201,6 +220,8 @@ def _local_pull(
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        effect_guard: FiledEffectGuard,
+        on_session_write: SessionWriteReporter,
     ) -> FiledHistoryOnboardingRun:
         return await pull_filed_history(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -218,6 +239,8 @@ def _local_pull(
             discover=discover,
             sync_run_repository=repository,
             events=events,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
         )
 
     return pull
@@ -247,6 +270,8 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
+        effect_guard: FiledEffectGuard,
+        on_session_write: SessionWriteReporter,
     ) -> FiledHistoryOnboardingRun:
         del filed_data_port
         async with open_routed_declarations_register((document,), ver_click_timeout_ms=1500) as (register, routed):
@@ -266,6 +291,8 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
                 discover=discover,
                 sync_run_repository=repository,
                 events=events,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
             )
             assert not routed.pending
             return run
@@ -284,8 +311,10 @@ def _composition_discovery(
         filed_data_port,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> FiledHistoryDiscoveryReport:
-        del filed_data_port, profile, today
+        del filed_data_port, profile, today, effect_guard, on_session_write
         return FiledHistoryDiscoveryReport(
             pairs=pairs,
             register_options_read=True,
@@ -397,7 +426,9 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_local_pull(_DeterministicFiledHistoryDiscovery()),
+            provider_preflight=lambda _profile_id, _operation: None,
         )
 
     assert definition.definition_id == FILED_HISTORY_OPERATION_DEFINITION_ID
@@ -405,6 +436,51 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
     assert definition.capabilities.durability is OperationDurability.RECORDED
     assert definition.capabilities.cancellation is OperationCancellation.UNSUPPORTED
     assert definition.capabilities.deadline is OperationDeadline.ABSENT
+    assert definition.capabilities.owned_resources == frozenset({OperationOwnedResource.PROCESS})
+
+
+def test_supervisor_refuses_a_foreign_payload_profile_before_capture(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
+        authority_operation = stack.enter_context(bundled_indexed_authority().operation())
+        discovery_entered = asyncio.Event()
+        definition = build_filed_history_operation_definition(
+            sync_run_repository_factory=SyncRunRecordRepository,
+            composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
+            pull=_local_pull(_DeterministicFiledHistoryDiscovery(entered=discovery_entered)),
+            provider_preflight=lambda _profile_id, _operation: None,
+        )
+        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
+        supervisor = OperationSupervisor(
+            authority_operation=authority_operation,
+            registry=_registered_filed_history_definition(definition),
+            journal=journal,
+            event_stream=journal,
+            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
+            operands=operation_secure_reference_repository(objects=profile.repository),
+            owner_id="1" * 64,
+            lease_token_factory=lambda: "2" * 64,
+            clock=lambda: _NOW,
+            lease_duration=timedelta(minutes=5),
+        )
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref=profile_operation_subject(profile.bucket_id),
+            payload=FiledHistoryOperationRequest(
+                profile_id=UUID("22222222-2222-4222-8222-222222222222"),
+                output_root=tmp_path / "filed",
+                dry_run=True,
+            ),
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            operation_id = await supervisor.submit(request, operation_id="3" * 64)
+            return await _run_to_terminal(supervisor, operation_id)
+
+        terminal = asyncio.run(run())
+        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+        assert terminal.effect is OperationEffect.NONE
+        assert not discovery_entered.is_set()
 
 
 def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_path: Path) -> None:
@@ -421,8 +497,10 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
             pull=pull,
             profile_resolver=lambda _operation: taxpayer,
+            provider_preflight=lambda _profile_id, _operation: None,
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
@@ -441,8 +519,9 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
-            subject_ref=profile.bucket_id,
+            subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
+                profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "filed",
                 today=date(2026, 3, 15),
             ),
@@ -531,7 +610,9 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            provider_preflight=lambda _profile_id, _operation: None,
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
@@ -550,8 +631,9 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
-            subject_ref=profile.bucket_id,
+            subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
+                profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "filed",
                 today=date(2026, 3, 15),
                 dry_run=True,
@@ -610,7 +692,9 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            provider_preflight=lambda _profile_id, _operation: None,
         )
         durable_root = tmp_path / "terminal-operations"
         journal = OperationJournalRepository(storage_root=durable_root)
@@ -629,8 +713,9 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
-            subject_ref=profile.bucket_id,
+            subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
+                profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "terminal-filed",
                 today=date(2026, 3, 15),
             ),
@@ -688,7 +773,9 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            provider_preflight=lambda _profile_id, _operation: None,
         )
         registry = _registered_filed_history_definition(definition)
         durable_root = tmp_path / "result-projection-operations"
@@ -708,9 +795,11 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
-            subject_ref=profile.bucket_id,
+            subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
-                output_root=tmp_path / "result-projection-filed", today=date(2026, 3, 15)
+                profile_id=UUID(profile.bucket_id),
+                output_root=tmp_path / "result-projection-filed",
+                today=date(2026, 3, 15),
             ),
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
@@ -793,6 +882,7 @@ def test_filed_history_operation_contract_has_one_public_defining_module() -> No
     definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=_test_filed_history_composition,
+        browser_resources_factory=BrowserRuntimeResourceScope,
     )
 
     assert FILED_HISTORY_OPERATION_DEFINITION_ID == "live.filed-history.pull"
@@ -810,12 +900,13 @@ def test_filed_history_operation_contract_has_one_public_defining_module() -> No
     assert operation.build_filed_history_operation_registration is build_filed_history_operation_registration
 
 
-def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path: Path) -> None:
-    """The public request resolves taxpayer facts from the active subject, not JSON."""
+def test_public_registration_uses_a_strict_profile_bound_request_schema(tmp_path: Path) -> None:
+    """The public request binds the profile without carrying taxpayer facts."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
             composition_factory=_test_filed_history_composition,
+            browser_resources_factory=BrowserRuntimeResourceScope,
         )
         registration = build_filed_history_operation_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -823,5 +914,67 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
     request_schema = registration.schema_bindings[0].model_type.model_json_schema(mode="validation")
 
     assert registry.lookup_public_registration(definition.definition_id) is registration
-    assert tuple(request_schema["properties"]) == ("output_root", "today", "limit", "dry_run")
+    assert tuple(request_schema["properties"]) == ("profile_id", "output_root", "today", "limit", "dry_run")
     assert "TaxpayerProfile" not in request_schema.get("$defs", {})
+
+
+def test_filed_history_access_requires_whole_profile_commit_and_result_disclosure(tmp_path: Path) -> None:
+    profile_id = UUID("11111111-1111-4111-8111-111111111111")
+    definition = build_filed_history_operation_definition(
+        sync_run_repository_factory=SyncRunRecordRepository,
+        composition_factory=_test_filed_history_composition,
+        browser_resources_factory=BrowserRuntimeResourceScope,
+    )
+    registration = build_filed_history_operation_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    request = OperationRequest[BaseModel](
+        definition_id=definition.definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=FiledHistoryOperationRequest(profile_id=profile_id, output_root=tmp_path / "filed"),
+    )
+
+    def context(action: AccessAction, admitted_request=None) -> OperationAccessContext:
+        return OperationAccessContext(
+            profile_id=profile_id,
+            destination_id=uuid4(),
+            action=action,
+            frontend=OperationFrontendProjection.CLI,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            admitted_request=admitted_request,
+        )
+
+    submitted = resolve_operation_access(registry=registry, request=request, context=context(AccessAction.SUBMIT))
+    assert submitted.request.periods == frozenset()
+    assert submitted.request.period_independent
+    assert submitted.policy.requires_all_periods
+    assert AccessAction.COMMIT in submitted.policy.actions
+    finite_scope = AccessScope(
+        operations=frozenset({definition.definition_id}),
+        actions=submitted.policy.actions,
+        disclosures=frozenset(),
+        periods=frozenset({Period.from_year_and_code(2025, "1T")}),
+        allow_period_independent=True,
+        allow_delegation=False,
+    )
+    finite_refusal = operation_scope_refusal(request=submitted.request, policy=submitted.policy, scope=finite_scope)
+    assert finite_refusal is not None and finite_refusal.code is AccessDenialCode.PERIOD_DENIED
+    no_commit_scope = finite_scope.model_copy(
+        update={"periods": None, "actions": finite_scope.actions - {AccessAction.COMMIT}}
+    )
+    commit_request = submitted.request.model_copy(update={"action": AccessAction.COMMIT})
+    commit_refusal = operation_scope_refusal(request=commit_request, policy=submitted.policy, scope=no_commit_scope)
+    assert commit_refusal is not None and commit_refusal.code is AccessDenialCode.OPERATION_DENIED
+    committed = resolve_operation_access(
+        registry=registry, request=request, context=context(AccessAction.COMMIT, submitted.request)
+    )
+    assert committed.request.periods == frozenset()
+    disclosed = resolve_operation_access(
+        registry=registry, request=request, context=context(AccessAction.RESULT, submitted.request)
+    )
+    assert {permission.category for permission in disclosed.policy.disclosures} == {DisclosureCategory.TAX_VALUES}
+
+    foreign = request.model_copy(update={"subject_ref": profile_operation_subject(str(uuid4()))})
+    with pytest.raises(ProfileAccessRefusedError) as refusal:
+        resolve_operation_access(registry=registry, request=foreign, context=context(AccessAction.SUBMIT))
+    assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH

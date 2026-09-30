@@ -1,52 +1,33 @@
 """Explicit read-only AEAT live observation CLI commands.
 
-This module wires filed-declaration commands through :func:`list_filed_data`,
-:func:`list_filed_data_bulk`, :func:`capture_filed_data`,
-:func:`capture_filed_data_bulk`, and :func:`capture_source_filed_data`; it also
-delegates IVA-wallet and subgroup command families to live application services.
+Filed-declaration listing, discovery and capture and combined IVA evidence
+acquisition use registered profile workers.
 It emits graph-declared payload schemas such as :class:`FiledListResult`,
 :class:`FiledCaptureResult`, and :class:`FiledCaptureSourcesResult` through
 :func:`emit_envelope`. The commands collect or render local evidence only; live
 submission, payment, acknowledgement, and representative write actions remain
 outside this CLI surface.
 
-The filed-declaration commands resolve the operator's :class:`TaxpayerProfile`
-and pass it to the application layer, because which modelos a filer is even
-asked about is a property of their declared profile rather than of the command.
+The filed-discovery worker resolves the bound :class:`TaxpayerProfile` because
+which modelos a filer is asked about follows their declared profile facts.
 """
 
 from __future__ import annotations
 
-import asyncio
-import json
-import os
-import re
-import shutil
-import signal
-import subprocess
-import sys
-from collections.abc import Awaitable, Sequence
-from dataclasses import dataclass
+from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Literal, overload
+from typing import Any, Final
 
 import typer
 
-from ...adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ...application.live.capture_mode import LiveCaptureMode
 from ...application.live.errors import LiveIvaAcquisitionFailureMode
 from ...application.live.filed_data import FiledDataListingRow
 from ...application.live.filed_data_capture import (
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
-    capture_filed_data,
-    capture_filed_data_bulk,
-    capture_source_filed_data,
-    discover_filed_history,
     expected_but_not_found_notice,
-    list_filed_data,
-    list_filed_data_bulk,
-    pull_filed_history,
 )
 from ...application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -59,7 +40,6 @@ from ...application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ...application.operator_actions.models import ActionReference
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
@@ -79,10 +59,6 @@ from .common import (
     resolve_optional_root,
     resolve_pull_year_range,
 )
-from .state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
-
-if TYPE_CHECKING:
-    from ...domain.deadlines.models import TaxpayerProfile
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -131,44 +107,71 @@ def iva_wallet_pull_cmd(
 ) -> None:
     """Pull the authenticated AEAT IVA wallet into an :class:`IvaWalletCaptureReport`.
 
-    Delegates to :func:`capture_iva_compensation_wallet` and emits
+    Delegates to its registered profile worker and emits
     :class:`IvaWalletPullResult`. The command can trigger the configured
     authentication provider, including Cl@ve Móvil manual approval, but the only
     remote action is the guarded wallet read query; reconciliation and blocking
     decisions are profile-local evidence.
     """
-    from ...application.live.iva_remote_state import capture_iva_compensation_wallet
-    from ..live_state_composition import compose_live_state
+    from .runtime_iva_wallet_capture import read_iva_wallet_capture_for_cli
 
     emit_live_auth_preflight(ctx)
-    composition = compose_live_state()
-    report = asyncio.run(
-        capture_iva_compensation_wallet(
-            ports=composition.iva_remote_state_port,
-            output_root=composition.output_root,
-            target_year=year,
-            target_period=_required_live_period_option(period, year=year),
-            taxpayer_nif=taxpayer_nif,
-        ),
+    target_period = _required_live_period_option(period, year=year)
+    read = read_iva_wallet_capture_for_cli(
+        ctx,
+        target_year=year,
+        target_period=target_period,
+        taxpayer_nif=taxpayer_nif,
     )
-    from ._app_live_iva_wallet_payloads import IvaWalletPullResult
+    projection = read.projection
+    try:
+        # The public worker projection carries the period as a bare registry
+        # token. Restore the canonical typed period used by this CLI payload.
+        report = IvaWalletCaptureReport(
+            taxpayer_ref=projection.taxpayer_ref,
+            target_year=projection.target_year,
+            target_period=Period.from_year_and_code(projection.target_year, projection.target_period),
+            observation_path=projection.observation_path,
+            decision_key=projection.decision_key,
+            row_count=projection.row_count,
+            total_pending=projection.total_pending,
+            selected_authority=projection.selected_authority,
+            selected_amount=projection.selected_amount,
+            local_recurrence_amount=projection.local_recurrence_amount,
+            divergence=projection.divergence,
+            blocked=projection.blocked,
+            captured_at=projection.captured_at,
+        )
+        from ._app_live_iva_wallet_payloads import IvaWalletPullResult
 
-    result = IvaWalletPullResult(
-        taxpayer_ref=report.taxpayer_ref,
-        target_year=report.target_year,
-        target_period=report.target_period,
-        observation_path=report.observation_path,
-        decision_key=report.decision_key,
-        row_count=report.row_count,
-        total_pending=report.total_pending,
-        selected_authority=report.selected_authority,
-        selected_amount=report.selected_amount,
-        local_recurrence_amount=report.local_recurrence_amount,
-        divergence=report.divergence,
-        blocked=report.blocked,
-        captured_at=report.captured_at.isoformat(),
-    )
-    emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
+        result = IvaWalletPullResult(
+            taxpayer_ref=report.taxpayer_ref,
+            target_year=report.target_year,
+            target_period=report.target_period,
+            observation_path=report.observation_path,
+            decision_key=report.decision_key,
+            row_count=report.row_count,
+            total_pending=report.total_pending,
+            selected_authority=report.selected_authority,
+            selected_amount=report.selected_amount,
+            local_recurrence_amount=report.local_recurrence_amount,
+            divergence=report.divergence,
+            blocked=report.blocked,
+            captured_at=report.captured_at.isoformat(),
+        )
+        emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
@@ -437,57 +440,67 @@ def iva_wallet_pull_history_cmd(
 ) -> None:
     """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
-    Delegates to :func:`capture_iva_compensation_history` and emits
+    Delegates to its registered profile worker and emits
     :class:`IvaWalletCaptureHistoryResult`. The live read captures filed-history
     evidence, promotes calculation observations, then verifies the secure
     profile-local reload count. It does not query the wallet/cartera surface or
     submit AEAT form choices.
     """
-    from ...application.live.iva_remote_state import capture_iva_compensation_history
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
+    from .runtime_iva_history_capture import read_iva_wallet_history_capture_for_cli
 
     emit_live_auth_preflight(ctx)
     resolved_root = resolve_optional_root(
         output_root,
         lambda: load_settings().cadrumo_iva_compensation_history_dir,
     )
-    composition = compose_live_state(output_root=resolved_root)
-    report = asyncio.run(
-        capture_iva_compensation_history(
-            ports=composition.iva_remote_state_port,
-            year_from=year_from,
-            year_to=year_to,
-            output_root=resolved_root,
-        ),
+    read = read_iva_wallet_history_capture_for_cli(
+        ctx,
+        year_from=year_from,
+        year_to=year_to,
+        output_root=resolved_root,
     )
-    lines = (
-        *_IVA_WALLET_LIVE_SAFETY_LINES,
-        metric_line("year_from", report.year_from),
-        metric_line("year_to", report.year_to),
-        metric_line("captured_count", report.captured_count),
-        metric_line("calculation_observation_count", report.calculation_observation_count),
-        metric_line("reloaded_history_count", report.reloaded_history_count),
-        metric_line("failed_declaration_count", report.failed_declaration_count),
-        metric_line("output_root", report.output_root),
-    )
-    from ._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
+    projection = read.projection
+    try:
+        lines = (
+            *_IVA_WALLET_LIVE_SAFETY_LINES,
+            metric_line("year_from", projection.year_from),
+            metric_line("year_to", projection.year_to),
+            metric_line("captured_count", projection.captured_count),
+            metric_line("calculation_observation_count", projection.calculation_observation_count),
+            metric_line("reloaded_history_count", projection.reloaded_history_count),
+            metric_line("failed_declaration_count", projection.failed_declaration_count),
+            metric_line("output_root", projection.output_root),
+        )
+        from ._app_live_iva_wallet_payloads import IvaWalletCaptureHistoryResult
 
-    result = IvaWalletCaptureHistoryResult(
-        output_root=report.output_root,
-        year_from=report.year_from,
-        year_to=report.year_to,
-        captured_count=report.captured_count,
-        calculation_observation_count=report.calculation_observation_count,
-        reloaded_history_count=report.reloaded_history_count,
-        casilla_count=report.casilla_count,
-        observation_paths=list(report.observation_paths),
-        artefact_refs=list(report.artefact_refs),
-        calculation_observation_keys=list(report.calculation_observation_keys),
-        failed_declaration_count=report.failed_declaration_count,
-        failed_declarations=list(report.failed_declarations),
-    )
-    emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
+        result = IvaWalletCaptureHistoryResult(
+            output_root=projection.output_root,
+            year_from=projection.year_from,
+            year_to=projection.year_to,
+            captured_count=projection.captured_count,
+            calculation_observation_count=projection.calculation_observation_count,
+            reloaded_history_count=projection.reloaded_history_count,
+            casilla_count=projection.casilla_count,
+            observation_paths=list(projection.observation_paths),
+            artefact_refs=list(projection.artefact_refs),
+            calculation_observation_keys=list(projection.calculation_observation_keys),
+            failed_declaration_count=projection.failed_declaration_count,
+            failed_declarations=list(projection.failed_declarations),
+        )
+        emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def iva_wallet_pull_evidence_cmd(
@@ -501,7 +514,7 @@ def iva_wallet_pull_evidence_cmd(
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
-    Delegates to :func:`capture_iva_remote_state`, emits
+    Delegates to its registered profile worker and emits
     :class:`IvaWalletPullEvidenceResult`, returns a redacted
     :class:`IvaRemoteStateAcquisitionReport`, persists a
     :class:`IvaRemoteStateAcquisitionManifest`, and keeps
@@ -509,74 +522,80 @@ def iva_wallet_pull_evidence_cmd(
     can therefore survive a wallet/cartera failure and vice versa. The command
     never performs AEAT filing, payment, or representative submission actions.
     """
-    from ...application.live.iva_remote_state import capture_iva_remote_state
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
+    from .runtime_iva_remote_state_capture import read_iva_remote_state_capture_for_cli
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     emit_live_auth_preflight(ctx)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir)
-    composition = compose_live_state(output_root=resolved_root)
-    report = asyncio.run(
-        _run_live_iva_evidence_pull_command(
-            capture_iva_remote_state(
-                ports=composition.iva_remote_state_port,
-                year_from=year_from,
-                year_to=year_to,
-                target_year=target_year,
-                target_period=resolved_target_period,
-                taxpayer_nif=taxpayer_nif,
-                output_root=resolved_root,
-            ),
-            ctx=ctx,
-            timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
-        ),
-    )
-    from ._app_live_iva_wallet_payloads import (
-        IvaWalletPullEvidenceResult,
-        LiveIvaAuthOutcomePayload,
-        LiveIvaSurfaceOutcomePayload,
-    )
-
-    result = IvaWalletPullEvidenceResult(
-        output_root=report.output_root,
-        year_from=report.year_from,
-        year_to=report.year_to,
-        target_year=report.target_year,
-        target_period=report.target_period,
-        acquisition_manifest_id=report.acquisition_manifest_id or "",
-        auth=LiveIvaAuthOutcomePayload(
-            status=report.auth.status,
-            outcome_mode=report.auth.outcome_mode,
-            failure_mode=report.auth.failure_mode,
-            failure_type=report.auth.failure_type,
-            diagnostic_ref=report.auth.diagnostic_ref,
-            provider_kind=report.auth.provider_kind,
-            reused_persisted_session=report.auth.reused_persisted_session,
-            fresh=report.auth.fresh,
-        ),
-        filed_history_succeeded=report.filed_history_succeeded,
-        wallet_succeeded=report.wallet_succeeded,
-        outcomes=[
-            LiveIvaSurfaceOutcomePayload(
-                surface=outcome.surface,
-                status=outcome.status,
-                outcome_mode=outcome.outcome_mode,
-                failure_mode=outcome.failure_mode,
-                failure_type=outcome.failure_type,
-                failure_context=outcome.failure_context,
-                captured_count=outcome.captured_count,
-                calculation_observation_count=outcome.calculation_observation_count,
-            )
-            for outcome in report.outcomes
-        ],
-    )
-    emit_envelope(
+    read = read_iva_remote_state_capture_for_cli(
         ctx,
-        command="app.live.iva_wallet.pull_evidence",
-        result=result,
-        lines=_iva_remote_state_capture_lines(report),
+        output_root=resolved_root,
+        year_from=year_from,
+        year_to=year_to,
+        target_year=target_year,
+        target_period=resolved_target_period,
+        taxpayer_nif=taxpayer_nif,
     )
+    report = read.report
+    try:
+        from ._app_live_iva_wallet_payloads import (
+            IvaWalletPullEvidenceResult,
+            LiveIvaAuthOutcomePayload,
+            LiveIvaSurfaceOutcomePayload,
+        )
+
+        result = IvaWalletPullEvidenceResult(
+            output_root=report.output_root,
+            year_from=report.year_from,
+            year_to=report.year_to,
+            target_year=report.target_year,
+            target_period=report.target_period,
+            acquisition_manifest_id=report.acquisition_manifest_id or "",
+            auth=LiveIvaAuthOutcomePayload(
+                status=report.auth.status,
+                outcome_mode=report.auth.outcome_mode,
+                failure_mode=report.auth.failure_mode,
+                failure_type=report.auth.failure_type,
+                diagnostic_ref=report.auth.diagnostic_ref,
+                provider_kind=report.auth.provider_kind,
+                reused_persisted_session=report.auth.reused_persisted_session,
+                fresh=report.auth.fresh,
+            ),
+            filed_history_succeeded=report.filed_history_succeeded,
+            wallet_succeeded=report.wallet_succeeded,
+            outcomes=[
+                LiveIvaSurfaceOutcomePayload(
+                    surface=outcome.surface,
+                    status=outcome.status,
+                    outcome_mode=outcome.outcome_mode,
+                    failure_mode=outcome.failure_mode,
+                    failure_type=outcome.failure_type,
+                    failure_context=outcome.failure_context,
+                    captured_count=outcome.captured_count,
+                    calculation_observation_count=outcome.calculation_observation_count,
+                )
+                for outcome in report.outcomes
+            ],
+        )
+        emit_envelope(
+            ctx,
+            command="app.live.iva_wallet.pull_evidence",
+            result=result,
+            lines=_iva_remote_state_capture_lines(report),
+        )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
@@ -624,318 +643,6 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
     return tuple(lines)
 
 
-async def _run_live_iva_evidence_pull_command[T](
-    awaitable: Awaitable[T],
-    *,
-    ctx: typer.Context,
-    timeout_ms: int | None = None,
-) -> T:
-    """Run the combined IVA evidence pull under a CLI-level watchdog."""
-    from ...application.live.errors import LiveIvaSurfaceTimeoutError
-    from ...application.live.remote_state_models import LiveIvaReadSurface
-    from ...core.config import load_settings
-
-    resolved_timeout_ms = (
-        timeout_ms if timeout_ms is not None else load_settings().cadrumo_live_iva_cli_watchdog_timeout_ms
-    )
-    baseline_inventory = await _process_command_inventory()
-    # None (not an empty set) when the process table could not be read, so the
-    # reaper can refuse to kill rather than treat every browser as newly ours.
-    preexisting_profiles = None if baseline_inventory is None else _playwright_profile_tokens(baseline_inventory)
-    pre_timeout_auth_context = _live_iva_auth_watchdog_context(
-        ctx,
-        stage="before",
-    )
-    try:
-        return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
-    except TimeoutError as exc:
-        killed_processes, inventory_available = await _reap_new_playwright_profile_processes(
-            preexisting_profiles=preexisting_profiles,
-        )
-        post_timeout_auth_context = _live_iva_auth_watchdog_context(
-            ctx,
-            stage="after",
-        )
-        raise LiveIvaSurfaceTimeoutError(
-            f"live IVA evidence pull command did not complete within {resolved_timeout_ms} ms",
-            surface="iva_evidence_command",
-            timeout_ms=resolved_timeout_ms,
-            progress_context={
-                "stage": "cli_watchdog",
-                "surface": LiveIvaReadSurface.FILED_HISTORY.value,
-                "watchdog_reaped_process_count": killed_processes,
-                # Without this an operator cannot tell "reaped nothing because
-                # there was nothing to reap" from "never managed to look", which
-                # are opposite conclusions about whether a browser leaked.
-                "watchdog_process_inventory_available": inventory_available,
-                **pre_timeout_auth_context,
-                **post_timeout_auth_context,
-            },
-        ) from exc
-
-
-def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) -> int:
-    """Return the CLI watchdog budget for one combined IVA evidence pull command."""
-    from ...core.config import load_settings
-
-    settings = load_settings()
-    year_count = max(1, year_to - year_from + 1)
-    filed_history_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms * year_count
-    wallet_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms
-    auth_budget_ms = settings.cadrumo_clave_movil_timeout_ms
-    cleanup_budget_ms = settings.cadrumo_live_iva_cli_watchdog_timeout_ms
-    return max(
-        settings.cadrumo_live_iva_cli_watchdog_timeout_ms,
-        auth_budget_ms + filed_history_budget_ms + wallet_budget_ms + cleanup_budget_ms,
-    )
-
-
-def _live_iva_auth_watchdog_context(ctx: typer.Context, *, stage: str) -> dict[str, object]:
-    """Return redacted local auth-session state for live IVA watchdog diagnostics."""
-    try:
-        from ...application.auth.operator import build_live_auth_preflight_report
-        from .state_projection_support import authority_operation, state_projection_read_ports
-
-        report = build_live_auth_preflight_report(
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operator_probe_ports=operator_probe_ports(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-            read_ports=state_projection_read_ports(ctx),
-            operation=authority_operation(ctx),
-        )
-    except Exception:
-        return {f"auth_watchdog_{stage}_probe": "unavailable"}
-    return {
-        f"auth_watchdog_{stage}_provider": report.provider,
-        f"auth_watchdog_{stage}_profile_status": report.active_profile_status,
-        f"auth_watchdog_{stage}_identity_alignment": report.identity_alignment,
-        f"auth_watchdog_{stage}_persisted_session": "present" if report.persisted_session_present else "missing",
-        f"auth_watchdog_{stage}_persisted_session_expired": report.persisted_session_expired,
-    }
-
-
-@dataclass(frozen=True, slots=True)
-class _ProcessCommand:
-    pid: int
-    command_line: str
-
-
-_PLAYWRIGHT_PROFILE_RE = re.compile(r"playwright_chromiumdev_profile-[A-Za-z0-9_-]+")
-#: Budget for ONE OS process-table read.
-#:
-#: Derived from measurement, not guessed, and the measurement is bimodal. On
-#: Windows the read shells out to PowerShell running ``Get-CimInstance
-#: Win32_Process``, which costs 1.1-2.0s once the CIM subsystem is WARM but was
-#: measured at 30.3s on a COLD first query -- the assemblies and the WMI service
-#: have to spin up, and a machine with ~1000 processes makes that first
-#: enumeration expensive. The former 2s budget did not even cover the warm case
-#: with headroom, and never had a chance at the cold one.
-#:
-#: That mattered because the expiry is swallowed (see
-#: :func:`_process_command_inventory`): the watchdog silently reaped nothing and
-#: reported "0 processes", so a leaked headless browser and its profile
-#: directory survived unnoticed. The cold path is the LIKELY one in production --
-#: this runs once, after a live pull has already timed out, often as the first
-#: CIM query of the session.
-#:
-#: 60s is roughly twice the worst observed cold read. Two reads at this bound
-#: stay inside the cleanup phase's own configured ceiling,
-#: ``cadrumo_live_iva_cli_watchdog_timeout_ms`` (240s by default). The cleanup
-#: path runs only after the operation has ALREADY failed, so a slower error path
-#: is far cheaper than leaking a browser -- and if even this bound expires, the
-#: caller is now TOLD rather than shown a misleading zero.
-_PROCESS_INVENTORY_TIMEOUT_SECONDS = 60
-
-
-async def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
-    """Return local process command lines for watchdog cleanup.
-
-    Returns ``None`` when the OS process table could NOT be inspected (the
-    helper is missing, the query timed out, or its output did not parse) --
-    deliberately distinct from an empty tuple, which asserts that the table WAS
-    read and held nothing of interest. Collapsing the two is what let the
-    watchdog report "reaped 0" when the truth was "never managed to look", and
-    it is what made a failed baseline read look like "no pre-existing browsers",
-    which would have licensed the reaper to kill processes it never created.
-    """
-    try:
-        if sys.platform == "win32":
-            return await _windows_process_command_inventory()
-        return await _posix_process_command_inventory()
-    except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
-        return None
-
-
-async def _windows_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
-    """Read the Windows process table through the available PowerShell host."""
-    powershell = shutil.which("powershell") or shutil.which("pwsh")
-    if powershell is None:
-        return None
-    script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
-    completed = await _run_process_inventory_command(
-        [powershell, "-NoProfile", "-Command", script],
-        text=False,
-    )
-    return _parse_windows_process_inventory(completed.stdout)
-
-
-def _parse_windows_process_inventory(payload: bytes) -> tuple[_ProcessCommand, ...] | None:
-    """Parse the JSON shape emitted by ``Get-CimInstance Win32_Process``."""
-    decoded_payload = payload.decode("utf-8", errors="replace").strip()
-    if not decoded_payload:
-        # Win32_Process can never legitimately be empty -- there is always
-        # at least this process -- so empty output means the query failed.
-        return None
-    # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
-    # payload is a Win32_Process PowerShell JSON array or single-object response.
-    decoded: Any = json.loads(decoded_payload)
-    win_rows: list[Any] = [decoded] if isinstance(decoded, dict) else decoded
-    return tuple(
-        _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or "")) for row in win_rows
-    )
-
-
-async def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
-    """Read and parse the POSIX process table used by the local watchdog."""
-    ps = shutil.which("ps")
-    if ps is None:
-        return None
-    completed = await _run_process_inventory_command(
-        [ps, "-axo", "pid=,args="],
-        text=True,
-    )
-    return _parse_posix_process_inventory(completed.stdout)
-
-
-@overload
-async def _run_process_inventory_command(
-    command: Sequence[str],
-    *,
-    text: Literal[True],
-) -> subprocess.CompletedProcess[str]: ...
-
-
-@overload
-async def _run_process_inventory_command(
-    command: Sequence[str],
-    *,
-    text: Literal[False],
-) -> subprocess.CompletedProcess[bytes]: ...
-
-
-async def _run_process_inventory_command(
-    command: Sequence[str],
-    *,
-    text: bool,
-) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
-    """Run one fixed process-table query through the audited async boundary."""
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    try:
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(),
-            timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
-        )
-    except TimeoutError:
-        process.kill()
-        stdout, stderr = await process.communicate()
-        raise subprocess.TimeoutExpired(
-            command,
-            _PROCESS_INVENTORY_TIMEOUT_SECONDS,
-            output=_decode_process_output(stdout, text=text),
-            stderr=_decode_process_output(stderr, text=text),
-        ) from None
-    returncode = process.returncode
-    if returncode is None:
-        raise InternalInvariantError("the process inventory command did not finish after communicate()")
-    if text:
-        output = _decode_process_output(stdout, text=True)
-        error = _decode_process_output(stderr, text=True)
-        if returncode:
-            raise subprocess.CalledProcessError(returncode, command, output=output, stderr=error)
-        return subprocess.CompletedProcess(command, returncode, output, error)
-    output = _decode_process_output(stdout, text=False)
-    error = _decode_process_output(stderr, text=False)
-    if returncode:
-        raise subprocess.CalledProcessError(returncode, command, output=output, stderr=error)
-    return subprocess.CompletedProcess(command, returncode, output, error)
-
-
-@overload
-def _decode_process_output(output: bytes, *, text: Literal[True]) -> str: ...
-
-
-@overload
-def _decode_process_output(output: bytes, *, text: Literal[False]) -> bytes: ...
-
-
-def _decode_process_output(output: bytes, *, text: bool) -> str | bytes:
-    """Decode a process-table stream only for the POSIX text parser."""
-    return output.decode("utf-8", errors="replace") if text else output
-
-
-def _parse_posix_process_inventory(output: str) -> tuple[_ProcessCommand, ...]:
-    """Parse ``ps -axo pid=,args=`` rows into watchdog process records."""
-    rows: list[_ProcessCommand] = []
-    for raw_line in output.splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        pid, _, command_line = line.partition(" ")
-        if pid.isdigit():
-            rows.append(_ProcessCommand(pid=int(pid), command_line=command_line))
-    return tuple(rows)
-
-
-def _playwright_profile_tokens(processes: tuple[_ProcessCommand, ...]) -> frozenset[str]:
-    """Return Playwright temp profile tokens visible in process command lines."""
-    tokens: set[str] = set()
-    for process in processes:
-        tokens.update(_PLAYWRIGHT_PROFILE_RE.findall(process.command_line))
-    return frozenset(tokens)
-
-
-async def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str] | None) -> tuple[int, bool]:
-    """Terminate processes tied to Playwright temp profiles created by this command.
-
-    Returns ``(killed, inventory_available)``. ``inventory_available`` is
-    ``False`` when the process table could not be read either now or when the
-    baseline was taken; the caller must not read a ``0`` count in that case as
-    "there was nothing to reap".
-
-    Reaping is fail-safe on a missing baseline: without the set of profiles that
-    already existed before this command ran, every profile on the machine looks
-    new, and reaping them would SIGTERM browsers this command never created --
-    including a concurrent operator's. When the baseline is unknown this returns
-    without killing anything, leaving the honest signal to the caller.
-    """
-    if preexisting_profiles is None:
-        return 0, False
-    processes = await _process_command_inventory()
-    if processes is None:
-        return 0, False
-    new_profiles = _playwright_profile_tokens(processes) - preexisting_profiles
-    if not new_profiles:
-        return 0, True
-
-    killed = 0
-    current_pid = os.getpid()
-    for process in processes:
-        if process.pid == current_pid:
-            continue
-        if not any(profile in process.command_line for profile in new_profiles):
-            continue
-        try:
-            os.kill(process.pid, signal.SIGTERM)
-        except OSError:
-            continue
-        killed += 1
-    return killed, True
-
-
 def _compact_failure_context(context: dict[str, object] | None) -> str:
     if not context:
         return ""
@@ -960,50 +667,43 @@ def filed_list_cmd(
 
     The command reads AEAT's declaration register and emits
     :class:`FiledListResult` without downloading justificantes, submitted files,
-    or declaration-copy artefacts. Single-modelo reads delegate to
-    :func:`list_filed_data`; omitted ``--modelo`` uses :func:`list_filed_data_bulk`
-    across every registry-configured modelo. Omitted year bounds default to the
-    current calendar year.
+    or declaration-copy artefacts. Omitted year bounds default to the current
+    calendar year.
     """
     from ...core.time.clock import today_madrid
-    from ..live_state_composition import compose_live_state
+    from .runtime_filed_read import read_filed_list_for_cli
 
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year
-    composition = compose_live_state()
     emit_live_auth_preflight(ctx)
-    if modelo is None:
-        bulk_report = asyncio.run(
-            list_filed_data_bulk(
-                filed_data_port=composition.filed_data_port,
-                year_from=resolved_from,
-                year_to=resolved_to,
-            ),
-        )
-        rows = bulk_report.rows
-        failures = bulk_report.failures
-        total_count = bulk_report.row_count
-    else:
-        report = asyncio.run(
-            list_filed_data(
-                filed_data_port=composition.filed_data_port,
-                modelo=modelo,
-                year_from=resolved_from,
-                year_to=resolved_to,
-            ),
-        )
-        rows = report.rows
-        failures = ()
-        total_count = report.row_count
-    result, lines = _filed_list_result_and_lines(
-        modelo_filter=modelo,
+    read = read_filed_list_for_cli(
+        ctx,
+        modelo=modelo,
         year_from=resolved_from,
         year_to=resolved_to,
-        row_count=total_count,
-        rows=rows,
-        failures=failures,
     )
-    emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+    try:
+        result, lines = _filed_list_result_and_lines(
+            modelo_filter=read.projection.modelo_filter,
+            year_from=read.projection.year_from,
+            year_to=read.projection.year_to,
+            row_count=read.projection.row_count,
+            rows=read.rows,
+            failures=read.failures,
+        )
+        emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _filed_list_result_and_lines(
@@ -1102,43 +802,31 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
     the accompanying caveat notice says so rather than leaving the operator to
     read one number as though both signals meant the same thing.
     """
-    from ..live_state_composition import compose_live_state
+    from .runtime_filed_read import read_filed_discover_for_cli
 
-    profile = _active_taxpayer_profile_or_none()
-    composition = compose_live_state()
-    report = asyncio.run(
-        discover_filed_history(
-            filed_data_port=composition.filed_data_port,
-            profile=profile,
-        )
-    )
-    result, lines = _filed_discover_result_and_lines(report)
-    emit_envelope(
-        ctx,
-        command="app.live.filed.discover",
-        result=result,
-        lines=lines,
-        notices=_filed_discover_notices(report),
-    )
-
-
-def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
-    """Return the active taxpayer profile, or ``None`` when setup has not produced one.
-
-    Discovery is useful before a profile is complete -- the register-options read
-    needs no profile at all -- so a missing profile downgrades the report rather
-    than refusing the verb. What it must NOT do is silently look like a complete
-    answer, which is what the caveat notices exist to prevent.
-    """
-    from ...application.wizard.status import load_active_taxpayer_profile
-    from ...application.workflow.persistence import workflow_state_repository
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
+    read = read_filed_discover_for_cli(ctx)
     try:
-        with bundled_indexed_authority().operation() as operation:
-            return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except CadrumoError:
-        return None
+        result, lines = _filed_discover_result_and_lines(read.report)
+        notices = _filed_discover_notices(read.report)
+        emit_envelope(
+            ctx,
+            command="app.live.filed.discover",
+            result=result,
+            lines=lines,
+            notices=notices,
+        )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
@@ -1237,36 +925,32 @@ def filed_pull_all_cmd(
     denominator note says what was actually measured.
     """
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
+    from .runtime_filed_history import read_filed_history_for_cli
 
-    profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    composition = compose_live_state(output_root=resolved_root)
-    emit_live_auth_preflight(ctx)
-    run = asyncio.run(
-        pull_filed_history(
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            browser_session_factory=composition.browser_session_factory,
-            operator_scope_ports=operator_scope_ports(ctx),
-            filed_data_port=composition.filed_data_port,
-            iva_remote_state_port=composition.iva_remote_state_port,
-            notifications_ports=composition.notifications_ports,
-            ports=composition.ports,
-            output_root=resolved_root,
-            profile=profile,
-            limit=limit,
-            sync_run_repository=SyncRunRecordRepository(),
-        ),
-    )
-    result, lines = _filed_pull_all_result_and_lines(run)
-    notices = _filed_pull_all_notices(run, limit=limit)
-    emit_envelope(
-        ctx,
-        command="app.live.filed.pull_all",
-        result=result,
-        lines=(*lines, *notice_lines(notices)),
-        notices=notices,
-    )
+    read = read_filed_history_for_cli(ctx, output_root=resolved_root, limit=limit, today=date.today())
+    try:
+        result, lines = _filed_pull_all_result_and_lines(read.report)
+        notices = _filed_pull_all_notices(read.report, limit=limit)
+        emit_envelope(
+            ctx,
+            command="app.live.filed.pull_all",
+            result=result,
+            lines=(*lines, *notice_lines(notices)),
+            notices=notices,
+        )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
@@ -1446,54 +1130,65 @@ def _emit_single_filed_pull(
 ) -> None:
     """Capture and emit one modelo/year filed-declaration report."""
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureResult
+    from .runtime_filed_single import read_filed_single_capture_for_cli
 
     resolved_period = _live_period_option(period, year=year)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    composition = compose_live_state(output_root=resolved_root)
-    report = asyncio.run(
-        capture_filed_data(
-            filed_data_port=composition.filed_data_port,
-            modelo=modelo,
-            year=year,
-            output_root=resolved_root,
-            ports=composition.ports,
-            period=resolved_period,
-            expediente_id=expediente_id,
-            limit=limit,
-        ),
-    )
-    lines = _filed_capture_lines(report, mode=LiveCaptureMode.SINGLE, modelo=report.modelo, year=report.year)
-    result = FiledCaptureResult(
-        output_root=report.output_root,
-        modelo=report.modelo,
-        year=report.year,
-        captured_count=report.captured_count,
-        observation_paths=list(report.observation_paths),
-        artefact_refs=list(report.artefact_refs),
-        justificante_metadata_count=report.justificante_metadata_count,
-        justificante_csvs=list(report.justificante_csvs),
-        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-        filing_record_ids=list(report.filing_record_ids),
-        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-        casilla_count=report.casilla_count,
-        calculation_observation_count=report.calculation_observation_count,
-        calculation_observation_keys=list(report.calculation_observation_keys),
-        reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
-    )
-    notices = (
-        *_filed_capture_notices(report, limit=limit),
-        *filing_reconciliation_notices(report.reconciliation_results),
-    )
-    emit_envelope(
+    read = read_filed_single_capture_for_cli(
         ctx,
-        command="app.live.filed.pull",
-        result=result,
-        lines=(*lines, *filing_reconciliation_lines(report.reconciliation_results), *notice_lines(notices)),
-        notices=notices,
+        modelo=modelo,
+        year=year,
+        output_root=resolved_root,
+        period=resolved_period,
+        expediente_id=expediente_id,
+        limit=limit,
     )
+    report = read.report
+    try:
+        lines = _filed_capture_lines(report, mode=LiveCaptureMode.SINGLE, modelo=report.modelo, year=report.year)
+        result = FiledCaptureResult(
+            output_root=report.output_root,
+            modelo=report.modelo,
+            year=report.year,
+            captured_count=report.captured_count,
+            reached_count=report.reached_count,
+            observation_paths=list(report.observation_paths),
+            artefact_refs=list(report.artefact_refs),
+            justificante_metadata_count=report.justificante_metadata_count,
+            justificante_csvs=list(report.justificante_csvs),
+            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+            filing_record_ids=list(report.filing_record_ids),
+            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
+            casilla_count=report.casilla_count,
+            calculation_observation_count=report.calculation_observation_count,
+            calculation_observation_keys=list(report.calculation_observation_keys),
+            reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
+        )
+        notices = (
+            *_filed_capture_notices(report, limit=limit),
+            *filing_reconciliation_notices(report.reconciliation_results),
+        )
+        emit_envelope(
+            ctx,
+            command="app.live.filed.pull",
+            result=result,
+            lines=(*lines, *filing_reconciliation_lines(report.reconciliation_results), *notice_lines(notices)),
+            notices=notices,
+        )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _emit_bulk_filed_pull(
@@ -1509,25 +1204,21 @@ def _emit_bulk_filed_pull(
 ) -> None:
     """Capture and emit a bulk filed-declaration report."""
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledCaptureResult
+    from .runtime_filed_bulk import read_filed_bulk_capture_for_cli
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    composition = compose_live_state(output_root=resolved_root)
-    report = asyncio.run(
-        capture_filed_data_bulk(
-            filed_data_port=composition.filed_data_port,
-            year_from=resolved_from,
-            year_to=resolved_to,
-            output_root=resolved_root,
-            ports=composition.ports,
-            modelos=selected_modelos or None,
-            limit=limit,
-            dry_run=dry_run,
-            sync_run_repository=SyncRunRecordRepository(),
-        ),
+    read = read_filed_bulk_capture_for_cli(
+        ctx,
+        year_from=resolved_from,
+        year_to=resolved_to,
+        output_root=resolved_root,
+        modelos=selected_modelos or None,
+        limit=limit,
+        dry_run=dry_run,
     )
+    report = read.report
     lines = _filed_capture_lines(
         report,
         mode=LiveCaptureMode.BULK,
@@ -1544,7 +1235,9 @@ def _emit_bulk_filed_pull(
         year_from=report.year_from,
         year_to=report.year_to,
         captured_count=report.captured_count,
+        reached_count=report.reached_count,
         failed_count=report.failed_count,
+        sync_run_ref=report.sync_run_ref,
         observation_paths=list(report.observation_paths),
         artefact_refs=list(report.artefact_refs),
         justificante_metadata_count=report.justificante_metadata_count,
@@ -1572,6 +1265,7 @@ def _emit_bulk_filed_pull(
     skipped = _skipped_casilla_notice(report.skipped_casillas)
     capture_notices = (
         *_filed_capture_notices(report, limit=limit),
+        *report.recapture_notices,
         *filing_reconciliation_notices(report.reconciliation_results),
     )
     notices = [*capture_notices]
@@ -1603,9 +1297,8 @@ def filed_pull_cmd(
 ) -> None:
     """Capture filed-declaration observations through the read-only AEAT register.
 
-    Single-modelo mode delegates to
-    :func:`capture_filed_data`; range mode delegates to
-    :func:`capture_filed_data_bulk`. Both flows emit :class:`FiledCaptureResult`,
+    Single-modelo and range modes delegate to registered profile workers.
+    Both flows emit :class:`FiledCaptureResult`,
     persist encrypted filed observations and artefact references, register parsed
     justificante metadata when available, and only stamp local
     :class:`ModeloRecord` evidence when an existing current filing record
@@ -1694,55 +1387,70 @@ def filed_pull_sources_cmd(
 ) -> None:
     """Capture registry-selected source observations for a target :class:`Period`.
 
-    Delegates to :func:`capture_source_filed_data`, which resolves dependencies
-    from a validated registry snapshot before reading prior filed declarations.
+    Delegates to its registered profile worker, which resolves dependencies from
+    a validated registry snapshot before reading prior filed declarations.
     The emitted :class:`FiledCaptureSourcesResult` is local evidence only; the
     command does not submit or mutate AEAT state.
     """
     from ...core.config import load_settings
-    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
+    from .runtime_filed_source import read_filed_source_capture_for_cli
 
-    emit_live_auth_preflight(ctx)
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    composition = compose_live_state(output_root=resolved_root)
-    report = asyncio.run(
-        capture_source_filed_data(
-            filed_data_port=composition.filed_data_port,
-            modelo=modelo,
-            year=year,
-            period=_required_live_period_option(period, year=year),
-            output_root=resolved_root,
-            ports=composition.ports,
-        ),
-    )
-    lines = _source_filed_capture_lines(report)
-    result = FiledCaptureSourcesResult(
-        output_root=report.output_root,
-        target_modelo=report.target_modelo,
-        target_year=report.target_year,
-        target_period=report.target_period,
-        captured_count=report.captured_count,
-        observation_paths=list(report.observation_paths),
-        artefact_refs=list(report.artefact_refs),
-        justificante_metadata_count=report.justificante_metadata_count,
-        justificante_csvs=list(report.justificante_csvs),
-        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-        filing_record_ids=list(report.filing_record_ids),
-        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-        casilla_count=report.casilla_count,
-        calculation_observation_count=report.calculation_observation_count,
-        calculation_observation_keys=list(report.calculation_observation_keys),
-    )
-    notices = _filed_capture_notices(report)
-    emit_envelope(
+    read = read_filed_source_capture_for_cli(
         ctx,
-        command="app.live.filed.pull_sources",
-        result=result,
-        lines=(*lines, *notice_lines(notices)),
-        notices=notices,
+        modelo=modelo,
+        year=year,
+        period=_required_live_period_option(period, year=year),
+        output_root=resolved_root,
     )
+    report = read.report
+    try:
+        reconciliations = report.reconciliation_results
+        result = FiledCaptureSourcesResult(
+            output_root=report.output_root,
+            target_modelo=report.target_modelo,
+            target_year=report.target_year,
+            target_period=report.target_period,
+            captured_count=report.captured_count,
+            reached_count=report.reached_count,
+            observation_paths=list(report.observation_paths),
+            artefact_refs=list(report.artefact_refs),
+            justificante_metadata_count=report.justificante_metadata_count,
+            justificante_csvs=list(report.justificante_csvs),
+            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+            filing_record_ids=list(report.filing_record_ids),
+            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
+            casilla_count=report.casilla_count,
+            calculation_observation_count=report.calculation_observation_count,
+            calculation_observation_keys=list(report.calculation_observation_keys),
+            reconciliations=[filing_reconciliation_payload(item) for item in reconciliations],
+        )
+        notices = (*_filed_capture_notices(report), *filing_reconciliation_notices(reconciliations))
+        emit_envelope(
+            ctx,
+            command="app.live.filed.pull_sources",
+            result=result,
+            lines=(
+                *_source_filed_capture_lines(report),
+                *filing_reconciliation_lines(reconciliations),
+                *notice_lines(notices),
+            ),
+            notices=notices,
+        )
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 # ─────────────────────────────────────────────────────────────────────────

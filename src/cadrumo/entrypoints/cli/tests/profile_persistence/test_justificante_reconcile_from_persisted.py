@@ -13,9 +13,15 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from cadrumo.application.live.justificante import reconcile_capture
-from cadrumo.application.modelo.reconciliation import ReconciliationEvidenceInvalidError
+from cadrumo.application.live.justificante import JustificanteCaptureSnapshot
+from cadrumo.application.modelo.reconciliation import (
+    ModeloReconciliationBytesCommand,
+    ModeloReconciliationReport,
+    ReconciliationEvidenceInvalidError,
+    modelo_reconcile_bytes,
+)
 from cadrumo.application.modelo.reconciliation_records import (
+    ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
@@ -36,6 +42,21 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+def _reconcile_snapshot(
+    *, work_unit_id: str, snapshot: JustificanteCaptureSnapshot, operation: PinnedAuthorityOperation
+) -> ModeloReconciliationReport:
+    """Exercise the canonical secure-bytes reconciler with an encrypted capture."""
+    return modelo_reconcile_bytes(
+        ModeloReconciliationBytesCommand(
+            work_unit_id=work_unit_id,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+            source_bytes=snapshot.decoded_pdf_bytes(),
+            source_ref=f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}",
+        ),
+        operation=operation,
+    )
+
+
 def test_reconcile_from_persisted_capture_matches(operation: PinnedAuthorityOperation) -> None:
     """A persisted real-fixture capture reconciles to MATCHES against its work unit."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -48,7 +69,7 @@ def test_reconcile_from_persisted_capture_matches(operation: PinnedAuthorityOper
         period="1T",
     )
 
-    report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
+    report = _reconcile_snapshot(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert report.diffs == ()
@@ -87,7 +108,7 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(
         period="1T",
     )
 
-    report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
+    report = _reconcile_snapshot(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert report.source_path == (
@@ -246,7 +267,7 @@ def test_reconcile_from_persisted_capture_mismatches_on_modelo(operation: Pinned
         period="1T",
     )
 
-    report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
+    report = _reconcile_snapshot(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
     assert any(diff.field_name == "modelo" for diff in report.diffs)
@@ -269,7 +290,7 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path(
     )
 
     with pytest.raises(ReconciliationEvidenceInvalidError) as exc_info:
-        reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
+        _reconcile_snapshot(work_unit_id=work_unit_id, snapshot=snapshot, operation=operation)
     message = str(exc_info.value)
     assert f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}" in message
     assert "Temp" not in message

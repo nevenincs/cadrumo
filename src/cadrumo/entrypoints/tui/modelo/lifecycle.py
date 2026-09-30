@@ -29,7 +29,7 @@ from ....application.modelo.edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ....application.modelo.export_projection import (
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
 )
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
@@ -53,6 +53,8 @@ from ....application.operations.frontend_projection import OperationPublicProjec
 from ....application.operations.models import OperationRequest
 from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -83,7 +85,7 @@ class ModeloWorkspaceLifecycleDoor:
     #: Whether this work unit's Modelo 303 period asks the Modelo 390 exemption, resolved under the pinned authority.
     asks_modelo_390: bool = False
     #: Reads one settled export's public result through the same runtime session.
-    read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV2]] | None = None
+    read_export_result: Callable[[OperationPublicProjectionV1], Awaitable[ModeloExportPublicResultV3]] | None = None
 
     async def calculate(
         self,
@@ -230,12 +232,13 @@ class ModeloWorkspaceLifecycleDoor:
                     prior_domiciliation_election=prior_domiciliation_election,
                     replace_existing=replace_existing,
                     artefact=artefact,
+                    report_language=OutputLanguage(output_language()),
                     actor=_ACTOR_REF,
                 ),
             )
         )
 
-    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV3 | None:
         """Resolve one settled export's public result through the runtime's result door.
 
         ``None`` when the projection is not a successful export or its result

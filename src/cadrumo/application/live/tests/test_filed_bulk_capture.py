@@ -3,22 +3,33 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ...user_profile.access_contracts import AccessDenialCode
+from ...user_profile.access_errors import ProfileAccessRefusedError
+from ...user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
 from ..filed_data_capture import (
+    FiledCaptureAccumulator,
+    _absorb_declarations,
     _await_filed_register_walk,
     _walk_or_failure_row,
+    capture_filed_data,
     capture_filed_data_bulk,
+    capture_source_filed_data,
     filed_data_capture_failure_row,
     list_filed_data_bulk,
 )
-from ..filed_data_ports import FiledRegisterDeclarationProtocol
+from ..filed_data_ports import FiledDataCapturePort, FiledDataRegisterPort, FiledRegisterDeclarationProtocol
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
@@ -52,9 +63,247 @@ def _declaration() -> FiledRegisterDeclarationProtocol:
     return _Declaration()
 
 
+def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_path: Path) -> None:
+    class Staged:
+        persisted = False
+
+        def persist_artefacts(self, sink):
+            del sink
+            self.persisted = True
+            raise AssertionError("revoked capture reached artefact persistence")
+
+    class Register:
+        def __init__(self, staged: Staged) -> None:
+            self.staged = staged
+
+        async def capture_observation_deferred(self, declaration):
+            del declaration
+            return self.staged
+
+    class DeniedGuard:
+        async def __aenter__(self) -> None:
+            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    staged = Staged()
+    bundle = in_memory_filed_observation_test_bundle()
+    failures: list[FiledDataCaptureFailureRow] = []
+    with bundled_indexed_authority().operation() as operation:
+        accumulator = FiledCaptureAccumulator(operation=operation)
+        with pytest.raises(ProfileAccessRefusedError) as refusal:
+            asyncio.run(
+                _absorb_declarations(
+                    (_declaration(),),
+                    opened_register=cast(FiledDataRegisterPort, Register(staged)),
+                    accumulator=accumulator,
+                    ports=bundle.ports,
+                    bucket_id="11111111-1111-4111-8111-111111111111",
+                    output_root=tmp_path,
+                    dry_run=False,
+                    modelo="303",
+                    year=2025,
+                    failures=failures,
+                    effect_guard=DeniedGuard,
+                )
+            )
+
+    assert refusal.value.reason is AccessDenialCode.GRANT_INACTIVE
+    assert not staged.persisted
+    assert failures == []
+
+
+def test_single_capture_revocation_after_remote_fetch_discards_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The single-file route must fence artefacts before its first local write."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    events: list[str] = []
+
+    class Staged:
+        def persist_artefacts(self, sink):
+            del sink
+            events.append("persist")
+            raise AssertionError("revoked single capture persisted artefacts")
+
+    class Register:
+        walk_timeout_ms = 1000
+
+        async def walk(self, *, modelo: str, ejercicio: int):
+            assert (modelo, ejercicio) == ("303", 2025)
+            return (_declaration(),)
+
+        async def capture_observation_deferred(self, declaration):
+            assert declaration == _declaration()
+            events.append("remote")
+            return Staged()
+
+    class Port:
+        @asynccontextmanager
+        async def open_register(self, *, operation: str) -> AsyncIterator[Register]:
+            assert operation == "live-filed-read"
+            yield Register()
+
+    class DeniedGuard:
+        async def __aenter__(self) -> None:
+            events.append("guard")
+            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    bundle = in_memory_filed_observation_test_bundle()
+    with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
+        asyncio.run(
+            capture_filed_data(
+                filed_data_port=cast(FiledDataCapturePort, Port()),
+                modelo="303",
+                year=2025,
+                output_root=tmp_path,
+                ports=bundle.ports,
+                effect_guard=DeniedGuard,
+                operation=operation,
+            )
+        )
+    assert refusal.value.reason is AccessDenialCode.GRANT_INACTIVE
+    assert events == ["remote", "guard"]
+
+
+def test_source_capture_revocation_after_remote_fetch_discards_batch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Source capture must never persist a downloaded batch after revocation."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    events: list[str] = []
+
+    class Staged:
+        def persist_artefacts(self, sink):
+            del sink
+            events.append("persist")
+            raise AssertionError("revoked source capture persisted artefacts")
+
+    class Port:
+        async def capture_source_observations_deferred(self, revision, *, filing_year, period, operation):
+            del revision
+            assert (filing_year, period, operation) == (2025, Period.from_year_and_code(2025, "1T"), "live-filed-read")
+            events.append("remote")
+            return Staged()
+
+    class DeniedGuard:
+        async def __aenter__(self) -> None:
+            events.append("guard")
+            raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    bundle = in_memory_filed_observation_test_bundle()
+    with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError) as refusal:
+        asyncio.run(
+            capture_source_filed_data(
+                filed_data_port=cast(FiledDataCapturePort, Port()),
+                modelo="303",
+                year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                output_root=tmp_path,
+                ports=bundle.ports,
+                effect_guard=DeniedGuard,
+                operation=operation,
+            )
+        )
+    assert refusal.value.reason is AccessDenialCode.GRANT_INACTIVE
+    assert events == ["remote", "guard"]
+
+
+def test_source_capture_revocation_before_finalization_preserves_first_fence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Calculation writes require a fresh fence after artefacts have settled."""
+    from .. import filed_data_capture as capture_module
+
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
+    events: list[str] = []
+
+    class Staged:
+        def persist_artefacts(self, sink):
+            del sink
+            events.append("artefacts")
+            return ()
+
+    class Port:
+        async def capture_source_observations_deferred(self, revision, *, filing_year, period, operation):
+            del revision, filing_year, period, operation
+            events.append("remote")
+            return Staged()
+
+    class Guard:
+        async def __aenter__(self) -> None:
+            events.append("guard")
+            if events.count("guard") == 2:
+                raise ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE)
+
+        async def __aexit__(self, exc_type, exc, traceback) -> bool:
+            del exc_type, exc, traceback
+            return False
+
+    def forbidden_finalization(*args, **kwargs):
+        del args, kwargs
+        raise AssertionError("revoked source capture finalized calculations")
+
+    monkeypatch.setattr(capture_module, "finalize_filed_capture", forbidden_finalization)
+    bundle = in_memory_filed_observation_test_bundle()
+    with bundled_indexed_authority().operation() as operation, pytest.raises(ProfileAccessRefusedError):
+        asyncio.run(
+            capture_source_filed_data(
+                filed_data_port=cast(FiledDataCapturePort, Port()),
+                modelo="303",
+                year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                output_root=tmp_path,
+                ports=bundle.ports,
+                effect_guard=Guard,
+                operation=operation,
+            )
+        )
+    assert events == ["remote", "guard", "artefacts", "guard"]
+
+
 async def _slow_empty_declarations() -> tuple[FiledRegisterDeclarationProtocol, ...]:
     await asyncio.sleep(0.05)
     return ()
+
+
+@pytest.mark.parametrize(
+    "refusal",
+    [
+        ProfileAccessRefusedError(AccessDenialCode.GRANT_INACTIVE),
+        AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE),
+    ],
+)
+def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: Exception) -> None:
+    async def revoked() -> tuple[FiledRegisterDeclarationProtocol, ...]:
+        raise refusal
+
+    failures: list[FiledDataCaptureFailureRow] = []
+    with pytest.raises(type(refusal)):
+        asyncio.run(
+            _walk_or_failure_row(
+                revoked(),
+                modelo="303",
+                year=2025,
+                timeout_ms=1000,
+                failures=failures,
+            )
+        )
+    assert failures == []
 
 
 def test_bulk_failure_row_preserves_declaration_coordinates() -> None:
@@ -120,7 +369,8 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
     assert report.failures[0].modelo == "130"
 
 
-def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(tmp_path: Path) -> None:
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(tmp_path: Path, dry_run: bool) -> None:
     report = asyncio.run(
         capture_filed_data_bulk(
             year_from=2024,
@@ -129,11 +379,13 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
             ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
             filed_data_port=bundle.filed_data_port,
             modelos=("151", "721"),
+            dry_run=dry_run,
         ),
     )
 
     assert report.modelos == ("151", "721")
     assert report.captured_count == 0
+    assert report.dry_run is dry_run
     assert report.failed_count == 2
     failures = {failure.modelo: failure for failure in report.failures}
     assert set(failures) == {"151", "721"}

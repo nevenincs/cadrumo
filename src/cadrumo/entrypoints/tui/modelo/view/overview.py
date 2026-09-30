@@ -84,7 +84,7 @@ from .technical_details import TechnicalDetailRowV1, mount_technical_details, pr
 
 if TYPE_CHECKING:
     from .....application.modelo.export_projection import (
-        ModeloExportPublicResultV2,
+        ModeloExportPublicResultV3,
     )
     from .....application.modelo.operation_definitions import (
         ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
@@ -587,7 +587,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and callable(settled_export_result):
             self.run_worker(
                 self._state_export_result(
-                    cast("Callable[..., Awaitable[ModeloExportPublicResultV2 | None]]", settled_export_result),
+                    cast("Callable[..., Awaitable[ModeloExportPublicResultV3 | None]]", settled_export_result),
                     projection,
                     refresh=refresh_callback,
                 ),
@@ -602,7 +602,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
 
     async def _state_export_result(
         self,
-        resolve: Callable[..., Awaitable[ModeloExportPublicResultV2 | None]],
+        resolve: Callable[..., Awaitable[ModeloExportPublicResultV3 | None]],
         projection: OperationPublicProjectionV1,
         *,
         refresh: Callable[[], object] | None,

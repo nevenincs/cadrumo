@@ -1,9 +1,4 @@
-"""TUI parity with the shared activity-asset application operations.
-
-The CLI adapter delegates every command to the same operations object; the
-installed acceptance journeys prove the real CLI and TUI processes against
-one encrypted store in both continuation directions.
-"""
+"""TUI presentation behavior for the installed activity-asset action door."""
 
 from __future__ import annotations
 
@@ -16,17 +11,20 @@ from threading import Event
 import pytest
 from textual.widgets import Button, Input, Static
 
-from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff
 from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
-from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.claims import ClaimProjection
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError, VehicleAffectationRecovery
+from cadrumo.domain.renta.actividad_asset.errors import (
+    ActividadAssetIncompleteError,
+    VehicleAffectationRecovery,
+)
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -43,40 +41,23 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
     ScheduledAmortizationCharge,
     schedule_charge,
 )
+from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetScreen, ActivityAssetTuiActionsV1
+from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetScreen
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
+    ActivityAssetClaimRequestV1,
+    ActivityAssetCorrectionRequestV1,
     ActivityAssetCreationRequestV1,
+    ActivityAssetFilingRequestV1,
     ActivityAssetForecastRequestV1,
+    ActivityAssetInspectionV1,
 )
-from cadrumo.entrypoints.tui.ledger.routes import actividad_asset_tui_actions
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-def _simplified() -> DirectEstimationRegime:
-    return DirectEstimationRegime.SIMPLIFIED
-
-
-class _MemoryRepository:
-    def __init__(self) -> None:
-        self.history = ActivityAssetHistory()
-
-    def load(self) -> ActivityAssetHistory:
-        return self.history
-
-    def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
-        self.history = self.history.append_revision(revision)
-        return self.history
-
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        result = self.history.record_claim(claim)
-        self.history = result.history
-        return result
 
 
 def _revision(asset_id: str) -> ActivityAssetRevision:
@@ -117,13 +98,13 @@ def _forecast(
     return schedule_charge(
         revision,
         ScheduleAuthority(
-            tax_year=2025,
-            asset_kind=AssetKind.MATERIAL,
-            method=AmortizationMethod.LINEAR,
+            tax_year=covered_from.year,
+            asset_kind=revision.asset_kind,
+            method=revision.amortization.method,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            authority_generation="irpf-2025-assets-test-v1",
-            source_reference="AEAT simplified direct-estimation table 2025",
+            authority_generation="tui-screen-fixture-v1",
+            source_reference="TUI screen fixture only",
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -132,262 +113,233 @@ def _forecast(
     )
 
 
-async def _wait_for_screen_result(
-    *,
-    pilot,
-    screen: ActivityAssetScreen,
-    expected_prefix: str,
-    expected_suffix: str | None = None,
-) -> str:
-    """Wait for the public result text produced by one background screen action."""
+class _ActionStub:
+    """Supply typed screen responses without reopening profile services."""
+
+    def __init__(
+        self,
+        revision: ActivityAssetRevision,
+        *,
+        forecast_error: Exception | None = None,
+        create_started: Event | None = None,
+        create_release: Event | None = None,
+        create_error: Exception | None = None,
+    ) -> None:
+        self.revision = revision
+        self.forecast_error = forecast_error
+        self.create_started = create_started
+        self.create_release = create_release
+        self.create_error = create_error
+        self.requests: list[tuple[str, object]] = []
+
+    def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
+        self.requests.append(("create", request))
+        if self.create_started is not None:
+            self.create_started.set()
+        if self.create_release is not None and not self.create_release.wait(timeout=2.0):
+            raise RuntimeError("test action was not released")
+        if self.create_error is not None:
+            raise self.create_error
+        return ActivityAssetInspectionV1(asset_id=request.revision.asset_id, revisions=(request.revision,))
+
+    def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
+        self.requests.append(("inspect", asset_id))
+        return ActivityAssetInspectionV1(asset_id=asset_id, revisions=(self.revision,))
+
+    def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
+        self.requests.append(("correct", request))
+        return ActivityAssetInspectionV1(asset_id=request.revision.asset_id, revisions=(request.revision,))
+
+    def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
+        self.requests.append(("forecast", request))
+        if self.forecast_error is not None:
+            raise self.forecast_error
+        history = AssetScheduleHistory()
+        return _forecast(
+            self.revision,
+            covered_from=request.covered_from,
+            covered_until=request.covered_until,
+            history=history,
+            requested_free_amount=request.requested_free_amount,
+        )
+
+    def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
+        self.requests.append(("record_claim", request))
+        raise AssertionError("this screen test does not exercise claim execution")
+
+    def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
+        self.requests.append(("filing_handoff", request))
+        return ActivityAssetFilingHandoff(
+            material_m100=ClaimProjection(
+                target_casilla_id="0113", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
+            ),
+            intangible_m100=ClaimProjection(
+                target_casilla_id="0114", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
+            ),
+            material_m130=ClaimProjection(
+                target_casilla_id="0120", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
+            ),
+            intangible_m130=ClaimProjection(
+                target_casilla_id="0121", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
+            ),
+        )
+
+
+def _screen(actions: _ActionStub) -> ActivityAssetScreen:
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
+    )
+    return ActivityAssetScreen(controller)
+
+
+async def _wait_for_screen_result(*, pilot, screen: ActivityAssetScreen, expected_prefix: str) -> str:
+    """Wait for one public worker result from the screen."""
     rendered = ""
     for _ in range(180):
-        rendered = str(screen.query_one("#asset-result", Static).render())
-        if rendered.startswith(expected_prefix) and (expected_suffix is None or rendered.endswith(expected_suffix)):
+        rendered = str(screen.query_one("#asset-result", Static).render()).strip()
+        if rendered.startswith(expected_prefix):
             return rendered
         await pilot.pause()
-    raise AssertionError(f"activity-asset TUI did not publish {expected_prefix!r}; last public result: {rendered!r}")
+    raise AssertionError(f"activity-asset TUI did not publish {expected_prefix!r}; last result: {rendered!r}")
 
 
 async def _wait_for_current_revision_id(*, pilot, screen: ActivityAssetScreen) -> str:
-    """Read the current revision through the screen's public immutable-ID projection."""
+    """Read the screen's public immutable revision identity."""
     for _ in range(180):
-        rendered = str(screen.query_one("#asset-current-revision-id", Static).render())
+        rendered = str(screen.query_one("#asset-current-revision-id", Static).render()).strip()
         match = re.fullmatch(r"current_revision_id\t([0-9a-f]{64})", rendered)
         if match is not None:
             return str(match.group(1))
         await pilot.pause()
-    raise AssertionError("activity-asset TUI did not expose the current immutable revision identity")
+    raise AssertionError("activity-asset TUI did not expose the immutable revision identity")
 
 
-async def _activate_screen_button(*, pilot, screen: ActivityAssetScreen, selector: str) -> None:
-    """Use the public keyboard activation path for a screen button."""
+async def _activate(*, pilot, screen: ActivityAssetScreen, selector: str) -> None:
     button = screen.query_one(selector, Button)
     button.focus()
     await pilot.press("enter")
     await pilot.pause()
 
 
-def test_shared_operations_and_tui_continue_each_others_assets() -> None:
-    operations_repository = _MemoryRepository()
-    shared_operations = ActivityAssetOperations(
-        repository=operations_repository, forecast_operation=_forecast, taxpayer_modality=_simplified
-    )
-    tui_after_operations = ActivityAssetTuiActionsV1(operations=shared_operations)
-    operations_revision = _revision("created-by-shared-operation")
-
-    shared_operations.create(operations_revision)
-    assert tui_after_operations.inspect(operations_revision.asset_id).revisions == (operations_revision,)
-
-    tui_repository = _MemoryRepository()
-    tui_operations = ActivityAssetOperations(
-        repository=tui_repository, forecast_operation=_forecast, taxpayer_modality=_simplified
-    )
-    tui = ActivityAssetTuiActionsV1(operations=tui_operations)
-    tui_revision = _revision("created-by-tui")
-
-    tui.create(ActivityAssetCreationRequestV1(revision=tui_revision))
-    assert tui_operations.inspect(tui_revision.asset_id) == (tui_revision,)
-    assert tui_repository.history.revisions == (tui_revision,)
-
-
-def test_tui_route_composition_registers_the_shared_actions() -> None:
-    operations = ActivityAssetOperations(
-        repository=_MemoryRepository(), forecast_operation=_forecast, taxpayer_modality=_simplified
-    )
-
-    actions = actividad_asset_tui_actions(operations=operations)
-
-    assert isinstance(actions, ActivityAssetTuiActionsV1)
-
-
-def test_tui_forecast_is_the_shared_non_consuming_operation() -> None:
-    repository = _MemoryRepository()
-    operations = ActivityAssetOperations(
-        repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
-    )
-    tui = ActivityAssetTuiActionsV1(operations=operations)
-    revision = _revision("forecast-parity")
-    operations.create(revision)
-
-    shared_forecast = operations.forecast(
-        asset_id=revision.asset_id,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
-    )
-    tui_forecast = tui.forecast(
-        ActivityAssetForecastRequestV1(
-            asset_id=revision.asset_id,
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
-        ),
-    )
-
-    assert tui_forecast == shared_forecast
-    assert tui_forecast.amount == Decimal("520.00")
-    assert repository.history.claims == ()
-
-
 @pytest.mark.asyncio
-async def test_interactive_tui_exposes_correction_claim_replay_and_filing_through_the_shared_door() -> None:
-    repository = _MemoryRepository()
-    actions = ActivityAssetTuiActionsV1(
-        operations=ActivityAssetOperations(
-            repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
-        ),
-    )
-    controller = LedgerWorkspaceController(
-        ledger_context(),
-        ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
-    )
-    screen = ActivityAssetScreen(controller)
-    revision = _revision("interactive-tui")
+async def test_activity_asset_screen_dispatches_typed_requests_and_renders_worker_projection() -> None:
+    revision = _revision("tui-runtime-screen")
+    actions = _ActionStub(revision)
+    screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
     async with app.run_test(size=(100, 35)) as pilot:
         screen.query_one("#asset-id", Input).value = revision.asset_id
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-create")
-        assert await _wait_for_screen_result(
-            pilot=pilot, screen=screen, expected_prefix="created\tinteractive-tui\trevisions=1"
-        )
-        first_revision_id = await _wait_for_current_revision_id(pilot=pilot, screen=screen)
-        assert first_revision_id == revision.revision_id
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-inspect")
-        assert await _wait_for_screen_result(
-            pilot=pilot, screen=screen, expected_prefix="asset\tinteractive-tui\trevisions=1"
-        )
-        assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == first_revision_id
-
-        correction = revision.model_copy(
-            update={
-                "revision_number": 2,
-                "supersedes_revision_id": first_revision_id,
-                "basis": ActivityAssetBasis(
-                    stage=AssetBasisStage.BUSINESS_ALLOCATED,
-                    basis_amount=Decimal("1800.00"),
-                    prior_allocation_provenance="corrected ledger allocation source",
-                ),
-            }
-        )
-        screen.query_one("#asset-revision-json", Input).value = correction.model_dump_json()
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-correct")
-        assert await _wait_for_screen_result(
-            pilot=pilot, screen=screen, expected_prefix="corrected\tinteractive-tui\trevisions=2"
-        )
-        assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == correction.revision_id
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\ttui-runtime-screen")
+        assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == revision.revision_id
 
         screen.query_one("#asset-covered-from", Input).value = "2025-01-01"
         screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
-        assert (await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="forecast\t")).startswith(
-            "forecast\t468.00\t"
-        )
+        await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
+        rendered = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="forecast\t")
+        assert rendered.startswith("forecast\t520.00\tTUI screen fixture only")
 
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
-        first_claim = await _wait_for_screen_result(
-            pilot=pilot,
-            screen=screen,
-            expected_prefix="claim\t",
-            expected_suffix="reused=false",
-        )
-        first_claim_id = first_claim.split("\t")[1]
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
-        assert (
-            await _wait_for_screen_result(
-                pilot=pilot,
-                screen=screen,
-                expected_prefix="claim\t",
-                expected_suffix="reused=true",
-            )
-        ).endswith("reused=true")
-
-        screen.query_one("#asset-filing-tax-year", Input).value = "2025"
-        screen.query_one("#asset-filing-m130-period", Input).value = "4T"
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
-        assert (
-            await _wait_for_screen_result(
-                pilot=pilot,
-                screen=screen,
-                expected_prefix="filing_handoff\t",
-            )
-        ) == "filing_handoff\tm100_material=468.00\tm100_intangible=0.00\tm130_material=468.00\tm130_intangible=0.00"
-
-        second_correction = correction.model_copy(
-            update={
-                "revision_number": 3,
-                "supersedes_revision_id": correction.revision_id,
-                "basis": ActivityAssetBasis(
-                    stage=AssetBasisStage.BUSINESS_ALLOCATED,
-                    basis_amount=Decimal("1500.00"),
-                    prior_allocation_provenance="second corrected ledger allocation source",
-                ),
-            }
-        )
-        screen.query_one("#asset-revision-json", Input).value = second_correction.model_dump_json()
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-correct")
-        assert await _wait_for_screen_result(
-            pilot=pilot, screen=screen, expected_prefix="corrected\tinteractive-tui\trevisions=3"
-        )
-        screen.query_one("#asset-supersedes-claim-id", Input).value = first_claim_id
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
-        # The replaced 468.00 is left out, so the corrected 1,500 basis yields 1,500 x 26% = 390.00.
-        assert (await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="forecast\t")).startswith(
-            "forecast\t390.00\t"
-        )
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
-        superseding_claim = await _wait_for_screen_result(
-            pilot=pilot,
-            screen=screen,
-            expected_prefix="claim\t",
-            expected_suffix="reused=false",
-        )
-        assert superseding_claim.split("\t")[1] != first_claim_id
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
-        assert (
-            await _wait_for_screen_result(
-                pilot=pilot,
-                screen=screen,
-                expected_prefix="filing_handoff\t",
-            )
-        ) == "filing_handoff\tm100_material=390.00\tm100_intangible=0.00\tm130_material=390.00\tm130_intangible=0.00"
+    assert [name for name, _request in actions.requests] == ["create", "forecast"]
+    assert isinstance(actions.requests[0][1], ActivityAssetCreationRequestV1)
+    assert isinstance(actions.requests[1][1], ActivityAssetForecastRequestV1)
 
 
 @pytest.mark.asyncio
-async def test_activity_asset_screen_clears_a_stale_public_result_before_worker_dispatch(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A repeated public action cannot be observed as the prior claim result."""
-    repository = _MemoryRepository()
-    actions = ActivityAssetTuiActionsV1(
-        operations=ActivityAssetOperations(
-            repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
-        ),
+async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lost() -> None:
+    revision = _revision("expired-screen")
+    actions = _ActionStub(revision, create_error=AccountSessionExpiredError())
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        for selector in (
+            "#asset-id",
+            "#asset-revision-json",
+            "#asset-free-amount",
+            "#asset-covered-from",
+            "#asset-covered-until",
+            "#asset-supersedes-claim-id",
+            "#asset-creating-operation",
+            "#asset-filing-tax-year",
+            "#asset-filing-m130-period",
+        ):
+            screen.query_one(selector, Input).value = "private fixture"
+        screen.query_one("#asset-current-revision-id", Static).update(f"current_revision_id\t{revision.revision_id}")
+        screen._last_forecast = _forecast(
+            revision,
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
+            history=AssetScheduleHistory(),
+            requested_free_amount=None,
+        )
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused") == "refused"
+        assert screen._last_forecast is None
+        assert screen._last_forecast_supersedes is None
+        assert all(
+            not screen.query_one(selector, Input).value
+            for selector in (
+                "#asset-id",
+                "#asset-revision-json",
+                "#asset-free-amount",
+                "#asset-covered-from",
+                "#asset-covered-until",
+                "#asset-supersedes-claim-id",
+                "#asset-creating-operation",
+                "#asset-filing-tax-year",
+                "#asset-filing-m130-period",
+            )
+        )
+        assert str(screen.query_one("#asset-current-revision-id", Static).render()).strip() == ""
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_refusal_retains_the_registered_recovery_presentation() -> None:
+    revision = _revision("undeclared-van")
+    recovery = VehicleAffectationRecovery(
+        asset_id=revision.asset_id,
+        revision_id=revision.revision_id,
+        class_key="transporte",
     )
-    controller = LedgerWorkspaceController(
-        ledger_context(),
-        ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
+    refusal = ActividadAssetIncompleteError(
+        f"activity asset {revision.asset_id!r} requires a vehicle affectation declaration",
+        precondition_verdict=vehicle_affectation_verdict(recovery),
+        vehicle_affectation_recovery=recovery,
     )
-    screen = ActivityAssetScreen(controller)
+    actions = _ActionStub(revision, forecast_error=refusal)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-covered-from", Input).value = "2025-01-01"
+        screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
+        rejected = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+        assert "undeclared-van" in rejected
+        assert str(screen.query_one("#asset-recovery", Static).render()).strip() == (
+            "recovery\toperator.ledger.actividad_asset.correct_revision"
+            f"\tasset\tundeclared-van\trevision\t{revision.revision_id}"
+        )
+        assert screen.focused is screen.query_one("#asset-correct", Button)
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_clears_old_result_while_action_runs() -> None:
     revision = _revision("pending-public-result")
-    original_create = actions.create
     worker_entered = Event()
     release_worker = Event()
-
-    def delayed_create(request: ActivityAssetCreationRequestV1):
-        worker_entered.set()
-        if not release_worker.wait(timeout=2.0):
-            raise RuntimeError("test worker was not released")
-        return original_create(request)
-
-    monkeypatch.setattr(actions, "create", delayed_create)
+    actions = _ActionStub(revision, create_started=worker_entered, create_release=release_worker)
+    screen = _screen(actions)
     app = ScreenHostApp[None](screen)
+
     async with app.run_test(size=(100, 35)) as pilot:
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
-        # This represents the prior first-claim result that used to remain
-        # visible while the next worker action began.
         screen.query_one("#asset-result", Static).update("claim\tfixture\treused=false")
         button = screen.query_one("#asset-create", Button)
         handler = asyncio.create_task(screen.on_button_pressed(Button.Pressed(button)))
@@ -401,56 +353,3 @@ async def test_activity_asset_screen_clears_a_stale_public_result_before_worker_
         assert str(screen.query_one("#asset-result", Static).render()).strip() == (
             "created\tpending-public-result\trevisions=1"
         )
-
-
-@pytest.mark.asyncio
-async def test_an_undeclared_vehicle_refusal_names_its_recovery_and_focuses_the_correction() -> None:
-    def refuse_undeclared_vehicle(
-        revision: ActivityAssetRevision,
-        *,
-        covered_from: date,
-        covered_until: date,
-        history: AssetScheduleHistory,
-        requested_free_amount: Decimal | None,
-    ) -> ScheduledAmortizationCharge:
-        recovery = VehicleAffectationRecovery(
-            asset_id=revision.asset_id,
-            revision_id=revision.revision_id,
-            class_key="transporte",
-        )
-        raise ActividadAssetIncompleteError(
-            f"activity asset {revision.asset_id!r} requires a vehicle affectation declaration",
-            precondition_verdict=vehicle_affectation_verdict(recovery),
-            vehicle_affectation_recovery=recovery,
-        )
-
-    actions = ActivityAssetTuiActionsV1(
-        operations=ActivityAssetOperations(
-            repository=_MemoryRepository(),
-            forecast_operation=refuse_undeclared_vehicle,
-            taxpayer_modality=_simplified,
-        ),
-    )
-    controller = LedgerWorkspaceController(
-        ledger_context(),
-        ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
-    )
-    screen = ActivityAssetScreen(controller)
-    revision = _revision("undeclared-van")
-    app = ScreenHostApp[None](screen)
-
-    async with app.run_test(size=(100, 35)) as pilot:
-        screen.query_one("#asset-id", Input).value = revision.asset_id
-        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-create")
-        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\t")
-        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
-        refused = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
-
-        assert "undeclared-van" in refused
-        assert str(screen.query_one("#asset-recovery", Static).render()) == (
-            "recovery\toperator.ledger.actividad_asset.correct_revision"
-            f"\tasset\tundeclared-van\trevision\t{revision.revision_id}"
-        )
-        assert screen.focused is screen.query_one("#asset-correct", Button)

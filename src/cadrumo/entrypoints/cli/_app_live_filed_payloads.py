@@ -223,8 +223,10 @@ class FiledCaptureResult(OutputSchema):
     year_from: int | None = None
     year_to: int | None = None
     captured_count: int
+    reached_count: int
     failed_count: int = 0
     dry_run: bool = False
+    sync_run_ref: str | None = None
     observation_paths: list[str]
     artefact_refs: list[str]
     justificante_metadata_count: int = 0
@@ -254,6 +256,7 @@ class FiledCaptureSourcesResult(OutputSchema):
     target_year: int
     target_period: Period
     captured_count: int
+    reached_count: int
     observation_paths: list[str]
     artefact_refs: list[str]
     justificante_metadata_count: int = 0
@@ -265,6 +268,7 @@ class FiledCaptureSourcesResult(OutputSchema):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
+    reconciliations: list[FilingReconciliationPayload] = []
 
 
 __all__ = [

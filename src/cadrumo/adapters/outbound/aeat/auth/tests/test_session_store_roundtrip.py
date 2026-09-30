@@ -138,6 +138,37 @@ def test_storage_state_hash_rejects_non_json_values() -> None:
         session_store.storage_state_sha256(storage_state)
 
 
+def test_deferred_provider_write_is_private_until_guarded_publication(tmp_path: Path) -> None:
+    """A browser capture cannot reach encrypted custody before its owner publishes."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        path = Path("/profile/active/deferred-aeat-session")
+        state = _playwright_shaped_storage_state()
+        with session_store.defer_writes() as staged:
+            session_store.save(path, storage_state=state, metadata={"provider_kind": "certificate"})
+            assert session_store.exists(path)
+            assert session_store.load(path) is not None
+            repo = secure_object_repository_for_active_bucket()
+            assert not repo.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, path.as_posix())
+            staged.publish()
+        assert session_store.load(path) is not None
+
+
+def test_deferred_provider_write_is_discarded_when_authority_refuses(tmp_path: Path) -> None:
+    """A lost COMMIT guard leaves no saved browser credential or fresh deletion."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        path = Path("/profile/active/deferred-aeat-session")
+        state = _playwright_shaped_storage_state()
+        session_store.save(path, storage_state=state, metadata={"version": "previous"})
+        with pytest.raises(PermissionError, match="revoked"), session_store.defer_writes():
+            assert session_store.delete(path)
+            session_store.save(path, storage_state=state, metadata={"version": "successor"})
+            assert session_store.load(path) is not None
+            raise PermissionError("revoked before publication")
+        persisted = session_store.load(path)
+        assert persisted is not None
+        assert persisted.metadata["version"] == "previous"
+
+
 def testsession_store_rejects_non_json_metadata_before_write(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         logical_path = Path("/profile/active/aeat-session")

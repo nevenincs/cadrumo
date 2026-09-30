@@ -939,6 +939,8 @@ cli:
             AEAT más bevallásfajtát jelöl, mint a függő helyi benyújtás.'
           declaration_kind_undetermined: '{modelo} modell, {period} {filing_year}:
             az AEAT egy későbbi benyújtást rögzít anélkül, hogy jelezné, helyesbítés-e.'
+          filing_instance_evidence_unavailable: '{modelo} modell, {period} {filing_year}:
+            az AEAT-bejegyzésből hiányzik a tartalom rögzítéséhez szükséges benyújtási bizonyíték.'
           receipt_totals_mismatch: '{modelo} modell, {period} {filing_year}: az igazolás
             végösszege eltér a függő helyi benyújtástól, de mezőértékek nélkül az
             AEAT tartalma nem rögzíthető.'

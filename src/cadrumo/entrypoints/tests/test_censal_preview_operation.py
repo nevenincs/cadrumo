@@ -107,7 +107,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
         task = asyncio.current_task()
         preflight_task_names.append("" if task is None else task.get_name())
 
-    async def acquire(authority: PinnedAuthorityOperation):
+    async def acquire(authority: PinnedAuthorityOperation, _effect_guard: object, _on_session_write: object):
         task = asyncio.current_task()
         acquisition_task_names.append("" if task is None else task.get_name())
         active_profile_id = require_active_bucket_id()

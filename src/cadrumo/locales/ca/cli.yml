@@ -939,6 +939,8 @@ cli:
             indica un tipus de declaració diferent del de la presentació local pendent.'
           declaration_kind_undetermined: 'Model {modelo} {period} {filing_year}: l''AEAT
             registra una presentació posterior sense indicar si és una correcció.'
+          filing_instance_evidence_unavailable: 'Model {modelo} {period} {filing_year}:
+            l''entrada de l''AEAT no té l''evidència de presentació necessària per registrar-ne el contingut.'
           receipt_totals_mismatch: 'Model {modelo} {period} {filing_year}: l''import
             del justificant difereix de la presentació local pendent, però sense valors
             de caselles no s''ha pogut registrar el contingut de l''AEAT.'

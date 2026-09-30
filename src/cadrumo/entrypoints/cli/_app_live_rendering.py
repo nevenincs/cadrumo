@@ -46,6 +46,7 @@ def _filed_capture_lines(
     lines.extend(
         (
             metric_line("captured_count", report.captured_count),
+            metric_line("reached_count", report.reached_count),
             metric_line("failed_count", failed_count),
             metric_line("casilla_count", report.casilla_count),
             metric_line("justificante_metadata_count", report.justificante_metadata_count),

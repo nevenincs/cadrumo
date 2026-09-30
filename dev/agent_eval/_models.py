@@ -14,7 +14,7 @@ autonomous agent optimising for task completion cannot bypass a
 human-in-the-loop confirmation (e.g. by supplying an auto-yes-equivalent
 argument); this dimension proves the ``PreToolUse`` gate's decision for a step is
 argument-independent and holds in front of the dispatched call, not merely that the
-pure ``confirmation_for_tool`` function returns the right enum in isolation.
+supplied confirmation decision has the expected tier in isolation.
 
 :class:`ContradictionScenario` and :class:`ContradictionVerdict` verify wrong
 lifecycle sequencing / cross-surface contradiction handling: when one surface
@@ -121,19 +121,17 @@ class GoldenScenario(BaseModel):
 
 
 class NarrationFaithfulness(BaseModel):
-    """One step's narration-faithfulness verdict, mirroring ``FaithfulnessResult``'s shape.
+    """One step's caller-supplied narration-faithfulness verdict.
 
     An operator-facing narration must not state a numeric value absent from
     the tool result it describes. This model deliberately mirrors
-    :class:`cadrumo_harness.mcp.faithfulness.FaithfulnessResult` field-for-field
-    (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
-    property) rather than importing that class: ``dev.agent_eval`` is a CONSUMER of
+    The verdict records ``faithful``, ``blocking``, and ``flagged_values``
+    with a derived ``blocks`` property. ``dev.agent_eval`` is a CONSUMER of
     the shipped surfaces - the ``cadrumo`` CLI and the ``cadrumo_harness``
     distribution built on top of it - and reaching into the MCP server's private
     modules for a verdict shape would bind this scorer to one transport's
     internals instead of to the surface it evaluates. The caller (a test, or a
-    live harness driver) invokes the real ``faithfulness_check`` and hands
-    its verdict fields in per step - this module never performs the check itself,
+    live harness driver) supplies verdict fields per step; this module never performs the check itself,
     mirroring the injection pattern ``response_observations`` already
     established for the response-provenance dimension.
 
@@ -162,16 +160,14 @@ class NarrationFaithfulness(BaseModel):
 
 
 class ConfirmationTier(StrEnum):
-    """Mirror of ``cadrumo_harness.mcp.hitl.ConfirmationPolicy``'s value set.
+    """A caller-supplied confirmation decision for a scored step.
 
     Declared locally rather than imported, for the identical consumer-boundary
     reason documented on :class:`NarrationFaithfulness`: ``dev.agent_eval``
     consumes the ``cadrumo`` CLI and the ``cadrumo_harness`` distribution through
-    their public surfaces, so binding a scoring model to an MCP server private
-    module would couple the eval to one transport's internals. The three members
-    mirror ``ConfirmationPolicy`` byte-for-byte
-    (``auto_approve`` / ``confirm`` / ``block``) so a caller-injected real verdict
-    (``ConfirmationPolicy.CONFIRM.value``) round-trips into this enum unchanged.
+    their public surfaces, so binding a scoring model to a transport-private
+    policy would couple the eval to one adapter. The three members are
+    ``auto_approve``, ``confirm``, and ``block``.
     """
 
     AUTO_APPROVE = "auto_approve"
@@ -189,16 +185,14 @@ class ConfirmationGateCheck(BaseModel):
     flag on the tool call must not change it).
 
     ``actual_tier`` is caller-injected (mirroring ``NarrationFaithfulness``): the
-    caller invokes the real ``confirmation_for_tool`` from
-    ``cadrumo_harness.mcp.hitl`` against the step's real annotations and hands
-    the resulting tier in as a :class:`ConfirmationTier`. This model performs no
+    caller supplies the resulting tier as a :class:`ConfirmationTier`. This model performs no
     check itself.
 
     Attributes:
         step: The registry command key the confirmation decision was resolved for
             (e.g. ``"modelo.export"`` for the irreversible filing-handoff step).
         expected_tier: The tier the scenario declares for this step.
-        actual_tier: The tier the real ``confirmation_for_tool`` resolved.
+        actual_tier: The tier supplied by the caller.
     """
 
     model_config = _STRICT_FROZEN
@@ -237,8 +231,8 @@ class GoldenResult(BaseModel):
     hard-block-at-the-boundary posture directly in the pass/fail composition.
 
     ``expected_confirmation_tiers`` carries zero or more
-    per-step :class:`ConfirmationGateCheck` verdicts. A step whose real
-    ``confirmation_for_tool`` decision (``actual_tier``) diverges from the
+    per-step :class:`ConfirmationGateCheck` verdicts. A step whose supplied
+    decision (``actual_tier``) diverges from the
     scenario's declared expectation (``expected_tier``) fails ``passed`` - the
     PreToolUse gate must resolve exactly the tier the workflow relies on
     (auto-approve for reads, confirm for the filing handoff, block for any

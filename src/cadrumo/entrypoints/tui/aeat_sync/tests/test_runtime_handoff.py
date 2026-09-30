@@ -1,9 +1,10 @@
-"""Exact-profile supervision for the enrolled AEAT Sync census review."""
+"""Exact-profile supervision for the enrolled AEAT Sync filed-history action."""
 
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import cast
 from uuid import UUID
 
@@ -11,6 +12,14 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.application.live.filed_history_operation import (
+    FILED_HISTORY_OPERATION_DEFINITION_ID,
+    FiledHistoryOperationRequest,
+)
+from cadrumo.application.live.notifications_read_operation import (
+    NOTIFICATIONS_LIST_DEFINITION_ID,
+    NotificationsListRequest,
+)
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -59,7 +68,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
+_TODAY = date(2026, 9, 29)
 _NOW = datetime(2026, 9, 29, tzinfo=UTC)
+_FILED_ACTION = ActionReference(action_id="operator.live.filed.pull_all")
+_NOTIFICATIONS_LIST_ACTION = ActionReference(action_id="operator.live.notifications.list")
 _CENSAL_REVIEW_ACTION = ActionReference(action_id="operator.profile.edit")
 
 
@@ -83,15 +95,7 @@ class _RuntimeClient:
 class _StartedController:
     operation_id = "3" * 64
 
-    def __init__(
-        self,
-        client: RuntimeFrontendClient,
-        events: list[str] | None = None,
-        *,
-        session_id: UUID = _SESSION_ID,
-    ) -> None:
-        self.client = client
-        self.session_id = session_id
+    def __init__(self, events: list[str] | None = None) -> None:
         self.started = False
         self.events = events
 
@@ -111,7 +115,6 @@ class _PreparedController:
         profile_id: UUID,
         prepared: CensalPrepareOperationProjection,
         events: list[str],
-        session_id: UUID = _SESSION_ID,
     ) -> None:
         self.client = client
         self.contract = contract
@@ -119,7 +122,7 @@ class _PreparedController:
         self.prepared = prepared
         self.events = events
         self.operation_id = "5" * 64
-        self.session_id = session_id
+        self.session_id = _SESSION_ID
 
     async def start(self) -> str:
         self.events.append("start:censo-prepare")
@@ -230,13 +233,10 @@ def _install_censal_bridge(
     monkeypatch: pytest.MonkeyPatch,
     client: _RuntimeClient,
     prepared: CensalPrepareOperationProjection,
-    *,
-    prepare_session_id: UUID = _SESSION_ID,
-    review_session_id: UUID = _SESSION_ID,
 ) -> tuple[list[str], list[tuple[RuntimeFrontendClient, dict[str, object]]], _StartedController]:
     events: list[str] = []
     submitted: list[tuple[RuntimeFrontendClient, dict[str, object]]] = []
-    started = _StartedController(cast(RuntimeFrontendClient, client), events, session_id=review_session_id)
+    started = _StartedController(events)
     prepare_contract = client._contracts[CENSAL_PREPARE_OPERATION_DEFINITION_ID]
 
     async def submit(
@@ -254,7 +254,6 @@ def _install_censal_bridge(
                 profile_id=_PROFILE_ID,
                 prepared=prepared,
                 events=events,
-                session_id=prepare_session_id,
             )
         return started
 
@@ -272,8 +271,195 @@ def _contract(definition_id: str) -> OperationPublicDefinitionContractV1:
     return build_production_operation_registry().lookup_public_contract(definition_id)
 
 
+def test_runtime_handoff_submits_exact_profile_and_starts_before_return(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    client = _RuntimeClient(_contract(FILED_HISTORY_OPERATION_DEFINITION_ID))
+    output_root = tmp_path / "filed-declarations"
+    submitted: list[tuple[object, dict[str, object]]] = []
+    started = _StartedController()
+
+    async def submit(
+        _controller_type: type[RuntimeOperationController],
+        received_client: RuntimeFrontendClient,
+        **kwargs: object,
+    ) -> _StartedController:
+        submitted.append((received_client, kwargs))
+        return started
+
+    monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
+    monkeypatch.setattr("cadrumo.entrypoints.tui.aeat_sync.runtime_handoff.today_madrid", lambda: _TODAY)
+
+    handoff, contracts = compose_runtime_aeat_sync_handoff(cast(RuntimeFrontendClient, client), output_root=output_root)
+    assert handoff is not None
+    assert contracts is not None
+    assert tuple(contract.definition_id for contract in contracts.definitions) == (
+        FILED_HISTORY_OPERATION_DEFINITION_ID,
+    )
+    assert client.contract_reads[0][0] == FILED_HISTORY_OPERATION_DEFINITION_ID
+
+    request = AeatSyncOperationRequestV1(action=_FILED_ACTION, operation=FILED_HISTORY_OPERATION_DEFINITION_ID)
+    controller = asyncio.run(handoff(request))
+
+    assert controller is started
+    assert started.started
+    assert len(submitted) == 1
+    received_client, options = submitted[0]
+    assert received_client is client
+    assert options == {
+        "definition_id": FILED_HISTORY_OPERATION_DEFINITION_ID,
+        "subject_ref": profile_operation_subject(str(_PROFILE_ID)),
+        "payload": FiledHistoryOperationRequest(
+            profile_id=_PROFILE_ID,
+            output_root=output_root,
+            today=_TODAY,
+            limit=None,
+            dry_run=False,
+        ),
+        "expected_session_id": _SESSION_ID,
+    }
+
+
+def test_notifications_list_handoff_submits_the_bound_profile_and_starts_its_result_reader(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    client = _RuntimeClient(
+        _contract(FILED_HISTORY_OPERATION_DEFINITION_ID),
+        _contract(NOTIFICATIONS_LIST_DEFINITION_ID),
+    )
+    submitted: list[tuple[object, dict[str, object]]] = []
+    started: list[RuntimeOperationController] = []
+
+    async def submit(
+        _controller_type: type[RuntimeOperationController],
+        received_client: RuntimeFrontendClient,
+        **kwargs: object,
+    ) -> RuntimeOperationController:
+        submitted.append((received_client, kwargs))
+        return RuntimeOperationController(
+            client=received_client,
+            operation_id="4" * 64,
+            session_id=_SESSION_ID,
+        )
+
+    async def start(controller: RuntimeOperationController) -> str:
+        started.append(controller)
+        return controller.operation_id
+
+    monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
+    monkeypatch.setattr(RuntimeOperationController, "start", start)
+
+    handoff, contracts = compose_runtime_aeat_sync_handoff(
+        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+    )
+    assert handoff is not None
+    assert contracts is not None
+    assert tuple(contract.definition_id for contract in contracts.definitions) == (
+        FILED_HISTORY_OPERATION_DEFINITION_ID,
+        NOTIFICATIONS_LIST_DEFINITION_ID,
+    )
+
+    controller = asyncio.run(
+        handoff(
+            AeatSyncOperationRequestV1(
+                action=_NOTIFICATIONS_LIST_ACTION,
+                operation=NOTIFICATIONS_LIST_DEFINITION_ID,
+            )
+        )
+    )
+
+    assert len(submitted) == 1
+    received_client, options = submitted[0]
+    assert received_client is client
+    assert options == {
+        "definition_id": NOTIFICATIONS_LIST_DEFINITION_ID,
+        "subject_ref": profile_operation_subject(str(_PROFILE_ID)),
+        "payload": NotificationsListRequest(profile_id=_PROFILE_ID),
+        "expected_session_id": _SESSION_ID,
+    }
+    assert started == [controller]
+    assert callable(getattr(controller, "read_notifications_list_result", None))
+
+
+@pytest.mark.parametrize(
+    "operation_request",
+    (
+        AeatSyncOperationRequestV1(
+            action=ActionReference(action_id="operator.profile.edit"),
+            operation="user-profile.censo-preview",
+        ),
+        AeatSyncOperationRequestV1(
+            action=_FILED_ACTION,
+            operation="live.filed-list",
+        ),
+        AeatSyncOperationRequestV1(
+            action=_NOTIFICATIONS_LIST_ACTION,
+            operation="live.notifications.show",
+        ),
+    ),
+)
+def test_runtime_handoff_refuses_other_action_operation_pairs_before_submission(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    operation_request: AeatSyncOperationRequestV1,
+) -> None:
+    client = _RuntimeClient(_contract(FILED_HISTORY_OPERATION_DEFINITION_ID))
+    handoff, _contracts = compose_runtime_aeat_sync_handoff(
+        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
+    )
+    assert handoff is not None
+    submitted: list[object] = []
+
+    async def submit(
+        _controller_type: type[RuntimeOperationController],
+        received_client: RuntimeFrontendClient,
+        **kwargs: object,
+    ) -> _StartedController:
+        submitted.append((received_client, kwargs))
+        return _StartedController()
+
+    monkeypatch.setattr(RuntimeOperationController, "submit", classmethod(submit))
+
+    with pytest.raises(RuntimeRefusalError) as refusal:
+        asyncio.run(handoff(operation_request))
+
+    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert submitted == []
+
+
+def test_runtime_handoff_leaves_action_unavailable_for_wrong_installed_contract() -> None:
+    forged_contract = _contract(FILED_HISTORY_OPERATION_DEFINITION_ID).model_copy(
+        update={"action_reference": ActionReference(action_id="operator.profile.edit")}
+    )
+    client = _RuntimeClient(forged_contract)
+
+    handoff, contracts = compose_runtime_aeat_sync_handoff(
+        cast(RuntimeFrontendClient, client), output_root=Path("filed-declarations")
+    )
+
+    assert handoff is None
+    assert contracts is None
+
+
+def test_notifications_list_action_stays_unavailable_for_wrong_contract() -> None:
+    forged_contract = _contract(NOTIFICATIONS_LIST_DEFINITION_ID).model_copy(
+        update={"request_schema": _contract(FILED_HISTORY_OPERATION_DEFINITION_ID).request_schema}
+    )
+    client = _RuntimeClient(forged_contract)
+
+    handoff, contracts = compose_runtime_aeat_sync_handoff(
+        cast(RuntimeFrontendClient, client), output_root=Path("filed-declarations")
+    )
+
+    assert handoff is None
+    assert contracts is None
+
+
 def test_censal_handoff_prepares_worker_baseline_before_review_submission(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     client = _RuntimeClient(
         _contract(CENSAL_PREPARE_OPERATION_DEFINITION_ID),
@@ -282,7 +468,7 @@ def test_censal_handoff_prepares_worker_baseline_before_review_submission(
     prepared = _prepared_projection(_PROFILE_ID)
     events, submitted, started = _install_censal_bridge(monkeypatch, client, prepared)
     handoff, contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client)
+        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
 
     assert handoff is not None
@@ -333,6 +519,7 @@ def test_censal_handoff_prepares_worker_baseline_before_review_submission(
 
 def test_censal_handoff_refuses_a_foreign_worker_prepared_profile_before_review_submission(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     client = _RuntimeClient(
         _contract(CENSAL_PREPARE_OPERATION_DEFINITION_ID),
@@ -345,7 +532,7 @@ def test_censal_handoff_refuses_a_foreign_worker_prepared_profile_before_review_
         _prepared_projection(foreign_profile),
     )
     handoff, _contracts = compose_runtime_aeat_sync_handoff(
-        cast(RuntimeFrontendClient, client)
+        cast(RuntimeFrontendClient, client), output_root=tmp_path / "filed-declarations"
     )
     assert handoff is not None
 
@@ -368,63 +555,4 @@ def test_censal_handoff_refuses_a_foreign_worker_prepared_profile_before_review_
         "start:censo-prepare",
         "observe:censo-prepare",
         "read:censo-prepare",
-    ]
-
-
-def test_censal_handoff_refuses_a_controller_bound_to_another_session(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client = _RuntimeClient(
-        _contract(CENSAL_PREPARE_OPERATION_DEFINITION_ID),
-        _contract(CENSAL_OPERATION_DEFINITION_ID),
-    )
-    events, submitted, _started = _install_censal_bridge(
-        monkeypatch,
-        client,
-        _prepared_projection(_PROFILE_ID),
-        prepare_session_id=UUID("cc000000-0000-4000-8000-0000000000cc"),
-    )
-    handoff, _contracts = compose_runtime_aeat_sync_handoff(cast(RuntimeFrontendClient, client))
-    assert handoff is not None
-
-    with pytest.raises(RuntimeRefusalError) as refusal:
-        asyncio.run(handoff(_request()))
-
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
-    assert [options["definition_id"] for _received_client, options in submitted] == [
-        CENSAL_PREPARE_OPERATION_DEFINITION_ID
-    ]
-    assert events == [f"submit:{CENSAL_PREPARE_OPERATION_DEFINITION_ID}"]
-
-
-def test_censal_handoff_does_not_start_a_review_controller_bound_to_another_session(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client = _RuntimeClient(
-        _contract(CENSAL_PREPARE_OPERATION_DEFINITION_ID),
-        _contract(CENSAL_OPERATION_DEFINITION_ID),
-    )
-    events, submitted, _started = _install_censal_bridge(
-        monkeypatch,
-        client,
-        _prepared_projection(_PROFILE_ID),
-        review_session_id=UUID("cc000000-0000-4000-8000-0000000000cc"),
-    )
-    handoff, _contracts = compose_runtime_aeat_sync_handoff(cast(RuntimeFrontendClient, client))
-    assert handoff is not None
-
-    with pytest.raises(RuntimeRefusalError) as refusal:
-        asyncio.run(handoff(_request()))
-
-    assert refusal.value.reason is RuntimeRefusalCode.INVALID_FRAME
-    assert [options["definition_id"] for _received_client, options in submitted] == [
-        CENSAL_PREPARE_OPERATION_DEFINITION_ID,
-        CENSAL_OPERATION_DEFINITION_ID,
-    ]
-    assert events == [
-        f"submit:{CENSAL_PREPARE_OPERATION_DEFINITION_ID}",
-        "start:censo-prepare",
-        "observe:censo-prepare",
-        "read:censo-prepare",
-        f"submit:{CENSAL_OPERATION_DEFINITION_ID}",
     ]

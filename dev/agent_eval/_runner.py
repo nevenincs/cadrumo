@@ -20,16 +20,14 @@ dispatches a real ``modelo.work.calculate`` through the actual CLI/MCP command
 handling and passes the decoded JSON ``observations`` rows in; this module only
 asserts over the already-fetched rows and never dispatches the call itself. The
 narration-faithfulness dimension (eval-catalogue category 9) follows the
-identical pattern one layer further: the caller runs the real
-``cadrumo_harness.mcp.faithfulness.faithfulness_check`` against a narration and
-the captured calculate JSON, and passes the per-step verdict in - this module
-never imports the MCP server layer and never runs the check itself. The
+identical pattern one layer further: the caller checks a narration against the
+captured calculate JSON and passes the per-step verdict in - this module
+never imports a transport layer and never runs the check itself. The
 confirmation-gate dimension (eval-catalogue category 8) follows the same pattern
-once more: the caller invokes the real
-``cadrumo_harness.mcp.hitl.confirmation_for_tool`` for a step and hands the
-resulting tier in as a :class:`~dev.agent_eval._models.ConfirmationGateCheck`;
-this module never imports the MCP server layer and never resolves a confirmation
-tier itself. The contradiction dimension (eval-catalogue category 4) follows the
+once more: the caller supplies a step's confirmation decision as a
+:class:`~dev.agent_eval._models.ConfirmationGateCheck`; this module never
+resolves a confirmation tier itself. The contradiction dimension
+(eval-catalogue category 4) follows the
 same pattern: the caller dispatches two independent real CLI/MCP invocations for
 the same target (a readiness-shaped signal and a second, legitimately-blocking
 signal) and passes in whether each reported ready / refused, plus a candidate
@@ -252,7 +250,7 @@ def _check_confirmation_gate_checks(
 
     Closes eval-catalogue category 8. Each :class:`ConfirmationGateCheck` is a
     caller-injected verdict (mirroring ``narration_faithfulness_checks``): the
-    caller resolved a step's real ``confirmation_for_tool`` decision and handed
+    caller resolved a step's confirmation decision and handed
     the ``(expected_tier, actual_tier)`` pair in. This function performs no
     resolution itself; it only decides whether a mismatch fails the scenario.
 
@@ -394,12 +392,12 @@ def run_golden_scenario(
             module never dispatches the calculate call itself.
         narration_faithfulness_checks: Zero or more per-step
             :class:`NarrationFaithfulness` verdicts, injected by the caller after
-            running the real ``faithfulness_check`` against a narration and the
+            checking a narration against the
             captured calculate JSON. Empty (the default) skips the dimension -
             this module never runs the faithfulness check itself.
         expected_confirmation_tiers: Zero or more per-step
             :class:`ConfirmationGateCheck` verdicts, injected by the caller after
-            resolving a step's real ``confirmation_for_tool`` decision. Empty (the
+            resolving a step's confirmation decision. Empty (the
             default) skips the dimension - this module never resolves a
             confirmation tier itself.
 

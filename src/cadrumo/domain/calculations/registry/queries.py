@@ -1134,6 +1134,7 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
         cadence=definition.cadence,
         jurisdiction=definition.jurisdiction,
         revision=str(revision.id),
+        authority_grade=revision.authority_grade,
         revision_ids=context.revision_ids,
         filing_year=filing_year,
         filing_period=_query_filing_period(filing_year, registry_period),

@@ -39,7 +39,6 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
-from ...core.i18n.render import output_language as active_output_language
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -51,6 +50,7 @@ from ...core.operations import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
+    OperationTerminalCondition,
 )
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -143,9 +143,10 @@ from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .export_projection import (
+    ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV2,
+    ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
 from .filing_action_ports import FilingActionPortsFactory
@@ -1404,6 +1405,7 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     #: a caller that names no artefact gets the export it always got; a
     #: calculation report is an explicit choice.
     artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE
+    report_language: OutputLanguage = OutputLanguage.ES
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -1444,11 +1446,23 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
     Every fact is read from the receipt the export service returned; the only
     translation is from its field spelling into the closed public vocabulary.
     """
-    del terminal_receipt
     settled = ModeloExportSettledResult.model_validate(result, strict=True)
+    receipt = settled.fichero_boe if settled.fichero_boe is not None else settled.calculation_report
+    if (
+        receipt is None
+        or terminal_receipt.identity.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
+        or terminal_receipt.identity.subject_ref != receipt.work_unit_id
+        or terminal_receipt.condition is not OperationTerminalCondition.SUCCEEDED
+        or terminal_receipt.effect is not OperationEffect.UPDATED
+        or terminal_receipt.result_ref is None
+        or terminal_receipt.refusal_ref is not None
+        or terminal_receipt.failure_error_code is not None
+        or terminal_receipt.diagnostic_ref is not None
+    ):
+        raise ValueError("export result contradicts its terminal receipt")
     if settled.fichero_boe is not None:
         filing = settled.fichero_boe
-        return ModeloExportPublicResultV2(
+        return ModeloExportPublicResultV3(
             calculation_revision_id=filing.calculation_revision_id,
             artefact=ModeloExportArtefact.FICHERO_BOE,
             export_format=filing.format,
@@ -1467,7 +1481,7 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
     report = settled.calculation_report
     if report is None:
         raise ValueError("a settled export carries exactly one receipt")
-    return ModeloExportPublicResultV2(
+    return ModeloExportPublicResultV3(
         calculation_revision_id=report.calculation_revision_id,
         artefact=_REPORT_ARTEFACTS[report.document_format],
         export_format=report.document_format.value,
@@ -1477,6 +1491,7 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
         software_identity_grade=report.software_identity_grade,
         evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
         completeness=ModeloExportCompleteness.NOT_ASSESSED,
+        calculation_report=ModeloCalculationReportPublicReceipt.from_result(report),
     )
 
 
@@ -1617,7 +1632,7 @@ class ModeloExportExecutor:
             ModeloCalculationReportCommand(
                 calculation_revision_id=payload.calculation_revision_id,
                 document_format=_REPORT_DOCUMENT_FORMATS[payload.artefact],
-                report_language=OutputLanguage(active_output_language()),
+                report_language=payload.report_language,
                 output_path=Path(payload.output_path),
                 replace_existing=payload.replace_existing,
             ),
@@ -1684,13 +1699,13 @@ def build_modelo_export_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.export.request",
-            schema_version=2,
+            schema_version=3,
             model_type=definition.request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.export.result",
-            schema_version=2,
-            model_type=ModeloExportPublicResultV2,
+            schema_version=3,
+            model_type=ModeloExportPublicResultV3,
         ),
         workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,

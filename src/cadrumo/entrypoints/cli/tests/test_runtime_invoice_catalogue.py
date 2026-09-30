@@ -12,6 +12,7 @@ import pytest
 import typer
 
 from ....application.exchange_rate_provider import exchange_rate_provider
+from ....application.invoices.catalogue_add_operation import InvoiceAddRequest, InvoiceAddResult
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.invoices.catalogue_read_operation import (
     INVOICE_VIEW_REFUSAL_CODE,
@@ -22,6 +23,7 @@ from ....application.invoices.catalogue_read_operation import (
 )
 from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason
+from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -91,6 +93,59 @@ def test_list_bridge_keeps_order_and_exact_filter(monkeypatch: pytest.MonkeyPatc
     assert len(submitted) == 1
     assert submitted[0].profile_id == _PROFILE
     assert submitted[0].kind is InvoiceKind.RECEIVED
+
+
+def test_add_bridge_uses_the_captured_request_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    _, snapshot = _record()
+    request = InvoiceAddRequest(
+        profile_id=_PROFILE,
+        kind=InvoiceKind.RECEIVED,
+        counterparty_name="Papeleria Sol SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="2026-0142",
+        issued_at=date(2026, 3, 10),
+        taxable_base=PublicDecimal(decimal="137.25"),
+        iva_rate=PublicDecimal(decimal="21"),
+        currency="EUR",
+    )
+    projection = InvoiceAddResult.created(
+        _PROFILE,
+        invoice=snapshot,
+        bucket_event_ids=("b" * 64,),
+        euro_value_pending=False,
+        simplificada_tax_id_advisory_required=False,
+    )
+    bound_profiles: list[UUID] = []
+    clients: list[SimpleNamespace] = []
+
+    def require_bound_profile(_ctx: typer.Context, *, expected_profile_id: UUID) -> SimpleNamespace:
+        bound_profiles.append(expected_profile_id)
+        client = SimpleNamespace(profile_id=expected_profile_id)
+        clients.append(client)
+        return client
+
+    def active_bucket_must_not_be_read() -> str:
+        raise AssertionError("invoice add re-read ambient active-profile state")
+
+    def submit(client: object, submitted: InvoiceAddRequest, **_kwargs: object):
+        assert client is clients[0]
+        assert submitted is request
+        return RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.UPDATED,
+        )
+
+    monkeypatch.setattr(bridge, "require_profile_client", require_bound_profile)
+    monkeypatch.setattr(bridge, "require_active_bucket_id", active_bucket_must_not_be_read)
+    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+
+    completion, added = bridge.add_invoice_catalogue(cast(typer.Context, cast(object, None)), request=request)
+
+    assert bound_profiles == [_PROFILE]
+    assert completion.operation_id == _OPERATION_ID
+    assert added == projection
 
 
 @pytest.mark.parametrize(

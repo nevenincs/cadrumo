@@ -29,6 +29,7 @@ from ...application.workflow.run_models import (
     WorkflowStepDetails,
 )
 from ...core.aggregation import RetencionClave
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
@@ -266,12 +267,12 @@ class ModeloDescribeResult(OutputSchema):
     Complete JSON projection of
     :class:`ModeloDescribeReport`. The
     payload carries every field of the canonical report -- including the
-    ``jurisdiction``, the revision validity bounds, the per-input-kind casilla
-    counts, and the ``legal_refs`` / ``source_refs`` grounding -- because an
-    operator justifying a revision selection needs the same evidence the domain
-    report holds. Build instances through :meth:`from_report` rather than
-    field-by-field, so a field added to the report cannot silently stop at this
-    boundary.
+    declared ``authority_grade``, ``jurisdiction``, revision validity bounds,
+    per-input-kind casilla counts, and ``legal_refs`` / ``source_refs``
+    grounding -- because an operator justifying a revision selection needs the
+    same evidence the domain report holds. Build instances through
+    :meth:`from_report` rather than field-by-field, so a field added to the
+    report cannot silently stop at this boundary.
     """
 
     operation: str = "modelo.describe"
@@ -282,6 +283,7 @@ class ModeloDescribeResult(OutputSchema):
     cadence: str
     jurisdiction: str
     revision: str
+    authority_grade: RegistryAuthorityGrade | None
     filing_year: FilingYear | None = None
     filing_period: Period | None = None
     period: str | None = None
@@ -316,6 +318,7 @@ class ModeloDescribeResult(OutputSchema):
             cadence=report.cadence,
             jurisdiction=report.jurisdiction,
             revision=report.revision,
+            authority_grade=report.authority_grade,
             filing_year=report.filing_year,
             filing_period=report.filing_period,
             period=report.period,

@@ -878,6 +878,8 @@ cli:
             states a different declaration kind than the pending local filing.'
           declaration_kind_undetermined: 'Modelo {modelo} {period} {filing_year}:
             AEAT records a later presentation without stating whether it is a correction.'
+          filing_instance_evidence_unavailable: 'Modelo {modelo} {period} {filing_year}:
+            the AEAT entry lacks filing-instance evidence required to record its content.'
           receipt_totals_mismatch: 'Modelo {modelo} {period} {filing_year}: the receipt
             total differs from the pending local filing, but without casilla values
             the AEAT content could not be recorded.'

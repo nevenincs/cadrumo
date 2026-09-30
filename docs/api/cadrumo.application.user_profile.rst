@@ -83,6 +83,7 @@ Submodules
    cadrumo.application.user_profile.projections
    cadrumo.application.user_profile.prospective_password
    cadrumo.application.user_profile.recovery_custody
+   cadrumo.application.user_profile.recovery_status_operation
    cadrumo.application.user_profile.registration
    cadrumo.application.user_profile.repository
    cadrumo.application.user_profile.section_rows

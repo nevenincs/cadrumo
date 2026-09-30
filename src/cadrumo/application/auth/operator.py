@@ -27,7 +27,8 @@ See Also:
 
 from __future__ import annotations
 
-from contextlib import contextmanager
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager, contextmanager, nullcontext
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
@@ -111,7 +112,7 @@ from .operator_scope import (
 )
 from .operator_scope import resolve_auth_operation_scope
 from .operator_scope_ports import OperatorScopePorts
-from .protocols import BrowserSessionFactoryPort
+from .protocols import BrowserSessionFactoryPort, session_store
 from .sessions import (
     ensure_authenticated_aeat_session,
 )
@@ -616,6 +617,8 @@ async def login_operator_auth(
     reset_lock: bool = False,
     settings: Settings | None = None,
     guarded_read_context: str | None = None,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]] | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> AuthLoginResult:
     """Acquire or verify a live AEAT session as :class:`AuthLoginResult`, and persist backend auth state.
 
@@ -644,6 +647,8 @@ async def login_operator_auth(
                 reset_lock=reset_lock,
                 settings=None,
                 guarded_read_context=guarded_read_context,
+                effect_guard=effect_guard,
+                authority_operation=authority_operation,
             )
     resolved_settings = load_settings()
     requested_kind = _provider_kind_or_none(provider)
@@ -707,30 +712,41 @@ async def login_operator_auth(
         ):
             repository = workflow_state_repository()
             _assert_auth_recovery_not_in_progress(repository.load())
-            with bundled_indexed_authority().operation() as authority_operation:
-                result = await ensure_authenticated_aeat_session(
-                    resolved_settings,
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    browser_session_factory=browser_session_factory,
-                    kind=provider_kind,
-                    certificate_credentials=certificate_credentials,
-                    fresh=fresh,
-                    reset_lock=reset_lock,
-                    operation="operator-auth-login",
-                    operator_scope_ports=operator_scope_ports,
-                    profile_decode_context=authority_operation.profile_decode_context(),
+            with session_store().defer_writes() as staged:
+                operation_span = (
+                    nullcontext(authority_operation)
+                    if authority_operation is not None
+                    else bundled_indexed_authority().operation()
                 )
+                with operation_span as pinned_operation:
+                    result = await ensure_authenticated_aeat_session(
+                        resolved_settings,
+                        certificate_secret_backend_factory=certificate_secret_backend_factory,
+                        browser_session_factory=browser_session_factory,
+                        kind=provider_kind,
+                        certificate_credentials=certificate_credentials,
+                        fresh=fresh,
+                        reset_lock=reset_lock,
+                        operation="operator-auth-login",
+                        operator_scope_ports=operator_scope_ports,
+                        profile_decode_context=pinned_operation.profile_decode_context(),
+                        effect_guard=effect_guard,
+                    )
 
-            occurred_at = now()
-            repository.update_with_bucket_events(
-                lambda current: _verified_session_update(
-                    current,
-                    bucket_id=bucket_id,
-                    provider_kind=provider_kind,
-                    occurred_at=occurred_at,
-                    event_type=BucketEventType.AUTH_SESSION_VERIFIED,
-                ),
-            )
+                # Remote provider work has ended. Recheck current profile authority
+                # only while publishing its encrypted session and verified event.
+                async with effect_guard() if effect_guard is not None else nullcontext():
+                    staged.publish()
+                    occurred_at = now()
+                    repository.update_with_bucket_events(
+                        lambda current: _verified_session_update(
+                            current,
+                            bucket_id=bucket_id,
+                            provider_kind=provider_kind,
+                            occurred_at=occurred_at,
+                            event_type=BucketEventType.AUTH_SESSION_VERIFIED,
+                        ),
+                    )
 
         return AuthLoginResult(
             provider=provider_kind.value,

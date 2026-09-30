@@ -1,7 +1,7 @@
 """The derived live-tree operation-exposure census.
 
 This is a census, not a sample. Its denominator is the live source tree under
-``src/cadrumo``, walked from disk without consulting version-control state, so
+``src/cadrumo`` and the installed MCP adapter under ``src/cadrumo_harness/mcp``, walked from disk without consulting version-control state, so
 a peer's new source file enters the census immediately.
 
 Every join below is derived from two independent readings that must agree:
@@ -35,13 +35,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _PACKAGE_PREFIX = "src/cadrumo/"
-_DEFINITION_ID_SUFFIX = "_OPERATION_DEFINITION_ID"
+_MCP_PACKAGE_PREFIX = "src/cadrumo_harness/mcp/"
+_DEFINITION_ID_SUFFIX = "_DEFINITION_ID"
 
 _ENTRYPOINT_TIER = "src/cadrumo/entrypoints/"
 
 _FRONTEND_PACKAGES: Mapping[OperationFrontendProjection, str] = {
     OperationFrontendProjection.CLI: "src/cadrumo/entrypoints/cli/",
-    OperationFrontendProjection.MCP: "src/cadrumo/entrypoints/mcp/",
+    OperationFrontendProjection.MCP: _MCP_PACKAGE_PREFIX,
     OperationFrontendProjection.TUI: "src/cadrumo/entrypoints/tui/",
 }
 """Where a claimed projection's own surface lives.
@@ -114,8 +115,12 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
 
 @cache
 def _source_files() -> tuple[str, ...]:
-    """Every Python file under the package, as repo-relative paths."""
-    paths = tuple(path.relative_to(_REPO_ROOT).as_posix() for path in package_python_files(include_data=True))
+    """Every Python file under the product and installed MCP packages."""
+    mcp_root = _REPO_ROOT / "src" / "cadrumo_harness" / "mcp"
+    paths = tuple(
+        path.relative_to(_REPO_ROOT).as_posix()
+        for path in (*package_python_files(include_data=True), *mcp_root.rglob("*.py"))
+    )
     if not paths:
         message = "the repository contains no visible package sources; the census denominator is empty"
         raise AssertionError(message)
@@ -135,8 +140,8 @@ def _parsed(path: str) -> ast.Module:
 
 @cache
 def _declared_definition_ids() -> Mapping[str, str]:
-    """Every module-level ``*_OPERATION_DEFINITION_ID`` literal, id to path."""
-    declared: dict[str, str] = {}
+    """Every module-level ``*_DEFINITION_ID`` literal or enum-derived ID, id to path."""
+    declared: dict[str, str] = dict(_dynamic_definition_ids())
     for path in _production_sources():
         for node in _parsed(path).body:
             if not isinstance(node, ast.Assign):
@@ -147,6 +152,21 @@ def _declared_definition_ids() -> Mapping[str, str]:
                 if isinstance(target, ast.Name) and target.id.endswith(_DEFINITION_ID_SUFFIX):
                     declared[node.value.value] = path
     return declared
+
+
+@cache
+def _dynamic_definition_ids() -> Mapping[str, str]:
+    """Read the one enum-derived declaration family from its source module."""
+    from ...application.overview.read_operation import OVERVIEW_READ_DEFINITION_IDS
+
+    path = "src/cadrumo/application/overview/read_operation.py"
+    return {definition_id: path for definition_id in OVERVIEW_READ_DEFINITION_IDS.values()}
+
+
+@cache
+def _definition_id_collections() -> Mapping[str, frozenset[str]]:
+    """Preserve the IDs carried by the overview's enum-derived declaration."""
+    return {"OVERVIEW_READ_DEFINITION_IDS": frozenset(_dynamic_definition_ids())}
 
 
 @cache
@@ -170,6 +190,7 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
     """
     ids = set(_declared_definition_ids())
     constant_to_id = _definition_id_constants()
+    collections = _definition_id_collections()
     builders = _request_builders()
 
     collected: dict[str, frozenset[str]] = {}
@@ -181,11 +202,15 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
             elif isinstance(node, ast.Name):
                 if node.id in constant_to_id:
                     found.add(constant_to_id[node.id])
+                elif node.id in collections:
+                    found |= collections[node.id]
                 elif node.id in builders:
                     found |= builders[node.id]
             elif isinstance(node, ast.alias):
                 if node.name in constant_to_id:
                     found.add(constant_to_id[node.name])
+                elif node.name in collections:
+                    found |= collections[node.name]
                 elif node.name in builders:
                     found |= builders[node.name]
         if found:
@@ -204,6 +229,7 @@ def _request_builders() -> Mapping[str, frozenset[str]]:
     """
     literal_ids = set(_declared_definition_ids())
     constants = _definition_id_constants()
+    collections = _definition_id_collections()
 
     def named_by(node: ast.AST, carriers: Mapping[str, frozenset[str]]) -> set[str]:
         named: set[str] = set()
@@ -212,6 +238,8 @@ def _request_builders() -> Mapping[str, frozenset[str]]:
                 named.add(inner.value)
             elif isinstance(inner, ast.Name) and inner.id in constants:
                 named.add(constants[inner.id])
+            elif isinstance(inner, ast.Name) and inner.id in collections:
+                named |= collections[inner.id]
             elif isinstance(inner, ast.Name) and inner.id in carriers:
                 named |= carriers[inner.id]
         return named
@@ -261,13 +289,15 @@ def _paths_under(prefix: str) -> Iterable[str]:
 def test_the_census_denominator_is_the_repository_visible_tree() -> None:
     """The census reads the repository-visible tree and covers the package."""
     sources = _source_files()
-    assert all(path.startswith(_PACKAGE_PREFIX) for path in sources)
+    assert all(path.startswith((_PACKAGE_PREFIX, _MCP_PACKAGE_PREFIX)) for path in sources)
     # The denominator must reach the operation platform and every frontend
     # package the projection map names, or a join below could pass by
     # scanning nothing at all.
     assert any(path.startswith("src/cadrumo/application/operations/") for path in sources)
     assert any(path.startswith("src/cadrumo/entrypoints/tui/") for path in sources)
     assert any(path.startswith("src/cadrumo/entrypoints/cli/") for path in sources)
+    assert any(path.startswith(_MCP_PACKAGE_PREFIX) for path in sources)
+    assert any(path == "src/cadrumo_harness/mcp/server.py" for path in sources)
 
 
 def test_every_declared_operation_id_joins_exactly_one_registered_definition() -> None:

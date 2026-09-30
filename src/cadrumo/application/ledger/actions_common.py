@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from pydantic import TypeAdapter
 
 from ...core.decimal.formatting import format_decimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.clock import now
 
@@ -53,6 +54,7 @@ from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,
+    RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
 
@@ -104,6 +106,18 @@ def resolve_transaction_repository(
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     return repository
+
+
+def resolve_revision_guarded_transaction_repository(
+    *,
+    bucket_id: str,
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> RevisionGuardedTransactionCatalogueCoCommitWriterProtocol:
+    """Resolve the optional full-snapshot capability for a whole-catalogue ledger write."""
+    resolved = resolve_transaction_repository(bucket_id=bucket_id, repository=repository)
+    if not isinstance(resolved, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+        raise InternalInvariantError("whole-catalogue ledger write requires revision-guarded transaction persistence")
+    return resolved
 
 
 def resolve_invoice_repository(
@@ -960,7 +974,10 @@ def save_transaction_catalogue_and_events(
     events: tuple[BucketEvent, ...],
     expected_current: Transaction | None = None,
     replacement: Transaction | None = None,
+    expected_catalogue_revision: str | None = None,
 ) -> None:
+    if expected_current is not None and expected_catalogue_revision is not None:
+        raise ValueError("transaction co-commit accepts only one expected snapshot guard")
     if expected_current is not None:
         if replacement is None:
             raise ValueError("baseline-guarded transaction write requires its replacement")
@@ -971,6 +988,19 @@ def save_transaction_catalogue_and_events(
                 expected_current,
                 replacement,
                 (event_write,),
+            ),
+        )
+        return
+    if expected_catalogue_revision is not None:
+        if not isinstance(transaction_repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+            raise InternalInvariantError("revision-guarded transaction co-commit capability is unavailable")
+        _commit_with_guarded_events(
+            event_repository=event_repository,
+            events=events,
+            commit=lambda event_write: transaction_repository.save_if_revision_with_secure_object_writes(
+                catalogue,
+                expected_revision_id=expected_catalogue_revision,
+                extra_writes=(event_write,),
             ),
         )
         return

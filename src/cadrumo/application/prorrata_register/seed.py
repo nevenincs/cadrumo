@@ -44,7 +44,10 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from ..calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    ObservationEnvelopePayload,
+)
 from ..calculations.revision_carry_gate import revision_carry_outcome
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
@@ -119,9 +122,24 @@ def evaluate_carried_prior_definitiva_seed(
     Divergent or unreconfirmable revision stamps produce a blocking
     ``registry_revision_divergence`` finding and no seed.
     """
-    repository = observation_repository
+    return evaluate_carried_prior_definitiva_seed_from_observations(
+        ejercicio=ejercicio,
+        observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
+        operation=operation,
+        sector_id=sector_id,
+    )
+
+
+def evaluate_carried_prior_definitiva_seed_from_observations(
+    *,
+    ejercicio: int,
+    observations: tuple[ObservationEnvelopePayload, ...],
+    operation: PinnedAuthorityOperation,
+    sector_id: str | None = None,
+) -> ProrrataPriorDefinitivaSeedEvaluation:
+    """Evaluate the canonical carry rule against one revision-pinned source snapshot."""
     prior_year = ejercicio - 1
-    for source in _prior_settlement_observations(repository, prior_year=prior_year):
+    for source in _prior_settlement_observations(observations, prior_year=prior_year, operation=operation):
         revision_outcome = revision_carry_outcome(
             RegistrySnapshotRef(
                 modelo=Modelo("303").value,
@@ -166,9 +184,25 @@ def cross_check_prorrata_entry_against_prior_observation(
     if entry.provisional_percentage is None or entry.provisional_provenance is None:
         return ()
 
-    evaluation = evaluate_carried_prior_definitiva_seed(
+    return cross_check_prorrata_entry_against_observations(
+        entry,
+        observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
+        operation=operation,
+    )
+
+
+def cross_check_prorrata_entry_against_observations(
+    entry: ProrrataRegisterEntry,
+    *,
+    observations: tuple[ObservationEnvelopePayload, ...],
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProrrataSeedFinding, ...]:
+    """Cross-check one entry using the same source snapshot as a proposed seed."""
+    if entry.provisional_percentage is None or entry.provisional_provenance is None:
+        return ()
+    evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
         ejercicio=entry.ejercicio,
-        observation_repository=observation_repository,
+        observations=observations,
         operation=operation,
         sector_id=entry.sector_id,
     )
@@ -344,17 +378,18 @@ def _source_observation_ref(source: _PriorSettlementObservation) -> str:
 
 
 def _prior_settlement_observations(
-    repository: CalculationObservationRepositoryProtocol,
+    source_observations: tuple[ObservationEnvelopePayload, ...],
     *,
     prior_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[_PriorSettlementObservation, ...]:
     observations: list[_PriorSettlementObservation] = []
-    for payload in repository.iter_modelo(Modelo("303").value):
+    for payload in source_observations:
         observation = payload.observation
-        if observation.filing_year != prior_year:
+        if observation.filing_year != prior_year or payload.member_nif is not None:
             continue
         period = Period.from_year_and_code(observation.filing_year, observation.period)
-        settlement_key = m303_annual_settlement_order_key(period, payload.captured_at)
+        settlement_key = m303_annual_settlement_order_key(period, payload.captured_at, authority=operation)
         if settlement_key is None:
             continue
         percentage = observation.casilla_values.get(_PRORRATA_PORCENTAJE_CASILLA)
@@ -376,6 +411,7 @@ def _prior_settlement_observations(
                 m303_annual_settlement_order_key(
                     Period.from_year_and_code(item.source_filing_year, item.source_period),
                     item.captured_at,
+                    authority=operation,
                 )
                 or (0, item.captured_at),
             ),

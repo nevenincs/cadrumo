@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
 import typer
@@ -23,38 +22,12 @@ import typer
 from ...application.modelo.reconciliation import ModeloReconciliationReport
 from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...core.i18n.render import tr
-from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.modelos.work_unit import WorkUnit
-from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import resolve_default_actor
-from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import authority_operation, certificate_secret_backend_factory, operator_scope_ports
-
-
-def _require_profile() -> None:
-    require_active_profile()
+from .common import emit_envelope
 
 
 def _resolve_default_actor_value() -> str:
     return resolve_default_actor()
-
-
-def _resolve_work_unit(
-    *,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: str | None,
-    revision: str | None,
-    bucket_id: str | None,
-) -> WorkUnit:
-    return resolve_work_unit_for_cli(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
-    )
-
-
-def _active_bucket() -> str:
-    return active_bucket_id_or_refuse()
 
 
 def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport, *, command: str) -> None:
@@ -124,46 +97,19 @@ def reconcile_pull_verb(
     actor: str | None = None,
 ) -> None:
     """Pull the AEAT justificante for a work unit and reconcile against it."""
-    from ...application.live.justificante import (
-        capture_justificante_snapshot,
-        reconcile_capture,
-    )
-    from .app_live_justificante_composition import (
-        build_justificante_authenticity_verifier,
-        build_justificante_capture_service,
-        build_justificante_live_read_port,
-        build_justificante_registration_ports,
-    )
+    from .runtime_modelo_reconciliation_pull import pull_modelo_reconciliation
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
-    _require_profile()
-    operation = authority_operation(ctx)
-    unit = _resolve_work_unit(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    report = pull_modelo_reconciliation(
+        ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        actor=resolved_actor,
     )
-    with validating_governed_facts(operation):
-        snapshot = asyncio.run(
-            capture_justificante_snapshot(
-                bucket_id=unit.bucket_id,
-                modelo=str(unit.modelo),
-                year=unit.filing_year,
-                period=unit.period,
-                service=build_justificante_capture_service(unit.bucket_id),
-                read_port=build_justificante_live_read_port(
-                    certificate_secret_backend_factory(ctx),
-                    operator_scope_ports(ctx),
-                    operation,
-                ),
-                registration_ports=build_justificante_registration_ports(),
-                verifier=build_justificante_authenticity_verifier(),
-            )
-        )
-        report = reconcile_capture(
-            work_unit_id=unit.work_unit_id,
-            snapshot=snapshot,
-            actor=resolved_actor,
-            operation=operation,
-        )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
 
 
@@ -180,46 +126,38 @@ def reconcile_file_verb(
     kind: ModeloReconciliationEvidenceKind | None = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
-    from ...application.modelo.reconciliation import (
-        ModeloReconciliationCommand,
-        modelo_reconcile,
-    )
+    from .runtime_modelo_reconciliation_import import import_modelo_reconciliation
 
-    resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    resolved_actor = actor.strip() if actor else "operator"
     resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
-    _require_profile()
-    unit = _resolve_work_unit(
-        work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
+    report = import_modelo_reconciliation(
+        ctx,
+        file=file,
+        source_kind=resolved_kind,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+        actor=resolved_actor,
     )
-    operation = authority_operation(ctx)
-    with validating_governed_facts(operation):
-        report = modelo_reconcile(
-            ModeloReconciliationCommand(
-                work_unit_id=unit.work_unit_id, source_kind=resolved_kind, source_path=file, actor=resolved_actor
-            ),
-            operation=operation,
-        )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
 
 def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
-    from ...application.modelo.reconciliation_records import list_modelo_reconciliations
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
+    from .runtime_modelo_reconciliation_list import read_modelo_reconciliation_list
 
-    _require_profile()
-    bucket_id = _active_bucket()
     work_unit_token = work_unit_id.strip() if work_unit_id else None
-    operation = authority_operation(ctx)
-    entries = list_modelo_reconciliations(
-        bucket_id=bucket_id,
-        operation=operation,
-        work_unit_id=work_unit_token,
-    )
+    projection = read_modelo_reconciliation_list(ctx, work_unit_id=work_unit_token)
+    bucket_id = str(projection.profile_id)
+    entries = projection.reconciliations
     result = ModeloReconciliationHistoryResult(
         bucket_id=bucket_id,
         work_unit_id=work_unit_token,
-        reconciliation_count=len(entries),
+        reconciliation_count=projection.reconciliation_count,
         reconciliations=[
             ModeloReconciliationHistoryRowPayload(
                 event_id=entry.event_id,
@@ -235,7 +173,11 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
             for entry in entries
         ],
     )
-    lines = ["operation\tmodelo.reconcile.list", f"bucket_id\t{bucket_id}", f"reconciliation_count\t{len(entries)}"]
+    lines = [
+        "operation\tmodelo.reconcile.list",
+        f"bucket_id\t{bucket_id}",
+        f"reconciliation_count\t{projection.reconciliation_count}",
+    ]
     if entries:
         lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tactor")
         lines.extend(

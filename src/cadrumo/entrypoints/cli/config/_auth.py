@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
@@ -200,32 +199,10 @@ def auth_login(
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
-    from ....application.auth.operator import login_operator_auth
     from ..config_payloads import AuthLoginPayload
-    from ..state_projection_support import (
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-    )
+    from .runtime_auth_login import run_auth_login
 
-    try:
-        result = asyncio.run(
-            login_operator_auth(
-                provider,
-                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-                browser_session_factory=default_browser_session_factory,
-                operator_probe_ports=operator_probe_ports(ctx),
-                operator_scope_ports=operator_scope_ports(ctx),
-                fresh=fresh,
-                reset_lock=reset_lock,
-            )
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
+    result = run_auth_login(ctx, provider=provider, fresh=fresh, reset_lock=reset_lock)
     payload = result.model_dump(mode="json")
     envelope_result = AuthLoginPayload.model_validate_json(result.model_dump_json())
     emit_envelope(

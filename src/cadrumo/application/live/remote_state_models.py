@@ -180,6 +180,7 @@ class ExpedientesBulkCaptureReport(BaseModel):
     captured_snapshot_count: int
     declaration_count: int
     snapshot_ids: tuple[str, ...]
+    newly_persisted: bool = False
     failures: tuple[ExpedientesBulkCaptureFailureRow, ...] = ()
 
 

@@ -19,7 +19,6 @@ from ...adapters.outbound.llm.consent import (
 from ...application.ledger.attachment_review import get_attachment_review_item, list_attachment_review_queue
 from ...application.ledger.confirmation_gate import FindingResolution
 from ...application.ledger.evidence import (
-    PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
@@ -55,11 +54,12 @@ from .ledger_business_payloads import (
     AttachmentReviewViewResult,
     EvidenceAddResult,
     EvidenceConfirmResult,
-    EvidenceListResult,
     EvidenceRemoveResult,
     EvidenceUpdateResult,
-    EvidenceViewResult,
 )
+from .runtime_ledger_evidence_add import run_ledger_evidence_add
+from .runtime_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
+from .runtime_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
 from .state_projection_support import (
     catalogue_creation_ports_factory,
     counterparty_establishment_repository_factory,
@@ -159,62 +159,66 @@ def evidence_add(
     # argument stays a string so the record echoes the path exactly as typed.
     if not Path(source_path).expanduser().is_file():
         raise bad(tr("cli.help.path_not_found", path=source_path))
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).add(
-        bucket_id=transaction_repository.bucket_id,
+    result = run_ledger_evidence_add(
+        ctx,
         source_path=source_path,
         supplier=supplier,
         invoice_number=invoice_number,
         invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
-        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-        iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
+        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base", signed=False),
+        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate", signed=False),
+        iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount", signed=False),
         notes=notes,
         idempotency_key=idempotency_key,
     )
-    payload = _evidence_payload(result.record)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _evidence_text_lines(result.record)
+    record_payload = dict(result.record.model_dump(mode="json"))
+    payload = {**record_payload, "bucket_event_ids": list(result.bucket_event_ids)}
+    lines = _evidence_text_lines_payload(record_payload)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     emit_envelope(ctx, command="ledger.evidence.add", result=EvidenceAddResult.model_validate(payload), lines=lines)
 
 
 def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
     """Show one purchase invoice evidence record by id."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    record = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).view(
-        bucket_id=transaction_repository.bucket_id,
-        evidence_id=evidence_id,
-    )
+    result = run_ledger_evidence_view(ctx, evidence_id=evidence_id)
+    payload = result.model_dump(mode="json")
+    lines = [
+        f"evidence_id\t{payload['evidence_id']}",
+        f"bucket_id\t{payload['bucket_id']}",
+        f"source_path\t{payload['source_path']}",
+        f"source_sha256\t{payload['source_sha256']}",
+        f"media_kind\t{payload['media_kind']}",
+        f"supplier\t{payload.get('supplier') or '-'}",
+        f"invoice_number\t{payload.get('invoice_number') or '-'}",
+        f"invoice_date\t{payload.get('invoice_date') or '-'}",
+        f"taxable_base\t{payload.get('taxable_base') or '-'}",
+        f"iva_rate\t{payload.get('iva_rate') or '-'}",
+        f"iva_amount\t{payload.get('iva_amount') or '-'}",
+        f"notes\t{payload.get('notes') or '-'}",
+        f"created_at\t{payload['created_at']}",
+        f"updated_at\t{payload['updated_at']}",
+    ]
     emit_envelope(
         ctx,
         command="ledger.evidence.view",
-        result=EvidenceViewResult.model_validate(_evidence_payload(record)),
-        lines=_evidence_text_lines(record),
+        result=result,
+        lines=lines,
     )
 
 
 def evidence_list(ctx: typer.Context) -> None:
     """List every purchase invoice evidence record in the active bucket."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    records = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).list_all(
-        bucket_id=transaction_repository.bucket_id,
-    )
-    payload = {
-        "bucket_id": transaction_repository.bucket_id,
-        "count": len(records),
-        "rows": [_evidence_payload(record) for record in records],
-    }
+    result = run_ledger_evidence_list(ctx)
     lines = ["evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes"]
-    for record in records:
-        data = _evidence_payload(record)
+    for record in result.rows:
+        data = record.model_dump(mode="json")
         lines.append(
             f"{data['evidence_id']}\t{data['media_kind']}\t"
             f"{data.get('supplier') or '-'}\t{data.get('invoice_number') or '-'}\t"
             f"{data.get('invoice_date') or '-'}\t{data.get('taxable_base') or '-'}\t"
             f"{data.get('notes') or '-'}"
         )
-    emit_envelope(ctx, command="ledger.evidence.list", result=EvidenceListResult.model_validate(payload), lines=lines)
+    emit_envelope(ctx, command="ledger.evidence.list", result=result, lines=lines)
 
 
 def evidence_update(
@@ -229,7 +233,6 @@ def evidence_update(
     notes: str | None = None,
 ) -> None:
     """Update mutable fields on one purchase invoice evidence record."""
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
     patch = PurchaseInvoiceEvidencePatch(
         supplier=supplier,
         invoice_number=invoice_number,
@@ -239,12 +242,10 @@ def evidence_update(
         iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
         notes=notes,
     )
-    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).update(
-        bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id, patch=patch
-    )
-    payload = _evidence_payload(result.record)
+    result = run_ledger_evidence_update(ctx, evidence_id=evidence_id, patch=patch)
+    payload = dict(result.record.model_dump(mode="json"))
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _evidence_text_lines(result.record)
+    lines = _evidence_text_lines_payload(payload)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     emit_envelope(
         ctx, command="ledger.evidence.update", result=EvidenceUpdateResult.model_validate(payload), lines=lines
@@ -255,14 +256,10 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
     """Delete one purchase invoice evidence record."""
     if not yes:
         raise bad(tr("cli.app.ledger.evidence.yes_required"))
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).remove(
-        bucket_id=transaction_repository.bucket_id,
-        evidence_id=evidence_id,
-    )
-    payload = _evidence_payload(result.record)
+    result = run_ledger_evidence_remove(ctx, evidence_id=evidence_id)
+    payload = dict(result.record.model_dump(mode="json"))
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _evidence_text_lines(result.record)
+    lines = _evidence_text_lines_payload(payload)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     emit_envelope(
         ctx, command="ledger.evidence.remove", result=EvidenceRemoveResult.model_validate(payload), lines=lines
@@ -843,24 +840,8 @@ def _invoice_class_kwarg(
         ) from None
 
 
-def _evidence_service(*, ctx: typer.Context, bucket_id: str) -> PurchaseInvoiceEvidenceService:
-    return PurchaseInvoiceEvidenceService(
-        ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
-    )
-
-
-def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
-    # `model_dump` on a plain (non-root) BaseModel is annotated and guaranteed
-    # to return a str-keyed dict, so neither a mapping check nor a key check
-    # could fire here. (A `RootModel` would differ -- see _root_payloads.py,
-    # where the parameter is `type[BaseModel]` and the guard IS live.)
-    # The invoice number is the supplier's document number the operator must
-    # check before confirming; it is shown as recorded, as `invoice view` does.
-    return dict(record.model_dump(mode="json"))
-
-
-def _evidence_text_lines(record: PurchaseInvoiceEvidence) -> list[str]:
-    payload = _evidence_payload(record)
+def _evidence_text_lines_payload(payload: dict[str, object]) -> list[str]:
+    """Render the established tab-separated evidence record presentation."""
     return [
         f"evidence_id\t{payload['evidence_id']}",
         f"bucket_id\t{payload['bucket_id']}",

@@ -1,9 +1,9 @@
 """A command that reaches AEAT declares the ``aeat`` capability.
 
-The MCP identity gate refuses an unidentified call to a command whose policy
-declares ``aeat``: reading AEAT for the wrong taxpayer is a confidentiality
-breach even when nothing local changes. A command that reaches AEAT without the
-declaration would slip past that gate, so this probe drives every runnable
+Profile-bound runtime admission protects private AEAT operations: reading AEAT
+for the wrong taxpayer is a confidentiality breach even when nothing local
+changes. A command that reaches AEAT without declaring its capability would
+escape the CLI's capability policy, so this probe drives every runnable
 command that does not declare ``aeat`` but may leave the host (``network``) or
 belongs to the ``config auth`` family, which reads the configured AEAT
 credentials, through the real CLI under the offline seal, and fails naming each
