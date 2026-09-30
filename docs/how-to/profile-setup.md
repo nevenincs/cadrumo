@@ -39,13 +39,14 @@ app` commands use. The login verb is `aeat config login`, not `aeat config
 profile login`.
 
 Name the profile exactly. `aeat config login` accepts a profile UUID or the
-exact label, and nothing else: a partial name, a different capitalisation, or a
-shortened form is refused rather than guessed at. Omit the name to log in to
-the profile already selected. The refusal is deliberate - guessing which
+label as `aeat config profile list` prints it (letter case is ignored), and
+nothing else: a partial name
+or a shortened form is refused rather than guessed at. Omit the name to log in
+to the profile already selected. The refusal is deliberate - guessing which
 taxpayer you meant is how filings end up under the wrong one.
 
 Log out with `aeat config logout` when you finish. Logout closes the storage
-session but keeps the profile selected for the next exact login; it deletes
+session and clears the active profile, so log in again by name. It deletes
 nothing.
 
 ## Decide your facts before you start
@@ -57,9 +58,9 @@ rest of setup follows:
 - **Who the taxpayer is.** A natural person (an individual), a legal entity (a
   company such as an SL or SA), or an attribution entity (a co-ownership such as
   a *comunidad de bienes*, where income passes through to its members).
-- **Which tax identifier applies.** Spanish citizens use their DNI as their tax
-  identifier (NIF). Foreign individuals use their NIE. Companies use a NIF or
-  CIF.
+- **Which tax identifier applies.** Spanish citizens use their DNI number plus
+  letter as their tax identifier (NIF). Foreign individuals use their NIE.
+  Companies use their own NIF, which older documents call the CIF.
 - **What the taxpayer does.** The economic activity and which kinds of income
   apply: business or professional activity, salaried work, rental income,
   investment income, capital gains, or a pension.
@@ -68,7 +69,8 @@ rest of setup follows:
   through Modelo 303.
 - **Where the taxpayer is resident.** The autonomous community for a Spanish
   resident, or the country of residence for a non-resident.
-- **Which output language you want.** The language `cadrumo` uses for its output.
+- **Which output language you want.** The language `aeat` uses for its
+  messages. See [Choose the output language](#choose-the-output-language).
 
 You don't need to memorize flag names. The guided wizard walks you through these
 decisions. For the complete, current list of flags and their accepted values,
@@ -111,49 +113,73 @@ described in
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt);
 recovery is never offered on that path.
 
-Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also
-store its default output language.
+### Choose the output language
+
+`aeat` prints its messages in Spanish unless you choose another language. Add
+`--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one command, or
+store a default for your profile:
+
+```{cli-sequence} profile-setup-output-language
+:verify: Confirm the profile stores English as its default output language.
+```
+
+The `CADRUMO_OUTPUT_LANGUAGE` environment variable sets the language for a whole
+shell session and takes precedence over the profile default. The examples in
+this documentation are recorded in English.
 
 (save-and-resume)=
 ### Save now, finish later
 
-Stop a first-time setup at any point and keep what you answered. Choose *save
-and exit* on any page: every answer you gave is already stored, and the profile
-stays marked as setup-incomplete. After unlocking it, `aeat config profile
-show` reports that setup state; `profile list` deliberately reports only the
-saved names and which profile is active.
+A profile you stop setting up before it is complete keeps what you answered
+and stays marked as setup-incomplete. After unlocking it,
+`aeat config profile view` reports that setup state; `profile list`
+deliberately reports only the saved names and which profile is active.
 
-Resume by running the same create command again with the same profile name.
-The wizard picks up where you left off with your earlier answers in place.
-Answer the remaining pages and confirm the review page to complete setup. The
-profile then becomes active and ready for `aeat app` commands.
+`create` refuses a name that already exists, so don't run it again to resume.
+Log in with `aeat config login NAME`, supply the remaining facts with
+`aeat config profile edit`, then run `aeat config profile complete-setup`. It
+names anything still missing, and once nothing is, the profile is ready for
+`aeat app` commands.
 
-Descendientes are the one exception on resume: the wizard asks for them again
-so the set you confirm is always complete and current.
-
-Use flags with `--quiet` when you want a repeatable, scriptable setup, passing
-the entity type, tax id, name, and surnames to `aeat config profile create`. The
-[worked example below](#worked-example-a-natural-person-with-an-activity) runs a
+Use flags with `--quiet` when you want a repeatable, scriptable setup. The
+[worked example](#worked-example-a-natural-person-with-an-activity) shows a
 complete scripted create.
 
-`--quiet` runs without prompts and uses only the flags you provide. A `--quiet`
-run refuses if a required flag is missing and tells you which ones to add. A
-scripted create needs the filing identity: the tax identifier, the entity type,
-and the name and surnames:
+`--quiet` runs without prompts and uses only the flags you provide. It creates
+the profile even when facts are missing, and leaves it marked setup-incomplete.
+Add `--accept-defaults` to fill the questions you omit from their built-in
+defaults. Facts without a default, such as the tax identifier, stay unset.
 
-```text
-Refused. Profile creation is missing filing identity details. Add these flags
-and run the command again: --entity-type --name --surnames.
-```
-
-Add `--accept-defaults` when you intentionally want Cadrumo to fill the questions
-you omit from its built-in defaults.
+A scripted create does not open a session. Run `aeat config login NAME` next.
+Once every required fact is set, run `aeat config profile complete-setup` to
+declare the profile ready to file from. If facts are still missing, the command
+refuses and names them.
 
 (worked-example-a-natural-person-with-an-activity)=
 ### Worked example: a natural person with an activity
 
-This example creates a natural-person profile for an individual with an
-economic activity, then inspects and validates it before you rely on it:
+This scripted create sets up a natural-person profile for an individual with an
+economic activity. It passes the passphrase through `--secrets-stdin` (see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt)),
+then declares setup complete after login:
+
+```text
+aeat config profile create NAME --quiet --secrets-stdin \
+  --entity-type natural_person --tax-id <NIF> --name <NAME> --surnames <SURNAMES> \
+  --activity "documentation examples" \
+  --irpf-income-categories actividad_economica \
+  --tax-residence-jurisdiction-scope common_regime --tax-residence-ccaa madrid \
+  --iva-regime GENERAL --iva-m303-regime-composition general \
+  --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled \
+  --no-iva-voluntary-sii-enrolled \
+  --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
+aeat config login NAME --secrets-stdin
+aeat config profile complete-setup
+```
+
+The sequence starts from a similar profile that has no income category or
+autonomous community yet. It inspects and validates the profile before you rely
+on it:
 
 ```{cli-sequence} profile-setup-worked-example
 :verify: Confirm the scripted create produces a natural-person profile that validates.
@@ -191,15 +217,17 @@ Choose `actividad_economica` only when the taxpayer runs an activity. A pure
 landlord, a salaried-only taxpayer, or a pensioner with no activity should not
 select it.
 
-For an activity, record how IRPF estimates its yield. Direct estimation is the
-default and files Modelo 130. Use `--irpf-estimation-regime objetiva` for the
-objective-estimation (módulos) regime, which files Modelo 131 instead.
+For an activity, record how IRPF estimates its yield with
+`--irpf-estimation-regime`. Direct estimation (`directa_normal` or
+`directa_simplificada`) files Modelo 130. The objective-estimation (módulos)
+regime, `objetiva`, files Modelo 131 instead. Cadrumo does not assume a regime
+when you leave it unset.
 
 ### Identity
 
-The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens use
-their DNI as their NIF; foreign individuals use their NIE; companies use a NIF or
-CIF. Record the name and surnames (or the entity's display name), the economic
+The tax identifier is required. Spanish citizens use their DNI number plus
+letter as their NIF; foreign individuals use their NIE; companies use their own
+NIF. Record the name and surnames (or the entity's display name), the economic
 activity when there is one, and the fiscal-address postcode.
 
 ### Where the taxpayer is resident
@@ -209,12 +237,15 @@ For a Spanish IRPF (personal income tax) resident, set the autonomous community
 
 This tool does not model the foral regimes. Setting the community to
 `pais_vasco` or `navarra` is refused, because residents there file with their
-*Hacienda Foral* under the *Concierto Económico*, not with the AEAT:
+*Hacienda Foral*, under the *Concierto Económico* (País Vasco) or the *Convenio
+Económico* (Navarra), not with the AEAT:
 
 ```text
-Invalid value for '--tax-residence-ccaa': Residents in pais_vasco file with the
-corresponding Hacienda Foral under the Concierto Económico (Ley 12/2002), not
-with the AEAT. This CLI does not model foral declarations.
+Refused. Residents in pais_vasco file with the corresponding Hacienda Foral
+under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
+not model foral declarations. See sede.bizkaia.eus (Bizkaia),
+gipuzkoa.eus/ogasuna (Gipuzkoa), araba.eus/ogasun (Álava), or
+hacienda.navarra.es (Navarra) depending on your territory.
 ```
 
 For a non-resident, set `--fiscal-residency non_resident_irnr` (not
@@ -262,22 +293,24 @@ fact is undeclared, the readiness check reports the related form as *incomplete*
 
 A wrong or missing fact produces a wrong filing. Confirm the profile before you
 calculate a modelo. The example shows the active profile's readiness summary and
-stored facts, validates them against the schema, then checks whether the profile
-holds the facts a specific form needs for a specific filing context:
+stored facts, validates them against the schema, then reports whether the
+profile is ready to file one modelo for one year and period:
 
 ```{cli-sequence} profile-setup-inspect
 :verify: Confirm the active profile's facts validate and see what a specific filing still needs.
 ```
 
-`preflight` names the missing fields for that `(modelo, filing-year, period)`
-context. Use [Choose which modelo to file](choose-modelo.md) to find the period
-codes a modelo accepts. Fix any wrong facts with `edit` before you continue.
+`aeat app modelo readiness` checks one modelo, filing year, and period. Here the
+profile is ready (`profile_ready` is true), but the Modelo 303 source inputs are
+not (`binding_ready` is false), so the command exits with status 2. Use
+[Find out which modelos apply to you](choose-modelo.md) to find the period codes a
+modelo accepts. Fix any wrong facts with `edit` before you continue.
 
 ## How your facts decide which forms apply
 
 The profile facts you recorded determine which modelos the taxpayer must file.
 Use this mapping to sanity-check your profile, then confirm a specific form with
-`preflight`:
+`aeat app modelo readiness`:
 
 | When this is true of the taxpayer | These forms apply |
 | --- | --- |
@@ -295,7 +328,7 @@ Use this mapping to sanity-check your profile, then confirm a specific form with
 
 This is a guide, not the authority. The tool decides applicability from the full
 profile and the registry rules. To see what applies to your profile, use
-[Choose which modelo to file](choose-modelo.md).
+[Find out which modelos apply to you](choose-modelo.md).
 
 (modify-your-profile)=
 ## Modify your profile
@@ -313,7 +346,7 @@ tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.
 
 Descendientes are not part of profile edit. Manage them with the
-[descendiente command](#manage-your-descendants) below. The edit summary
+[descendiente command](#manage-your-descendants). The edit summary
 reminds you of this every time.
 
 For a scripted change, pass `--quiet` with only the flags you want to change;
@@ -343,11 +376,14 @@ Script the same changes with the flag verbs:
 ```
 
 `add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated by
-commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; `ADOPCION`,
-`DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
-`MESES_TRABAJO`, `GASTOS_GUARDERIA`, and `NIF` are optional. A
-descendiente without a tax identifier is fine. Leave `NIF` out. `remove`
-takes the position from `list`, counting from `0`.
+commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required. Optional keys
+include `RELACION` (`descendiente`, `adoptado`,
+`acogimiento_preadoptivo_o_permanente`, `acogimiento_temporal`, or `tutela`),
+`INSCRIPCION`, `DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
+`MESES_TRABAJO`, `GASTOS_GUARDERIA`, and `NIF`. Run
+`aeat config profile descendiente add --help` for the full list. A descendiente
+without a tax identifier is fine. Leave `NIF` out. `remove` takes the position
+from `list`, counting from `0`.
 
 `MESES_TRABAJO` names *which* months the mother worked, not how many. Write a
 month as two digits, a run as `MM-MM`, and separate entries with `;`. Write
@@ -368,13 +404,15 @@ The following steps edit a fact and back up the profile to a sealed archive:
 What each step does:
 
 - **Edit** re-runs the wizard, or changes only the flags you pass with
-  `--quiet`. See [Modify your profile](#modify-your-profile). Run `show`,
+  `--quiet`. See [Modify your profile](#modify-your-profile). Run `view`,
   `status`, or `validate` again after editing.
 - **Archive export** writes a sealed, encrypted copy of the profile. The target
   filename must end with `.cadrumo-bucket.tar.gz`. The archive is encrypted with
   the profile passphrase and does not carry the profile label. Restore it with
-  `aeat config profile archive import`, and read a sealed archive's header without
-  decrypting it using `aeat config profile archive inspect`.
+  `aeat config profile archive import`, naming the profile and passing the
+  archive with `--file`, and read a sealed
+  archive's header without decrypting it using
+  `aeat config profile archive inspect --file ARCHIVE`.
 
 A sealed archive contains taxpayer data, including the tax identifier, activity,
 and local filing history. Store it as sensitive tax data, and don't attach it to
@@ -401,11 +439,11 @@ The three capabilities are:
 
 Turn any capability on or off with `aeat config profile capabilities set`.
 The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to enable
-cloud upload. Missing package extras produce the exact install command. See
-[Install Cadrumo](../workstation-setup.md) for the extras.
+cloud upload. A capability whose package extra is missing needs that extra
+installed; see [Install Cadrumo](../workstation-setup.md) for the extras.
 
 Sign out without deleting the profile using `aeat config logout` after the
-login-gated maintenance and capability checks above. Logout closes the active
+login-gated maintenance and capability checks. Logout closes the active
 storage session, discards its in-memory keys, disposes the bucket engines, and
 clears the local active-profile pointer:
 
@@ -418,20 +456,17 @@ clears the local active-profile pointer:
 Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
 append-only history (a log you can read but not alter). Reading history needs an
-active profile, so switch to it first after logout. The example creates,
-renames, and edits a profile before filtering its history:
+open session, so log in to the profile first. The example lists the filters
+`aeat config profile history` accepts:
 
 ```{cli-sequence} profile-setup-history
-:verify: Confirm the profile history records each change and can be filtered.
+:verify: Confirm the history command lists its filters.
 ```
 
-Repeat `--event-type` to include several types. An unknown type is refused with
-the full accepted list, so an empty value is a quick way to discover the
-vocabulary.
-
-A rename appears as two events on purpose: `profile.renamed` records that the
-data changed, and `bucket.renamed` records that you ran the rename action. One
-answers "what changed", the other "what was done".
+Repeat `--event-type` to include several types. Narrow the window with `--since`
+and `--until`, or match one record with `--object-id` or `--actor`. An unknown
+type is refused with the full accepted list, so an empty value is a quick way to
+discover the vocabulary.
 
 ## Delete a profile permanently
 

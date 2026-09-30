@@ -7,13 +7,15 @@ A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130 for qu
 You need:
 
 - An active profile with your taxpayer type, activity, and regime facts filled in. See the [profile setup guide](profile-setup.md), or the [quickstart](quickstart.md) if you're starting from nothing.
-- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it.
+- Your passphrase. Every profile-scoped command needs it; the tool prompts for it.
 
-Check the profile first with `aeat config profile status`. It confirms the profile exists and carries the basics. If a fact is missing, the verdict says so. The CLI emits the rationale, legal references, and refusals in Spanish.
+Check the profile first with `aeat config profile status`. It confirms the profile exists and carries the basics. If a fact is missing, the verdict says so.
+
+The examples in this documentation are recorded in English. `aeat` prints its messages in Spanish unless you [choose another language](profile-setup.md#choose-the-output-language). The verdict rationale comes from the official rules and stays in Spanish.
 
 ## Ask whether one modelo applies
 
-Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The card below confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter, the whole diagnostic flow in order.
+Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The following example confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter, the whole diagnostic flow in order.
 
 ```{cli-sequence} choose-modelo-applicability
 :verify: Confirm the tool reports whether Modelo 303 applies and whether the profile is ready to file it.
@@ -32,7 +34,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 
 - **Applicable** - the form applies to you for that year. Plan to prepare and file it.
 - **Not applicable** - your taxpayer situation excludes it. The rationale tells you which fact rules it out.
-- **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file this self-assessment form itself. The members declare the attributed income on their own returns.
+- **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file the income-tax self-assessment itself (Modelo 100, 130, 200, or 202). The members declare the attributed income on their own returns.
 - **Incomplete** - the tool cannot decide and refuses to guess. Usually your profile is missing the facts needed; see [When the verdict is incomplete](#when-the-verdict-is-incomplete). For a few forms the tool has not yet derived an applicability rule. The rationale says so, and in that case no profile change alters the verdict.
 
 (when-the-verdict-is-incomplete)=
@@ -40,7 +42,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 
 An incomplete verdict usually means the decision depends on facts your profile doesn't declare yet. The main groups:
 
-- **Who you are** - your taxpayer type and entity form (an individual identified by NIF; a company identified by NIF or CIF; an entity in atribución de rentas).
+- **Who you are** - your taxpayer type and entity form (an individual identified by NIF; a legal entity identified by its NIF; an entity in atribución de rentas).
 - **Your income-tax situation** - your IRPF estimation regime and which income categories you receive.
 - **Your IVA situation** - your IVA regime and any special enrolments, such as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop Shop), or intra-community operations.
 - **Whether you employ or withhold** - employees on payroll, or withholdings on professional fees, rent, or capital payments.
@@ -50,7 +52,7 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a readiness check with `aeat app modelo readiness`, the closing frame of the card above.
+When you already know which modelo, year, and period you're aiming at, ask for a readiness check with `aeat app modelo readiness`, the final command in the applicability example.
 
 Readiness reports what still stands between you and working on that specific filing: the profile facts still missing, the registry revision that applies, and any ledger rows that would block a calculation. Where `overview explain` answers whether the form applies, readiness answers whether you're ready to work on it.
 
@@ -81,11 +83,11 @@ These commands read your local profile and the built-in rules only. They do not 
 
 ## Where to get help
 
-If a verdict looks wrong or a command fails, see the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+If a verdict looks wrong or a command fails, see the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command output to ask for help, remove personal tax identifiers such as your NIF or NIE.
 
 ## Next steps
 
-- [Plan your filing deadlines](filing-calendar.md)
+- [Plan your filing calendar](filing-calendar.md)
 - [Set up or correct your profile](profile-setup.md)
 - [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Start from nothing with the quickstart](quickstart.md)

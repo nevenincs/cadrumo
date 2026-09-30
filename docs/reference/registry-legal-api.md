@@ -76,8 +76,8 @@ byte-exact. The compiler receipt hashes the portable path and content of every
 non-test `cadrumo` and `dev/registry` source file loaded to compile, validate
 and project the authority, together with `pyproject.toml`, `uv.lock`, Python
 major/minor, and the installed `pydantic` and `pydantic-core` versions. Every
-publication, whether started from the command above or by the package build,
-compiles in one fresh interpreter running the same module, so the recorded
+publication, whether started from the publication command or by the package
+build, compiles in one fresh interpreter running the same module, so the recorded
 files do not depend on the launching tool. The currency check re-hashes exactly
 those recorded files without compiling: an edit to a recorded file, or its
 removal, makes the publication stale, while an edit to a module the compiler
@@ -117,8 +117,8 @@ write or read refuses an authority when any required runtime catalogue is empty.
 Modelo and tax-domain types validate stable identifier syntax without loading
 the authored tree. The compiled authority owns membership and validates those
 identifiers against its published vocabularies. The same authority projects the
-shared temporal support envelope—`floor`, `horizon`, and optional
-`hard_ceiling`—used to admit supported coordinates.
+shared temporal support envelope - `floor`, `horizon`, and optional
+`hard_ceiling` - used to admit supported coordinates.
 
 The `IndexedRegistryAuthority.operation()` path has no source compilation, raw
 authored-tree loader, repair path, eager JSON runtime backend, or JSON fallback.
@@ -129,16 +129,6 @@ mismatch raises an integrity error. These failures occur before
 authority-dependent calculation or filing proceeds. Components are loaded only
 when a pinned operation asks for them; successful values remain in a bounded
 generation-scoped cache.
-
-Development checkpoint C may compare the indexed reader with an explicit
-`dev.registry.indexed_authority_benchmark` JSON baseline. The baseline is
-written from the same validated in-memory `AuthorityArtifact` as the exact
-candidate, retains its logical generation identity, and eagerly decodes the
-same complete public authority semantics. The benchmark verifies the
-descriptor's physical database bytes before measuring. The baseline is a
-measurement fixture, not a product module or a shipped fallback. Numeric
-latency and memory results are pending until checkpoint C is run against a
-stable candidate; no measured gain is implied by this API description.
 
 The runtime contract is for ordinary filesystem-installed wheels, where the
 descriptor and SQLite database have stable physical paths. Direct zip-import
@@ -168,9 +158,9 @@ business records remain owned by their encrypted domain repositories.
 A binding is not an attachable data blob. It is the contract by which an
 enrolled source resolver projects an owned source record into one of these
 filing-input shapes. Modelo 720 foreign assets use an enrolled repeating-row
-projection. The binding-source taxonomy currently has no inventory member. No
-calculation resolver is enrolled for the encrypted `InventoryLedger`, so it
-remains a standalone business register.
+projection. The encrypted `InventoryLedger` is enrolled through the `inventory`
+binding source, which projects Modelo 100 2025 casillas 0177, 0181, and 0182
+per activity.
 
 Use the generated [application command reference](../cli/app.rst) to look up
 modelo calculation, description, verification-report, and audit surfaces. Use
@@ -179,8 +169,8 @@ the {doc}`glossary </_generated/glossary>` for taxpayer-facing definitions.
 ## Python public API lookup
 
 The [Cadrumo Python API overview](../api/index.md) is the entry point for
-Python lookup. Public consumers import from `cadrumo` and its documented public
-facades. The generated package tree lists the supported adapters, application,
+Python lookup. The `cadrumo` package and its subpackages export nothing. Import each symbol
+from the module that defines it. The generated package tree lists the supported adapters, application,
 core, domain, entrypoint, and locale surfaces.
 
 There is no `aeat` Python import compatibility package. Names containing

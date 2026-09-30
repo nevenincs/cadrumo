@@ -9,8 +9,8 @@
         "profile",
         "edit",
         "--quiet",
-        "--activity-start-date",
-        "2026-01-01"
+        "--output-language",
+        "en"
       ],
       "captures": [],
       "envelope": {
@@ -32,5 +32,5 @@
     }
   ],
   "golden_schema_version": 2,
-  "sequence_id": "verification-reports-scope-dependency"
+  "sequence_id": "profile-setup-output-language"
 }

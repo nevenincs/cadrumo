@@ -1,6 +1,6 @@
 @step Preview a suggestion that also selects the IVA category.
-@static aeat app ledger classify <transaction-id> --llm claude --saturate
-@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
+@static aeat app ledger classify <transaction-id> --llm --saturate
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.
 @step Apply the saturated suggestion.
-@static aeat app ledger classify <transaction-id> --llm claude --saturate --apply
-@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
+@static aeat app ledger classify <transaction-id> --llm --saturate --apply
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.

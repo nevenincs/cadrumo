@@ -1,10 +1,16 @@
 # How to publish a validated runtime authority
 
+This guide is for Cadrumo contributors and release maintainers, not for
+taxpayers. It needs a source checkout of the Cadrumo repository with its
+`dev/` tooling, the `uv` tool, and the `just` runner. An installed package
+contains none of these commands, and an installed `aeat` needs no publication
+step.
+
 Use this guide when you change Cadrumo's tax-rule registry or its legal
 evidence. Publication turns validated Agencia Estatal de Administración
 Tributaria (AEAT) modelo rules into the authority the runtime reads for
 calculations and filing exports. It is a development and release operation,
-not an `aeat` command for taxpayers.
+not an `aeat` command.
 
 The publication is generated output. It consists of one small descriptor and
 one content-addressed SQLite database. The descriptor records the database
@@ -147,12 +153,10 @@ their private cohort. Superseded content-addressed files retained by a source
 checkout are not members of the candidate package.
 
 The development-only paired benchmark accepts that same isolated descriptor
-and an explicit JSON baseline produced from the same validated
-`AuthorityArtifact` that produced the candidate database. The development
-baseline helper is
-`dev.registry.eager_authority_baseline.write_eager_authority_baseline`; invoke
-it from the checkpoint driver with that exact artifact and keep the resulting
-file outside shipped package resources. Run the paired measurement with:
+and an explicit JSON baseline produced from the same validated authority that
+produced the candidate database. Write the baseline while you publish, with
+`--eager-baseline <path>` on `publish-authority`, and keep the file outside
+shipped package resources. Run the paired measurement with:
 
 ```powershell
 uv run --no-sync python -m dev.registry.indexed_authority_benchmark `
@@ -166,9 +170,7 @@ validated in-memory authority, eagerly decodes the complete graph, and carries
 the candidate's logical identity. The runner verifies the descriptor's exact
 database bytes before either side is measured; it does not read the shipped
 package, discover a default JSON file, or become a runtime fallback. Each
-M100, M200, and M303 workload is reported independently; the ADR admission,
-incremental-memory, and warm-context thresholds remain pending until
-checkpoint C runs on one stable candidate cohort.
+workload (Modelo 100, 200, and 303) is reported independently.
 
 ## Check that the publication is current
 

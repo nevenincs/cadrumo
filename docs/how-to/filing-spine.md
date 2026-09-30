@@ -9,21 +9,22 @@ between steps.
 
 ## Before you start
 
-You need an active profile, and the tool needs your master-key passphrase.
+You need an active profile, and the tool needs your passphrase.
 
 Create a profile first if you do not have one (see
 [Set up your taxpayer profile](profile-setup.md)). Pass `--quiet` for the
 non-interactive form (a bare `profile create NAME` opens an interactive wizard).
-A profile that will reach `export` must carry a name and surnames, or `export`
-refuses with "requires the operator name":
+A profile that will reach `export` must carry a name and surnames, because
+`export` refuses without them:
 
 ```{cli-sequence} filing-spine-create-profile
 ```
 
-Every profile-scoped command needs the master-key passphrase; the tool
-prompts for it.
+Every profile-scoped command needs the passphrase; the tool prompts for it.
 
-The CLI emits help, results, and refusals in Spanish.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you
+[choose another language](profile-setup.md#choose-the-output-language).
 
 ## The filing chain
 
@@ -130,8 +131,8 @@ were, identified by their exact contents, so you can compare revisions and
 go back. If your transactions or manual values changed, the tool creates a
 new saved calculation alongside the old; if nothing changed, it reuses the
 same result. The tool updates your filing record to reflect the latest
-calculated draft. A saved revision is a record of one attempt, not a verdict
-- its numbers commit to nothing until you verify and file it.
+calculated draft. A saved revision is a record of one attempt, not a verdict:
+its numbers commit to nothing until you verify and file it.
 
 List the saved calculation revisions for a filing with `aeat app modelo work
 revisions`, and show the current revision's persisted values with `aeat app
@@ -177,12 +178,15 @@ completeness check (or one already recorded as filed) - the gate that stops
 an incomplete or inconsistent draft from becoming a filing by accident.
 
 The `.boe` extension is a naming convention. The tool writes the file to the
-`--output` path you choose and always produces a fixed-width fichero-BOE text
-file, whatever extension you give it.
+`--output` path you choose, in the modelo's official layout whatever extension
+you give it: a fixed-width fichero-BOE text file for most modelos, and an XML
+file for Modelo 100. Export refuses to overwrite an existing
+file unless you add `--replace`. It also refuses when the directory of the
+`--output` path does not exist.
 
 Each command automatically picks the most appropriate saved calculation:
 
-- `verify` uses the latest draft
+- `verify` uses the current draft, the one your latest calculation saved
 - `file` uses the latest verified draft
 - `export` uses whichever was marked as filed; if none was filed, it uses the
   verified draft
@@ -259,7 +263,7 @@ Use the exact reference number when:
 
 ## Next steps
 
-- [Quickstart: produce a modelo file](quickstart.md) - the shortest path from
+- [Quickstart: prepare a modelo filing](quickstart.md) - the shortest path from
   profile to exported file.
 - [Review and supply calculation inputs](review-calculation-values.md) - how to
   inspect saved values, missing bindings, and manual inputs.

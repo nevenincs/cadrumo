@@ -39,7 +39,7 @@
         "--taxable-base",
         "500",
         "--iva-rate",
-        "0.21",
+        "21",
         "--iva-amount",
         "105"
       ],
@@ -47,13 +47,39 @@
         {
           "json_path": "result.evidence_id",
           "name": "evidence_id",
-          "value": "9a075f52dad08e80"
+          "value": "3445d70497fc89d7"
         }
       ],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "68f3a36c339c42ee24b1d0f632747b61c97d9130c4f559e5a30722927c758275"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "3445d70497fc89d7",
+          "invoice_date": "2026-02-11",
+          "invoice_number": "C-2026-0087",
+          "iva_amount": "105",
+          "iva_rate": "21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
       "text": null
     },
@@ -86,9 +112,9 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "ID\t32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\n"
     },
     {
       "argv": [
@@ -115,7 +141,7 @@
         "--iva-amount",
         "105",
         "--purchase-invoice-evidence-id",
-        "9a075f52dad08e80",
+        "3445d70497fc89d7",
         "--idempotency-key",
         "irpf-q1-compra"
       ],
@@ -123,9 +149,9 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "ID\tff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
     },
     {
       "argv": [

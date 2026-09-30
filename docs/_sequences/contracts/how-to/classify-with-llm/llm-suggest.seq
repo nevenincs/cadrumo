@@ -6,5 +6,5 @@ aeat app ledger list --filter classification=NOT_YET_PROCESSED
 @result aeat --format json app ledger view e3eeac5e
 @expect result.transaction.business_classification == "NOT_YET_PROCESSED"
 @step Preview a suggestion for that one row.
-@static aeat app ledger classify e3eeac5e --llm claude
-@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
+@static aeat app ledger classify e3eeac5e --llm
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.
