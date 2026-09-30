@@ -455,3 +455,35 @@ valid_from = 2023-01-01
 key = "38"
 value = "1"
 valid_from = 2023-01-01
+
+# M210 income-code applicability for the payer-mode rule.
+#
+# This keyed presence table is intentionally separate from the complete
+# income-code catalogue above. A declared row means that the selected code
+# requires the multiple-payer transaction mode; absence means that no special
+# multiple-payer requirement is declared by this parameter. Code 35 is itself
+# defined by that mode: the HOJA INFORMATIVA 210 lists it as rendimientos de
+# inmuebles arrendados no sujetos a retencion "cuando se agrupan los obtenidos
+# de varios pagadores", the same source that enrols code 35 above, and Orden
+# EHA/3316/2010 art. 2.1.b requires it whenever such rentas come from several
+# payers.
+
+[[revisions."2023".parameters]]
+id = "m210-tipo-renta-multiple-payers-required"
+data_type = "keyed_bracket_table"
+unit = "boolean"
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-base-order",
+]
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["HOJA INFORMATIVA 210", "TIPOS DE RENTA"]
+
+[[revisions."2023".parameters.keyed_brackets]]
+key = "35"
+value = 1
+valid_from = 2023-01-01
