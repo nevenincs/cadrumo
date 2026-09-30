@@ -128,6 +128,21 @@ guide finishes with this re-run step.
 Incomplete means required casillas have no value yet. The report lists which
 ones under **missing required casillas**.
 
+For example, a Modelo 349 draft calculated before any intra-community invoice
+is recorded has no operator record, so the boxes each record needs are empty:
+country code, EU VAT number, name, operation key, and base. Verify still saves
+the report, but it exits with status 1 and reads `completeness_status`
+`incomplete` and `granted_verificado_completo` `false`, with the empty boxes
+under `missing_required_casilla_ids`:
+
+```{cli-sequence} verification-reports-incomplete-report
+:verify: Confirm the report reads incomplete and names the empty required boxes.
+```
+
+Those boxes come from your invoice records, so record the intra-community
+invoices and recalculate rather than typing the values in. See
+[Prepare a Modelo 349 recapitulative declaration](modelo-349.md).
+
 `--casilla` works only on boxes whose input kind is `manual`. A box filled from
 your ledger or another source is `bound`, and `--casilla` refuses it with
 `cannot override bucket-derived source-bound casillas`. Fix the source for those.
@@ -158,6 +173,19 @@ expects you to do. The common kinds of blocking finding:
 - **A value could not be derived.** The tool needed to compute a casilla but your
   data did not provide enough input. Supply the missing input or enter the value
   directly.
+- **Your records changed after you calculated.** Verify compares the saved
+  calculation with your ledger as it is now. If you reclassify, correct, or
+  remove an entry after calculating, a blocking finding says your records
+  changed and asks you to calculate again. The example records a sale,
+  calculates, corrects the sale's price, then verifies without calculating
+  again. Verify saves the report, exits with status 1, and reads
+  `completeness_status` `blocked` and `granted_verificado_completo` `false`:
+
+  ```{cli-sequence} verification-reports-blocked
+  :verify: Confirm the report reads blocked and carries a blocking finding.
+  ```
+
+  Calculate the draft again so the saved figures match your ledger.
 - **A prior-period record is missing.** This filing depends on a filing from an
   earlier period that is missing or unconfirmed. Record or confirm that earlier
   filing first. If you had no obligation in that earlier period because you had

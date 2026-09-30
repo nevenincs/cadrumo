@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-30 16:44+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -47,8 +47,8 @@ msgid ""
 msgstr ""
 "A Cadrumo soha nem nyújt be bevallást az Agencia Estatal de "
 "Administración Tributaria (AEAT) részére. Helyben állítja elő a 130-as "
-"modelo fichero-BOE leletét; ezt a fájlt az AEAT hivatalos csatornáján "
-"te nyújtod be."
+"modelo fichero-BOE leletét; ezt a fájlt az AEAT hivatalos csatornáján te "
+"nyújtod be."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -200,10 +200,97 @@ msgstr ""
 " értéket mutat, így a piszkozat teljes és exportálásra kész."
 
 #: ../../how-to/first-quarterly-filing.md:88
+msgid "When your expenses exceed your income"
+msgstr "Amikor a kiadásai meghaladják a bevételeit"
+
+#: ../../how-to/first-quarterly-filing.md:90
+msgid ""
+"In a quarter where your deductible expenses are larger than your income, "
+"the net yield is negative. The example below records a second office-"
+"supplies purchase of 1000.00 in the same quarter, so the expenses reach "
+"1500.00 against 1000.00 of income, then calculates and verifies the draft"
+" again:"
+msgstr ""
+"Ha egy negyedévben a levonható kiadásai nagyobbak a bevételeinél, a nettó"
+" hozam negatív. Az alábbi példa ugyanabban a negyedévben rögzít egy "
+"második, 1000.00 összegű irodaszer-vásárlást, így a kiadások elérik az "
+"1500.00-t az 1000.00 bevétellel szemben, majd újra kiszámítja és "
+"ellenőrzi a piszkozatot:"
+
+#: ../../how-to/first-quarterly-filing.md:99
+msgid ""
+"What the calculation shows, with the rule each box follows in the "
+"official AEAT instructions for Modelo 130:"
+msgstr ""
+"Amit a számítás mutat, azzal a szabállyal együtt, amelyet az egyes "
+"rovatok az AEAT hivatalos Modelo 130 kitöltési útmutatójában követnek:"
+
+#: ../../how-to/first-quarterly-filing.md:102
+msgid ""
+"Casilla `03`, the net yield, is `-500.00`. A negative net yield is "
+"entered with a minus sign (instructions, casilla 03)."
+msgstr ""
+"A casilla `03`, a nettó hozam, `-500.00`. A negatív nettó hozamot "
+"mínuszjellel kell feltüntetni (útmutató, casilla 03)."
+
+#: ../../how-to/first-quarterly-filing.md:104
+msgid ""
+"Casilla `04`, the instalment, is `0.00`. The 20 percent applies only to a"
+" positive net yield; when casilla 03 is negative, casilla 04 is zero "
+"(instructions, casilla 04). Casilla `07` is `0.00` too, because this "
+"first quarter has no earlier instalments or withholdings to subtract."
+msgstr ""
+"A casilla `04`, az előleg, `0.00`. A 20 százalék csak pozitív nettó "
+"hozamra vonatkozik; ha a casilla 03 negatív, a casilla 04 nulla "
+"(útmutató, casilla 04). A casilla `07` szintén `0.00`, mert ennek az első"
+" negyedévnek nincs levonandó korábbi előlege vagy forrásadója."
+
+#: ../../how-to/first-quarterly-filing.md:108
+msgid ""
+"Casilla `13` is the `100.00` reduction for a prior-year net income of "
+"9000 euros or less; with no activity last year, that income counts as "
+"zero (instructions, casilla 13). Casilla `14` subtracts it from casilla "
+"`12`, which is zero here, and keeps the minus sign, so casillas `14`, "
+"`17`, and `19` all read `-100.00` (instructions, casillas 14, 17, and "
+"19)."
+msgstr ""
+"A casilla `13` a `100.00` összegű csökkentés, amely 9000 euró vagy annál "
+"kisebb előző évi nettó jövedelemhez tartozik; ha tavaly nem volt "
+"tevékenység, ez a jövedelem nullának számít (útmutató, casilla 13). A "
+"casilla `14` ezt levonja a casilla `12` értékéből, amely itt nulla, és "
+"megtartja a mínuszjelet, így a casilla `14`, `17` és `19` egyaránt "
+"`-100.00` (útmutató, casilla 14, 17 és 19)."
+
+#: ../../how-to/first-quarterly-filing.md:114
+msgid ""
+"Nothing is payable for this quarter: only a positive casilla 19 is paid "
+"(instructions, section \"Ingreso\"). In the first, second, or third "
+"quarter, a negative casilla 19 is declared \"A deducir\": a later "
+"instalment of the same year deducts it through casilla 15, never by more "
+"than that quarter's positive casilla 14 (instructions, casilla 15 and "
+"section \"A deducir\"). In the fourth quarter, a negative result is "
+"declared \"Negativa\" instead. The calculation also reports the amount as"
+" `saldo-negativo-fin-periodo`, `100.00`, and the draft verifies like any "
+"other. For how later quarters build on this one, see [Prepare a Modelo "
+"130 IRPF instalment](modelo-130.md#each-quarter-is-cumulative)."
+msgstr ""
+"Erre a negyedévre nincs fizetendő összeg: csak a pozitív casilla 19-et "
+"kell befizetni (útmutató, \"Ingreso\" szakasz). Az első, második vagy "
+"harmadik negyedévben a negatív casilla 19 \"A deducir\" jelöléssel kerül "
+"bevallásra: ugyanazon év egy későbbi előlege a casilla 15-ön keresztül "
+"levonja, de legfeljebb az adott negyedév pozitív casilla 14 összegéig "
+"(útmutató, casilla 15 és \"A deducir\" szakasz). A negyedik negyedévben a"
+" negatív eredményt ehelyett \"Negativa\" jelöléssel kell bevallani. A "
+"számítás az összeget `saldo-negativo-fin-periodo` néven is kimutatja, "
+"`100.00` értékkel, és a piszkozat ugyanúgy ellenőrizhető, mint bármely "
+"más. Arról, hogyan épülnek erre a későbbi negyedévek, lásd: [Egy Modelo "
+"130 IRPF-részlet előkészítése](modelo-130.md#each-quarter-is-cumulative)."
+
+#: ../../how-to/first-quarterly-filing.md:124
 msgid "Check the figures and record the filing"
 msgstr "Ellenőrizze a számokat és exportáljon"
 
-#: ../../how-to/first-quarterly-filing.md:90
+#: ../../how-to/first-quarterly-filing.md:126
 msgid ""
 "The verification result is the signal that the draft is ready. "
 "Verification refuses until every deductible-expense row carries linked "
@@ -219,7 +306,7 @@ msgstr ""
 "el: a piszkozat az ellenőrzéskor foglalja magába a bizonyítékot, így a "
 "később csatolt számla nem kerül be a bevallásba."
 
-#: ../../how-to/first-quarterly-filing.md:96
+#: ../../how-to/first-quarterly-filing.md:132
 msgid ""
 "The sequence below exports the verified draft and then records the local "
 "filed marker."
@@ -227,7 +314,7 @@ msgstr ""
 "Az alábbi sorozat exportálja az ellenőrzött tervezetet, majd rögzíti a "
 "helyi benyújtott jelölőt."
 
-#: ../../how-to/first-quarterly-filing.md:103
+#: ../../how-to/first-quarterly-filing.md:139
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -239,23 +326,23 @@ msgstr ""
 "eleji halmozott viselkedésért lásd [Egy Modelo 130 IRPF-előleg "
 "előkészítése](modelo-130.md)."
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:144
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:146
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:111
+#: ../../how-to/first-quarterly-filing.md:147
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók osztályozása](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:112
+#: ../../how-to/first-quarterly-filing.md:148
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:113
+#: ../../how-to/first-quarterly-filing.md:149
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel az exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 

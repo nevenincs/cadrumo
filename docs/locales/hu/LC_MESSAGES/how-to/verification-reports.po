@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 08:27+0000\n"
+"POT-Creation-Date: 2026-09-30 17:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -354,6 +354,35 @@ msgstr ""
 
 #: ../../how-to/verification-reports.md:131
 msgid ""
+"For example, a Modelo 349 draft calculated before any intra-community "
+"invoice is recorded has no operator record, so the boxes each record "
+"needs are empty: country code, EU VAT number, name, operation key, and "
+"base. Verify still saves the report, but it exits with status 1 and reads"
+" `completeness_status` `incomplete` and `granted_verificado_completo` "
+"`false`, with the empty boxes under `missing_required_casilla_ids`:"
+msgstr ""
+"Például egy Modelo 349 piszkozatnak, amelyet még azelőtt számítottak ki, "
+"hogy bármilyen Közösségen belüli számlát rögzítettek volna, nincs "
+"partnerrekordja, így az egyes rekordokhoz szükséges rovatok üresek: "
+"országkód, közösségi adószám, név, műveleti kulcs és adóalap. Az "
+"ellenőrzés ettől még elmenti a jelentést, de 1-es állapotkóddal lép ki, "
+"és `completeness_status` `incomplete`, valamint "
+"`granted_verificado_completo` `false` értéket mutat, az üres rovatokkal a"
+" `missing_required_casilla_ids` alatt:"
+
+#: ../../how-to/verification-reports.md:142
+msgid ""
+"Those boxes come from your invoice records, so record the intra-community"
+" invoices and recalculate rather than typing the values in. See [Prepare "
+"a Modelo 349 recapitulative declaration](modelo-349.md)."
+msgstr ""
+"Ezek a rovatok a számlanyilvántartásából származnak, ezért az értékek "
+"kézi beírása helyett rögzítse a Közösségen belüli számlákat, és számoljon"
+" újra. Lásd: [Egy Modelo 349 összesítő nyilatkozat "
+"előkészítése](modelo-349.md)."
+
+#: ../../how-to/verification-reports.md:146
+msgid ""
 "`--casilla` works only on boxes whose input kind is `manual`. A box "
 "filled from your ledger or another source is `bound`, and `--casilla` "
 "refuses it with `cannot override bucket-derived source-bound casillas`. "
@@ -370,7 +399,7 @@ msgstr ""
 "a számítási értékeit](review-calculation-values.md). Ellenőrizze, milyen "
 "fajtájú egy rovat, majd adja meg egy kézi értékét, és számítson újra:"
 
-#: ../../how-to/verification-reports.md:143
+#: ../../how-to/verification-reports.md:158
 msgid ""
 "Then [re-run verification](#after-any-fix-re-run-verification). For the "
 "full input workflow, including where values come from and how to check "
@@ -381,11 +410,11 @@ msgstr ""
 "értékek, és hogyan ellenőrizze őket, lásd: [Vizsgálja felül a számítási "
 "értékeit](review-calculation-values.md)."
 
-#: ../../how-to/verification-reports.md:147
+#: ../../how-to/verification-reports.md:162
 msgid "The report says blocked"
 msgstr "A jelentés blokkoltat mond"
 
-#: ../../how-to/verification-reports.md:149
+#: ../../how-to/verification-reports.md:164
 msgid ""
 "Blocked means at least one blocking finding stands between your draft and"
 " a verified calculation. You cannot file the draft until you resolve "
@@ -395,7 +424,7 @@ msgstr ""
 "piszkozata és egy ellenőrzött számítás között. Nem exportálhatja a "
 "piszkozatot, amíg fel nem old minden blokkoló megállapítást."
 
-#: ../../how-to/verification-reports.md:153
+#: ../../how-to/verification-reports.md:168
 msgid ""
 "Read each finding's suggested next action first; it tells you what the "
 "tool expects you to do. The common kinds of blocking finding:"
@@ -404,7 +433,7 @@ msgstr ""
 "megmondja, mit vár Öntől az eszköz. A blokkoló megállapítások gyakori "
 "fajtái:"
 
-#: ../../how-to/verification-reports.md:156
+#: ../../how-to/verification-reports.md:171
 msgid ""
 "**A cross-field rule failed.** Two or more casillas disagree in a way the"
 " form rules do not allow. Check the values named in the finding against "
@@ -414,7 +443,7 @@ msgstr ""
 "módon nem egyezik, amelyet az űrlapszabályok nem engednek. Ellenőrizze a "
 "megállapításban megnevezett értékeket a nyilvántartásával szemben."
 
-#: ../../how-to/verification-reports.md:158
+#: ../../how-to/verification-reports.md:173
 msgid ""
 "**A value could not be derived.** The tool needed to compute a casilla "
 "but your data did not provide enough input. Supply the missing input or "
@@ -425,7 +454,33 @@ msgstr ""
 "bemenetet. Adja meg a hiányzó bemenetet, vagy adja meg közvetlenül az "
 "értéket."
 
-#: ../../how-to/verification-reports.md:161
+#: ../../how-to/verification-reports.md:176
+msgid ""
+"**Your records changed after you calculated.** Verify compares the saved "
+"calculation with your ledger as it is now. If you reclassify, correct, or"
+" remove an entry after calculating, a blocking finding says your records "
+"changed and asks you to calculate again. The example records a sale, "
+"calculates, corrects the sale's price, then verifies without calculating "
+"again. Verify saves the report, exits with status 1, and reads "
+"`completeness_status` `blocked` and `granted_verificado_completo` "
+"`false`:"
+msgstr ""
+"**A nyilvántartása a számítás után megváltozott.** Az ellenőrzés a "
+"mentett számítást a ledger jelenlegi állapotával veti össze. Ha a "
+"számítás után átsorol, javít vagy töröl egy bejegyzést, egy blokkoló "
+"megállapítás jelzi, hogy a nyilvántartása megváltozott, és újraszámítást "
+"kér. A példa rögzít egy eladást, számítást végez, kijavítja az eladás "
+"árát, majd újraszámítás nélkül ellenőriz. Az ellenőrzés elmenti a "
+"jelentést, 1-es állapotkóddal lép ki, és `completeness_status` `blocked`,"
+" valamint `granted_verificado_completo` `false` értéket mutat:"
+
+#: ../../how-to/verification-reports.md:188
+msgid "Calculate the draft again so the saved figures match your ledger."
+msgstr ""
+"Számítsa ki újra a piszkozatot, hogy a mentett számok egyezzenek a "
+"ledgerrel."
+
+#: ../../how-to/verification-reports.md:189
 msgid ""
 "**A prior-period record is missing.** This filing depends on a filing "
 "from an earlier period that is missing or unconfirmed. Record or confirm "
@@ -442,17 +497,17 @@ msgstr ""
 "profilon, hogy a függőség kimaradjon a hatókörből (cserélje a `me` "
 "értéket a profilja nevére):"
 
-#: ../../how-to/verification-reports.md:172
+#: ../../how-to/verification-reports.md:200
 msgid "After each fix, [re-run verification](#after-any-fix-re-run-verification)."
 msgstr ""
 "Minden javítás után [futtassa újra az ellenőrzést](#after-any-fix-re-run-"
 "verification)."
 
-#: ../../how-to/verification-reports.md:174
+#: ../../how-to/verification-reports.md:202
 msgid "Export refuses"
 msgstr "Exportálás elutasítva"
 
-#: ../../how-to/verification-reports.md:176
+#: ../../how-to/verification-reports.md:204
 msgid ""
 "Export refuses a plain draft, with a message such as \"current revision "
 "is still draft; verify it before exporting\" or \"no exportable verified "
@@ -468,7 +523,7 @@ msgstr ""
 "Ellenőrizze, hol áll a benyújtás, majd próbálja újra az exportot, amint "
 "az ellenőrzés ellenőrzött-teljes állapotot ad:"
 
-#: ../../how-to/verification-reports.md:181
+#: ../../how-to/verification-reports.md:209
 msgid ""
 "Verified-complete is what export requires. The Modelo 303 file it writes "
 "carries Cadrumo's all-zero development software identity, which AEAT does"
@@ -481,11 +536,11 @@ msgstr ""
 "Ellenőrizd, hol tart a benyújtás, majd olvasd vissza az ellenőrzött "
 "számokat, és add meg őket az AEAT portálján:"
 
-#: ../../how-to/verification-reports.md:190
+#: ../../how-to/verification-reports.md:218
 msgid "More than one filing matches"
 msgstr "Több benyújtás is illeszkedik"
 
-#: ../../how-to/verification-reports.md:192
+#: ../../how-to/verification-reports.md:220
 msgid ""
 "When more than one filing or saved calculation matches the modelo, year, "
 "and period you named, the tool refuses to guess and prints the candidates"
@@ -495,7 +550,7 @@ msgstr ""
 "megnevezett modelóhoz, évhez és időszakhoz, az eszköz megtagadja a "
 "találgatást, és ehelyett kiírja a jelölteket."
 
-#: ../../how-to/verification-reports.md:195
+#: ../../how-to/verification-reports.md:223
 msgid ""
 "List your filings with their work-unit IDs with `aeat app modelo work "
 "list`, then target the one you mean by passing its work-unit ID directly "
@@ -506,7 +561,7 @@ msgstr ""
 "munkaegység-azonosítójának közvetlen átadásával az `aeat app modelo work "
 "verify --work-unit-id <work-unit-id>` parancsnak."
 
-#: ../../how-to/verification-reports.md:199
+#: ../../how-to/verification-reports.md:227
 msgid ""
 "To confirm which filing a command touched, check its state and the "
 "actions taken on it:"
@@ -514,11 +569,11 @@ msgstr ""
 "Annak megerősítéséhez, melyik benyújtáshoz nyúlt egy parancs, ellenőrizze"
 " annak állapotát és a rajta végzett műveleteket:"
 
-#: ../../how-to/verification-reports.md:207
+#: ../../how-to/verification-reports.md:235
 msgid "The filing deadline has passed"
 msgstr "A benyújtási határidő lejárt"
 
-#: ../../how-to/verification-reports.md:209
+#: ../../how-to/verification-reports.md:237
 msgid ""
 "Verification does not check filing deadlines. It still runs for a past "
 "period and can pass; the deadline gate applies later, when you record the"
@@ -528,7 +583,7 @@ msgstr ""
 "időszakra is lefut, és átmehet; a határidő-kapu később alkalmazódik, "
 "amikor a benyújtást a `work file` paranccsal rögzíti."
 
-#: ../../how-to/verification-reports.md:213
+#: ../../how-to/verification-reports.md:241
 msgid ""
 "If the deadline has passed, file late through AEAT's own channels; "
 "consult AEAT or an advisor about any surcharges that may apply."
@@ -537,11 +592,11 @@ msgstr ""
 "keresztül; érdeklődjön az AEAT-nál vagy egy tanácsadónál az esetleg "
 "alkalmazandó pótlékokról."
 
-#: ../../how-to/verification-reports.md:216
+#: ../../how-to/verification-reports.md:244
 msgid "Where to get help"
 msgstr "Hol kérhet segítséget"
 
-#: ../../how-to/verification-reports.md:218
+#: ../../how-to/verification-reports.md:246
 msgid ""
 "Command labels and messages display in Spanish to match the official AEAT"
 " forms, while this guide is in English. The field names this guide names "
@@ -555,7 +610,7 @@ msgstr ""
 "`completeness_status`, `finding_legal_refs`) pontosan megegyeznek a "
 "kimenettel, így egy spanyol sort visszavezethet az azt leíró lépéshez."
 
-#: ../../how-to/verification-reports.md:224
+#: ../../how-to/verification-reports.md:252
 #, python-brace-format
 msgid ""
 "If a report or an error message does not match what this guide describes,"
@@ -571,11 +626,11 @@ msgstr ""
 " távolítsa el a személyes adóazonosítókat, például a NIF-, CIF-, DNI-, "
 "NIE- vagy NII-számát."
 
-#: ../../how-to/verification-reports.md:230
+#: ../../how-to/verification-reports.md:258
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/verification-reports.md:232
+#: ../../how-to/verification-reports.md:260
 msgid ""
 "[File at AEAT](file-at-aeat.md): enter the verified figures at the AEAT "
 "portal."
@@ -583,7 +638,7 @@ msgstr ""
 "[Benyújtás az AEAT-nál](file-at-aeat.md): töltse fel az exportált fájlt "
 "az AEAT-portálon."
 
-#: ../../how-to/verification-reports.md:233
+#: ../../how-to/verification-reports.md:261
 msgid ""
 "[Review your calculation values](review-calculation-values.md): check and"
 " correct the inputs behind each casilla."
@@ -591,7 +646,7 @@ msgstr ""
 "[Vizsgálja felül a számítási értékeit](review-calculation-values.md): "
 "ellenőrizze és javítsa az egyes casillák mögötti bemeneteket."
 
-#: ../../how-to/verification-reports.md:234
+#: ../../how-to/verification-reports.md:262
 msgid ""
 "[The filing workflow](filing-spine.md): how filings, saved calculations, "
 "and reports fit together."
@@ -599,7 +654,7 @@ msgstr ""
 "[A benyújtási munkafolyamat](filing-spine.md): hogyan illeszkednek össze "
 "a benyújtások, a mentett számítások és a jelentések."
 
-#: ../../how-to/verification-reports.md:235
+#: ../../how-to/verification-reports.md:263
 msgid "[CLI reference](../cli/index.rst): every command and option."
 msgstr "[CLI-referencia](../cli/index.rst): minden parancs és opció."
 

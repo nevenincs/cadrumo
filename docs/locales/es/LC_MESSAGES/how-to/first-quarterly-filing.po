@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-30 16:44+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -200,10 +200,99 @@ msgstr ""
 "en true, así que el borrador está completo y listo para exportar."
 
 #: ../../how-to/first-quarterly-filing.md:88
+msgid "When your expenses exceed your income"
+msgstr "Cuando tus gastos superan tus ingresos"
+
+#: ../../how-to/first-quarterly-filing.md:90
+msgid ""
+"In a quarter where your deductible expenses are larger than your income, "
+"the net yield is negative. The example below records a second office-"
+"supplies purchase of 1000.00 in the same quarter, so the expenses reach "
+"1500.00 against 1000.00 of income, then calculates and verifies the draft"
+" again:"
+msgstr ""
+"En un trimestre en el que tus gastos deducibles son mayores que tus "
+"ingresos, el rendimiento neto es negativo. El ejemplo siguiente registra "
+"una segunda compra de material de oficina de 1000.00 en el mismo "
+"trimestre, de modo que los gastos llegan a 1500.00 frente a 1000.00 de "
+"ingresos, y después vuelve a calcular y verificar el borrador:"
+
+#: ../../how-to/first-quarterly-filing.md:99
+msgid ""
+"What the calculation shows, with the rule each box follows in the "
+"official AEAT instructions for Modelo 130:"
+msgstr ""
+"Lo que muestra el cálculo, con la regla que sigue cada casilla en las "
+"instrucciones oficiales de la AEAT para el Modelo 130:"
+
+#: ../../how-to/first-quarterly-filing.md:102
+msgid ""
+"Casilla `03`, the net yield, is `-500.00`. A negative net yield is "
+"entered with a minus sign (instructions, casilla 03)."
+msgstr ""
+"La casilla `03`, el rendimiento neto, es `-500.00`. Un rendimiento neto "
+"negativo se consigna con signo menos (instrucciones, casilla 03)."
+
+#: ../../how-to/first-quarterly-filing.md:104
+msgid ""
+"Casilla `04`, the instalment, is `0.00`. The 20 percent applies only to a"
+" positive net yield; when casilla 03 is negative, casilla 04 is zero "
+"(instructions, casilla 04). Casilla `07` is `0.00` too, because this "
+"first quarter has no earlier instalments or withholdings to subtract."
+msgstr ""
+"La casilla `04`, el pago fraccionado, es `0.00`. El 20 por ciento solo se"
+" aplica a un rendimiento neto positivo; cuando la casilla 03 es negativa,"
+" la casilla 04 es cero (instrucciones, casilla 04). La casilla `07` "
+"también es `0.00`, porque este primer trimestre no tiene pagos "
+"fraccionados anteriores ni retenciones que restar."
+
+#: ../../how-to/first-quarterly-filing.md:108
+msgid ""
+"Casilla `13` is the `100.00` reduction for a prior-year net income of "
+"9000 euros or less; with no activity last year, that income counts as "
+"zero (instructions, casilla 13). Casilla `14` subtracts it from casilla "
+"`12`, which is zero here, and keeps the minus sign, so casillas `14`, "
+"`17`, and `19` all read `-100.00` (instructions, casillas 14, 17, and "
+"19)."
+msgstr ""
+"La casilla `13` es la minoración de `100.00` que corresponde a un "
+"rendimiento neto del ejercicio anterior de 9000 euros o menos; sin "
+"actividad el año pasado, ese rendimiento se considera cero "
+"(instrucciones, casilla 13). La casilla `14` la resta de la casilla `12`,"
+" que aquí es cero, y conserva el signo menos, así que las casillas `14`, "
+"`17` y `19` muestran `-100.00` (instrucciones, casillas 14, 17 y 19)."
+
+#: ../../how-to/first-quarterly-filing.md:114
+msgid ""
+"Nothing is payable for this quarter: only a positive casilla 19 is paid "
+"(instructions, section \"Ingreso\"). In the first, second, or third "
+"quarter, a negative casilla 19 is declared \"A deducir\": a later "
+"instalment of the same year deducts it through casilla 15, never by more "
+"than that quarter's positive casilla 14 (instructions, casilla 15 and "
+"section \"A deducir\"). In the fourth quarter, a negative result is "
+"declared \"Negativa\" instead. The calculation also reports the amount as"
+" `saldo-negativo-fin-periodo`, `100.00`, and the draft verifies like any "
+"other. For how later quarters build on this one, see [Prepare a Modelo "
+"130 IRPF instalment](modelo-130.md#each-quarter-is-cumulative)."
+msgstr ""
+"Este trimestre no hay nada que ingresar: solo se ingresa una casilla 19 "
+"positiva (instrucciones, apartado \"Ingreso\"). En el primer, segundo o "
+"tercer trimestre, una casilla 19 negativa se declara \"A deducir\": un "
+"pago fraccionado posterior del mismo año la deduce a través de la casilla"
+" 15, nunca por más del importe positivo de la casilla 14 de ese trimestre"
+" (instrucciones, casilla 15 y apartado \"A deducir\"). En el cuarto "
+"trimestre, un resultado negativo se declara \"Negativa\". El cálculo "
+"también informa del importe como `saldo-negativo-fin-periodo`, `100.00`, "
+"y el borrador se verifica como cualquier otro. Para ver cómo los "
+"trimestres posteriores se apoyan en este, consulta [Prepara un pago "
+"fraccionado del IRPF con el Modelo 130](modelo-130.md#each-quarter-is-"
+"cumulative)."
+
+#: ../../how-to/first-quarterly-filing.md:124
 msgid "Check the figures and record the filing"
 msgstr "Comprueba las cifras y exporta"
 
-#: ../../how-to/first-quarterly-filing.md:90
+#: ../../how-to/first-quarterly-filing.md:126
 msgid ""
 "The verification result is the signal that the draft is ready. "
 "Verification refuses until every deductible-expense row carries linked "
@@ -219,15 +308,15 @@ msgstr ""
 "en ese orden: el borrador incorpora su evidencia al verificarlo, de modo "
 "que una factura adjuntada después no llega a la presentación."
 
-#: ../../how-to/first-quarterly-filing.md:96
+#: ../../how-to/first-quarterly-filing.md:132
 msgid ""
 "The sequence below exports the verified draft and then records the local "
 "filed marker."
 msgstr ""
-"La secuencia siguiente exporta el borrador verificado y después "
-"registra el marcador local de presentado."
+"La secuencia siguiente exporta el borrador verificado y después registra "
+"el marcador local de presentado."
 
-#: ../../how-to/first-quarterly-filing.md:103
+#: ../../how-to/first-quarterly-filing.md:139
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -240,23 +329,23 @@ msgstr ""
 "IRPF con el Modelo 130](modelo-130.md) para el comportamiento acumulado "
 "del año en curso."
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:144
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:146
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:111
+#: ../../how-to/first-quarterly-filing.md:147
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Clasificar transacciones](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:112
+#: ../../how-to/first-quarterly-filing.md:148
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:113
+#: ../../how-to/first-quarterly-filing.md:149
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Subir tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 

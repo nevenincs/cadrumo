@@ -85,6 +85,42 @@ Read the frames in order:
 - Verify the draft. The result reads `granted_verificado_completo` true, so the
   draft is complete and ready to file.
 
+## When your expenses exceed your income
+
+In a quarter where your deductible expenses are larger than your income, the
+net yield is negative. The example below records a second office-supplies
+purchase of 1000.00 in the same quarter, so the expenses reach 1500.00 against
+1000.00 of income, then calculates and verifies the draft again:
+
+```{cli-sequence} first-quarter-expenses-exceed-income
+:verify: Confirm casilla 03 is negative and casilla 19 shows a negative result.
+```
+
+What the calculation shows, with the rule each box follows in the official
+AEAT instructions for Modelo 130:
+
+- Casilla `03`, the net yield, is `-500.00`. A negative net yield is entered
+  with a minus sign (instructions, casilla 03).
+- Casilla `04`, the instalment, is `0.00`. The 20 percent applies only to a
+  positive net yield; when casilla 03 is negative, casilla 04 is zero
+  (instructions, casilla 04). Casilla `07` is `0.00` too, because this first
+  quarter has no earlier instalments or withholdings to subtract.
+- Casilla `13` is the `100.00` reduction for a prior-year net income of 9000
+  euros or less; with no activity last year, that income counts as zero
+  (instructions, casilla 13). Casilla `14` subtracts it from casilla `12`,
+  which is zero here, and keeps the minus sign, so casillas `14`, `17`, and
+  `19` all read `-100.00` (instructions, casillas 14, 17, and 19).
+
+Nothing is payable for this quarter: only a positive casilla 19 is paid
+(instructions, section "Ingreso"). In the first, second, or third quarter, a
+negative casilla 19 is declared "A deducir": a later instalment of the same
+year deducts it through casilla 15, never by more than that quarter's positive
+casilla 14 (instructions, casilla 15 and section "A deducir"). In the fourth
+quarter, a negative result is declared "Negativa" instead. The calculation
+also reports the amount as `saldo-negativo-fin-periodo`, `100.00`, and the
+draft verifies like any other. For how later quarters build on this one, see
+[Prepare a Modelo 130 IRPF instalment](modelo-130.md#each-quarter-is-cumulative).
+
 ## Check the figures and record the filing
 
 The verification result is the signal that the draft is ready. Verification
