@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:2f0446ab051bf9e046364bb61d13682aa9bd1b4506b18571100d86468c60b535'
+body_hash: 'sha256:c1cb27927ee89e80f989c3d0fd7f6b9d3deeac1a6f45cb06dedb488de24d13ce'
 ---
 
 # `modelo-editor-workbench` plan
@@ -79,7 +79,7 @@ Join the canonical review, the declared layout, the current revision and the edi
 - [x] `P03.S16` - Add the total source-kind policy table with family, override policy and destination, bound by test to the calculation precedence ladder; `src/cadrumo/application/modelo/source_policy.py`.
 - [x] `P03.S17` - Build the editor form read model and builder with closed editability and origin enums, localized labels and help, counts, working figures, the unplaced list and the totality invariant; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P03.S18` - Assemble the help card parts from legal references, rendered formulas, official quotes, constraints and origin, treating label restatements as absent help; `src/cadrumo/application/modelo/casilla_help.py`.
-- [ ] `P03.S19` - Add the form loading service and the before-and-after calculation diff query that the workbench door calls off the event loop; `src/cadrumo/application/modelo/work_form_service.py`.
+- [x] `P03.S19` - Add the form loading service and the before-and-after calculation diff query that the workbench door calls off the event loop; `src/cadrumo/application/modelo/work_form_service.py`.
 
 ### Phase `P04` - modelo workbench
 

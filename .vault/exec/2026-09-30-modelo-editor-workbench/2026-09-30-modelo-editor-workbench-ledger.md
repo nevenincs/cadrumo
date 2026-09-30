@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d247614a5ac81de3fe93cfe71d46d26c1451782a8320ce078dd07a40930d111c'
+body_hash: 'sha256:48893795166b250db55c853a60fb3ad536677f82feeb0ed368fed0108ea8d087'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -315,6 +315,13 @@ related:
 - `S14` `verify:` `publish-authority --if-stale in the shared worktree, generation 84ac42c742a1` -> `pass`
 - `S14` `verify:` `operation.form_layout serves 130 (1 page, 20 placements), 303 (5, 220), 111 (1, 30)` -> `pass`
 - `S14` `by:` `orchestrator`
+- `S19` `A` `src/cadrumo/application/modelo/work_form_service.py`
+- `S19` `A` `src/cadrumo/application/modelo/tests/test_work_form_service.py`
+- `S19` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S19` `verify:` `pytest change query over the real 130 registry (3)` -> `pass`
+- `S19` `verify:` `pytest form loading over real encrypted storage and the republished authority (2, integration)` -> `pass`
+- `S19` `verify:` `ruff + ty` -> `pass`
+- `S19` `by:` `orchestrator`
 
 ## Notes
 
@@ -343,3 +350,4 @@ related:
 - `S13` Implemented on the layout-family lane as 628d73ef20, 836afe9110, 7d2a15f1ed; merged into the feature branch
 - `S13` 146 generated per-revision `form_layouts` fragments are logged as their registry tree
 - `S14` The authority tree is gitignored runtime state; the descriptor row records the publication, not a committed file
+- `S19` The change query lists moved values and origins; separating the filer's changes from recalculated and newly sourced values is the workbench's reading of it, owned by the page retirement Step
