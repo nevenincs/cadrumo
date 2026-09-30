@@ -145,6 +145,9 @@ _BASE_BINDINGS = {
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
     "renta-maritime-qualifying-days": Decimal("0"),
+    # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+    # neutral zero for a scenario with no descendants.
+    "renta-profile-deduccion-maternidad": Decimal("0"),
 }
 
 # Art. 75 Ley 19/1994 maritime-worker exemption path: these couples are not

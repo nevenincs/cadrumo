@@ -285,6 +285,9 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # neutral zero for a scenario with no descendants.
+        **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
     }
     # The reviewed edition requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.

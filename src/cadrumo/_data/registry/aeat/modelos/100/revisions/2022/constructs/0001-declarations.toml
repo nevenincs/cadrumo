@@ -29,6 +29,9 @@ formulas = [
     "renta-cuota-resultante-autoliquidacion",
     "renta-total-pagos-a-cuenta",
     "renta-cuota-diferencial",
+    "renta-matrimonio-vigente-todo-anio",
+    "renta-matrimonio-mes-inicio",
+    "renta-matrimonio-mes-fin",
 ]
 application_links = [
     "modelo-100-calculation",

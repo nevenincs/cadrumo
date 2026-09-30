@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html",
+  "source_sha256": "41844f61c8d2c24b63372f1afa2030b86e209bb685f2422386311c29af1e773e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los contribuyentes que determinen el rendimiento neto de sus actividades económicas por el método de estimación objetiva, podrán reducir el rendimiento neto de módulos obtenido en 2022 en un 5 por 100.\n2. Cuando se trate de actividades incluidas en el anexo I de esta orden, la reducción prevista en el apartado 1 anterior se aplicará sobre el rendimiento neto de módulos a que se refiere la instrucción 2.3 para la aplicación de los signos, índices o módulos en el Impuesto sobre la Renta de las Personas Físicas del anexo I de esta Orden.\nEl rendimiento neto de módulos, así calculado, se tendrá en cuenta para la aplicación de lo dispuesto en la instrucción 3 para la aplicación de los signos, índices o módulos en el Impuesto sobre la Renta de las Personas Físicas del anexo I de esta Orden.\n3. Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2022.\nTéngase en cuenta que la reducción prevista en esta disposición será del 15 por 100 para cuantificar el rendimiento neto a efectos del pago fraccionado correspondientes al cuarto trimestre de 2022, según establece la disposición adicional 8 de la Orden HFP/1172/2022, de 29 de noviembre. Ref. BOE-A-2022-20025\nLa reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva prevista en esta disposición será del 25 por ciento para las actividades agrícolas, ganaderas y forestales incluidas en el anexo I de esta orden, según establece el art. 2 de la Orden HFP/405/2023, de 18 de abril de 2023. Ref. BOE-A-2023-9955",
+      "title": "Disposición adicional primera. Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva.",
+      "section": "Disposición adicional primera. Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva.",
+      "anchor": "#da"
+    }
+  ]
+}

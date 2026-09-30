@@ -178,8 +178,8 @@ casillas = [
 modelo = "100"
 revision = "2020"
 reference = "ley-35-2006:art-32"
-category = "no_governing_row_catalogued"
-reason = "LIRPF art. 32 is catalogued only in the redaction in force from 2023-01-01; no catalogued row of the article governs the 2020 devengo."
+category = "superseded_row_cited"
+reason = "LIRPF art. 32 governs the 2020 devengo in the redaction in force from 2015-01-01 to 2022-12-31, catalogued as ley-35-2006:art-32-2015; these casillas cite the row of the redaction in force from 2023-01-01 instead."
 casillas = [
     "0072",
     "0080",
@@ -374,8 +374,8 @@ casillas = [
 modelo = "100"
 revision = "2021"
 reference = "ley-35-2006:art-32"
-category = "no_governing_row_catalogued"
-reason = "LIRPF art. 32 is catalogued only in the redaction in force from 2023-01-01; no catalogued row of the article governs the 2021 devengo."
+category = "superseded_row_cited"
+reason = "LIRPF art. 32 governs the 2021 devengo in the redaction in force from 2015-01-01 to 2022-12-31, catalogued as ley-35-2006:art-32-2015; these casillas cite the row of the redaction in force from 2023-01-01 instead."
 casillas = [
     "0072",
     "0080",
@@ -571,8 +571,8 @@ casillas = [
 modelo = "100"
 revision = "2022"
 reference = "ley-35-2006:art-32"
-category = "no_governing_row_catalogued"
-reason = "LIRPF art. 32 is catalogued only in the redaction in force from 2023-01-01; no catalogued row of the article governs the 2022 devengo."
+category = "superseded_row_cited"
+reason = "LIRPF art. 32 governs the 2022 devengo in the redaction in force from 2015-01-01 to 2022-12-31, catalogued as ley-35-2006:art-32-2015; these casillas cite the row of the redaction in force from 2023-01-01 instead."
 casillas = [
     "0072",
     "0080",

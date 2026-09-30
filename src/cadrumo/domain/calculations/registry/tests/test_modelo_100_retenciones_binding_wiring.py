@@ -153,6 +153,9 @@ def _reviewed_base_binding_values(
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # neutral zero for a scenario with no descendants.
+        **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
     }
     if m111 is not None:
         values["renta-modelo-111-retenciones-periodicas"] = m111

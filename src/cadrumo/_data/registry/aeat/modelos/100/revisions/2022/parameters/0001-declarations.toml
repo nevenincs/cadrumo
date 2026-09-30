@@ -2051,3 +2051,21 @@ valid_from = 2022-01-01
 [[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]
+[[revisions."2022".parameters]]
+id = "renta-guarderia-incremento-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+additional_source_refs = ["aeat-dr-100-2022-dictionary"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses",
+    "1.000 euros ÷ 12 meses x 8 meses) = 666,64",
+]
+
+[[revisions."2022".parameters.values]]
+value = "1000"
+date_axis = "filing_period"
+valid_from = 2022-01-01

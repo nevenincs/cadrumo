@@ -48,15 +48,29 @@ from .authored_editions import authored_revisions_where, manual_editions_printin
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The Art. 81.2 guardería profile bindings the fixture supplies beside the
+# maternidad binding.
+_FIXTURE_GUARDERIA_BINDINGS = frozenset(
+    {
+        "renta-profile-guarderia-gastos-reales",
+        "renta-profile-incremento-guarderia",
+        "renta-profile-cotizaciones-ss-madre",
+        "renta-profile-descendientes-guarderia",
+    }
+)
 # The Modelo 100 edition these cuotas are computed for: the newest one whose AEAT Renta
 # manual prints the Cataluna scale the expected cuotas use and whose declared bindings
-# are the ones the fixture below supplies (it still carries the maternidad binding).
+# are the ones the fixture below supplies (the maternidad and guardería bindings).
 _TARIFF_EXERCISE = max(
     set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
     & {
         revision.valid_from.year
         for revision in authored_revisions_where(
-            "100", lambda revision: set(M100_2024_EMPTY_MATERNIDAD_BINDINGS) <= {b.id for b in revision.bindings}
+            "100",
+            lambda revision: (
+                set(M100_2024_EMPTY_MATERNIDAD_BINDINGS) | _FIXTURE_GUARDERIA_BINDINGS
+                <= {b.id for b in revision.bindings}
+            ),
         )
     }
 )

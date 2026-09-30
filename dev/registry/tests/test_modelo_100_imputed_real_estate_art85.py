@@ -64,6 +64,9 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         values["renta-maritime-gross-navigation-income"] = Decimal("0")
         values["renta-maritime-annual-salary"] = Decimal("0")
         values["renta-maritime-qualifying-days"] = Decimal("0")
+        # The 2025 edition computes the maternity deducción as well; neutral
+        # zero for the same reason as in 2024 below.
+        values.update(_m100_2024_deduccion_maternidad_bindings())
     if year == 2024:
         values.update(
             {

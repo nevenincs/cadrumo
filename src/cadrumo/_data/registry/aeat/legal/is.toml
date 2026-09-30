@@ -2249,6 +2249,25 @@ required_text = [
     "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
 ]
 
+[legal."real-decreto-ley-4-2024:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2024-12944-rdl-4-2024-iva-alimentos.html#a4"
+document_id = "BOE-A-2024-12944"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-12944#a4"
+published_at = 2024-06-27
+effective_from = 2024-06-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the bundled consolidated RDL 4/2024 (block a4); operator to re-stamp"
+notes = "RDL 4/2024 art. 4.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor del real decreto-ley (28 de junio de 2024), redacta de nuevo la disposicion adicional decimoctava LIS: libertad de amortizacion de vehiculos nuevos FCV, FCHV, BEV, REEV o PHEV y de nuevas infraestructuras de recarga que entren en funcionamiento en los periodos impositivos que se inicien en 2024 y 2025, sustituyendo la amortizacion acelerada al doble del coeficiente lineal maximo que regia desde 2023. Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRPF, el del contribuyente fallecido antes de esa fecha) queda fuera de esta redaccion y conserva la amortizacion acelerada, como recoge el Manual practico de Renta 2024. Los apartados Dos y Tres del articulo (reserva de capitalizacion) no se citan desde esta entrada."
+required_text = [
+    "Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor de este real decreto-ley, se modifica la disposición adicional decimoctava",
+]
+
 [legal."ley-27-2014:da-17"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2267,6 +2286,46 @@ required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
     "Los edificios no podrán acogerse a la libertad de amortización regulada en esta disposición.",
+]
+
+[legal."real-decreto-ley-18-2022:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml#a2-4"
+document_id = "BOE-A-2022-17040"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-17040#a2-4"
+published_at = 2022-10-19
+effective_from = 2022-10-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
+notes = "RDL 18/2022 art. 22: introduce la disposicion adicional decimoseptima LIS, libertad de amortizacion de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposicion del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortizacion; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+required_text = [
+    "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."real-decreto-ley-8-2023:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml#a1-10"
+document_id = "BOE-A-2023-26452"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-26452#a1-10"
+published_at = 2023-12-28
+effective_from = 2023-12-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-10, single redaction fecha_vigencia 20231229); pending operator re-stamp"
+notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposicion adicional decimoseptima LIS para admitir tambien las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposicion desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortizacion."
+required_text = [
+    "Se modifica el apartado 1 de la disposición adicional decimoséptima de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "ii) Que se inicien o concluyan en 2024, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2024.",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
 ]
 
 [legal."rdl-16-2025:art-17"]
@@ -2673,6 +2732,36 @@ published_at = 2025-12-24
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2025-26458/texto/bloque/a1-9"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-18-2022-art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml"
+sha256 = "5fd9f498d20192c4a92e15fbfcfba57cc9dfafd5af9777375de624ea37be4a40"
+bytes = 9698
+retrieved_at = 2026-09-30
+published_at = 2022-10-19
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2022-17040/texto/bloque/a2-4"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-8-2023-art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml"
+sha256 = "42a523ab66770b5bb202297fabf280754c8ba4022be09379cb3d4d9d68541dad"
+bytes = 10090
+retrieved_at = 2026-09-30
+published_at = 2023-12-28
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2023-26452/texto/bloque/a1-10"
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 

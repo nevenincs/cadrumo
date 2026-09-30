@@ -31,6 +31,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_edition
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
@@ -244,6 +245,9 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+            # neutral zero for a scenario with no descendants.
+            **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and

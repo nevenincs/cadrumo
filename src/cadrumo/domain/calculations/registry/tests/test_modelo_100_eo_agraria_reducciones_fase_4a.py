@@ -58,6 +58,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
@@ -131,6 +132,9 @@ def _neutral_binding_values() -> dict[str, Decimal]:
         "renta-maritime-gross-navigation-income": Decimal("0"),
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
+        # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
+        # neutral zero for a scenario with no descendants.
+        **M100_2024_EMPTY_MATERNIDAD_BINDINGS,
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
