@@ -216,6 +216,7 @@ __all__ = [
     "M576_SCENARIO_PERIODS",
     "M604_SCENARIO_PERIODS",
     "M714_SCENARIO_PERIODS",
+    "declared_row_total_inputs",
     "edition_export_scenarios",
     "general_export_scenario",
     "m131_export_scenario",
@@ -878,12 +879,11 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
 
 # ── modelo 190 ──────────────────────────────────────────────────────────────
 
-#: The eight ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022
-#: and 2023 editions' declarante summary formulas (percepciones-total,
-#: retenciones-total) add over. The 2024 edition replaces that formula with
-#: modelo 111 relation prefills instead, and every edition after it inherits
-#: that replacement, so from 2024 onward these bindings are no longer declared
-#: and must not be supplied.
+#: The eight ``provider.kind = "withholding"`` grouped-row-sum bindings an
+#: edition's declarante summary formulas (percepciones-total, retenciones-total)
+#: add over where they total the type-2 records. An edition that routes those
+#: totals through the modelo 111 relation prefills does not declare them, and a
+#: binding an edition does not declare must not be supplied.
 _M190_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
     "modelo-190-perceptor-rows-percepcion-dineraria-total",
     "modelo-190-perceptor-rows-percepcion-especie-total",
@@ -896,16 +896,46 @@ _M190_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
 )
 
 
-def m190_export_scenario(period: Period) -> EditionExportScenario:
-    """A Modelo 190 annual scenario supplying the withholding row totals the 2022 and 2023 editions sum.
+@cache
+def _bundled_modelo(modelo_id: str) -> ModeloDefinition:
+    return load_modelo_directory(bundled_path("registry", "aeat") / "modelos" / modelo_id)
 
-    Those two editions bind their declarante summary casillas to formulas over
-    eight withholding grouped-row-sum bindings -- the annual total each type-2
-    perceptor row family sums to -- so an empty draft leaves them unresolved.
+
+@cache
+def _bundled_support() -> SupportedFilingYearsCatalogue:
+    return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+
+
+def declared_row_total_inputs(
+    modelo_id: str,
+    period: Period,
+    binding_ids: tuple[str, ...],
+) -> dict[str, Decimal]:
+    """Synthetic inputs for those of ``binding_ids`` the edition ``period`` selects declares.
+
+    Which edition sums its own type-2 records and which routes its totals
+    through a relation is the edition's declaration, so it is read from the
+    selected revision rather than inferred from the filing year.
     """
-    inputs: dict[str, Decimal] = {}
-    if period.filing_year <= 2023:
-        inputs = {binding_id: Decimal("1000.00") for binding_id in _M190_PERCEPTOR_ROW_TOTAL_BINDINGS}
+    revision = select_revision(
+        _bundled_modelo(modelo_id),
+        filing_year=period.filing_year,
+        period=period.registry_token,
+        support=_bundled_support(),
+    )
+    declared = {str(binding.id) for binding in revision.bindings}
+    return {binding_id: Decimal("1000.00") for binding_id in binding_ids if binding_id in declared}
+
+
+def m190_export_scenario(period: Period) -> EditionExportScenario:
+    """A Modelo 190 annual scenario supplying the withholding row totals its edition sums.
+
+    An edition that totals its type-2 records binds its declarante summary
+    casillas to formulas over eight withholding grouped-row-sum bindings -- the
+    annual total each type-2 perceptor row family sums to -- so an empty draft
+    leaves them unresolved.
+    """
+    inputs = declared_row_total_inputs("190", period, _M190_PERCEPTOR_ROW_TOTAL_BINDINGS)
     return EditionExportScenario(
         period=period,
         inputs=inputs,
@@ -915,10 +945,10 @@ def m190_export_scenario(period: Period) -> EditionExportScenario:
 
 # ── modelo 193 ──────────────────────────────────────────────────────────────
 
-#: The two ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022,
-#: 2023 and 2025-y-siguientes editions' declarante summary formulas add over.
-#: The 2024 edition replaces that formula with modelo 123 relation prefills
-#: instead, so it does not declare them.
+#: The two ``provider.kind = "withholding"`` grouped-row-sum bindings an
+#: edition's declarante summary formulas add over where they total the type-2
+#: records. An edition that routes those totals through the modelo 123 relation
+#: prefills does not declare them.
 _M193_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
     "modelo-193-perceptor-rows-base-total",
     "modelo-193-perceptor-rows-retenciones-total",
@@ -929,15 +959,13 @@ def m193_export_scenario(period: Period) -> EditionExportScenario:
     """A Modelo 193 annual scenario supplying its manual gastos total and the withholding row totals it sums.
 
     ``decl.gastos-total`` is a manual declarante casilla every edition declares
-    required, so every edition needs it supplied directly. The 2022, 2023 and
-    2025-y-siguientes editions additionally bind their base-total and
+    required, so every edition needs it supplied directly. An edition that
+    totals its type-2 records additionally binds its base-total and
     retenciones-total casillas to formulas over two withholding grouped-row-sum
-    bindings; the 2024 edition replaces that formula with modelo 123 relation
-    prefills instead.
+    bindings; one that routes them through modelo 123 relation prefills does not.
     """
     inputs: dict[str, Decimal] = {"decl.gastos-total": Decimal("500.00")}
-    if period.filing_year != 2024:
-        inputs.update({binding_id: Decimal("1000.00") for binding_id in _M193_PERCEPTOR_ROW_TOTAL_BINDINGS})
+    inputs.update(declared_row_total_inputs("193", period, _M193_PERCEPTOR_ROW_TOTAL_BINDINGS))
     return EditionExportScenario(
         period=period,
         inputs=inputs,

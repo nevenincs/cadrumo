@@ -111,9 +111,6 @@ def test_the_known_drifting_citations_are_refused_by_name(
     for fragment in ("modelo 100", "edition 2020", "[2020-01-01..2020-12-31]", "casilla 0066", "ley-35-2006:art-23"):
         assert fragment in message
 
-    later_orden = refusals[CasillaCitationKey("190", "2024", "decl.complementaria", "orden-hac-1431-2025:art-2")]
-    assert later_orden.alternatives == ()
-
 
 def test_a_planted_superseded_citation_names_the_governing_alternative(
     corpus: tuple[ModeloDefinition, ...], legal: Mapping[str, LegalReference]

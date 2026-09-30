@@ -160,14 +160,17 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 
 
 @pytest.mark.parametrize(
-    ("ejercicio", "window_id", "expected", "expected_legal_refs", "expected_shift"),
+    ("ejercicio", "window_id", "expected", "expected_legal_refs", "expected_shift", "form_source"),
     [
+        # Each ejercicio's form source is the orden that governs it: Orden
+        # HAC/1432/2024 for 2024, the 2025 consolidated form from 2025.
         (
             2024,
             "modelo-190-2024-0a",
             (2024, "2024 0A", date(2025, 1, 1), date(2025, 1, 31)),
             ("rd-439-2007:art-108", "orden-eha-3127-2009:art-5"),
             (date(2025, 1, 31), False, "business_day"),
+            "boe-modelo-190-2024-amendment",
         ),
         # Both windows store the NOMINAL statutory close, the month-end the plazo
         # names, and never AEAT's published operational date. 31 January 2026 is a
@@ -184,6 +187,7 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
             (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
             ("orden-eha-3127-2009:art-5",),
             (date(2026, 2, 2), True, "sabado"),
+            "boe-modelo-190-2025-form",
         ),
     ],
 )
@@ -193,6 +197,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     expected: tuple[int, str, date, date],
     expected_legal_refs: tuple[str, ...],
     expected_shift: tuple[date, bool, str],
+    form_source: str,
 ) -> None:
     """Each filing year resolves the revision that declares ITS deadline window.
 
@@ -229,14 +234,14 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
     assert catalogues.legal["orden-eha-3127-2009:art-5"].evidence_tier == "legal_authority"
     assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources["boe-modelo-190-2025-form"].evidence_tier == "layout_authority"
+    assert catalogues.sources[form_source].evidence_tier == "layout_authority"
 
     assert construct.deadline_windows == (window_id,)
     assert construct.filing_schedules == ("modelo-190-anual",)
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
     assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
-    assert schedule.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
+    assert schedule.source_refs == ("aeat-modelo-190-procedure", form_source)
 
     # The edition spans every supported year from 2025 onward and declares one
     # window per year, so the requested year's window is asserted rather than
@@ -251,7 +256,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.opens_on == opens_on
     assert window.closes_on == closes_on
     assert window.legal_refs == expected_legal_refs
-    assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
+    assert {"aeat-modelo-190-procedure", form_source} <= set(window.source_refs)
     with bundled_indexed_authority().operation() as operation:
         shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
