@@ -260,6 +260,8 @@ def _require_exact_admitted_status(client: RuntimeFrontendClient, *, profile_id:
         raise RuntimeFrontendRefusedError(status.denial.value)
     if status.session_expires_at is None or status.session_expires_at <= now():
         raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_EXPIRED.value)
+    if not status.grant_valid:
+        raise RuntimeFrontendRefusedError(AccessDenialCode.GRANT_INACTIVE.value)
     if (
         not status.connected
         or not status.credential_authenticated
