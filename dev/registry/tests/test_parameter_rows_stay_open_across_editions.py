@@ -12,7 +12,9 @@ reader and the projection rely on:
   window re-keyed.
 
 A genuine change still adds a row with different content, so only a row whose
-content matches one its predecessor already carries is a defect.
+content matches one its predecessor already carries is a defect. Content is
+compared by typed meaning: ``12450.00`` restates ``12450`` and ``0.20`` restates
+``0.2``, so a new decimal representation does not make a restatement a change.
 """
 
 from __future__ import annotations
@@ -78,10 +80,18 @@ def _filing_rows(parameter: ParameterDefinition) -> Iterable[_Row]:
     yield from (row for row in rows if _is_filing_row(row))
 
 
-def _content(row: _Row) -> str:
-    """A row's content without its window, as one comparable key."""
+_Content = tuple[tuple[str, object], ...]
+
+
+def _content(row: _Row) -> _Content:
+    """A row's typed content without its window, as one comparable key.
+
+    Fields keep their typed values, so ``12450.00`` and ``12450`` are one amount:
+    ``Decimal`` compares and hashes by numeric value, not by its representation.
+    """
     window = ("valid_from", "valid_to")
-    return repr(sorted((key, repr(value)) for key, value in row.model_dump().items() if key not in window))
+    dumped = cast("Mapping[str, object]", row.model_dump())
+    return tuple((key, dumped[key]) for key in sorted(dumped) if key not in window)
 
 
 def _covers(row: _Row, day: date) -> bool:
@@ -92,9 +102,9 @@ def _window(row: _Row) -> tuple[date, date | None]:
     return row.valid_from, row.valid_to
 
 
-def _open_rows(parameter: ParameterDefinition, boundary: date) -> dict[str, set[tuple[date, date | None]]]:
+def _open_rows(parameter: ParameterDefinition, boundary: date) -> dict[_Content, set[tuple[date, date | None]]]:
     """The rows still in force on ``boundary``, by content, with their windows."""
-    open_rows: dict[str, set[tuple[date, date | None]]] = {}
+    open_rows: dict[_Content, set[tuple[date, date | None]]] = {}
     for row in _filing_rows(parameter):
         if _covers(row, boundary):
             open_rows.setdefault(_content(row), set()).add(_window(row))
@@ -314,3 +324,64 @@ def test_a_genuine_change_to_an_open_row_is_not_reported() -> None:
     assert _restated_across(predecessor, successor) == ()
     assert _rekeyed_across(predecessor, successor) == ()
     assert _restates_open_row(predecessor, successor, {"family_overrides": [override]}) == ()
+
+
+def _bracket_parameter(*rows: Mapping[str, object]) -> ParameterDefinition:
+    return ParameterDefinition.model_validate(
+        {**_DETECTOR_PARAMETER, "data_type": "bracket_table", "bracket_axis": "filing_period", "brackets": rows}
+    )
+
+
+def _bracket_row(lower: str, fixed: str, rate: str, valid_from: date) -> dict[str, object]:
+    return {
+        "lower_bound": lower,
+        "upper_bound": None,
+        "fixed_addition": fixed,
+        "marginal_rate": rate,
+        "valid_from": valid_from,
+    }
+
+
+def test_a_restatement_in_another_decimal_representation_is_detected() -> None:
+    """``12450.00`` for ``12450`` and ``0.20`` for ``0.2`` restate the row; ``0.21`` changes it."""
+    closing_earlier, closing_later = _live_pair(closed=True)
+    closed = _detector_parameter(_detector_row("12450", closing_earlier.valid_from, closing_earlier.valid_to))
+    assert _restated_across(
+        closing_earlier.model_copy(update={"parameters": (closed,)}),
+        closing_later.model_copy(
+            update={"parameters": (_detector_parameter(_detector_row("12450.00", closing_later.valid_from)),)}
+        ),
+    ) == ("detector-parameter",)
+
+    earlier, later = _live_pair(closed=False)
+    predecessor = earlier.model_copy(
+        update={"parameters": (_detector_parameter(_detector_row("0.2", earlier.valid_from)),)}
+    )
+    selector = {"revision": str(earlier.id), "id": "detector-parameter"}
+    for value, reported in (("0.20", ("detector-parameter",)), ("0.21", ())):
+        restated_row = _detector_row(value, earlier.valid_from)
+        successor = later.model_copy(update={"parameters": (_detector_parameter(restated_row),)})
+        readded = {"family": "parameters", "selector": selector, "sequence_additions": {"values": [restated_row]}}
+        assert _restates_open_row(predecessor, successor, {"family_overrides": [readded]}) == reported, value
+
+
+def test_a_rekey_in_another_decimal_representation_is_detected() -> None:
+    """A value or a bracket rung re-keyed from the later edition's start in a new representation is reported."""
+    earlier, later = _live_pair(closed=False)
+    value_predecessor = earlier.model_copy(
+        update={"parameters": (_detector_parameter(_detector_row("0.2", earlier.valid_from)),)}
+    )
+    bracket_predecessor = earlier.model_copy(
+        update={"parameters": (_bracket_parameter(_bracket_row("12450", "1182.75", "0.12", earlier.valid_from)),)}
+    )
+
+    for value, reported in (("0.20", ("detector-parameter",)), ("0.21", ())):
+        successor = later.model_copy(
+            update={"parameters": (_detector_parameter(_detector_row(value, later.valid_from)),)}
+        )
+        assert _rekeyed_across(value_predecessor, successor) == reported, value
+    for fixed, reported in (("1182.750", ("detector-parameter",)), ("1182.76", ())):
+        successor = later.model_copy(
+            update={"parameters": (_bracket_parameter(_bracket_row("12450.00", fixed, "0.120", later.valid_from)),)}
+        )
+        assert _rekeyed_across(bracket_predecessor, successor) == reported, fixed
