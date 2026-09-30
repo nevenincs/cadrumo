@@ -146,7 +146,12 @@ def _casilla_family_and_channel(data_type: str) -> tuple[ModeloEditValueFamily, 
     return ModeloEditValueFamily.TEXT, ModeloEditValueChannel.TEXT
 
 
-def _ratio_unit(data_type: str, maximum: Decimal | None) -> ModeloEditRatioUnit | None:
+def ratio_unit(data_type: str, maximum: Decimal | None) -> ModeloEditRatioUnit | None:
+    """Return how a ratio casilla's figure reads, from its declared maximum; ``None`` for any other type.
+
+    A declared maximum of 100 makes the figure a percent and a maximum of 1 a
+    fraction; a ratio that declares neither is undeclared, never guessed.
+    """
     if data_type != CasillaDataType.RATIO:
         return None
     if maximum == Decimal(100):
@@ -183,7 +188,7 @@ def casilla_value_grammar(casilla: CasillaDefinition) -> ModeloEditValueGrammarV
         min_length=constraints.min_length if constraints is not None else None,
         max_length=constraints.max_length if constraints is not None else None,
         pattern=constraints.pattern if constraints is not None else None,
-        ratio_unit=_ratio_unit(data_type, maximum),
+        ratio_unit=ratio_unit(data_type, maximum),
         money_operand_bound=is_money,
         required=casilla.required,
         constraints_declared=constraints is not None,
@@ -244,4 +249,5 @@ __all__ = [
     "ModeloEditValueGrammarV1",
     "binding_value_grammar",
     "casilla_value_grammar",
+    "ratio_unit",
 ]
