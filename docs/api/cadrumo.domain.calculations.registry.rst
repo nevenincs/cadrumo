@@ -83,6 +83,7 @@ Submodules
    cadrumo.domain.calculations.registry.export_value_policy
    cadrumo.domain.calculations.registry.fixed_width_codec
    cadrumo.domain.calculations.registry.foreign_asset_obligation_catalogue
+   cadrumo.domain.calculations.registry.form_layout_integrity
    cadrumo.domain.calculations.registry.formula_initial_values
    cadrumo.domain.calculations.registry.formula_runtime
    cadrumo.domain.calculations.registry.formula_runtime_m100
@@ -178,6 +179,7 @@ Submodules
    cadrumo.domain.calculations.registry.schema_deadlines
    cadrumo.domain.calculations.registry.schema_exports
    cadrumo.domain.calculations.registry.schema_extraction
+   cadrumo.domain.calculations.registry.schema_form_layouts
    cadrumo.domain.calculations.registry.schema_formula
    cadrumo.domain.calculations.registry.schema_governance
    cadrumo.domain.calculations.registry.schema_input_kind

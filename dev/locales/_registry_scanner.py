@@ -261,3 +261,51 @@ def scan_detail_row_fields() -> tuple[str, ...]:
     if not values:
         raise LocaleRegistryEnumerationError(f"registry source contains no row_field declarations: {root}")
     return tuple(sorted(values))
+
+
+_FORM_LAYOUT_FRAGMENT_GLOB = "modelos/*/revisions/*/form_layouts/*.toml"
+
+
+def is_form_layout_heading_candidate(key: str) -> bool:
+    """Return whether ``key`` has the shape of a form layout heading key."""
+    return key.startswith("modelo.") and ".form." in f"{key}."
+
+
+@cache
+def scan_form_layout_heading_keys() -> frozenset[str]:
+    """Return every heading key the committed form layouts and the shared column vocabulary declare.
+
+    Layout headings are registry-declared and optional: the runtime falls back
+    from the operator's locale to Spanish, then to the design's official
+    Spanish heading, then to a technical name. They are therefore neither
+    required by key-set parity nor extra to it, but only a key some layout (or
+    the shared vocabulary) actually declares is exempt, so a stray or
+    misspelled heading key still reads as extra.
+
+    Raises:
+        LocaleRegistryEnumerationError: If a committed layout fragment cannot
+            be read or parsed.
+    """
+    from dev.registry.form_layout.column_vocabulary import SHARED_COLUMN_HEADING_KEY_PREFIX, SHARED_COLUMN_KEYS
+
+    root = bundled_path("registry", "aeat").resolve()
+    keys = {f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{member}" for member in SHARED_COLUMN_KEYS}
+
+    def _walk(node: object) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "heading_key" and isinstance(value, str):
+                    keys.add(value)
+                _walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                _walk(value)
+
+    for path in sorted(root.glob(_FORM_LAYOUT_FRAGMENT_GLOB)):
+        try:
+            _walk(parse_toml(path.read_text(encoding="utf-8")))
+        except (OSError, UnicodeError, TomlDecodeError) as exc:
+            raise LocaleRegistryEnumerationError(
+                f"cannot enumerate form layout heading keys from {path}: {type(exc).__name__}: {exc}"
+            ) from exc
+    return frozenset(keys)

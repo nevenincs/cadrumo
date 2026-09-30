@@ -1256,10 +1256,18 @@ def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, obj
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     """Return whether a dotted locale key belongs to a namespace governed outside key-set parity.
 
-    Dynamic namespaces are one such family; delta-keyed casilla leaves are the
-    other, and their presence is checked by the Modelo casilla catalogue.
+    Dynamic namespaces are one such family; delta-keyed casilla leaves are
+    another, and their presence is checked by the Modelo casilla catalogue.
+    Form layout headings the committed layouts declare are the third: they are
+    optional translations with a declared fallback chain.
     """
-    return is_delta_keyed_leaf(key) or any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+    from ._registry_scanner import is_form_layout_heading_candidate, scan_form_layout_heading_keys
+
+    return (
+        is_delta_keyed_leaf(key)
+        or any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+        or (is_form_layout_heading_candidate(key) and key in scan_form_layout_heading_keys())
+    )
 
 
 def _is_test_module(path: Path) -> bool:
