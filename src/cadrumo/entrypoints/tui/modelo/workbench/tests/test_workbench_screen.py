@@ -41,6 +41,7 @@ async def test_the_workbench_opens_on_the_first_box_that_needs_the_filer() -> No
             await pilot.pause()
             highlighted = screen.query_one(CasillaList).highlighted
             header = _text(screen, "#wb-header")
+            result = _text(screen, "#wb-result")
             stepper = _text(screen, "#wb-stepper")
             next_line = _text(screen, "#wb-next")
             page = _text(screen, "#wb-page")
@@ -49,8 +50,8 @@ async def test_the_workbench_opens_on_the_first_box_that_needs_the_filer() -> No
     assert highlighted is not None and highlighted.key == ("casilla", "06")
     assert "Modelo 130" in header
     assert "1.er trimestre 2026" in header
-    assert "Resultado [19]: 1.300,00" in header
-    assert "● Rellenar" in stepper
+    assert result == "Resultado  1.300,00\u00a0€  [19]"
+    assert "▸ Rellenar" in stepper
     assert "Completa las casillas marcadas (pendientes: 1) [n]" in next_line
     assert "Resultado" in page
     assert "página 2 de 3" in page
@@ -137,8 +138,8 @@ async def test_a_complete_declaration_offers_the_next_lifecycle_step() -> None:
 
     assert "✓ Fill in" in stepper
     assert "✓ Calculate" in stepper
-    assert "● Review" in stepper
-    assert next_line == "Next: Verify the declaration [F8]"
+    assert "▸ Check" in stepper
+    assert next_line == "Next: Check the declaration [F8]"
 
 
 @pytest.mark.asyncio

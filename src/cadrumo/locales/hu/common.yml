@@ -2018,7 +2018,7 @@ tui:
       joint_return_elected: Közös önbevallás (autoliquidación conjunta)?
       no_modelo_390_question_hint: Válaszoljon a kérdésre. Ennek az időszaknak a bevallása
         nem kérdez rá a 390-es nyomtatvány alóli mentességre; ezt csak az év utolsó
-        időszakáé (12 vagy 4T) teszi.
+        időszakáé teszi (december vagy a negyedik negyedév).
       observed_at: Megerősítés időpontja új nyilatkozathoz (ISO 8601 UTC-eltolással,
         például 2025-04-01T12:00:00Z)
       required: Válaszoljon a közös önbevallásra vonatkozó kérdésre. Az év utolsó
@@ -2030,6 +2030,8 @@ tui:
     workbench:
       attention:
         staged: Módosítva, még nem alkalmazva
+      browse:
+        last_to_do: 'Ez volt az utolsó teendő. Következő: {action}'
       bulk_confirm:
         column:
           value: Feltételezett érték
@@ -2058,7 +2060,6 @@ tui:
         operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
           számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Az
           újraszámítás csak az itt megadott értékeket tartja meg.
-      defaults_to_confirm: 'meg nem erősített alapértékek: {count} [n]'
       design_constant: '{column}: {value} · a hivatalos terv rögzíti'
       details_page: A számítás részletei
       disclosure:
@@ -2139,10 +2140,46 @@ tui:
       export:
         title: A bevallás exportálása
         verify_first: Exportálás előtt ellenőrizze a bevallást [F8].
+      filed:
+        read_only: 'Benyújtottként rögzítve: megtekinthető, de nem módosítható. A
+          módosításhoz indítsa el a bevallás helyesbítését.'
       filter:
         all: minden rovat
         attention: csak a teendők
         mine: csak az Ön értékei
+      go_to:
+        missing: Ezen a nyomtatványon nincs [{box}] rovat.
+        prompt: 'Ugrás rovatra: írd be a számát, majd nyomj Entert.'
+      header:
+        chip:
+          blocks: 'akadályozó: {count}'
+          check: 'átnézendő: {count}'
+          confirm: 'megerősítendő: {count}'
+          missing: 'hiányzó: {count}'
+        deadline: 'Határidő: {date} · hátralévő napok: {days}'
+        deadline_passed: 'A határidő lejárt: {date}; a benyújtás most már késedelmes'
+        deadline_shifted_help: A szokásos határidő {nominal}. Hétvége vagy ünnepnap
+          miatt {date} lett.
+        deadline_today: 'A határidő ma jár le: {date}'
+        no_deadline: Ehhez az időszakhoz nincs nyilvántartott határidő
+        own_calculation: A Cadrumo számítása; az AEAT még nem látta.
+        result:
+          choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
+          direction_unknown_help: A Cadrumo még nem jelzi, hogy ez az összeg fizetendő
+            vagy visszatérítendő. Benyújtás előtt ellenőrizze a hivatalos nyomtatványon.
+          failed: 'Eredmény: nem számítható ki [{key}]'
+          negative: 'Negatív eredmény: nincs fizetendő'
+          not_calculated: 'Eredmény: még nincs kiszámítva [{key}]'
+          other_boxes: 'A nyomtatvány további eredményrovatai: {boxes}'
+          sign_help: A(z) [{box}] rovat a nyomtatványon {value} értéket mutat. A fejléc
+            az összeget előjel nélkül mutatja, az irányt pedig szavakkal jelzi.
+          to_carry_forward: Később beszámítható
+          to_pay: Fizetendő
+          to_refund: Visszatérítendő
+          unknown: Eredmény
+          zero: Nulla eredmény
+        stale:
+          changes: 'elavult: nem alkalmazott módosítások: {count} [{key}]'
       help:
         empty: Ebben a nézetben nincs rovat.
         feeds: 'Felhasználva: {boxes}'
@@ -2200,9 +2237,12 @@ tui:
       key:
         back: Vissza
         calculate: Számítás
+        close: Bezárás
         edit: Szerkesztés
         export: Exportálás
         filter: Szűrő
+        fold: Oldal kinyitása vagy bezárása
+        go_to: Ugrás rovatra
         help: Súgó
         issues: Problémák
         next_attention: Következő teendő
@@ -2210,6 +2250,8 @@ tui:
         next_step: Következő lépés
         previous_page: Előző oldal
         review: Módosítások
+        search: Keresés
+        sort: Rendezés
         sources: Források
       layout:
         generated: automatikusan rendezett oldalak
@@ -2221,6 +2263,50 @@ tui:
         stay: Szerkesztés folytatása
         title: Nem alkalmazott módosítások
       legend:
+        first_open: Először jár itt? Nyomja meg a ? billentyűt, és megtudja, mit jelentenek
+          a jelek.
+        group:
+          empty: Szándékosan üres, vagy még hiányzik
+          keys: Billentyűk
+          needs_you: Önre vár
+          origin: Honnan származik az érték
+          progress: Módosítások és előrehaladás
+        intro: Minden jel mindenhol ugyanazt jelenti.
+        meaning:
+          level:
+            blocks: A benyújtás rögzítése előtt meg kell oldani.
+            check: Figyelmeztetés. Nem akadályozza a benyújtást.
+            info: Magyarázat, például arról, miért nem használtak fel egy forrást.
+          mark:
+            collapsed: Nyomja meg a → billentyűt a megnyitásához.
+            done: 'Kész: itt nincs több teendő.'
+            earlier: Egy korábban benyújtott bevallásából átvéve.
+            expanded: Nyomja meg a ← billentyűt a bezárásához.
+            here: A kijelölt rovat, vagy az a lépés, ahol tart.
+            staged: Ön módosította ezt a rovatot. A módosítás még nincs alkalmazva.
+            stale: Az eredmény még nem tartalmazza a legutóbbi módosításait.
+          origin:
+            calculated: Más rovatokból számítva.
+            calculation_failed: A Cadrumo nem tudta kiszámítani. A problémák listája
+              megmutatja, miért.
+            cleared: Ön ürítette ki ezt a rovatot.
+            default_to_confirm: A Cadrumo itt olyan értéket tárol, amelyet senki nem
+              adott meg. Erősítse meg, vagy írja be a helyeset.
+            entered: Ezt az értéket Ön írta be.
+            imported: 'Az Ön Cadrumóban tárolt adataiból: nyilvántartásaiból, profiljából
+              vagy az importált AEAT-adatokból.'
+            informational: A nyomtatvány rögzíti, vagy csak viszonyításként látható.
+              Nem kell kitöltenie.
+            needs_input: A bevallásnak szüksége van erre az adatra, de még senki nem
+              adta meg.
+            not_applicable: Szabály szerint üres marad, vagy nem vonatkozik erre a
+              bevallásra.
+            not_calculated_yet: Számítsa ki a bevallást a kitöltéséhez.
+            not_imported_yet: Az adatai még nem kerültek be.
+            optional_empty: Nem kötelező. Hagyja üresen, ha Önre nem vonatkozik.
+            overrides_source: Az Ön értéke felülírja a forrásból származót, csak ebben
+              a bevallásban.
+        more: Nyomja meg újra a ? billentyűt az összes jelhez és billentyűhöz.
         name:
           collapsed: Bezárt szakasz
           done: Kész
@@ -2228,6 +2314,8 @@ tui:
           expanded: Nyitott szakasz
           here: Itt tart
           stale: Elavult
+        on_screen: Ezen a képernyőn
+        title: Jelek és billentyűk
       level:
         blocks: Akadályozza a benyújtást
         check: Érdemes átnézni
@@ -2236,11 +2324,13 @@ tui:
       modelo_number: '{modelo}-es nyomtatvány'
       modelo_title: '{modelo}-es nyomtatvány · {title}'
       next:
-        apply: 'Nézze át és alkalmazza a módosításait (függőben: {count})'
+        apply: 'Nézze át és alkalmazza a módosításait (még nem alkalmazva: {count})'
         calculate: Számítsa ki a bevallást
-        done: A bevallás benyújtva
-        file: Hozza létre a fájlt és rögzítse a benyújtást
+        confirm: 'Erősítse meg a feltételezett értékeket (megerősítendő: {count})'
+        export: Hozza létre a fájlt az AEAT-nál történő benyújtáshoz
         fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
+        record: Miután benyújtotta az AEAT-nál, rögzítse itt a benyújtást
+        recorded: 'Benyújtottként rögzítve: {date}'
         resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
         verify: Ellenőrizze a bevallást
       next_line: 'Következő: {action} [{key}]'
@@ -2258,6 +2348,12 @@ tui:
         source_locked: Az Ön nyilvántartását követi; ott javítsa, majd számoljon újra.
         value_channel_unavailable: Dátumot és évet itt még nem lehet megadni.
       operation:
+        calculated: 'Kiszámítva. {direction}: {value}.'
+        checked:
+          blocked: 'Ellenőrizve: valami akadályozza a benyújtást. A részletekért nyissa
+            meg a problémákat [{key}].'
+          complete: 'Ellenőrizve: semmi sem akadályozza a benyújtást.'
+          incomplete: 'Ellenőrizve: hiányoznak a bevalláshoz szükséges adatok [{key}].'
         done: Kész. A bevallás frissült.
         not_done: Nem fejeződött be; a módosításai megmaradtak.
       origin:
@@ -2302,6 +2398,7 @@ tui:
           records: Az Öné, felülírja a nyilvántartásait
           registers: Az Öné, felülírja a vezetett nyilvántartást
           your_entries: Az Öné, felülírja a bejegyzését
+      page_number: '{page}. oldal'
       page_position: '{current}/{total}. oldal'
       period:
         annual: '{year}. éves'
@@ -2330,7 +2427,6 @@ tui:
           a módosításait [R].
       repeating: 'Részletező sorok: {count}'
       repeating_unknown: Ezek a sorok itt még nem jeleníthetők meg.
-      result: 'Eredmény [{box}]: {value}'
       result_diff:
         close: Bezárás
         column:
@@ -2398,8 +2494,20 @@ tui:
         rebased: 'A bevallás megváltozott, miután előkészítette ezeket a módosításokat.
           Nézze át újra a megjelölt sorokat (megváltozott: {count}).'
         title: 'Alkalmazandó módosítások: {count}'
+      search:
+        count: 'Talált rovatok: {count}'
+        empty: 'Egy rovat sem felel meg ennek: {query}.'
+        prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
+          visz.
       section:
+        part: '{page}. oldal, {part}. rész'
         pending: '{heading} · teendő: {count}'
+      sort:
+        all_pages: Minden oldal
+        amount: összeg szerint rendezve, a legnagyobbal kezdve
+        attention: elöl, ami figyelmet igényel
+        box: rovatszám szerint rendezve
+        form: a nyomtatvány sorrendjében
       sources:
         and_more: és még {count}
         count: 'Rovatok: {count}'
@@ -2441,7 +2549,7 @@ tui:
         restore: (vissza a forráshoz)
       step:
         calculate: Számítás
-        file: Benyújtás
+        file: Benyújtás rögzítése
         fill: Kitöltés
         review: Ellenőrzés
       value:

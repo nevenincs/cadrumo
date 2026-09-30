@@ -3,9 +3,10 @@
 Driven through the standalone host with the synthetic form and a fake actions
 port: the editor reads every keystroke through the port's parser and only
 stages a value that reads cleanly; staged values show on their line with what
-they replace; a box the filer cannot type into says why; leaving with staged
-changes asks first; applying submits the typed changes and keeps them when the
-operation cannot run; and the next-step key runs the step the stepper offers.
+they replace; a box the filer cannot type into opens its panel and says why;
+leaving with staged changes asks first; applying submits the typed changes and
+keeps them when the operation cannot run; and the next-step key runs the step
+the stepper offers.
 """
 
 from __future__ import annotations
@@ -63,7 +64,7 @@ async def test_a_typed_value_is_read_back_then_staged_on_its_line() -> None:
     staged_line = next(line for line in listing.splitlines() if "Retenciones" in line)
     assert "Δ" in staged_line
     assert "300,50" in staged_line
-    assert "Revisa y aplica tus cambios (pendientes: 1) [R]" in next_line
+    assert "Revisa y aplica tus cambios (sin aplicar: 1) [R]" in next_line
 
 
 @pytest.mark.asyncio
@@ -97,11 +98,19 @@ async def test_a_box_that_follows_the_records_says_why_it_cannot_be_typed_into()
             await _settle(pilot)
             await pilot.press("enter")
             await _settle(pilot)
-            still_workbench = app.screen is screen
-            notice = str(screen.query_one("#wb-notice", Static).render())
+            panel = app.screen
+            assert isinstance(panel, CasillaEditorScreen)
+            read_only = panel.read_only
+            inputs = len(panel.query(Input))
+            reason = str(panel.query_one("#editor-can-change-text", Static).render())
+            await pilot.press("escape")
+            await _settle(pilot)
+            back = app.screen is screen
 
-    assert still_workbench
-    assert notice == "It follows your records; correct it there and recalculate."
+    assert read_only
+    assert inputs == 0
+    assert reason == "Not here. Change it in your records (Ledger), then calculate again."
+    assert back
 
 
 @pytest.mark.asyncio

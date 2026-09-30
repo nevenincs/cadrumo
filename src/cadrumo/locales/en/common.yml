@@ -1989,8 +1989,8 @@ tui:
         a new attestation.
       joint_return_elected: Joint self-assessment (autoliquidación conjunta)?
       no_modelo_390_question_hint: Answer the question. This period's return does
-        not ask about the Modelo 390 exemption; only the last period of the year (12
-        or 4T) does.
+        not ask about the Modelo 390 exemption; only the return for the last period
+        of the year does (December, or the 4th quarter).
       observed_at: Confirmed at, for a new attestation (ISO 8601 with UTC offset,
         for example 2025-04-01T12:00:00Z)
       required: Answer the joint self-assessment question. In the last period of the
@@ -2002,6 +2002,8 @@ tui:
     workbench:
       attention:
         staged: Changed, not applied
+      browse:
+        last_to_do: 'That was the last thing to do. Next: {action}'
       bulk_confirm:
         column:
           value: Assumed value
@@ -2028,7 +2030,6 @@ tui:
         operator_entries_unknown: This declaration was last calculated outside this
           screen, so Cadrumo cannot tell which values you typed. Calculating again
           keeps only the values entered here.
-      defaults_to_confirm: 'defaults not yet confirmed: {count} [n]'
       design_constant: '{column}: {value} · fixed by the official design'
       details_page: Calculation details
       disclosure:
@@ -2107,10 +2108,47 @@ tui:
       export:
         title: Export the declaration
         verify_first: Verify the declaration before exporting it [F8].
+      filed:
+        read_only: 'Recorded as filed: you can look at it but not change it. To change
+          it, start a correction of this declaration.'
       filter:
         all: all boxes
         attention: only what needs attention
         mine: only your values
+      go_to:
+        missing: There is no box [{box}] on this form.
+        prompt: 'Go to box: type its number and press Enter.'
+      header:
+        chip:
+          blocks: 'blocking: {count}'
+          check: 'to check: {count}'
+          confirm: 'to confirm: {count}'
+          missing: 'missing: {count}'
+        deadline: 'Deadline {date} · days left: {days}'
+        deadline_passed: 'Deadline passed on {date}: filing now is late'
+        deadline_shifted_help: The usual deadline is {nominal}. It moves to {date}
+          because of a weekend or holiday.
+        deadline_today: Deadline today, {date}
+        no_deadline: No deadline on record for this period
+        own_calculation: Cadrumo's calculation. AEAT has not seen it.
+        result:
+          choice_pending: 'To carry forward or to be refunded: you choose when you
+            create the file'
+          direction_unknown_help: Cadrumo does not yet say whether this amount is
+            to pay or to refund. Check it against the official form before you file.
+          failed: 'Result: could not be calculated [{key}]'
+          negative: 'Negative result: nothing to pay'
+          not_calculated: 'Result: not calculated yet [{key}]'
+          other_boxes: 'Other result boxes on this form: {boxes}'
+          sign_help: Box [{box}] shows {value} on the form. The header shows the amount
+            without its sign and says the direction in words.
+          to_carry_forward: To carry forward
+          to_pay: To pay
+          to_refund: To be refunded
+          unknown: Result
+          zero: Result zero
+        stale:
+          changes: 'out of date: changes not applied yet: {count} [{key}]'
       help:
         empty: There are no boxes in this view.
         feeds: 'Used in: {boxes}'
@@ -2165,9 +2203,12 @@ tui:
       key:
         back: Back
         calculate: Calculate
+        close: Close
         edit: Edit
         export: Export
         filter: Filter
+        fold: Open or close page
+        go_to: Go to box
         help: Help
         issues: Issues
         next_attention: Next to do
@@ -2175,6 +2216,8 @@ tui:
         next_step: Next step
         previous_page: Previous page
         review: Review changes
+        search: Search
+        sort: Sort
         sources: Sources
       layout:
         generated: pages arranged automatically
@@ -2186,6 +2229,47 @@ tui:
         stay: Keep editing
         title: Changes not applied
       legend:
+        first_open: New here? Press ? to see what each symbol means.
+        group:
+          empty: Empty on purpose, or not there yet
+          keys: Keys
+          needs_you: Needs you
+          origin: Where the value comes from
+          progress: Changes and progress
+        intro: Each symbol always means the same thing, wherever it appears.
+        meaning:
+          level:
+            blocks: Must be fixed before you can record the filing.
+            check: A warning. It does not stop you from filing.
+            info: An explanation, for example why a source was not used.
+          mark:
+            collapsed: Press → to open it.
+            done: 'Finished: nothing left to do here.'
+            earlier: Carried from a declaration you filed before.
+            expanded: Press ← to close it.
+            here: The selected box, or the step you are on.
+            staged: You changed this box. The change is not applied yet.
+            stale: The result does not include your latest changes yet.
+          origin:
+            calculated: Worked out from other boxes.
+            calculation_failed: Cadrumo could not work this out. The issue list says
+              why.
+            cleared: You emptied this box.
+            default_to_confirm: Cadrumo holds a value here that nobody entered. Confirm
+              it or type the right one.
+            entered: You typed this value.
+            imported: 'From your data in Cadrumo: your records, your profile or AEAT
+              data you imported.'
+            informational: Fixed by the form, or shown for reference. You do not fill
+              it in.
+            needs_input: The declaration needs this value and nobody has given it.
+            not_applicable: Stays empty by rule, or does not apply to this declaration.
+            not_calculated_yet: Calculate the declaration to fill it.
+            not_imported_yet: Its data has not been brought in yet.
+            optional_empty: Optional. Leave it empty if it does not apply to you.
+            overrides_source: Your value replaces the one from its source, in this
+              declaration only.
+        more: Press ? again for all symbols and keys.
         name:
           collapsed: Closed section
           done: Done
@@ -2193,6 +2277,8 @@ tui:
           expanded: Open section
           here: You are here
           stale: Out of date
+        on_screen: On this screen
+        title: Symbols and keys
       level:
         blocks: Blocks filing
         check: Worth checking
@@ -2201,13 +2287,15 @@ tui:
       modelo_number: Modelo {modelo}
       modelo_title: Modelo {modelo} · {title}
       next:
-        apply: 'Review and apply your changes (pending: {count})'
+        apply: 'Review and apply your changes (not applied yet: {count})'
         calculate: Calculate the declaration
-        done: Declaration filed
-        file: Create the file and record the filing
+        confirm: 'Confirm the assumed values (to confirm: {count})'
+        export: Create the file to file with AEAT
         fill: 'Complete the marked boxes (to do: {count})'
+        record: Once you have filed it with AEAT, record the filing here
+        recorded: Recorded as filed on {date}
         resolve: 'Resolve what blocks filing (to do: {count})'
-        verify: Verify the declaration
+        verify: Check the declaration
       next_line: 'Next: {action} [{key}]'
       not_writable:
         absent_from_admission: This box cannot be edited here.
@@ -2223,6 +2311,12 @@ tui:
         source_locked: It follows your records; correct it there and recalculate.
         value_channel_unavailable: Dates and years cannot be entered here yet.
       operation:
+        calculated: Calculated. {direction} {value}.
+        checked:
+          blocked: 'Checked: something blocks filing. Open the issues to see what
+            [{key}].'
+          complete: 'Checked: nothing blocks filing.'
+          incomplete: 'Checked: some values the declaration needs are missing [{key}].'
         done: Done. The declaration has been updated.
         not_done: It did not complete; your changes are still here.
       origin:
@@ -2267,6 +2361,7 @@ tui:
           records: Yours, replaces your records
           registers: Yours, replaces your register
           your_entries: Yours, replaces your entry
+      page_number: Page {page}
       page_position: page {current} of {total}
       period:
         annual: Annual {year}
@@ -2295,7 +2390,6 @@ tui:
           your changes again [R].
       repeating: 'Detail rows: {count}'
       repeating_unknown: These rows cannot be shown here yet.
-      result: 'Result [{box}]: {value}'
       result_diff:
         close: Close
         column:
@@ -2360,8 +2454,19 @@ tui:
         rebased: 'The declaration changed after you staged these changes. Check the
           marked lines again (changed: {count}).'
         title: 'Changes to apply: {count}'
+      search:
+        count: 'Boxes found: {count}'
+        empty: No box matches {query}.
+        prompt: Search every page by box number or by words. Enter goes to the box.
       section:
+        part: Page {page}, part {part}
         pending: '{heading} · to do: {count}'
+      sort:
+        all_pages: All pages
+        amount: sorted by amount, largest first
+        attention: what needs attention first
+        box: sorted by box number
+        form: in form order
       sources:
         and_more: and {count} more
         count: 'Boxes: {count}'
@@ -2403,9 +2508,9 @@ tui:
         restore: (back to source)
       step:
         calculate: Calculate
-        file: File
+        file: Record filing
         fill: Fill in
-        review: Review
+        review: Check
       value:
         fixed_by_design: fixed
         not_applicable: n/a

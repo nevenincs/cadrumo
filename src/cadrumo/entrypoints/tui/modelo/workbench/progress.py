@@ -1,28 +1,42 @@
 """Where a declaration stands in the filing journey, and the one thing to do next.
 
 Four steps, each decided from facts the form and the lifecycle already carry:
-fill (no field still needs the filer and no change is left unapplied),
-calculate (a calculation exists and nothing changed since), review (the
-current calculation is verified and nothing blocks filing) and file (the
-declaration is recorded as filed). The first step not done is the current one,
-and the next-action line names it with the key that performs it, so the filer
-is never left to guess what comes next.
+fill in (no field still needs the filer, no value is still assumed and no
+change is left unapplied), calculate (a calculation exists and nothing changed
+since), check (the current calculation is verified and nothing blocks filing)
+and record filing (the declaration is recorded as filed). The first step not
+done is the current one, and the next-action line names it with the key that
+performs it, so the filer is never left to guess what comes next.
+
+An assumed value, one the calculation holds that nobody is recorded as having
+entered, keeps filling in open and withholds recording the filing until the
+filer confirms it or types another: an unentered value in a box the
+declaration files is exactly the suspicious zero that must be surfaced before
+filing. Recording a filing only records it in Cadrumo, so a verified
+declaration is offered the file to take to the AEAT first, and recording once
+it has been filed there.
 
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
-not reviewed, and a verification that found something to resolve sends the
+not checked, and a verification that found something to resolve sends the
 filer to what it found rather than back to verifying.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Final
 
+from rich.text import Text
+
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
+from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
+from .wording import date_text
 
 
 class WorkbenchStep(StrEnum):
@@ -48,23 +62,29 @@ class NextAction(StrEnum):
 
     APPLY = "apply"
     FILL = "fill"
+    CONFIRM = "confirm"
     CALCULATE = "calculate"
     RESOLVE = "resolve"
     VERIFY = "verify"
-    FILE = "file"
-    DONE = "done"
+    EXPORT = "export"
+    RECORDED = "recorded"
 
 
 _UNRESOLVED_VERDICTS: Final[frozenset[VerificationCompletenessStatus]] = frozenset(
     {VerificationCompletenessStatus.INCOMPLETE, VerificationCompletenessStatus.BLOCKED}
 )
 _STEP_SEPARATOR: Final[str] = " ── "
-_STATUS_MARKS: Final[dict[StepStatus, str]] = {
-    StepStatus.DONE: "✓",
-    StepStatus.CURRENT: "●",
-    StepStatus.BLOCKED: "▲",
-    StepStatus.PENDING: "○",
+_STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
+    StepStatus.DONE: DONE_MARK,
+    StepStatus.CURRENT: HERE_MARK,
+    StepStatus.BLOCKED: BLOCKS_MARK,
+    # A step not started carries no mark and is dimmed, so it reads as not
+    # done in greyscale without a glyph of its own.
+    StepStatus.PENDING: None,
 }
+_PENDING_STYLE: Final[str] = "dim"
+_RECORD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next.record"
+_RECORD_KEY: Final[str] = "F8"
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,29 +97,30 @@ class StepState:
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchProgress:
-    """The journey's state, the next action it offers and how many defaults remain unconfirmed."""
+    """The journey's state, the next action it offers, and when the filing was recorded, once it is."""
 
     steps: tuple[StepState, ...]
     next_action: NextAction
     count: int
-    defaults_to_confirm: int = 0
+    recorded_at: datetime | None = None
 
 
 def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
     """Place a declaration on the filing journey from its form and lifecycle facts.
 
-    The lifecycle facts dominate: a verified declaration has passed its checks
-    and a filed one has been filed, whatever its form still marks, so neither is
-    sent back to filling. Filling asks only for boxes that need the filer; a
-    default the filer has not confirmed is reported beside the next action
-    rather than holding the journey back. Every step shows whether it is done,
-    wherever it sits; the first step not done is the current one.
+    A declaration recorded as filed is done whatever its form still marks. A
+    verified one is not sent back to filing in the boxes verification already
+    accepted, but an assumed value still keeps filling in open: only the filer
+    can say it is right. Every step shows whether it is done, wherever it sits;
+    the first step not done is the current one.
     """
     to_fill = form.counts.needs_input
+    assumed = form.counts.default_to_confirm
     blocked = form.counts.blocked
     clean = staged == 0
+    filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
-        WorkbenchStep.FILL: clean and (filed or verified or to_fill == 0),
+        WorkbenchStep.FILL: clean and filled,
         WorkbenchStep.CALCULATE: clean and form.calculation_revision_id is not None,
         WorkbenchStep.REVIEW: clean and verified and blocked == 0,
         WorkbenchStep.FILE: clean and filed,
@@ -118,8 +139,8 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         else:
             steps.append(StepState(step, StepStatus.PENDING))
     action, count = _next(form, staged=staged, to_fill=to_fill, blocked=blocked, verified=verified, filed=filed)
-    advisory = 0 if verified or filed or action is NextAction.APPLY else form.counts.default_to_confirm
-    return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count, defaults_to_confirm=advisory)
+    recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
+    return WorkbenchProgress(steps=tuple(steps), next_action=action, count=count, recorded_at=recorded_at)
 
 
 def _next(
@@ -128,11 +149,13 @@ def _next(
     if staged:
         return NextAction.APPLY, staged
     if filed:
-        return NextAction.DONE, 0
-    if verified:
-        return NextAction.FILE, 0
-    if to_fill:
+        return NextAction.RECORDED, 0
+    if to_fill and not verified:
         return NextAction.FILL, to_fill
+    if form.counts.default_to_confirm:
+        return NextAction.CONFIRM, form.counts.default_to_confirm
+    if verified:
+        return NextAction.EXPORT, 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
     if blocked or form.verification in _UNRESOLVED_VERDICTS:
@@ -144,22 +167,38 @@ def _step_name(step: WorkbenchStep) -> str:
     return tr(f"tui.modelo.workbench.step.{step.value}")
 
 
-def stepper_text(progress: WorkbenchProgress) -> str:
-    """Render the steps as one line of marks and names."""
-    parts = [f"{_STATUS_MARKS[state.status]} {_step_name(state.step)}" for state in progress.steps]
-    return _STEP_SEPARATOR.join(parts)
+def stepper_text(progress: WorkbenchProgress) -> Text:
+    """Render the steps as one line: a mark and a name each, a step not started dimmed and unmarked."""
+    line = Text()
+    for index, state in enumerate(progress.steps):
+        if index:
+            line.append(_STEP_SEPARATOR)
+        mark = _STATUS_MARKS[state.status]
+        if mark is None:
+            line.append(_step_name(state.step), style=_PENDING_STYLE)
+        else:
+            line.append(f"{mark.glyph} {_step_name(state.step)}")
+    return line
 
 
-def next_action_text(progress: WorkbenchProgress) -> str:
-    """Render the next-action line in the filer's language."""
-    return tr(f"tui.modelo.workbench.next.{progress.next_action.value}", count=progress.count)
+def stepper_marks(progress: WorkbenchProgress) -> tuple[WorkbenchMark, ...]:
+    """The marks the stepper draws, one per step that carries one."""
+    return tuple(mark for state in progress.steps if (mark := _STATUS_MARKS[state.status]) is not None)
 
 
-def defaults_text(progress: WorkbenchProgress) -> str:
-    """Say how many defaults the filer has not confirmed, or nothing when none remain."""
-    if not progress.defaults_to_confirm:
-        return ""
-    return tr("tui.modelo.workbench.defaults_to_confirm", count=progress.defaults_to_confirm)
+def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> str:
+    """Render the next action in the filer's language, without its key."""
+    action = progress.next_action
+    if action is NextAction.RECORDED:
+        if progress.recorded_at is None:
+            return f"{DONE_MARK.glyph} {_step_name(WorkbenchStep.FILE)}"
+        return tr("tui.modelo.workbench.next.recorded", date=date_text(progress.recorded_at.date(), language))
+    return tr(f"tui.modelo.workbench.next.{action.value}", count=progress.count)
+
+
+def record_filing_text() -> str:
+    """The second half of a verified declaration's next line: record the filing once it is filed with the AEAT."""
+    return f"{tr(_RECORD_LOCALE_KEY)} [{_RECORD_KEY}]"
 
 
 __all__ = [
@@ -168,8 +207,9 @@ __all__ = [
     "StepStatus",
     "WorkbenchProgress",
     "WorkbenchStep",
-    "defaults_text",
     "next_action_text",
+    "record_filing_text",
+    "stepper_marks",
     "stepper_text",
     "workbench_progress",
 ]

@@ -1,4 +1,4 @@
-"""The workbench's words for a declaration: its modelo's name and its period.
+"""The workbench's words for a declaration: its modelo's name, its period and its dates.
 
 A filer reads "1st quarter 2026" and "Modelo 130 · Income tax instalment", never
 the transport tokens ``1T`` or ``0A``. A period kind without words of its own is
@@ -7,8 +7,10 @@ shown as its official code rather than guessed at.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Final
 
+from .....application.modelo.value_presentation import format_casilla_value
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import lookup_translation, tr
 from .....core.period import Period, PeriodKind
@@ -50,4 +52,9 @@ def modelo_title(modelo: str, language: OutputLanguage) -> str:
     return modelo_number(modelo)
 
 
-__all__ = ["PERIOD_WORD_NAMES", "modelo_number", "modelo_title", "period_words"]
+def date_text(value: date, language: OutputLanguage) -> str:
+    """A date in the order the filer's language writes it, as the rows write one."""
+    return format_casilla_value(value, data_type="date", language=language)
+
+
+__all__ = ["PERIOD_WORD_NAMES", "date_text", "modelo_number", "modelo_title", "period_words"]

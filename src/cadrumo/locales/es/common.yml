@@ -2019,12 +2019,12 @@ tui:
         title: Resultado de la exportación
         unavailable: La exportación ha terminado, pero no se ha podido leer su resultado,
           así que se desconocen su estado como evidencia, su integridad y su identidad
-          de software. Revise el fichero antes de confiar en él.
+          de software. Revisa el fichero antes de confiar en él.
         warning:
           completeness_unverified: 'No se ha verificado la integridad de este fichero
             de presentación: su revisión no declara manifiesto de integridad, así
             que la comprobación de paridad estructural no ha podido confirmar que
-            todas las casillas obligatorias lleguen al fichero. Revise las casillas
+            todas las casillas obligatorias lleguen al fichero. Revisa las casillas
             exportadas frente al Diseño de Registros oficial antes de presentar.'
           development_software_identity: La cabecera del fichero lleva la identidad
             de software de desarrollo con todo ceros; la AEAT no aceptará este fichero
@@ -2042,25 +2042,27 @@ tui:
       attestation_sha256: SHA-256 de la atestación existente
       cancel: Cancelar
       cancelled: Cálculo cancelado; no se ha registrado ningún dato de la autoliquidación.
-      existing_attestation_hint: Responda a la pregunta. Después, indique una atestación
+      existing_attestation_hint: Responde a la pregunta. Después, indica una atestación
         existente de que no procede el apartado de exoneración del modelo 390 (su
-        identificador y SHA-256), o déjelos en blanco e indique cuándo lo confirmó
+        identificador y SHA-256), o déjalos en blanco e indica cuándo lo confirmaste
         para registrar una atestación nueva.
       joint_return_elected: ¿Autoliquidación conjunta?
-      no_modelo_390_question_hint: Responda a la pregunta. La autoliquidación de este
+      no_modelo_390_question_hint: Responde a la pregunta. La autoliquidación de este
         período no pregunta por la exoneración del modelo 390; solo lo hace la del
-        último período del año (12 o 4T).
+        último período del año (diciembre o cuarto trimestre).
       observed_at: Confirmado el, para una atestación nueva (ISO 8601 con desfase
         UTC, por ejemplo 2025-04-01T12:00:00Z)
-      required: Responda a la pregunta sobre la autoliquidación conjunta. En el último
-        período del año indique además una atestación existente completa o una hora
+      required: Responde a la pregunta sobre la autoliquidación conjunta. En el último
+        período del año indica además una atestación existente completa o una hora
         de confirmación con su desfase UTC, pero no ambas.
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
-        abierto. No se ha calculado nada; vuelva a elegir Calcular.
+        abierto. No se ha calculado nada; vuelve a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
     workbench:
       attention:
         staged: Cambiada, sin aplicar
+      browse:
+        last_to_do: 'Era lo último que quedaba por hacer. Siguiente: {action}'
       bulk_confirm:
         column:
           value: Valor supuesto
@@ -2088,7 +2090,6 @@ tui:
         operator_entries_unknown: Esta declaración se calculó por última vez fuera
           de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
           Al volver a calcular solo se conservan los valores introducidos aquí.
-      defaults_to_confirm: 'valores por defecto sin confirmar: {count} [n]'
       design_constant: '{column}: {value} · lo fija el diseño oficial'
       details_page: Detalles del cálculo
       disclosure:
@@ -2165,10 +2166,47 @@ tui:
       export:
         title: Exportar la declaración
         verify_first: Verifica la declaración antes de exportarla [F8].
+      filed:
+        read_only: 'Registrada como presentada: puedes consultarla, pero no cambiarla.
+          Para cambiarla, inicia una corrección de esta declaración.'
       filter:
         all: todas las casillas
         attention: solo lo pendiente
         mine: solo tus valores
+      go_to:
+        missing: No hay ninguna casilla [{box}] en este modelo.
+        prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
+      header:
+        chip:
+          blocks: 'impiden presentar: {count}'
+          check: 'para revisar: {count}'
+          confirm: 'por confirmar: {count}'
+          missing: 'faltan: {count}'
+        deadline: 'Plazo hasta el {date} · días restantes: {days}'
+        deadline_passed: 'El plazo terminó el {date}: presentar ahora es fuera de
+          plazo'
+        deadline_shifted_help: El plazo habitual es el {nominal}. Pasa al {date} por
+          un fin de semana o festivo.
+        deadline_today: El plazo termina hoy, {date}
+        no_deadline: No consta ningún plazo para este periodo
+        own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
+        result:
+          choice_pending: 'A compensar o a devolver: lo eliges al generar el fichero'
+          direction_unknown_help: Cadrumo aún no indica si este importe es a ingresar
+            o a devolver. Compruébalo en el modelo oficial antes de presentar.
+          failed: 'Resultado: no se pudo calcular [{key}]'
+          negative: 'Resultado negativo: nada a ingresar'
+          not_calculated: 'Resultado: aún sin calcular [{key}]'
+          other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
+          sign_help: La casilla [{box}] figura en el modelo como {value}. Arriba se
+            muestra el importe sin signo y el sentido en palabras.
+          to_carry_forward: A compensar
+          to_pay: A ingresar
+          to_refund: A devolver
+          unknown: Resultado
+          zero: Resultado cero
+        stale:
+          changes: 'desactualizado: cambios sin aplicar: {count} [{key}]'
       help:
         empty: No hay casillas en esta vista.
         feeds: 'Se usa en: {boxes}'
@@ -2224,9 +2262,12 @@ tui:
       key:
         back: Volver
         calculate: Calcular
+        close: Cerrar
         edit: Editar
         export: Exportar
         filter: Filtro
+        fold: Abrir o cerrar página
+        go_to: Ir a casilla
         help: Ayuda
         issues: Incidencias
         next_attention: Siguiente pendiente
@@ -2234,6 +2275,8 @@ tui:
         next_step: Siguiente paso
         previous_page: Página anterior
         review: Revisar cambios
+        search: Buscar
+        sort: Ordenar
         sources: Orígenes
       layout:
         generated: páginas ordenadas automáticamente
@@ -2244,6 +2287,46 @@ tui:
         stay: Seguir editando
         title: Cambios sin aplicar
       legend:
+        first_open: ¿Es tu primera vez? Pulsa ? para ver qué significa cada símbolo.
+        group:
+          empty: Vacía a propósito, o todavía sin valor
+          keys: Teclas
+          needs_you: Te necesita
+          origin: De dónde sale el valor
+          progress: Cambios y avance
+        intro: Cada símbolo significa siempre lo mismo, aparezca donde aparezca.
+        meaning:
+          level:
+            blocks: Hay que resolverlo antes de registrar la presentación.
+            check: Un aviso. No te impide presentar.
+            info: Una explicación, por ejemplo por qué no se usó un origen.
+          mark:
+            collapsed: Pulsa → para abrirla.
+            done: 'Terminado: no queda nada por hacer aquí.'
+            earlier: Traído de una declaración que presentaste antes.
+            expanded: Pulsa ← para cerrarla.
+            here: La casilla seleccionada o el paso en el que estás.
+            staged: Cambiaste esta casilla. El cambio aún no se ha aplicado.
+            stale: El resultado aún no incluye tus últimos cambios.
+          origin:
+            calculated: Calculado a partir de otras casillas.
+            calculation_failed: Cadrumo no pudo calcularlo. La lista de incidencias
+              explica por qué.
+            cleared: Vaciaste esta casilla.
+            default_to_confirm: Cadrumo tiene aquí un valor que nadie introdujo. Confírmalo
+              o escribe el correcto.
+            entered: Escribiste tú este valor.
+            imported: 'De tus datos en Cadrumo: tus registros, tu perfil o datos de
+              la AEAT que importaste.'
+            informational: Lo fija el modelo o se muestra como referencia. No tienes
+              que rellenarlo.
+            needs_input: La declaración necesita este dato y nadie lo ha dado.
+            not_applicable: Queda vacía por norma o no se aplica a esta declaración.
+            not_calculated_yet: Calcula la declaración para rellenarla.
+            not_imported_yet: Sus datos aún no se han traído.
+            optional_empty: Opcional. Déjala vacía si no te afecta.
+            overrides_source: Tu valor sustituye al de su origen, solo en esta declaración.
+        more: Pulsa ? otra vez para ver todos los símbolos y teclas.
         name:
           collapsed: Sección cerrada
           done: Hecho
@@ -2251,6 +2334,8 @@ tui:
           expanded: Sección abierta
           here: Estás aquí
           stale: Desactualizado
+        on_screen: En esta pantalla
+        title: Símbolos y teclas
       level:
         blocks: Impide presentar
         check: Conviene revisarlo
@@ -2259,13 +2344,15 @@ tui:
       modelo_number: Modelo {modelo}
       modelo_title: Modelo {modelo} · {title}
       next:
-        apply: 'Revisa y aplica tus cambios (pendientes: {count})'
+        apply: 'Revisa y aplica tus cambios (sin aplicar: {count})'
         calculate: Calcula la declaración
-        done: Declaración presentada
-        file: Genera el fichero y registra la presentación
+        confirm: 'Confirma los valores supuestos (por confirmar: {count})'
+        export: Genera el fichero para presentarlo en la AEAT
         fill: 'Completa las casillas marcadas (pendientes: {count})'
+        record: Cuando la hayas presentado en la AEAT, registra aquí la presentación
+        recorded: Registrada como presentada el {date}
         resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
-        verify: Verifica la declaración
+        verify: Comprueba la declaración
       next_line: 'Siguiente: {action} [{key}]'
       not_writable:
         absent_from_admission: Esta casilla no se puede editar aquí.
@@ -2281,6 +2368,12 @@ tui:
         value_channel_unavailable: Las fechas y los años aún no se pueden introducir
           aquí.
       operation:
+        calculated: Calculada. {direction} {value}.
+        checked:
+          blocked: 'Comprobada: algo impide presentarla. Abre las incidencias para
+            verlo [{key}].'
+          complete: 'Comprobada: nada impide presentarla.'
+          incomplete: 'Comprobada: faltan datos que la declaración necesita [{key}].'
         done: Hecho. La declaración se ha actualizado.
         not_done: No se ha completado; tus cambios siguen aquí.
       origin:
@@ -2325,6 +2418,7 @@ tui:
           records: Tuyo, sustituye a tus registros
           registers: Tuyo, sustituye a tu registro
           your_entries: Tuyo, sustituye a lo que escribiste
+      page_number: Página {page}
       page_position: página {current} de {total}
       period:
         annual: Anual {year}
@@ -2353,7 +2447,6 @@ tui:
           revisar tus cambios [R].
       repeating: 'Filas de detalle: {count}'
       repeating_unknown: Estas filas no se pueden mostrar aquí todavía.
-      result: 'Resultado [{box}]: {value}'
       result_diff:
         close: Cerrar
         column:
@@ -2420,8 +2513,20 @@ tui:
         rebased: 'La declaración cambió después de que prepararas estos cambios. Revisa
           de nuevo las líneas marcadas (cambiadas: {count}).'
         title: 'Cambios por aplicar: {count}'
+      search:
+        count: 'Casillas encontradas: {count}'
+        empty: Ninguna casilla coincide con {query}.
+        prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
+          te lleva a la casilla.
       section:
+        part: Página {page}, parte {part}
         pending: '{heading} · pendientes: {count}'
+      sort:
+        all_pages: Todas las páginas
+        amount: ordenadas por importe, de mayor a menor
+        attention: primero lo que requiere atención
+        box: ordenadas por número de casilla
+        form: en el orden del modelo
       sources:
         and_more: y {count} más
         count: 'Casillas: {count}'
@@ -2464,9 +2569,9 @@ tui:
         restore: (vuelve al origen)
       step:
         calculate: Calcular
-        file: Presentar
+        file: Registrar presentación
         fill: Rellenar
-        review: Revisar
+        review: Comprobar
       value:
         fixed_by_design: fijado
         not_applicable: no aplica
