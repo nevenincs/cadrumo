@@ -3,8 +3,9 @@
 Four steps, each decided from facts the form and the lifecycle already carry:
 fill in (no field still needs the filer, no value is still assumed and no
 change is left unapplied), calculate (a calculation exists and nothing changed
-since), check (the current calculation is verified and nothing blocks filing)
-and record filing (the declaration is recorded as filed). The first step not
+since, neither a staged change nor the filer's records), check (the current
+calculation is verified and nothing blocks filing) and record filing (the
+declaration is recorded as filed). The first step not
 done is the current one, and the next-action line names it with the key that
 performs it, so the filer is never left to guess what comes next.
 
@@ -80,6 +81,7 @@ class NextAction(StrEnum):
     FILL = "fill"
     CONFIRM = "confirm"
     CALCULATE = "calculate"
+    RECALCULATE = "recalculate"
     RESOLVE = "resolve"
     VERIFY = "verify"
     EXPORT = "export"
@@ -159,7 +161,9 @@ def workbench_progress(
     filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
         WorkbenchStep.FILL: clean and filled,
-        WorkbenchStep.CALCULATE: clean and form.calculation_revision_id is not None,
+        WorkbenchStep.CALCULATE: clean
+        and form.calculation_revision_id is not None
+        and (filed or not form.calculation_out_of_date),
         WorkbenchStep.REVIEW: clean and (filed or (verified and blocked == 0 and blocking == 0)),
         WorkbenchStep.FILE: clean and filed,
     }
@@ -216,6 +220,8 @@ def _next(
         return NextAction.APPLY, staged
     if filed:
         return NextAction.RECORDED, 0
+    if form.calculation_revision_id is not None and form.calculation_out_of_date:
+        return NextAction.RECALCULATE, 0
     if to_fill and not verified:
         return NextAction.FILL, to_fill + unboxed
     if assumed:

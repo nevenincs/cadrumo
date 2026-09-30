@@ -106,7 +106,7 @@ from .header import (
     result_line_text,
     result_view,
 )
-from .issues import WorkbenchIssuesScreen, blocks_marked
+from .issues import ConfirmAssumedValues, IssuesChoice, WorkbenchIssuesScreen, blocks_marked
 from .keys import describe_bindings
 from .legend import first_open_text, legend_panel, mark_for_glyph, more_text, on_screen_text
 from .navigator import (
@@ -227,6 +227,7 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.CONFIRM: "n",
     NextAction.RESOLVE: "i",
     NextAction.CALCULATE: "F8",
+    NextAction.RECALCULATE: "c",
     NextAction.VERIFY: "F8",
     NextAction.EXPORT: "e",
     NextAction.RECORD: "F8",
@@ -1743,7 +1744,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._advance_attention(1)
         elif actions is None:
             self._edit_unavailable()
-        elif action is NextAction.CALCULATE:
+        elif action in {NextAction.CALCULATE, NextAction.RECALCULATE}:
             self._calculate(actions)
         elif action is NextAction.VERIFY:
             self._run_operation(actions.verify)
@@ -1806,14 +1807,23 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         )
 
     def action_issues(self) -> None:
-        """List everything to look at, what the last check found and the assumed values, and go where one leads."""
+        """List everything to look at, what the last check found and the assumed values, and go where one leads.
+
+        A finding leads to its box, or to the area of the product that owns
+        its value; asking to confirm the assumed values goes to the confirm
+        step, one section at a time, never the whole declaration at once.
+        """
         form = self.form
         if form is None:
             return
 
-        def closed(key: AddressKey | None) -> None:
-            if key is not None:
-                self._go_to(key)
+        def closed(choice: IssuesChoice | None) -> None:
+            if isinstance(choice, OpenSourceSurface):
+                self._open_surface(choice)
+            elif isinstance(choice, ConfirmAssumedValues):
+                self._confirm_next()
+            elif choice is not None:
+                self._go_to(choice)
 
         self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
 

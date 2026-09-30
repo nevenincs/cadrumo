@@ -95,6 +95,7 @@ _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
         "sources.entry",
         "sources.joined",
         "value.none",
+        "address.declaration",
     }
 )
 
@@ -351,8 +352,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.overview.title",
         {
             "en": "AEAT Sync overview",
-            "es": "Resumen de sincronización AEAT",
-            "ca": "Resum de sincronització de l'AEAT",
+            "es": "Resumen de Sincronización AEAT",
+            "ca": "Resum de Sincronització AEAT",
             "hu": "Az AEAT-szinkron áttekintése",
         },
         ("overview:census",),
@@ -362,9 +363,9 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.census.title",
         {
             "en": "AEAT Sync census",
-            "es": "Censo de sincronización AEAT",
-            "ca": "Cens de sincronització de l'AEAT",
-            "hu": "AEAT-szinkronizálási nyilvántartás",
+            "es": "Censo de Sincronización AEAT",
+            "ca": "Cens de Sincronització AEAT",
+            "hu": "AEAT-szinkron: törzsadatok",
         },
         ("census:tax address",),
     ),
@@ -373,8 +374,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.filed_declarations.title",
         {
             "en": "AEAT Sync filed declarations",
-            "es": "Declaraciones presentadas en sincronización AEAT",
-            "ca": "Declaracions presentades a l'AEAT",
+            "es": "Declaraciones presentadas en Sincronización AEAT",
+            "ca": "Declaracions presentades a Sincronització AEAT",
             "hu": "Az AEAT-szinkron benyújtott bevallásai",
         },
         ("filed:130|2026|1T",),
@@ -384,8 +385,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.notifications.title",
         {
             "en": "AEAT Sync notifications",
-            "es": "Notificaciones de sincronización AEAT",
-            "ca": "Notificacions de l'AEAT",
+            "es": "Notificaciones de Sincronización AEAT",
+            "ca": "Notificacions de Sincronització AEAT",
             "hu": "Az AEAT-szinkron értesítései",
         },
         (),
@@ -394,10 +395,10 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         AeatSyncEvidenceComparisonScreen,
         "tui.aeat_sync.evidence_comparison.title",
         {
-            "en": "AEAT Sync evidence comparison",
-            "es": "Comparación de evidencias de sincronización AEAT",
-            "ca": "Comparació d'evidències de l'AEAT",
-            "hu": "Az AEAT-szinkron bizonyítékainak összehasonlítása",
+            "en": "AEAT Sync: comparison with AEAT",
+            "es": "Sincronización AEAT: comparación con la AEAT",
+            "ca": "Sincronització AEAT: comparació amb l'AEAT",
+            "hu": "AEAT-szinkron: összehasonlítás az AEAT-tal",
         },
         ("comparison:130|2026|1T",),
     ),
@@ -406,8 +407,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.reconciliation.title",
         {
             "en": "AEAT Sync reconciliation",
-            "es": "Conciliación de sincronización AEAT",
-            "ca": "Conciliació de l'AEAT",
+            "es": "Conciliación de Sincronización AEAT",
+            "ca": "Conciliació de Sincronització AEAT",
             "hu": "Az AEAT-szinkron egyeztetése",
         },
         ("reconciliation:130|2026|1T",),

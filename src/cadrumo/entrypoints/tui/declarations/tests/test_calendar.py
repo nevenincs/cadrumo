@@ -30,35 +30,35 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _EXPECTED = {
     OutputLanguage.ES: (
-        "Agenda de declaraciones",
+        "Calendario fiscal",
         "Vencida",
         "Legal:",
         "Días de retraso:",
-        "Coherencia de evidencia:",
+        "Coherencia con la AEAT:",
         "Abrir esta declaración",
     ),
     OutputLanguage.EN: (
-        "Declarations agenda",
+        "Filing calendar",
         "Overdue",
         "Legal:",
         "Days overdue:",
-        "Evidence consistency:",
+        "Consistency with AEAT:",
         "Open this declaration",
     ),
     OutputLanguage.CA: (
-        "Agenda de declaracions",
+        "Calendari fiscal",
         "Vençuda",
         "Legal:",
         "Dies de retard:",
-        "Coherència de l'evidència:",
+        "Coherència amb l'AEAT:",
         "Obre aquesta declaració",
     ),
     OutputLanguage.HU: (
-        "Bevallási napirend",
+        "Bevallási naptár",
         "Lejárt",
         "Jogi:",
         "Késedelmes napok:",
-        "Bizonyíték konzisztenciája:",
+        "Egyezés az AEAT-tal:",
         "Bevallás megnyitása",
     ),
 }

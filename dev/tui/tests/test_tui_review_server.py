@@ -16,11 +16,13 @@ from dataclasses import dataclass
 from hashlib import sha256
 from http.client import HTTPConnection, HTTPResponse
 from pathlib import Path
+from typing import Any
 
 import pytest
 from PIL import Image
 
 from .._review_catalogue import ReviewCatalogue
+from .._review_elements import element_digest
 from .._review_server import (
     PAGE_PATH,
     THUMBNAIL_WIDTH,
@@ -38,6 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DARK = "home--ready__small__dark"
 _LIGHT = "home--ready__small__light"
+_ELEMENT = "fixture:home"
 
 
 @dataclass
@@ -72,6 +75,18 @@ class _Review:
     def json(self, method: str, path: str, body: object = None) -> tuple[int, object]:
         status, _, payload = self.request(method, path, body)
         return status, json.loads(payload)
+
+    def state_now(self) -> dict[str, Any]:
+        status, state = self.json("GET", "/api/state")
+        assert status == 200
+        assert isinstance(state, dict)
+        return state
+
+    def element_digest(self) -> str:
+        """The digest the page is handed for the element, as a reviewer's browser would hold it."""
+        digest = next(element["digest"] for element in self.state_now()["elements"] if element["key"] == _ELEMENT)
+        assert isinstance(digest, str)
+        return digest
 
 
 def _write_png(path: Path, colour: tuple[int, int, int], size: tuple[int, int] = (1200, 300)) -> str:
@@ -119,7 +134,31 @@ def test_the_state_lists_every_settled_frame_of_the_default_run(review: _Review)
         (_LIGHT, review.digests[_LIGHT]),
     ]
     assert [frame["text"] for frame in state["frames"]] == [True, False]
+    assert [(frame["element"], frame["state"]) for frame in state["frames"]] == [(_ELEMENT, "ready")] * 2
     assert state["notes"] == []
+
+
+def test_the_state_groups_the_frames_into_the_element_they_show(review: _Review) -> None:
+    state = review.state_now()
+
+    assert state["elements"] == [
+        {
+            "key": _ELEMENT,
+            "family": "fixture",
+            "name": "home",
+            "states": ["ready"],
+            "frames": [_DARK, _LIGHT],
+            "digest": element_digest(
+                {
+                    "home--ready/small/dark": review.digests[_DARK],
+                    "home--ready/small/light": review.digests[_LIGHT],
+                }
+            ),
+            "modified_at": state["latest_frame_at"],
+        }
+    ]
+    assert state["states"] == [{"family": "fixture", "state": "ready"}]
+    assert state["sign_offs"] == {}
 
 
 def test_a_frame_image_is_served_byte_for_byte_and_cached_only_under_its_digest(review: _Review) -> None:
@@ -172,30 +211,67 @@ def test_the_text_reading_and_the_page_are_served_from_disk(review: _Review) -> 
     assert headers["content-type"].startswith("text/html")
 
 
-def test_a_note_posted_from_the_page_outlives_the_server(review: _Review) -> None:
+def test_a_note_posted_from_the_page_is_filed_under_the_element_and_outlives_the_server(review: _Review) -> None:
+    seen = review.element_digest()
     status, created = review.json(
         "POST",
         "/api/notes",
-        {"run": "current", "stem": _DARK, "png_sha256": review.digests[_DARK], "body": "Title is clipped."},
+        {
+            "run": "current",
+            "element": _ELEMENT,
+            "element_sha256": seen,
+            "frame": {"stem": _DARK, "png_sha256": review.digests[_DARK]},
+            "body": "Title is clipped.",
+        },
     )
 
     assert status == 201
     assert isinstance(created, dict)
-    _, state = review.json("GET", "/api/state")
-    assert isinstance(state, dict)
-    assert [(note["id"], note["image_state"]) for note in state["notes"]] == [(created["id"], "current")]
+    state = review.state_now()
+    assert [(note["id"], note["element_state"], note["frame_state"]) for note in state["notes"]] == [
+        (created["id"], "current", "current"),
+    ]
 
     stored = ReviewStore(review.store_path).notes()
-    assert [(note.frame_key, note.png_sha256, note.body) for note in stored] == [
-        ("home--ready/small/dark", review.digests[_DARK], "Title is clipped."),
+    assert [
+        (note.element_key, note.element_sha256, note.frame_key, note.frame_sha256, note.body) for note in stored
+    ] == [
+        (_ELEMENT, seen, "home--ready/small/dark", review.digests[_DARK], "Title is clipped."),
     ]
+
+
+def test_a_note_says_when_the_frame_it_pointed_at_was_re_rendered(review: _Review) -> None:
+    status, _ = review.json(
+        "POST",
+        "/api/notes",
+        {
+            "run": "current",
+            "element": _ELEMENT,
+            "element_sha256": review.element_digest(),
+            "frame": {"stem": _LIGHT, "png_sha256": review.digests[_LIGHT]},
+            "body": "Low contrast.",
+        },
+    )
+    assert status == 201
+
+    _write_png(review.runs / "current" / "png" / f"{_DARK}.png", (90, 20, 30))
+    review.state.refresh()
+    (note,) = review.state_now()["notes"]
+
+    assert (note["element_state"], note["frame_state"]) == ("changed", "current")
+
+    _write_png(review.runs / "current" / "png" / f"{_LIGHT}.png", (90, 90, 30))
+    review.state.refresh()
+    (note,) = review.state_now()["notes"]
+
+    assert (note["element_state"], note["frame_state"]) == ("changed", "changed")
 
 
 def test_a_write_that_is_not_json_is_refused_and_stores_nothing(review: _Review) -> None:
     status, _, _ = review.request(
         "POST",
         "/api/notes",
-        b"run=current&stem=home--ready__small__dark&body=hi",
+        b"run=current&element=fixture%3Ahome&body=hi",
         content_type="application/x-www-form-urlencoded",
     )
 
@@ -203,14 +279,22 @@ def test_a_write_that_is_not_json_is_refused_and_stores_nothing(review: _Review)
     assert ReviewStore(review.store_path).notes() == ()
 
 
+_NOTE = {"run": "current", "element": _ELEMENT, "element_sha256": "a" * 64, "body": "x"}
+
+
 @pytest.mark.parametrize(
     ("payload", "expected_status"),
     [
-        ({"run": "current", "stem": "home--ready__large__dark", "png_sha256": "a" * 64, "body": "x"}, 404),
-        ({"run": "current", "stem": _DARK, "png_sha256": "not-a-digest", "body": "x"}, 400),
-        ({"run": "current", "stem": _DARK, "png_sha256": "a" * 64, "body": "   "}, 400),
-        ({"run": "current", "stem": _DARK, "png_sha256": "a" * 64}, 400),
-        ({"stem": _DARK, "png_sha256": "a" * 64, "body": "x"}, 400),
+        ({**_NOTE, "element": "fixture:ledger-overview"}, 404),
+        ({**_NOTE, "run": "elsewhere"}, 404),
+        ({**_NOTE, "frame": {"stem": "home--ready__large__dark", "png_sha256": "a" * 64}}, 404),
+        ({**_NOTE, "frame": {"stem": "login__small__dark", "png_sha256": "a" * 64}}, 404),
+        ({**_NOTE, "frame": {"stem": _DARK, "png_sha256": "not-a-digest"}}, 400),
+        ({**_NOTE, "element_sha256": "not-a-digest"}, 400),
+        ({**_NOTE, "body": "   "}, 400),
+        ({key: value for key, value in _NOTE.items() if key != "body"}, 400),
+        ({key: value for key, value in _NOTE.items() if key != "run"}, 400),
+        ({**_NOTE, "stem": _DARK}, 400),
     ],
 )
 def test_a_malformed_note_is_refused_and_stores_nothing(
@@ -227,11 +311,7 @@ def test_a_malformed_note_is_refused_and_stores_nothing(
 
 
 def test_resolve_reopen_and_delete_through_the_api(review: _Review) -> None:
-    _, created = review.json(
-        "POST",
-        "/api/notes",
-        {"run": "current", "stem": _LIGHT, "png_sha256": review.digests[_LIGHT], "body": "Low contrast."},
-    )
+    _, created = review.json("POST", "/api/notes", {**_NOTE, "body": "Low contrast."})
     assert isinstance(created, dict)
     note_id = created["id"]
 
@@ -253,31 +333,55 @@ def test_resolve_reopen_and_delete_through_the_api(review: _Review) -> None:
     assert status == 404
 
 
-def test_a_sign_off_is_bound_to_the_image_and_a_re_render_leaves_it_behind(review: _Review) -> None:
-    signed = review.digests[_DARK]
+def _sign_off(review: _Review, digest: str, *, reviewed: bool = True) -> int:
     status, _ = review.json(
         "POST",
         "/api/reviewed",
-        {"run": "current", "stem": _DARK, "png_sha256": signed, "reviewed": True},
+        {"run": "current", "element": _ELEMENT, "element_sha256": digest, "reviewed": reviewed},
     )
-    assert status == 200
+    return status
 
-    rerendered = _write_png(review.runs / "current" / "png" / f"{_DARK}.png", (90, 20, 30))
+
+def test_a_sign_off_covers_every_frame_and_a_re_render_names_the_one_that_moved(review: _Review) -> None:
+    assert _sign_off(review, review.element_digest()) == 200
+    assert review.state_now()["sign_offs"] == {
+        _ELEMENT: {
+            "run": "current",
+            "reviewed_at": ReviewStore(review.store_path).sign_offs()[_ELEMENT].reviewed_at,
+            "current": True,
+            "changed": [],
+            "added": [],
+            "removed": [],
+        }
+    }
+    assert ReviewStore(review.store_path).sign_offs()[_ELEMENT].frames == {
+        "home--ready/small/dark": review.digests[_DARK],
+        "home--ready/small/light": review.digests[_LIGHT],
+    }
+
+    _write_png(review.runs / "current" / "png" / f"{_DARK}.png", (90, 20, 30))
+    _write_png(review.runs / "current" / "png" / "home--empty__small__dark.png", (1, 2, 3))
     review.state.refresh()
-    _, state = review.json("GET", "/api/state")
+    mark = review.state_now()["sign_offs"]
 
-    assert isinstance(state, dict)
-    frame = next(frame for frame in state["frames"] if frame["stem"] == _DARK)
-    assert frame["digest"] == rerendered
-    assert state["reviewed"]["home--ready/small/dark"]["png_sha256"] == signed != rerendered
-
-    status, _ = review.json(
-        "POST",
-        "/api/reviewed",
-        {"run": "current", "stem": _DARK, "png_sha256": rerendered, "reviewed": False},
+    assert (mark[_ELEMENT]["current"], mark[_ELEMENT]["changed"], mark[_ELEMENT]["added"]) == (
+        False,
+        ["home--ready/small/dark"],
+        ["home--empty/small/dark"],
     )
-    assert status == 200
-    assert ReviewStore(review.store_path).reviewed() == {}
+
+    assert _sign_off(review, review.element_digest(), reviewed=False) == 200
+    assert ReviewStore(review.store_path).sign_offs() == {}
+
+
+def test_a_sign_off_against_images_the_page_no_longer_shows_is_refused(review: _Review) -> None:
+    seen = review.element_digest()
+    _write_png(review.runs / "current" / "png" / f"{_LIGHT}.png", (1, 200, 1))
+    review.state.refresh()
+
+    assert _sign_off(review, seen) == 409
+    assert ReviewStore(review.store_path).sign_offs() == {}
+    assert _sign_off(review, review.element_digest()) == 200
 
 
 def _next_event(response: HTTPResponse) -> int:

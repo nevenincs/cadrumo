@@ -464,7 +464,7 @@ def _probed_status(fitness: RoleFitnessState) -> LocalReaderStatus:
         (RoleFitnessState.FIT, "fit", None),
         (RoleFitnessState.UNFIT, "unfit", "could not be used to read an invoice"),
         (RoleFitnessState.TIMED_OUT, "timed out", "did not finish its test answer"),
-        (RoleFitnessState.NOT_VERIFIED, "not verified", "This does not mean the model is unfit"),
+        (RoleFitnessState.NOT_VERIFIED, "not checked", "This does not mean the model is unfit"),
     ],
 )
 def test_each_fitness_state_reads_as_itself(fitness: RoleFitnessState, cell: str, explained: str | None) -> None:

@@ -489,8 +489,8 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
         (
             "en",
             (
-                "Local Ledger evidence only. AEAT Sync is a separate workspace.",
-                "Canonical score: 1.0",
+                "Local Records data only. AEAT Sync is a separate area.",
+                "Match score: 1.0",
                 "Amount matches: Yes",
                 "Counterparty matches: Yes",
                 "Invoice cites entry only",
@@ -499,8 +499,8 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
         (
             "es",
             (
-                "Solo datos locales del libro. Sincronización AEAT es un espacio distinto.",
-                "Puntuación canónica: 1.0",
+                "Solo datos locales de Registros. Sincronización AEAT es otra área.",
+                "Puntuación de coincidencia: 1.0",
                 "Coincide el importe: Sí",
                 "Coincide la contraparte: Sí",
                 "Solo la factura cita el apunte",
@@ -509,18 +509,18 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
         (
             "ca",
             (
-                "Només dades locals del llibre. Sincronització AEAT és un espai diferent.",
-                "Puntuació canònica: 1.0",
+                "Només dades locals de Registres. Sincronització AEAT és una altra àrea.",
+                "Puntuació de coincidència: 1.0",
                 "Coincideix l'import: Sí",
                 "Coincideix la contrapart: Sí",
-                "Només la factura cita l'assentament",
+                "Només la factura cita l'apunt",
             ),
         ),
         (
             "hu",
             (
-                "Csak helyi főkönyvi adatok. Az AEAT-szinkron külön munkaterület.",
-                "Kanonikus pontszám: 1.0",
+                "Csak helyi nyilvántartási adatok. Az AEAT-szinkron külön terület.",
+                "Egyezési pontszám: 1.0",
                 "Összeg egyezik: Igen",
                 "Partner egyezik: Igen",
                 "Csak a számla hivatkozik a tételre",

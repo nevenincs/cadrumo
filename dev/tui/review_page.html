@@ -22,7 +22,6 @@
   --bad: #b7312f;
   --shot-bg: #0d0f13;
   --radius: 10px;
-  --bar-h: 0px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -51,9 +50,10 @@ body {
   font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 body.detail-open { overflow: hidden; }
-button, select, textarea { font: inherit; color: inherit; }
+button, select, textarea, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .muted { color: var(--muted); }
+[hidden] { display: none !important; }
 
 /* Header */
 .bar {
@@ -71,25 +71,28 @@ button { cursor: pointer; }
 .spacer { flex: 1; }
 .stats { font-size: 13px; color: var(--muted); flex-wrap: wrap; column-gap: 10px; row-gap: 2px; }
 .stats b { color: var(--text); font-weight: 600; }
-.filters { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.filters::-webkit-scrollbar { display: none; }
+.scroll-row { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.scroll-row::-webkit-scrollbar { display: none; }
 .chip {
   border: 1px solid var(--line); background: var(--chip); border-radius: 999px;
-  padding: 5px 12px; white-space: nowrap; font-size: 14px;
+  padding: 5px 12px; white-space: nowrap; font-size: 14px; flex: none;
 }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-select {
+.chip .n { opacity: .7; font-size: 12px; margin-left: 3px; }
+select, input[type="search"] {
   border: 1px solid var(--line); background: var(--panel); border-radius: 8px;
-  padding: 5px 8px; font-size: 14px; max-width: 12rem;
+  padding: 5px 8px; font-size: 14px; flex: none;
 }
+select { max-width: 13rem; }
+input[type="search"] { width: 11rem; }
 
-/* Grid */
+/* Element grid */
 main { padding: 12px 16px 32px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-@media (min-width: 700px) { .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; } }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+@media (min-width: 700px) { .grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; } }
 .group {
   grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px;
-  margin: 14px 0 0; font-size: 15px; font-weight: 600; word-break: break-word;
+  margin: 14px 0 0; font-size: 15px; font-weight: 600;
 }
 .group:first-child { margin-top: 0; }
 .group .count { font-weight: 400; font-size: 13px; color: var(--muted); }
@@ -99,18 +102,21 @@ main { padding: 12px 16px 32px; }
   overflow: hidden; min-width: 0; -webkit-tap-highlight-color: transparent;
 }
 .card img { display: block; width: 100%; height: auto; background: var(--shot-bg); }
-.card.reviewed img { opacity: .55; }
+.card.reviewed img { opacity: .5; }
+.card.changed { border-color: color-mix(in srgb, var(--warn) 60%, transparent); }
 .card.fresh { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.cap { display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 12.5px; min-width: 0; }
-.cap-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cap { display: flex; flex-direction: column; gap: 2px; padding: 7px 9px 8px; min-width: 0; }
+.cap-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.cap-name { flex: 1; min-width: 0; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cap-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge {
   flex: none; border-radius: 999px; padding: 1px 7px; font-size: 12px; font-weight: 600;
-  background: var(--chip); color: var(--muted);
+  background: var(--chip); color: var(--muted); white-space: nowrap;
 }
 .badge.ok { background: var(--ok-soft); color: var(--ok); }
-.badge.note { background: var(--warn-soft); color: var(--warn); }
+.badge.note, .badge.changed { background: var(--warn-soft); color: var(--warn); }
 .badge.new { background: var(--accent); color: var(--accent-text); }
-.empty { color: var(--muted); padding: 32px 4px; text-align: center; }
+.empty { color: var(--muted); padding: 32px 4px; text-align: center; grid-column: 1 / -1; }
 .empty code { background: var(--chip); padding: 1px 6px; border-radius: 6px; }
 
 /* Run panel */
@@ -121,12 +127,11 @@ main { padding: 12px 16px 32px; }
 .run-panel li { margin: 3px 0; word-break: break-word; }
 .run-panel code { font-size: 12.5px; }
 
-/* Detail */
+/* Element detail */
 .detail {
   position: fixed; inset: 0; z-index: 10; background: var(--bg);
   display: flex; flex-direction: column;
 }
-.detail[hidden] { display: none; }
 .detail-bar {
   display: flex; align-items: center; gap: 10px;
   padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
@@ -134,27 +139,67 @@ main { padding: 12px 16px 32px; }
 }
 .detail-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .detail-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.detail-title span { font-size: 13px; color: var(--muted); }
+.detail-title span { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plain { border: 0; background: none; padding: 6px 4px; color: var(--accent); font-weight: 600; }
 .detail-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.detail-inner { max-width: 1500px; margin: 0 auto; padding: 12px 16px 24px; }
+.detail-inner { max-width: 1600px; margin: 0 auto; padding: 0 16px 24px; }
+.detail-main, .detail-side { min-width: 0; }
+@media (min-width: 1200px) {
+  .detail-inner { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+  .detail-side { position: sticky; top: 12px; padding-top: 12px; max-height: calc(100vh - 150px); overflow-y: auto; }
+}
+.picker {
+  position: sticky; top: 0; z-index: 2; background: var(--bg);
+  padding: 10px 0 8px; display: flex; flex-direction: column; gap: 6px;
+}
+.picker-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.picker .chip { font-size: 13px; padding: 4px 11px; }
+.chip.changed:not([aria-pressed="true"]) { border-color: var(--warn); color: var(--warn); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: var(--panel); padding: 5px 10px; font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+.seg button:disabled { opacity: .35; }
+.keys { font-size: 12px; color: var(--muted); }
+@media (hover: none), (max-width: 699px) { .keys { display: none; } }
 .banner {
   border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px;
   background: var(--warn-soft); color: var(--warn);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
+.banner button { border: 1px solid currentColor; background: none; color: inherit; border-radius: 999px; padding: 2px 10px; font-size: 13px; }
 .shot {
   margin: 0; background: var(--shot-bg); border-radius: 8px; overflow: hidden;
   display: flex; justify-content: center; touch-action: pan-y pinch-zoom;
 }
-.shot img { display: block; max-width: 100%; height: auto; cursor: zoom-in; }
-.shot.actual { overflow-x: auto; justify-content: flex-start; touch-action: auto; }
-.shot.actual img { max-width: none; cursor: zoom-out; }
-.meta { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.shot img { display: block; max-width: 100%; max-height: 78vh; width: auto; height: auto; cursor: zoom-in; }
+.shot.actual { overflow: auto; justify-content: flex-start; touch-action: auto; max-height: none; }
+.shot.actual img { max-width: none; max-height: none; cursor: zoom-out; }
+.meta { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .meta code { font-size: 12px; }
 .findings { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; }
 .findings li { padding: 6px 10px; border-radius: 8px; background: var(--chip); margin-bottom: 6px; word-break: break-word; }
 .findings li.warn { background: var(--warn-soft); color: var(--warn); }
-.notes h3 { font-size: 15px; margin: 18px 0 8px; }
+h3 { font-size: 15px; margin: 18px 0 8px; display: flex; align-items: baseline; gap: 8px; }
+h3 .count { font-weight: 400; font-size: 13px; color: var(--muted); }
+
+/* Contact sheet: every frame of the element */
+.sheet-row { margin-bottom: 10px; }
+.sheet-state { font-size: 13px; font-weight: 600; margin: 0 0 4px; display: flex; gap: 6px; align-items: center; }
+.strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; align-items: flex-start; }
+@media (min-width: 700px) { .strip { flex-wrap: wrap; overflow-x: visible; } }
+.tile {
+  flex: none; padding: 0; border: 2px solid transparent; border-radius: 8px;
+  background: var(--panel); overflow: hidden; text-align: left;
+}
+.tile img { display: block; height: 72px; width: auto; background: var(--shot-bg); }
+@media (min-width: 700px) { .tile img { height: 100px; } }
+.tile span { display: flex; gap: 4px; align-items: center; padding: 3px 6px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.tile.focused { border-color: var(--accent); }
+.tile.changed:not(.focused) { border-color: var(--warn); }
+.tile.fresh span::after { content: "new"; margin-left: auto; color: var(--accent); font-weight: 600; }
+
+/* Notes */
 .note-list { list-style: none; padding: 0; margin: 0 0 10px; }
 .note {
   border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius);
@@ -166,13 +211,15 @@ main { padding: 12px 16px 32px; }
 .note-meta .spacer { flex: 1; }
 .note-meta button { border: 0; background: none; color: var(--accent); padding: 4px 2px; font-size: 13px; }
 .note-meta button.danger { color: var(--bad); }
+.note-meta button.link { padding: 0; font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; }
 textarea {
   display: block; width: 100%; min-height: 84px; resize: vertical;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
   padding: 10px 12px; font-size: 16px;
 }
-textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.form-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+textarea:focus, select:focus, input:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.form-row label { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; min-width: 0; }
 .primary, .secondary {
   border-radius: var(--radius); padding: 10px 14px; font-weight: 600; border: 1px solid transparent;
 }
@@ -181,7 +228,8 @@ textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--ac
 .secondary.on { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
 button:disabled { opacity: .5; cursor: default; }
 details.text { margin-top: 16px; }
-details.text summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+details.text summary, details.sheet summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+details.sheet summary { color: var(--text); font-weight: 600; margin: 18px 0 8px; }
 details.text pre {
   margin: 8px 0 0; padding: 10px; border-radius: 8px; background: var(--shot-bg); color: #d7dae0;
   font: 11px/1.25 ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-x: auto;
@@ -193,7 +241,7 @@ details.text pre {
 }
 .step { border: 1px solid var(--line); background: var(--chip); border-radius: var(--radius); font-size: 20px; line-height: 1; }
 @media (min-width: 900px) {
-  .detail-actions { grid-template-columns: 64px 220px 260px 64px; justify-content: center; }
+  .detail-actions { grid-template-columns: 64px 240px 260px 64px; justify-content: center; }
 }
 
 .toast {
@@ -213,15 +261,22 @@ details.text pre {
     <select id="run" aria-label="Run"></select>
   </div>
   <div class="bar-row stats" id="stats"></div>
-  <div class="bar-row filters">
-    <button class="chip" data-filter="all" aria-pressed="true">All</button>
+  <div class="bar-row scroll-row" id="filters">
+    <button class="chip" data-filter="all" aria-pressed="false">All</button>
     <button class="chip" data-filter="todo" aria-pressed="false">To review</button>
+    <button class="chip" data-filter="changed" aria-pressed="false">Changed</button>
+    <button class="chip" data-filter="reviewed" aria-pressed="false">Reviewed</button>
     <button class="chip" data-filter="notes" aria-pressed="false">Open notes</button>
-    <select id="viewport" aria-label="Viewport"><option value="">All sizes</option></select>
-    <select id="theme" aria-label="Theme"><option value="">Both themes</option></select>
+  </div>
+  <div class="bar-row scroll-row">
+    <input id="query" type="search" placeholder="Find an element" aria-label="Find an element" autocomplete="off">
+    <select id="family" aria-label="Kind of element"></select>
+    <select id="state" aria-label="State"></select>
+    <select id="viewport" aria-label="Preview size"></select>
+    <select id="theme" aria-label="Preview theme"></select>
     <select id="sort" aria-label="Order">
-      <option value="surface">By surface</option>
-      <option value="newest">Newest first</option>
+      <option value="kind">By kind</option>
+      <option value="newest">Recently rendered</option>
     </select>
   </div>
 </header>
@@ -236,35 +291,53 @@ details.text pre {
 
 <div id="detail" class="detail" hidden>
   <div class="detail-bar">
-    <button id="close" class="plain" type="button">‹ Grid</button>
-    <div class="detail-title"><strong id="d-surface"></strong><span id="d-sub"></span></div>
+    <button id="close" class="plain" type="button">‹ Elements</button>
+    <div class="detail-title"><strong id="d-name"></strong><span id="d-sub"></span></div>
     <span id="d-pos" class="muted"></span>
   </div>
   <div class="detail-scroll" id="detail-scroll">
     <div class="detail-inner">
-      <div id="d-banner" class="banner" hidden></div>
-      <figure id="shot" class="shot"><img id="d-img" alt=""></figure>
-      <div id="d-meta" class="meta"></div>
-      <ul id="d-findings" class="findings"></ul>
-      <section class="notes">
-        <h3>Notes</h3>
-        <ol id="d-notes" class="note-list"></ol>
+      <div class="detail-main">
+        <div class="picker" id="picker">
+          <div class="picker-row scroll-row" id="d-states"></div>
+          <div class="picker-row">
+            <span class="seg" id="d-viewports" role="group" aria-label="Size"></span>
+            <span class="seg" id="d-themes" role="group" aria-label="Theme"></span>
+            <span class="spacer"></span>
+            <span class="keys">← → state · v size · t theme · j k element</span>
+          </div>
+        </div>
+        <div id="d-banner" class="banner" hidden></div>
+        <figure id="shot" class="shot"><img id="d-img" alt=""></figure>
+        <div id="d-meta" class="meta"></div>
+        <ul id="d-findings" class="findings"></ul>
+        <details id="d-sheet-box" class="sheet" open>
+          <summary>Every frame of this element <span id="d-sheet-count" class="muted"></span></summary>
+          <div id="d-sheet"></div>
+        </details>
+        <details id="d-text-box" class="text">
+          <summary>Harness text reading of this frame</summary>
+          <pre id="d-text"></pre>
+        </details>
+      </div>
+      <aside class="detail-side">
+        <h3>Notes on this element <span id="d-note-count" class="count"></span></h3>
         <form id="note-form">
-          <textarea id="note-body" placeholder="What needs fixing in this frame?" aria-label="New note"></textarea>
-          <div class="form-row"><button id="note-save" class="primary" type="submit">Add note</button></div>
+          <textarea id="note-body" placeholder="What needs fixing in this element?" aria-label="New note"></textarea>
+          <div class="form-row">
+            <label><input id="note-point" type="checkbox" checked> <span id="note-point-label">Point at the frame on screen</span></label>
+            <button id="note-save" class="primary" type="submit">Add note</button>
+          </div>
         </form>
-      </section>
-      <details id="d-text-box" class="text">
-        <summary>Harness text reading</summary>
-        <pre id="d-text"></pre>
-      </details>
+        <ol id="d-notes" class="note-list" style="margin-top: 12px"></ol>
+      </aside>
     </div>
   </div>
   <nav class="detail-actions">
-    <button id="prev" class="step" type="button" aria-label="Previous frame">‹</button>
-    <button id="toggle-reviewed" class="secondary" type="button">Mark reviewed</button>
+    <button id="prev" class="step" type="button" aria-label="Previous element">‹</button>
+    <button id="toggle-reviewed" class="secondary" type="button" title="Sign off this element, every state, size and theme">Mark reviewed</button>
     <button id="review-next" class="primary" type="button">Reviewed, next ›</button>
-    <button id="next" class="step" type="button" aria-label="Next frame">›</button>
+    <button id="next" class="step" type="button" aria-label="Next element">›</button>
   </nav>
 </div>
 
@@ -298,26 +371,43 @@ function fill(node, ...children) {
   return node;
 }
 
-const PREFS_KEY = 'tui-review.prefs';
+const FAMILIES = {
+  fixture: { label: 'Fixture states', one: 'state', many: 'states' },
+  sequence: { label: 'Modelo sequences', one: 'sequence', many: 'sequences' },
+  screen: { label: 'Single screens', one: 'state', many: 'states' },
+};
+const familyOf = (name) => FAMILIES[name] || { label: name, one: 'state', many: 'states' };
+const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+
+const PREFS_KEY = 'tui-review.elements.prefs';
 const ui = {
   data: null,
   run: null,
-  filter: 'all',
+  filter: 'todo',
+  family: '',
+  state: '',
   viewport: '',
   theme: '',
-  sort: 'surface',
-  openStem: null,
+  sort: 'kind',
+  query: '',
+  openKey: null,
+  focusStem: null,
+  focus: { state: undefined, viewport: '', theme: '' },
   fromGrid: false,
-  shownDigest: null,
   shownStem: null,
+  shownDigest: null,
   actual: false,
   live: false,
   fresh: new Set(),
+  freshFrames: new Set(),
   drafts: new Map(),
   texts: new Map(),
   cards: new Map(),
-  notesByKey: new Map(),
+  sheet: { key: null, digest: null, nodes: new Map() },
   byStem: new Map(),
+  byKey: new Map(),
+  elements: new Map(),
+  notesByElement: new Map(),
   loading: false,
   reloadQueued: false,
 };
@@ -325,7 +415,7 @@ const ui = {
 function readPrefs() {
   try {
     const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
-    for (const key of ['filter', 'viewport', 'theme', 'sort']) {
+    for (const key of ['filter', 'family', 'state', 'viewport', 'theme', 'sort']) {
       if (typeof saved[key] === 'string') ui[key] = saved[key];
     }
   } catch (_) { /* storage unavailable: defaults stand */ }
@@ -334,7 +424,7 @@ function readPrefs() {
 function writePrefs() {
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify({
-      filter: ui.filter, viewport: ui.viewport, theme: ui.theme, sort: ui.sort,
+      filter: ui.filter, family: ui.family, state: ui.state, viewport: ui.viewport, theme: ui.theme, sort: ui.sort,
     }));
   } catch (_) { /* storage unavailable: preferences last for this visit */ }
 }
@@ -345,7 +435,7 @@ function toast(text) {
   node.textContent = text;
   node.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => node.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => node.classList.remove('show'), 2800);
 }
 
 async function api(path, options) {
@@ -376,19 +466,29 @@ function stamp(iso) {
 
 // ---- state -----------------------------------------------------------------
 
-const frameNotes = (frame) => ui.notesByKey.get(frame.key) || [];
-const openNotes = (frame) => frameNotes(frame).filter((note) => !note.resolved_at);
-const isReviewed = (frame) => {
-  const mark = ui.data.reviewed[frame.key];
-  return Boolean(mark && mark.png_sha256 === frame.digest);
-};
+const elementFrames = (element) => element.frames.map((stem) => ui.byStem.get(stem)).filter(Boolean);
+const signOff = (element) => ui.data.sign_offs[element.key] || null;
+const isReviewed = (element) => { const mark = signOff(element); return Boolean(mark && mark.current); };
+const isChanged = (element) => { const mark = signOff(element); return Boolean(mark && !mark.current); };
+const elementNotes = (element) => ui.notesByElement.get(element.key) || [];
+const openNotes = (element) => elementNotes(element).filter((note) => !note.resolved_at);
+const frameLabel = (frame) => [frame.state, frame.viewport, frame.theme].filter(Boolean).join(' · ');
+const stateLabel = (state) => (state === null ? 'only state' : state);
+
+// Frames the element holds that its sign-off did not see as they are now.
+function movedSinceSignOff(element) {
+  const mark = signOff(element);
+  return mark && !mark.current ? new Set([...mark.changed, ...mark.added]) : new Set();
+}
 
 function indexData(data) {
   ui.byStem = new Map(data.frames.map((frame) => [frame.stem, frame]));
-  ui.notesByKey = new Map();
+  ui.byKey = new Map(data.frames.map((frame) => [frame.key, frame]));
+  ui.elements = new Map(data.elements.map((element) => [element.key, element]));
+  ui.notesByElement = new Map();
   for (const note of data.notes) {
-    if (!ui.notesByKey.has(note.frame_key)) ui.notesByKey.set(note.frame_key, []);
-    ui.notesByKey.get(note.frame_key).push(note);
+    if (!ui.notesByElement.has(note.element_key)) ui.notesByElement.set(note.element_key, []);
+    ui.notesByElement.get(note.element_key).push(note);
   }
 }
 
@@ -396,14 +496,19 @@ function announce(previous, data) {
   const before = new Map(previous.frames.map((frame) => [frame.stem, frame.digest]));
   let added = 0;
   let updated = 0;
+  const touched = new Set();
   for (const frame of data.frames) {
-    if (!before.has(frame.stem)) { added += 1; ui.fresh.add(frame.stem); }
-    else if (before.get(frame.stem) !== frame.digest) { updated += 1; ui.fresh.add(frame.stem); }
+    if (!before.has(frame.stem)) added += 1;
+    else if (before.get(frame.stem) !== frame.digest) updated += 1;
+    else continue;
+    ui.freshFrames.add(frame.stem);
+    touched.add(frame.element);
+    if (frame.element !== ui.openKey) ui.fresh.add(frame.element);
   }
   const parts = [];
-  if (added) parts.push(`${added} new frame${added === 1 ? '' : 's'}`);
-  if (updated) parts.push(`${updated} updated`);
-  if (parts.length) toast(parts.join(', '));
+  if (added) parts.push(`${plural(added, 'new frame', 'new frames')}`);
+  if (updated) parts.push(`${updated} re-rendered`);
+  if (parts.length) toast(`${parts.join(', ')} in ${plural(touched.size, 'element', 'elements')}`);
 }
 
 async function load() {
@@ -414,7 +519,9 @@ async function load() {
     const previous = ui.data;
     if (!previous || previous.run !== data.run) {
       ui.fresh.clear();
+      ui.freshFrames.clear();
       ui.cards.clear();
+      ui.sheet = { key: null, digest: null, nodes: new Map() };
     }
     ui.data = data;
     ui.run = data.run;
@@ -435,55 +542,109 @@ function scheduleLoad() {
   loadTimer = setTimeout(load, 250);
 }
 
-// ---- ordering and filters --------------------------------------------------
+// ---- ordering, filters and the frame an element is shown by ---------------
 
-function ordered() {
-  const frames = [...ui.data.frames];
+function orderedElements() {
+  const elements = [...ui.data.elements];
   if (ui.sort === 'newest') {
-    frames.sort((a, b) => b.modified_at.localeCompare(a.modified_at) || a.stem.localeCompare(b.stem));
+    elements.sort((a, b) => b.modified_at.localeCompare(a.modified_at) || a.key.localeCompare(b.key));
   }
-  return frames;
+  return elements;
 }
 
-function matches(frame) {
-  if (ui.viewport && frame.viewport !== ui.viewport) return false;
-  if (ui.theme && frame.theme !== ui.theme) return false;
-  if (ui.filter === 'todo' && isReviewed(frame)) return false;
-  if (ui.filter === 'notes' && openNotes(frame).length === 0) return false;
+function matches(element) {
+  if (ui.family && element.family !== ui.family) return false;
+  if (ui.state && !element.states.includes(ui.state)) return false;
+  const query = ui.query.trim().toLowerCase();
+  if (query) {
+    const named = element.name.toLowerCase().includes(query)
+      || element.states.some((state) => state !== null && state.toLowerCase().includes(query));
+    if (!named) return false;
+  }
+  if (ui.filter === 'todo' && isReviewed(element)) return false;
+  if (ui.filter === 'changed' && !isChanged(element)) return false;
+  if (ui.filter === 'reviewed' && !isReviewed(element)) return false;
+  if (ui.filter === 'notes' && openNotes(element).length === 0) return false;
   return true;
 }
 
 function neighbour(direction) {
-  const frames = ordered();
-  let index = frames.findIndex((frame) => frame.stem === ui.openStem);
-  if (index < 0) index = direction > 0 ? -1 : frames.length;
-  for (let at = index + direction; at >= 0 && at < frames.length; at += direction) {
-    if (matches(frames[at])) return frames[at];
+  const elements = orderedElements();
+  let index = elements.findIndex((element) => element.key === ui.openKey);
+  if (index < 0) index = direction > 0 ? -1 : elements.length;
+  for (let at = index + direction; at >= 0 && at < elements.length; at += direction) {
+    if (matches(elements[at])) return elements[at];
   }
   return null;
 }
 
+// The closest frame to what was asked: the state first, then the size, then
+// the theme, so flipping one of them never silently changes another.
+function pickFrame(element, want) {
+  const frames = elementFrames(element);
+  if (!frames.length) return null;
+  const state = want.state !== undefined && element.states.includes(want.state) ? want.state : element.states[0];
+  const inState = frames.filter((frame) => frame.state === state);
+  const pool = inState.length ? inState : frames;
+  return pool.find((frame) => (!want.viewport || frame.viewport === want.viewport) && (!want.theme || frame.theme === want.theme))
+    || pool.find((frame) => !want.viewport || frame.viewport === want.viewport)
+    || pool.find((frame) => !want.theme || frame.theme === want.theme)
+    || pool[0];
+}
+
+const previewFrame = (element) => pickFrame(element, { state: ui.state || undefined, viewport: ui.viewport, theme: ui.theme });
+const thumbUrl = (frame) => `/thumb/${enc(ui.run)}/${enc(frame.stem)}.webp?v=${frame.digest}`;
+
+function thumbSize(frame) {
+  const width = Math.min(frame.width, 480);
+  return [width, Math.max(1, Math.round(frame.height * width / frame.width))];
+}
+
 // ---- rendering: header -----------------------------------------------------
 
-function fillSelect(select, values, blankLabel, current) {
-  const options = [el('option', { value: '', text: blankLabel })];
-  for (const value of values) options.push(el('option', { value, text: value }));
-  select.replaceChildren(...options);
+function fillSelect(select, options, current) {
+  select.replaceChildren(...options.map((option) => option.group
+    ? el('optgroup', { label: option.group }, option.items.map((item) => el('option', { value: item.value, text: item.text })))
+    : el('option', { value: option.value, text: option.text })));
+  const values = options.flatMap((option) => (option.group ? option.items.map((item) => item.value) : [option.value]));
   select.value = values.includes(current) ? current : '';
+  return select.value;
 }
 
 function renderHeader() {
   const data = ui.data;
   const runSelect = $('#run');
-  runSelect.replaceChildren(...data.runs.map((run) => el('option', { value: run.name, text: `${run.name} (${run.frames})` })));
+  runSelect.replaceChildren(...data.runs.map((run) => el('option', { value: run.name, text: `${run.name} (${run.elements} elements)` })));
   if (data.run) runSelect.value = data.run;
   runSelect.hidden = data.runs.length < 2;
 
+  const families = [...new Set(data.elements.map((element) => element.family))];
+  ui.family = fillSelect($('#family'), [
+    { value: '', text: 'Every kind' },
+    ...families.map((family) => ({ value: family, text: familyOf(family).label })),
+  ], ui.family);
+
+  const holding = (state) => data.elements.filter((element) => element.states.includes(state)).length;
+  const groups = [];
+  for (const entry of data.states) {
+    let group = groups.find((item) => item.family === entry.family);
+    if (!group) { group = { family: entry.family, group: familyOf(entry.family).label, items: [] }; groups.push(group); }
+    group.items.push({ value: entry.state, text: `${entry.state} (${holding(entry.state)})` });
+  }
+  ui.state = fillSelect($('#state'), [{ value: '', text: 'Any state' }, ...groups], ui.state);
+
   const unique = (field) => [...new Set(data.frames.map((frame) => frame[field]))];
-  fillSelect($('#viewport'), unique('viewport'), 'All sizes', ui.viewport);
-  fillSelect($('#theme'), unique('theme'), 'Both themes', ui.theme);
+  ui.viewport = fillSelect($('#viewport'), [
+    { value: '', text: 'Size: first' },
+    ...unique('viewport').map((value) => ({ value, text: `Size: ${value}` })),
+  ], ui.viewport);
+  ui.theme = fillSelect($('#theme'), [
+    { value: '', text: 'Theme: first' },
+    ...unique('theme').map((value) => ({ value, text: `Theme: ${value}` })),
+  ], ui.theme);
   $('#sort').value = ui.sort;
-  for (const chip of document.querySelectorAll('.chip')) {
+  if ($('#query').value !== ui.query) $('#query').value = ui.query;
+  for (const chip of document.querySelectorAll('#filters .chip')) {
     chip.setAttribute('aria-pressed', String(chip.dataset.filter === ui.filter));
   }
   renderStats();
@@ -492,58 +653,71 @@ function renderHeader() {
 function renderStats() {
   const data = ui.data;
   if (!data) return;
-  const reviewed = data.frames.filter(isReviewed).length;
-  const keys = new Set(data.frames.map((frame) => frame.key));
-  const open = data.notes.filter((note) => !note.resolved_at && keys.has(note.frame_key)).length;
+  const reviewed = data.elements.filter(isReviewed).length;
+  const changed = data.elements.filter(isChanged).length;
+  const keys = new Set(data.elements.map((element) => element.key));
+  const open = data.notes.filter((note) => !note.resolved_at && keys.has(note.element_key)).length;
   const parts = [
-    el('span', {}, el('b', { text: String(data.frames.length) }), ' frames'),
+    el('span', {}, el('b', { text: String(data.elements.length) }), ' elements'),
+    el('span', { class: 'muted', text: `${data.frames.length} frames` }),
     el('span', {}, el('b', { text: String(reviewed) }), ' reviewed'),
+    changed ? el('span', {}, el('b', { text: String(changed) }), ' changed since sign-off') : null,
     el('span', {}, el('b', { text: String(open) }), ` open note${open === 1 ? '' : 's'}`),
   ];
   if (data.latest_frame_at) parts.push(el('span', { text: `last frame ${ago(data.latest_frame_at)}` }));
   fill($('#stats'), parts);
 }
 
-// ---- rendering: grid -------------------------------------------------------
+// ---- rendering: element grid -----------------------------------------------
 
-function thumbSize(frame) {
-  const width = Math.min(frame.width, 480);
-  return [width, Math.max(1, Math.round(frame.height * width / frame.width))];
-}
-
-function card(frame) {
-  let node = ui.cards.get(frame.stem);
+function card(element) {
+  let node = ui.cards.get(element.key);
   if (!node) {
     const img = el('img', { loading: 'lazy', decoding: 'async', alt: '' });
-    const caption = el('span', { class: 'cap' });
-    node = el('button', { class: 'card', type: 'button', onclick: () => openFrame(frame.stem) }, img, caption);
+    const name = el('span', { class: 'cap-row' });
+    const sub = el('span', { class: 'cap-sub' });
+    node = el('button', { class: 'card', type: 'button', onclick: () => openElement(element.key) }, img, el('span', { class: 'cap' }, name, sub));
     node._img = img;
-    node._caption = caption;
-    ui.cards.set(frame.stem, node);
+    node._name = name;
+    node._sub = sub;
+    ui.cards.set(element.key, node);
   }
-  const src = `/thumb/${enc(ui.run)}/${enc(frame.stem)}.webp?v=${frame.digest}`;
-  if (node.dataset.src !== src) {
-    const [width, height] = thumbSize(frame);
-    node._img.width = width;
-    node._img.height = height;
-    node._img.src = src;
-    node.dataset.src = src;
+  const frame = previewFrame(element);
+  if (frame) {
+    const src = thumbUrl(frame);
+    if (node.dataset.src !== src) {
+      const [width, height] = thumbSize(frame);
+      node._img.width = width;
+      node._img.height = height;
+      node._img.src = src;
+      node.dataset.src = src;
+    }
   }
-  const reviewed = isReviewed(frame);
-  const open = openNotes(frame).length;
-  const fresh = ui.fresh.has(frame.stem);
+  const family = familyOf(element.family);
+  const reviewed = isReviewed(element);
+  const changed = isChanged(element);
+  const open = openNotes(element).length;
+  const fresh = ui.fresh.has(element.key);
   node.classList.toggle('reviewed', reviewed);
+  node.classList.toggle('changed', changed);
   node.classList.toggle('fresh', fresh);
-  const label = ui.sort === 'surface'
-    ? `${frame.viewport} · ${frame.theme}`
-    : `${frame.surface} · ${frame.viewport} · ${frame.theme}`;
-  node.setAttribute('aria-label', `${frame.surface}, ${frame.viewport}, ${frame.theme}${reviewed ? ', reviewed' : ''}${open ? `, ${open} open notes` : ''}`);
-  fill(node._caption,
-    el('span', { class: 'cap-main', text: label }),
+  const states = element.states[0] === null ? [] : element.states;
+  node.setAttribute('aria-label', [
+    element.name, family.label, plural(states.length || 1, family.one, family.many),
+    reviewed ? 'reviewed' : changed ? 'changed since sign-off' : 'not reviewed',
+    open ? `${open} open notes` : null,
+  ].filter(Boolean).join(', '));
+  fill(node._name,
+    el('span', { class: 'cap-name', text: element.name }),
     fresh ? el('span', { class: 'badge new', text: 'new' }) : null,
     open ? el('span', { class: 'badge note', text: `✎ ${open}` }) : null,
+    changed ? el('span', { class: 'badge changed', text: '⟳ changed' }) : null,
     reviewed ? el('span', { class: 'badge ok', text: '✓' }) : null,
   );
+  node._sub.textContent = states.length
+    ? `${plural(states.length, family.one, family.many)} · ${element.frames.length} frames: ${states.join(', ')}`
+    : `${element.frames.length} frames`;
+  node._img.title = frame ? `Showing ${frameLabel(frame)}` : '';
   return node;
 }
 
@@ -553,32 +727,32 @@ function renderGrid() {
   if (!data.run) {
     grid.replaceChildren(el('div', { class: 'empty' },
       'No review run yet. Start one with ', el('code', { text: 'just tui-review render' }),
-      '; frames appear here as each one is written.'));
+      '; elements appear here as their frames are written.'));
     return;
   }
-  const frames = ordered().filter(matches);
-  if (!frames.length) {
-    const text = data.frames.length
-      ? 'Nothing matches these filters.'
+  const elements = orderedElements().filter(matches);
+  if (!elements.length) {
+    const text = data.elements.length
+      ? 'No element matches these filters.'
       : `Run “${data.run}” has no frames yet. They appear here as the render writes them.`;
     grid.replaceChildren(el('p', { class: 'empty', text }));
     return;
   }
   const nodes = [];
-  if (ui.sort === 'surface') {
+  if (ui.sort === 'kind') {
     const groups = new Map();
-    for (const frame of frames) {
-      if (!groups.has(frame.surface)) groups.set(frame.surface, []);
-      groups.get(frame.surface).push(frame);
+    for (const element of elements) {
+      if (!groups.has(element.family)) groups.set(element.family, []);
+      groups.get(element.family).push(element);
     }
-    for (const [surface, members] of groups) {
-      const all = data.frames.filter((frame) => frame.surface === surface);
+    for (const [family, members] of groups) {
+      const all = data.elements.filter((element) => element.family === family);
       const done = all.filter(isReviewed).length;
-      nodes.push(el('h2', { class: 'group' }, surface, el('span', { class: 'count', text: `${done}/${all.length} reviewed` })));
-      for (const frame of members) nodes.push(card(frame));
+      nodes.push(el('h2', { class: 'group' }, familyOf(family).label, el('span', { class: 'count', text: `${done}/${all.length} reviewed` })));
+      for (const element of members) nodes.push(card(element));
     }
   } else {
-    for (const frame of frames) nodes.push(card(frame));
+    for (const element of elements) nodes.push(card(element));
   }
   grid.replaceChildren(...nodes);
 }
@@ -621,85 +795,97 @@ function renderRunPanel() {
     blocks.push(el('p', { text: 'PNG files that are not frames (not shown):' }),
       el('ul', {}, data.unrecognised.map((name) => el('li', {}, el('code', { text: name })))));
   }
-  const keys = new Set(data.frames.map((frame) => frame.key));
-  const elsewhere = data.notes.filter((note) => !note.resolved_at && !keys.has(note.frame_key));
+  const elsewhere = data.notes.filter((note) => !note.resolved_at && !ui.elements.has(note.element_key));
   if (elsewhere.length) {
-    blocks.push(el('p', { text: `Open notes on frames this run does not hold (${elsewhere.length}):` }),
-      el('ul', {}, elsewhere.map((note) => el('li', {}, el('code', { text: note.frame_key }), ` — #${note.id} ${note.body}`))));
+    blocks.push(el('p', { text: `Open notes on elements this run does not hold (${elsewhere.length}):` }),
+      el('ul', {}, elsewhere.map((note) => el('li', {}, el('code', { text: note.element_key }), ` — #${note.id} ${note.body}`))));
   }
   blocks.push(el('p', { class: 'muted' }, 'Notes are stored on the server at ', el('code', { text: data.store }), '.'));
   fill(body, blocks);
 }
 
-// ---- rendering: detail -----------------------------------------------------
+// ---- rendering: element detail ---------------------------------------------
 
-function current() {
-  return ui.openStem ? ui.byStem.get(ui.openStem) || null : null;
+function currentElement() {
+  return ui.openKey ? ui.elements.get(ui.openKey) || null : null;
+}
+
+function focusedFrame(element) {
+  const chosen = ui.focusStem ? ui.byStem.get(ui.focusStem) : null;
+  if (chosen && chosen.element === element.key) return chosen;
+  return pickFrame(element, ui.focus);
 }
 
 function renderDetail() {
   const detail = $('#detail');
-  if (!ui.openStem || !ui.data) {
+  if (!ui.openKey || !ui.data) {
     detail.hidden = true;
     document.body.classList.remove('detail-open');
     return;
   }
   detail.hidden = false;
   document.body.classList.add('detail-open');
-  const frame = current();
+  const element = currentElement();
+  const frame = element ? focusedFrame(element) : null;
   const banner = $('#d-banner');
-  const disabled = !frame;
-  for (const id of ['#toggle-reviewed', '#review-next', '#note-save']) $(id).disabled = disabled;
+  for (const id of ['#toggle-reviewed', '#review-next', '#note-save']) $(id).disabled = !frame;
   $('#prev').disabled = !neighbour(-1);
   $('#next').disabled = !neighbour(1);
 
-  if (!frame) {
+  if (!element || !frame) {
     banner.hidden = false;
-    banner.textContent = 'This frame is not in the run any more. It may be re-rendering; it will reappear here when it settles.';
+    fill(banner, 'This element has no frame in the run any more. It may be re-rendering; it will reappear here when a frame settles.');
     $('#d-pos').textContent = '';
     return;
   }
 
-  ui.fresh.delete(frame.stem);
-  $('#d-surface').textContent = frame.surface;
-  $('#d-sub').textContent = `${frame.viewport} ${frame.columns}×${frame.rows} · ${frame.theme}`;
-  const visible = ordered().filter(matches);
-  const at = visible.findIndex((item) => item.stem === frame.stem);
+  ui.fresh.delete(element.key);
+  ui.freshFrames.delete(frame.stem);
+  ui.focusStem = frame.stem;
+  const family = familyOf(element.family);
+  const states = element.states[0] === null ? [] : element.states;
+  $('#d-name').textContent = element.name;
+  $('#d-sub').textContent = [
+    family.label,
+    states.length ? plural(states.length, family.one, family.many) : null,
+    `${element.frames.length} frames`,
+  ].filter(Boolean).join(' · ');
+  const visible = orderedElements().filter(matches);
+  const at = visible.findIndex((item) => item.key === element.key);
   $('#d-pos').textContent = at >= 0 ? `${at + 1}/${visible.length}` : '';
+
+  const moved = movedSinceSignOff(element);
+  renderPicker(element, frame, moved);
 
   const img = $('#d-img');
   const src = `/image/${enc(ui.run)}/${enc(frame.stem)}.png?v=${frame.digest}`;
   const replaced = ui.shownStem === frame.stem && ui.shownDigest && ui.shownDigest !== frame.digest;
   if (img.getAttribute('src') !== src) {
     img.src = src;
-    img.alt = `${frame.surface} at ${frame.viewport}, ${frame.theme}`;
+    img.alt = `${element.name}: ${frameLabel(frame)}`;
   }
   ui.shownStem = frame.stem;
   ui.shownDigest = frame.digest;
   applyZoom(frame);
-  if (replaced) {
-    banner.hidden = false;
-    banner.textContent = 'This frame was re-rendered while you were looking at it; the image above is the new one.';
-  } else if (banner.dataset.stem !== frame.stem) {
-    banner.hidden = true;
-  }
-  banner.dataset.stem = frame.stem;
+  renderBanner(element, frame, moved, replaced);
 
+  const mark = signOff(element);
   fill($('#d-meta'),
+    el('span', { text: `${frame.viewport} ${frame.columns}×${frame.rows}` }),
     el('span', { text: `${frame.width}×${frame.height}px` }),
-    el('span', { text: `${Math.round(frame.bytes / 1024)} KB` }),
     el('span', { text: `rendered ${ago(frame.modified_at)}` }),
     el('span', {}, 'sha ', el('code', { text: frame.digest.slice(0, 10) })),
+    moved.has(frame.key) ? el('span', { class: 'badge changed', text: mark && mark.added.includes(frame.key) ? 'new since sign-off' : 're-rendered since sign-off' }) : null,
   );
 
   const findings = [];
   if (frame.recorded) {
-    const state = frame.recorded.sequence;
-    if (state) {
-      findings.push(el('li', { class: state.matches_golden ? '' : 'warn' },
-        'State built by the documentation sequence ', el('code', { text: state.sequence_id }),
-        ` (${state.docs_page}), which ${state.matches_golden ? 'matches its committed golden.' : 'no longer matches its committed golden:'}`,
-        state.golden_problems.map((problem) => el('div', { text: problem }))));
+    const sequence = frame.recorded.sequence;
+    if (sequence) {
+      findings.push(el('li', { class: sequence.matches_golden ? '' : 'warn' },
+        'State built by the documentation sequence ', el('code', { text: sequence.sequence_id }),
+        ` (${sequence.docs_page}), which ${sequence.matches_golden ? 'matches its committed golden.' : 'no longer matches its committed golden:'}`,
+        sequence.golden_problems.map((problem) => el('div', { text: problem }))));
     }
     for (const finding of frame.recorded.geometry_findings) findings.push(el('li', { class: 'warn', text: `Geometry: ${finding}` }));
     if (frame.recorded.missing_glyphs.length) {
@@ -710,31 +896,114 @@ function renderDetail() {
   }
   fill($('#d-findings'), findings);
 
-  const reviewed = isReviewed(frame);
+  const reviewed = isReviewed(element);
   const toggle = $('#toggle-reviewed');
   toggle.textContent = reviewed ? '✓ Reviewed' : 'Mark reviewed';
   toggle.classList.toggle('on', reviewed);
+  $('#note-point-label').textContent = `Point at ${frameLabel(frame)}`;
 
-  renderNotes(frame);
+  renderSheet(element, frame, moved);
+  renderNotes(element);
   renderText(frame);
 }
 
-function renderNotes(frame) {
-  const notes = frameNotes(frame);
+function renderPicker(element, frame, moved) {
+  const frames = elementFrames(element);
+  const states = element.states[0] === null ? [] : element.states;
+  fill($('#d-states'), states.map((state) => {
+    const inState = frames.filter((item) => item.state === state);
+    const changed = inState.some((item) => moved.has(item.key));
+    return el('button', {
+      class: `chip${changed ? ' changed' : ''}`, type: 'button', 'aria-pressed': String(state === frame.state),
+      title: changed ? 'Frames of this state changed since the sign-off' : null,
+      onclick: () => focusWith({ state }),
+    }, state, changed ? ' ⟳' : null);
+  }));
+  $('#d-states').hidden = states.length === 0;
+  const inState = frames.filter((item) => item.state === frame.state);
+  const segment = (field, values) => values.map((value) => el('button', {
+    type: 'button', 'aria-pressed': String(frame[field] === value),
+    disabled: !inState.some((item) => item[field] === value),
+    onclick: () => focusWith({ [field]: value }),
+  }, value));
+  fill($('#d-viewports'), segment('viewport', [...new Set(frames.map((item) => item.viewport))]));
+  fill($('#d-themes'), segment('theme', [...new Set(frames.map((item) => item.theme))]));
+}
+
+function renderBanner(element, frame, moved, replaced) {
+  const banner = $('#d-banner');
+  const mark = signOff(element);
+  const parts = [];
+  if (replaced) parts.push(el('span', { text: 'This frame was re-rendered while you were looking at it; the image below is the new one.' }));
+  if (mark && !mark.current) {
+    const counts = [
+      mark.changed.length ? `${mark.changed.length} re-rendered` : null,
+      mark.added.length ? `${mark.added.length} new` : null,
+      mark.removed.length ? `${mark.removed.length} gone` : null,
+    ].filter(Boolean).join(', ');
+    parts.push(el('span', { text: `Signed off ${ago(mark.reviewed_at)}; since then ${counts}. They are outlined below.` }));
+    if (moved.size) parts.push(el('button', { type: 'button', text: 'Next changed frame', onclick: () => stepChanged() }));
+  }
+  banner.hidden = parts.length === 0;
+  fill(banner, parts);
+}
+
+function renderSheet(element, focused, moved) {
+  const box = $('#d-sheet');
+  if (ui.sheet.key !== element.key || ui.sheet.digest !== element.digest) {
+    ui.sheet = { key: element.key, digest: element.digest, nodes: new Map() };
+    const frames = elementFrames(element);
+    const rows = element.states.map((state) => {
+      const members = frames.filter((frame) => frame.state === state);
+      return el('div', { class: 'sheet-row' },
+        state === null ? null : el('div', { class: 'sheet-state', text: state }),
+        el('div', { class: 'strip' }, members.map((frame) => {
+          const [width, height] = thumbSize(frame);
+          const node = el('button', { class: 'tile', type: 'button', title: frameLabel(frame), onclick: () => focusStem(frame.stem, true) },
+            el('img', { loading: 'lazy', decoding: 'async', alt: frameLabel(frame), src: thumbUrl(frame), width, height }),
+            el('span', { text: `${frame.viewport} · ${frame.theme}` }));
+          ui.sheet.nodes.set(frame.stem, node);
+          return node;
+        })));
+    });
+    box.replaceChildren(...rows);
+    $('#d-sheet-count').textContent = `(${element.frames.length})`;
+  }
+  for (const [stem, node] of ui.sheet.nodes) {
+    const frame = ui.byStem.get(stem);
+    node.classList.toggle('focused', stem === focused.stem);
+    node.classList.toggle('changed', Boolean(frame && moved.has(frame.key)));
+    node.classList.toggle('fresh', ui.freshFrames.has(stem));
+    node.setAttribute('aria-pressed', String(stem === focused.stem));
+  }
+}
+
+function renderNotes(element) {
+  const notes = elementNotes(element);
+  const open = notes.filter((note) => !note.resolved_at).length;
+  $('#d-note-count').textContent = notes.length ? `${open} open of ${notes.length}` : '';
   const items = notes.map((note) => {
-    const earlier = note.png_sha256 !== frame.digest;
+    const pointed = note.frame_key ? ui.byKey.get(note.frame_key) : null;
+    let where = null;
+    if (pointed) where = el('button', { type: 'button', class: 'link', text: `on ${frameLabel(pointed)}`, onclick: () => focusStem(pointed.stem, true) });
+    else if (note.frame_key) where = el('span', { text: `on ${note.frame_key}` });
+    let drift = null;
+    if (note.frame_state === 'changed') drift = 'that frame re-rendered since';
+    else if (note.frame_state === 'absent') drift = 'that frame is not in this run';
+    else if (note.element_state === 'changed') drift = 'element re-rendered since';
     return el('li', { class: `note${note.resolved_at ? ' resolved' : ''}` },
       el('p', { text: note.body }),
       el('div', { class: 'note-meta' },
         el('span', { text: `#${note.id} · ${stamp(note.created_at)}` }),
-        earlier ? el('span', { class: 'badge note', text: 'earlier image' }) : null,
+        where,
+        drift ? el('span', { class: 'badge note', text: drift }) : null,
         note.resolved_at ? el('span', { class: 'badge ok', text: 'resolved' }) : null,
         el('span', { class: 'spacer' }),
         el('button', { type: 'button', text: note.resolved_at ? 'Reopen' : 'Resolve', onclick: () => setResolved(note, !note.resolved_at) }),
         el('button', { type: 'button', class: 'danger', text: 'Delete', onclick: () => deleteNote(note) }),
       ));
   });
-  if (!items.length) items.push(el('li', { class: 'muted', text: 'No notes on this frame.' }));
+  if (!items.length) items.push(el('li', { class: 'muted', text: 'No notes on this element yet.' }));
   fill($('#d-notes'), items);
 }
 
@@ -776,40 +1045,98 @@ function renderAll() {
 
 // ---- navigation ------------------------------------------------------------
 
-function hashFor(stem) {
-  return `#/${enc(ui.run)}/${enc(stem)}`;
+function hashFor(key, stem) {
+  return `#/${enc(ui.run)}/${enc(key)}${stem ? `/${enc(stem)}` : ''}`;
 }
 
 function saveDraft() {
-  if (!ui.openStem) return;
+  if (!ui.openKey) return;
   const text = $('#note-body').value;
-  if (text) ui.drafts.set(ui.openStem, text); else ui.drafts.delete(ui.openStem);
+  if (text) ui.drafts.set(ui.openKey, text); else ui.drafts.delete(ui.openKey);
 }
 
 function restoreDraft() {
-  $('#note-body').value = (ui.openStem && ui.drafts.get(ui.openStem)) || '';
+  $('#note-body').value = (ui.openKey && ui.drafts.get(ui.openKey)) || '';
 }
 
-function openFrame(stem) {
+function openElement(key) {
   ui.fromGrid = true;
-  location.hash = hashFor(stem);
+  location.hash = hashFor(key);
 }
 
-function go(frame) {
-  if (!frame) return;
+function go(element) {
+  if (!element) return;
   saveDraft();
-  history.replaceState(null, '', hashFor(frame.stem));
-  ui.openStem = frame.stem;
+  ui.openKey = element.key;
+  ui.focusStem = null;
+  ui.actual = false;
+  history.replaceState(null, '', hashFor(element.key));
   restoreDraft();
   $('#detail-scroll').scrollTop = 0;
   renderDetail();
   renderGrid();
 }
 
-function step(direction) {
+function focusStem(stem, reveal) {
+  const frame = ui.byStem.get(stem);
+  if (!frame) return;
+  ui.focusStem = stem;
+  ui.focus = { state: frame.state, viewport: frame.viewport, theme: frame.theme };
+  history.replaceState(null, '', hashFor(ui.openKey, stem));
+  renderDetail();
+  if (reveal) {
+    const picker = $('#picker');
+    const scroll = $('#detail-scroll');
+    const top = $('#shot').getBoundingClientRect().top - scroll.getBoundingClientRect().top - picker.offsetHeight;
+    if (top < 0 || top > scroll.clientHeight * 0.6) scroll.scrollBy({ top: top - 8, behavior: 'smooth' });
+  }
+}
+
+// Changes one of state, size or theme and keeps the other two where they are.
+function focusWith(change) {
+  const element = currentElement();
+  if (!element) return;
+  const now = focusedFrame(element);
+  const target = pickFrame(element, { state: now.state, viewport: now.viewport, theme: now.theme, ...change });
+  if (target) focusStem(target.stem);
+}
+
+function cycle(values, current, direction) {
+  const index = values.indexOf(current);
+  return values[(index + direction + values.length) % values.length];
+}
+
+function stepState(direction) {
+  const element = currentElement();
+  if (!element || element.states.length < 2) return;
+  const now = focusedFrame(element);
+  focusWith({ state: cycle(element.states, now.state, direction) });
+}
+
+function stepFacet(field, direction) {
+  const element = currentElement();
+  if (!element) return;
+  const now = focusedFrame(element);
+  const values = [...new Set(elementFrames(element).filter((frame) => frame.state === now.state).map((frame) => frame[field]))];
+  if (values.length > 1) focusWith({ [field]: cycle(values, now[field], direction) });
+}
+
+function stepChanged() {
+  const element = currentElement();
+  if (!element) return;
+  const moved = movedSinceSignOff(element);
+  const frames = elementFrames(element);
+  const index = frames.findIndex((frame) => frame.stem === ui.focusStem);
+  for (let offset = 1; offset <= frames.length; offset += 1) {
+    const frame = frames[(index + offset) % frames.length];
+    if (moved.has(frame.key)) { focusStem(frame.stem, true); return; }
+  }
+}
+
+function stepElement(direction) {
   const target = neighbour(direction);
   if (target) go(target);
-  else toast(direction > 0 ? 'That was the last frame in this view.' : 'That was the first frame in this view.');
+  else toast(direction > 0 ? 'That was the last element in this view.' : 'That was the first element in this view.');
 }
 
 function closeDetail() {
@@ -823,40 +1150,52 @@ function closeDetail() {
 }
 
 async function route() {
-  const match = /^#\/([^/]+)\/(.+)$/.exec(location.hash);
+  const match = /^#\/([^/]+)\/([^/]+)(?:\/(.+))?$/.exec(location.hash);
   if (!match) {
-    if (ui.openStem) saveDraft();
-    ui.openStem = null;
+    if (ui.openKey) saveDraft();
+    ui.openKey = null;
+    ui.focusStem = null;
     ui.fromGrid = false;
     ui.actual = false;
     if (ui.data) { renderDetail(); renderGrid(); }
     return;
   }
   const run = decodeURIComponent(match[1]);
-  const stem = decodeURIComponent(match[2]);
+  const key = decodeURIComponent(match[2]);
+  const stem = match[3] ? decodeURIComponent(match[3]) : null;
   if (!ui.data || run !== ui.run) {
     ui.run = run;
     await load();
   }
-  if (ui.openStem !== stem) {
+  if (ui.openKey !== key) {
     saveDraft();
-    ui.openStem = stem;
+    ui.openKey = key;
     ui.actual = false;
     restoreDraft();
     $('#detail-scroll').scrollTop = 0;
   }
+  ui.focusStem = stem;
+  const frame = stem ? ui.byStem.get(stem) : null;
+  if (frame) ui.focus = { state: frame.state, viewport: frame.viewport, theme: frame.theme };
   renderDetail();
   renderGrid();
 }
 
 // ---- writes ----------------------------------------------------------------
 
-async function setReviewed(frame, reviewed) {
-  await api('/api/reviewed', {
-    method: 'POST',
-    body: { run: ui.run, stem: frame.stem, png_sha256: ui.shownDigest || frame.digest, reviewed },
-  });
-  await load();
+async function setReviewed(element, reviewed) {
+  try {
+    await api('/api/reviewed', {
+      method: 'POST',
+      body: { run: ui.run, element: element.key, element_sha256: element.digest, reviewed },
+    });
+    return true;
+  } catch (error) {
+    toast(error.message);
+    return false;
+  } finally {
+    await load();
+  }
 }
 
 async function setResolved(note, resolved) {
@@ -896,44 +1235,49 @@ function connect() {
 // ---- wiring ----------------------------------------------------------------
 
 function wire() {
-  for (const chip of document.querySelectorAll('.chip')) {
+  for (const chip of document.querySelectorAll('#filters .chip')) {
     chip.addEventListener('click', () => { ui.filter = chip.dataset.filter; writePrefs(); renderAll(); });
   }
-  $('#viewport').addEventListener('change', (event) => { ui.viewport = event.target.value; writePrefs(); renderAll(); });
-  $('#theme').addEventListener('change', (event) => { ui.theme = event.target.value; writePrefs(); renderAll(); });
-  $('#sort').addEventListener('change', (event) => { ui.sort = event.target.value; writePrefs(); renderAll(); });
+  const bind = (id, field) => $(id).addEventListener('change', (event) => { ui[field] = event.target.value; writePrefs(); renderAll(); });
+  bind('#family', 'family');
+  bind('#state', 'state');
+  bind('#viewport', 'viewport');
+  bind('#theme', 'theme');
+  bind('#sort', 'sort');
+  $('#query').addEventListener('input', (event) => { ui.query = event.target.value; renderGrid(); });
   $('#run').addEventListener('change', (event) => {
     ui.run = event.target.value;
-    if (ui.openStem) history.replaceState(null, '', location.pathname + location.search);
-    ui.openStem = null;
+    if (ui.openKey) history.replaceState(null, '', location.pathname + location.search);
+    ui.openKey = null;
     load();
   });
 
   $('#close').addEventListener('click', closeDetail);
-  $('#prev').addEventListener('click', () => step(-1));
-  $('#next').addEventListener('click', () => step(1));
+  $('#prev').addEventListener('click', () => stepElement(-1));
+  $('#next').addEventListener('click', () => stepElement(1));
   $('#toggle-reviewed').addEventListener('click', async () => {
-    const frame = current();
-    if (!frame) return;
-    try { await setReviewed(frame, !isReviewed(frame)); } catch (error) { toast(error.message); }
+    const element = currentElement();
+    if (element) await setReviewed(element, !isReviewed(element));
   });
   $('#review-next').addEventListener('click', async () => {
-    const frame = current();
-    if (!frame) return;
+    const element = currentElement();
+    if (!element) return;
     const target = neighbour(1);
-    try {
-      if (!isReviewed(frame)) await setReviewed(frame, true);
-      if (target) go(target); else toast('Reviewed. That was the last frame in this view.');
-    } catch (error) { toast(error.message); }
+    if (!isReviewed(element) && !(await setReviewed(element, true))) return;
+    if (target) go(target);
+    else toast('Reviewed. That was the last element in this view.');
   });
 
   $('#d-img').addEventListener('click', () => {
-    const frame = current();
-    if (!frame) return;
+    const element = currentElement();
+    if (!element) return;
     ui.actual = !ui.actual;
-    applyZoom(frame);
+    applyZoom(focusedFrame(element));
   });
-  $('#d-text-box').addEventListener('toggle', () => { const frame = current(); if (frame) renderText(frame); });
+  $('#d-text-box').addEventListener('toggle', () => {
+    const element = currentElement();
+    if (element) renderText(focusedFrame(element));
+  });
 
   let touch = null;
   const shot = $('#shot');
@@ -948,7 +1292,7 @@ function wire() {
     const dy = event.changedTouches[0].clientY - touch.y;
     const quick = Date.now() - touch.at < 700;
     touch = null;
-    if (quick && Math.abs(dx) > 60 && Math.abs(dy) < 50) step(dx < 0 ? 1 : -1);
+    if (quick && Math.abs(dx) > 60 && Math.abs(dy) < 50) stepState(dx < 0 ? 1 : -1);
   }, { passive: true });
 
   const form = $('#note-form');
@@ -958,18 +1302,26 @@ function wire() {
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const frame = current();
+    const element = currentElement();
     const body = textarea.value.trim();
-    if (!frame || !body) return;
+    if (!element || !body) return;
+    const frame = focusedFrame(element);
+    const pointed = $('#note-point').checked && frame && ui.shownStem === frame.stem;
     const button = $('#note-save');
     button.disabled = true;
     try {
       await api('/api/notes', {
         method: 'POST',
-        body: { run: ui.run, stem: frame.stem, png_sha256: ui.shownDigest || frame.digest, body },
+        body: {
+          run: ui.run,
+          element: element.key,
+          element_sha256: element.digest,
+          body,
+          frame: pointed ? { stem: frame.stem, png_sha256: ui.shownDigest } : null,
+        },
       });
       textarea.value = '';
-      ui.drafts.delete(frame.stem);
+      ui.drafts.delete(element.key);
       await load();
       toast('Note saved on the server.');
     } catch (error) {
@@ -980,14 +1332,23 @@ function wire() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (!ui.openStem) return;
+    if (!ui.openKey) {
+      if (event.key === '/' && !event.target.matches('textarea, input, select')) { event.preventDefault(); $('#query').focus(); }
+      return;
+    }
     if (event.target.matches('textarea, input, select')) {
       if (event.key === 'Escape') event.target.blur();
       return;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return;
-    if (event.key === 'ArrowRight' || event.key === 'j') step(1);
-    else if (event.key === 'ArrowLeft' || event.key === 'k') step(-1);
+    if (event.key === 'ArrowRight') stepState(1);
+    else if (event.key === 'ArrowLeft') stepState(-1);
+    else if (event.key === 'v') stepFacet('viewport', 1);
+    else if (event.key === 'V') stepFacet('viewport', -1);
+    else if (event.key === 't' || event.key === 'T') stepFacet('theme', 1);
+    else if (event.key === 'j') stepElement(1);
+    else if (event.key === 'k') stepElement(-1);
+    else if (event.key === 'c') stepChanged();
     else if (event.key === 'Escape') closeDetail();
     else if (event.key === 'r') $('#toggle-reviewed').click();
     else if (event.key === 'n') { event.preventDefault(); textarea.focus(); }

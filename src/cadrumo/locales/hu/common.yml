@@ -2276,6 +2276,7 @@ tui:
             a forrásánál, majd számoljon újra.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
+        confirm_all: Az összes feltételezett érték áttekintése és megerősítése
         detail:
           advisory: Ez tanács. A bevallást a jelenlegi formájában is benyújthatja.
           blocking_rule: A Modelo egyik szabálya nem teljesül. A benyújtás addig nem
@@ -2297,6 +2298,7 @@ tui:
           more: Továbbiak
         missing: A bevalláshoz ezekben a rovatokban érték kell, de senki sem adta
           meg.
+        open_area: '{area} megnyitása'
         open_records: Táblázat megnyitása
         open_section: Szakasz megnyitása
         records:

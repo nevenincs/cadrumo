@@ -24,11 +24,15 @@ ticked, so an unticked box never looks ticked.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import ClassVar, Final, override
 
+from rich.cells import cell_len
+from rich.console import Console
+from rich.text import Text
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -45,6 +49,7 @@ from .dialog_width import fit_dialog_width
 from .issues import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
+from .sources import BOX_LIST_LINES
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
 from .wording import period_words
 
@@ -66,6 +71,8 @@ class ReviewNote:
 
 
 _NAMED_FILING: Final[str] = "named_filing"
+_FRAME: Final[int] = 4
+"""Cells a dialog's border and padding take on each side, for a first estimate of its paragraph width."""
 REVIEW_EFFECTS: Final[tuple[str, ...]] = (
     "clear",
     "restore",
@@ -76,7 +83,9 @@ REVIEW_EFFECTS: Final[tuple[str, ...]] = (
 """Every effect the review can state for a change; a replaced source is named by its family."""
 _NOTE_MARKS: Final[Mapping[bool, WorkbenchMark]] = {True: BLOCKS_MARK, False: CHECK_MARK}
 """A finding that refuses the changes blocks; any other is worth checking, marked as every surface marks it."""
-_AT_RISK_SHOWN: Final[int] = 12
+_AND_MORE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.review.and_more"
+_NAMED_BOXES_UP_TO: Final[int] = 20
+"""Past this many boxes a list of their numbers stops helping; the sections that hold them are named instead."""
 
 
 def _effect_key(effect: str) -> str:
@@ -112,25 +121,71 @@ def change_effect_text(change: StagedChange) -> str:
     return tr(key)
 
 
-def _boxes_text(boxes: tuple[str, ...]) -> str:
-    shown = ", ".join(boxes[:_AT_RISK_SHOWN])
-    if len(boxes) > _AT_RISK_SHOWN:
-        shown = tr("tui.modelo.workbench.review.and_more", shown=shown, count=len(boxes) - _AT_RISK_SHOWN)
-    return shown
+@dataclass(frozen=True, slots=True)
+class UnattributedBoxes:
+    """The boxes holding a value nobody is recorded as having typed, and the part of the form each sits in.
+
+    ``boxes`` names each by its box number in brackets, or by its words when no
+    box prints it; ``sections`` gives, in the same order, the heading of the
+    section it sits in.
+    """
+
+    boxes: tuple[str, ...]
+    sections: tuple[str, ...]
 
 
-def at_risk_text(boxes: tuple[str, ...]) -> str:
-    """Say what applying does to values nobody is recorded as having typed, naming their boxes."""
-    if not boxes:
+def _lines(text: str, console: Console, width: int) -> int:
+    return len(Text(text).wrap(console, max(width, 1)))
+
+
+def _fitted(parts: tuple[str, ...], console: Console, width: int) -> str:
+    """``parts`` joined in at most two lines at ``width``; those that do not fit give way to how many more there are."""
+    whole = ", ".join(parts)
+    if _lines(whole, console, width) <= BOX_LIST_LINES:
+        return whole
+    room = BOX_LIST_LINES * max(width, 1)
+    shown = 1
+    while shown < len(parts) and cell_len(", ".join(parts[: shown + 1])) <= room:
+        shown += 1
+    while True:
+        text = tr(_AND_MORE_LOCALE_KEY, shown=", ".join(parts[:shown]), count=len(parts) - shown)
+        if shown == 1 or _lines(text, console, width) <= BOX_LIST_LINES:
+            return text
+        shown -= 1
+
+
+def unattributed_words(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
+    """Name the boxes in at most two lines at ``width``; past twenty, the sections holding them, with counts.
+
+    Every box is still counted: words that do not fit give way to how many
+    more there are.
+    """
+    if len(unattributed.boxes) <= _NAMED_BOXES_UP_TO:
+        return _fitted(unattributed.boxes, console, width)
+    counts = Counter(unattributed.sections)
+    return _fitted(tuple(f"{section} ({counts[section]})" for section in counts), console, width)
+
+
+def at_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
+    """Say what applying does to values nobody is recorded as having typed, naming their boxes at ``width``."""
+    if not unattributed.boxes:
         return tr("tui.modelo.workbench.review.operator_entries_unknown")
-    return tr("tui.modelo.workbench.review.operator_entries_at_risk", count=len(boxes), boxes=_boxes_text(boxes))
+    return tr(
+        "tui.modelo.workbench.review.operator_entries_at_risk",
+        count=len(unattributed.boxes),
+        boxes=unattributed_words(unattributed, console=console, width=width),
+    )
 
 
-def recalculation_risk_text(boxes: tuple[str, ...]) -> str:
-    """Say what recalculating does to values nobody is recorded as having typed, naming their boxes."""
-    if not boxes:
+def recalculation_risk_text(unattributed: UnattributedBoxes, *, console: Console, width: int) -> str:
+    """Say what recalculating does to values nobody is recorded as having typed, naming their boxes at ``width``."""
+    if not unattributed.boxes:
         return tr("tui.modelo.workbench.calculate.operator_entries_unknown")
-    return tr("tui.modelo.workbench.calculate.operator_entries_at_risk", count=len(boxes), boxes=_boxes_text(boxes))
+    return tr(
+        "tui.modelo.workbench.calculate.operator_entries_at_risk",
+        count=len(unattributed.boxes),
+        boxes=unattributed_words(unattributed, console=console, width=width),
+    )
 
 
 def change_line(change: StagedChange) -> str:
@@ -234,7 +289,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         changes: tuple[StagedChange, ...],
         *,
         notes: tuple[ReviewNote, ...] = (),
-        at_risk: tuple[str, ...] | None = None,
+        at_risk: UnattributedBoxes | None = None,
         status_line: str | None = None,
     ) -> None:
         """Hold the changes under review, what the check found, and the boxes applying could return to source.
@@ -293,7 +348,11 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                         markup=False,
                     )
                 if self._at_risk is not None:
-                    yield Static(at_risk_text(self._at_risk), id="review-at-risk", markup=False)
+                    yield Static(
+                        self._at_risk_text(max(self.app.size.width - 2 * _FRAME, 1)),
+                        id="review-at-risk",
+                        markup=False,
+                    )
                 if self._notes:
                     yield Static(self._notes_text(), id="review-findings", markup=False)
             if self._needs_acknowledgement:
@@ -324,14 +383,27 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         boxes = self.query("#review-acknowledge").results(Checkbox)
         return any(box.value for box in boxes)
 
+    def _at_risk_text(self, width: int) -> str:
+        at_risk = self._at_risk
+        return "" if at_risk is None else at_risk_text(at_risk, console=self.app.console, width=width)
+
+    def _fit_at_risk(self) -> None:
+        """Name the boxes applying could return to source in as many as fit the paragraph's width."""
+        for widget in self.query("#review-at-risk").results(Static):
+            width = widget.content_region.width
+            if width:
+                widget.update(self._at_risk_text(width))
+
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""
         fit_dialog_width(self, event.size.width)
+        self.call_after_refresh(self._fit_at_risk)
 
     def on_mount(self) -> None:
         """Fit the terminal and give the list of changes the focus."""
         fit_dialog_width(self, self.app.size.width)
         self.query_one("#review-body", VerticalScroll).focus()
+        self.call_after_refresh(self._fit_at_risk)
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         """Offer Apply once the filer has acknowledged what applying does."""
@@ -359,9 +431,11 @@ __all__ = [
     "EditReviewScreen",
     "ReviewDecision",
     "ReviewNote",
+    "UnattributedBoxes",
     "at_risk_text",
     "change_effect_key",
     "change_effect_text",
     "change_line",
     "recalculation_risk_text",
+    "unattributed_words",
 ]
