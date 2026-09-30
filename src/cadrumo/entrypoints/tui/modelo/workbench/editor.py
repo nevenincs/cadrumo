@@ -161,10 +161,14 @@ def where_from_text(field: ModeloFormField) -> str | None:
 
 
 def affects_text(feeds: tuple[str, ...]) -> str | None:
-    """Name the boxes this box's value is used in; ``None`` when it feeds none."""
+    """Name the boxes this box's value is used in; ``None`` when it feeds none.
+
+    The help card already writes each one as the filer reads it, a bracketed
+    box number or the phrase for a working figure, so they are only joined.
+    """
     if not feeds:
         return None
-    return ", ".join(f"[{box}]" for box in feeds)
+    return ", ".join(feeds)
 
 
 def confirm_lexeme(value: ModeloFormScalar, language: OutputLanguage) -> str | None:

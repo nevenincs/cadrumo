@@ -87,7 +87,7 @@ def _text(editor: CasillaEditorScreen, widget_id: str) -> str:
 @pytest.mark.asyncio
 async def test_the_panel_answers_what_it_asks_what_it_holds_whether_it_changes_and_what_it_affects() -> None:
     with override_settings(cadrumo_output_language="en"):
-        editor = _editor(_assumed(), "en", feeds=("07", "19"))
+        editor = _editor(_assumed(), "en", feeds=("[07]", "[19]"))
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
@@ -237,7 +237,7 @@ async def test_the_input_and_every_button_stay_in_view_however_long_the_answers(
         bindings=(fed_by("m130.anteriores", BindingSourceKind.PREVIOUS_FILING),),
     ).model_copy(update={"source": ModeloFormValueSource(family=SourceFamily.EARLIER_FILINGS)})
     with override_settings(cadrumo_output_language=language):
-        editor = _editor(carried, language, can_restore=True, feeds=("07", "12", "19"))
+        editor = _editor(carried, language, can_restore=True, feeds=("[07]", "[12]", "[19]"))
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
             await _settle(pilot)
