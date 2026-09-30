@@ -128,22 +128,28 @@ def _write_edition(modelo_dir: Path, revision_id: str, *, year_from: int, year_t
     )
 
 
-def _synthetic_registry(root: Path, *, floor: int) -> Path:
-    """A registry holding the bundled legal tree, a stated floor and one modelo whose editions meet it differently."""
+def _synthetic_registry(root: Path) -> tuple[Path, dict[str, Period], int]:
+    """A registry holding the bundled legal tree and one modelo whose editions meet its floor differently.
+
+    The floor is the bundled one rather than a stated one: the shared catalogues
+    are validated together, so overriding the support span alone leaves the
+    catalogues that enumerate its years inconsistent with it. Returns the
+    registry, each edition's declared period keyed by revision id (wholly below,
+    straddling, then serving the floor), and the floor.
+    """
     registry = root / "registry" / "aeat"
     shutil.copytree(bundled_path("registry", "aeat", "legal"), registry / "legal")
-    (registry / "legal" / "supported-filing-years.toml").write_text(
-        f"[supported_filing_years]\nfloor = {floor}\nhorizon = {floor + 4}\n",
-        encoding="utf-8",
-        newline="\n",
-    )
+    floor = load_shared_catalogues(registry).require_supported_filing_years().floor
     modelo_dir = registry / "modelos" / "999"
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
-    _write_edition(modelo_dir, "2012-2015", year_from=2012, year_to=2015)
-    _write_edition(modelo_dir, "2016-2021", year_from=2016, year_to=2021)
-    _write_edition(modelo_dir, "2022-y-siguientes", year_from=2022, year_to=None)
-    return registry
+    spans = ((floor - 10, floor - 7), (floor - 6, floor + 1), (floor + 2, None))
+    declared: dict[str, Period] = {}
+    for year_from, year_to in spans:
+        revision_id = f"{year_from}-y-siguientes" if year_to is None else f"{year_from}-{year_to}"
+        _write_edition(modelo_dir, revision_id, year_from=year_from, year_to=year_to)
+        declared[revision_id] = Period.from_year_and_code(year_from, "0A")
+    return registry, declared, floor
 
 
 def test_a_period_declared_below_the_floor_renders_at_the_earliest_supported_one(tmp_path: Path) -> None:
@@ -153,23 +159,19 @@ def test_a_period_declared_below_the_floor_renders_at_the_earliest_supported_one
     selection refuses both of them outright, so a scenario left there proves
     nothing about the edition's bytes.
     """
-    registry = _synthetic_registry(tmp_path, floor=2019)
-    declared = {
-        "2012-2015": Period.from_year_and_code(2012, "0A"),
-        "2016-2021": Period.from_year_and_code(2016, "0A"),
-        "2022-y-siguientes": Period.from_year_and_code(2022, "0A"),
-    }
+    registry, declared, floor = _synthetic_registry(tmp_path)
+    wholly_below, straddling, serving = declared
     modelo = load_modelo_directory(registry / "modelos" / "999")
     support = load_shared_catalogues(registry).require_supported_filing_years()
-    for below in ("2012-2015", "2016-2021"):
+    for below in (wholly_below, straddling):
         with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             select_revision(modelo, filing_year=declared[below].filing_year, period="0A", support=support)
 
     rendered = supported_scenario_periods("999", declared, registry_root=registry)
 
     assert rendered == {
-        "2016-2021": Period.from_year_and_code(2019, "0A"),
-        "2022-y-siguientes": declared["2022-y-siguientes"],
+        straddling: Period.from_year_and_code(floor, "0A"),
+        serving: declared[serving],
     }
     for revision_id, period in rendered.items():
         selected = select_revision(modelo, filing_year=period.filing_year, period="0A", support=support)

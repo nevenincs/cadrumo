@@ -193,11 +193,6 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # fixture has no export rows, so casillas 59/60 resolve to zero.
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
-        # No supplier-side domestic reverse charge and no service located in
-        # another Member State, so the informativa bases [122] and [120]
-        # resolve to zero.
-        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
-        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         # No third-country import rows in this observation set, so the import
         # deducible bindings, base [32] and cuota [33], resolve to zero.
         "modelo-303-iva-soportado-importaciones-base": Decimal("0"),
