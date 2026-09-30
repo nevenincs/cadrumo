@@ -1,10 +1,10 @@
 {
   "packages": {
     "vaultspec-core": {
-      "install_mode": "tool"
+      "install_mode": "dev"
     },
     "vaultspec-rag": {
-      "install_mode": "tool"
+      "install_mode": "dev"
     }
   },
   "schema_version": "2.2"
