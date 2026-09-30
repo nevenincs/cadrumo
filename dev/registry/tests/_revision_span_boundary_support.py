@@ -83,6 +83,24 @@ def _mid_year_span(revision: ModeloRevision) -> int | None:
     return None if covers_whole_year else valid_from.year
 
 
+def _partial_edge_years(revision: ModeloRevision) -> frozenset[int]:
+    """The years at either edge of a revision's validity that it covers only in part.
+
+    A revision opening after 1 January or closing before 31 December shares
+    that year with a neighbour, whatever else it spans. The mid-year halves are
+    the one-year case; a multi-year revision whose last year ends at a
+    mid-course boundary -- one ejercicio's first month still filed on the
+    outgoing design -- is the same situation at its edge.
+    """
+    valid_from, valid_to = revision.valid_from, revision.valid_to
+    years: set[int] = set()
+    if (valid_from.month, valid_from.day) != (1, 1):
+        years.add(valid_from.year)
+    if valid_to is not None and (valid_to.month, valid_to.day) != (12, 31):
+        years.add(valid_to.year)
+    return frozenset(years)
+
+
 def _designs_for_claimed_years(ordered: tuple[Path, ...], revision: ModeloRevision) -> tuple[Path, ...]:
     """Keep publication-ordered designs whose coverage intersects the revision."""
     every_year = {year for path in ordered for year in _design_coverage_years(path)}
@@ -90,15 +108,17 @@ def _designs_for_claimed_years(ordered: tuple[Path, ...], revision: ModeloRevisi
     return tuple(path for path in ordered if set(_design_coverage_years(path)) & claimed)
 
 
-def _mid_year_claimed_designs(within: tuple[Path, ...], revision: ModeloRevision, mid_year: int) -> tuple[Path, ...]:
-    """Narrow a partial-year claim to the cited design while retaining other years."""
+def _partial_year_claimed_designs(
+    within: tuple[Path, ...], revision: ModeloRevision, partial_years: frozenset[int]
+) -> tuple[Path, ...]:
+    """Narrow each partial-year claim to the cited design while retaining whole years."""
     cited = _cited_design_fingerprints(revision)
     if not cited:
         return within
     kept = tuple(
         path
         for path in within
-        if _design_fingerprint(path) in cited or mid_year not in set(_design_coverage_years(path))
+        if _design_fingerprint(path) in cited or not partial_years & set(_design_coverage_years(path))
     )
     return kept or within
 
@@ -128,24 +148,27 @@ def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path,
     ordered, _unorderable = _designs_in_publication_order(modelo_id)
     within = _designs_for_claimed_years(ordered, revision)
 
-    # A revision covering only PART of one year claims only the design it cites
+    # A revision covering only PART of a year claims only the design it cites
     # for that year. AEAT splits an ejercicio mid-course by publishing two
     # designs with the same coverage year, so a year-keyed claim hands both to
     # each half -- and the halves then report a (2024, 2024) boundary they do
     # not span. Modelo 303's 2024 halves and modelo 490's 2022 halves are the
     # cases: each declares its own months in its id AND names one design in its
     # source refs, and the design filenames say the same thing
-    # ("hasta-periodos-08-y-2t" beside "a-partir-de-periodos-09-y-3t").
+    # ("hasta-periodos-08-y-2t" beside "a-partir-de-periodos-09-y-3t"). The same
+    # holds at the edge of a multi-year span: modelo 353's 2021 edition runs to
+    # January 2026, which Orden HAC/27/2026 leaves on the 2021 design, so the
+    # 2026 design its successor cites is not this edition's to claim.
     #
-    # Deliberately narrow. A revision covering a whole year, several years, or
-    # an open-ended span is untouched, so the genuine cross-year spans this gate
-    # exists to find -- modelo 184, 200, 322 and 347 -- keep reporting. And the
-    # narrowing applies only where the revision actually cites a design, so a
-    # revision citing none claims its years outright as before.
-    mid_year = _mid_year_span(revision)
-    if mid_year is None:
+    # Deliberately narrow. Whole years inside any span are untouched, so the
+    # genuine cross-year spans this gate exists to find -- modelo 184, 200, 322
+    # and 347 -- keep reporting. And the narrowing applies only where the
+    # revision actually cites a design, so a revision citing none claims its
+    # years outright as before.
+    partial_years = _partial_edge_years(revision)
+    if not partial_years:
         return within
-    return _mid_year_claimed_designs(within, revision, mid_year)
+    return _partial_year_claimed_designs(within, revision, partial_years)
 
 
 def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int]) -> str | None:

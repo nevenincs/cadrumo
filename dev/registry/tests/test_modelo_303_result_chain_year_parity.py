@@ -41,11 +41,12 @@ _REVISIONS = tuple(_M303_RECORD_DESIGN_SOURCE_BY_REVISION)
 # cuota, [13] the other inversión del sujeto pasivo cuota, [155]/[167] the
 # transitional reducido and super-reducido cuotas, [46] the régimen general
 # result, [69] the autoliquidación result and [78] the compensación applied
-# this period.
+# this period. Every summand must stand for a printed box: the promotor's
+# autoconsumo is declared inside the rate row of its rate, never beside them.
 _CARRIER_BOX = {
-    "iva.repercutido.super-reducido": "03",
-    "iva.repercutido.reducido": "06",
-    "iva.repercutido.general": "09",
+    "iva.cuota-devengada.super-reducido": "03",
+    "iva.cuota-devengada.reducido": "06",
+    "iva.cuota-devengada.general": "09",
     "iva.autorepercutido.intracomunitaria": "11",
     "iva.autorepercutido.interior.devengado": "13",
     "iva.repercutido.reducido.transitorio": "155",
@@ -54,12 +55,6 @@ _CARRIER_BOX = {
     "iva.compensacion-aplicada-periodo": "78",
     "iva.resultado": "69",
 }
-# The promoter's autoconsumo cuota is added to the devengado total directly
-# although no design prints it as a box of its own; it is the one summand the
-# design expression cannot account for, and it is held apart here rather than
-# mapped to a box it does not have.
-_UNPRINTED_SUMMANDS = frozenset({"iva.autoconsumo.promotor.cuota"})
-
 _DESIGN_TERM = re.compile(r"([+-]?)\s*\[(\d+)\]")
 
 
@@ -99,11 +94,7 @@ def _formula_for(revision: ModeloRevision, casilla_id: str) -> FormulaExpression
 
 def test_the_design_comparison_detects_a_missing_summand() -> None:
     revision = _revision("2022")
-    terms = [
-        term
-        for term in _signed_terms(_formula_for(revision, "iva.cuota-devengada-total"))
-        if term[1] not in _UNPRINTED_SUMMANDS
-    ]
+    terms = _signed_terms(_formula_for(revision, "iva.cuota-devengada-total"))
     design = set(_design_expression("2022", "27"))
     assert _as_design_terms(terms) == design
     without_box_26 = [term for term in terms if term != (1, "26")]
@@ -118,9 +109,8 @@ def test_box_27_projects_a_devengado_total_holding_exactly_its_years_design_rung
     assert _formula_for(revision, "27").casilla_id == "iva.cuota-devengada-total"
 
     terms = _signed_terms(_formula_for(revision, "iva.cuota-devengada-total"))
-    printed = [term for term in terms if term[1] not in _UNPRINTED_SUMMANDS]
-    assert _as_design_terms(printed) == set(_design_expression(revision_id, "27"))
-    assert len(printed) == len(_design_expression(revision_id, "27")), "a rung is summed twice"
+    assert _as_design_terms(terms) == set(_design_expression(revision_id, "27"))
+    assert len(terms) == len(_design_expression(revision_id, "27")), "a rung is summed twice"
 
 
 @pytest.mark.parametrize(("box", "target"), [("64", "64"), ("69", "iva.resultado"), ("71", "71")])

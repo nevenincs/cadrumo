@@ -527,7 +527,7 @@ record_identity = "M15108000"
 [[entries]]
 export_field_id = "m151-2015.pagina08.f041"
 kind = "casilla"
-casilla_id = "p08.base-liquidable-del-ahorro-18"
+casilla_id = "impatriado.base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015"]
 [entries.anchor]
@@ -553,7 +553,7 @@ record_identity = "M15108000"
 [[entries]]
 export_field_id = "m151-2015.pagina08.f043"
 kind = "casilla"
-casilla_id = "p08.cuota-correspondiente-e-general-del-ahorro-20"
+casilla_id = "impatriado.cuota-integra-ahorro"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015"]
 [entries.anchor]

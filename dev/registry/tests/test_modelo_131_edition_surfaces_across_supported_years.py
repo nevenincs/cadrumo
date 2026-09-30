@@ -64,18 +64,28 @@ def _record_design_lines(revision: ModeloRevision) -> list[str]:
     return corpus_path.with_name(f"{corpus_path.name}.extracted.md").read_text(encoding="utf-8").splitlines()
 
 
-def _modulos_orden_title(revision: ModeloRevision) -> str | None:
-    """Return the printed title of the annual Orden de módulos the edition applies, if it names one."""
+def _modulos_orden_title(revision: ModeloRevision, year: int) -> str | None:
+    """Return the printed title of the annual Orden de módulos the edition cites for ``year``, if it cites one.
+
+    An edition spanning several years cites each year's Orden; the one governing
+    ``year`` is the cited Orden whose catalogue window covers that year.
+    """
+    legal = compiled_bundled_authority().catalogues.legal
+
+    def governs(ref: str) -> bool:
+        effective_to = legal[ref].effective_to
+        return legal[ref].effective_from.year <= year and (effective_to is None or effective_to.year >= year)
+
     ordenes = [
         str(ref).removesuffix(_MODULOS_ORDEN_ARTICLE)
-        for ref in revision.orden_aplicabilidad
-        if str(ref).endswith(_MODULOS_ORDEN_ARTICLE)
+        for ref in revision.legal_refs
+        if str(ref).endswith(_MODULOS_ORDEN_ARTICLE) and governs(ref)
     ]
     if not ordenes:
         return None
-    assert len(ordenes) == 1, f"edition {revision.id} applies Ordenes de módulos {ordenes}"
-    _, ministry, number, year = ordenes[0].split("-")
-    return f"Orden {ministry.upper()}/{number}/{year}"
+    assert len(ordenes) == 1, f"edition {revision.id} cites Ordenes de módulos {ordenes} for {year}"
+    _, ministry, number, approved = ordenes[0].split("-")
+    return f"Orden {ministry.upper()}/{number}/{approved}"
 
 
 @pytest.mark.parametrize("year", _supported_years())
@@ -105,7 +115,7 @@ def test_corrective_index_labels_cite_the_years_orden_de_modulos(year: int) -> N
     present = [casilla_id for casilla_id in _ORDEN_CITING_CASILLAS if casilla_id in casillas]
     if not present:
         return
-    orden = _modulos_orden_title(revision)
+    orden = _modulos_orden_title(revision, year)
     assert orden is not None, f"{year}: edition {revision.id} computes módulos without an Orden de módulos"
     stale = {casilla_id: casillas[casilla_id].get_label("es") for casilla_id in present}
     stale = {casilla_id: label for casilla_id, label in stale.items() if orden not in label}

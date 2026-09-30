@@ -6,8 +6,8 @@ modelo:
           irpf-pf-modulos-1-unidades:
             label: '1. modul (Alkalmazott személyzet): egységek száma'
           irpf-pf-modulos-1-unidades-anterior:
-            label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
-              (2023), a foglalkoztatási kedvezmény csökkentéséhez'
+            label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben,
+              a foglalkoztatási kedvezmény csökkentéséhez'
           irpf-pf-modulos-2-unidades:
             label: '2. modul (Nem alkalmazott személyzet): egységek száma'
           irpf-pf-modulos-3-unidades:
@@ -34,8 +34,8 @@ modelo:
               (pl. "659.4a", "691.9b") a tevékenységnek megfelelően - a pontos hozzárendeléshez
               tekintse meg az m131-modulos-coeficientes együttható paramétert.
           irpf-pf-modulos-rendimiento-neto-actividad:
-            label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
-              5%-os csökkentés)'
+            label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − a modulrendelet
+              által az adóévre megállapított általános csökkentés)'
           irpf-pf-modulos-rendimiento-neto-minorado:
             label: 'Csökkentett nettó jövedelem (2. szakasz: előzetes − foglalkoztatási
               kedvezmény csökkentése − beruházási kedvezmény csökkentése)'
@@ -79,6 +79,53 @@ modelo:
         title: IRPF részletfizetés, objektív megállapítás
       revision:
         2019-2023:
+          casilla:
+            modulos-indice-inicio-actividad:
+              label: 'Korrekciós index új tevékenységek indítására (b.4 pont, a 2022-es
+                adóévre 2021-01-01 után, a 2023-as adóévre 2022-01-01 után kizárólagos
+                helyiségben indított tevékenység). Az üzemeltető által megadott index
+                (0,80/0,90; 0,60/0,70 ≥33%-os fogyatékosság esetén, 2022-re a HFP/1335/2021,
+                2023-ra a HFP/1172/2022 rendelet II. melléklet, 2.3.b.4 utasítás);
+                a motor nem modellezi az indítás évét vagy a fogyatékosságot. Összeegyeztethetetlen
+                a szezonális indexszel (b.2): ha mindkettőt megadják, a szezonális
+                index érvényesül.'
+            modulos-indice-pequena-dimension:
+              label: Korrekciós index kisvállalkozások számára (b.1 pont - egy településen,
+                egyetlen helyiségben, alkalmazott nélkül vagy legfeljebb 2 alkalmazottal).
+                Az üzemeltető által megadott index (0,70/0,75/0,80/0,90, 2022-re a
+                HFP/1335/2021, 2023-ra a HFP/1172/2022 rendelet II. melléklet, 2.3.b.1
+                utasítás); a motor nem modellezi az adózó tényeit. Soha nem alkalmazandó
+                a különleges indexszel rendelkező tevékenységekre (721.2, 722).
+            modulos-indice-temporada:
+              label: 'Szezonális korrekciós index (b.2 pont - szezonális tevékenység,
+                évi legfeljebb 180 nap). Az üzemeltető által megadott index (1,50/1,35/1,25
+                az időtartamtól függően, 2022-re a HFP/1335/2021, 2023-ra a HFP/1172/2022
+                rendelet II. melléklet, 2.3.b.2 utasítás); a motor nem modellezi az
+                időtartamot mint adózói tényt. Összeegyeztethetetlen az új tevékenység
+                indítási indexével (b.4): ha mindkettőt megadják, ez érvényesül.'
+            modulos-minoracion-inversion:
+              label: Csökkentés beruházási ösztönzők után (a használatban lévő tárgyi
+                vagy immateriális eszközök amortizációja, a beruházási eszközök nyilvántartása
+                szerint). Az üzemeltető által megadott összeg; a motor nem modellez
+                tételenkénti eszköznyilvántartást - lásd 2022-re a HFP/1335/2021,
+                2023-ra a HFP/1172/2022 rendelet II. mellékletének 2.2.b) utasítását
+                és a saját amortizációs táblázatát.
+            modulos-pequena-dimension-ignorado-flag:
+              label: 'Belső jelző (1/0): a bejelentett kisvállalkozási korrekciós
+                index (b.1) figyelmen kívül maradt a tevékenység különleges korrekciós
+                indexével való összeférhetetlenség miatt (2022-re a HFP/1335/2021,
+                2023-ra a HFP/1172/2022 rendelet II. melléklet, 2.3.a/b.1 utasítás).'
+            modulos-rendimiento-neto-modulos:
+              label: 'Modulok szerinti nettó jövedelem (3. szakasz: csökkentett összeg
+                az általános korrekciós indexekkel kiigazítva - kisvállalkozás, szezonalitás/új
+                tevékenység indítása, többlet - a 2022-re a HFP/1335/2021, 2023-ra
+                a HFP/1172/2022 rendelet II. mellékletének 2.3 utasításában meghatározott
+                sorrendben és összeférhetetlenségekkel)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              label: 'Belső jelző (1/0): a szezonális korrekciós indexet (b.2) és
+                az új tevékenység indítási korrekciós indexét (b.4) egyidejűleg jelentették
+                be, amelyek kölcsönösen összeférhetetlenek (2022-re a HFP/1335/2021,
+                2023-ra a HFP/1172/2022 rendelet II. melléklet, 2.3 utasítás).'
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -88,6 +135,9 @@ modelo:
             label: 2019-2023. adóévek
         '2024':
           casilla:
+            modulos-1-unidades-anterior:
+              label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
+                (2023), a foglalkoztatási kedvezmény csökkentéséhez'
             modulos-indice-inicio-actividad:
               label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2023-01-01
                 után kizárólagos helyiségben indított tevékenység). Az üzemeltető

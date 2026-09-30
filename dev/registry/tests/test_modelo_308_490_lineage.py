@@ -17,11 +17,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_200_new_cohorts_do_not_hide_predecessor_declaration_gaps() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
+    previous = {row.id: row for row in modelo.revisions["2024"].casillas}
     current = {row.id: row for row in modelo.revisions["2025-y-siguientes"].casillas}
     assert lineage_totality((modelo,), ()).uncovered == ()
+    # A row may call its predecessor edition silent only while that edition
+    # really declares nothing for it; once the earlier row is declared, the
+    # silence is a hidden gap and the row must continue it instead.
+    falsely_silent = sorted(
+        str(row.id)
+        for row in current.values()
+        if row.continuidad_origin is CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT and row.id in previous
+    )
+    assert not falsely_silent
+    # These three were once silent. The 2024 design prints each of them
+    # (aeat-dr-200-2024: DP200011 [00417] at 285 and [00569] at 1390,
+    # DP200001 [00082] at 217), so the 2024 edition declares them and the 2025
+    # rows continue those declarations rather than calling 2024 silent.
     for identifier in ("DP200011:00417", "DP200011:00569", "DP200001:00082"):
-        assert current[identifier].continuidad_origin is CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT
-        assert current[identifier].continuidad_id is None
+        assert current[identifier].continuidad_origin is CasillaLineageOrigin.GROUNDED
+        assert current[identifier].continuidad_id is not None
+        assert current[identifier].continuidad_id == previous[identifier].continuidad_id
     for identifier in ("03401", "03402", "03594", "03642", "03647"):
         assert current[identifier].continuidad_origin is CasillaLineageOrigin.NEW_ON_FORM
         evidence = current[identifier].continuidad_evidence

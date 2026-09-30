@@ -85,11 +85,12 @@ inputs this scenario feeds the registry's ledger-IVA-aggregation resolver as
 Registry mapping (M303 early-2024 revision):
 
     casilla 27 "Total cuota devengada" = projection of
-      `iva.cuota-devengada-total` = iva.repercutido.general (17.430, ops
-      7+8+9) + iva.repercutido.reducido (0) + iva.repercutido.super-reducido
-      (0) + iva.autorepercutido.intracomunitaria (4.410, ops 2+4) +
+      `iva.cuota-devengada-total` = iva.cuota-devengada.general (17.430,
+      ops 7+8+9, no autoconsumo) + iva.cuota-devengada.reducido (0) +
+      iva.cuota-devengada.super-reducido (0) +
+      iva.autorepercutido.intracomunitaria (4.410, ops 2+4) +
       iva.autorepercutido.interior.devengado (0) +
-      iva.autoconsumo.promotor.cuota (0) + casilla 18 (0) + casilla 21 (0) +
+      casilla 18 (0) + casilla 21 (0) +
       casilla 24 recargo general (1.248, op 9) = 23.088 -> matches the
       manual's own "TOTAL CUOTA DEVENGADA: 23.088 euros" exactly.
     casilla 45 "Total a deducir" = projection of `iva.cuota-deducible-total`

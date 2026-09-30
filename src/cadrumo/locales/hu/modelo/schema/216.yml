@@ -16,19 +16,19 @@ modelo:
       revision:
         2020-2023:
           casilla:
-            partida-1:
+            '1':
               label: Elszámolás. Tétel 1. Jövedelmek száma
-            partida-2:
+            '2':
               label: Elszámolás. Tétel 2. Levonások és előlegfizetések adóalapja
-            partida-3:
+            '3':
               label: Elszámolás. Tétel 3. Forrásadó és részletfizetés
-            partida-4:
+            '4':
               label: Elszámolás. Tétel 4. Jövedelmek száma
-            partida-5:
+            '5':
               label: Elszámolás. Tétel 5. Levonások és előlegfizetések adóalapja
-            partida-6:
+            '6':
               label: Elszámolás. Tétel 6. Korábbi bevallásokból befizetendő összeg
-            partida-7:
+            '7':
               label: Elszámolás. Tétel 7. Befizetendő eredmény
           field:
             label: EHA/3290/2008 rendelet, 2020–2023. adóévek

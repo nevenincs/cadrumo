@@ -163,3 +163,63 @@ value = "10"
 date_axis = "filing_period"
 valid_from = 2022-01-01
 comparison = "inclusive"  # art. 103.Dos.2 "o mas" reaches the margin
+
+# The rate of each régimen general row, keyed by the row's Tipo % box, for the
+# promotor's autoconsumo declared in that row. The 2022 design leaves [02], [05]
+# and [08] free and every later design pins them to "00400", "01000" and
+# "02100"; the statute fixes the same three rates across every filing period of
+# the support window: art. 91.Dos 4 per cent, art. 91.Uno 10 per cent and art.
+# 90.Uno 21 per cent. A row that also carries another rate's supplies (the
+# 2022 5 per cent electricity rate shared [01]-[03]) does not change the rate a
+# building's autoconsumo bears, which is all these values feed.
+#
+# Corpus wording: Se aplicará el tipo del 4 por ciento a las operaciones siguientes
+[[revisions."2022".parameters]]
+id = "m303-dr303-02-tipo-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions."2022".parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# Corpus wording: Se aplicará el tipo del 10 por ciento a las operaciones siguientes
+[[revisions."2022".parameters]]
+id = "m303-dr303-05-tipo-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions."2022".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+# Corpus wording: El Impuesto se exigirá al tipo del 21 por ciento
+[[revisions."2022".parameters]]
+id = "m303-dr303-08-tipo-porcentaje"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions."2022".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2022-01-01

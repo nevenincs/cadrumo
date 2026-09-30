@@ -7,7 +7,7 @@ source_refs = [
     "aeat-calendario-contribuyente-2023",
     "aeat-calendario-contribuyente-2024",
 ]
-casilla_ids = ["partida-1", "partida-2", "partida-3", "partida-4", "partida-5", "partida-6", "partida-7"]
+casilla_ids = ["1", "2", "3", "4", "5", "6", "7"]
 application_links = ["modelo-216-deadline", "modelo-216-filing"]
 workbook_parity_refs = ["modelo-216-2020-2023-static-layout"]
 filing_schedules = ["modelo-216-trimestral"]

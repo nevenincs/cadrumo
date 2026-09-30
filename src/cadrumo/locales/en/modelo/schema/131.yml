@@ -7,7 +7,7 @@ modelo:
             label: 'Módulo 1 (Employed staff): number of units'
           irpf-pf-modulos-1-unidades-anterior:
             label: 'Módulo 1 (Employed staff): number of units in the previous tax
-              year (2023), for the employment-incentive reduction'
+              year, for the employment-incentive reduction'
           irpf-pf-modulos-2-unidades:
             label: 'Módulo 2 (Non-employed staff): number of units'
           irpf-pf-modulos-3-unidades:
@@ -34,8 +34,8 @@ modelo:
               according to the activity - see the coefficient parameter m131-modulos-coeficientes
               for the exact assignment.
           irpf-pf-modulos-rendimiento-neto-actividad:
-            label: 'Net income from the activity (Phase 4: modules − general 5 percent
-              reduction)'
+            label: 'Net income from the activity (Phase 4: modules − the general reduction
+              the modules order sets for the tax year)'
           irpf-pf-modulos-rendimiento-neto-minorado:
             label: 'Reduced net income (Phase 2: preliminary − employment-incentive
               reduction − investment-incentive reduction)'
@@ -77,6 +77,54 @@ modelo:
         title: IRPF instalment payment, objective assessment
       revision:
         2019-2023:
+          casilla:
+            modulos-indice-inicio-actividad:
+              label: 'Corrective index for the start of new activities (letter b.4,
+                activity started on or after 1-1-2021 for tax year 2022 or on or after
+                1-1-2022 for tax year 2023, in an exclusive premises). Index declared
+                by the operator (0.80/0.90; 0.60/0.70 with disability ≥33%, Annex
+                II, instruction 2.3.b.4 of Order HFP/1335/2021 for 2022 and of Order
+                HFP/1172/2022 for 2023); the engine does not model the start year
+                or the disability. Incompatible with the seasonal index (b.2): if
+                both are declared, the seasonal index prevails.'
+            modulos-indice-pequena-dimension:
+              label: Corrective index for small enterprises (letter b.1 - single municipality,
+                single premises, no staff or up to 2 employees). Index declared by
+                the operator (0.70/0.75/0.80/0.90, Annex II, instruction 2.3.b.1 of
+                Order HFP/1335/2021 for 2022 and of Order HFP/1172/2022 for 2023);
+                the engine does not model taxpayer facts. Never applies to activities
+                with a special index (721.2, 722).
+            modulos-indice-temporada:
+              label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
+                to 180 days/year). Index declared by the operator (1.50/1.35/1.25
+                depending on duration, Annex II, instruction 2.3.b.2 of Order HFP/1335/2021
+                for 2022 and of Order HFP/1172/2022 for 2023); the engine does not
+                model duration as a taxpayer fact. Incompatible with the new-activity
+                start-up index (b.4): if both are declared, this one prevails.'
+            modulos-minoracion-inversion:
+              label: Reduction for investment incentives (depreciation of tangible
+                or intangible fixed assets in use, per the investment-goods register).
+                Amount declared by the operator; the engine does not model a per-item
+                asset register - see Annex II, instruction 2.2.b) of Order HFP/1335/2021
+                for 2022 or of Order HFP/1172/2022 for 2023, and your own depreciation
+                schedule.
+            modulos-pequena-dimension-ignorado-flag:
+              label: 'Internal indicator (1/0): the declared small-enterprise corrective
+                index (b.1) was ignored due to incompatibility with the activity''s
+                special corrective index (Annex II, instruction 2.3.a/b.1 of Order
+                HFP/1335/2021 for 2022 and of Order HFP/1172/2022 for 2023).'
+            modulos-rendimiento-neto-modulos:
+              label: 'Net income from modules (Phase 3: reduced amount adjusted by
+                the general corrective indices - small enterprise, seasonal/new-activity
+                start-up, excess - in the order and with the incompatibilities of
+                Annex II, instruction 2.3 of Order HFP/1335/2021 for 2022 and of Order
+                HFP/1172/2022 for 2023)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              label: 'Internal indicator (1/0): the seasonal corrective index (b.2)
+                and the new-activity start-up corrective index (b.4) were declared
+                simultaneously, which are mutually incompatible (Annex II, instruction
+                2.3 of Order HFP/1335/2021 for 2022 and of Order HFP/1172/2022 for
+                2023).'
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -86,6 +134,9 @@ modelo:
             label: Tax years 2019 to 2023
         '2024':
           casilla:
+            modulos-1-unidades-anterior:
+              label: 'Módulo 1 (Employed staff): number of units in the previous tax
+                year (2023), for the employment-incentive reduction'
             modulos-indice-inicio-actividad:
               label: 'Corrective index for the start of new activities (letter b.4,
                 activity started on or after 1-1-2023 in an exclusive premises). Index

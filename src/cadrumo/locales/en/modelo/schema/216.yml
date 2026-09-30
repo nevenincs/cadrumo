@@ -16,19 +16,19 @@ modelo:
       revision:
         2020-2023:
           casilla:
-            partida-1:
+            '1':
               label: Settlement. Item 1. Number of income items
-            partida-2:
+            '2':
               label: Settlement. Item 2. Withholding and advance payment tax base
-            partida-3:
+            '3':
               label: Settlement. Item 3. Withholdings and payments on account
-            partida-4:
+            '4':
               label: Settlement. Item 4. Number of income items
-            partida-5:
+            '5':
               label: Settlement. Item 5. Withholding and advance payment tax base
-            partida-6:
+            '6':
               label: Settlement. Item 6. Amount payable from prior returns
-            partida-7:
+            '7':
               label: Settlement. Item 7. Result payable
           field:
             label: Order EHA/3290/2008, tax years 2020 to 2023

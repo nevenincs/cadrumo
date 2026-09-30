@@ -93,3 +93,15 @@ id = "equals:dr303-45-equals-iva-cuota-deducible-total"
 predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
 expression = 'equals(["45", "iva.cuota-deducible-total"])'
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# The profile states the promotor's autoconsumo base as one rate-less total,
+# while the return declares it in the régimen general row of the rate its
+# building bears (LIVA arts. 9.1º, 79.Tres, 90 and 91). A total the rate rows
+# do not account for would leave autoconsumo undeclared, and rows that exceed
+# it would declare more than the profile states, so the filing is refused until
+# the rows' bases sum to the profile's total.
+[[revisions.2022.verification_predicates]]
+id = "equals:iva-autoconsumo-promotor-base-equals-por-tipo"
+predicate_id = "modelo-303-iva-autoconsumo-promotor-base-equals-por-tipo"
+expression = 'equals(["iva.autoconsumo.promotor.base", "iva.autoconsumo.promotor.base.por-tipo"])'
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

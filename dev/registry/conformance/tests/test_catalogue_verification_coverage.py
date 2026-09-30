@@ -107,7 +107,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                     continue
 
                 checked.add(exception_key)
-                for period in revision.period_selector.periods:
+                for period in revision.period_selector.periods_for_year(year):
                     selected = select_revision(
                         modelo,
                         filing_year=year,
@@ -130,7 +130,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                     resolved_exceptions.add(exception_key)
                     continue
 
-                for period in revision.period_selector.periods:
+                for period in revision.period_selector.periods_for_year(year):
                     filing_period = filing_period_from_scope(year, period)
                     evidence_date = (
                         filing_period.end_date

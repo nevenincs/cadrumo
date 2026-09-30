@@ -148,8 +148,15 @@ def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
 
         if physical_calendar_year <= 2026:
             assert calendar_ref in window.source_refs
-            assert calendar_ref in revision.source_refs
             assert calendar_ref in revision.constructs[0].source_refs
+            # A window closing after the edition's own validity -- a fourth
+            # quarter filed the next January -- is grounded in the next year's
+            # calendar through the window alone; citing that calendar on the
+            # edition would claim it for periods it does not apply to.
+            if revision.valid_to is None or window.closes_on <= revision.valid_to:
+                assert calendar_ref in revision.source_refs
+            else:
+                assert calendar_ref not in revision.source_refs
             source = catalogues.sources[calendar_ref]
             assert (source.authority, source.evidence_tier) == ("aeat", "official_source_guidance")
             assert (bundled_path() / source.corpus_path).is_file()
@@ -218,7 +225,7 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     text = corpus.with_name(f"{corpus.name}.extracted.md").read_text(encoding="utf-8")
     printed = sorted(set(re.findall(r"Liquidación - Partida (\d)", text)))
     assert printed
-    assert sorted(str(casilla.id) for casilla in revision.casillas) == [f"partida-{n}" for n in printed]
+    assert sorted(str(casilla.id) for casilla in revision.casillas) == printed
     assert revision.formulas == ()
     assert revision.export_layouts == ()
 

@@ -1,7 +1,9 @@
 # Cuota projections for the régimen general rate rows [09], [06] and [03]. They
 # start with the 2023 design, the first to pin each row's Tipo % field to a
 # constant; the 2022 design leaves it free, so the 2022 baseline cannot say
-# which rate a row carries.
+# which rate a row carries. Each row projects its whole cuota devengada: the
+# ledger's cuota at the row's rate plus the promotor's autoconsumo declared at
+# that rate.
 [[revisions.2023.formulas]]
 id = "modelo-303-dr303-09-projection"
 target_casilla_id = "09"
@@ -14,7 +16,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023.formulas.expression]
-casilla_id = "iva.repercutido.general"
+casilla_id = "iva.cuota-devengada.general"
 
 [[revisions.2023.formulas]]
 id = "modelo-303-dr303-06-projection"
@@ -28,7 +30,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023.formulas.expression]
-casilla_id = "iva.repercutido.reducido"
+casilla_id = "iva.cuota-devengada.reducido"
 
 [[revisions.2023.formulas]]
 id = "modelo-303-dr303-03-projection"
@@ -42,7 +44,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023.formulas.expression]
-casilla_id = "iva.repercutido.super-reducido"
+casilla_id = "iva.cuota-devengada.super-reducido"
 
 # Cuota projections for the two RD-ley 4/2024 transitional rungs. Same shape as
 # the ordinary-tier projections above: the official box carries whatever its

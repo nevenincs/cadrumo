@@ -71,3 +71,128 @@ additional_source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Resultados negativos"]
+
+# Módulos engine phases for 2022 and 2023 (Orden HFP/1335/2021 and Orden
+# HFP/1172/2022, Anexo II, instrucciones 2.1 to 2.4): fase 1ª rendimiento neto
+# previo, fase 2ª minoraciones por incentivos al empleo y a la inversión, fase
+# 3ª índices correctores generales in the Orden's order and incompatibilities,
+# fase 4ª reducción general, whose dated rate the parameter carries per year.
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-previo"
+target_casilla_id = "modulos-rendimiento-neto-previo"
+expression = { op = "m131_resolve_modulos_previo", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-1-unidades" },
+    { casilla_id = "modulos-2-unidades" },
+    { casilla_id = "modulos-3-unidades" },
+    { casilla_id = "modulos-4-unidades" },
+    { casilla_id = "modulos-5-unidades" },
+    { casilla_id = "modulos-6-unidades" },
+    { casilla_id = "modulos-7-unidades" },
+    { parameter = "m131-modulos-coeficientes" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:art-4", "orden-hfp-1172-2022:art-4"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Apéndice: Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2022"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Apéndice: Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2023"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-minorado"
+target_casilla_id = "modulos-rendimiento-neto-minorado"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-previo" },
+    { op = "add", args = [
+        { op = "m131_resolve_modulos_minoracion_empleo", args = [
+            { casilla_id = "modulos-epigrafe" },
+            { casilla_id = "modulos-1-unidades" },
+            { casilla_id = "modulos-1-unidades-anterior" },
+            { parameter = "m131-modulos-coeficientes" },
+            { parameter = "m131-modulos-coeficiente-tramos-asalariados" },
+            { parameter = "m131-modulos-coeficiente-incremento-asalariados" },
+        ] },
+        { casilla_id = "modulos-minoracion-inversion" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-2-a", "orden-hfp-1172-2022:instruccion-2-2-a", "orden-hfp-1335-2021:instruccion-2-2-b", "orden-hfp-1172-2022:instruccion-2-2-b"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-modulos"
+target_casilla_id = "modulos-rendimiento-neto-modulos"
+expression = { op = "m131_resolve_modulos_indices_generales", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-rendimiento-neto-minorado" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+    { parameter = "m131-modulos-cuantia-exceso" },
+    { parameter = "m131-modulos-indice-exceso" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:instruccion-2-3-b-3", "orden-hfp-1172-2022:instruccion-2-3-b-3", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-pequena-dimension-ignorado-flag"
+target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
+expression = { op = "m131_resolve_modulos_pequena_dimension_ignorado_flag", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+] }
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El índice corrector para empresas de pequeña dimensión no será aplicable a las"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["El índice corrector para empresas de pequeña dimensión no será aplicable a las"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
+target_casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag"
+expression = { op = "m131_resolve_modulos_temporada_inicio_conflicto_flag", args = [
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+] }
+legal_refs = ["orden-hfp-1335-2021:anexo-ii-instruccion-2-3-incompatibilidades", "orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Cuando resulte aplicable el índice corrector de temporada no se aplicará el índice"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Cuando resulte aplicable el índice corrector de temporada no se aplicará el índice"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-actividad"
+target_casilla_id = "modulos-rendimiento-neto-actividad"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-modulos" },
+    { op = "percent", args = [
+        { casilla_id = "modulos-rendimiento-neto-modulos" },
+        { parameter = "m131-modulos-reduccion-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-1172-2022:da-1"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-renta-2023-manual-parte1"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["reducción general del 15 por 100"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["reducción general del 10 por 100"]

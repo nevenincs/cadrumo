@@ -62,7 +62,7 @@ contradictions = 0
 contradictions = 0
 
 [summary."100"]
-"refused:not_examined" = 2387
+"refused:not_examined" = 2388
 contradictions = 0
 
 [summary."123"]
@@ -16985,6 +16985,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2025"
 casilla = "prestacion-inss-maternidad-paternidad-exenta"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
+casilla = "trabajo-mar-renta-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 

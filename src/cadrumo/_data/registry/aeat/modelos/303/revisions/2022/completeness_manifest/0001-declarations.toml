@@ -384,9 +384,9 @@ number = "120"
 casilla_id = "122"
 number = "122"
 
-# Box [10], the intracomunitaria acquisitions base carrier it projects and the
-# promotor's autoconsumo carriers join the calculation closure once they are
-# wired on this edition.
+# Box [10], the intracomunitaria acquisitions base carrier it projects, the
+# promotor's autoconsumo carriers and the rate rows' ledger bases and cuota
+# carriers join the calculation closure once they are wired on this edition.
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "10"
 number = "10"
@@ -400,5 +400,41 @@ casilla_id = "iva.autoconsumo.promotor.base"
 number = "iva.autoconsumo.promotor.base"
 
 [[revisions.2022.completeness_manifest.casillas]]
-casilla_id = "iva.autoconsumo.promotor.cuota"
-number = "iva.autoconsumo.promotor.cuota"
+casilla_id = "iva.repercutido.super-reducido.base"
+number = "iva.repercutido.super-reducido.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido.base"
+number = "iva.repercutido.reducido.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.general.base"
+number = "iva.repercutido.general.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.super-reducido.base"
+number = "iva.autoconsumo.promotor.super-reducido.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.reducido.base"
+number = "iva.autoconsumo.promotor.reducido.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.general.base"
+number = "iva.autoconsumo.promotor.general.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.base.por-tipo"
+number = "iva.autoconsumo.promotor.base.por-tipo"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada.super-reducido"
+number = "iva.cuota-devengada.super-reducido"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada.reducido"
+number = "iva.cuota-devengada.reducido"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada.general"
+number = "iva.cuota-devengada.general"

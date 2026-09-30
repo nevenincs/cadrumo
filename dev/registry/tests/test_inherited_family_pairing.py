@@ -341,3 +341,46 @@ def test_a_layout_the_official_structure_withdraws_still_breaks_the_pair(tmp_pat
     (failure,) = inherited_family_pairing_failures(definition)
     assert "export_layouts" in failure
     assert "'export'" in failure
+
+
+_OWN_EXPORT_LAYOUT: Final = f'id = "fichero-2025"\nlegal_refs = ["{_ARTICLE}"]\nsource_refs = ["{_SOURCE}"]\n'
+
+
+def _state_own_layout(modelo_dir: Path) -> None:
+    """Give the successor the layout generated from its own design, as publishing its tree does."""
+    _write_section(modelo_dir / "revisions" / "2025", "2025", "export_layouts", (_OWN_EXPORT_LAYOUT,))
+
+
+def test_a_clearance_left_beside_the_layout_it_owed_is_refused(tmp_path: Path) -> None:
+    """Detector teeth: once the edition states its own layout, the owed clearance contradicts it.
+
+    The edition still loads -- publishing a generated tree leaves the clearance
+    it was staged under in place -- but the validator names the leftover so it
+    is retired before the authority is compiled.
+    """
+    modelo_dir = _owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition")
+    _state_own_layout(modelo_dir)
+    definition = load_modelo_directory(modelo_dir)
+
+    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    (failure,) = inherited_family_pairing_failures(definition)
+    assert "clears scoped family 'export_layouts'" in failure
+    assert "not_authored_for_this_edition" in failure
+
+
+def test_the_stated_layout_without_its_clearance_is_accepted(tmp_path: Path) -> None:
+    """The normal path: with the clearance retired, the edition's own layout stands alone."""
+    modelo_dir = _owed_layout_modelo(tmp_path, cause="not_authored_for_this_edition")
+    _state_own_layout(modelo_dir)
+    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    lines = manifest.read_text("utf-8").splitlines(keepends=True)
+    manifest.write_text(
+        "".join(line for line in lines if not line.startswith("cleared_families")),
+        encoding="utf-8",
+        newline="\n",
+    )
+    definition = load_modelo_directory(modelo_dir)
+
+    assert definition.revisions["2025"].cleared_families == ()
+    assert [str(layout.id) for layout in definition.revisions["2025"].export_layouts] == ["fichero-2025"]
+    assert inherited_family_pairing_failures(definition) == ()

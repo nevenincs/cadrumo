@@ -16,19 +16,19 @@ modelo:
       revision:
         2020-2023:
           casilla:
-            partida-1:
+            '1':
               label: Liquidación. Partida 1. Número de rentas
-            partida-2:
+            '2':
               label: Liquidación. Partida 2. Base de retenciones e ingresos a cuenta
-            partida-3:
+            '3':
               label: Liquidación. Partida 3. Retenciones e ingresos a cuenta
-            partida-4:
+            '4':
               label: Liquidación. Partida 4. Número de rentas
-            partida-5:
+            '5':
               label: Liquidación. Partida 5. Base de retenciones e ingresos a cuenta
-            partida-6:
+            '6':
               label: Liquidación. Partida 6. Resultado a ingresar de anteriores declaraciones
-            partida-7:
+            '7':
               label: Liquidación. Partida 7. Resultado a ingresar
           field:
             label: Orden EHA/3290/2008, ejercicios 2020 a 2023

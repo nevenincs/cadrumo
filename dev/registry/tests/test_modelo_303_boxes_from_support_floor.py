@@ -1,9 +1,9 @@
 """Modelo 303 boxes the first supported design already prints hydrate from the support floor.
 
 The devengado projections, the informativa bindings for [120] and [122], the
-resultado chain [64] to [69], the promotor's autoconsumo and the box-equals-source
-predicates apply to every design from the one covering the registry's support
-floor: each of those boxes is printed there with the meaning later designs
+resultado chain [64] to [69], the promotor's autoconsumo in the rate rows and the
+box-equals-source predicates apply to every design from the one covering the
+registry's support floor: each of those boxes is printed there with the meaning later designs
 repeat. They are authored once at that edition and inherited forward. Boxes a
 later design introduces stay out of every edition whose own design omits them.
 The rate-row cuotas [03], [06] and [09] are not among them: their meaning follows
@@ -114,14 +114,22 @@ def test_devengado_total_sums_every_box_the_floor_design_names() -> None:
     revision = _floor_revision()
     design = _design(revision)
     # The design's own statement of box [27], which names [15] and [26] as well
-    # as the rate, inversión del sujeto pasivo and recargo boxes.
+    # as the rate, inversión del sujeto pasivo and recargo boxes, and nothing
+    # beside them: the promotor's autoconsumo reaches [27] through the rate row
+    # of its rate, whose cuota carrier stands for [03], [06] or [09].
     assert "( [03] + [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] + [26]) [27]" in design
     arguments = _expression(revision, "modelo-303-iva-cuota-devengada-total")
     assert isinstance(arguments, dict)
     assert arguments["op"] == "add"
     summed = {argument["casilla_id"] for argument in arguments["args"]}
-    assert {"15", "18", "21", "24", "26", "iva.autoconsumo.promotor.cuota"} <= summed
-    assert {"iva.repercutido.general", "iva.repercutido.reducido", "iva.repercutido.super-reducido"} <= summed
+    assert {"15", "18", "21", "24", "26"} <= summed
+    rate_rows = {"iva.cuota-devengada.general", "iva.cuota-devengada.reducido", "iva.cuota-devengada.super-reducido"}
+    assert rate_rows <= summed
+    assert not {argument for argument in summed if argument.startswith("iva.autoconsumo.")}
+    for row in rate_rows:
+        carried = _expression(revision, f"modelo-303-{row.replace('.', '-')}")
+        assert isinstance(carried, dict)
+        assert carried["args"][0] == {"casilla_id": row.replace("cuota-devengada", "repercutido")}
 
 
 def test_resultado_chain_hydrates_in_every_edition() -> None:

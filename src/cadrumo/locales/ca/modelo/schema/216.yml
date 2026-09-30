@@ -16,19 +16,19 @@ modelo:
       revision:
         2020-2023:
           casilla:
-            partida-1:
+            '1':
               label: Liquidació. Partida 1. Nombre de rendes
-            partida-2:
+            '2':
               label: Liquidació. Partida 2. Base de retencions i ingressos a compte
-            partida-3:
+            '3':
               label: Liquidació. Partida 3. Retencions i ingressos a compte
-            partida-4:
+            '4':
               label: Liquidació. Partida 4. Nombre de rendes
-            partida-5:
+            '5':
               label: Liquidació. Partida 5. Base de retencions i ingressos a compte
-            partida-6:
+            '6':
               label: Liquidació. Partida 6. Resultat a ingressar de declaracions anteriors
-            partida-7:
+            '7':
               label: Liquidació. Partida 7. Resultat a ingressar
           field:
             label: Ordre EHA/3290/2008, exercicis 2020 a 2023

@@ -1,26 +1,26 @@
 # Box-equals-source consistency for the régimen general rate rows [09], [06] and
-# [03] (LIVA art. 88). Each row's cuota projects the carrier of the rate its
-# Tipo % field pins, and the 2023 design is the first to pin that field to a
-# constant, so the projections and their guards start here rather than on the
-# 2022 baseline. Every other box guard is declared on the 2022 baseline and
-# inherited. A projection cannot drift from its source within one evaluation;
+# [03] (LIVA art. 88). Each row's cuota projects the cuota devengada carrier of
+# the rate its Tipo % field pins, and the 2023 design is the first to pin that
+# field to a constant, so the projections and their guards start here rather
+# than on the 2022 baseline. Every other box guard is declared on the 2022
+# baseline and inherited. A projection cannot drift from its source within one evaluation;
 # the predicate catches a future mis-edit (a box re-flipped to manual input, or
 # a projection pointed at the wrong source) and is blocking so such a filing is
 # refused.
 [[revisions.2023.verification_predicates]]
-id = "equals:dr303-09-equals-iva-repercutido-general"
-predicate_id = "modelo-303-dr303-09-equals-iva-repercutido-general"
-expression = 'equals(["09", "iva.repercutido.general"])'
+id = "equals:dr303-09-equals-iva-cuota-devengada-general"
+predicate_id = "modelo-303-dr303-09-equals-iva-cuota-devengada-general"
+expression = 'equals(["09", "iva.cuota-devengada.general"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2023.verification_predicates]]
-id = "equals:dr303-06-equals-iva-repercutido-reducido"
-predicate_id = "modelo-303-dr303-06-equals-iva-repercutido-reducido"
-expression = 'equals(["06", "iva.repercutido.reducido"])'
+id = "equals:dr303-06-equals-iva-cuota-devengada-reducido"
+predicate_id = "modelo-303-dr303-06-equals-iva-cuota-devengada-reducido"
+expression = 'equals(["06", "iva.cuota-devengada.reducido"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2023.verification_predicates]]
-id = "equals:dr303-03-equals-iva-repercutido-super-reducido"
-predicate_id = "modelo-303-dr303-03-equals-iva-repercutido-super-reducido"
-expression = 'equals(["03", "iva.repercutido.super-reducido"])'
+id = "equals:dr303-03-equals-iva-cuota-devengada-super-reducido"
+predicate_id = "modelo-303-dr303-03-equals-iva-cuota-devengada-super-reducido"
+expression = 'equals(["03", "iva.cuota-devengada.super-reducido"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
