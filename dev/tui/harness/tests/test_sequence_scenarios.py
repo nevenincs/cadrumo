@@ -29,6 +29,7 @@ from ..sequences import (
     BULK_CONFIRM_PAGE,
     DECLARATIONS_PAGE,
     EDITOR_PAGE,
+    F8_CONFIRM_PAGE,
     ISSUES_PAGE,
     RECALCULATE_PAGE,
     REVIEW_PAGE,
@@ -93,6 +94,25 @@ def test_a_scenario_offers_only_the_pages_its_declaration_can_reach() -> None:
     assert EDITOR_PAGE not in scenario_pages(_NOTHING_ASSUMED)
     assert scenario_pages(_ANNUAL_RETURN) == (DECLARATIONS_PAGE, *_EVERY_PAGE)
     assert REVIEW_PAGE in scenario_pages(_NOTHING_ASSUMED)
+
+
+@pytest.mark.unit
+@pytest.mark.hex_core
+def test_f8_opening_a_panel_is_a_page_only_of_an_open_declaration_whose_assumed_values_no_list_confirms() -> None:
+    def unconfirmable(scenario: SequenceScenario) -> SequenceScenario:
+        return SequenceScenario(
+            scenario.sequence_id,
+            scenario.modelo,
+            scenario.summary,
+            verified=scenario.verified,
+            filed=scenario.filed,
+            assumes=True,
+            assumed_unconfirmable=True,
+        )
+
+    assert not any(F8_CONFIRM_PAGE in scenario_pages(scenario) for scenario in SEQUENCE_SCENARIOS.values())
+    assert F8_CONFIRM_PAGE in scenario_pages(unconfirmable(_ANNUAL_RETURN))
+    assert F8_CONFIRM_PAGE not in scenario_pages(unconfirmable(_FIRST_QUARTER))
 
 
 @pytest.mark.unit
@@ -191,6 +211,35 @@ def test_a_page_the_declaration_does_not_offer_is_refused_alone(tmp_path: Path) 
     assert [refused.shot.page for refused in refusals] == [BULK_CONFIRM_PAGE]
     assert "no assumed value" in refusals[0].detail
     assert not (tmp_path / f"{BULK_CONFIRM_PAGE}.svg").exists()
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+@pytest.mark.parametrize(
+    ("scenario", "reason"),
+    [
+        (_ANNUAL_RETURN, "can be confirmed from a list"),
+        (_INSTALMENT, "not confirm"),
+    ],
+    ids=["value-a-list-confirms", "next-step-is-not-confirm"],
+)
+def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
+    scenario: SequenceScenario, reason: str, tmp_path: Path
+) -> None:
+    """F8 runs the next step, so the walk refuses before pressing it wherever that step is not a panel."""
+    claimed = SequenceScenario(
+        scenario.sequence_id, scenario.modelo, "claimed to hold only unconfirmable values", assumed_unconfirmable=True
+    )
+    shots = [
+        Shot(page, 120, 40, "dark", tmp_path / f"{index}-{page}.svg")
+        for index, page in enumerate(("workbench", F8_CONFIRM_PAGE, "workbench"))
+    ]
+
+    _, frames, refusals = capture_scenario(claimed, shots)
+
+    assert [refused.shot.page for refused in refusals] == [F8_CONFIRM_PAGE]
+    assert reason in refusals[0].detail
+    assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
 
 
 @pytest.mark.integration
