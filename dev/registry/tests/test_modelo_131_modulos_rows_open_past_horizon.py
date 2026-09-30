@@ -143,8 +143,14 @@ def test_a_row_closed_at_the_horizon_is_reported() -> None:
         for parameter in _snapshot(horizon, _LAST_PERIOD).revision.parameters
         if parameter.id == f"{_MODULOS_PARAMETER_PREFIX}reduccion-general"
     )
+    # Earlier years' rates are dated rows that already closed; only the open row is closed here.
     closed = reduction.model_copy(
-        update={"values": tuple(row.model_copy(update={"valid_to": last_day}) for row in reduction.values)},
+        update={
+            "values": tuple(
+                row.model_copy(update={"valid_to": last_day}) if row.valid_to is None else row
+                for row in reduction.values
+            ),
+        },
     )
     assert _rows_closing_by((reduction,), last_day) == {}
     assert _rows_closing_by((closed,), last_day) == {reduction.id: 1}

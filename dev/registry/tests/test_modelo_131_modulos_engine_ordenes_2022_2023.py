@@ -155,7 +155,9 @@ def test_2022_reproduces_the_manual_example_with_its_dated_reduction() -> None:
         previo, minorado, modulos, actividad = _engine(year, period, _EXAMPLE_2022)
         for computed, printed in zip((previo, minorado, modulos), _PHASES_2022, strict=True):
             assert abs(computed - printed) <= _CENT, (period, computed, printed)
-        assert actividad == _reduced(modulos, rates[period])
+        # The engine carries unrounded phases forward, so the reduced figure may differ from
+        # reducing the rounded módulos figure by the one-cent rounding step.
+        assert abs(actividad - _reduced(modulos, rates[period])) <= _CENT, (period, actividad)
     # The manual's annual figure applies the 15 per cent: 26.961,89 - 4.044,28.
     *_, actividad_4t = _engine(year, "4T", _EXAMPLE_2022)
     assert abs(actividad_4t - Decimal("22917.61")) <= _CENT
