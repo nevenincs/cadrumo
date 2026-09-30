@@ -352,6 +352,11 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     the workbench puts into words: a localized label and a reviewed layout are
     shown without a note.
     """
+    from cadrumo.application.modelo.calculation_notes import (
+        CALCULATION_NOTE_ATTENTION,
+        what_locale_key,
+        what_to_do_locale_key,
+    )
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
     from cadrumo.application.modelo.source_policy import SourceFamily
     from cadrumo.application.modelo.work_form_models import (
@@ -412,6 +417,16 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="application.modelo.edit.parse.* (ModeloEditParseReason)",
             key_factory=lambda value: f"application.modelo.edit.parse.{value}",
             values=tuple(item.value for item in ModeloEditParseReason),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
+            key_factory=what_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
+            key_factory=what_to_do_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
         ),
     )
 

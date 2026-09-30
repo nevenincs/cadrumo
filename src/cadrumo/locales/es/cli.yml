@@ -1415,9 +1415,6 @@ cli:
           pantalla completa sí los conserva.
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde.'
-        calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero
-          este importe declarable no se asigna a ninguna casilla y no se declara en
-          esta presentación; revísalo antes de presentar.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA_ID=DECIMAL (repetible).

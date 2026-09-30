@@ -1397,9 +1397,6 @@ cli:
           itt újra meg nem adja őket; a teljes képernyős felület megőrzi őket.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható.'
-        calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött,
-          de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel
-          a bevallásban; ellenőrizze benyújtás előtt.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető). A CASILLA_ID

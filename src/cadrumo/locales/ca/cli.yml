@@ -1398,9 +1398,6 @@ cli:
           pantalla completa sí que els conserva.
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard.'
-        calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
-          aquest import declarable no s''assigna a cap casella i no es declara en
-          aquesta presentació; revisa''l abans de presentar.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA_ID=DECIMAL (repetible).

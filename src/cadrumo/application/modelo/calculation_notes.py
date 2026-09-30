@@ -152,8 +152,8 @@ _WORDED_REASONS: Final[frozenset[str]] = frozenset(
 """The reasons with sentences of their own; the others read the general sentences."""
 
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
-STALE_LOCALE_KEY: Final[str] = f"{_KEY_ROOT}.stale"
-REOPEN_HINT_LOCALE_KEY: Final[str] = f"{_KEY_ROOT}.reopen_hint"
+STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
+REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
 
 
 def is_printed_box(casilla: CasillaDefinition | None) -> bool:
