@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9a696d62237f79cc57b81c612ad3d82b7733a813178bda9be65dfcdcaa76cf1'
+body_hash: 'sha256:f0dc6d6f2cebbd2b14bfbac35b2e40e586a960ef7c08e02976ec3d16c973b758'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -203,6 +203,22 @@ D1 and D4 require grids as the official rows and columns, falling back to stacke
 narrow terminals. 303's accrued-VAT grid still renders stacked with "General regime" repeated,
 the largest remaining gap between the workbench and the official form. Open, part of the
 workbench-shape finding.
+
+### brand-error-hue | high | the TUI's brand colour was indistinguishable from its error colour
+
+The UX session measured the terracotta primary within 2 to 4 degrees of hue of the error red and
+1.2:1 to 1.5:1 in contrast, so headings and bars drawn in it read as errors and a real blocker
+could not stand out; the light primary also missed AA as text. The operator chose a blue brand
+for the TUI only, keeping terracotta for the docs site and PDF summaries. Resolved in the palette
+commit; `src/cadrumo/entrypoints/tui/tests/test_theme_palette_contrast.py` holds the separation.
+
+### printed-rate-scale | medium | Modelo 303 rate literals declare no scale, and two labels contradict them
+
+Design-constant rate literals in 303 ("00400", "02100", "00175") carry no declared scale, so the
+workbench shows a printed rate only where the literal itself says "%" or its export field declares
+the scale; the rest show a dot. The labels of [157] ("at 0.5%") and [17] ("at 1.0%") contradict
+their literals ("00175", "00000"). Open, for the registry's owner: declare the export scale of the
+rate literals and correct the contradicting labels.
 
 ## Recommendations
 
