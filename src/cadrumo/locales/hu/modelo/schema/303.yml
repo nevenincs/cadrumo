@@ -660,6 +660,148 @@ modelo:
       field:
         official_name: Modelo 303. Hozzáadottérték-adó. Önbevallás.
         title: IVA. Önbevallás (negyedéves)
+      form:
+        column:
+          1t-2t-3t:
+            heading: 1–3. negyedév
+          4t:
+            heading: 4. negyedév
+          4t-2:
+            heading: 4. negyedév
+          adquisicion-o-importacion-de-activos-fijos:
+            heading: Tárgyi eszközök beszerzése vagy importja
+          adquisiciones-intracomunitarias-de-bienes:
+            heading: Közösségen belüli termékbeszerzések
+          entregas-de-activos-fijos:
+            heading: Tárgyi eszközök értékesítése
+          iva-devengado-por-inversion-del-sujeto-pasivo:
+            heading: Fordított adózás szerint fizetendő áfa
+          regularizacion-bienes-de-inversion:
+            heading: Beruházási javak korrekciója
+          regularizacion-de-bienes-de-inversion:
+            heading: Beruházási javak korrekciója
+          regularizacion-de-inversiones:
+            heading: Beruházások korrekciója
+          resultado:
+            heading: Eredmény
+          resultado-rs:
+            heading: Egyszerűsített rendszer eredménye
+          suma-de-deducciones:
+            heading: Levonások összesen
+          total-cuota-resultante:
+            heading: Fizetendő adó összesen
+          total-iva-deducible:
+            heading: Levonható áfa összesen
+        page:
+          dp30301:
+            heading: 1. oldal · Általános szabályok szerinti elszámolás
+          dp30302:
+            heading: 2. oldal · Egyszerűsített rendszer
+          dp30303:
+            heading: 3. oldal · Kiegészítő adatok és eredmény
+          dp30304:
+            heading: 4. oldal · A 390-es nyomtatvány alól mentesített adóalanyok
+          dp30305:
+            heading: 5. oldal · Arányosítás és elkülönített levonások
+        row:
+          '1':
+            heading: 1. sor
+          '2':
+            heading: 2. sor
+          '3':
+            heading: 3. sor
+          '4':
+            heading: 4. sor
+          '5':
+            heading: 5. sor
+          adquisiciones-intracomunitarias-de-bienes-368e6a:
+            heading: Közösségen belüli termék- és szolgáltatásbeszerzések
+          bienes-corrientes:
+            heading: Forgóeszközök
+          bienes-corrientes-y-servicios:
+            heading: Forgóeszközök és szolgáltatások
+          bienes-inversion:
+            heading: Beruházási javak
+          bienes-y-servic:
+            heading: Forgóeszközök és szolgáltatások
+          bienes-y-servicios-corrientes:
+            heading: Forgóeszközök és szolgáltatások
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Mezőgazdasági, állattenyésztési és halászati különleges rendszer
+              kompenzációi
+          en-adquisiciones-intracomunitarias-de-bie-13bc2d:
+            heading: Beruházási javak Közösségen belüli beszerzésénél
+          en-adquisiciones-intracomunitarias-de-bie-1944dc:
+            heading: Forgóeszközök és szolgáltatások Közösségen belüli beszerzésénél
+          importes-de-las-entregas-de-bienes-y-pres-c77f8b:
+            heading: Pénzforgalmi elszámolású ügyletek az általános szabály szerinti
+              teljesítéssel (LIVA 75. cikk)
+          modificacion-bases-y-cuotas:
+            heading: Adóalapok és adóösszegek módosítása
+          modificaciones-bases-y-cuotas-del-recargo-b27892:
+            heading: Kiegyenlítő pótlék alapjainak és összegeinek módosítása
+          otras-operaciones-con-inversion-del-sujet-951686:
+            heading: Egyéb fordított adózású ügyletek (a Közösségen belüli beszerzések
+              kivételével)
+          por-cuotas-soportadas-en-las-importacione-66dc6d:
+            heading: Beruházási javak importjának előzetesen felszámított adója
+          por-cuotas-soportadas-en-las-importacione-f35018:
+            heading: Forgóeszközök importjának előzetesen felszámított adója
+          por-cuotas-soportadas-en-operaciones-inte-08f33c:
+            heading: Belföldi folyó ügyletek előzetesen felszámított adója
+          por-cuotas-soportadas-en-operaciones-inte-5598b4:
+            heading: Belföldi beruházási ügyletek előzetesen felszámított adója
+          recargo-equivalencia:
+            heading: Kiegyenlítő pótlék
+          rectificacion-de-deducciones:
+            heading: Levonások helyesbítése
+          regimen-general:
+            heading: Általános szabályok
+        section:
+          13-reg-deducc-diferenc:
+            heading: Elkülönített levonások
+          13-reg-deducc-diferenc-1:
+            heading: Elkülönített levonások · 1. ágazat
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: 1. ágazat · Közösségen belüli beszerzések levonható áfája
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: 1. ágazat · importok levonható áfája
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: 1. ágazat · belföldi ügyletek levonható áfája
+          13-reg-deducc-diferenc-2:
+            heading: Elkülönített levonások · 2. ágazat
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: 2. ágazat · Közösségen belüli beszerzések levonható áfája
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: 2. ágazat · importok levonható áfája
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: 2. ágazat · belföldi ügyletek levonható áfája
+          exclusivamente-a-cumplimentar-en-el-ultim-974ccf:
+            heading: 'Csak az utolsó időszakban: az éves összesítő (390) alól mentesítettek'
+          informacion-adicional:
+            heading: Kiegészítő adatok
+          informacion-adicional-exclusivamente-a-cu-d26dc7:
+            heading: Kiegészítő adatok · Csak az utolsó időszakban az éves összesítő
+              alól mentesítetteknek
+          liquidacion-3:
+            heading: Elszámolás
+          liquidacion-3-regimen-general:
+            heading: Általános szabályok · Összesítők
+          liquidacion-3-regimen-general-iva-deducible:
+            heading: Általános szabályok · Levonható áfa
+          liquidacion-3-regimen-general-iva-devengado:
+            heading: Általános szabályok · Fizetendő áfa
+          liquidacion-3-rs:
+            heading: Egyszerűsített rendszer
+          liquidacion-3-rs-a-b-actividades-en-rs:
+            heading: Egyszerűsített rendszer · Egyszerűsített rendszerű tevékenységek
+              (A+B)
+          prorratas:
+            heading: Arányosítás
+          rectificativa:
+            heading: Önellenőrző bevallás
+          resultado:
+            heading: Eredmény
       revision:
         '2022':
           casilla:

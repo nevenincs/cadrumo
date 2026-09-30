@@ -10,6 +10,10 @@ modelo:
         official_name: Retenciones e ingresos a cuenta. Rentas o rendimientos procedentes
           del arrendamiento o subarrendamiento de inmuebles urbanos.
         title: IRPF retenciones sobre arrendamientos urbanos
+      form:
+        page:
+          dr-11501:
+            heading: Página 1 · Retenciones por arrendamientos de inmuebles urbanos
       revision:
         2019-y-siguientes:
           casilla:

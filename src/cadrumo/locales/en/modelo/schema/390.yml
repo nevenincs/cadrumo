@@ -1159,6 +1159,251 @@ modelo:
       field:
         official_name: Modelo 390. Annual summary return for Value Added Tax.
         title: VAT. Annual summary return
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Activity carried on
+          fecha-poder-ddmmaaaa:
+            heading: Date of power of attorney
+          nif:
+            heading: Tax ID (NIF)
+          nombre-y-apellidos:
+            heading: Full name
+          notaria:
+            heading: Notary
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Reduction for activity in municipalities hit by the DANA storm
+          reducciones-total:
+            heading: Reductions (total)
+          regularizacion-de-inversiones:
+            heading: Investment adjustment
+          suma-de-deducciones:
+            heading: Total deductions
+        page:
+          pag-1:
+            heading: Page 1
+          pag-2:
+            heading: Page 2
+          pag-2-bis:
+            heading: Page 2 bis
+          pag-3:
+            heading: Page 3
+          pag-4:
+            heading: Page 4
+          pag-5:
+            heading: Page 5
+          pag-6:
+            heading: Page 6
+          pag-7:
+            heading: Page 7
+          pag-8:
+            heading: Page 8
+        row:
+          '1':
+            heading: Line 1
+          '2':
+            heading: Line 2
+          '3':
+            heading: Line 3
+          '4':
+            heading: Line 4
+          '5':
+            heading: Line 5
+          actividad-1:
+            heading: Activity 1
+          actividad-2:
+            heading: Activity 2
+          bienes-corrientes:
+            heading: Current goods
+          bienes-inversion:
+            heading: Capital goods
+          bienes-y-servic:
+            heading: Current goods and services
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Special farming, livestock and fishing regime compensation
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Tax deductible under a final ruling at rates no longer in force
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Acquisitions under the special cash-accounting regime
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Supplies under the special cash-accounting regime
+          iva-deveng-invers-sujeto-pasivo:
+            heading: VAT due under reverse charge
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Equivalence surcharge adjustment for insolvency
+          modific-recargo-equivalencia:
+            heading: Equivalence surcharge adjustment
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Adjustment of bases and tax for insolvency
+          modificac-bases-y-cuotas:
+            heading: Adjustment of bases and tax
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Adjustment of intra-group bases and tax
+          rectificacion-de-deducciones:
+            heading: Correction of deductions
+          rectificacion-de-deducciones-intragrupo:
+            heading: Correction of intra-group deductions
+          represent-1:
+            heading: Representative 1
+          represent-2:
+            heading: Representative 2
+          represent-3:
+            heading: Representative 3
+          tipo-0-26-pct:
+            heading: 0.26% rate
+          tipo-0-5-pct:
+            heading: 0.5% rate
+          tipo-0-62-pct:
+            heading: 0.62% rate
+          tipo-0-pct:
+            heading: 0% rate
+          tipo-1-4-pct:
+            heading: 1.4% rate
+          tipo-1-75-pct:
+            heading: 1.75% rate
+          tipo-1-pct:
+            heading: 1% rate
+          tipo-10-pct:
+            heading: 10% rate
+          tipo-2-pct:
+            heading: 2% rate
+          tipo-21-pct:
+            heading: 21% rate
+          tipo-4-pct:
+            heading: 4% rate
+          tipo-5-2-pct:
+            heading: 5.2% rate
+          tipo-5-pct:
+            heading: 5% rate
+          tipo-7-5-pct:
+            heading: 7.5% rate
+          total-adqui-intra-bienes-corrientes:
+            heading: Total intra-EU acquisitions of current goods
+          total-adqui-intra-bienes-inversion:
+            heading: Total intra-EU acquisitions of capital goods
+          total-adqui-intra-servicios:
+            heading: Total intra-EU acquisitions of services
+          total-bases-y-cuotas-iva:
+            heading: Total VAT bases and tax
+          total-import-bienes-corrientes:
+            heading: Total imports of current goods
+          total-importacion-bienes-inversion:
+            heading: Total imports of capital goods
+          total-oper-inter-bienes-de-inversion:
+            heading: Total domestic capital goods transactions
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Total domestic current goods and services
+          total-oper-intra-bienes-de-inversion:
+            heading: Total intra-group capital goods transactions
+          total-oper-intragrupo-corrientes:
+            heading: Total intra-group current transactions
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Taxpayer
+          10-volumen-de-operaciones:
+            heading: 10. Turnover
+          11-oper-especificas:
+            heading: 11. Specific transactions
+          12-prorratas:
+            heading: 12. Pro rata
+          13-reg-deducc-diferenc:
+            heading: Differentiated deductions
+          13-reg-deducc-diferenc-1:
+            heading: Differentiated deductions · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · deductible VAT on imports
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · deductible VAT on domestic transactions
+          13-reg-deducc-diferenc-2:
+            heading: Differentiated deductions · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · deductible VAT on imports
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · deductible VAT on domestic transactions
+          13-reg-deducc-diferenc-3:
+            heading: Differentiated deductions · sector 3
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: Sector 3 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: Sector 3 · deductible VAT on imports
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: Sector 3 · deductible VAT on domestic transactions
+          2-devengo:
+            heading: 2. Accrual
+          3-datos-estadisticos:
+            heading: 3. Statistical data
+          3-datos-estadisticos-a:
+            heading: 3. Statistical data · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Statistical data · A · Activities
+          3-datos-estadisticos-b:
+            heading: 3. Statistical data · B
+          3-datos-estadisticos-c:
+            heading: 3. Statistical data · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Representative · Individuals and joint ownerships
+          4-representante-personas-juridicas:
+            heading: 4. Representative · Legal entities
+          5-operaciones-reg-gral:
+            heading: 5. General regime transactions
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. General regime · Output · Travel agencies special regime
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. General regime · Output · Intra-EU acquisitions of services
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. General regime · Output · Cash-accounting special regime
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. General regime · Output · Second-hand goods special regime
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. General regime · Output · Intra-EU acquisitions of goods
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. General regime · Output · Intra-group transactions
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. General regime · Output · Ordinary regime
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. General regime · Output · Equivalence surcharge
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. General regime · Taxable base and tax
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. General regime · Deductible VAT
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of services
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of capital
+              goods
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of current
+              goods
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. General regime · Deductible · Imports of capital goods
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. General regime · Deductible · Imports of current goods
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. General regime · Deductible · Intra-group current transactions
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. General regime · Deductible · Intra-group capital goods transactions
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. General regime · Deductible · Domestic capital goods transactions
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. General regime · Deductible · Domestic current goods and services
+          6-operaciones-reg-simplificado:
+            heading: 6. Simplified regime transactions
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Simplified regime · Farming and livestock activities
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Simplified regime · Activity 1
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Simplified regime · Activity 2
+          7-resultado-liquidacion-anual:
+            heading: 7. Annual return result
+          8-tributacion-razon-de-territorio:
+            heading: 8. Taxation by territory
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Results of the returns
       revision:
         '2021':
           casilla:

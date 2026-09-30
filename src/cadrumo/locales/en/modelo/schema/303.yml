@@ -651,6 +651,146 @@ modelo:
       field:
         official_name: Modelo 303. Value Added Tax. Self-assessment.
         title: VAT. Self-assessment (quarterly)
+      form:
+        column:
+          1t-2t-3t:
+            heading: Q1/Q2/Q3
+          4t:
+            heading: Q4
+          4t-2:
+            heading: Q4
+          adquisicion-o-importacion-de-activos-fijos:
+            heading: Acquisition or import of fixed assets
+          adquisiciones-intracomunitarias-de-bienes:
+            heading: Intra-EU acquisitions of goods
+          entregas-de-activos-fijos:
+            heading: Supplies of fixed assets
+          iva-devengado-por-inversion-del-sujeto-pasivo:
+            heading: VAT due under reverse charge
+          regularizacion-bienes-de-inversion:
+            heading: Capital goods adjustment
+          regularizacion-de-bienes-de-inversion:
+            heading: Capital goods adjustment
+          regularizacion-de-inversiones:
+            heading: Investment adjustment
+          resultado:
+            heading: Result
+          resultado-rs:
+            heading: Simplified regime result
+          suma-de-deducciones:
+            heading: Total deductions
+          total-cuota-resultante:
+            heading: Total resulting tax
+          total-iva-deducible:
+            heading: Total deductible VAT
+        page:
+          dp30301:
+            heading: Page 1 · General regime return
+          dp30302:
+            heading: Page 2 · Simplified regime
+          dp30303:
+            heading: Page 3 · Additional information and result
+          dp30304:
+            heading: Page 4 · Taxpayers exempt from modelo 390
+          dp30305:
+            heading: Page 5 · Pro rata and differentiated deductions
+        row:
+          '1':
+            heading: Line 1
+          '2':
+            heading: Line 2
+          '3':
+            heading: Line 3
+          '4':
+            heading: Line 4
+          '5':
+            heading: Line 5
+          adquisiciones-intracomunitarias-de-bienes-368e6a:
+            heading: Intra-EU acquisitions of goods and services
+          bienes-corrientes:
+            heading: Current goods
+          bienes-corrientes-y-servicios:
+            heading: Current goods and services
+          bienes-inversion:
+            heading: Capital goods
+          bienes-y-servic:
+            heading: Current goods and services
+          bienes-y-servicios-corrientes:
+            heading: Current goods and services
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Special farming, livestock and fishing regime compensation
+          en-adquisiciones-intracomunitarias-de-bie-13bc2d:
+            heading: On intra-EU acquisitions of capital goods
+          en-adquisiciones-intracomunitarias-de-bie-1944dc:
+            heading: On intra-EU acquisitions of current goods and services
+          importes-de-las-entregas-de-bienes-y-pres-c77f8b:
+            heading: Cash-accounting supplies that would have accrued under the general
+              rule (art. 75 LIVA)
+          modificacion-bases-y-cuotas:
+            heading: Adjustment of bases and tax
+          modificaciones-bases-y-cuotas-del-recargo-b27892:
+            heading: Adjustment of equivalence surcharge bases and tax
+          otras-operaciones-con-inversion-del-sujet-951686:
+            heading: Other reverse-charge transactions (except intra-EU acquisitions)
+          por-cuotas-soportadas-en-las-importacione-66dc6d:
+            heading: Input tax on imports of capital goods
+          por-cuotas-soportadas-en-las-importacione-f35018:
+            heading: Input tax on imports of current goods
+          por-cuotas-soportadas-en-operaciones-inte-08f33c:
+            heading: Input tax on domestic current transactions
+          por-cuotas-soportadas-en-operaciones-inte-5598b4:
+            heading: Input tax on domestic capital goods transactions
+          recargo-equivalencia:
+            heading: Equivalence surcharge
+          rectificacion-de-deducciones:
+            heading: Correction of deductions
+          regimen-general:
+            heading: General regime
+        section:
+          13-reg-deducc-diferenc:
+            heading: Differentiated deductions
+          13-reg-deducc-diferenc-1:
+            heading: Differentiated deductions · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · deductible VAT on imports
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · deductible VAT on domestic transactions
+          13-reg-deducc-diferenc-2:
+            heading: Differentiated deductions · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · deductible VAT on imports
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · deductible VAT on domestic transactions
+          exclusivamente-a-cumplimentar-en-el-ultim-974ccf:
+            heading: 'Last period only: taxpayers exempt from the annual summary (modelo
+              390)'
+          informacion-adicional:
+            heading: Additional information
+          informacion-adicional-exclusivamente-a-cu-d26dc7:
+            heading: Additional information · Last period only for those exempt from
+              the annual summary
+          liquidacion-3:
+            heading: Return
+          liquidacion-3-regimen-general:
+            heading: General regime · Totals
+          liquidacion-3-regimen-general-iva-deducible:
+            heading: General regime · Deductible VAT
+          liquidacion-3-regimen-general-iva-devengado:
+            heading: General regime · Output VAT
+          liquidacion-3-rs:
+            heading: Simplified regime
+          liquidacion-3-rs-a-b-actividades-en-rs:
+            heading: Simplified regime · Activities under the simplified regime (A+B)
+          prorratas:
+            heading: Pro rata
+          rectificativa:
+            heading: Corrective return
+          resultado:
+            heading: Result
       revision:
         '2022':
           casilla:

@@ -1151,6 +1151,256 @@ modelo:
         official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
           Afegit.
         title: IVA. Declaració-resum anual
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Activitat desenvolupada
+          fecha-poder-ddmmaaaa:
+            heading: Data del poder
+          nif:
+            heading: NIF
+          nombre-y-apellidos:
+            heading: Nom i cognoms
+          notaria:
+            heading: Notaria
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Reducció per activitat en municipis afectats per la DANA
+          reducciones-total:
+            heading: Reduccions (total)
+          regularizacion-de-inversiones:
+            heading: Regularització d'inversions
+          suma-de-deducciones:
+            heading: Suma de deduccions
+        page:
+          pag-1:
+            heading: Pàgina 1
+          pag-2:
+            heading: Pàgina 2
+          pag-2-bis:
+            heading: Pàgina 2 bis
+          pag-3:
+            heading: Pàgina 3
+          pag-4:
+            heading: Pàgina 4
+          pag-5:
+            heading: Pàgina 5
+          pag-6:
+            heading: Pàgina 6
+          pag-7:
+            heading: Pàgina 7
+          pag-8:
+            heading: Pàgina 8
+        row:
+          '1':
+            heading: Línia 1
+          '2':
+            heading: Línia 2
+          '3':
+            heading: Línia 3
+          '4':
+            heading: Línia 4
+          '5':
+            heading: Línia 5
+          actividad-1:
+            heading: Activitat 1
+          actividad-2:
+            heading: Activitat 2
+          bienes-corrientes:
+            heading: Béns corrents
+          bienes-inversion:
+            heading: Béns d'inversió
+          bienes-y-servic:
+            heading: Béns i serveis corrents
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Compensacions del règim especial d'agricultura, ramaderia i pesca
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Quotes deduïbles per resolució o sentència ferma amb tipus no
+              vigents
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Adquisicions de béns en el règim especial del criteri de caixa
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Lliuraments de béns en el règim especial del criteri de caixa
+          iva-deveng-invers-sujeto-pasivo:
+            heading: IVA meritat per inversió del subjecte passiu
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Modificació del recàrrec d'equivalència per concurs de creditors
+          modific-recargo-equivalencia:
+            heading: Modificació del recàrrec d'equivalència
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Modificació de bases i quotes per concurs de creditors
+          modificac-bases-y-cuotas:
+            heading: Modificació de bases i quotes
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Modificació de bases i quotes d'operacions intragrup
+          rectificacion-de-deducciones:
+            heading: Rectificació de deduccions
+          rectificacion-de-deducciones-intragrupo:
+            heading: Rectificació de deduccions d'operacions intragrup
+          represent-1:
+            heading: Representant 1
+          represent-2:
+            heading: Representant 2
+          represent-3:
+            heading: Representant 3
+          tipo-0-26-pct:
+            heading: Tipus 0,26 %
+          tipo-0-5-pct:
+            heading: Tipus 0,5 %
+          tipo-0-62-pct:
+            heading: Tipus 0,62 %
+          tipo-0-pct:
+            heading: Tipus 0 %
+          tipo-1-4-pct:
+            heading: Tipus 1,4 %
+          tipo-1-75-pct:
+            heading: Tipus 1,75 %
+          tipo-1-pct:
+            heading: Tipus 1 %
+          tipo-10-pct:
+            heading: Tipus 10 %
+          tipo-2-pct:
+            heading: Tipus 2 %
+          tipo-21-pct:
+            heading: Tipus 21 %
+          tipo-4-pct:
+            heading: Tipus 4 %
+          tipo-5-2-pct:
+            heading: Tipus 5,2 %
+          tipo-5-pct:
+            heading: Tipus 5 %
+          tipo-7-5-pct:
+            heading: Tipus 7,5 %
+          total-adqui-intra-bienes-corrientes:
+            heading: Total adquisicions intracomunitàries de béns corrents
+          total-adqui-intra-bienes-inversion:
+            heading: Total adquisicions intracomunitàries de béns d'inversió
+          total-adqui-intra-servicios:
+            heading: Total adquisicions intracomunitàries de serveis
+          total-bases-y-cuotas-iva:
+            heading: Total bases i quotes d'IVA
+          total-import-bienes-corrientes:
+            heading: Total importacions de béns corrents
+          total-importacion-bienes-inversion:
+            heading: Total importacions de béns d'inversió
+          total-oper-inter-bienes-de-inversion:
+            heading: Total operacions interiors amb béns d'inversió
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Total operacions interiors corrents de béns i serveis
+          total-oper-intra-bienes-de-inversion:
+            heading: Total operacions intragrup amb béns d'inversió
+          total-oper-intragrupo-corrientes:
+            heading: Total operacions intragrup corrents
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Subjecte passiu
+          10-volumen-de-operaciones:
+            heading: 10. Volum d'operacions
+          11-oper-especificas:
+            heading: 11. Operacions específiques
+          12-prorratas:
+            heading: 12. Prorrates
+          13-reg-deducc-diferenc:
+            heading: Deduccions diferenciades
+          13-reg-deducc-diferenc-1:
+            heading: Deduccions diferenciades · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · IVA deduïble en operacions interiors
+          13-reg-deducc-diferenc-2:
+            heading: Deduccions diferenciades · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · IVA deduïble en operacions interiors
+          13-reg-deducc-diferenc-3:
+            heading: Deduccions diferenciades · sector 3
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: Sector 3 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: Sector 3 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: Sector 3 · IVA deduïble en operacions interiors
+          2-devengo:
+            heading: 2. Meritació
+          3-datos-estadisticos:
+            heading: 3. Dades estadístiques
+          3-datos-estadisticos-a:
+            heading: 3. Dades estadístiques · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Dades estadístiques · A · Activitats
+          3-datos-estadisticos-b:
+            heading: 3. Dades estadístiques · B
+          3-datos-estadisticos-c:
+            heading: 3. Dades estadístiques · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Representant · Persones físiques i comunitats de béns
+          4-representante-personas-juridicas:
+            heading: 4. Representant · Persones jurídiques
+          5-operaciones-reg-gral:
+            heading: 5. Operacions en règim general
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. Règim general · Meritat · Règim especial d'agències de viatges
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. Règim general · Meritat · Adquisicions intracomunitàries de
+              serveis
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. Règim general · Meritat · Règim especial del criteri de caixa
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. Règim general · Meritat · Règim especial de béns usats
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. Règim general · Meritat · Adquisicions intracomunitàries de
+              béns
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. Règim general · Meritat · Operacions intragrup
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. Règim general · Meritat · Règim ordinari
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. Règim general · Meritat · Recàrrec d'equivalència
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. Règim general · Base imposable i quota
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. Règim general · IVA deduïble
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de serveis
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de béns corrents
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. Règim general · Deduïble · Importacions de béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. Règim general · Deduïble · Importacions de béns corrents
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. Règim general · Deduïble · Operacions intragrup corrents
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. Règim general · Deduïble · Operacions intragrup amb béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. Règim general · Deduïble · Operacions interiors amb béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. Règim general · Deduïble · Operacions interiors corrents de
+              béns i serveis
+          6-operaciones-reg-simplificado:
+            heading: 6. Operacions en règim simplificat
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Règim simplificat · Activitats agrícoles i ramaderes
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Règim simplificat · Activitat 1
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Règim simplificat · Activitat 2
+          7-resultado-liquidacion-anual:
+            heading: 7. Resultat de la liquidació anual
+          8-tributacion-razon-de-territorio:
+            heading: 8. Tributació per raó de territori
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Resultat de les liquidacions
       revision:
         '2021':
           casilla:

@@ -1160,6 +1160,262 @@ modelo:
         official_name: Modelo 390. Declaración-resumen anual del Impuesto sobre el
           Valor Añadido.
         title: IVA. Declaración-resumen anual
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Actividad desarrollada
+          fecha-poder-ddmmaaaa:
+            heading: Fecha del poder
+          nif:
+            heading: NIF
+          nombre-y-apellidos:
+            heading: Nombre y apellidos
+          notaria:
+            heading: Notaría
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Reducción por actividad en municipios afectados por la DANA
+          reducciones-total:
+            heading: Reducciones (total)
+          regularizacion-de-inversiones:
+            heading: Regularización de inversiones
+          suma-de-deducciones:
+            heading: Suma de deducciones
+        page:
+          pag-1:
+            heading: Página 1
+          pag-2:
+            heading: Página 2
+          pag-2-bis:
+            heading: Página 2 bis
+          pag-3:
+            heading: Página 3
+          pag-4:
+            heading: Página 4
+          pag-5:
+            heading: Página 5
+          pag-6:
+            heading: Página 6
+          pag-7:
+            heading: Página 7
+          pag-8:
+            heading: Página 8
+        row:
+          '1':
+            heading: Línea 1
+          '2':
+            heading: Línea 2
+          '3':
+            heading: Línea 3
+          '4':
+            heading: Línea 4
+          '5':
+            heading: Línea 5
+          actividad-1:
+            heading: Actividad 1
+          actividad-2:
+            heading: Actividad 2
+          bienes-corrientes:
+            heading: Bienes corrientes
+          bienes-inversion:
+            heading: Bienes de inversión
+          bienes-y-servic:
+            heading: Bienes y servicios corrientes
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Compensaciones del régimen especial de agricultura, ganadería
+              y pesca
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Cuotas deducibles por resolución o sentencia firme con tipos
+              no vigentes
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Adquisiciones de bienes en el régimen especial del criterio de
+              caja
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Entregas de bienes en el régimen especial del criterio de caja
+          iva-deveng-invers-sujeto-pasivo:
+            heading: IVA devengado por inversión del sujeto pasivo
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Modificación del recargo de equivalencia por concurso de acreedores
+          modific-recargo-equivalencia:
+            heading: Modificación del recargo de equivalencia
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Modificación de bases y cuotas por concurso de acreedores
+          modificac-bases-y-cuotas:
+            heading: Modificación de bases y cuotas
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Modificación de bases y cuotas de operaciones intragrupo
+          rectificacion-de-deducciones:
+            heading: Rectificación de deducciones
+          rectificacion-de-deducciones-intragrupo:
+            heading: Rectificación de deducciones de operaciones intragrupo
+          represent-1:
+            heading: Representante 1
+          represent-2:
+            heading: Representante 2
+          represent-3:
+            heading: Representante 3
+          tipo-0-26-pct:
+            heading: Tipo 0,26 %
+          tipo-0-5-pct:
+            heading: Tipo 0,5 %
+          tipo-0-62-pct:
+            heading: Tipo 0,62 %
+          tipo-0-pct:
+            heading: Tipo 0 %
+          tipo-1-4-pct:
+            heading: Tipo 1,4 %
+          tipo-1-75-pct:
+            heading: Tipo 1,75 %
+          tipo-1-pct:
+            heading: Tipo 1 %
+          tipo-10-pct:
+            heading: Tipo 10 %
+          tipo-2-pct:
+            heading: Tipo 2 %
+          tipo-21-pct:
+            heading: Tipo 21 %
+          tipo-4-pct:
+            heading: Tipo 4 %
+          tipo-5-2-pct:
+            heading: Tipo 5,2 %
+          tipo-5-pct:
+            heading: Tipo 5 %
+          tipo-7-5-pct:
+            heading: Tipo 7,5 %
+          total-adqui-intra-bienes-corrientes:
+            heading: Total adquisiciones intracomunitarias de bienes corrientes
+          total-adqui-intra-bienes-inversion:
+            heading: Total adquisiciones intracomunitarias de bienes de inversión
+          total-adqui-intra-servicios:
+            heading: Total adquisiciones intracomunitarias de servicios
+          total-bases-y-cuotas-iva:
+            heading: Total bases y cuotas de IVA
+          total-import-bienes-corrientes:
+            heading: Total importaciones de bienes corrientes
+          total-importacion-bienes-inversion:
+            heading: Total importaciones de bienes de inversión
+          total-oper-inter-bienes-de-inversion:
+            heading: Total operaciones interiores con bienes de inversión
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Total operaciones interiores corrientes de bienes y servicios
+          total-oper-intra-bienes-de-inversion:
+            heading: Total operaciones intragrupo con bienes de inversión
+          total-oper-intragrupo-corrientes:
+            heading: Total operaciones intragrupo corrientes
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Sujeto pasivo
+          10-volumen-de-operaciones:
+            heading: 10. Volumen de operaciones
+          11-oper-especificas:
+            heading: 11. Operaciones específicas
+          12-prorratas:
+            heading: 12. Prorratas
+          13-reg-deducc-diferenc:
+            heading: Deducciones diferenciadas
+          13-reg-deducc-diferenc-1:
+            heading: Deducciones diferenciadas · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · IVA deducible en adquisiciones intracomunitarias
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · IVA deducible en importaciones
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · IVA deducible en operaciones interiores
+          13-reg-deducc-diferenc-2:
+            heading: Deducciones diferenciadas · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · IVA deducible en adquisiciones intracomunitarias
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · IVA deducible en importaciones
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · IVA deducible en operaciones interiores
+          13-reg-deducc-diferenc-3:
+            heading: Deducciones diferenciadas · sector 3
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: Sector 3 · IVA deducible en adquisiciones intracomunitarias
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: Sector 3 · IVA deducible en importaciones
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: Sector 3 · IVA deducible en operaciones interiores
+          2-devengo:
+            heading: 2. Devengo
+          3-datos-estadisticos:
+            heading: 3. Datos estadísticos
+          3-datos-estadisticos-a:
+            heading: 3. Datos estadísticos · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Datos estadísticos · A · Actividades
+          3-datos-estadisticos-b:
+            heading: 3. Datos estadísticos · B
+          3-datos-estadisticos-c:
+            heading: 3. Datos estadísticos · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Representante · Personas físicas y comunidades de bienes
+          4-representante-personas-juridicas:
+            heading: 4. Representante · Personas jurídicas
+          5-operaciones-reg-gral:
+            heading: 5. Operaciones en régimen general
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. Régimen general · Devengado · Régimen especial de agencias
+              de viajes
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. Régimen general · Devengado · Adquisiciones intracomunitarias
+              de servicios
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. Régimen general · Devengado · Régimen especial del criterio
+              de caja
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. Régimen general · Devengado · Régimen especial de bienes usados
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. Régimen general · Devengado · Adquisiciones intracomunitarias
+              de bienes
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. Régimen general · Devengado · Operaciones intragrupo
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. Régimen general · Devengado · Régimen ordinario
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. Régimen general · Devengado · Recargo de equivalencia
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. Régimen general · Base imponible y cuota
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. Régimen general · IVA deducible
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. Régimen general · Deducible · Adquisiciones intracomunitarias
+              de servicios
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. Régimen general · Deducible · Adquisiciones intracomunitarias
+              de bienes de inversión
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. Régimen general · Deducible · Adquisiciones intracomunitarias
+              de bienes corrientes
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. Régimen general · Deducible · Importaciones de bienes de inversión
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. Régimen general · Deducible · Importaciones de bienes corrientes
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. Régimen general · Deducible · Operaciones intragrupo corrientes
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. Régimen general · Deducible · Operaciones intragrupo con bienes
+              de inversión
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. Régimen general · Deducible · Operaciones interiores con bienes
+              de inversión
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. Régimen general · Deducible · Operaciones interiores corrientes
+              de bienes y servicios
+          6-operaciones-reg-simplificado:
+            heading: 6. Operaciones en régimen simplificado
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Régimen simplificado · Actividades agrícolas y ganaderas
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Régimen simplificado · Actividad 1
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Régimen simplificado · Actividad 2
+          7-resultado-liquidacion-anual:
+            heading: 7. Resultado de la liquidación anual
+          8-tributacion-razon-de-territorio:
+            heading: 8. Tributación por razón de territorio
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Resultado de las liquidaciones
       revision:
         '2021':
           casilla:

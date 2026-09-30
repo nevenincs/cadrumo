@@ -1156,6 +1156,258 @@ modelo:
       field:
         official_name: Modelo 390. A hozzáadottérték-adó éves összesítő bevallása.
         title: IVA. Éves összesítő bevallás
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Folytatott tevékenység
+          fecha-poder-ddmmaaaa:
+            heading: Meghatalmazás kelte
+          nif:
+            heading: Adóazonosító (NIF)
+          nombre-y-apellidos:
+            heading: Teljes név
+          notaria:
+            heading: Közjegyző
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Csökkentés a DANA vihar sújtotta településeken folytatott tevékenységre
+          reducciones-total:
+            heading: Csökkentések (összesen)
+          regularizacion-de-inversiones:
+            heading: Beruházások korrekciója
+          suma-de-deducciones:
+            heading: Levonások összesen
+        page:
+          pag-1:
+            heading: 1. oldal
+          pag-2:
+            heading: 2. oldal
+          pag-2-bis:
+            heading: 2 bis. oldal
+          pag-3:
+            heading: 3. oldal
+          pag-4:
+            heading: 4. oldal
+          pag-5:
+            heading: 5. oldal
+          pag-6:
+            heading: 6. oldal
+          pag-7:
+            heading: 7. oldal
+          pag-8:
+            heading: 8. oldal
+        row:
+          '1':
+            heading: 1. sor
+          '2':
+            heading: 2. sor
+          '3':
+            heading: 3. sor
+          '4':
+            heading: 4. sor
+          '5':
+            heading: 5. sor
+          actividad-1:
+            heading: 1. tevékenység
+          actividad-2:
+            heading: 2. tevékenység
+          bienes-corrientes:
+            heading: Forgóeszközök
+          bienes-inversion:
+            heading: Beruházási javak
+          bienes-y-servic:
+            heading: Forgóeszközök és szolgáltatások
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Mezőgazdasági, állattenyésztési és halászati különleges rendszer
+              kompenzációi
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Jogerős határozat alapján, már nem hatályos kulccsal levonható
+              adó
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Pénzforgalmi elszámolású különleges rendszerbeli beszerzések
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Pénzforgalmi elszámolású különleges rendszerbeli értékesítések
+          iva-deveng-invers-sujeto-pasivo:
+            heading: Fordított adózás szerint fizetendő áfa
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Kiegyenlítő pótlék módosítása fizetésképtelenségi eljárás miatt
+          modific-recargo-equivalencia:
+            heading: Kiegyenlítő pótlék módosítása
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Adóalapok és adóösszegek módosítása fizetésképtelenségi eljárás
+              miatt
+          modificac-bases-y-cuotas:
+            heading: Adóalapok és adóösszegek módosítása
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Csoporton belüli adóalapok és adóösszegek módosítása
+          rectificacion-de-deducciones:
+            heading: Levonások helyesbítése
+          rectificacion-de-deducciones-intragrupo:
+            heading: Csoporton belüli levonások helyesbítése
+          represent-1:
+            heading: 1. képviselő
+          represent-2:
+            heading: 2. képviselő
+          represent-3:
+            heading: 3. képviselő
+          tipo-0-26-pct:
+            heading: 0,26%-os kulcs
+          tipo-0-5-pct:
+            heading: 0,5%-os kulcs
+          tipo-0-62-pct:
+            heading: 0,62%-os kulcs
+          tipo-0-pct:
+            heading: 0%-os kulcs
+          tipo-1-4-pct:
+            heading: 1,4%-os kulcs
+          tipo-1-75-pct:
+            heading: 1,75%-os kulcs
+          tipo-1-pct:
+            heading: 1%-os kulcs
+          tipo-10-pct:
+            heading: 10%-os kulcs
+          tipo-2-pct:
+            heading: 2%-os kulcs
+          tipo-21-pct:
+            heading: 21%-os kulcs
+          tipo-4-pct:
+            heading: 4%-os kulcs
+          tipo-5-2-pct:
+            heading: 5,2%-os kulcs
+          tipo-5-pct:
+            heading: 5%-os kulcs
+          tipo-7-5-pct:
+            heading: 7,5%-os kulcs
+          total-adqui-intra-bienes-corrientes:
+            heading: Közösségen belüli forgóeszköz-beszerzések összesen
+          total-adqui-intra-bienes-inversion:
+            heading: Közösségen belüli beruházásijavak-beszerzések összesen
+          total-adqui-intra-servicios:
+            heading: Közösségen belüli szolgáltatásbeszerzések összesen
+          total-bases-y-cuotas-iva:
+            heading: Áfaalapok és áfaösszegek összesen
+          total-import-bienes-corrientes:
+            heading: Forgóeszköz-importok összesen
+          total-importacion-bienes-inversion:
+            heading: Beruházásijavak-importok összesen
+          total-oper-inter-bienes-de-inversion:
+            heading: Belföldi beruházási ügyletek összesen
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Belföldi folyó termék- és szolgáltatásügyletek összesen
+          total-oper-intra-bienes-de-inversion:
+            heading: Csoporton belüli beruházási ügyletek összesen
+          total-oper-intragrupo-corrientes:
+            heading: Csoporton belüli folyó ügyletek összesen
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Adóalany
+          10-volumen-de-operaciones:
+            heading: 10. Forgalom
+          11-oper-especificas:
+            heading: 11. Egyedi ügyletek
+          12-prorratas:
+            heading: 12. Arányosítás
+          13-reg-deducc-diferenc:
+            heading: Elkülönített levonások
+          13-reg-deducc-diferenc-1:
+            heading: Elkülönített levonások · 1. ágazat
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: 1. ágazat · Közösségen belüli beszerzések levonható áfája
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: 1. ágazat · importok levonható áfája
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: 1. ágazat · belföldi ügyletek levonható áfája
+          13-reg-deducc-diferenc-2:
+            heading: Elkülönített levonások · 2. ágazat
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: 2. ágazat · Közösségen belüli beszerzések levonható áfája
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: 2. ágazat · importok levonható áfája
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: 2. ágazat · belföldi ügyletek levonható áfája
+          13-reg-deducc-diferenc-3:
+            heading: Elkülönített levonások · 3. ágazat
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: 3. ágazat · Közösségen belüli beszerzések levonható áfája
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: 3. ágazat · importok levonható áfája
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: 3. ágazat · belföldi ügyletek levonható áfája
+          2-devengo:
+            heading: 2. Adókötelezettség időpontja
+          3-datos-estadisticos:
+            heading: 3. Statisztikai adatok
+          3-datos-estadisticos-a:
+            heading: 3. Statisztikai adatok · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Statisztikai adatok · A · Tevékenységek
+          3-datos-estadisticos-b:
+            heading: 3. Statisztikai adatok · B
+          3-datos-estadisticos-c:
+            heading: 3. Statisztikai adatok · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Képviselő · Természetes személyek és közös tulajdonok
+          4-representante-personas-juridicas:
+            heading: 4. Képviselő · Jogi személyek
+          5-operaciones-reg-gral:
+            heading: 5. Általános szabályok szerinti ügyletek
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. Általános szabályok · Fizetendő · Utazási irodák különleges
+              rendszere
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. Általános szabályok · Fizetendő · Közösségen belüli szolgáltatásbeszerzések
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. Általános szabályok · Fizetendő · Pénzforgalmi elszámolás
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. Általános szabályok · Fizetendő · Használt cikkek különleges
+              rendszere
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. Általános szabályok · Fizetendő · Közösségen belüli termékbeszerzések
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. Általános szabályok · Fizetendő · Csoporton belüli ügyletek
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. Általános szabályok · Fizetendő · Rendes rendszer
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. Általános szabályok · Fizetendő · Kiegyenlítő pótlék
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. Általános szabályok · Adóalap és adó
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. Általános szabályok · Levonható áfa
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. Általános szabályok · Levonható · Közösségen belüli szolgáltatásbeszerzések
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. Általános szabályok · Levonható · Beruházási javak Közösségen
+              belüli beszerzése
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. Általános szabályok · Levonható · Forgóeszközök Közösségen
+              belüli beszerzése
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. Általános szabályok · Levonható · Beruházási javak importja
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. Általános szabályok · Levonható · Forgóeszközök importja
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. Általános szabályok · Levonható · Csoporton belüli folyó ügyletek
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. Általános szabályok · Levonható · Csoporton belüli beruházási
+              ügyletek
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. Általános szabályok · Levonható · Belföldi beruházási ügyletek
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. Általános szabályok · Levonható · Belföldi folyó termék- és
+              szolgáltatásügyletek
+          6-operaciones-reg-simplificado:
+            heading: 6. Egyszerűsített rendszer szerinti ügyletek
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Egyszerűsített rendszer · Mező- és állatgazdasági tevékenységek
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Egyszerűsített rendszer · 1. tevékenység
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Egyszerűsített rendszer · 2. tevékenység
+          7-resultado-liquidacion-anual:
+            heading: 7. Éves elszámolás eredménye
+          8-tributacion-razon-de-territorio:
+            heading: 8. Területi adózás
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Elszámolások eredménye
       revision:
         '2021':
           casilla:

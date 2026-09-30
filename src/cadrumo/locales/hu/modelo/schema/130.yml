@@ -10,6 +10,17 @@ modelo:
         official_name: A magánszemélyek jövedelemadója. Közvetlen megállapítás alá
           tartozó gazdasági tevékenységek. Részletfizetés.
         title: IRPF részletfizetés, közvetlen megállapítás
+      form:
+        page:
+          dr-13001:
+            heading: 1. oldal · Adóelőleg
+        section:
+          liquidacion-3-i-actividades-econ-estim-directa:
+            heading: I. Tényleges költségelszámolású gazdasági tevékenységek
+          liquidacion-3-ii-actividades-agricolas-ga-829910:
+            heading: II. Mező-, állat-, erdőgazdasági és halászati tevékenységek
+          liquidacion-3-iii-total-liquidacion:
+            heading: III. Bevallás összesen
       revision:
         2019-y-siguientes:
           casilla:
