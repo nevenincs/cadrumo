@@ -10,8 +10,10 @@ one would exercise refusal paths in tests that mean to exercise a rendered
 workbench, and a refusal renders a small surface that fits at any size.
 
 The lifecycle door's operation services are the one stand-in: the surfaces
-these tests mount read and stage, and never submit an operation, so nothing
-reaches them. Every figure is synthetic.
+these tests mount read, stage and check their changes, and never submit an
+operation, so nothing reaches them. Admission, renewal and the check before
+applying are the real services, bound as the launcher binds them. Every figure
+is synthetic.
 """
 
 from __future__ import annotations
@@ -26,10 +28,12 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ....application.modelo.edit_admission import admit_modelo_edit_baseline
+from ....application.modelo.edit_admission import admit_modelo_edit_baseline, renew_modelo_edit_baseline
+from ....application.modelo.edit_preflight import preflight_modelo_edit
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 from ...operation_composition import build_production_operation_registry
@@ -118,6 +122,19 @@ def real_workbench(
                     calculation_catalogue=ports.calculation_repository.load(),
                     operation=operation,
                     operation_contracts=contracts,
+                ),
+                edit_renewal=lambda baseline: renew_modelo_edit_baseline(
+                    baseline,
+                    work_catalogue=ports.work_unit_repository.load(),
+                    calculation_catalogue=ports.calculation_repository.load(),
+                    operation=operation,
+                    operation_contracts=contracts,
+                ),
+                edit_preflight=lambda submission: preflight_modelo_edit(
+                    submission,
+                    work_catalogue=ports.work_unit_repository.load(),
+                    calculation_catalogue=ports.calculation_repository.load(),
+                    tax_id_format=runtime_tax_id_format(authority=operation),
                 ),
             )
 

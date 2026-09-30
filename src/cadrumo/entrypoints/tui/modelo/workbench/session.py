@@ -9,6 +9,12 @@ A change is only offered where the field's editability allows it: a typed value
 where the filer types, a clear where they declared a value, and a restore where
 their value replaces a source. Anything else is refused here with the reason,
 before it could reach the application.
+
+When the declaration moves underneath the staged changes -- another
+calculation, new source data -- the changes are kept and re-based on what the
+declaration holds now: each is checked again against its field, a change that
+can no longer be made is dropped, and a change whose box now reads differently
+is marked, so the review can ask the filer to look at it again.
 """
 
 from __future__ import annotations
@@ -21,7 +27,9 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
+    ModeloWorkForm,
     address_key,
+    edit_address,
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
@@ -58,11 +66,28 @@ class StagedChange:
     text: str
     previous_text: str
     displaces: Displacement
+    #: The box read differently when the declaration was read again after the change was staged.
+    before_changed: bool = False
+
+    @property
+    def key(self) -> AddressKey:
+        """The semantic identity of the field the change is staged on."""
+        return address_key(self.field.address)
 
     @property
     def change(self) -> WorkbenchChange:
         """The typed change the application receives."""
-        return WorkbenchChange(address=self.field.address, kind=self.kind, value=self.value)
+        return WorkbenchChange(address=edit_address(self.field), kind=self.kind, value=self.value)
+
+
+@dataclass(frozen=True, slots=True)
+class Rebase:
+    """What reading the declaration again did to the staged changes."""
+
+    #: Kept, but their box reads differently now; the review marks them.
+    changed: tuple[StagedChange, ...] = ()
+    #: No longer possible, or no longer needed, on the declaration as it stands.
+    dropped: tuple[StagedChange, ...] = ()
 
 
 def _displacement(field: ModeloFormField) -> Displacement:
@@ -156,6 +181,54 @@ class WorkbenchEditSession:
         )
         return None
 
+    def rebase(self, form: ModeloWorkForm) -> Rebase:
+        """Check every staged change again against ``form``, keeping the ones that still apply."""
+        fields = {address_key(field.address): field for field in form.fields()}
+        staged = self._changes
+        self._changes = {}
+        changed: list[StagedChange] = []
+        dropped: list[StagedChange] = []
+        for key, change in staged.items():
+            field = fields.get(key)
+            if field is None or self._restage(change, field) is not None or key not in self._changes:
+                self._changes.pop(key, None)
+                dropped.append(change)
+                continue
+            if (field.value, field.origin) != (change.field.value, change.field.origin):
+                marked = self._changes[key]
+                self._changes[key] = StagedChange(
+                    field=marked.field,
+                    kind=marked.kind,
+                    value=marked.value,
+                    text=marked.text,
+                    previous_text=marked.previous_text,
+                    displaces=marked.displaces,
+                    before_changed=True,
+                )
+                changed.append(self._changes[key])
+        return Rebase(changed=tuple(changed), dropped=tuple(dropped))
+
+    def _restage(self, change: StagedChange, field: ModeloFormField) -> StageRefusal | None:
+        if change.kind is WorkbenchChangeKind.SET:
+            return self.stage_value(field, change.value, change.text)
+        if change.kind is WorkbenchChangeKind.CLEAR:
+            return self.stage_clear(field)
+        return self.stage_restore(field)
+
+    def acknowledge(self) -> None:
+        """Take the marks off the changes the filer has looked at again."""
+        self._changes = {
+            key: StagedChange(
+                field=change.field,
+                kind=change.kind,
+                value=change.value,
+                text=change.text,
+                previous_text=change.previous_text,
+                displaces=change.displaces,
+            )
+            for key, change in self._changes.items()
+        }
+
     def revert(self, key: AddressKey) -> bool:
         """Drop the change staged on one address; ``False`` when there was none."""
         return self._changes.pop(key, None) is not None
@@ -169,4 +242,4 @@ class WorkbenchEditSession:
         return tuple(change.change for change in self._changes.values())
 
 
-__all__ = ["Displacement", "StageRefusal", "StagedChange", "WorkbenchEditSession"]
+__all__ = ["Displacement", "Rebase", "StageRefusal", "StagedChange", "WorkbenchEditSession"]

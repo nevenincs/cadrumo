@@ -22,6 +22,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
+from .....application.modelo.edit_parsing import MAX_EDIT_LEXEME_LENGTH
 from .....application.modelo.work_form_models import ModeloFormField, ModeloFormScalar
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
@@ -140,7 +141,9 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
                 markup=False,
             )
             yield Input(
-                placeholder=tr(f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}"), id="editor-input"
+                placeholder=tr(f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}"),
+                max_length=MAX_EDIT_LEXEME_LENGTH,
+                id="editor-input",
             )
             yield Static("", id="editor-readback", markup=False)
             yield Static(self._hint(), id="editor-hint", markup=False)

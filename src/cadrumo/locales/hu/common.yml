@@ -2034,6 +2034,11 @@ tui:
       calculate:
         apply_first: Az újraszámítás előtt alkalmazza vagy vesse el a módosításait
           [R].
+        at_risk_cancel: A jelenlegi értékek megtartása
+        at_risk_proceed: Újraszámítás
+        at_risk_title: Újraszámítja a forrásai alapján?
+        kept: Semmi sem lett újraszámítva. Adja meg a megtartandó értékeket, majd
+          számoljon újra.
       defaults_to_confirm: 'meg nem erősített alapértékek: {count} [n]'
       design_constant: '{column}: {value} · a hivatalos terv rögzíti'
       details_page: A számítás részletei
@@ -2052,7 +2057,8 @@ tui:
           újra.
         no_admission: Ennél a bevallásnál a szerkesztés most nem érhető el.
         not_writable: Ez a rovat itt nem szerkeszthető.
-        overridable_source: Korábbi bevallásból származik; indoklással felülírhatja.
+        overridable_source: Korábbi bevallásból származik; felülírhatja, és felülírtként
+          jelenik meg, amíg vissza nem állítja a forrást.
         source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
       editor:
         cancel: Mégse
@@ -2096,6 +2102,20 @@ tui:
         no_explanation: Ehhez a rovathoz még nincs írott magyarázat.
         official: 'Hivatalos szöveg ({source}): „{text}”'
         origin: 'Forrás: {origin}'
+      issues:
+        blocking: Akadályozza a benyújtást
+        column:
+          kind: Fajta
+          message: Megállapítás
+        title: Amit az ellenőrzés talált
+        verdict:
+          blocked: 'Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást. Megállapítások:
+            {count}.'
+          complete: 'Az ellenőrzés sikeres. Átnézendő megállapítások: {count}.'
+          incomplete: 'Az ellenőrzés nem teljes: kötelező adat hiányzik. Megállapítások:
+            {count}.'
+          none: Ezt a számítást még nem ellenőrizték.
+        warning: Érdemes átnézni
       key:
         back: Vissza
         calculate: Számítás
@@ -2103,6 +2123,7 @@ tui:
         export: Exportálás
         filter: Szűrő
         help: Súgó
+        issues: Problémák
         next_attention: Következő teendő
         next_page: Következő oldal
         next_step: Következő lépés
@@ -2130,6 +2151,19 @@ tui:
         resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
         verify: Ellenőrizze a bevallást
       next_line: 'Következő: {action} [{key}]'
+      not_writable:
+        absent_from_admission: Ez a rovat itt nem szerkeszthető.
+        capability_unavailable: Ennek a rovatnak a szerkesztése ebben a verzióban
+          még nem érhető el.
+        computed_by_formula: A Cadrumo más rovatokból számítja ki.
+        override_policy_undecided: Még nincs eldöntve, hogy ez a forrás felülírható-e
+          kézzel.
+        row_field_template: Ez a rovat ismétlődő sorok egy oszlopát jelöli; a sorokat
+          ott adja meg, ahol vezeti őket.
+        schema_declared_read_only: A hivatalos minta nem engedi, hogy ebbe a rovatba
+          írjanak.
+        source_locked: Az Ön nyilvántartását követi; ott javítsa, majd számoljon újra.
+        value_channel_unavailable: Dátumot és évet itt még nem lehet megadni.
       operation:
         done: Kész. A bevallás frissült.
         not_done: Nem fejeződött be; a módosításai megmaradtak.
@@ -2167,12 +2201,41 @@ tui:
         quarter_3: '{year}. III. negyedév'
         quarter_4: '{year}. IV. negyedév'
       read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
+      rebase:
+        changed: 'Most más értéket mutató rovatok: {count}.'
+        dropped: 'Már nem alkalmazható, ezért eltávolított módosítások: {count}.'
+        moved: A bevallás megváltozott, mióta előkészítette a módosításait.
+        still_moving: A bevallás még változik. Várjon egy kicsit, és nézze át újra
+          a módosításait [R].
       repeating: 'Részletező sorok: {count}'
       repeating_unknown: Ezek a sorok itt még nem jeleníthetők meg.
       result: 'Eredmény [{box}]: {value}'
+      result_diff:
+        close: Bezárás
+        column:
+          why: Ok
+        count:
+          calculated: 'újraszámítva: {count}'
+          other: 'egyéb változások: {count}'
+          sourced: 'a forrásaiból: {count}'
+          yours: 'az Ön módosításai: {count}'
+        group:
+          calculated: Újraszámítva
+          other: Egyéb változás
+          sourced: A forrásaiból
+          yours: Az Ön módosítása
+        not_shown: nem látható
+        nothing_changed: Kész. Egyetlen rovat sem változott.
+        title: 'Megváltozott rovatok: {count}'
       review:
+        acknowledge: Ellenőriztem, mit tesz az alkalmazás
+        and_more: '{shown} és még {count}'
         apply: Alkalmazás és újraszámítás
         back: Vissza a szerkesztéshez
+        before_changed: a rovat megváltozott, mióta ezt előkészítette
+        blocked: Az alkalmazás előtt oldja meg a ▲ jellel jelölteket.
+        check_failed: A módosításait nem sikerült ellenőrizni. Megmaradtak; próbálja
+          újra.
         column:
           after: Utána
           before: Előtte
@@ -2190,9 +2253,28 @@ tui:
           set_filer: módosítja az Ön értékét
           set_nothing: új érték
           set_source: felülírja az importált értéket
+        finding:
+          clear_of_source_fed_casilla: Ezt a rovatot egy forrás tölti ki, ezért nem
+            üríthető ki. Állítsa inkább vissza a forrására.
+          intent_not_admitted: Ez a rovat így nem módosítható.
+          nothing_to_restore: Ez a rovat már a forrása értékét mutatja.
+          required_empty: A bevallásnak szüksége van erre a rovatra, és üres marad.
+        findings_heading: 'Amit az ellenőrzés talált:'
         none: Nincs alkalmazandó módosítás.
         nothing_saved: Semmi sem mentődik, amíg meg nem nyomja az „Alkalmazás és újraszámítás”
           gombot.
+        operator_entries_at_risk: 'Ezt a bevallást legutóbb a munkafelületen kívül
+          számították ki, ezért a Cadrumo nem tudja, mely értékeit írta be Ön. Az
+          alkalmazás csak az itt felsorolt módosításokat tartja meg. Ezekben a rovatokban
+          olyan értékek vannak, amelyekről nincs nyilvántartva, hogy bárki beírta
+          volna, és visszaállnak arra, amit a forrásuk mond (rovatok: {count}): {boxes}.
+          Ha meg szeretne tartani egyet, előbb adja meg az értékét.'
+        operator_entries_unknown: Ezt a bevallást legutóbb a munkafelületen kívül
+          számították ki, ezért a Cadrumo nem tudja, mely értékeit írta be Ön. Az
+          alkalmazás csak az itt felsorolt módosításokat tartja meg; minden más, máshol
+          beírt érték visszaáll arra, amit a forrása mond.
+        rebased: 'A bevallás megváltozott, miután előkészítette ezeket a módosításokat.
+          Nézze át újra a megjelölt sorokat (megváltozott: {count}).'
         title: 'Alkalmazandó módosítások: {count}'
       section:
         pending: '{heading} · teendő: {count}'

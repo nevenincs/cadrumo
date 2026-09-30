@@ -54,6 +54,7 @@ from ..ports import (
     WorkbenchExportRequest,
     WorkbenchParsed,
     WorkbenchParseOutcome,
+    WorkbenchPreflight,
     WorkbenchRefused,
 )
 
@@ -251,6 +252,7 @@ class FakeReader:
     filed: bool = False
     loads: int = 0
     cards: list[str] = field(default_factory=list)
+    refusal: str | None = None
 
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         """Return the fixed form."""
@@ -270,6 +272,10 @@ class FakeReader:
             feeds=(),
         )
 
+    def edit_refusal(self) -> str | None:
+        """Why editing is unavailable, as the test set it."""
+        return self.refusal
+
 
 @dataclass
 class FakeActions:
@@ -287,6 +293,9 @@ class FakeActions:
     exports: list[WorkbenchExportRequest] = field(default_factory=list)
     asks_elections: bool = False
     refusal: CadrumoError | None = None
+    preflight_answer: WorkbenchPreflight = field(default_factory=WorkbenchPreflight)
+    checked: list[tuple[WorkbenchChange, ...]] = field(default_factory=list)
+    refreshed: int = 0
 
     def parse(self, field: ModeloFormField, lexeme: str, language: OutputLanguage) -> WorkbenchParseOutcome:
         """Read a Spanish decimal, or refuse with a fix-it sentence."""
@@ -295,6 +304,11 @@ class FakeActions:
         except InvalidOperation:
             return WorkbenchRefused(message="Escribe un importe, por ejemplo 1.234,56.")
         return WorkbenchParsed(value=value, display=f"{value:.2f}".replace(".", ",") + "\u00a0\u20ac")
+
+    async def preflight(self, changes: tuple[WorkbenchChange, ...]) -> WorkbenchPreflight:
+        """Record the checked changes and answer what the test set."""
+        self.checked.append(changes)
+        return self.preflight_answer
 
     async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
         """Record the submitted changes, then fail as an unavailable service would."""
@@ -335,6 +349,10 @@ class FakeActions:
     async def export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
         """No export ever settles in these tests."""
         return None
+
+    def refresh_product(self) -> None:
+        """Count the product refreshes asked for."""
+        self.refreshed += 1
 
 
 __all__ = ["FakeActions", "FakeReader", "form_field", "synthetic_form"]

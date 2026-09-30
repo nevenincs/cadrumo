@@ -361,11 +361,13 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormTextDisclosure,
     )
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
+    from cadrumo.entrypoints.tui.modelo.workbench.installed import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
     from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
+    from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
-    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import Attention
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, Attention
     from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
 
     root = "tui.modelo.workbench"
@@ -373,6 +375,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("attention", tuple(item.value for item in Attention)),
         ("origin", tuple(item.value for item in ModeloFormOrigin)),
         ("editability", tuple(item.value for item in ModeloFormEditability)),
+        ("not_writable", NOT_WRITABLE_REASONS),
         (
             "disclosure",
             tuple(item.value for item in ModeloFormTextDisclosure if item is not ModeloFormTextDisclosure.LOCALIZED),
@@ -388,6 +391,9 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("editor.placeholder", EDITOR_HINT_KINDS),
         ("editor.format", EDITOR_HINT_KINDS),
         ("review.effect", REVIEW_EFFECTS),
+        ("review.finding", WORDED_FINDING_CODES),
+        ("result_diff.group", tuple(item.value for item in ResultGroup)),
+        ("result_diff.count", tuple(item.value for item in ResultGroup)),
         ("sources.family", tuple(item.value for item in SourceFamily)),
         ("sources.policy", tuple(item.value for item in SourceOverridePolicy)),
         ("period", PERIOD_WORD_NAMES),

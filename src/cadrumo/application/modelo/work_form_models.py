@@ -28,7 +28,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -46,6 +46,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationCompletenessStatus
 from .calculation_report import CalculationReportRowRole
 from .source_policy import SourcePolicyV1
 from .work_review import ModeloWorkProgress
@@ -121,6 +122,10 @@ class ModeloFormOrigin(StrEnum):
     #: A value the calculation holds that nobody is proven to have entered.
     DEFAULT_TO_CONFIRM = "default_to_confirm"
     ENTERED = "entered"
+
+
+ABSENT_FROM_ADMISSION: Final[str] = "absent_from_admission"
+"""The not-writable reason of a field the edit admission does not name at all."""
 
 
 class ModeloFormEditability(StrEnum):
@@ -203,6 +208,7 @@ class ModeloFormField(_FormModel):
     not_writable_reason: str | None = None
     required: bool
     role: CalculationReportRowRole | None = None
+    #: The bindings that feed the field; on a bound casilla the first is the one an override replaces.
     bindings: tuple[ModeloFormBinding, ...] = ()
     formula_id: FormulaId | None = None
     formula_operands: tuple[str, ...] = ()
@@ -217,6 +223,25 @@ class ModeloFormField(_FormModel):
         if (self.editability is ModeloFormEditability.NOT_WRITABLE) != (self.not_writable_reason is not None):
             raise ValueError("a not-writable reason belongs to, and only to, a not-writable field")
         return self
+
+
+_OVERRIDE_EDITABILITIES = frozenset({ModeloFormEditability.OVERRIDABLE_SOURCE, ModeloFormEditability.EDITABLE_OVERRIDE})
+
+
+def edit_address(field: ModeloFormField) -> ModeloFormAddressV1:
+    """Return the address a change to ``field`` is submitted to.
+
+    A bound casilla is shown by its box, but what the filer may replace is the
+    value of the binding that feeds it, so an override is addressed to that
+    binding; every other field is edited at its own address.
+    """
+    if (
+        isinstance(field.address, ModeloFormCasillaAddressV1)
+        and field.editability in _OVERRIDE_EDITABILITIES
+        and field.bindings
+    ):
+        return ModeloFormBindingAddressV1(binding_id=field.bindings[0].binding_id)
+    return field.address
 
 
 class ModeloFormCounts(_FormModel):
@@ -343,6 +368,18 @@ class ModeloFormUnplacedField(_FormModel):
     reason: FormUnplacedReason | None
 
 
+class ModeloFormIssue(_FormModel):
+    """One finding of the current calculation's latest verification, with the box it concerns.
+
+    The finding keeps its catalogue key and typed facts, so the frontend renders
+    it in the filer's language; ``box`` is the official box number when the
+    finding names a casilla the form shows.
+    """
+
+    finding: ModeloVerificationFinding
+    box: str | None = None
+
+
 class ModeloWorkForm(_FormModel):
     """The editor form of one work target in one language."""
 
@@ -364,6 +401,10 @@ class ModeloWorkForm(_FormModel):
     progress: ModeloWorkProgress
     operator_entries_known: bool
     edit_admitted: bool
+    #: The current calculation's latest verification verdict; ``None`` when it has not been verified.
+    verification: VerificationCompletenessStatus | None = None
+    #: That verification's findings, blocking first, whether or not they name a casilla.
+    issues: tuple[ModeloFormIssue, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -398,6 +439,7 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 
 __all__ = [
+    "ABSENT_FROM_ADMISSION",
     "ModeloFormAddressV1",
     "ModeloFormBinding",
     "ModeloFormBindingAddressV1",
@@ -414,6 +456,7 @@ __all__ = [
     "ModeloFormGridColumn",
     "ModeloFormGridRow",
     "ModeloFormInspectionReason",
+    "ModeloFormIssue",
     "ModeloFormLayoutProvenance",
     "ModeloFormOrigin",
     "ModeloFormPage",
@@ -426,5 +469,6 @@ __all__ = [
     "ModeloFormUnplacedField",
     "ModeloWorkForm",
     "address_key",
+    "edit_address",
     "section_fields",
 ]

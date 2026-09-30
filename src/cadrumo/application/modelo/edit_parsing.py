@@ -59,6 +59,9 @@ from .edit_value_grammar import (
     ModeloEditValueGrammarV1,
 )
 
+MAX_EDIT_LEXEME_LENGTH: Final[int] = 512
+"""The longest entry the parser reads; an editor stops the filer typing past it."""
+
 
 class ModeloEditParseRequestV1(EditModel):
     """One typed lexeme for one address, in the locale the operator typed it in.
@@ -69,7 +72,7 @@ class ModeloEditParseRequestV1(EditModel):
 
     address: ModeloEditValueAddressV1
     entry_locale: OutputLanguage
-    lexeme: Annotated[str, Field(max_length=512, exclude=True, repr=False)]
+    lexeme: Annotated[str, Field(max_length=MAX_EDIT_LEXEME_LENGTH, exclude=True, repr=False)]
 
 
 @dataclass(frozen=True, slots=True)

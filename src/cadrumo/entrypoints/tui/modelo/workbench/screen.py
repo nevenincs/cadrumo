@@ -29,18 +29,26 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
 
+from .....application.modelo.action_errors import ModeloEditBaselineStaleError
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from .....application.modelo.operation_definitions import (
+    MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+)
 from .....application.modelo.work_form_models import (
+    ModeloFormAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormLayoutProvenance,
+    ModeloFormOrigin,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
+    edit_address,
     section_fields,
 )
-from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
+from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
@@ -59,6 +67,7 @@ from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303Filing
 from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, value_text
 from .editor import CasillaEditorScreen, EditorDecision
 from .export import WorkbenchExportScreen
+from .issues import WorkbenchIssuesScreen
 from .keys import describe_bindings
 from .page_items import (
     WorkbenchFilter,
@@ -69,12 +78,19 @@ from .page_items import (
     section_nav_text,
     workbench_pages,
 )
-from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchChangeKind, WorkbenchExportRequest
+from .ports import (
+    ModeloWorkbenchActionsV1,
+    ModeloWorkbenchReaderV1,
+    WorkbenchChangeKind,
+    WorkbenchExportRequest,
+    WorkbenchPreflight,
+)
 from .progress import NextAction, defaults_text, next_action_text, stepper_text, workbench_progress
-from .review import EditReviewScreen, ReviewDecision
-from .session import StagedChange, StageRefusal, WorkbenchEditSession
+from .result import WorkbenchResultScreen, result_lines
+from .review import EditReviewScreen, ReviewDecision, ReviewNote, at_risk_text
+from .session import Rebase, StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
-from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_words_key, origin_words_key
+from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_text, origin_words_key
 from .wording import modelo_number, modelo_title, period_words
 
 if TYPE_CHECKING:
@@ -94,10 +110,15 @@ _FOOTER_PRIORITY: Final[tuple[str, ...]] = (
     "left_square_bracket",
     "right_square_bracket",
     "f",
+    "i",
     "c",
     "e",
 )
 """Footer keys, most needed first; the footer shows as many as fit and the expanded help names them all."""
+_VALUE_CHANGING_OPERATIONS: Final[frozenset[str]] = frozenset(
+    {str(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID), str(MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID)}
+)
+"""Operations after which the workbench shows which boxes now read differently."""
 _NAV_MIN_LABEL: Final[int] = 12
 _FRAGMENT_SEPARATOR: Final[str] = " … "
 _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
@@ -108,7 +129,7 @@ _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
 _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.APPLY: "R",
     NextAction.FILL: "n",
-    NextAction.RESOLVE: "n",
+    NextAction.RESOLVE: "i",
     NextAction.CALCULATE: "F8",
     NextAction.VERIFY: "F8",
     NextAction.FILE: "F8",
@@ -124,6 +145,7 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "f8": "tui.modelo.workbench.key.next_step",
     "c": "tui.modelo.workbench.key.calculate",
     "e": "tui.modelo.workbench.key.export",
+    "i": "tui.modelo.workbench.key.issues",
 }
 _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
@@ -202,6 +224,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         Binding("f8", "next_step", "", show=False),
         Binding("c", "calculate", "", show=False),
         Binding("e", "export", "", show=False),
+        Binding("i", "issues", "", show=False),
     ]
 
     def __init__(
@@ -442,7 +465,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         field = entry.field
         lines = [self._help_title(entry)]
         state = f"{ORIGIN_GLYPHS[field.origin]} {tr(origin_words_key(field.origin))}"
-        lines.append(f"{state} · {tr(editability_words_key(field.editability))}")
+        lines.append(f"{state} · {editability_text(field)}")
         lines.append(field.help or tr("tui.modelo.workbench.help.no_explanation"))
         card = None
         if isinstance(field.address, ModeloFormCasillaAddressV1):
@@ -560,6 +583,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _notice(self, message: str) -> None:
         self.query_one("#wb-notice", Static).update(message)
 
+    def _edit_unavailable(self) -> None:
+        refusal = self._reader.edit_refusal()
+        self._notice(refusal or tr("tui.modelo.workbench.editability.no_admission"))
+
     def _refresh_after_staging(self) -> None:
         self._render_progress()
         self._render_navigator()
@@ -571,10 +598,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         actions = self._actions
         form = self.form
         if actions is None or form is None or not form.edit_admitted:
-            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            self._edit_unavailable()
             return
         if field.editability not in TYPED_EDITABILITIES:
-            self._notice(tr(editability_words_key(field.editability)))
+            self._notice(editability_text(field))
             return
         card = None
         if isinstance(field.address, ModeloFormCasillaAddressV1):
@@ -663,15 +690,98 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._leave_then(lambda: navigate(target))
 
     def action_review(self) -> None:
-        """Open the review of every staged change."""
+        """Check every staged change with the application, then open their review."""
         if not self._session.dirty:
             self._notice(tr("tui.modelo.workbench.review.none"))
             return
-        self.app.push_screen(EditReviewScreen(self._session.changes), self._review_closed)
+        self.run_worker(self._open_review, group="workbench-review", exclusive=True)
+
+    async def _open_review(self, *, rebased: bool = False) -> None:
+        actions = self._actions
+        preflight = WorkbenchPreflight()
+        if actions is not None:
+            try:
+                preflight = await actions.preflight(self._session.payload())
+            except CadrumoError as refusal:
+                self._notice(resolve_error_message(refusal))
+                return
+            except Exception as failure:
+                get_logger(__name__).error(
+                    "modelo workbench could not check the staged changes: %s",
+                    type(failure).__qualname__,
+                    exc_info=True,
+                )
+                self._notice(tr("tui.modelo.workbench.review.check_failed"))
+                return
+        if preflight.stale:
+            if rebased:
+                self._notice(tr("tui.modelo.workbench.rebase.still_moving"))
+                return
+            if await self._rebase() and self._session.dirty:
+                await self._open_review(rebased=True)
+            return
+        form = self.form
+        at_risk = None
+        if form is not None and (preflight.operator_entries_unknown or self._entries_unknown(form)):
+            staged = frozenset(change.key for change in self._session.changes)
+            at_risk = self._unattributed_boxes(form, excluding=staged)
+        notes = tuple(
+            ReviewNote(box=self._box_of(finding.address), message=finding.message, blocking=finding.blocking)
+            for finding in preflight.findings
+        )
+        self.app.push_screen(EditReviewScreen(self._session.changes, notes=notes, at_risk=at_risk), self._review_closed)
+
+    @staticmethod
+    def _entries_unknown(form: ModeloWorkForm) -> bool:
+        """Whether the declaration holds a calculation that does not record which values the filer typed."""
+        return form.calculation_revision_id is not None and not form.operator_entries_known
+
+    @staticmethod
+    def _unattributed_boxes(form: ModeloWorkForm, *, excluding: frozenset[AddressKey] = frozenset()) -> tuple[str, ...]:
+        """The boxes holding a value nobody is recorded as having typed, which a recalculation returns to source."""
+        return tuple(
+            f"[{field.box}]" if field.box else field.label.text
+            for field in form.fields()
+            if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM and address_key(field.address) not in excluding
+        )
+
+    def _box_of(self, address: ModeloFormAddressV1 | None) -> str | None:
+        form = self.form
+        if address is None or form is None:
+            return None
+        for field in form.fields():
+            if field.address == address or edit_address(field) == address:
+                return field.box or field.label.text
+        return None
+
+    async def _rebase(self) -> bool:
+        """Read the declaration again and keep the staged changes that still apply, saying what moved."""
+        try:
+            load = await asyncio.to_thread(self._reader.load, self._language)
+        except Exception as failure:
+            get_logger(__name__).error(
+                "modelo workbench could not read its declaration again: %s", type(failure).__qualname__, exc_info=True
+            )
+            self._notice(tr("tui.modelo.workbench.read_failed"))
+            return False
+        outcome = self._session.rebase(load.form)
+        self.show_load(load)
+        self._notice(self._rebase_text(outcome))
+        return True
+
+    @staticmethod
+    def _rebase_text(outcome: Rebase) -> str:
+        parts = [tr("tui.modelo.workbench.rebase.moved")]
+        if outcome.changed:
+            parts.append(tr("tui.modelo.workbench.rebase.changed", count=len(outcome.changed)))
+        if outcome.dropped:
+            parts.append(tr("tui.modelo.workbench.rebase.dropped", count=len(outcome.dropped)))
+        return " ".join(parts)
 
     def _review_closed(self, decision: ReviewDecision | None) -> None:
         actions = self._actions
         if decision is ReviewDecision.APPLY and actions is not None:
+            self._session.acknowledge()
             changes = self._session.payload()
             self._run_operation(partial(actions.apply, changes), applies_changes=True)
         elif decision is ReviewDecision.DISCARD:
@@ -692,10 +802,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         action = progress.next_action
         if action is NextAction.APPLY:
             self.action_review()
+        elif action is NextAction.RESOLVE and load.form.verification is not None:
+            self.action_issues()
         elif action in {NextAction.FILL, NextAction.RESOLVE}:
             self.query_one(CasillaList).action_attention(1)
         elif actions is None:
-            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            self._edit_unavailable()
         elif action is NextAction.CALCULATE:
             self._calculate(actions)
         elif action is NextAction.VERIFY:
@@ -707,7 +819,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Recalculate the declaration now, keeping the filer's values."""
         actions = self._actions
         if actions is None:
-            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            self._edit_unavailable()
             return
         if self._session.dirty:
             self._notice(tr("tui.modelo.workbench.calculate.apply_first"))
@@ -715,6 +827,29 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._calculate(actions)
 
     def _calculate(self, actions: ModeloWorkbenchActionsV1) -> None:
+        """Recalculate, first asking the filer to accept losing values nobody is recorded as having typed."""
+        form = self.form
+        if form is None or not self._entries_unknown(form):
+            self._calculate_now(actions)
+            return
+
+        def closed(proceed: bool | None) -> None:
+            if proceed:
+                self._calculate_now(actions)
+            else:
+                self._notice(tr("tui.modelo.workbench.calculate.kept"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("tui.modelo.workbench.calculate.at_risk_title"),
+                message=at_risk_text(self._unattributed_boxes(form)),
+                confirm_label=tr("tui.modelo.workbench.calculate.at_risk_proceed"),
+                cancel_label=tr("tui.modelo.workbench.calculate.at_risk_cancel"),
+            ),
+            closed,
+        )
+
+    def _calculate_now(self, actions: ModeloWorkbenchActionsV1) -> None:
         need = actions.calculation_evidence()
         if need is None:
             self._run_operation(actions.calculate)
@@ -733,12 +868,27 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             answered,
         )
 
+    def action_issues(self) -> None:
+        """List what the last verification found, and go to the box of the finding the filer picks."""
+        form = self.form
+        if form is None:
+            return
+        if form.verification is None:
+            self._notice(tr("tui.modelo.workbench.issues.verdict.none"))
+            return
+
+        def closed(key: AddressKey | None) -> None:
+            if key is not None:
+                self._go_to(key)
+
+        self.app.push_screen(WorkbenchIssuesScreen(form), closed)
+
     def action_export(self) -> None:
         """Export the verified declaration where and how the filer asks."""
         actions = self._actions
         load = self._load
         if actions is None or load is None:
-            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            self._edit_unavailable()
             return
         if not load.verified:
             self._notice(tr("tui.modelo.workbench.export.verify_first"))
@@ -784,6 +934,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         try:
             controller = await submit()
+        except ModeloEditBaselineStaleError:
+            self._operation_in_flight = False
+            if applies_changes and await self._rebase() and self._session.dirty:
+                await self._open_review(rebased=True)
+            return
         except CadrumoError as refusal:
             self._operation_in_flight = False
             self._notice(resolve_error_message(refusal))
@@ -812,15 +967,50 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             )
             message = tr("tui.modelo.workbench.operation.not_done")
             self._notice(message if explanation is None else f"{message} {explanation}")
+            if applies_changes:
+                self.run_worker(self._rebase, group="workbench-read", exclusive=True)
             return
+        yours = frozenset(change.key for change in self._session.changes) if applies_changes else frozenset()
         if applies_changes:
             self._session.discard()
         self._notice(tr("tui.modelo.workbench.operation.done"))
         projection = outcome.view_model.projection
         actions = self._actions
+        if actions is not None:
+            self.run_worker(partial(asyncio.to_thread, actions.refresh_product), group="workbench-refresh")
         if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and actions is not None:
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
-        self.run_worker(self._read, group="workbench-read", exclusive=True)
+        changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
+        before = self._load if changes_values else None
+        self.run_worker(
+            partial(self._read_after, before, yours),
+            group="workbench-read",
+            exclusive=True,
+        )
+
+    async def _read_after(self, before: ModeloWorkFormLoadV1 | None, yours: frozenset[AddressKey]) -> None:
+        """Read the declaration again and, after a recalculation, show what it changed."""
+        await self._read()
+        after = self._load
+        if before is None or after is None or after is before:
+            return
+        changes = modelo_work_form_changes(before.form, after.form)
+        if not changes:
+            self._notice(tr("tui.modelo.workbench.result_diff.nothing_changed"))
+            return
+        lines = result_lines(
+            changes,
+            before=before.form,
+            after=after.form,
+            yours=yours,
+            language=self._language,
+        )
+
+        def closed(key: AddressKey | None) -> None:
+            if key is not None:
+                self._go_to(key)
+
+        self.app.push_screen(WorkbenchResultScreen(lines), closed)
 
     async def _state_export_result(
         self, actions: ModeloWorkbenchActionsV1, projection: OperationPublicProjectionV1

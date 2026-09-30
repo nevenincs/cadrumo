@@ -17,7 +17,14 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from .....application.modelo.work_form_models import ModeloFormEditability, ModeloFormOrigin
+from .....application.modelo.edit_models import ModeloEditNonWritableReason
+from .....application.modelo.work_form_models import (
+    ABSENT_FROM_ADMISSION,
+    ModeloFormEditability,
+    ModeloFormField,
+    ModeloFormOrigin,
+)
+from .....core.i18n.render import tr
 
 
 class ColourRole(StrEnum):
@@ -105,9 +112,18 @@ def origin_words_key(origin: ModeloFormOrigin) -> str:
     return f"tui.modelo.workbench.origin.{origin.value}"
 
 
-def editability_words_key(editability: ModeloFormEditability) -> str:
-    """The catalogue key explaining what may be done about a field."""
-    return f"tui.modelo.workbench.editability.{editability.value}"
+NOT_WRITABLE_REASONS: Final[tuple[str, ...]] = (
+    *(reason.value for reason in ModeloEditNonWritableReason),
+    ABSENT_FROM_ADMISSION,
+)
+"""Every reason a field that cannot be edited here gives for it."""
+
+
+def editability_text(field: ModeloFormField) -> str:
+    """Say what may be done about a field; one that cannot be edited here says why."""
+    if field.editability is ModeloFormEditability.NOT_WRITABLE and field.not_writable_reason is not None:
+        return tr(f"tui.modelo.workbench.not_writable.{field.not_writable_reason}")
+    return tr(f"tui.modelo.workbench.editability.{field.editability.value}")
 
 
 def attention_words_key(attention: Attention) -> str:
@@ -133,12 +149,13 @@ __all__ = [
     "ATTENTION_GLYPHS",
     "ATTENTION_ROLES",
     "NEEDS_ATTENTION",
+    "NOT_WRITABLE_REASONS",
     "ORIGIN_GLYPHS",
     "ORIGIN_ROLES",
     "TYPED_EDITABILITIES",
     "Attention",
     "ColourRole",
     "attention_words_key",
-    "editability_words_key",
+    "editability_text",
     "origin_words_key",
 ]

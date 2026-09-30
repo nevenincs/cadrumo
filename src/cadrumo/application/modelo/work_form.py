@@ -62,6 +62,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
 from .edit_models import (
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
@@ -72,6 +73,7 @@ from .edit_models import (
 )
 from .source_policy import SourceOverridePolicy, source_policy
 from .work_form_models import (
+    ABSENT_FROM_ADMISSION,
     ModeloFormBinding,
     ModeloFormBindingAddressV1,
     ModeloFormBindingInputsBlock,
@@ -87,6 +89,7 @@ from .work_form_models import (
     ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormInspectionReason,
+    ModeloFormIssue,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
     ModeloFormPage,
@@ -121,6 +124,10 @@ _BINDING_DATA_TYPE: Final[Mapping[str, str]] = {
     "date": "date",
     "enum": "text",
 }
+
+
+_BOOLEAN_TOKENS: Final[Mapping[str, bool]] = {"true": True, "1": True, "false": False, "0": False}
+"""The spellings a yes-or-no binding value is stored under."""
 
 
 class ModeloWorkFormLayoutError(InternalInvariantError):
@@ -309,7 +316,7 @@ def _casilla_editability(
         return ModeloFormEditability.EDITABLE_VALUE, None
     if isinstance(entry, ModeloEditNonWritableScalarSurfaceEntryV1):
         return ModeloFormEditability.NOT_WRITABLE, entry.reason.value
-    return ModeloFormEditability.NOT_WRITABLE, "absent_from_admission"
+    return ModeloFormEditability.NOT_WRITABLE, ABSENT_FROM_ADMISSION
 
 
 def _bound_editability(row: ModeloWorkReviewCasilla, context: _FormContext) -> tuple[ModeloFormEditability, str | None]:
@@ -338,7 +345,7 @@ def _bound_editability(row: ModeloWorkReviewCasilla, context: _FormContext) -> t
         return editable, None
     if isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1):
         return ModeloFormEditability.NOT_WRITABLE, entry.reason.value
-    return ModeloFormEditability.NOT_WRITABLE, "absent_from_admission"
+    return ModeloFormEditability.NOT_WRITABLE, ABSENT_FROM_ADMISSION
 
 
 def _casilla_field(
@@ -397,6 +404,7 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
         None if owner_casilla is None else _localized(owner_casilla.localization_keys, context.language)
     ) or ModeloFormText(text=binding_id, disclosure=ModeloFormTextDisclosure.TECHNICAL)
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
+    data_type = _BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
     policy = source_policy(binding.source)
     editability, reason = _binding_input_editability(binding_id, policy.override_policy, context)
     overridden = context.overridden is not None and binding_id in context.overridden
@@ -418,8 +426,8 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
         box=None,
         label=label,
         help=None,
-        data_type=_BINDING_DATA_TYPE.get(binding.value.data_type.value, "text"),
-        value=raw,
+        data_type=data_type,
+        value=_binding_value(raw, data_type),
         origin=origin,
         editability=editability,
         not_writable_reason=reason,
@@ -427,6 +435,15 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
         bindings=(ModeloFormBinding(binding_id=binding.id, policy=policy, resolved=raw is not None),),
         legal_refs=tuple(binding.legal_refs),
     )
+
+
+def _binding_value(raw: str | None, data_type: str) -> ModeloFormScalar:
+    """Read a stored binding value as the value it stands for; a yes-or-no is stored as a token."""
+    if raw is not None and data_type == "boolean":
+        token = raw.strip().lower()
+        if token in _BOOLEAN_TOKENS:
+            return _BOOLEAN_TOKENS[token]
+    return raw
 
 
 def _binding_input_editability(
@@ -448,7 +465,7 @@ def _binding_input_editability(
         return editable, None
     if isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1):
         return ModeloFormEditability.NOT_WRITABLE, entry.reason.value
-    return ModeloFormEditability.NOT_WRITABLE, "absent_from_admission"
+    return ModeloFormEditability.NOT_WRITABLE, ABSENT_FROM_ADMISSION
 
 
 def _counts(fields: Iterable[ModeloFormField]) -> ModeloFormCounts:
@@ -769,6 +786,24 @@ def build_modelo_work_form(
         progress=review.progress,
         operator_entries_known=entered_casilla_ids is not None,
         edit_admitted=permitted_surface is not None,
+        verification=review.verification_outcome,
+        issues=_issues(review, [*form_fields, *working, *(item.field for item in unplaced)]),
+    )
+
+
+def _issues(review: ModeloWorkReview, fields: Iterable[ModeloFormField]) -> tuple[ModeloFormIssue, ...]:
+    """The review's verification findings, blocking first, each with the box it names."""
+    boxes = {
+        str(field.address.casilla_id): field.box
+        for field in fields
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+    ordered = sorted(
+        review.findings, key=lambda finding: finding.severity is not ModeloVerificationFindingSeverity.BLOCKING
+    )
+    return tuple(
+        ModeloFormIssue(finding=finding, box=None if finding.casilla_id is None else boxes.get(str(finding.casilla_id)))
+        for finding in ordered
     )
 
 
@@ -833,6 +868,8 @@ def _inspection_form(
         progress=review.progress,
         operator_entries_known=context.entered is not None,
         edit_admitted=False,
+        verification=review.verification_outcome,
+        issues=_issues(review, fields),
     )
 
 

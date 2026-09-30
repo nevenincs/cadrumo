@@ -30,21 +30,42 @@ from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1, build_
 from .....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from .....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
+    ModeloEditAddressV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
+    ModeloEditFindingSeverity,
+    ModeloEditFindingV1,
     ModeloEditParsedValueV1,
+    ModeloEditParseReason,
     ModeloEditParseRefusalV1,
+    ModeloEditRefusedV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditStaleBaselineRefusalV1,
     ModeloScalarEditIntentV1,
 )
 from .....application.modelo.edit_parse_text import parse_refusal_text
 from .....application.modelo.edit_parsing import ModeloEditParseRequestV1, parse_modelo_edit_lexeme
+from .....application.modelo.edit_preflight import (
+    CLEAR_OF_SOURCE_FED_CASILLA,
+    INTENT_NOT_ADMITTED,
+    NOTHING_TO_RESTORE,
+    OPERATOR_LAYER_UNKNOWN,
+    OVERRIDES_SOURCE_VALUE,
+    REQUIRED_EMPTY,
+    VALUE_REFUSED_PREFIX,
+)
 from .....application.modelo.value_presentation import format_casilla_value
 from .....application.modelo.verification_actions import granting_verification_report
-from .....application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField
+from .....application.modelo.work_form_models import (
+    ModeloFormAddressV1,
+    ModeloFormBindingAddressV1,
+    ModeloFormCasillaAddressV1,
+    ModeloFormField,
+    edit_address,
+)
 from .....application.modelo.work_form_service import (
     ModeloWorkFormLoadV1,
     load_modelo_work_form,
@@ -54,7 +75,7 @@ from .....core.casilla_id import CasillaId
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from .....core.identity.bucket import BucketId
 from .....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....domain.modelos.protocols import (
@@ -72,8 +93,10 @@ from .ports import (
     WorkbenchChangeKind,
     WorkbenchExportOffer,
     WorkbenchExportRequest,
+    WorkbenchFinding,
     WorkbenchParsed,
     WorkbenchParseOutcome,
+    WorkbenchPreflight,
     WorkbenchRefused,
 )
 from .screen import ModeloWorkbenchScreen
@@ -97,6 +120,15 @@ _SCALAR_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditScalarIntentKind]] =
         WorkbenchChangeKind.RESTORE: ModeloEditScalarIntentKind.RESTORE_SOURCE_VALUE,
     }
 )
+WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
+    INTENT_NOT_ADMITTED,
+    CLEAR_OF_SOURCE_FED_CASILLA,
+    REQUIRED_EMPTY,
+    NOTHING_TO_RESTORE,
+)
+"""The check's findings the review says in its own sentence; a refused value says how to fix it instead."""
+#: Findings the review already states in its own words, so the check does not repeat them.
+_STATED_BY_THE_REVIEW: Final[frozenset[str]] = frozenset({OPERATOR_LAYER_UNKNOWN, OVERRIDES_SOURCE_VALUE})
 #: A binding input the filer supplied is removed whether they clear it or give it back to its source.
 _BINDING_KINDS: Final[Mapping[WorkbenchChangeKind, ModeloEditBindingIntentKind]] = MappingProxyType(
     {
@@ -125,6 +157,8 @@ class _ReadState:
     verification_report_id: str | None
     asks_m303_evidence: bool
     registry_revision_id: str
+    #: Why the declaration cannot be edited, in the filer's words; ``None`` when it can.
+    edit_refusal: str | None = None
 
 
 class InstalledModeloWorkbench:
@@ -182,6 +216,11 @@ class InstalledModeloWorkbench:
         )
         self._state = _ReadState(
             baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
+            edit_refusal=(
+                resolve_error_message(modelo_edit_refusal_error(admission.refusal))
+                if isinstance(admission, ModeloEditRefusedV1)
+                else None
+            ),
             calculation_revision_id=head_id,
             verification_report_id=None if report is None else str(report.verification_report_id),
             asks_m303_evidence=str(declaration.modelo) == _M303
@@ -189,6 +228,11 @@ class InstalledModeloWorkbench:
             registry_revision_id=str(form.registry_revision_id),
         )
         return loaded
+
+    def edit_refusal(self) -> str | None:
+        """Why the declaration last read cannot be edited, or ``None`` when it can or was not asked."""
+        state = self._state
+        return None if state is None else state.edit_refusal
 
     def help_card(self, casilla_id: CasillaId, language: OutputLanguage) -> ModeloCasillaHelpCardV1:
         """Assemble one casilla's help from the snapshot of the revision last read."""
@@ -228,10 +272,11 @@ class InstalledModeloWorkbench:
         state = self._state
         if state is None or state.baseline is None:
             return WorkbenchRefused(message=tr("tui.modelo.workbench.editability.no_admission"))
+        target = edit_address(field)
         address = (
-            ModeloEditScalarAddressV1(casilla_id=field.address.casilla_id)
-            if isinstance(field.address, ModeloFormCasillaAddressV1)
-            else ModeloEditBindingAddressV1(binding_id=field.address.binding_id)
+            ModeloEditScalarAddressV1(casilla_id=target.casilla_id)
+            if isinstance(target, ModeloFormCasillaAddressV1)
+            else ModeloEditBindingAddressV1(binding_id=target.binding_id)
         )
         result = parse_modelo_edit_lexeme(
             ModeloEditParseRequestV1(address=address, entry_locale=language, lexeme=lexeme),
@@ -247,34 +292,35 @@ class InstalledModeloWorkbench:
             return WorkbenchRefused(message=parse_refusal_text(refusal, language))
         return WorkbenchRefused(message=resolve_error_message(modelo_edit_refusal_error(refusal)))
 
-    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
-        """Submit the staged changes as typed intents against the admitted baseline."""
+    def _baseline(self) -> ModeloEditBaselineV1:
         state = self._state
         if state is None or state.baseline is None:
             raise ModeloLifecycleActionUnavailableError(translated_message=_EDIT_UNAVAILABLE_KEY)
-        scalar: list[ModeloScalarEditIntentV1] = []
-        binding: list[ModeloBindingEditIntentV1] = []
-        for change in changes:
-            address = change.address
-            if isinstance(address, ModeloFormCasillaAddressV1):
-                scalar.append(
-                    ModeloScalarEditIntentV1(
-                        address=ModeloEditScalarAddressV1(casilla_id=address.casilla_id),
-                        kind=_SCALAR_KINDS[change.kind],
-                        value=change.value if change.kind is WorkbenchChangeKind.SET else None,
-                    )
-                )
-            else:
-                binding.append(
-                    ModeloBindingEditIntentV1(
-                        address=ModeloEditBindingAddressV1(binding_id=address.binding_id),
-                        kind=_BINDING_KINDS[change.kind],
-                        value=change.value if change.kind is WorkbenchChangeKind.SET else None,
-                    )
-                )
-        return await self._door().apply_edits(
-            baseline=state.baseline, scalar_intents=tuple(scalar), binding_intents=tuple(binding)
+        return state.baseline
+
+    async def preflight(self, changes: tuple[WorkbenchChange, ...]) -> WorkbenchPreflight:
+        """Check the staged changes against the declaration as it stands, naming what each finding concerns."""
+        scalar, binding = _intents(changes)
+        result = await self._door().preflight_edits(
+            baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding
         )
+        if isinstance(result, ModeloEditRefusedV1):
+            if isinstance(result.refusal, ModeloEditStaleBaselineRefusalV1):
+                return WorkbenchPreflight(stale=True)
+            message = resolve_error_message(modelo_edit_refusal_error(result.refusal))
+            return WorkbenchPreflight(findings=(WorkbenchFinding(address=None, message=message, blocking=True),))
+        language = OutputLanguage(output_language())
+        return WorkbenchPreflight(
+            findings=tuple(
+                _finding(finding, language) for finding in result.findings if finding.code not in _STATED_BY_THE_REVIEW
+            ),
+            operator_entries_unknown=any(finding.code == OPERATOR_LAYER_UNKNOWN for finding in result.findings),
+        )
+
+    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
+        """Submit the staged changes as typed intents against the admitted baseline."""
+        scalar, binding = _intents(changes)
+        return await self._door().apply_edits(baseline=self._baseline(), scalar_intents=scalar, binding_intents=binding)
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -331,6 +377,67 @@ class InstalledModeloWorkbench:
         """Resolve one settled export's facts."""
         return await self._door().settled_export_result(projection)
 
+    def refresh_product(self) -> None:
+        """Capture a new product generation, so Declarations and search show what the operation changed."""
+        refresh = self._door().refresh_after_success
+        if refresh is not None:
+            refresh()
+
+
+def _intents(
+    changes: tuple[WorkbenchChange, ...],
+) -> tuple[tuple[ModeloScalarEditIntentV1, ...], tuple[ModeloBindingEditIntentV1, ...]]:
+    """Turn staged changes into the typed intents of the edit contract, casilla and binding apart."""
+    scalar: list[ModeloScalarEditIntentV1] = []
+    binding: list[ModeloBindingEditIntentV1] = []
+    for change in changes:
+        address = change.address
+        value = change.value if change.kind is WorkbenchChangeKind.SET else None
+        if isinstance(address, ModeloFormCasillaAddressV1):
+            scalar.append(
+                ModeloScalarEditIntentV1(
+                    address=ModeloEditScalarAddressV1(casilla_id=address.casilla_id),
+                    kind=_SCALAR_KINDS[change.kind],
+                    value=value,
+                )
+            )
+        else:
+            binding.append(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=address.binding_id),
+                    kind=_BINDING_KINDS[change.kind],
+                    value=value,
+                )
+            )
+    return tuple(scalar), tuple(binding)
+
+
+def _form_address(address: ModeloEditAddressV1 | None) -> ModeloFormAddressV1 | None:
+    if isinstance(address, ModeloEditScalarAddressV1):
+        return ModeloFormCasillaAddressV1(casilla_id=address.casilla_id)
+    if isinstance(address, ModeloEditBindingAddressV1):
+        return ModeloFormBindingAddressV1(binding_id=address.binding_id)
+    return None
+
+
+def _finding(finding: ModeloEditFindingV1, language: OutputLanguage) -> WorkbenchFinding:
+    """Say one preflight finding in the filer's words; a refused value says how to fix it."""
+    address = _form_address(finding.address)
+    blocking = finding.severity is ModeloEditFindingSeverity.ERROR
+    target = finding.address
+    if finding.code.startswith(VALUE_REFUSED_PREFIX) and isinstance(
+        target, ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1
+    ):
+        refusal = ModeloEditParseRefusalV1(
+            address=target,
+            reason=ModeloEditParseReason(finding.code.removeprefix(VALUE_REFUSED_PREFIX)),
+            message_arguments=finding.message_arguments,
+        )
+        return WorkbenchFinding(address=address, message=parse_refusal_text(refusal, language), blocking=blocking)
+    return WorkbenchFinding(
+        address=address, message=tr(f"tui.modelo.workbench.review.finding.{finding.code}"), blocking=blocking
+    )
+
 
 class ModeloWorkspaceDeclarationAdmissionError(CadrumoError):
     """An installed declaration cannot open a workbench from this generation."""
@@ -379,6 +486,7 @@ def compose_installed_modelo_workbench_factory(
 
 
 __all__ = [
+    "WORDED_FINDING_CODES",
     "DeclarationDoorFactory",
     "InstalledModeloWorkbench",
     "LifecycleDoorFactory",

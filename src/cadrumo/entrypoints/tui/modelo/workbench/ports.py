@@ -40,6 +40,10 @@ class ModeloWorkbenchReaderV1(Protocol):
         """Assemble the mechanical help of one casilla in ``language``."""
         ...
 
+    def edit_refusal(self) -> str | None:
+        """Why the declaration last read cannot be edited, in the filer's words; ``None`` when it can."""
+        ...
+
 
 class WorkbenchChangeKind(StrEnum):
     """What one staged change asks the application to do with an address."""
@@ -80,6 +84,34 @@ type WorkbenchParseOutcome = WorkbenchParsed | WorkbenchRefused
 
 
 @dataclass(frozen=True, slots=True)
+class WorkbenchFinding:
+    """One thing the check before applying found, in the filer's words.
+
+    ``address`` is the field the finding concerns, or ``None`` when it concerns
+    the whole submission. A blocking finding would make the application refuse
+    the changes, so they cannot be applied until it is resolved.
+    """
+
+    address: ModeloFormAddressV1 | None
+    message: str
+    blocking: bool
+
+
+@dataclass(frozen=True, slots=True)
+class WorkbenchPreflight:
+    """What the application found when it checked the staged changes before they are applied.
+
+    ``stale`` means the declaration changed since the workbench read it, so the
+    changes must be checked again against what it holds now. ``operator_entries_unknown``
+    means the declaration does not record which of its values the filer typed.
+    """
+
+    findings: tuple[WorkbenchFinding, ...] = ()
+    stale: bool = False
+    operator_entries_unknown: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class WorkbenchCalculationEvidence:
     """What a calculation must first ask the filer: the ordinary Modelo 303 filing answers."""
 
@@ -114,6 +146,10 @@ class ModeloWorkbenchActionsV1(Protocol):
         """Read what the filer typed for one field, in the language they typed it in."""
         ...
 
+    async def preflight(self, changes: tuple[WorkbenchChange, ...]) -> WorkbenchPreflight:
+        """Check the staged changes against the declaration as it stands, without applying them."""
+        ...
+
     async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
         """Submit the staged changes and recalculate, through the supervised operation."""
         ...
@@ -146,6 +182,10 @@ class ModeloWorkbenchActionsV1(Protocol):
         """The facts of one settled export, or ``None`` when they cannot be read."""
         ...
 
+    def refresh_product(self) -> None:
+        """Have the rest of the product read the declaration afresh after an operation changed it."""
+        ...
+
 
 __all__ = [
     "ModeloWorkbenchActionsV1",
@@ -155,7 +195,9 @@ __all__ = [
     "WorkbenchChangeKind",
     "WorkbenchExportOffer",
     "WorkbenchExportRequest",
+    "WorkbenchFinding",
     "WorkbenchParseOutcome",
     "WorkbenchParsed",
+    "WorkbenchPreflight",
     "WorkbenchRefused",
 ]

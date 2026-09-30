@@ -2052,6 +2052,11 @@ tui:
         staged: Canviada, sense aplicar
       calculate:
         apply_first: Aplica o descarta els teus canvis abans de recalcular [R].
+        at_risk_cancel: Conserva els valors actuals
+        at_risk_proceed: Recalcula
+        at_risk_title: Vols recalcular a partir dels teus orígens?
+        kept: No s'ha recalculat res. Introdueix els valors que vulguis conservar
+          i després recalcula.
       defaults_to_confirm: 'valors per defecte sense confirmar: {count} [n]'
       design_constant: '{column}: {value} · el fixa el disseny oficial'
       details_page: Detalls del càlcul
@@ -2069,8 +2074,8 @@ tui:
         locked_source: Surt dels teus registres; corregeix-ho allà i torna a calcular.
         no_admission: L'edició no està disponible ara mateix per a aquesta declaració.
         not_writable: Aquesta casella no es pot editar aquí.
-        overridable_source: Ve d'una declaració anterior; el pots substituir indicant
-          el motiu.
+        overridable_source: Ve d'una declaració anterior; el pots substituir, i es
+          mostra com a substituït fins que restauris l'origen.
         source_policy_undecided: Encara no s'ha decidit si aquest origen es pot substituir
           a mà.
       editor:
@@ -2115,6 +2120,20 @@ tui:
         no_explanation: Encara no hi ha cap explicació escrita per a aquesta casella.
         official: 'Text oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+      issues:
+        blocking: Impedeix presentar
+        column:
+          kind: Tipus
+          message: Troballa
+        title: El que ha trobat la verificació
+        verdict:
+          blocked: 'La verificació ha trobat alguna cosa que impedeix presentar. Troballes:
+            {count}.'
+          complete: 'La verificació és correcta. Troballes per revisar: {count}.'
+          incomplete: 'La verificació no és completa: falta informació obligatòria.
+            Troballes: {count}.'
+          none: Aquest càlcul encara no s'ha verificat.
+        warning: Convé revisar-ho
       key:
         back: Tornar
         calculate: Calcula
@@ -2122,6 +2141,7 @@ tui:
         export: Exporta
         filter: Filtre
         help: Ajuda
+        issues: Incidències
         next_attention: Següent pendent
         next_page: Pàgina següent
         next_step: Pas següent
@@ -2149,6 +2169,20 @@ tui:
         resolve: 'Resol el que impedeix presentar (pendents: {count})'
         verify: Verifica la declaració
       next_line: 'Següent: {action} [{key}]'
+      not_writable:
+        absent_from_admission: Aquesta casella no es pot editar aquí.
+        capability_unavailable: Editar aquesta casella encara no està disponible en
+          aquesta versió.
+        computed_by_formula: Cadrumo la calcula a partir d'altres caselles.
+        override_policy_undecided: Encara no s'ha decidit si aquest origen es pot
+          substituir a mà.
+        row_field_template: Aquesta casella representa una columna de línies repetides;
+          introdueix les línies on es guarden.
+        schema_declared_read_only: El disseny oficial no permet escriure en aquesta
+          casella.
+        source_locked: Segueix els teus registres; corregeix-la allà i recalcula.
+        value_channel_unavailable: Les dates i els anys encara no es poden introduir
+          aquí.
       operation:
         done: Fet. La declaració s'ha actualitzat.
         not_done: No s'ha completat; els teus canvis continuen aquí.
@@ -2186,12 +2220,41 @@ tui:
         quarter_3: 3r trimestre {year}
         quarter_4: 4t trimestre {year}
       read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
+      rebase:
+        changed: 'Caselles que ara mostren un altre valor: {count}.'
+        dropped: 'Canvis que ja no s''apliquen i s''han tret: {count}.'
+        moved: La declaració ha canviat des que vas preparar els teus canvis.
+        still_moving: La declaració continua canviant. Espera un moment i torna a
+          revisar els teus canvis [R].
       repeating: 'Files de detall: {count}'
       repeating_unknown: Aquestes files encara no es poden mostrar aquí.
       result: 'Resultat [{box}]: {value}'
+      result_diff:
+        close: Tanca
+        column:
+          why: Motiu
+        count:
+          calculated: 'recalculades: {count}'
+          other: 'altres canvis: {count}'
+          sourced: 'dels teus orígens: {count}'
+          yours: 'els teus canvis: {count}'
+        group:
+          calculated: Recalculada
+          other: Un altre canvi
+          sourced: Dels teus orígens
+          yours: El teu canvi
+        not_shown: no es mostra
+        nothing_changed: Fet. Cap casella no ha canviat.
+        title: 'Caselles que han canviat: {count}'
       review:
+        acknowledge: He comprovat el que fa aplicar
+        and_more: '{shown} i {count} més'
         apply: Aplica i recalcula
         back: Torna a editar
+        before_changed: la casella ha canviat des que vas preparar això
+        blocked: Resol el que està marcat amb ▲ abans d'aplicar.
+        check_failed: No s'han pogut comprovar els teus canvis. Continuen aquí; torna-ho
+          a provar.
         column:
           after: Després
           before: Abans
@@ -2209,8 +2272,27 @@ tui:
           set_filer: canvia el teu valor
           set_nothing: valor nou
           set_source: substitueix el valor importat
+        finding:
+          clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que
+            no es pot buidar. Torna-la al seu origen en lloc d'això.
+          intent_not_admitted: Aquesta casella no es pot canviar d'aquesta manera.
+          nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
+          required_empty: La declaració necessita aquesta casella i quedarà buida.
+        findings_heading: 'El que ha trobat la comprovació:'
         none: No hi ha canvis per aplicar.
         nothing_saved: No es desa res fins que premis «Aplica i recalcula».
+        operator_entries_at_risk: 'Aquesta declaració es va calcular per última vegada
+          fora del banc de treball, així que Cadrumo no pot saber quins valors vas
+          escriure. En aplicar només es conserven els canvis d''aquesta llista. Aquestes
+          caselles tenen valors que no consta que ningú escrivís i tornen al que digui
+          el seu origen (caselles: {count}): {boxes}. Per conservar-ne un, introdueix-lo
+          abans.'
+        operator_entries_unknown: Aquesta declaració es va calcular per última vegada
+          fora del banc de treball, així que Cadrumo no pot saber quins valors vas
+          escriure. En aplicar només es conserven els canvis d'aquesta llista; qualsevol
+          altre valor que escrivissis fora torna al que digui el seu origen.
+        rebased: 'La declaració va canviar després que preparessis aquests canvis.
+          Revisa de nou les línies marcades (canviades: {count}).'
         title: 'Canvis per aplicar: {count}'
       section:
         pending: '{heading} · pendents: {count}'

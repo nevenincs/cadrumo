@@ -2064,6 +2064,11 @@ tui:
         staged: Cambiada, sin aplicar
       calculate:
         apply_first: Aplica o descarta tus cambios antes de recalcular [R].
+        at_risk_cancel: Conservar los valores actuales
+        at_risk_proceed: Recalcular
+        at_risk_title: ¿Recalcular a partir de tus orígenes?
+        kept: No se ha recalculado nada. Introduce los valores que quieras conservar
+          y después recalcula.
       defaults_to_confirm: 'valores por defecto sin confirmar: {count} [n]'
       design_constant: '{column}: {value} · lo fija el diseño oficial'
       details_page: Detalles del cálculo
@@ -2081,8 +2086,8 @@ tui:
         locked_source: Sale de tus registros; corrígelo allí y vuelve a calcular.
         no_admission: La edición no está disponible ahora mismo para esta declaración.
         not_writable: Esta casilla no se puede editar aquí.
-        overridable_source: Viene de una declaración anterior; puedes sustituirlo
-          indicando el motivo.
+        overridable_source: Viene de una declaración anterior; puedes sustituirlo,
+          y se muestra como sustituido hasta que restaures el origen.
         source_policy_undecided: Aún no se ha decidido si este origen puede sustituirse
           a mano.
       editor:
@@ -2127,6 +2132,20 @@ tui:
         no_explanation: Aún no hay una explicación escrita para esta casilla.
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+      issues:
+        blocking: Impide presentar
+        column:
+          kind: Tipo
+          message: Hallazgo
+        title: Lo que encontró la verificación
+        verdict:
+          blocked: 'La verificación encontró algo que impide presentar. Hallazgos:
+            {count}.'
+          complete: 'La verificación es correcta. Hallazgos para revisar: {count}.'
+          incomplete: 'La verificación no está completa: falta información obligatoria.
+            Hallazgos: {count}.'
+          none: Este cálculo aún no se ha verificado.
+        warning: Conviene revisarlo
       key:
         back: Volver
         calculate: Calcular
@@ -2134,6 +2153,7 @@ tui:
         export: Exportar
         filter: Filtro
         help: Ayuda
+        issues: Incidencias
         next_attention: Siguiente pendiente
         next_page: Página siguiente
         next_step: Siguiente paso
@@ -2160,6 +2180,19 @@ tui:
         resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
         verify: Verifica la declaración
       next_line: 'Siguiente: {action} [{key}]'
+      not_writable:
+        absent_from_admission: Esta casilla no se puede editar aquí.
+        capability_unavailable: Editar esta casilla aún no está disponible en esta
+          versión.
+        computed_by_formula: Cadrumo la calcula a partir de otras casillas.
+        override_policy_undecided: Aún no se ha decidido si este origen se puede sustituir
+          a mano.
+        row_field_template: Esta casilla representa una columna de líneas repetidas;
+          introduce las líneas donde se guardan.
+        schema_declared_read_only: El diseño oficial no permite escribir en esta casilla.
+        source_locked: Sigue tus registros; corrígela allí y recalcula.
+        value_channel_unavailable: Las fechas y los años aún no se pueden introducir
+          aquí.
       operation:
         done: Hecho. La declaración se ha actualizado.
         not_done: No se ha completado; tus cambios siguen aquí.
@@ -2197,12 +2230,41 @@ tui:
         quarter_3: 3.er trimestre {year}
         quarter_4: 4.º trimestre {year}
       read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
+      rebase:
+        changed: 'Casillas que ahora muestran otro valor: {count}.'
+        dropped: 'Cambios que ya no se aplican y se han quitado: {count}.'
+        moved: La declaración cambió desde que preparaste tus cambios.
+        still_moving: La declaración sigue cambiando. Espera un momento y vuelve a
+          revisar tus cambios [R].
       repeating: 'Filas de detalle: {count}'
       repeating_unknown: Estas filas no se pueden mostrar aquí todavía.
       result: 'Resultado [{box}]: {value}'
+      result_diff:
+        close: Cerrar
+        column:
+          why: Motivo
+        count:
+          calculated: 'recalculadas: {count}'
+          other: 'otros cambios: {count}'
+          sourced: 'de tus orígenes: {count}'
+          yours: 'tus cambios: {count}'
+        group:
+          calculated: Recalculada
+          other: Otro cambio
+          sourced: De tus orígenes
+          yours: Tu cambio
+        not_shown: no se muestra
+        nothing_changed: Hecho. Ninguna casilla ha cambiado.
+        title: 'Casillas que han cambiado: {count}'
       review:
+        acknowledge: He comprobado lo que hace aplicar
+        and_more: '{shown} y {count} más'
         apply: Aplicar y recalcular
         back: Volver a editar
+        before_changed: la casilla cambió desde que preparaste esto
+        blocked: Resuelve lo marcado con ▲ antes de aplicar.
+        check_failed: No se han podido comprobar tus cambios. Siguen aquí; inténtalo
+          de nuevo.
         column:
           after: Después
           before: Antes
@@ -2220,8 +2282,26 @@ tui:
           set_filer: cambia tu valor
           set_nothing: valor nuevo
           set_source: sustituye el valor importado
+        finding:
+          clear_of_source_fed_casilla: Un origen rellena esta casilla, así que no
+            se puede vaciar. Devuélvela a su origen en su lugar.
+          intent_not_admitted: Esta casilla no se puede cambiar de esa forma.
+          nothing_to_restore: Esta casilla ya muestra el valor de su origen.
+          required_empty: La declaración necesita esta casilla y quedará vacía.
+        findings_heading: 'Lo que encontró la comprobación:'
         none: No hay cambios por aplicar.
         nothing_saved: Nada se guarda hasta que pulses «Aplicar y recalcular».
+        operator_entries_at_risk: 'Esta declaración se calculó por última vez fuera
+          del banco de trabajo, así que Cadrumo no puede saber qué valores escribiste.
+          Al aplicar solo se conservan los cambios de esta lista. Estas casillas tienen
+          valores que nadie consta que escribiera y vuelven a lo que diga su origen
+          (casillas: {count}): {boxes}. Para conservar uno, introdúcelo antes.'
+        operator_entries_unknown: Esta declaración se calculó por última vez fuera
+          del banco de trabajo, así que Cadrumo no puede saber qué valores escribiste.
+          Al aplicar solo se conservan los cambios de esta lista; cualquier otro valor
+          que escribieras fuera vuelve a lo que diga su origen.
+        rebased: 'La declaración cambió después de que prepararas estos cambios. Revisa
+          de nuevo las líneas marcadas (cambiadas: {count}).'
         title: 'Cambios por aplicar: {count}'
       section:
         pending: '{heading} · pendientes: {count}'

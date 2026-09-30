@@ -10,7 +10,8 @@ is never left to guess what comes next.
 
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
-not reviewed.
+not reviewed, and a verification that found something to resolve sends the
+filer to what it found rather than back to verifying.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from typing import Final
 
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
+from .....domain.modelos.verification_report import VerificationCompletenessStatus
 
 
 class WorkbenchStep(StrEnum):
@@ -53,6 +55,9 @@ class NextAction(StrEnum):
     DONE = "done"
 
 
+_UNRESOLVED_VERDICTS: Final[frozenset[VerificationCompletenessStatus]] = frozenset(
+    {VerificationCompletenessStatus.INCOMPLETE, VerificationCompletenessStatus.BLOCKED}
+)
 _STEP_SEPARATOR: Final[str] = " ── "
 _STATUS_MARKS: Final[dict[StepStatus, str]] = {
     StepStatus.DONE: "✓",
@@ -106,7 +111,9 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
             steps.append(StepState(step, StepStatus.DONE))
         elif not current_found:
             current_found = True
-            is_blocked = step is WorkbenchStep.REVIEW and blocked > 0
+            is_blocked = step is WorkbenchStep.REVIEW and (
+                blocked > 0 or form.verification is VerificationCompletenessStatus.BLOCKED
+            )
             steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
         else:
             steps.append(StepState(step, StepStatus.PENDING))
@@ -128,8 +135,8 @@ def _next(
         return NextAction.FILL, to_fill
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
-    if blocked:
-        return NextAction.RESOLVE, blocked
+    if blocked or form.verification in _UNRESOLVED_VERDICTS:
+        return NextAction.RESOLVE, max(blocked, len(form.issues))
     return NextAction.VERIFY, 0
 
 

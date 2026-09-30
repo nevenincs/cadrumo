@@ -2005,6 +2005,10 @@ tui:
         staged: Changed, not applied
       calculate:
         apply_first: Apply or discard your changes before recalculating [R].
+        at_risk_cancel: Keep the current values
+        at_risk_proceed: Recalculate
+        at_risk_title: Recalculate from your sources?
+        kept: Nothing was recalculated. Enter the values you want to keep, then recalculate.
       defaults_to_confirm: 'defaults not yet confirmed: {count} [n]'
       design_constant: '{column}: {value} · fixed by the official design'
       details_page: Calculation details
@@ -2022,8 +2026,8 @@ tui:
         locked_source: It follows your records; correct it there and recalculate.
         no_admission: Editing is not available for this declaration right now.
         not_writable: This box cannot be edited here.
-        overridable_source: Carried from an earlier filing; you may replace it and
-          state why.
+        overridable_source: Carried from an earlier filing; you may replace it, and
+          it shows as replaced until you restore the source.
         source_policy_undecided: It is not yet decided whether this source may be
           replaced by hand.
       editor:
@@ -2068,6 +2072,19 @@ tui:
         no_explanation: There is no written explanation for this box yet.
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
+      issues:
+        blocking: Blocks filing
+        column:
+          kind: Kind
+          message: Finding
+        title: What verification found
+        verdict:
+          blocked: 'Verification found something that blocks filing. Findings: {count}.'
+          complete: 'Verification passed. Findings to look at: {count}.'
+          incomplete: 'Verification is not complete: some required information is
+            missing. Findings: {count}.'
+          none: This calculation has not been verified yet.
+        warning: Worth a look
       key:
         back: Back
         calculate: Calculate
@@ -2075,6 +2092,7 @@ tui:
         export: Export
         filter: Filter
         help: Help
+        issues: Issues
         next_attention: Next to do
         next_page: Next page
         next_step: Next step
@@ -2102,6 +2120,19 @@ tui:
         resolve: 'Resolve what blocks filing (to do: {count})'
         verify: Verify the declaration
       next_line: 'Next: {action} [{key}]'
+      not_writable:
+        absent_from_admission: This box cannot be edited here.
+        capability_unavailable: Editing this box is not available in this version
+          yet.
+        computed_by_formula: Cadrumo calculates it from other boxes.
+        override_policy_undecided: It is not yet decided whether this source may be
+          replaced by hand.
+        row_field_template: This box stands for a column of repeated lines; enter
+          the lines where they are kept.
+        schema_declared_read_only: The official design does not let this box be typed
+          into.
+        source_locked: It follows your records; correct it there and recalculate.
+        value_channel_unavailable: Dates and years cannot be entered here yet.
       operation:
         done: Done. The declaration has been updated.
         not_done: It did not complete; your changes are still here.
@@ -2139,12 +2170,41 @@ tui:
         quarter_3: 3rd quarter {year}
         quarter_4: 4th quarter {year}
       read_failed: The declaration could not be read. Go back and open it again.
+      rebase:
+        changed: 'Boxes that now read differently: {count}.'
+        dropped: 'Changes that no longer apply and were removed: {count}.'
+        moved: The declaration changed since you staged your changes.
+        still_moving: The declaration is still changing. Wait a moment and review
+          your changes again [R].
       repeating: 'Detail rows: {count}'
       repeating_unknown: These rows cannot be shown here yet.
       result: 'Result [{box}]: {value}'
+      result_diff:
+        close: Close
+        column:
+          why: Why
+        count:
+          calculated: 'recalculated: {count}'
+          other: 'other changes: {count}'
+          sourced: 'from your sources: {count}'
+          yours: 'your changes: {count}'
+        group:
+          calculated: Recalculated
+          other: Other change
+          sourced: From your sources
+          yours: Your change
+        not_shown: not shown
+        nothing_changed: Done. No box changed.
+        title: 'Boxes that changed: {count}'
       review:
+        acknowledge: I have checked what applying does
+        and_more: '{shown} and {count} more'
         apply: Apply and recalculate
         back: Back to editing
+        before_changed: the box changed since you staged this
+        blocked: Resolve the items marked ▲ before applying.
+        check_failed: Your changes could not be checked. They are still here; try
+          again.
         column:
           after: After
           before: Before
@@ -2162,8 +2222,26 @@ tui:
           set_filer: changes your value
           set_nothing: new value
           set_source: replaces the imported value
+        finding:
+          clear_of_source_fed_casilla: A source fills this box, so it cannot be emptied.
+            Give it back to its source instead.
+          intent_not_admitted: This box cannot be changed that way.
+          nothing_to_restore: This box already shows its source's value.
+          required_empty: The declaration needs this box, and it will be empty.
+        findings_heading: 'What the check found:'
         none: There are no changes to apply.
         nothing_saved: Nothing is saved until you press “Apply and recalculate”.
+        operator_entries_at_risk: 'This declaration was last calculated outside the
+          workbench, so Cadrumo cannot tell which of its values you typed. Applying
+          keeps only the changes listed here. These boxes hold values nobody is recorded
+          as having typed, and they go back to what their source says (boxes: {count}):
+          {boxes}. To keep one, enter its value first.'
+        operator_entries_unknown: This declaration was last calculated outside the
+          workbench, so Cadrumo cannot tell which of its values you typed. Applying
+          keeps only the changes listed here; any other value you typed elsewhere
+          goes back to what its source says.
+        rebased: 'The declaration changed after you staged these changes. Check the
+          marked lines again (changed: {count}).'
         title: 'Changes to apply: {count}'
       section:
         pending: '{heading} · to do: {count}'

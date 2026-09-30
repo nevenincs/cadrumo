@@ -23,6 +23,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
+from pydantic import BaseModel
+
 from ...adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
@@ -214,6 +216,22 @@ class SeededOperatorWork:
             scalar_intents=scalar,
             binding_intents=binding,
         )
+        request = OperationRequest(
+            definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+            subject_ref=self.work_unit_id,
+            payload=ModeloEditApplyOperationRequestV1(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission)
+            ),
+        )
+        return self._run_edit(
+            request, operation_id=content_hash_hex({"baseline": admitted.baseline_id, "submission": repr(submission)})
+        )
+
+    def execute(self, request: OperationRequest[BaseModel]) -> CadrumoError | None:
+        """Run an edit request a frontend submitted through the production edit executor; its refusal, if any."""
+        return self._run_edit(request, operation_id=content_hash_hex({"request": repr(request)})).refusal
+
+    def _run_edit(self, request: OperationRequest[BaseModel], *, operation_id: str) -> AppliedEdit:
         executor = ModeloEditApplyExecutor(
             calculation_action_ports_factory=lambda **_: self.ports,
             receipt_repository_factory=self.receipt_repository_factory,
@@ -221,19 +239,12 @@ class SeededOperatorWork:
         events = _RecordedEvents()
         context = _ExecutorContext(
             identity=OperationIdentity(
-                operation_id=content_hash_hex({"baseline": admitted.baseline_id, "submission": repr(submission)}),
+                operation_id=operation_id,
                 definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
             ),
             authority_operation=self.operation,
             events=events,
-        )
-        request = OperationRequest(
-            definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-            subject_ref=self.work_unit_id,
-            payload=ModeloEditApplyOperationRequestV1(
-                submission=ModeloEditApplySubmissionV1.from_submission(submission)
-            ),
         )
         try:
             asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))

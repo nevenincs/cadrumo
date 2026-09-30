@@ -39,9 +39,16 @@ from ..operations.registry import OperationSchemaIdentityV1
 
 
 class EditModel(BaseModel):
-    """The common fail-closed boundary posture for Edit Contract V1 records."""
+    """The common fail-closed boundary posture for Edit Contract V1 records.
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    A validation error never quotes the input it refused: these records carry
+    what a filer typed and their taxpayer values, and an error message can
+    reach a log.
+    """
+
+    model_config = ConfigDict(
+        strict=True, frozen=True, extra="forbid", validate_default=True, hide_input_in_errors=True
+    )
 
 
 class ModeloEditMutationFamily(StrEnum):
