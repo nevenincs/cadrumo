@@ -127,9 +127,9 @@ sequence_order = {legal_refs = [1, 2, 0, 3]}
 [[revisions."2019-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2016-2018", id = "modelo-308-iva-solicitud-devolucion"}
-fields = {live_cross_references = ["modelo-308-static-documentation", "modelo-308-filed-declarations-read"]}
-sequence_additions = {casilla_ids = ["decl.tipo-solicitud"], legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"], workbook_parity_refs = ["modelo-308-dr"]}
-sequence_removals = {casilla_ids = [1], source_refs = [0], workbook_parity_refs = [0]}
+fields = {export_layouts = ["generated-modelo-308-2019-y-siguientes-fichero"], live_cross_references = ["modelo-308-static-documentation", "modelo-308-filed-declarations-read"]}
+sequence_additions = {casilla_ids = ["decl.tipo-solicitud", "decl.devolucion-iban", "decl.devolucion-bic", "decl.tipo-declaracion", "decl.nombre", "decl.tipo-tributacion", "decl.mtn-adquirente-nif", "decl.mtn-adquirente-apellidos", "decl.mtn-adquirente-nombre", "decl.mtn-adquirente-pais", "decl.mtn-vehiculo-marca", "decl.mtn-vehiculo-tipo", "decl.mtn-vehiculo-modelo", "decl.mtn-vehiculo-bastidor", "decl.mtn-vehiculo-clasificacion", "decl.mtn-embarcacion-fabricante", "decl.mtn-embarcacion-tipo", "decl.mtn-embarcacion-identificacion", "decl.mtn-embarcacion-eslora", "decl.mtn-aeronave-fabricante", "decl.mtn-aeronave-marca", "decl.mtn-aeronave-serie", "decl.mtn-aeronave-ano", "decl.mtn-aeronave-peso", "decl.mtn-precio-adquisicion", "decl.mtn-tipo-01", "decl.mtn-iva-soportado", "decl.mtn-precio-venta", "decl.mtn-tipo-04", "decl.mtn-maximo-devolver", "decl.mtn-iva-devolver-eib", "decl.mtn-iva-devolver-transporte", "decl.mtn-iva-soportado-art21", "decl.mtn-iva-devolver-art21", "decl.req-base-08", "decl.req-tipo-09", "decl.req-cuota-10", "decl.req-base-11", "decl.req-tipo-12", "decl.req-cuota-13", "decl.req-base-14", "decl.req-tipo-15", "decl.req-cuota-16", "decl.req-iva-devolver-17"], application_links = ["modelo-308-export"], legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"], workbook_parity_refs = ["modelo-308-dr"]}
+sequence_removals = {source_refs = [0], workbook_parity_refs = [0]}
 sequence_order = {legal_refs = [2, 3, 0, 1, 4], source_refs = [2, 0, 1]}
 
 [[revisions."2019-y-siguientes".family_overrides]]
