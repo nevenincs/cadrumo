@@ -99,6 +99,9 @@ from .framing import VerifiedRuntimeConnection
 from .startup import RuntimeLaunchDoor
 
 _RESULT_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+# Profile admission may launch a cold isolated worker before the first reply.
+# Keep this longer than its bounded pipe-accept and handshake stages.
+_PROFILE_LOGIN_TIMEOUT_SECONDS = 75.0
 
 
 class RuntimeFrontendRefusedError(CadrumoError):
@@ -281,16 +284,18 @@ class RuntimeFrontendClient:
             secret[:] = bytes(len(secret))
 
     def login_password(
-        self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
+        self, secret: bytearray, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS, persist_receipt: bool = False
     ) -> RuntimeProfileStatus:
         """Consume an explicit password only on the one-use verified secret frame."""
         return self._login("password", secret, timeout=timeout, persist_receipt=persist_receipt)
 
-    def login_api_key(self, secret: bytearray, *, timeout: float = 20) -> RuntimeProfileStatus:
+    def login_api_key(
+        self, secret: bytearray, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS
+    ) -> RuntimeProfileStatus:
         """Consume an explicit key without attempting human receipt fallback."""
         return self._login("api_key", secret, timeout=timeout)
 
-    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+    def resume_receipt(self, *, timeout: float = _PROFILE_LOGIN_TIMEOUT_SECONDS) -> RuntimeProfileStatus:
         """Borrow the exact profile's protected receipt proof for one verified frame."""
         from ...application.user_profile.login_session import borrow_profile_receipt_key
 

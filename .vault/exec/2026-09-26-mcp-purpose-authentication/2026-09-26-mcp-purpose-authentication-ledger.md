@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:29a7ec88f978b705687e667aa1445eda7befc732ce3dd4c33d3f071e05e300fb'
+body_hash: 'sha256:e0d973fd76d41b91a844e91b1d48f96c218e2e7974c727f4c51e531a06b238b8'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -2230,6 +2230,24 @@ related:
 - `S08` `A` `docs/api/cadrumo.application.invoices.catalogue_update_operation.rst`
 - `S08` `M` `docs/api/cadrumo.application.invoices.rst`
 - `S08` `verify:` `just check-import-boundaries [20260929T031303.763557Z-check-import-boundaries-30664-682c8b63]` -> `pass`
+- `S08` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S08` `M` `docs/api/cadrumo.application.invoices.catalogue_add_operation.rst`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S08` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S08` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_link_flow.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_invoice_euro_rate_notice.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_add.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/censal_review_test_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_censal_sync_operations.py`
+- `S08` `verify:` `focused invoice add operation 9/9` -> `pass`
+- `S08` `verify:` `clean staged native invoice create-link-check` -> `pass`
+- `S08` `verify:` `clean staged native invoice validation refusal no-write` -> `pass`
+- `S08` `verify:` `clean staged native invoice full-and-prefix view` -> `pass`
+- `S08` `verify:` `clean staged import gate 15/15 3145/3145 zero hard` -> `pass`
+- `S08` `verify:` `staged diff check` -> `pass`
 
 ## Notes
 
@@ -2789,3 +2807,4 @@ related:
 - `S08` Synthetic encrypted profile and native worker acceptance uses the existing memory credential-store test port; it does not establish installed OS-store/platform acceptance. Pyrefly: zero errors, nine hidden warnings. Invoice update proves partial patch/zero persistence, unchanged identity and sibling records, retained omitted notes, and durable update audit event. S08 remains open.
 - `S18` Root inspected live source and diff: both basedpyright findings concern an unchanged empty frozenset tuple in `LedgerEvidenceDoor.list_records,` outside removed LedgerRecordDoors. One-line annotation cleanup is queued until the generated/import source freeze ends; no behavior test rerun required for annotation-only correction.
 - `S08` Frozen cohort: 8036 src/dev Python files; before/after SHA-256 33234f2ce67386999d000185495adcbf2cbc577b2e3e87871359946805e6067c. 15/15 contracts kept, 3102/3102 modules loaded, zero hard findings, 137.1s. Internal snapshots 8ec98590758d24afa32b1c7687bd16f2453e710bdf4e880bc657d0a2884f523d match. API generator: two changed, 2127 unchanged, zero stale. A subsequent annotation-only correction in `ledger_doors.py` is validated separately by scoped statics; this fingerprint describes the completed frozen cohort, not that later source revision.
+- `S08` Invoice add uses canonical catalogue creation under exact-profile registered worker; displaced direct CLI add path removed. S08 remains open for remaining private entrypoints, parity and installed acceptance.

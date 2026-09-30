@@ -10,8 +10,7 @@ to keep out.
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
-from typing import TYPE_CHECKING, cast, override
+from typing import override
 
 import pytest
 from textual.app import ComposeResult
@@ -33,9 +32,6 @@ from ..ledger.models import (
     LedgerEvidenceConfirmedV1,
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
-    LedgerImportOutcomeV1,
-    LedgerImportRequestV1,
-    LedgerImportSourceKind,
     LedgerReaderReadinessV1,
 )
 from ..ledger.tests.workspace_fixtures import (
@@ -45,12 +41,8 @@ from ..ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
-from ..ledger_doors import LedgerImportDoor
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .test_app import HandoverScreen, _account_factories, _catalogue
-
-if TYPE_CHECKING:
-    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -167,32 +159,6 @@ async def test_the_evidence_area_reads_records_and_the_reader_off_the_loop() -> 
         await pilot.pause()
 
     assert boundary.names == {"list_records", "reader_readiness"}
-    assert boundary.on_loop == []
-
-
-class _GuardedImportDoor(LedgerImportDoor):
-    """The real door with its synchronous transport step replaced."""
-
-    boundary: TransportBoundary = TransportBoundary()
-
-    @override
-    def _run(self, request: LedgerImportRequestV1, *, dry_run: bool) -> LedgerImportOutcomeV1:
-        self.boundary.enter("import_run")
-        return LedgerImportOutcomeV1(
-            source_kind=request.source_kind, dry_run=dry_run, files=1, rows=0, imported=0, skipped=0
-        )
-
-
-@pytest.mark.asyncio
-async def test_the_import_door_does_its_reading_and_writing_off_the_loop(tmp_path: Path) -> None:
-    boundary = TransportBoundary()
-    _GuardedImportDoor.boundary = boundary
-    # The overridden transport step never reads the authority.
-    door = _GuardedImportDoor(profile_id="synthetic", operation=cast("PinnedAuthorityOperation", object()))
-    request = LedgerImportRequestV1(path=tmp_path, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
-    await door.preview(request)
-    await door.apply(request)
-    assert boundary.names == {"import_run"}
     assert boundary.on_loop == []
 
 

@@ -7,6 +7,12 @@ from uuid import UUID
 
 import typer
 
+from ...application.invoices.catalogue_add_operation import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+    INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddRequest,
+    InvoiceAddResult,
+)
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
     INVOICE_VIEW_OPERATION_DEFINITION_ID,
@@ -63,6 +69,56 @@ class InvoiceCatalogueViewRead:
 
     completion: RegisteredOperationCompletion[InvoiceViewProjection]
     invoice: CatalogueInvoiceSnapshot
+
+
+def add_invoice_catalogue(
+    ctx: typer.Context, *, request: InvoiceAddRequest
+) -> tuple[RegisteredOperationCompletion[InvoiceAddResult], InvoiceAddResult]:
+    """Create one catalogue invoice inside the invocation's exact profile worker."""
+    client = require_profile_client(ctx, expected_profile_id=request.profile_id)
+    completed = run_registered_operation(
+        client,
+        request,
+        definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=InvoiceAddResult,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        allow_refusal_detail=True,
+    )
+    result = completed.projection
+    invalid = result.profile_id != client.profile_id
+    if result.outcome == "validation_error":
+        invalid = invalid or (
+            completed.terminal_condition is not OperationTerminalCondition.REFUSED
+            or completed.effect is not OperationEffect.NONE
+            or completed.refusal_code != INVOICE_ADD_VALIDATION_REFUSAL_CODE
+            or result.validation_code is None
+            or result.invoice is not None
+            or (result.validation_code == "duplicate_invoice") != (result.invoice_id is not None)
+        )
+    else:
+        invoice = result.invoice
+        invalid = invalid or (
+            invoice is None
+            or (invoice.bucket_id is not None and str(invoice.bucket_id) != str(client.profile_id))
+            or invoice.kind is not request.kind
+            or invoice.invoice_number != request.invoice_number
+            or invoice.issued_at != request.issued_at
+            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            or completed.effect is not OperationEffect.UPDATED
+            or completed.refusal_code is not None
+        )
+    if invalid:
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        )
+    return completed, result
 
 
 def read_invoice_catalogue(ctx: typer.Context, *, kind: InvoiceKind | None) -> InvoiceCatalogueListRead:
@@ -235,6 +291,7 @@ def update_invoice_catalogue(
 __all__ = [
     "InvoiceCatalogueListRead",
     "InvoiceCatalogueViewRead",
+    "add_invoice_catalogue",
     "read_invoice_catalogue",
     "remove_invoice_catalogue",
     "update_invoice_catalogue",

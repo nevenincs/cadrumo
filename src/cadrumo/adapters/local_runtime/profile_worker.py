@@ -73,6 +73,8 @@ from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 from .worker_authorization import WorkerAuthorizationServer
 
+_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
+
 
 def worker_operation_namespace(worker_id: UUID) -> UUID:
     """Separate private execution I/O from authority-held custody control calls."""
@@ -151,7 +153,10 @@ class ProfileWorkerProcess:
                 directory=storage_root,
                 environment=environment,
             )
-            channel = endpoint.accept(timeout=10)
+            # A cold isolated worker imports the registered operation catalogue
+            # before opening its first pipe. Keep that bounded startup budget
+            # separate from the short handshakes after the pipe is connected.
+            channel = endpoint.accept(timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
             self._channel = channel
             worker_process_id = _verified_worker_pid(channel, self._scope, identity.binding.os_owner_id)
             deadline = time.monotonic() + 10

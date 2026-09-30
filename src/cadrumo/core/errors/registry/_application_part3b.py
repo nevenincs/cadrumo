@@ -8,6 +8,16 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.invoices.catalogue_add_operation.InvoiceAddValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_ADD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.invoices.catalogue_selection.InvoiceLookupRefusedError",
         ErrorCode(
             code="REFUSED_INVOICE_LOOKUP",

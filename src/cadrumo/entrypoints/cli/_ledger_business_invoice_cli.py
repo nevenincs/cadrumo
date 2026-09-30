@@ -17,17 +17,19 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
+from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
+from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.invoices.bulk_import import (
     BulkInvoiceImportResult,
     BulkInvoiceImportSource,
     import_invoices_from_rows,
     read_bulk_invoice_import_source,
 )
-from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices.catalogue_add_operation import InvoiceAddLine, InvoiceAddRequest
 from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
@@ -38,6 +40,7 @@ from ...application.invoices.simplificada_advisory import (
     resolve_simplificada_tax_id_legal_refs,
 )
 from ...application.invoices.source_resolver import iva_category_for_operation_type
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -69,12 +72,14 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
-from ._ledger_support import ledger_invoice_validation_no_recovery
+from ._ledger_support import ledger_cli_no_recovery, ledger_invoice_validation_no_recovery
 from .common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from .common import bad, emit_envelope
+from .errors import CliRefusedBoundaryError
 from .runtime_invoice_catalogue import (
+    add_invoice_catalogue,
     read_invoice_catalogue,
     remove_invoice_catalogue,
     update_invoice_catalogue,
@@ -262,14 +267,20 @@ def _parse_invoice_lines(raw_lines: Sequence[str]) -> tuple[InvoiceLine, ...]:
     return tuple(parsed)
 
 
-def _euro_value_pending_notices(invoice: Invoice) -> list[Notice]:
+def _euro_value_pending_notices(
+    invoice: Invoice | CatalogueInvoiceRecordPayload, *, pending: bool | None = None
+) -> list[Notice]:
     """Say at capture that a foreign-currency invoice was recorded without a euro rate.
 
     The invoice is kept and held back from every euro figure until a rate is
     stamped on it. Without this notice the first sign was a refusal at
     calculation, far from the capture that could have been corrected.
     """
-    if not invoice.euro_value_pending:
+    if pending is None:
+        if not isinstance(invoice, Invoice):
+            raise ValueError("invoice add result requires a worker-owned euro-rate status")
+        pending = invoice.euro_value_pending
+    if not pending:
         return []
     return [
         Notice(
@@ -289,7 +300,9 @@ def _euro_value_pending_notices(invoice: Invoice) -> list[Notice]:
     ]
 
 
-def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
+def _simplificada_tax_id_notices(
+    invoice: Invoice | CatalogueInvoiceRecordPayload, *, required: bool | None = None
+) -> list[Notice]:
     """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
 
     Case 3.º asks for the destinatario's NIF on a DOMESTIC factura simplificada
@@ -309,7 +322,11 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     fact the resolver preserves, and a surface with somewhere to report it can
     say so; this channel has only "advise" and "do not".
     """
-    if resolve_simplificada_tax_id_advisory(invoice=invoice) is not SimplificadaTaxIdAdvisory.REQUIRED:
+    if required is None:
+        if not isinstance(invoice, Invoice):
+            raise ValueError("invoice add result requires a worker-owned simplificada advisory")
+        required = resolve_simplificada_tax_id_advisory(invoice=invoice) is SimplificadaTaxIdAdvisory.REQUIRED
+    if not required:
         return []
     legal_refs = resolve_simplificada_tax_id_legal_refs()
     return [
@@ -407,9 +424,7 @@ def invoice_add(
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
     a received invoice.
     """
-    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
-    catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     # An explicitly stated treatment WINS over the one derived from the M349
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
@@ -418,6 +433,11 @@ def invoice_add(
         operation_type,
     )
     try:
+
+        def public_amount(raw: str | None, *, label: str) -> PublicDecimal | None:
+            parsed = parse_optional_decimal_amount(raw, label=label)
+            return None if parsed is None else PublicDecimal(decimal=str(parsed))
+
         structured_lines = _parse_invoice_lines(line)
         if structured_lines and (taxable_base is not None or iva_rate is not None):
             raise InvoiceValidationError("--line cannot be combined with --taxable-base or --iva-rate")
@@ -429,45 +449,85 @@ def invoice_add(
                 raise InvoiceValidationError("--taxable-base is required when --line is not supplied")
             parsed_taxable_base = parse_decimal_amount(taxable_base, label="taxable-base")
             parsed_iva_rate = parse_optional_decimal_amount(iva_rate, label="iva-rate")
-        invoice = build_catalogue_invoice(
-            bucket_id=bucket_id,
+        request = InvoiceAddRequest(
+            profile_id=UUID(bucket_id),
             kind=kind,
             counterparty_name=counterparty_name,
             counterparty_tax_id=counterparty_nif,
             counterparty_country=country_code,
             invoice_number=invoice_number,
             issued_at=_parse_iso_date(invoice_date, label="invoice-date"),
-            taxable_base=parsed_taxable_base,
-            iva_rate=parsed_iva_rate,
+            taxable_base=None if parsed_taxable_base is None else PublicDecimal(decimal=str(parsed_taxable_base)),
+            iva_rate=None if parsed_iva_rate is None else PublicDecimal(decimal=str(parsed_iva_rate)),
             currency=currency,
             notes=notes,
-            iva_category=resolved_iva_category,
+            iva_category=None if resolved_iva_category is None else str(resolved_iva_category),
             operation_type=operation_type,
             operation_date=(
                 None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
             ),
-            retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
-            retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-            invoice_class=(default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)),
+            retention_rate=public_amount(retention_rate, label="retention-rate"),
+            retention_amount=public_amount(retention_amount, label="retention-amount"),
+            invoice_class=str(
+                default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)
+            ),
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
-            recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
-            lines=structured_lines or None,
-            rate_provider=catalogue_ports.rate_provider,
+            recargo_amount=public_amount(recargo, label="recargo"),
+            lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
         )
-        result = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
             raise refusal from None
         raise
 
-    emit_envelope(
-        ctx,
-        command="ledger.invoice.add",
-        result=CatalogueInvoiceCreatePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
-        lines=_catalogue_invoice_lines(result.invoice),
-        notices=[*_simplificada_tax_id_notices(result.invoice), *_euro_value_pending_notices(result.invoice)],
-    )
+    completed, added = add_invoice_catalogue(ctx, request=request)
+    if added.outcome == "validation_error":
+        details: dict[str, str] = {
+            "operation_id": str(completed.operation_id),
+            "terminal_condition": completed.terminal_condition.value,
+            "effect": completed.effect.value,
+            "refusal_code": completed.refusal_code or "",
+        }
+        if added.invoice_id is not None:
+            details["invoice_id"] = added.invoice_id
+        error = CliRefusedBoundaryError(
+            translated_message=(
+                "application.invoices.creation.errors.duplicate_invoice"
+                if added.validation_code == "duplicate_invoice"
+                else "errors.refused.refused_cli_validation_boundary"
+            ),
+            context=details,
+        )
+        raise ledger_cli_no_recovery(
+            error,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"invoice_valid": False},
+        ) from None
+    try:
+        if added.invoice is None:
+            raise ValueError("created invoice result is missing its snapshot")
+        invoice = _snapshot_invoice_payload(added.invoice)
+        emit_envelope(
+            ctx,
+            command="ledger.invoice.add",
+            result=CatalogueInvoiceCreatePayload.model_validate(invoice.model_dump(mode="python")),
+            lines=_catalogue_invoice_lines(invoice),
+            notices=[
+                *_simplificada_tax_id_notices(invoice, required=added.simplificada_tax_id_advisory_required),
+                *_euro_value_pending_notices(invoice, pending=added.euro_value_pending),
+            ],
+        )
+    except typer.Exit:
+        raise
+    except Exception:
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def invoice_wizard(

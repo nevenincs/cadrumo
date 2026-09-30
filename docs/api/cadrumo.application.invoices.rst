@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.application.invoices._bulk_import_columns
    cadrumo.application.invoices.bulk_import
+   cadrumo.application.invoices.catalogue_add_operation
    cadrumo.application.invoices.catalogue_creation
    cadrumo.application.invoices.catalogue_creation_ports
    cadrumo.application.invoices.catalogue_lifecycle

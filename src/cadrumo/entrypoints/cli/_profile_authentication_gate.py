@@ -56,6 +56,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "app_overview_backlog",
         "app_overview_explain",
         "app_overview_prepare",
+        "app_ledger_invoice_add",
         "app_ledger_invoice_list",
         "app_ledger_invoice_view",
         "app_ledger_invoice_remove",

@@ -303,7 +303,7 @@ from ..adapter_composition import (
     build_filing_action_ports,
     build_verification_repository_bundle,
 )
-from ..censal_review import review_censal_with_services
+from .censal_review_test_support import review_censal_with_services
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
 from . import modelo_operation_test_support

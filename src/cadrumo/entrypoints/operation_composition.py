@@ -20,7 +20,10 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+from ..adapters.persistence.profile.catalogue_creation import (
+    build_catalogue_creation_ports,
+    build_catalogue_lifecycle_ports,
+)
 from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ..adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
@@ -44,6 +47,8 @@ from ..application.export.google_operation import (
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
 )
+from ..application.invoices.catalogue_add_operation import build_invoice_add_definition, build_invoice_add_registration
+from ..application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
 from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
 from ..application.invoices.catalogue_read_operation import (
     build_invoice_list_definition,
@@ -374,6 +379,7 @@ def build_production_operation_registry(
     pipeline_read_ports_factory: PipelineReadPortsFactory = build_pipeline_read_ports,
     overview_read_ports_factory: OverviewReadPortsFactory = build_overview_read_ports,
     invoice_inspection_read_ports_factory: InvoiceInspectionReadPortsFactory = build_invoice_inspection_read_ports,
+    invoice_creation_ports_factory: CatalogueCreationPortsFactory = build_catalogue_creation_ports,
     invoice_lifecycle_ports_factory: CatalogueLifecyclePortsFactory = build_catalogue_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
@@ -481,6 +487,7 @@ def build_production_operation_registry(
     overview_definitions = tuple(
         build_overview_read_definition(kind, overview_read_ports_factory) for kind in OverviewReadKind
     )
+    invoice_add_definition = build_invoice_add_definition(invoice_creation_ports_factory)
     invoice_list_definition = build_invoice_list_definition(invoice_inspection_read_ports_factory)
     invoice_view_definition = build_invoice_view_definition(invoice_inspection_read_ports_factory)
     invoice_remove_definition = build_invoice_remove_definition(invoice_lifecycle_ports_factory)
@@ -557,6 +564,7 @@ def build_production_operation_registry(
                 dependency_definition,
                 pipeline_definition,
                 *overview_definitions,
+                invoice_add_definition,
                 invoice_list_definition,
                 invoice_view_definition,
                 invoice_remove_definition,
@@ -616,6 +624,7 @@ def build_production_operation_registry(
                 build_modelo_dependency_registration(dependency_definition),
                 build_overview_pipeline_registration(pipeline_definition),
                 *(build_overview_read_registration(definition) for definition in overview_definitions),
+                build_invoice_add_registration(invoice_add_definition),
                 build_invoice_list_registration(invoice_list_definition),
                 build_invoice_view_registration(invoice_view_definition),
                 build_invoice_remove_registration(invoice_remove_definition),
@@ -675,6 +684,7 @@ def compose_operation_dependencies(
     pipeline_read_ports_factory: PipelineReadPortsFactory = build_pipeline_read_ports,
     overview_read_ports_factory: OverviewReadPortsFactory = build_overview_read_ports,
     invoice_inspection_read_ports_factory: InvoiceInspectionReadPortsFactory = build_invoice_inspection_read_ports,
+    invoice_creation_ports_factory: CatalogueCreationPortsFactory = build_catalogue_creation_ports,
     invoice_lifecycle_ports_factory: CatalogueLifecyclePortsFactory = build_catalogue_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
@@ -716,6 +726,7 @@ def compose_operation_dependencies(
         pipeline_read_ports_factory=pipeline_read_ports_factory,
         overview_read_ports_factory=overview_read_ports_factory,
         invoice_inspection_read_ports_factory=invoice_inspection_read_ports_factory,
+        invoice_creation_ports_factory=invoice_creation_ports_factory,
         invoice_lifecycle_ports_factory=invoice_lifecycle_ports_factory,
         modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
