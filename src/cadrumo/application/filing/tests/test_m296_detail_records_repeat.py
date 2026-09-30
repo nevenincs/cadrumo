@@ -55,7 +55,7 @@ from ..producer_snapshot import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "296"
-_REVISION = "2024-y-siguientes"
+_REVISION = "2024-2025"
 
 type _M296ProfileFactory = Callable[[tuple[str, ...]], Modelo296ProfileFacts]
 

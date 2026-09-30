@@ -20,6 +20,9 @@ modelo:
           és -befizetések éves bevallása.
         title: IRNR adóelőleg-levonások és -befizetések éves összesítője
       revision:
+        '2022':
+          field:
+            label: 296-os modelo, 2022. adóév
         '2023':
           construct:
             modelo-296-calculation-construct:
@@ -28,10 +31,13 @@ modelo:
                   nélküli IRNR forrásadóról és előlegekről'
           field:
             label: 296-os modelo, 2023. adóév
-        2024-y-siguientes:
+        2024-2025:
           construct:
             modelo-296-calculation-construct:
               field:
                 title: '296-os nyomtatvány: az IRNR forrásadójának éves összesítője'
           field:
-            label: HAC/56/2024 rendelet, 2024. adóévtől
+            label: HAC/56/2024 rendelet, 2024. és 2025. adóév
+        2026-y-siguientes:
+          field:
+            label: HAC/623/2026 rendelet, 2026. adóévtől

@@ -363,6 +363,9 @@ modelo:
           fiscal. Pago fraccionado.
         title: IS pago fraccionado régimen de consolidación fiscal (grupos)
       revision:
+        '2022':
+          field:
+            label: Modelo 222, ejercicio 2022
         '2023':
           field:
             label: Modelo 222, ejercicio 2023

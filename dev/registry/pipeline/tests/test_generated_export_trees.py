@@ -74,11 +74,13 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     "m222-2025-y-siguientes": (
         "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
     ),
-    # The 2023 and 2024 editions are the same case as their in-force sibling
-    # above, from the same design family: each publishes a reproducing tree at
-    # calculation grade, and each still owes the relationship families the
-    # filing rung asserts. Both retire by the same pass assertion the day the
-    # revision earns filing grade.
+    # The 2022, 2023 and 2024 editions are the same case as their in-force
+    # sibling above: each publishes a reproducing tree at calculation grade, and
+    # each still owes the relationship families the filing rung asserts. Each
+    # retires by the same pass assertion the day the revision earns filing grade.
+    "m222-2022": (
+        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
+    ),
     "m222-2023": (
         "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
     ),

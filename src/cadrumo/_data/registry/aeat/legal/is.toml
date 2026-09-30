@@ -1173,6 +1173,48 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx"
 review_status = "pending_review"
 
+# Modelo 222 diseno de registro for ejercicios 2019 to 2022. AEAT's historical
+# index titles it "222 - Orden HAC/941/2018 (Ejercicios 2019 a 2022, actualizado
+# Septiembre 2019)". It is the design the 2022 edition renders: measured against
+# aeat-dr-222-2023-2024, it lacks the page-1 flag the 2023 design inserts at
+# position 226 (grupo fiscal with importe neto de la cifra de negocios below one
+# million euros) and boxes [59] and [60] (DA 19a LIS adjustments), so every later
+# page-1 field sits one or, after [39], thirty-five positions earlier; page 2 is
+# identical. It had been classified as a historical exclusion although filing
+# year 2022 is inside the supported envelope.
+[sources."aeat-dr-222-2019-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx"
+sha256 = "dcda923080570aa7ad9d5bd48e0fc4224ca4e142fbf8960363f175c3244d6c2a"
+bytes = 137380
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/DR222e17v55.xlsx"
+review_status = "pending_review"
+
+# Modelo 222 instrucciones for the era AEAT's instructions index lists as
+# "Instrucciones para periodos impositivos 2019 a 2022": the page links this PDF,
+# "Instrucciones para periodos impositivos iniciados en 2019 (pago fraccionado de
+# octubre y siguientes)". It states each computed clave of that era, including
+# "clave [10] = clave [04] + clave [38] - clave [39]", without the [59]/[60] terms
+# the 2023-2024 instructions add.
+[sources."aeat-modelo-222-instructions-2019-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf"
+sha256 = "1d6a5c0fc17ec85fcdc3af20cb8b48a3296b251c4a25a950610667751e9a338c"
+bytes = 303752
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE03/222_instrucciones_2019.pdf"
+review_status = "pending_review"
+
 [sources."aeat-dr-202-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

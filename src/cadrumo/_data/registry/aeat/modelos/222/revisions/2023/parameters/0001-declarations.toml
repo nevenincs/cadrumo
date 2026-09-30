@@ -6,6 +6,9 @@
 # (clave [01])". The value is carried as a parameter rather than a literal
 # because it is a rate the Orden can move, and the 2025 edition declares the
 # same parameter id for the same reason.
+#
+# The row opens with the 2022 edition, whose 2019-2022 instructions print the
+# same 18%, so every edition reads this one open row rather than restating it.
 
 [[revisions."2023".parameters]]
 id = "is.modalidad_cuota.percentage"
@@ -21,4 +24,4 @@ required_text = ["CLAVE [03]. A INGRESAR", "porcentaje del 18%", "base del pago 
 [[revisions."2023".parameters.values]]
 value = "18"
 date_axis = "filing_period"
-valid_from = 2023-01-01
+valid_from = 2022-01-01

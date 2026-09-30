@@ -1,0 +1,838 @@
+<version id_norma="BOE-A-2021-20004" fecha_publicacion="20211203" fecha_vigencia="20211204">
+        <p class="anexo_num">ANEXO III</p>
+        <p class="anexo_tit">Diseños físicos y lógicos para la presentación del modelo 296 en soporte directamente legible por ordenador</p>
+        <p class="centro_cursiva">A) Características de los soportes magnéticos</p>
+        <p class="parrafo_2">Los soportes directamente legibles por ordenador para la presentación del resumen anual de retenciones e ingresos a cuenta del Impuesto sobre la Renta de no Residentes sin establecimiento permanente (Modelo 296), habrán de cumplir las siguientes características:</p>
+        <p class="parrafo_2">– Tipo: CD-R (Compact Dic Recordable) de 12 cm.</p>
+        <p class="parrafo">– Capacidad: hasta 700 MB.</p>
+        <p class="parrafo">– Formato ISO/IEC DIS 9660:1999, con extensión o sin extensión Joliet.</p>
+        <p class="parrafo">– No multisesión.</p>
+        <p class="parrafo_2">Si las características del equipo de que dispone el declarante no le permite ajustarse a las especificaciones técnicas exigidas, y está obligado a presentar el resumen anual de retenciones e ingresos a cuenta del Impuesto sobre la Renta de no Residentes sin establecimiento permanente, en soporte directamente legible por ordenador, deberá dirigirse por escrito a la Subdirección General de Aplicaciones del Departamento de Informática Tributaria de la Agencia Estatal de Administración Tributaria (A.E.A.T.), calle Santa María Magdalena, 16, 28016 Madrid, exponiendo sus propias características técnicas y el número de registros que presentaría, con objeto de encontrar, si lo hay, un sistema compatible con las características técnicas de la A.E.A.T.</p>
+        <p class="centro_cursiva">B) Diseños lógicos</p>
+        <p class="centro_redonda">Descripción de los registros</p>
+        <p class="parrafo_2">Para cada declarante se incluirán dos tipos diferentes de registro, que se distinguen por la primera posición, con arreglo a los siguientes criterios:</p>
+        <p class="parrafo_2">Tipo 1: Registro del declarante: Datos identificativos y resumen de la declaración. Diseño de tipo de registro 1 de los recogidos más adelante en estos mismos apartados y Anexo de la presente Orden.</p>
+        <p class="parrafo">Tipo 2: Registro de perceptor. Diseño de tipo de registro 2 de los recogidos más adelante en estos mismos apartados y Anexo de la presente Orden.</p>
+        <p class="parrafo_2">El orden de presentación será el del tipo de registro, existiendo un único registro del tipo 1 y tantos registros del tipo 2 como perceptores tenga la declaración.</p>
+        <p class="parrafo">Todos los campos alfanuméricos y alfabéticos se presentarán alineados a la izquierda y rellenos de blancos por la derecha, en mayúsculas sin caracteres especiales, y sin vocales acentuadas.</p>
+        <p class="parrafo">Para los caracteres específicos del idioma se utilizará la codificación ISO-8859-1. De esta forma la letra «Ñ» tendrá el valor ASCII 209 (Hex. D1) y la «Ç» (cedilla mayúscula) el valor ASCII 199 (Hex. C7).</p>
+        <p class="parrafo">Todos los campos numéricos se presentarán alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.</p>
+        <p class="parrafo">Todos los campos tendrán contenido, a no ser que se especifique lo contrario en la descripción del campo. Si no lo tuvieran, los campos numéricos se rellenarán a ceros y tanto los alfanuméricos como los alfabéticos a blancos.</p>
+        <p class="imagen">
+          <img class="frame" height="1856" src="/datos/imagenes/disp/2008/277/18497_7904806_image11.png" width="2969"/>
+        </p>
+        <p class="imagen">
+          <img class="frame" height="1979" src="/datos/imagenes/disp/2008/277/18497_7904806_image12.png" width="2969"/>
+        </p>
+        <p class="centro_negrita">Modelo 296</p>
+        <p class="centro_cursiva">A. Tipo de registro 1: registro de declarante</p>
+        <p class="centro_redonda">(Posiciones, naturaleza y descripción de los campos)</p>
+        <table class="tabla_ancha">
+          <thead>
+            <tr>
+              <th class="cabeza_tabla">Posiciones</th>
+              <th class="cabeza_tabla">Naturaleza</th>
+              <th class="cabeza_tabla">Descripción de los campos</th>
+            </tr>
+          </thead>
+          <colgroup>
+            <col width="12%"/>
+            <col width="14%"/>
+            <col width="74%"/>
+          </colgroup>
+          <tbody>
+            <tr>
+              <td class="cuerpo_tabla_centro">1</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq"><strong>Tipo de registro</strong>.</p>
+                <p class="cuerpo_tabla_izq">Constante número '1'.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">2-4</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq"><strong>Modelo declaración</strong>.</p>
+                <p class="cuerpo_tabla_izq">Constante '296'.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">5-8</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Ejercicio.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Las cuatro cifras del ejercicio fiscal al que corresponde la declaración.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">9-17</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del declarante.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará el N.I.F. del declarante.</p>
+                <p class="cuerpo_tabla_izq">Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones de la izquierda, de acuerdo con las reglas previstas en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, (B.O.E del 5 de septiembre).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">18-57</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Apellidos y nombre o razón social del declarante.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si es una persona física se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo necesariamente en este orden.</p>
+                <p class="cuerpo_tabla_izq">Para personas jurídicas y entidades en régimen de atribución de Rentas, se consignará la razón social completa, sin anagrama.</p>
+                <p class="cuerpo_tabla_izq">En ningún caso podrá figurar en este campo un nombre comercial.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">58</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Tipo de soporte.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se cumplimentará una de las siguientes claves:</p>
+                <p class="cuerpo_tabla_izq"><strong>'C':</strong> Si la información se presenta en CD-R.</p>
+                <p class="cuerpo_tabla_izq"><strong>'T':</strong> Transmisión telemática</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">59-107</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Persona con quién relacionarse </strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Datos de la persona con quién relacionarse. Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq">59-67 <strong>Teléfono:</strong> Campo numérico de 9 posiciones.</p>
+                <p class="cuerpo_tabla_izq">68-107 <strong>Apellidos y nombre:</strong> Se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">108-120</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Número identificativo de la declaración.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará el número identificativo correspondiente a la declaración. Campo de contenido numérico de 13 posiciones.</p>
+                <p class="cuerpo_tabla_izq">El número identificativo que habrá de figurar en el modelo 296, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 296.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">121-122</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Declaración complementaria o sustitutiva.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">En el caso excepcional de segunda o posterior presentación de declaraciones, deberá cumplimentarse obligatoriamente uno de los siguientes campos:</p>
+                <p class="cuerpo_tabla_izq">121 <strong>Declaración complementaria.:</strong> Se consignará una «C» si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma.</p>
+                <p class="cuerpo_tabla_izq">La presentación de una declaración complementaria que tenga por objeto la modificación del contenido de datos declarados en otra declaración del mismo ejercicio presentada anteriormente se realizará desde el servicio de consulta y modificación de declaraciones informativas en la Oficina Virtual de la Agencia Tributaria (www.agenciatributaria.es )</p>
+                <p class="cuerpo_tabla_izq">122 <strong>Declaración sustitutiva:</strong> Se consignará una «S» si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva sólo puede anular a una única declaración anterior.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">123-135</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Número identificativo de la declaración anterior.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">En el caso de que se haya consignado una «C» en el campo «Declaración complementaria» o se haya consignado «S» en el campo «Declaración sustitutiva», se consignará el número identificativo correspondiente a la declaración a la que sustituye o complementa.</p>
+                <p class="cuerpo_tabla_izq">Campo de contenido numérico de 13 posiciones.</p>
+                <p class="cuerpo_tabla_izq">En cualquier otro caso deberá rellenarse a CEROS.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">136-144</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Número total de perceptores.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 9 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Se consignará el número total de perceptores relacionados en los registros de detalle de tipo 2 por la entidad declarante. Si un mismo perceptor figura en varios registros, se computará tantas veces como figure relacionado. (Número de registros de tipo 2).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">145-159</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Base retenciones e ingresos a cuenta.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará la suma algebraica total de las cantidades reflejadas en los campos «BASE RETENCIONES E INGRESOS A CUENTA» correspondientes a los registros de perceptor.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en:</p>
+                <p class="cuerpo_tabla_izq">145 <strong>Signo:</strong> Alfabético.</p>
+                <p class="cuerpo_tabla_izq">Se cumplimentará cuando el resultado anteriormente mencionada sea menor de 0 (cero). En este caso se consignará una «N», en cualquier otro caso el contenido de este campo será un espacio.</p>
+                <p class="cuerpo_tabla_izq">146-159 <strong>Importe </strong>Campo numérico de 14 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Se consignará sin signo y sin coma decimal, el importe mencionado anteriormente.</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq">146-157 Parte entera del importe de las bases de retenciones.</p>
+                <p class="cuerpo_tabla_izq">158-159 Parte decimal del importe de las bases de retenciones. Si no tiene, consignar ceros.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">160-174</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Retenciones e ingresos a cuenta.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 15 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Se consignará sin signo y sin coma decimal la suma total de las cantidades reflejadas en el campo «RETENCIONES E INGRESOS A CUENTA» correspondiente a los registros de perceptor.</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq">160-172 Parte entera del importe de las retenciones.</p>
+                <p class="cuerpo_tabla_izq">173-174 Parte decimal del importe de las retenciones. Si no tiene, consignar ceros.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">175-189</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Retenciones e ingresos a cuenta ingresados.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 15 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Se consignará sin signo y sin coma decimal la suma total de las cantidades reflejadas en el campo «RETENCIONES E INGRESOS A CUENTA» correspondiente a los registros de perceptor, que correspondan a perceptores (registros) en los que se haya consignado en el campo «CLAVE» los valores «3» a «25», así como también aquellos en los que se haya consignado en el campo «CLAVE» los valores «1» ó «2» y, simultáneamente en el campo «PAGO» el valor «1».</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq"><strong>175-187 Entero Numérico</strong> Parte entera del importe de las retenciones.</p>
+                <p class="cuerpo_tabla_izq"><strong>188-189 Decimal Numérico</strong> Parte decimal del importe de las retenciones. Si no tiene, consignar ceros.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">190-390</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <strong>Blancos</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">391-399</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del representante legal.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si el declarante es menor de 14 años se consignará en este campo el NIF de su representante legal (padre, madre, tutor). Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.</p>
+                <p class="cuerpo_tabla_izq">En cualquier otro caso el contenido de este campo se rellenará a espacios.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">400-487</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <strong>Blancos</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">391-399</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del representante legal.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si el declarante es menor de 14 años se consignará en este campo el NIF de su representante legal (padre, madre, tutor). Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.</p>
+                <p class="cuerpo_tabla_izq">En cualquier otro caso el contenido de este campo se rellenará a espacios.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">400-487</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <strong>Blancos</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">488-500</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Sello electrónico</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo reservado para el sello electrónico en presentaciones individuales, que será cumplimentado exclusivamente por los programas de la A.E.A.T. En cualquier otro caso se rellenará a blancos.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="cita">* Todos los importes serán positivos.</p>
+        <p class="cita">* Los campos numéricos que no tengan contenido se rellenarán a ceros.</p>
+        <p class="cita">* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a blancos.</p>
+        <p class="cita">* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la izquierda.</p>
+        <p class="cita">* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales acentuadas, excepto que se especifique lo contrario en la descripción del campo</p>
+        <p class="imagen">
+          <img class="frame" height="1971" src="/datos/imagenes/disp/2008/277/18497_7904806_image13.png" width="2969"/>
+        </p>
+        <p class="imagen">
+          <img class="frame" height="2094" src="/datos/imagenes/disp/2008/277/18497_7904806_image14.png" width="2969"/>
+        </p>
+        <p class="centro_negrita">Modelo 296</p>
+        <p class="centro_cursiva">B. tipo de registro 2: registro de perceptor.</p>
+        <p class="centro_redonda">(Posiciones, naturaleza y descripción de los campos)</p>
+        <table class="tabla_ancha">
+          <thead>
+            <tr>
+              <th class="cabeza_tabla">Posiciones</th>
+              <th class="cabeza_tabla">Naturaleza</th>
+              <th class="cabeza_tabla">Descripción de los campos</th>
+            </tr>
+          </thead>
+          <colgroup>
+            <col width="12%"/>
+            <col width="14%"/>
+            <col width="74%"/>
+          </colgroup>
+          <tbody>
+            <tr>
+              <td class="cuerpo_tabla_centro">1</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Tipo de registro.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Constante '2'</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">2-4</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Modelo declaración.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Constante '296'.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">5-8</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Ejercicio.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Consignar lo contenido en estas mismas posiciones del registro de tipo 1.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">9-17</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del declarante.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Consignar lo contenido en estas mismas posiciones del registro de tipo 1.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">18-26</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del perceptor.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si el perceptor dispone de N.I.F. asignado en España, de acuerdo con las reglas previstas en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, (B.O.E del 5 de septiembre), se consignará el número de identificación fiscal.</p>
+                <p class="cuerpo_tabla_izq">Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">27-35</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>N.I.F. del representante legal.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si el perceptor es menor de 14 años y su representante dispone de NIF asignado en España de acuerdo con las reglas previstas en el Reglamento general de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por el Real Decreto 1065/2007, de 27 de junio (B.O.E. del 5 de septiembre), se consignará en este campo el número de identificación fiscal de su representante legal (padre, madre o tutor).</p>
+                <p class="cuerpo_tabla_izq">En cualquier otro caso el contenido de este campo se rellenará a espacios.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">36</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>F/J. </strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se hará constar una «F» si el perceptor es una persona física y una «J» si se trata de una persona jurídica o una entidad.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">37-76</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Apellidos y nombre, razón social o denominación del perceptor.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">a). Para personas físicas se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden. Si el perceptor es menor de edad, se consignarán en este campo los apellidos y nombre del menor de edad.</p>
+                <p class="cuerpo_tabla_izq">b). Tratándose de personas jurídicas y entidades en régimen de atribución de rentas, se consignará la razón social o denominación completa de la entidad, sin anagramas.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">77-90</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <strong>Blancos.</strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">91-98</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Fecha de devengo.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará la fecha en que se ha devengado la renta. Se subdivide en:</p>
+                <p class="cuerpo_tabla_izq">91-92 <strong>Dia</strong> Numérico Dos posiciones.</p>
+                <p class="cuerpo_tabla_izq">93-94 <strong>Mes</strong> Numérico Dos posiciones.</p>
+                <p class="cuerpo_tabla_izq">95-98 <strong>Año</strong> Numérico Cuatro posiciones.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">99</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Naturaleza.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará la clave que corresponda en función de la naturaleza, dineraria o en especie, de la renta, según la relación alfabética siguiente:</p>
+                <p class="cuerpo_tabla_izq">D. Renta dineraria.</p>
+                <p class="cuerpo_tabla_izq">E. Renta en especie.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">100-101</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Clave.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará la clave numérica que corresponda en función del tipo de renta, según la relación de Claves siguientes:</p>
+                <p class="cuerpo_tabla_izq">1. Dividendos y otras rentas derivadas de la participación en fondos propios de entidades.</p>
+                <p class="cuerpo_tabla_izq">2. Intereses y otras rentas derivadas de la cesión a terceros de capitales propios.</p>
+                <p class="cuerpo_tabla_izq">3. Cánones derivados de patentes, marcas de fábrica o de comercio, dibujos o modelos, planos, fórmulas o procedimientos secretos.</p>
+                <p class="cuerpo_tabla_izq">4. Cánones derivados de derechos sobre obras literarias y artísticas.</p>
+                <p class="cuerpo_tabla_izq">5. Cánones derivados de derechos sobre obras científicas.</p>
+                <p class="cuerpo_tabla_izq">6. Cánones derivados de derechos sobre películas cinematográficas y obras sonoras o visuales grabadas.</p>
+                <p class="cuerpo_tabla_izq">7. Cánones derivados de informaciones relativas a experiencias industriales, comerciales o científicas (know-how).</p>
+                <p class="cuerpo_tabla_izq">8. Cánones derivados de derechos sobre programas informáticos.</p>
+                <p class="cuerpo_tabla_izq">9. Cánones derivados de derechos personales susceptibles de cesión, tales como los derechos de imagen.</p>
+                <p class="cuerpo_tabla_izq">10. Cánones derivados de equipos industriales, comerciales o científicos.</p>
+                <p class="cuerpo_tabla_izq">11. Otros cánones no relacionados anteriormente.</p>
+                <p class="cuerpo_tabla_izq">12. Rendimientos de capital mobiliario de operaciones de capitalización y de contratos de seguros de vida o invalidez.</p>
+                <p class="cuerpo_tabla_izq">13. Otros rendimientos de capital mobiliario no citados anteriormente.</p>
+                <p class="cuerpo_tabla_izq">14. Rendimientos de bienes inmuebles.</p>
+                <p class="cuerpo_tabla_izq">15. Rentas de actividades empresariales.</p>
+                <p class="cuerpo_tabla_izq">16. Rentas derivadas de prestaciones de asistencia técnica.</p>
+                <p class="cuerpo_tabla_izq">17. Rentas de actividades artísticas.</p>
+                <p class="cuerpo_tabla_izq">18. Rentas de actividades deportivas.</p>
+                <p class="cuerpo_tabla_izq">19. Rentas de actividades profesionales.</p>
+                <p class="cuerpo_tabla_izq">20. Rentas del trabajo.</p>
+                <p class="cuerpo_tabla_izq">21. Pensiones y haberes pasivos.</p>
+                <p class="cuerpo_tabla_izq">22. Retribuciones de administradores y miembros de consejos de Administración.</p>
+                <p class="cuerpo_tabla_izq">23. Rendimientos derivados de operaciones de reaseguros.</p>
+                <p class="cuerpo_tabla_izq">24. Entidades de navegación marítima o aérea.</p>
+                <p class="cuerpo_tabla_izq">25. Otras rentas.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">102-103</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Subclave:</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará la que corresponda en función de las circunstancias tenidas en cuenta para el cálculo de la retención o ingreso a cuenta, según la relación siguiente:</p>
+                <p class="cuerpo_tabla_izq">01. Retención practicada a los tipos generales o escalas de tributación del artículo 25 de la Ley del Impuesto sobre la Renta de no Residentes.</p>
+                <p class="cuerpo_tabla_izq">02. Retención practicada aplicando límites de imposición de Convenios.</p>
+                <p class="cuerpo_tabla_izq">03. Exención interna (principalmente: artículo 14 de la Ley del Impuesto sobre la Renta de no Residentes) excepto los supuestos a que se refiere la subclave 12.</p>
+                <p class="cuerpo_tabla_izq">04. Exención por aplicación de un Convenio.</p>
+                <p class="cuerpo_tabla_izq">05. Sin retención por previo pago del Impuesto por el contribuyente o su representante.</p>
+                <p class="cuerpo_tabla_izq">06. El perceptor declarado es una entidad extranjera de gestión colectiva de derechos de la propiedad intelectual, habiéndose practicado retención aplicando el límite de imposición, o la exención, de un Convenio, conforme a lo previsto en el artículo 18 de esta Orden.</p>
+                <p class="cuerpo_tabla_izq">07. El perceptor es un contribuyente del Impuesto sobre la Renta de las Personas Físicas del régimen especial aplicable a los trabajadores desplazados a territorio español, a que se refiere el artículo 93 de la Ley del Impuesto sobre la Renta de las Personas Físicas excepto los supuestos a que se refiere la subclave 13.</p>
+                <p class="cuerpo_tabla_izq">08. El perceptor declarado es una entidad residente en el extranjero comercializadora de acciones o participaciones de instituciones de inversión colectiva españolas, habiéndose practicado retención aplicando un límite de imposición fijado en el Convenio inferior al previsto en el artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, conforme al procedimiento especial previsto en el artículo 19 de esta Orden.</p>
+                <p class="cuerpo_tabla_izq">09. El perceptor declarado es una entidad residente en el extranjero comercializadora de acciones o participaciones de instituciones de inversión colectiva españolas, habiéndose practicado retención aplicando el tipo de gravamen previsto en el artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, conforme el procedimiento especial previsto en el artículo 19 de esta Orden.</p>
+                <p class="cuerpo_tabla_izq">10. Ingreso a cuenta a que se refiere el artículo 36.2 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, realizado por una entidad en régimen de atribución de rentas en relación con la renta atribuida a un miembro no residente.</p>
+                <p class="cuerpo_tabla_izq">11. El perceptor declarado es un contribuyente que ha acreditado al pagador haber hecho uso del procedimiento previsto en el artículo 32 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes.</p>
+                <p class="cuerpo_tabla_izq">12. Dietas y asignaciones para gastos de viaje exceptuados de gravamen (artículo 9 del Reglamento del Impuesto sobre la Renta de las Personas Físicas).</p>
+                <p class="cuerpo_tabla_izq">13. El perceptor es un contribuyente del Impuesto sobre la Renta de las Personas Físicas del régimen especial aplicable a los trabajadores desplazados a territorio español a que se refiere el artículo 93 de la Ley del Impuesto sobre la Renta de las Personas Físicas. Dietas y asignaciones para gastos de viaje exceptuados de gravamen (artículo 9 del Reglamento del Impuesto sobre la Renta de las Personas Físicas).</p>
+                <p class="cuerpo_tabla_izq">En los supuestos a que se refieren las subclaves 06, 07, 08, 09, 10, 11 y 13 de la relación anterior, se consignarán siempre estas subclaves específicas sin tener en consideración el resto de subclaves.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">104-116</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Base retenciones e ingresos a cuenta.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 13 posiciones.</p>
+                <p class="cuerpo_tabla_izq">La base para el cálculo de la obligación de retener e ingresar a cuenta será la prevista en el artículo 13 del Reglamento del Impuesto. Esta base coincide con la base imponible del impuesto determinada conforme establece el artículo 24 de la Ley, pero sin tener en consideración los gastos deducibles contemplados en los artículos 24.2 y 44 de la Ley.</p>
+                <p class="cuerpo_tabla_izq">No obstante, en el caso de operaciones de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P», el contenido de este campo será igual a la suma de la cuantía consignadas en el campo «REMUNERACIÓN AL PRESTAMISTA» (posiciones 191-202, del registro de tipo 2) y de la cuantía de las compensaciones sobre las que exista obligación de retener consignadas en el campo «COMPENSACIONES» (posiciones 203-214, del registro de tipo 2).</p>
+                <p class="cuerpo_tabla_izq">104 <strong>Signo:</strong> Si el importe descrito anteriormente es negativo, se consignará una «N», En cualquier otro caso se rellenará a blancos</p>
+                <p class="cuerpo_tabla_izq">105-116 <strong>Importe:</strong> Campo numérico de 12 posiciones. Se consignará sin signo y sin coma decimal, el importe descrito anteriormente.</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq"><strong>105-114 Entero Numérico Parte entera</strong> del importe de las retenciones.</p>
+                <p class="cuerpo_tabla_izq"><strong>115-116 Decimal Numérico Parte decimal</strong> del importe de las retenciones. Si no tiene, consignar ceros.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">117-120</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>% Retención</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará el porcentaje de retención o de ingreso a cuenta aplicado en cada caso. El % de retención aplicable será el tipo de gravamen establecido en el artículo 25 de la Ley del Impuesto, en función del tipo de renta o, si resulta aplicable un Convenio para evitar la doble imposición, el límite de imposición previsto en el Convenio. Cuando no se haya practicado retención o ingreso a cuenta o se trate de rentas exentas, tanto por normativa interna como por Convenio, se indicará un 0%. Tratándose de pensiones, a las que resulta aplicable la escala de gravamen del artículo 25.1.b), se indicará el tipo medio resultante de aplicar dicha escala a la cuantía anual de la pensión.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en otros dos:</p>
+                <p class="cuerpo_tabla_izq">117-118 <strong>Entero</strong> Numérico Parte entera:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte entera del porcentaje (si no tiene, consignar CEROS).</p>
+                <p class="cuerpo_tabla_izq">119-120 <strong>Decimal</strong> Numérico Parte decimal:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte decimal del porcentaje (si no tiene, consignar CEROS).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">121-133</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Retenciones e ingresos a cuenta.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 13 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Se consignará el resultado de aplicar la cuantía consignada en el campo «BASE RETENCIONES E INGRESOS A CUENTA» el porcentaje de retención o ingreso a cuenta consignado en el campo «% RETENCIÓN».</p>
+                <p class="cuerpo_tabla_izq">Si el campo «BASE RETENCIONES E INGRESOS A CUENTA» es negativo, este campo se cumplimentará a ceros.</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en otros dos:</p>
+                <p class="cuerpo_tabla_izq">121-131 <strong>Entero</strong> Numérico Parte entera:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte entera de las retenciones (si no tiene, consignar CEROS).</p>
+                <p class="cuerpo_tabla_izq">132-133 <strong>Decimal</strong> Numérico Parte decimal:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte decimal de las retenciones (si no tiene, consignar CEROS).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">134</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Mediador.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se consignará una «X» en este campo exclusivamente en aquellos supuestos en que la naturaleza del perceptor declarado sea la de una Entidad domiciliada, residente o representada en España, que pague por cuenta ajena rentas sujetas a retención o que sea depositaria o gestione el cobro de las rentas de valores que originan el rendimiento o la renta correspondiente. En los demás supuestos que no sean el contemplado anteriormente, es decir, cuando el perceptor declarado sea el contribuyente por el Impuesto sobre la Renta de no Residentes que haya soportado efectivamente las retenciones o ingresos a cuenta objeto de este modelo no se cumplimentará.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">135</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Código.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Identifica el contenido del campo «CÓDIGO EMISOR». Puede tomar los valores siguientes:</p>
+                <p class="cuerpo_tabla_izq">1 Corresponde a un NIF.</p>
+                <p class="cuerpo_tabla_izq">2 Corresponde a un código ISIN.</p>
+                <p class="cuerpo_tabla_izq">3 Corresponde a valores extranjeros que no tienen asignado ISIN, cuyo emisor no dispone de NIF.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">136-147</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Codigo emisor.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se cumplimentará para identificar al emisor.</p>
+                <p class="cuerpo_tabla_izq">En general, se consignará el Código ISIN, configurado de acuerdo con la Norma Técnica 1/1998, de 16 de diciembre, de la Comisión Nacional del Mercado de Valores.</p>
+                <p class="cuerpo_tabla_izq">Si los valores no tienen asignado este Código:</p>
+                <p class="cuerpo_tabla_izq">– Cuando se haya indicado un 1 en el campo «CÓDIGO» (posición 135), se identificará al emisor mediante el Numero de Identificación Fiscal, otorgado por la Agencia Estatal de Administración Tributaria.</p>
+                <p class="cuerpo_tabla_izq">– Si se ha consignado un 3 en el campo «CÓDIGO» (posición 135), se reflejará la clave «ZXX», siendo «XX» el código del país emisor, de acuerdo con las claves de países que figuran en la Orden HAC/3626/2003, de 23 de diciembre, en su anexo 11.</p>
+                <p class="cuerpo_tabla_izq">Asimismo, en los supuestos de títulos emitidos por organismos supranacionales (Banco Mundial, etc.) que no tengan asignado ISIN se consignará ZNN, siendo NN las claves alfabéticas que figuran al final del citado anexo 11.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">148</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Pago</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se consignará cualquiera de los números que a continuación se relacionan para indicar si el pago que ha realizado el declarante ha sido por uno de los siguientes conceptos:</p>
+                <p class="cuerpo_tabla_izq">1. Como emisor.</p>
+                <p class="cuerpo_tabla_izq">2. Como mediador.</p>
+                <p class="cuerpo_tabla_izq">En el caso de pago de valores de emisores extranjeros, esta clave será 1 (como emisor-retenedor).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">149</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Tipo código.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se cumplimentará en este campo cualquiera de las letras que a continuación se relacionan, para identificar la descripción del contenido del campo «CÓDIGO CUENTA VALORES»:</p>
+                <p class="cuerpo_tabla_izq">«C» Identificación con el Código Cuenta Valores (C.C.V.).</p>
+                <p class="cuerpo_tabla_izq">«O» Otra identificación.</p>
+                <p class="cuerpo_tabla_izq">«P»: Préstamo de valores de los regulados en la disposición adicional decimoctava de la Ley 62/2003, de 30 de diciembre, de medidas fiscales, administrativas y del orden social («Boletín Oficial del Estado» de 31 de diciembre)».</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">150-169</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Codigo cuenta valores.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se consignará este dato en aquellos supuestos en que una Entidad financiera tenga encomendada la gestión del cobro, la administración y el depósito de los valores de los cuales proceden los correspondientes rendimientos del capital mobiliario o rentas objeto de este modelo. Por lo tanto, si el declarante no es una Entidad financiera gestora del cobro, administradora o depositaria de los valores de los cuales proceden tales rendimientos del capital mobiliario o rentas no deberá cumplimentarse, en ningún caso, este campo. Su estructura se descompone de la siguiente manera:</p>
+                <p class="cuerpo_tabla_izq">Código de Entidad: Cuatro dígitos.</p>
+                <p class="cuerpo_tabla_izq">Código de Sucursal: Cuatro dígitos.</p>
+                <p class="cuerpo_tabla_izq">Dígitos de Control: Dos dígitos.</p>
+                <p class="cuerpo_tabla_izq">Número de Cuenta: Diez dígitos.</p>
+                <p class="cuerpo_tabla_izq">Cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el número de operación del préstamo en los supuestos de préstamos de valores.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">170</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Pendiente.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se consignará una «X» en este campo en aquellos supuestos de percepciones devengadas en el ejercicio, cuyos pagos no se han efectuado en el mismo por el declarante al no presentarse los titulares a su cobro. Siempre que se consigne la «X» en este campo, el resto de campos del mismo perceptor (registro) se cumplimentará de la forma siguiente:</p>
+                <p class="cuerpo_tabla_izq">N.I.F. PERCEPTOR: 999 999 999</p>
+                <p class="cuerpo_tabla_izq">N.I.F. REPRESENTANTE: 999 999 999</p>
+                <p class="cuerpo_tabla_izq">F/J: sin contenido</p>
+                <p class="cuerpo_tabla_izq">APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN: VALORES PENDIENTES DE ABONO</p>
+                <p class="cuerpo_tabla_izq">FECHA DEVENGO: la que corresponda</p>
+                <p class="cuerpo_tabla_izq">NATURALEZA: la que corresponda</p>
+                <p class="cuerpo_tabla_izq">CLAVE: la que corresponda</p>
+                <p class="cuerpo_tabla_izq">SUBCLAVE: la que corresponda</p>
+                <p class="cuerpo_tabla_izq">BASE RETENCIONES E INGRESOS A CUENTA: la que corresponda</p>
+                <p class="cuerpo_tabla_izq">% RETENCIÓN: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">RETENCIONES E INGRESOS A CUENTA: los que correspondan</p>
+                <p class="cuerpo_tabla_izq">MEDIADOR: sin contenido</p>
+                <p class="cuerpo_tabla_izq">CÓDIGO: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">CÓDIGO EMISOR: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">PAGO: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">TIPO CÓDIGO: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">CÓDIGO CUENTA VALORES: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">EJERCICIO DEVENGO: sin contenido</p>
+                <p class="cuerpo_tabla_izq">FECHA INICIO PRESTAMO: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">FECHA VENCIMIENTO PRESTAMO: el que corresponda.</p>
+                <p class="cuerpo_tabla_izq">REMUNERACIÓN AL PRESTAMISTA: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">COMPENSACIONES: el que corresponda.</p>
+                <p class="cuerpo_tabla_izq">GARANTÍAS: el que corresponda</p>
+                <p class="cuerpo_tabla_izq">DIRECCIÓN DEL PERCEPTOR: sin contenido</p>
+                <p class="cuerpo_tabla_izq">NIF EN EL PAÍS DE RESIDENCIA FISCAL: sin contenido</p>
+                <p class="cuerpo_tabla_izq">FECHA DE NACIMIENTO: sin contenido</p>
+                <p class="cuerpo_tabla_izq">LUGAR DE NACIMIENTO: sin contenido</p>
+                <p class="cuerpo_tabla_izq">PAÍS O TERRITORIO DE RESIDENCIA FISCAL DEL PERCEPTOR: sin contenido</p>
+                <p class="cuerpo_tabla_izq">La presentación de la información de los datos relativos al perceptor se realizará en la declaración correspondiente al ejercicio en que los rendimientos o rentas pendientes de pago sean abonados a aquél. En este supuesto deberá consignarse, en la declaración correspondiente al ejercicio de pago de los rendimientos o rentas, en el campo</p>
+                <p class="cuerpo_tabla_izq">«EJERCICIO DEVENGO», las cuatro cifras del ejercicio en que se devengaron los correspondientes rendimientos o rentas, aunque no se pagaron por no presentarse los titulares al cobro de los mismos.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">171-174</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Ejercicio de devengo.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».</p>
+                <p class="cuerpo_tabla_izq">Se consignarán las cuatro cifras del ejercicio de devengo de aquellos rendimientos o rentas pagados en el ejercicio correspondiente a la presente declaración por haberse presentado los titulares a su cobro, cuyo devengo corresponda a ejercicios anteriores. En ningún otro caso que no sea el descrito anteriormente se cumplimentará este campo.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">175-182</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Fecha de inicio del préstamo</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo la fecha de inicio del préstamo, indicando los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31), con el formato AAAAMMDD.</p>
+                <p class="cuerpo_tabla_izq">En el resto de los casos este campo no tendrá contenido.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">183-190</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Fecha de vencimiento del préstamo</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo la fecha de vencimiento del préstamo, indicando los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31), con el formato AAAAMMDD.</p>
+                <p class="cuerpo_tabla_izq">En el resto de los casos este campo no tendrá contenido</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">191-202</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Remuneración al prestamista</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 12 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las remuneraciones al prestamista que correspondan. Los importes deben configurarse en EUROS, sin signo y sin coma decimal.</p>
+                <p class="cuerpo_tabla_izq">En el resto de los casos este campo no tendrá contenido</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en otros dos:</p>
+                <p class="cuerpo_tabla_izq">191-200 <strong>Entero</strong> Numérico Parte entera:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte entera de la remuneración (si no tiene, consignar CEROS).</p>
+                <p class="cuerpo_tabla_izq">201-202 <strong>Decimal</strong> Numérico Parte decimal:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte decimal de la remuneración (si no tiene, consignar CEROS).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">203-214</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Compensaciones</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 12 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las compensaciones que correspondan, independiente de si existe o no obligación de retener e ingresar a cuenta. Los importes deben configurarse en EUROS, sin signo y sin coma decimal.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en otros dos:</p>
+                <p class="cuerpo_tabla_izq">203-212 <strong>Entero</strong> Numérico Parte entera:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte entera de las compensaciones (si no tiene, consignar CEROS).</p>
+                <p class="cuerpo_tabla_izq">213-214 <strong>Decimal</strong> Numérico Parte decimal:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte decimal de las compensaciones (si no tiene, consignar CEROS).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">215-226</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Garantías</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 12 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las garantías que correspondan. Los importes deben configurarse en euros, sin signo y sin coma decimal.</p>
+                <p class="cuerpo_tabla_izq">En el resto de los casos este campo no tendrá contenido Este campo se subdivide en otros dos:</p>
+                <p class="cuerpo_tabla_izq">215-224 <strong>Entero</strong> Numérico Parte entera:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte entera de las garantías (si no tiene, consignar CEROS).</p>
+                <p class="cuerpo_tabla_izq">225-226 <strong>Decimal</strong> Numérico Parte decimal:</p>
+                <p class="cuerpo_tabla_izq">Se consignará la parte decimal de las garantías (si no tiene, consignar CEROS).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">227-388</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Dirección del perceptor</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará el domicilio del perceptor en su país o territorio de residencia.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en:</p>
+                <p class="cuerpo_tabla_izq">227-276 <strong>Domicilio/address:</strong> Se consignará en este campo la dirección correspondiente al domicilio: tipo de vía (calle, plaza, avenida, carretera...), nombre de la vía pública, número de casa, o, en su caso, punto kilométrico, etc</p>
+                <p class="cuerpo_tabla_izq">277-316 <strong>Complemento del domicilio:</strong> en su caso, se harán constar en este campo los datos adicionales que resulten necesarios para la completa identificación del domicilio.</p>
+                <p class="cuerpo_tabla_izq">317-346 <strong>Población/ciudad:</strong> se consignará el nombre de la población o ciudad en la que se encuentra situado el domicilio.</p>
+                <p class="cuerpo_tabla_izq">347-376 <strong>Provincia/región/estado:</strong> Cuando sea necesario para una correcta identificación de la dirección del domicilio, se consignará en este campo el nombre de la Provincia, Región, Estado, Departamento o cualquier otra subdivisión política o administrativa, donde se encuentre situado el domicilio.</p>
+                <p class="cuerpo_tabla_izq">377-386 <strong>Código postal (zip):</strong> se consignará el código postal correspondiente al domicilio. (campo de 10 posiciones, alfanumérico)</p>
+                <p class="cuerpo_tabla_izq">387-388<strong> Código país:</strong> se cumplimentará el código del país o territorio correspondiente al domicilio, de acuerdo con las claves de países o territorios que figuran en el anexo 11 de la Orden HAC/3626/2003, de 23 de diciembre. Campo alfabético de 2 posiciones.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">389-401</td>
+              <td class="cuerpo_tabla_centro">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Ingresos a cuenta repercutidos.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Campo numérico de 13 posiciones.</p>
+                <p class="cuerpo_tabla_izq">Cuando en el campo “NATURALEZA” (posición 99 del registro de tipo 2) se haya consignado el valor E (Renta en especie) y tenga contenido el campo “RETENCIONES E INGRESOS A CUENTA” (posición 121-133 del registro de tipo 2), se consignará en este campo el importe de los ingresos a cuenta efectuados que, en su caso, el pagador de las retribuciones en especie hubiera repercutido al perceptor.</p>
+                <p class="cuerpo_tabla_izq">Los importes deben consignarse en EUROS.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq">389-399 Entero. Parte entera del importe de las retenciones e ingresos a cuenta (si no tiene contenido se consignará a ceros).</p>
+                <p class="cuerpo_tabla_izq">400-401 Decimal. Parte decimal del importe de las retenciones e ingresos a cuenta (si no tiene contenido se consignará a ceros).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">402-432</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Blancos.</strong>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">433-452</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>NIF en el país de residencia fiscal</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Si el perceptor dispone de un número de identificación fiscal asignado en su país o territorio de residencia se consignarán los dígitos numéricos y alfabéticos que identifiquen al contribuyente en su país o territorio de residencia.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">453-460</td>
+              <td class="cuerpo_tabla_izq">Numérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Fecha de nacimiento.</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Cuando en la «clave de personalidad», posición 36 del tipo de registro 2, se haga constar una F, se indicará la fecha de nacimiento del perceptor. Se consignarán los dos dígitos del día (01 a 31), los dos del mes (de 01 a 12) y los cuatro del año con el formato DDMMAAAA.</p>
+                <p class="cuerpo_tabla_izq">453-454 <strong>Dia </strong>Numérico Dos posiciones.</p>
+                <p class="cuerpo_tabla_izq">455-456 <strong>Mes</strong> Numérico Dos posiciones.</p>
+                <p class="cuerpo_tabla_izq">457-460 <strong>Año</strong> Numérico Cuatro posiciones.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">461-497</td>
+              <td class="cuerpo_tabla_izq">Alfanumérico</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>Lugar de nacimiento</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Cuando en la «clave de personalidad», posición 36 del tipo de registro 2, se haga constar una F, se indicará el lugar de nacimiento del perceptor.</p>
+                <p class="cuerpo_tabla_izq">Este campo se subdivide en dos:</p>
+                <p class="cuerpo_tabla_izq">461-495 CIUDAD: 35 posiciones. Se consignará el municipio y, en su caso, la provincia o región o departamento correspondiente al lugar de nacimiento.</p>
+                <p class="cuerpo_tabla_izq">496-497 CÓDIGO PAÍS: Campo alfabético de 2 posiciones. Se consignará el código del país o territorio correspondiente al lugar de nacimiento del perceptor, de acuerdo con las claves de países y territorios que figuran en el anexo 11 de la Orden HAC/3626/2003, de 23 de diciembre.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">498-499</td>
+              <td class="cuerpo_tabla_izq">Alfabético</td>
+              <td class="cuerpo_tabla_izq">
+                <p class="cuerpo_tabla_izq">
+                  <strong>País o territorio de residencia fiscal del perceptor</strong>
+                </p>
+                <p class="cuerpo_tabla_izq">Se consignará el código del país o territorio de residencia fiscal del perceptor, de acuerdo con las claves de países que figuran en la Orden HAC/3626/2003, de 23 de diciembre, en su Anexo 11 (B.O.E. de 30/12/2003).</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cuerpo_tabla_centro">500</td>
+              <td class="cuerpo_tabla_centro">–</td>
+              <td class="cuerpo_tabla_izq">
+                <strong>Blanco.</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="cita">* Todos los importes serán positivos.</p>
+        <p class="cita">* Los campos numéricos que no tengan contenido se rellenarán a ceros.</p>
+        <p class="cita">* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a blancos.</p>
+        <p class="cita">* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la izquierda.</p>
+        <p class="cita">* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales acentuadas, excepto que se especifique lo contrario en la descripción del campo.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el campo «subclave», posiciones 102-103, se añade un nuevo campo «ingresos a cuenta repercutidos», que ocupa las posiciones 389-401, y el campo «blancos» pasa a ocupar las posiciones 402-432, dentro del registro de tipo 2, por el art. 5 de la Orden HFP/1351/2021, de 1 de diciembre. <a class="refPost">Ref. BOE-A-2021-20004#aq</a></p>
+          <p class="nota_pie_2">Esta modificación será aplicable, por primera vez, para las declaraciones correspondientes a 2021 que se presentarán en 2022, según establece la disposición final única de la citada Orden.</p>
+          <p class="nota_pie">Se introduce un nuevo tipo de subclave «11» y se modifican las instrucciones de cumplimentación del campo «Subclave», posiciones 102 y 103 del registro de tipo 2, por el art. 2 de la Orden HFP/1271/2017, de 21 de diciembre. <a class="refPost">Ref. BOE-A-2017-15365</a></p>
+          <p class="nota_pie_2">Téngase en cuenta que la nueva subclave del modelo 296 se utilizará por primera vez en la declaración informativa correspondiente al ejercicio 2017, según establece la disposición final única de la citada Orden.</p>
+          <p class="nota_pie">Se introduce un nuevo tipo de subclave «10» y se modifican las instrucciones de cumplimentación del campo «Subclave», posiciones 102 y 103 del registro de tipo 2, por el art. 3.2 de la Orden HAP/2201/2014, de 21 de noviembre. <a class="refPost">Ref. BOE-A-2014-12248</a></p>
+          <p class="nota_pie_2">Esta modificación será de aplicación, por primera vez, para la presentación de las declaraciones informativas cuyo plazo se inicie a partir del día 1 de enero de 2015, en relación con la información correspondiente al año 2014, según establece la disposición final 3 de la citada Orden.</p>
+        </blockquote>
+      </version>

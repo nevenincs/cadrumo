@@ -21,6 +21,9 @@ modelo:
           account.
         title: IRNR annual summary of withholdings and payments on account
       revision:
+        '2022':
+          field:
+            label: Modelo 296, tax year 2022
         '2023':
           construct:
             modelo-296-calculation-construct:
@@ -29,10 +32,13 @@ modelo:
                   payments on account without a permanent establishment
           field:
             label: Modelo 296, tax year 2023
-        2024-y-siguientes:
+        2024-2025:
           construct:
             modelo-296-calculation-construct:
               field:
                 title: 'Modelo 296: annual summary of IRNR withholdings'
           field:
-            label: Order HAC/56/2024, tax years 2024 onwards
+            label: Order HAC/56/2024, tax years 2024 and 2025
+        2026-y-siguientes:
+          field:
+            label: Order HAC/623/2026, tax years 2026 onwards

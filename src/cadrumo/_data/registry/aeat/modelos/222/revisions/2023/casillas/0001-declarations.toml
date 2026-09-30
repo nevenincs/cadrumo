@@ -132,6 +132,8 @@ id = "59"
 continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos"
 number = "59"
 section = ["liquidacion"]
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) line 79 prints box [59], Ajustes para la determinacion de la base imponible del grupo (DA 19a LIS) - Aumentos; corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.md (sha256 dcda92308057) carries no field [59]. The 2019-2022 instructions print [59] only as a closed clave for other correcciones, in which no dato may be consigned, so the DA 19a adjustment is new on the 2023 form"
 semantic_role = "is_pf_grupo_mod_40_3_lis_ajustes_para_la_determinacion_de_la_base_imponible_del_grup_aumentos"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
@@ -140,6 +142,8 @@ id = "60"
 continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones"
 number = "60"
 section = ["liquidacion"]
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) line 80 prints box [60], Ajustes para la determinacion de la base imponible del grupo (DA 19a LIS) - Disminuciones; corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.md (sha256 dcda92308057) carries no field [60]. The 2019-2022 instructions print [60] only as a closed clave for other correcciones, in which no dato may be consigned, so the DA 19a adjustment is new on the 2023 form"
 semantic_role = "is_pf_grupo_mod_40_3_lis_ajustes_para_la_determinacion_de_la_base_imponible_del_disminuciones"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 

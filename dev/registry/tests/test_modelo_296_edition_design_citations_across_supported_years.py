@@ -15,9 +15,11 @@ from functools import cache
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
@@ -37,7 +39,15 @@ def _supported_years() -> tuple[int, ...]:
 
 
 def _edition(year: int) -> ModeloRevision:
-    return compiled_bundled_authority().snapshot(_MODELO, filing_year=year, period=_PERIOD).revision
+    """The year's edition, snapshotted at the grade it declares rather than at filing grade."""
+    authority = compiled_bundled_authority()
+    selected = select_revision(
+        authority.modelo(_MODELO),
+        filing_year=year,
+        period=_PERIOD,
+        support=authority.catalogues.supported_filing_years,
+    )
+    return authority.snapshot(_MODELO, filing_year=year, period=_PERIOD, grade=selected.authority_grade).revision
 
 
 def _is_record_design(source_ref: str) -> bool:
@@ -51,7 +61,7 @@ def _layout_design(revision: ModeloRevision) -> str:
     return design
 
 
-def _foreign_design_citations(revision: ModeloRevision, design: str) -> list[tuple[str, str, str]]:
+def _foreign_design_citations(revision: ModeloRevision, design: str | None) -> list[tuple[str, str, str]]:
     """Return (family, member, design) for every member citing a record design other than ``design``."""
     findings: list[tuple[str, str, str]] = []
     for spec in CANONICAL_FAMILY_SPECS:
@@ -67,16 +77,30 @@ def _foreign_design_citations(revision: ModeloRevision, design: str) -> list[tup
     return findings
 
 
+def _export_bearing_years() -> tuple[int, ...]:
+    return tuple(year for year in _supported_years() if _edition(year).export_layouts)
+
+
 @pytest.mark.parametrize("year", _supported_years())
 def test_every_member_cites_the_record_design_of_its_own_year(year: int) -> None:
+    """A year with no generated layout has no design of its own, so it may cite none.
+
+    Such an edition claims applicability only: the export generator renders AEAT
+    record designs, and a year whose design is unpublished or never existed can
+    only inherit another year's, which is exactly the citation this test refuses.
+    """
     revision = _edition(year)
+    if not revision.export_layouts:
+        assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY, f"{year}: {revision.id}"
+        assert _foreign_design_citations(revision, None) == [], f"{year}: edition {revision.id} cites a design"
+        return
     design = _layout_design(revision)
     assert _foreign_design_citations(revision, design) == [], f"{year}: edition {revision.id} cites another design"
 
 
 def test_an_inherited_citation_of_the_earlier_design_is_reported() -> None:
-    revision = _edition(max(_supported_years()))
-    earlier = _edition(min(_supported_years()))
+    revision = _edition(max(_export_bearing_years()))
+    earlier = _edition(min(_export_bearing_years()))
     design = _layout_design(revision)
     earlier_design = _layout_design(earlier)
     assert earlier_design != design, "the supported years resolve to a single 296 design; nothing to plant"

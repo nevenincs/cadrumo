@@ -798,6 +798,9 @@ modelo:
           iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
             label: Operaciones específicas - Servicios localizados en el territorio
               de aplicación del impuesto por inversión del sujeto pasivo [523]
+          iva-pago-cuenta-carburantes-deposito-fiscal:
+            label: Pago a cuenta atribuible a la Administración del Estado deducido
+              en el ejercicio por entregas de gasolinas, gasóleos y biocarburantes
           iva-recargo-equivalencia-tipo-0-5-base:
             label: Recargo de equivalencia al tipo 0,5% - Base imponible
           iva-recargo-equivalencia-tipo-1-4-base:
@@ -3861,3 +3864,7 @@ modelo:
           field:
             label: Modelo 390 ejercicio 2025 (Orden EHA/3111/2009, modificada por
               sucesivas ordenes incluida HAP/2373/2014)
+        '2026':
+          field:
+            label: Modelo 390 ejercicio 2026 (Orden EHA/3111/2009, modificada por
+              la Orden HAC/27/2026)

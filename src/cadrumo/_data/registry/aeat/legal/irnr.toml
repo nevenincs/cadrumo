@@ -950,3 +950,115 @@ applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR_296_2023.pdf"
 review_status = "pending_review"
+
+# Anexo III of Orden EHA/3290/2008 -- the modelo 296 diseno fisico y logico -- as it
+# stood from Orden HFP/1351/2021 (first applied to 2021) until Orden HFP/1284/2023
+# (first applied to 2023): BOE's consolidated redaction of 4 December 2021, captured
+# alone from the article endpoint. It is the complete record layout for ejercicio
+# 2022, for which AEAT publishes no separate diseno: positions 77-90 of the tipo-2
+# record are blancos and there is no Anexo de desglose (tipo de hoja F).
+[sources."boe-modelo-296-2021-2022-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20211204.xml"
+sha256 = "bd49565741f24e0674a2ebe2a273253682631a9fa40e058834dc6b8a42d51f2c"
+bytes = 70825
+retrieved_at = 2026-09-30
+published_at = 2021-12-03
+applies_from = 2021-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2008-18497/texto/bloque/ai-3"
+review_status = "pending_review"
+
+# The same Anexo III as Orden HAC/623/2026 left it: BOE's consolidated redaction of 24
+# June 2026, captured alone. Its disposicion final unica applies it first to
+# ejercicio 2026; AEAT has not published the matching diseno de registro.
+[sources."boe-modelo-296-2026-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20260624.xml"
+sha256 = "f5f234898003d5d38191cba2c08bb54455dbad2d0742f18ef1053ea7bfe03fd6"
+bytes = 140017
+retrieved_at = 2026-09-30
+published_at = 2026-06-23
+applies_from = 2026-01-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2008-18497/texto/bloque/ai-3"
+review_status = "pending_review"
+
+[legal."orden-hfp-1351-2021:art-quinto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1351-2021.html#a5"
+document_id = "BOE-A-2021-20004"
+article = "quinto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#a5"
+published_at = 2021-12-03
+effective_from = 2021-12-04
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la Orden EHA/3290/2008 (registro de tipo 2 del modelo 296: subclave, ingresos a cuenta repercutidos en 389-401, blancos en 402-432). Aplicable por primera vez a las declaraciones de 2021; es la redaccion vigente para el ejercicio 2022."
+required_text = [
+    "Modificación de la Orden EHA/3290/2008",
+    "Se modifica el campo «SUBCLAVE»",
+]
+
+[legal."orden-hfp-1284-2023:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#a9"
+document_id = "BOE-A-2023-24412"
+article = "9"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#a9"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Articulo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 segun su disposicion final unica; antes, las posiciones 77-90 eran blancos y no existia el anexo."
+required_text = [
+    "Modificación de la Orden EHA/3290/2008",
+    "IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN",
+]
+
+[legal."orden-hac-623-2026:art-segundo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-623-2026.html#a2"
+document_id = "BOE-A-2026-13573"
+article = "segundo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573#a2"
+published_at = 2026-06-23
+effective_from = 2026-06-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de tipo 2 del modelo 296 los campos CODIGO (135), CODIGO EMISOR (136-147) y CLAVE DE MERCADO (412), y crea el campo CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL (310) en el anexo Valores negociables. Relacion de certificados de pago."
+required_text = [
+    "Modificación de la Orden EHA/3290/2008",
+    "CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL",
+]
+
+[legal."orden-hac-623-2026:disposicion-final-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-623-2026.html#disposicion-final-unica"
+document_id = "BOE-A-2026-13573"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573#dfunica"
+published_at = 2026-06-23
+effective_from = 2026-06-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Disposicion final unica de la Orden HAC/623/2026, punto 1: la modificacion del modelo 296 se aplica por primera vez a la declaracion informativa del ejercicio 2026, que se presentara en 2027."
+required_text = [
+    "declaración informativa modelo 296",
+    "correspondiente al ejercicio 2026",
+]

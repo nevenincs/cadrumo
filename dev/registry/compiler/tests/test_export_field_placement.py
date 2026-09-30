@@ -37,7 +37,7 @@ from ..validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_REVISION = "2024-y-siguientes"
+_REVISION = "2024-2025"
 _PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
 
 #: The shipped declaration of the second perceptor field: a three-position

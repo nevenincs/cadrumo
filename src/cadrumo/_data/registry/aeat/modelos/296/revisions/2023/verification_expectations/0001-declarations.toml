@@ -1,4 +1,4 @@
-# Reconcile-when-present for Modelo 296 revision 2024-y-siguientes. The
+# Reconcile-when-present for Modelo 296 revision 2024-2025. The
 # hoja-resumen prints four boxes; box 01, the perceptor count, is produced by the
 # export layout's own declarante header field rather than a casilla, so the three
 # monetary boxes are the casilla set. All three are operator input -- none is

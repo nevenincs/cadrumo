@@ -20,6 +20,9 @@ modelo:
           a compte.
         title: IRNR resum anual de retencions i ingressos a compte
       revision:
+        '2022':
+          field:
+            label: Model 296, exercici 2022
         '2023':
           construct:
             modelo-296-calculation-construct:
@@ -28,10 +31,13 @@ modelo:
                   a compte de l'IRNR sense establiment permanent
           field:
             label: Model 296, exercici 2023
-        2024-y-siguientes:
+        2024-2025:
           construct:
             modelo-296-calculation-construct:
               field:
                 title: 'Model 296: resum anual de les retencions de l''IRNR'
           field:
-            label: Ordre HAC/56/2024, exercicis 2024 i següents
+            label: Ordre HAC/56/2024, exercicis 2024 i 2025
+        2026-y-siguientes:
+          field:
+            label: Ordre HAC/623/2026, exercicis 2026 i següents

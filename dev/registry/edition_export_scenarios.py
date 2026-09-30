@@ -354,7 +354,7 @@ M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The annual period of Modelo 296's five-record successor design.
 M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2024-y-siguientes": Period.from_year_and_code(2024, "0A"),
+    "2024-2025": Period.from_year_and_code(2024, "0A"),
 }
 #: The annual period each Modelo 180 edition is rendered for.
 M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -382,7 +382,7 @@ M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The month each Modelo 353 edition is rendered for; the 2026 edition starts at ``02``.
 M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-2025": Period.from_year_and_code(2021, "01"),
+    "2021-hasta-2026-01": Period.from_year_and_code(2021, "01"),
     "2026-desde-02": Period.from_year_and_code(2026, "02"),
 }
 #: The annual period Modelo 576's one export-bearing edition is rendered for.

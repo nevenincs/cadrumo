@@ -262,7 +262,6 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
         "193",
         "200",
         "202",
-        "296",
         "303",
         "353",
         "720",
@@ -270,6 +269,9 @@ def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelo
     assert all(item.dependencies for item in inventory.items)
     assert "036" not in inventory.target_modelos
     assert "390" not in inventory.target_modelos
+    # Modelo 296's horizon edition claims applicability only: AEAT has not
+    # published that ejercicio's diseno de registro, so it owns no filing snapshot.
+    assert "296" not in inventory.target_modelos
     assert any(
         item.target_modelo == "353"
         and item.target_period == Period.from_year_and_code(_SUPPORT.horizon, "12")

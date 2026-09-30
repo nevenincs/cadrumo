@@ -43,7 +43,7 @@ def test_modelo_296_declares_no_formula() -> None:
     perceptor records, which this registry does not hold.
     """
     modelo, _ = _load_modelo_296()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions["2024-2025"]
 
     assert revision.formulas == ()
     assert not any(construct.formulas for construct in revision.constructs)
@@ -61,7 +61,7 @@ def test_modelo_296_casilla_set_is_the_printed_box_set() -> None:
     declared and stays operator input.
     """
     modelo, _ = _load_modelo_296()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions["2024-2025"]
     by_id = {str(casilla.id): casilla for casilla in revision.casillas}
 
     assert tuple(by_id) == ("02", "03", "04")

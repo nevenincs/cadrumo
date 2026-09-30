@@ -34,7 +34,7 @@ def test_enrollment_scenarios_select_their_supported_edition() -> None:
         ("123", "2019-2023", M123_SCENARIO_PERIODS["2019-2023"]),
         ("200", "2025-y-siguientes", M200_SCENARIO_PERIODS["2025-y-siguientes"]),
         ("222", "2025-y-siguientes", M222_SCENARIO_PERIODS["2025-y-siguientes"]),
-        ("296", "2024-y-siguientes", M296_SCENARIO_PERIODS["2024-y-siguientes"]),
+        ("296", "2024-2025", M296_SCENARIO_PERIODS["2024-2025"]),
         ("308", "2019-y-siguientes", M308_SCENARIO_PERIODS["2019-y-siguientes"]),
         ("309", "2018-2022", M309_SCENARIO_PERIODS["2018-2022"]),
         ("604", "2021-2023", M604_SCENARIO_PERIODS["2021-2023"]),
@@ -59,7 +59,7 @@ def test_the_retired_below_floor_period_still_refuses() -> None:
 
 def test_modelo296_scenario_supplies_every_required_detail_family() -> None:
     with modelo_fact_scope(bundled_path("registry", "aeat", "modelos", "296")):
-        scenario = edition_export_scenarios("296")["2024-y-siguientes"]
+        scenario = edition_export_scenarios("296")["2024-2025"]
         profile = scenario.producer_snapshot().model_profile
     assert isinstance(profile, Modelo296ProfileFacts)
     assert profile.ejercicio == str(scenario.period.filing_year)
