@@ -166,6 +166,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     COMPONENT_CLASSES: ClassVar[set[str]] = {
         "casilla-list--cursor",
         "casilla-list--heading",
+        "casilla-list--subheading",
         "casilla-list--box",
         "casilla-list--muted",
         "casilla-list--value",
@@ -191,6 +192,10 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         }
         CasillaList > .casilla-list--heading {
             color: $primary;
+            text-style: bold;
+        }
+        CasillaList > .casilla-list--subheading {
+            color: $foreground;
             text-style: bold;
         }
         CasillaList > .casilla-list--box {
@@ -387,10 +392,13 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         return Strip(list(text.render(self.app.console))).adjust_cell_length(width, base).apply_style(base)
 
     def _item_text(self, item: CasillaListItem, sub_line: int, width: int, *, focused: bool) -> Text:
+        # A span-less Text drops its own style when rendered to segments, so
+        # single-style lines are appended as one styled span.
         if isinstance(item, CasillaListHeading):
-            return Text(_fit(" " * (1 + 2 * item.level) + item.text, width), style=self._style("heading"))
+            role = "heading" if item.level == 0 else "subheading"
+            return Text().append(_fit(" " * (1 + 2 * item.level) + item.text, width), style=self._style(role))
         if isinstance(item, CasillaListNote):
-            return Text(_fit(" " * (3 + item.indent) + item.text, width), style=self._style("muted"))
+            return Text().append(_fit(" " * (3 + item.indent) + item.text, width), style=self._style("muted"))
         return self._entry_line(item, sub_line, width, focused=focused)
 
     def _columns(self, width: int, indent: int) -> tuple[int, bool, bool]:

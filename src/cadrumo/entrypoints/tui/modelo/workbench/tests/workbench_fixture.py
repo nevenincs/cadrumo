@@ -2,7 +2,9 @@
 
 Two official pages and the calculation details: a first page with a finished
 section and an official grid, a second page with a box that needs the filer,
-and one working figure. Values are synthetic. The reader counts its calls so a
+and one working figure. Income and expenses come from the ledger; the
+withholding box is fed by two registers, one of which has produced nothing yet.
+Values are synthetic. The reader counts its calls so a
 test can prove the screen read off the event loop exactly as often as it should.
 """
 
@@ -14,7 +16,9 @@ from typing import TYPE_CHECKING
 
 from ......application.modelo.calculation_report import CalculationReportRowRole
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpFormulaV1
+from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form_models import (
+    ModeloFormBinding,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormEditability,
@@ -33,6 +37,7 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
 )
 from ......application.modelo.work_review import ModeloWorkProgress
+from ......core.aggregation import BindingSourceKind
 from ......core.casilla_id import CasillaId
 from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
@@ -54,6 +59,11 @@ def _text(text: str) -> ModeloFormText:
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
 
 
+def fed_by(binding_id: str, kind: BindingSourceKind, *, resolved: bool = True) -> ModeloFormBinding:
+    """Build one synthetic binding with the product's real policy for its source kind."""
+    return ModeloFormBinding(binding_id=binding_id, policy=source_policy(kind), resolved=resolved)
+
+
 def form_field(
     box: str,
     label: str,
@@ -63,6 +73,7 @@ def form_field(
     editability: ModeloFormEditability = ModeloFormEditability.EDITABLE_VALUE,
     role: CalculationReportRowRole | None = None,
     help_text: str | None = None,
+    bindings: tuple[ModeloFormBinding, ...] = (),
 ) -> ModeloFormField:
     """Build one synthetic money field addressed by its box number."""
     return ModeloFormField(
@@ -76,6 +87,7 @@ def form_field(
         editability=editability,
         required=origin is ModeloFormOrigin.NEEDS_INPUT,
         role=role,
+        bindings=bindings,
     )
 
 
@@ -111,6 +123,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         ModeloFormOrigin.IMPORTED,
         Decimal("24000.00"),
         editability=ModeloFormEditability.LOCKED_SOURCE,
+        bindings=(fed_by("m130.ingresos", BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION),),
     )
     expenses = form_field(
         "02",
@@ -118,6 +131,7 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         ModeloFormOrigin.IMPORTED,
         Decimal("9500.00"),
         editability=ModeloFormEditability.LOCKED_SOURCE,
+        bindings=(fed_by("m130.gastos", BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION),),
     )
     net = form_field(
         "03",
@@ -136,6 +150,10 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
         ModeloFormOrigin.NEEDS_INPUT if needs_input else ModeloFormOrigin.ENTERED,
         None if needs_input else Decimal("300.00"),
         help_text="Retenciones soportadas en el trimestre.",
+        bindings=(
+            fed_by("m130.retenciones", BindingSourceKind.RETENCIONES_AGGREGATION, resolved=False),
+            fed_by("m130.retencion_registro", BindingSourceKind.WITHHOLDING),
+        ),
     )
     result = form_field(
         "19",

@@ -204,6 +204,10 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # what/why/where explanation, short enough to leave an 80x24 page its
         # content. Longer help scrolls within it.
         "cadrumo-help-max-height": "6",
+        # The same panel opened on request, for a casilla whose formula,
+        # official wording and legal basis do not fit the docked height: most
+        # of a 24-row terminal, still leaving the stepper and one list row.
+        "cadrumo-help-expanded-max-height": "18",
     },
 )
 """The canonical presentation tokens every Cadrumo surface is built from.

@@ -7,9 +7,18 @@ shown as its official code rather than guessed at.
 
 from __future__ import annotations
 
+from typing import Final
+
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import lookup_translation, tr
 from .....core.period import Period, PeriodKind
+
+PERIOD_WORD_NAMES: Final[tuple[str, ...]] = (
+    *(f"quarter_{quarter}" for quarter in range(1, 5)),
+    *(f"month_{month:02d}" for month in range(1, 13)),
+    "annual",
+)
+"""Every period the workbench names in words; any other period reads as its code and year."""
 
 
 def period_words(period: Period) -> str:
@@ -17,12 +26,14 @@ def period_words(period: Period) -> str:
     code = str(period.code)
     year = period.filing_year
     if period.kind is PeriodKind.QUARTERLY and code[:1].isdigit():
-        return tr(f"tui.modelo.workbench.period.quarter_{code[0]}", year=year)
-    if period.kind is PeriodKind.MONTHLY and code.isdigit():
-        return tr(f"tui.modelo.workbench.period.month_{int(code):02d}", year=year)
-    if period.kind is PeriodKind.ANNUAL:
-        return tr("tui.modelo.workbench.period.annual", year=year)
-    return f"{code} {year}"
+        name = f"quarter_{code[0]}"
+    elif period.kind is PeriodKind.MONTHLY and code.isdigit():
+        name = f"month_{int(code):02d}"
+    elif period.kind is PeriodKind.ANNUAL:
+        name = "annual"
+    else:
+        return f"{code} {year}"
+    return tr(f"tui.modelo.workbench.period.{name}", year=year)
 
 
 def modelo_number(modelo: str) -> str:
@@ -39,4 +50,4 @@ def modelo_title(modelo: str, language: OutputLanguage) -> str:
     return modelo_number(modelo)
 
 
-__all__ = ["modelo_number", "modelo_title", "period_words"]
+__all__ = ["PERIOD_WORD_NAMES", "modelo_number", "modelo_title", "period_words"]

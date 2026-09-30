@@ -25,7 +25,7 @@ from ......application.modelo.work_form_models import (
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ....components.theme import install_cadrumo_themes
-from ..casilla_list import CasillaList, CasillaListEntry, CasillaListHeading, CasillaListItem
+from ..casilla_list import CasillaList, CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -183,3 +183,26 @@ async def test_compact_density_puts_every_field_on_one_line() -> None:
         lines = [line for line in _screen_lines(widget) if line.strip()]
 
     assert len(lines) == len(_ITEMS)
+
+
+@pytest.mark.asyncio
+async def test_headings_and_notes_keep_their_own_style_when_rendered() -> None:
+    items: tuple[CasillaListItem, ...] = (
+        CasillaListHeading("I. Estimación directa"),
+        CasillaListHeading("Régimen general", level=1),
+        CasillaListNote("Fixed by the official design"),
+        _ITEMS[1],
+    )
+    app = _ListHarness(items, OutputLanguage.EN)
+    async with app.run_test(size=(80, 24)) as pilot:
+        widget = app.query_one(CasillaList)
+        await pilot.pause()
+        plain = widget.rich_style
+        heading_style = widget.get_component_rich_style("casilla-list--heading")
+        muted_style = widget.get_component_rich_style("casilla-list--muted")
+        heading, subheading, note = (next(iter(widget.render_line(y))).style for y in range(3))
+
+    assert heading is not None and heading.bold and heading.color == heading_style.color
+    assert subheading is not None and subheading.bold and subheading.color != heading.color
+    assert note is not None and note.color == muted_style.color
+    assert note.color != plain.color

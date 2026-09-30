@@ -2173,6 +2173,7 @@ tui:
         next_step: Következő lépés
         previous_page: Előző oldal
         review: Módosítások
+        sources: Források
       layout:
         generated: elrendezés még nem ellenőrzött
         inspection_only: 'nincs hivatalos elrendezés: csak megtekintés, rovatszám
@@ -2260,7 +2261,35 @@ tui:
         title: 'Alkalmazandó módosítások: {count}'
       section:
         pending: '{heading} · teendő: {count}'
-      source_line: 'Forrás: {source}'
+      sources:
+        family:
+          aeat_draft: Az AEAT tervezete
+          earlier_filings: Korábbi bevallások
+          fixed_by_design: A hivatalos minta által rögzített értékek
+          profile: Az Ön profilja
+          records: Az Ön nyilvántartásai
+          registers: Az Ön által vezetett jegyzékek
+          your_entries: Az Ön által megadott értékek
+        intro: Minden forrás, hogy mit tehet az értékeivel, és mely rovatokat tölti
+          ki.
+        key:
+          go: Ugrás a rovatra
+          open: Forrás megnyitása
+        listed_above: '{field} · fentebb már szerepel'
+        no_surface: A(z) „{source}” forrásnak nincs megnyitható saját területe.
+        none: A bevallás egyetlen rovata sem forrásból kapja az értékét.
+        not_here: Ez a terület innen nem nyitható meg; nyissa meg a főmenüből.
+        policy:
+          edit_at_home: a profiljában módosítható
+          enter: Ön adja meg
+          fix_at_source: a forrásnál javítható
+          fixed: nem módosítható
+          override_with_reason: felülírható
+          undecided: itt még nem módosítható
+        state:
+          complete: van adat
+          missing: 'nincs adat: {missing}/{total}'
+        title: Honnan származnak az értékek
       stage_refused:
         not_editable: Ez a rovat így nem módosítható.
         nothing_to_clear: Ebben a rovatban nincs törölhető saját érték.

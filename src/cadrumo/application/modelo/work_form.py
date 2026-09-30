@@ -99,7 +99,7 @@ from .work_review import ModeloWorkOriginAnomaly, ModeloWorkReview, ModeloWorkRe
 
 _SPANISH: Final[str] = OutputLanguage.ES.value
 _INSPECTION_PAGE_ID: Final[str] = "inspection"
-_INSPECTION_HEADING_KEY: Final[str] = "application.modelo.work_form.inspection_heading"
+_INSPECTION_HEADING_LOCALE_KEY: Final[str] = "application.modelo.work_form.inspection_heading"
 _BOX_LOCATOR_HELP: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"^Casilla [\d-]+ del modelo \d+, ejercicios? [\d-]+( y siguientes)?\.$"),
     re.compile(r"^Box [\d-]+ of [Mm]odelo \d+, tax years? [\d-]+( onwards)?\.$"),
@@ -754,7 +754,7 @@ def _inspection_form(
         key=_box_order,
     )
     blocks = tuple(ModeloFormFieldBlock(id=f"field-{index}", field=field) for index, field in enumerate(fields))
-    heading = _heading(_INSPECTION_HEADING_KEY, None, _INSPECTION_PAGE_ID, context.language)
+    heading = _heading(_INSPECTION_HEADING_LOCALE_KEY, None, _INSPECTION_PAGE_ID, context.language)
     section = ModeloFormSection(
         id=f"{_INSPECTION_PAGE_ID}.all", heading=heading, official_heading=None, blocks=blocks, counts=_counts(fields)
     )

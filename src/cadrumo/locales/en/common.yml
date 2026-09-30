@@ -2146,6 +2146,7 @@ tui:
         next_step: Next step
         previous_page: Previous page
         review: Review changes
+        sources: Sources
       layout:
         generated: layout not yet reviewed
         inspection_only: 'no official layout: view only, in box order'
@@ -2232,7 +2233,34 @@ tui:
         title: 'Changes to apply: {count}'
       section:
         pending: '{heading} · to do: {count}'
-      source_line: 'Source: {source}'
+      sources:
+        family:
+          aeat_draft: The AEAT draft
+          earlier_filings: Earlier filings
+          fixed_by_design: Fixed by the official design
+          profile: Your profile
+          records: Your records
+          registers: Registers you keep
+          your_entries: Values you enter
+        intro: Each source, what you can do about its values, and the boxes it feeds.
+        key:
+          go: Go to box
+          open: Open source
+        listed_above: '{field} · listed above'
+        no_surface: “{source}” has no area of its own to open.
+        none: No box in this declaration takes its value from a source.
+        not_here: That area cannot be opened from here; open it from the main menu.
+        policy:
+          edit_at_home: changed in your profile
+          enter: you enter it
+          fix_at_source: corrected at its source
+          fixed: cannot be changed
+          override_with_reason: you may replace it
+          undecided: cannot be changed here yet
+        state:
+          complete: has data
+          missing: 'no data: {missing} of {total}'
+        title: Where the values come from
       stage_refused:
         not_editable: This box cannot be changed that way.
         nothing_to_clear: There is no value of yours to clear in this box.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:a2146d4b8638a25bfe6214de117808aa2ec9a487554e40349096c0e81d98694e'
+body_hash: 'sha256:243870f5d8ebb88b7e020a61f1b0e361de49da543c56e43460dc36ea28c0a87e'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -130,6 +130,34 @@ related:
 - `S23` `verify:` `ruff + ty` -> `pass`
 - `S23` `verify:` `rasterised editor and review captures at 80x24 and 120x36` -> `pass`
 - `S23` `by:` `orchestrator`
+- `S24` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/dialog_width.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S24` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S24` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S24` `M` `src/cadrumo/application/modelo/tests/test_work_form.py`
+- `S24` `M` `dev/locales/fstring_registry.py`
+- `S24` `M` `dev/locales/tests/test_audit.py`
+- `S24` `M` `dev/quality/metadata/import_load_targets.json`
+- `S24` `M` `src/cadrumo/locales/ca/common.yml`
+- `S24` `M` `src/cadrumo/locales/en/common.yml`
+- `S24` `M` `src/cadrumo/locales/es/common.yml`
+- `S24` `M` `src/cadrumo/locales/hu/common.yml`
+- `S24` `verify:` `pytest workbench and TUI suite (248)` -> `pass`
+- `S24` `verify:` `pytest dev/locales tests, 4 baseline failures outside this diff (casilla composed segment; withholding finding facts x3)` -> `fail`
+- `S24` `verify:` `locale audit ca en es hu` -> `pass`
+- `S24` `verify:` `import gate, only baseline findings remain (1 hard in test_modelo_workspace_destinations; 6 unapproved); 2955 modules load` -> `fail`
+- `S24` `verify:` `ruff + ty` -> `pass`
+- `S24` `verify:` `rasterised sources, editor and review captures at 80x24, 120x36, 160x48` -> `pass`
+- `S24` `by:` `orchestrator`
 
 ## Notes
 
@@ -138,3 +166,5 @@ related:
 - `S22` Screen reads through a port the composition root will supply; production wiring lands with the page retirement Step
 - `S23` The parse, apply and lifecycle actions arrive through a port; the production adapter onto the edit contract's parser and door lands with the page retirement Step once the edit-correctness lane merges
 - `S23` Result diff after apply deferred to acceptance phase
+- `S24` Corrects earlier Steps: list headings and notes rendered unstyled (a span-less rich Text drops its style); workbench CSS pinned measures outside the design tokens; dynamic catalogue keys were invisible to the locale scanner; a test imported CasillaDataType through a non-defining module
+- `S24` D6 asks for an override reason; the operator-layer contract carries none, so the view offers no reason input; recorded for the plan-close review

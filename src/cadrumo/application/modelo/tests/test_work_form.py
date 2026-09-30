@@ -19,6 +19,7 @@ from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import (
     FORM_LAYOUT_GENERATOR_VERSION,
     FormCell,
@@ -35,7 +36,6 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
     FormUnplacedReason,
 )
-from ....domain.calculations.registry.schema_surfaces import CasillaDataType
 from ....domain.filing.schema import ModeloValueKind
 from ..edit_models import (
     ModeloEditBindingIntentKind,

@@ -2205,6 +2205,7 @@ tui:
         next_step: Siguiente paso
         previous_page: Página anterior
         review: Revisar cambios
+        sources: Orígenes
       layout:
         generated: distribución sin revisar
         inspection_only: 'sin distribución oficial: solo consulta, por número de casilla'
@@ -2290,7 +2291,36 @@ tui:
         title: 'Cambios por aplicar: {count}'
       section:
         pending: '{heading} · pendientes: {count}'
-      source_line: 'Origen: {source}'
+      sources:
+        family:
+          aeat_draft: Borrador de la AEAT
+          earlier_filings: Declaraciones anteriores
+          fixed_by_design: Fijados por el diseño oficial
+          profile: Tu perfil
+          records: Tu contabilidad
+          registers: Registros que llevas
+          your_entries: Valores que introduces tú
+        intro: Cada origen, lo que puedes hacer con sus valores y las casillas que
+          alimenta.
+        key:
+          go: Ir a la casilla
+          open: Abrir el origen
+        listed_above: '{field} · ya aparece arriba'
+        no_surface: «{source}» no tiene un apartado propio que abrir.
+        none: Ninguna casilla de esta declaración toma su valor de un origen.
+        not_here: Desde aquí no se puede abrir ese apartado; ábrelo desde el menú
+          principal.
+        policy:
+          edit_at_home: se cambia en tu perfil
+          enter: lo introduces tú
+          fix_at_source: se corrige en su origen
+          fixed: no se puede cambiar
+          override_with_reason: puedes sustituirlo
+          undecided: aún no se puede cambiar aquí
+        state:
+          complete: con datos
+          missing: 'sin datos: {missing} de {total}'
+        title: De dónde salen los valores
       stage_refused:
         not_editable: Esta casilla no se puede cambiar así.
         nothing_to_clear: No hay un valor tuyo que vaciar en esta casilla.

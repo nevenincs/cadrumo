@@ -2193,6 +2193,7 @@ tui:
         next_step: Pas següent
         previous_page: Pàgina anterior
         review: Revisa els canvis
+        sources: Orígens
       layout:
         generated: distribució sense revisar
         inspection_only: 'sense distribució oficial: només consulta, per número de
@@ -2279,7 +2280,34 @@ tui:
         title: 'Canvis per aplicar: {count}'
       section:
         pending: '{heading} · pendents: {count}'
-      source_line: 'Origen: {source}'
+      sources:
+        family:
+          aeat_draft: Esborrany de l'AEAT
+          earlier_filings: Declaracions anteriors
+          fixed_by_design: Fixats pel disseny oficial
+          profile: El teu perfil
+          records: La teva comptabilitat
+          registers: Registres que portes
+          your_entries: Valors que introdueixes tu
+        intro: Cada origen, què pots fer amb els seus valors i les caselles que alimenta.
+        key:
+          go: Ves a la casella
+          open: Obre l'origen
+        listed_above: '{field} · ja apareix a dalt'
+        no_surface: «{source}» no té un apartat propi per obrir.
+        none: Cap casella d'aquesta declaració no pren el valor d'un origen.
+        not_here: Des d'aquí no es pot obrir aquest apartat; obre'l des del menú principal.
+        policy:
+          edit_at_home: es canvia al teu perfil
+          enter: l'introdueixes tu
+          fix_at_source: es corregeix al seu origen
+          fixed: no es pot canviar
+          override_with_reason: el pots substituir
+          undecided: encara no es pot canviar aquí
+        state:
+          complete: amb dades
+          missing: 'sense dades: {missing} de {total}'
+        title: D'on surten els valors
       stage_refused:
         not_editable: Aquesta casella no es pot canviar així.
         nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.

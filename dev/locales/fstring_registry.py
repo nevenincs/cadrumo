@@ -410,6 +410,65 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workspace_registrations(),
+        *_modelo_workbench_registrations(),
+    )
+
+
+def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the modelo workbench's words for each state, step, source and period.
+
+    Each tail is the value of a closed vocabulary the workbench renders, so the
+    registration derives from that vocabulary and follows it when a member is
+    added. The text disclosure and layout provenance register only the members
+    the workbench puts into words: a localized label and a reviewed layout are
+    shown without a note.
+    """
+    from cadrumo.application.modelo.source_policy import SourceFamily, SourceOverridePolicy
+    from cadrumo.application.modelo.work_form_models import (
+        ModeloFormEditability,
+        ModeloFormLayoutProvenance,
+        ModeloFormOrigin,
+        ModeloFormTextDisclosure,
+    )
+    from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
+    from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
+    from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
+    from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
+    from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import Attention
+    from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
+
+    root = "tui.modelo.workbench"
+    vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("attention", tuple(item.value for item in Attention)),
+        ("origin", tuple(item.value for item in ModeloFormOrigin)),
+        ("editability", tuple(item.value for item in ModeloFormEditability)),
+        (
+            "disclosure",
+            tuple(item.value for item in ModeloFormTextDisclosure if item is not ModeloFormTextDisclosure.LOCALIZED),
+        ),
+        (
+            "layout",
+            tuple(item.value for item in ModeloFormLayoutProvenance if item is not ModeloFormLayoutProvenance.REVIEWED),
+        ),
+        ("filter", tuple(item.value for item in WorkbenchFilter)),
+        ("step", tuple(item.value for item in WorkbenchStep)),
+        ("next", tuple(item.value for item in NextAction)),
+        ("stage_refused", tuple(item.value for item in StageRefusal)),
+        ("editor.placeholder", EDITOR_HINT_KINDS),
+        ("editor.format", EDITOR_HINT_KINDS),
+        ("review.effect", REVIEW_EFFECTS),
+        ("sources.family", tuple(item.value for item in SourceFamily)),
+        ("sources.policy", tuple(item.value for item in SourceOverridePolicy)),
+        ("period", PERIOD_WORD_NAMES),
+    )
+    return tuple(
+        FStringKeyRegistration(
+            description=f"{root}.{leaf}.* (modelo workbench vocabulary)",
+            key_factory=lambda value, leaf=leaf: f"{root}.{leaf}.{value}",
+            values=values,
+        )
+        for leaf, values in vocabularies
     )
 
 

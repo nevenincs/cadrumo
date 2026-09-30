@@ -13,8 +13,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
@@ -27,6 +28,7 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from ...components.theme import tokenised
 from .casilla_list import CasillaListEntry, value_text
+from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .vocabulary import ORIGIN_GLYPHS, origin_words_key
 
@@ -42,6 +44,10 @@ class EditorDecision:
     display: str = ""
 
 
+EDITOR_HINT_KINDS: Final[tuple[str, ...]] = ("money", "ratio", "decimal", "integer", "boolean", "date", "year", "text")
+"""The value kinds the editor explains with its own placeholder and format line; anything else reads as text."""
+
+
 class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
     """A modal editor for one casilla, reading every keystroke through the application parser."""
 
@@ -54,13 +60,15 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
             align: center middle;
         }
         CasillaEditorScreen #editor-panel {
-            width: 76;
-            max-width: 96%;
+            width: $cadrumo-modal-width;
             height: auto;
-            max-height: 90%;
+            max-height: $cadrumo-modal-height;
             border: $cadrumo-radius-overlay $primary;
             background: $surface;
             padding: $cadrumo-gutter-y $cadrumo-gutter;
+        }
+        CasillaEditorScreen.-narrow #editor-panel {
+            width: 100%;
         }
         CasillaEditorScreen #editor-title {
             text-style: bold;
@@ -146,15 +154,18 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
                     yield Button(tr("tui.modelo.workbench.editor.restore"), id="editor-restore")
                 yield Button(tr("tui.modelo.workbench.editor.save"), id="editor-save", variant="primary", disabled=True)
 
+    def on_resize(self, event: events.Resize) -> None:
+        """Take the whole width on a narrow terminal."""
+        fit_dialog_width(self, event.size.width)
+
     def on_mount(self) -> None:
         """Put the cursor in the value field."""
+        fit_dialog_width(self, self.app.size.width)
         self.query_one("#editor-input", Input).focus()
 
     def _hint_kind(self) -> str:
         data_type = self._field.data_type
-        if data_type in {"money", "ratio", "decimal", "integer", "boolean", "date", "year"}:
-            return data_type
-        return "text"
+        return data_type if data_type in EDITOR_HINT_KINDS else "text"
 
     def _hint(self) -> str:
         parts = [tr(f"tui.modelo.workbench.editor.format.{self._hint_kind()}")]
@@ -214,4 +225,4 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
         self.dismiss(None)
 
 
-__all__ = ["CasillaEditorScreen", "EditorDecision", "Parser"]
+__all__ = ["EDITOR_HINT_KINDS", "CasillaEditorScreen", "EditorDecision", "Parser"]

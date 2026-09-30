@@ -45,9 +45,10 @@ from .....core.operations import OperationTerminalCondition
 from ...components.account_chrome import AccountChromeScreen
 from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance, tokenised
+from ...navigation import TuiNavigationTargetV1
 from ...operations.controller import OperationController
 from ...operations.refusal_explanation import public_refusal_explanation
-from .casilla_list import CasillaList, CasillaListEntry, Density, value_text
+from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, value_text
 from .editor import CasillaEditorScreen, EditorDecision
 from .keys import describe_bindings
 from .page_items import (
@@ -55,6 +56,7 @@ from .page_items import (
     WorkbenchPage,
     first_attention,
     page_items,
+    page_of,
     section_nav_text,
     workbench_pages,
 )
@@ -62,11 +64,13 @@ from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchC
 from .progress import NextAction, next_action_text, stepper_text, workbench_progress
 from .review import EditReviewScreen, ReviewDecision
 from .session import StageRefusal, WorkbenchEditSession
+from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
 from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_words_key, origin_words_key
 from .wording import modelo_number, modelo_title, period_words
 
 _NARROW: Final[int] = 110
-_NAV_WIDTH: Final[int] = 32
+_NAV_MARGIN: Final[int] = 8
+_NAV_MIN_LABEL: Final[int] = 12
 _FRAGMENT_SEPARATOR: Final[str] = " … "
 _FILTER_ORDER: Final[tuple[WorkbenchFilter, ...]] = (
     WorkbenchFilter.ALL,
@@ -82,7 +86,7 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.FILE: "F8",
     NextAction.DONE: "",
 }
-_SCREEN_KEYS: Final[Mapping[str, str]] = {
+_SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "left_square_bracket": "tui.modelo.workbench.key.previous_page",
     "right_square_bracket": "tui.modelo.workbench.key.next_page",
     "f": "tui.modelo.workbench.key.filter",
@@ -91,9 +95,10 @@ _SCREEN_KEYS: Final[Mapping[str, str]] = {
     "R": "tui.modelo.workbench.key.review",
     "f8": "tui.modelo.workbench.key.next_step",
 }
-_LIST_KEYS: Final[Mapping[str, str]] = {
+_LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
     "n": "tui.modelo.workbench.key.next_attention",
+    "s": "tui.modelo.workbench.key.sources",
 }
 
 
@@ -119,7 +124,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             height: 1fr;
         }
         ModeloWorkbenchScreen #wb-sections {
-            width: 32;
+            width: 1fr;
             height: 1fr;
             border: none;
             border-right: $cadrumo-rule $panel;
@@ -129,7 +134,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             display: none;
         }
         ModeloWorkbenchScreen #wb-main {
-            width: 1fr;
+            width: 3fr;
             height: 1fr;
         }
         ModeloWorkbenchScreen #wb-page {
@@ -150,7 +155,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             border-top: $cadrumo-rule $panel;
         }
         ModeloWorkbenchScreen #wb-help.-expanded {
-            max-height: 18;
+            max-height: $cadrumo-help-expanded-max-height;
         }
         """
     )
@@ -172,12 +177,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         reader: ModeloWorkbenchReaderV1,
         *,
         actions: ModeloWorkbenchActionsV1 | None = None,
+        navigate: Callable[[TuiNavigationTargetV1], None] | None = None,
         id: str | None = None,
     ) -> None:
-        """Hold the ports this workbench reads through and, when editing is available, acts through."""
+        """Hold the ports this workbench reads and acts through, and how it opens another product area."""
         super().__init__(id=id)
         self._reader = reader
         self._actions = actions
+        self._navigate = navigate
         self._operation_in_flight = False
         self._load: WorkbenchLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
@@ -214,13 +221,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Fold the navigator away on narrow terminals and shorten the header to fit."""
         self._apply_width(event.size.width)
         self._render_header()
+        self.call_after_refresh(self._render_navigator)
 
     def _apply_width(self, width: int) -> None:
         self.set_class(width < _NARROW, "-narrow")
 
     def _describe_keys(self) -> None:
-        describe_bindings(self._bindings.key_to_bindings, _SCREEN_KEYS)
-        self.query_one(CasillaList).describe_keys(_LIST_KEYS)
+        describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
+        self.query_one(CasillaList).describe_keys(_LIST_LOCALE_KEYS)
         self.refresh_bindings()
 
     # ── reading ─────────────────────────────────────────────────────────
@@ -302,12 +310,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def _render_navigator(self) -> None:
         navigator = self.query_one("#wb-sections", OptionList)
+        label_width = max(navigator.size.width - _NAV_MARGIN, _NAV_MIN_LABEL)
         navigator.clear_options()
         for index, page in enumerate(self._pages):
             marker = "▸ " if index == self._page_index else "  "
             navigator.add_option(Option(f"{marker}{page.heading.text}", id=f"page:{index}"))
             for section in page.sections:
-                label = section_nav_text(section, _NAV_WIDTH - 8)
+                label = section_nav_text(section, label_width)
                 navigator.add_option(Option(f"  {label}", id=f"section:{index}:{section.id}"))
 
     def _render_page(self) -> None:
@@ -446,14 +455,17 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def action_leave(self) -> None:
         """Return to where the workbench was opened from, asking first when changes are staged."""
+        self._leave_then(lambda: self.dismiss(None))
+
+    def _leave_then(self, leave: Callable[[], object]) -> None:
         if not self._session.dirty:
-            self.dismiss(None)
+            leave()
             return
 
         def closed(discard: bool | None) -> None:
             if discard:
                 self._session.discard()
-                self.dismiss(None)
+                leave()
 
         self.app.push_screen(
             ConfirmScreen(
@@ -532,12 +544,42 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._refresh_after_staging()
 
     def on_casilla_list_source_requested(self, message: CasillaList.SourceRequested) -> None:
-        """Say where the value under the cursor comes from."""
-        bindings = message.entry.field.bindings
-        if not bindings:
-            self._notice(tr(editability_words_key(message.entry.field.editability)))
+        """Open the declaration's sources, on the casilla under the cursor when a source feeds it."""
+        form = self.form
+        if form is None:
             return
-        self._notice(tr("tui.modelo.workbench.source_line", source=tr(bindings[0].policy.label_key)))
+        self.app.push_screen(
+            WorkbenchSourcesScreen(
+                form, language=self._language, staged=self._session.display(), focus=message.entry.key
+            ),
+            self._sources_closed,
+        )
+
+    def _sources_closed(self, choice: SourcesChoice | None) -> None:
+        if isinstance(choice, GoToCasilla):
+            self._go_to(choice.key)
+        elif isinstance(choice, OpenSourceSurface):
+            self._open_surface(choice)
+
+    def _go_to(self, key: AddressKey) -> None:
+        index = page_of(self._pages, key)
+        if index is None:
+            return
+        self._show_page(index)
+        casilla_list = self.query_one(CasillaList)
+        if not casilla_list.focus_address(key):
+            self._filter = WorkbenchFilter.ALL
+            self._render_page()
+            casilla_list.focus_address(key)
+        casilla_list.focus()
+
+    def _open_surface(self, choice: OpenSourceSurface) -> None:
+        navigate = self._navigate
+        target = surface_target(choice.surface)
+        if navigate is None or target is None:
+            self._notice(tr("tui.modelo.workbench.sources.not_here"))
+            return
+        self._leave_then(lambda: navigate(target))
 
     def action_review(self) -> None:
         """Open the review of every staged change."""

@@ -11,9 +11,11 @@ on arrival so Enter cannot apply by accident.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
@@ -23,6 +25,7 @@ from textual.widgets import Button, Static
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from ...components.widgets import ContentDataTable
+from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
 
@@ -34,13 +37,26 @@ class ReviewDecision(StrEnum):
     DISCARD = "discard"
 
 
+REVIEW_EFFECTS: Final[tuple[str, ...]] = ("clear", "restore", *(f"set_{item.value}" for item in Displacement))
+"""Every effect the review can state for a change."""
+_COLUMN_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "box": "tui.modelo.workbench.review.column.box",
+    "concept": "tui.modelo.workbench.review.column.concept",
+    "before": "tui.modelo.workbench.review.column.before",
+    "after": "tui.modelo.workbench.review.column.after",
+    "effect": "tui.modelo.workbench.review.column.effect",
+}
+
+
 def change_effect_key(change: StagedChange) -> str:
     """The catalogue key saying in words what one change does."""
     if change.kind is WorkbenchChangeKind.CLEAR:
-        return "tui.modelo.workbench.review.effect.clear"
-    if change.kind is WorkbenchChangeKind.RESTORE:
-        return "tui.modelo.workbench.review.effect.restore"
-    return f"tui.modelo.workbench.review.effect.set_{change.displaces.value}"
+        effect = "clear"
+    elif change.kind is WorkbenchChangeKind.RESTORE:
+        effect = "restore"
+    else:
+        effect = f"set_{change.displaces.value}"
+    return f"tui.modelo.workbench.review.effect.{effect}"
 
 
 class EditReviewScreen(ModalScreen[ReviewDecision | None]):
@@ -55,12 +71,14 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             align: center middle;
         }
         EditReviewScreen #review-panel {
-            width: 96%;
-            height: auto;
-            max-height: 90%;
+            width: $cadrumo-modal-width;
+            height: $cadrumo-modal-height;
             border: $cadrumo-radius-overlay $primary;
             background: $surface;
             padding: $cadrumo-gutter-y $cadrumo-gutter;
+        }
+        EditReviewScreen.-narrow #review-panel {
+            width: 100%;
         }
         EditReviewScreen #review-title {
             text-style: bold;
@@ -71,8 +89,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             margin-bottom: $cadrumo-stack;
         }
         EditReviewScreen #review-table {
-            height: auto;
-            max-height: 16;
+            height: 1fr;
         }
         EditReviewScreen #review-warning {
             color: $warning;
@@ -124,11 +141,16 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                 yield Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error")
                 yield Button(tr("tui.modelo.workbench.review.apply"), id="review-apply", variant="primary")
 
+    def on_resize(self, event: events.Resize) -> None:
+        """Take the whole width on a narrow terminal."""
+        fit_dialog_width(self, event.size.width)
+
     def on_mount(self) -> None:
         """List the changes and give the table the focus."""
+        fit_dialog_width(self, self.app.size.width)
         table = self.query_one("#review-table", ContentDataTable)
-        for key in ("box", "concept", "before", "after", "effect"):
-            table.add_column(tr(f"tui.modelo.workbench.review.column.{key}"), key=key)
+        for key, label_key in _COLUMN_LOCALE_KEYS.items():
+            table.add_column(tr(label_key), key=key)
         for index, change in enumerate(self._changes):
             field = change.field
             table.add_row(
@@ -157,4 +179,4 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         self.dismiss(None)
 
 
-__all__ = ["EditReviewScreen", "ReviewDecision", "change_effect_key"]
+__all__ = ["REVIEW_EFFECTS", "EditReviewScreen", "ReviewDecision", "change_effect_key"]

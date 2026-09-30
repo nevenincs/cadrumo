@@ -44,7 +44,38 @@ from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, 
 from .source_policy import source_policy
 from .value_presentation import LOCALE_NUMBER_FORMATS, SCREEN_MINUS_SIGN, group_decimal_text
 
-_KEY: Final[str] = "application.modelo.help"
+_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "constraint.at_least": "application.modelo.help.constraint.at_least",
+    "constraint.at_most": "application.modelo.help.constraint.at_most",
+    "constraint.choices": "application.modelo.help.constraint.choices",
+    "constraint.exact_length": "application.modelo.help.constraint.exact_length",
+    "constraint.format": "application.modelo.help.constraint.format",
+    "constraint.length": "application.modelo.help.constraint.length",
+    "constraint.max_length": "application.modelo.help.constraint.max_length",
+    "constraint.min_length": "application.modelo.help.constraint.min_length",
+    "constraint.non_negative": "application.modelo.help.constraint.non_negative",
+    "constraint.none_declared": "application.modelo.help.constraint.none_declared",
+    "constraint.range": "application.modelo.help.constraint.range",
+    "formula.clamp": "application.modelo.help.formula.clamp",
+    "formula.if_then_else": "application.modelo.help.formula.if_then_else",
+    "formula.max": "application.modelo.help.formula.max",
+    "formula.min": "application.modelo.help.formula.min",
+    "formula.other_modelos": "application.modelo.help.formula.other_modelos",
+    "formula.percent_of": "application.modelo.help.formula.percent_of",
+    "formula.previous_period": "application.modelo.help.formula.previous_period",
+    "formula.rule": "application.modelo.help.formula.rule",
+    "formula.table": "application.modelo.help.formula.table",
+    "formula.working_figure": "application.modelo.help.formula.working_figure",
+    "source_kind.dictionary": "application.modelo.help.source_kind.dictionary",
+    "source_kind.form_spec": "application.modelo.help.source_kind.form_spec",
+    "source_kind.instructions": "application.modelo.help.source_kind.instructions",
+    "source_kind.manual_pdf": "application.modelo.help.source_kind.manual_pdf",
+    "source_kind.record_design": "application.modelo.help.source_kind.record_design",
+    "source_kind.suppression_notice": "application.modelo.help.source_kind.suppression_notice",
+    "source_kind.xsd": "application.modelo.help.source_kind.xsd",
+}
+"""Every phrase a help card composes, by the name its builders use."""
+
 _INFIX: Final[Mapping[str, str]] = {
     "add": " + ",
     "sum": " + ",
@@ -122,7 +153,7 @@ class CasillaHelpCatalogueError(LookupError):
 
 
 def _phrase(language: OutputLanguage, name: str, /, **values: object) -> str:
-    key = f"{_KEY}.{name}"
+    key = _HELP_LOCALE_KEYS[name]
     template = lookup_translation(key, locale=language.value)
     if template is None:
         raise CasillaHelpCatalogueError(f"{key} has no {language.value} text")
