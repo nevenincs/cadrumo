@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:67a694c6c19f2fd6c3c54550cbe54ceea96cae09aa47e2503fa212e5a0809bff'
+body_hash: 'sha256:1db5a43a26f5d9fa72baf723cd9b8b45c021162f8492b91f9c3c1b80fb756c04'
 ---
 
 # `registry-conformance-rectification` plan
@@ -49,6 +49,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - Found in P05.S17: a Modelo 100 calculation suspected wrong is adjudicated against official evidence before it changes, and stays as it is until then (P05.S39); a member whose citation was missing moves once its provision is catalogued (P05.S40, P05.S42); a year's missing calendar window is authored from its calendar source rather than projected from another year's (P05.S41).
 - Found in P05.S19: a declared inception year is a gate, because a modelo that did not exist answers no earlier year, while an unauthored-debt declaration is not, because the standard projects missing years (P05.S44). A year whose release is published in BOE but whose AEAT design is not yet out is authored from the BOE orden at applicability grade rather than served the replaced layout at filing grade; a year whose governing design differs is authored as a delta from the official text, at no higher grade than that text proves; Modelo 353's January 2026 is authored on the design that governs it, with its edition renamed to the span it truly covers.
 - Found in P05.S19: a year whose own design refuses the edition projected into it is authored at the grade its evidence earns, even if that turns filing into a refusal, as for Modelo 216 in 2022 and 2023; a cell whose official text is not yet held stays projected until the text is captured (P05.S45). Provenance errors in an edition being restructured are corrected with it; an undeclared box is declared where its design grounds it, and a larger undeclared inventory is recorded as debt.
+- Found in P05.S39: a calculation defect the official dictionary or manual confirms is corrected even when the fix spans domain code and shared tests, by one step that owns them all (P05.S47, P05.S48); a relation that cannot express the member's share is withdrawn rather than left summing entity totals; a legal catalogue's effective date is grounded in the governing law itself, not in a manual.
 
 ## Steps
 
@@ -114,7 +115,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S36` - Remove the unpersisted --withholding-observation option under ruling 14's precedent, and correct the clave breakdown docstring that still names only Modelo 190; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 - [x] `P05.S37` - Extend the label-reading fallback to a busy refusal of the optional model fill, and persist the degradation fact with the draft so batch results and the TUI draft row show it; `src/cadrumo/application/ledger/invoice_draft_extraction.py`.
 - [x] `P05.S38` - Correct the aggregate help that still describes the retired retención observation values, and the mis-encoded accents in the withholding bindings module; `src/cadrumo/locales/`.
-- [ ] `P05.S39` - Adjudicate against official evidence the suspected Modelo 100 defects: the 2025 maritime exemption writing box 0525, the 184 relation summing every type-2 record, the 131 binding summing four quarterly copies into box 1481, and box 0512 ignoring regions with their own minimo; re-cite the 2020 to 2022 casillas to art. 32's 2015 redaction and rename the maternity test constant that still names 2024; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P05.S39` - Adjudicate against official evidence the suspected Modelo 100 defects: the 2025 maritime exemption writing box 0525, the 184 relation summing every type-2 record, the 131 binding summing four quarterly copies into box 1481, and box 0512 ignoring regions with their own minimo; re-cite the 2020 to 2022 casillas to art. 32's 2015 redaction and rename the maternity test constant that still names 2024; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S40` - Author Modelo 184's reduccion binding at 2022 now that art. 23 and art. 32 carry their 2022 redactions; `src/cadrumo/_data/registry/aeat/modelos/184/`.
 - [ ] `P05.S41` - Author the missing ejercicio 2022 deadline windows of Modelos 151, 165 and 180 from their calendar sources, and remove Modelo 151's duplicate filing schedule and export link; `src/cadrumo/_data/registry/aeat/modelos/151/`.
 - [ ] `P05.S42` - Catalogue the 2022 wording of LIRPF art. 93.2.e).2.o and author Modelo 151's ahorro escala, formula and predicate at 2015-2022; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`.
@@ -122,6 +123,8 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `P05.S45` - Capture the missing official texts and author the support-range cells they unblock: Modelos 200 and 220 for 2022 and 2023 with their approving ordenes, 182 and 189 for 2022 and 2023, 036 before its 2023 design, 038 before June 2024 and 210 for January to May 2022; `src/cadrumo/_data/corpus/`.
 - [ ] `P05.S46` - Show a draft's stored label-reading degradation in the ledger evidence review command, as batch results and the TUI already do; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
+- [ ] `P05.S47` - Move the 2025 maritime exemption formula off box 0525 onto an internal casilla with its domain constant, withdraw the Modelo 184 relation into box 1577 with the shared tests that name it, and prove stored revisions carrying the withdrawn Modelo 131 relation are handled explicitly; `src/cadrumo/domain/renta/maritime_exemption.py`.
+- [ ] `P05.S48` - Apply the autonomica scale to box 0523 as every dictionary states, compute box 0512 for 2022 and 2023 including Valencia's rule from 28 October 2022, and ground the catalogue's regional minimo effective dates in the regional laws; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Parallelization
 

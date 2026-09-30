@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d6df62e9b6b545eea4448e7247c32dbff1efa1fa13c7e8578dbb08cf83638d43'
+body_hash: 'sha256:1e3f3ccf58090874baa241f2296224ae3ca6e06498941c3c2bacfbe55fe47baf'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -530,6 +530,46 @@ related:
 - `S38` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
 - `S38` `verify:` `aggregate help describes only live options in four locales; six replacement characters restored, code parses identically` -> `pass`
 - `S18` `verify:` `product-identity audit assertions pass for the reworded message; DA 18 CLI test passes` -> `pass`
+- `S39` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S39` `M` `dev/registry/tests/_modelo_100_registry_support.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_deferred_semantic_rows.py`
+- `S39` `A` `dev/registry/tests/test_modelo_100_minimo_contribuyente_autonomico.py`
+- `S39` `A` `dev/registry/tests/test_modelo_100_modelo_131_relations.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_registry_quota_legal_refs.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_registry_roles_objective_estimation.py`
+- `S39` `M` `dev/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/extraction_profiles/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S39` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_registry_support.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_final_settlement_chain_manual_anchor.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_rental_reduccion_art23_2.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py`
+- `S39` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py`
+- `S39` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_modulos_fold_in_live.py`
+- `S39` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S39` `verify:` `isolated-copy inspection and converter no-op; live inspection valid; Modelo 100 dev tests 2049 passed then remaining 17 passed; published 5ea36a5e; 1642 runtime tests passed (2 failures in other lanes' modelos)` -> `pass`
 
 ## Notes
 
@@ -557,3 +597,4 @@ related:
 - `S11` Correction to the preceding 202 verify row: the run reported complete=True with `registry_rollout=incomplete,` not rollout complete; `registry_rollout` is the registry-wide collapse state, which stays incomplete while other modelos are still being rectified
 - `S11` 210 verification against 0b6bfacc: equivalence, facts, indexed (3307 coordinates), cache and publication readiness passed, but `inputs_stable=False` because a concurrent lane captured corpus evidence mid-run, so the run is not certifying; the verification round is suspended while lanes write and runs once over every touched modelo when they finish
 - `S18` the S18 message named the product, which the locale audit reserves for a closed set of keys
+- `S39` landed: 131 relation into 1481 withdrawn, 0512 regional minimo with age increments for 2024 and 2025, art. 32 re-cited with 170 evolutions, constant renamed; confirmed but blocked on code and shared tests: 0525 maritime and 1577 relation (P05.S47); found: 0531 uses 0521 where every dictionary says 0523 (P05.S48); first partial apply broke validity and was reverted with git show, then landed in one validated step
