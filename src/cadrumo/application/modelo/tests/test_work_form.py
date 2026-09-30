@@ -46,6 +46,7 @@ from ..edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from ..edit_value_grammar import binding_value_grammar, casilla_value_grammar
 from ..work_form import ModeloWorkFormLayoutError, build_modelo_work_form
 from ..work_form_models import (
     ModeloFormCasillaAddressV1,
@@ -297,11 +298,15 @@ def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
 def test_editability_follows_the_admission_and_the_source_policy(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
+    revision = snapshot.revision
+    casilla = next(item for item in revision.casillas if item.id == "06")
+    binding = next(item for item in revision.bindings if item.id == "modelo-130-pagos-fraccionados-anteriores")
     surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] = (
         ModeloEditWritableScalarSurfaceEntryV1(
             casilla_id="06",
             data_type=CasillaDataType.MONEY,
             allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE,),
+            grammar=casilla_value_grammar(casilla),
         ),
         ModeloEditNonWritableScalarSurfaceEntryV1(
             casilla_id="08", reason=ModeloEditNonWritableReason.SCHEMA_DECLARED_READ_ONLY
@@ -309,6 +314,7 @@ def test_editability_follows_the_admission_and_the_source_policy(
         ModeloEditWritableBindingOverrideSurfaceEntryV1(
             binding_id="modelo-130-pagos-fraccionados-anteriores",
             allowed_intents=(ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,),
+            grammar=binding_value_grammar(binding, revision=revision),
         ),
     )
 
