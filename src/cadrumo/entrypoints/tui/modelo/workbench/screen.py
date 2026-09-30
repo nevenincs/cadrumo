@@ -1829,7 +1829,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
         A finding leads to its box, or to the area of the product that owns
         its value; asking to confirm the assumed values goes to the confirm
-        step, one section at a time, never the whole declaration at once.
+        step for the section, or the page, holding the box chosen there,
+        never the whole declaration at once.
         """
         form = self.form
         if form is None:
@@ -1839,7 +1840,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             if isinstance(choice, OpenSourceSurface):
                 self._open_surface(choice)
             elif isinstance(choice, ConfirmAssumedValues):
-                self._confirm_next()
+                # The part of the form that holds the chosen box, as b there offers it: its section, else its page.
+                self._go_to(choice.at)
+                self.action_bulk_confirm()
             elif choice is not None:
                 self._go_to(choice)
 
