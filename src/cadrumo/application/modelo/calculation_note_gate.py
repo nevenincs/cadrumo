@@ -1,24 +1,22 @@
-"""Refuse to check, export or record a declaration while its calculation says a filed figure is missing.
+"""Refuse to check, export or record a declaration while its calculation left a figure out of every box.
 
-A calculation persists the notes that mean a figure from the filer's records
-reached no box, or that a filed figure could not be worked out or trusted
-(:data:`~.calculation_notes.BLOCKING_REASONS`). While the current calculation
-carries one, no entrypoint may produce a complete check, an export file or a
-recorded filing from it: a recalculation that clears the note releases them.
+A calculation persists the notes that mean an amount from the filer's records
+reached no box, or that the VAT owed on a reverse-charge invoice could not be
+derived (:data:`~.calculation_notes.GATE_REFUSED_REASONS`). While the current
+calculation carries one, no entrypoint may produce a complete check, an export
+file or a recorded filing from it: a recalculation that clears the note
+releases them. The refusal is worded by the same catalogue sentence the
+editor's findings list shows.
 
-A persisted reason that the check itself adjudicates with its own evidence is
-left to that check, and a reason whose producer still fires for sources that
-do not apply is not refused yet: the selected-scope and annual-partition VAT evidence, an
-empty withholdings detail, which the filer may attest, and an unrouted
-one-stop-shop row, which the Modelo 369 check reads. Every other blocking
-reason is refused here, worded by the same catalogue sentence the editor's
-findings list shows.
+An unrouted one-stop-shop row is left to the Modelo 369 check, which reads it
+with its own evidence, as the other reasons the application refuses on are
+left to their own check step or to the export
+(:data:`~.calculation_notes.BLOCKING_REASONS`).
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Final
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -27,44 +25,25 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
-from .calculation_notes import BLOCKING_REASONS, printed_box_number, what_locale_key
-
-_ADJUDICATED_BY_THE_CHECK: Final[frozenset[str]] = frozenset(
-    {
-        "iva_selected_scope_evidence_failure",
-        "iva_compensation_annual_source_evidence_failure",
-        "withholding_detail_absent",
-    }
-)
-"""Blocking reasons a check step of verification reads with its own evidence and decides itself."""
-_NOT_YET_ENFORCED: Final[frozenset[str]] = frozenset(
-    {"unresolved_binding", "unhandled_binding_source", "source_domain_not_ready", "terminal_origin_mismatch"}
-)
-"""Blocking reasons whose producers still fire for sources that do not apply to the filer.
-
-They are shown and persisted, but refusing on them would refuse valid declarations: a salaried
-filer with no activity ledger, a binding with no resolver yet, a Modelo 720 row that arrives by
-its producer. The refusal waits until their producers skip sources that do not apply.
-"""
+from .calculation_notes import GATE_REFUSED_REASONS, printed_box_number, what_locale_key
 
 
 class ModeloCalculationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
     """The current calculation carries a note that withholds this action until a recalculation clears it."""
 
 
-def _adjudicated_by_the_check(issue: CalculationSourceIssue) -> bool:
-    if issue.reason in _ADJUDICATED_BY_THE_CHECK or issue.reason in _NOT_YET_ENFORCED:
-        return True
-    return issue.reason == "unrouted_observation" and issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+def _refused_here(issue: CalculationSourceIssue) -> bool:
+    """Whether the gate refuses on ``issue``; an unrouted one-stop-shop row is the Modelo 369 check's to decide."""
+    if issue.reason not in GATE_REFUSED_REASONS:
+        return False
+    return not (
+        issue.reason == "unrouted_observation" and issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+    )
 
 
 def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
     """The persisted notes of ``revision`` that withhold checking, exporting and recording it."""
-    return tuple(
-        issue
-        for issue in revision.source_issues
-        if issue.reason in BLOCKING_REASONS and not _adjudicated_by_the_check(issue)
-    )
+    return tuple(issue for issue in revision.source_issues if _refused_here(issue))
 
 
 def require_no_blocking_calculation_notes(

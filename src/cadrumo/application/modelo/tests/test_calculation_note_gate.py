@@ -10,6 +10,7 @@ blocking note passes.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import get_args
 
 import pytest
 
@@ -27,6 +28,14 @@ from ..calculation_note_gate import (
     blocking_calculation_issues,
     require_no_blocking_calculation_notes,
 )
+from ..calculation_notes import (
+    BLOCKING_REASONS,
+    CALCULATION_NOTE_ATTENTION,
+    CHECK_REFUSED_REASONS,
+    EXPORT_REFUSED_REASONS,
+    GATE_REFUSED_REASONS,
+)
+from ..work_form_models import ModeloFormAttention
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -101,3 +110,21 @@ def test_a_revision_with_no_blocking_note_passes() -> None:
     assert blocking_calculation_issues(
         _revision(_issue("unrouted_observation", binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION))
     )
+
+
+def test_the_editor_blocks_on_exactly_the_reasons_the_application_refuses() -> None:
+    """One definition: the editor's blocking level, and the gate, check steps and export that refuse."""
+    blocking_level = {
+        reason for reason, level in CALCULATION_NOTE_ATTENTION.items() if level is ModeloFormAttention.BLOCKS
+    }
+    persisted = get_args(CalculationSourceIssue.model_fields["reason"].annotation)
+    refused_by_the_gate = {
+        reason
+        for reason in persisted
+        if blocking_calculation_issues(
+            _revision(_issue(reason, binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION))
+        )
+    }
+
+    assert blocking_level == BLOCKING_REASONS == GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
+    assert refused_by_the_gate == set(GATE_REFUSED_REASONS)

@@ -774,8 +774,8 @@ class ModeloFormCalculationNote(_FormModel):
 
     ``reason`` is the calculation's own reason code, which the frontend words
     from the catalogue; ``box`` is the printed box number when the note names a
-    box the form prints. ``durable`` says the note persists with the
-    calculation and withholds filing until a recalculation clears it.
+    box the form prints. ``durable`` says the note withholds filing, in the
+    editor and in every entrypoint, until a recalculation clears it.
     """
 
     reason: str = Field(min_length=1, max_length=64)

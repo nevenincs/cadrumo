@@ -90,7 +90,7 @@ from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .calculation_notes import BLOCKING_REASONS, UNWORKED_BOX_REASONS, is_printed_box, note_attention
+from .calculation_notes import BLOCKING_REASONS, UNWORKED_BOX_REASONS, note_attention
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
 from .caller_context import caller_context_of
 from .edit_models import (
@@ -1203,15 +1203,12 @@ def _calculation_notes(
     for reason, casilla_id in sources:
         if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
-        box = None if casilla_id is None else boxes.get(casilla_id)
-        printed = box is not None or is_printed_box(None if casilla_id is None else context.casillas.get(casilla_id))
-        attention = note_attention(reason, printed_box=printed)
         notes[(reason, casilla_id)] = ModeloFormCalculationNote(
             reason=reason,
-            attention=attention,
+            attention=note_attention(reason),
             casilla_id=casilla_id,
-            box=box,
-            durable=reason in BLOCKING_REASONS and attention is ModeloFormAttention.BLOCKS,
+            box=None if casilla_id is None else boxes.get(casilla_id),
+            durable=reason in BLOCKING_REASONS,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

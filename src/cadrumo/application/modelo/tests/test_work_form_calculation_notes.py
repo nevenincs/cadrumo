@@ -2,9 +2,9 @@
 
 Built by the real read model over the published authority for a Modelo 130
 first quarter, with diagnostics of the shapes the calculation raises. A box
-the form prints whose source produced nothing blocks filing, persists with the
-calculation, and reads as not calculated instead of holding its zero; the same
-condition on a working figure is worth checking. A note that a finding of the
+the form prints whose source produced nothing is worth checking, persists
+with the calculation, and reads as not calculated instead of holding its zero.
+An amount from the records that reached no box blocks filing. A note that a finding of the
 check already says, about the same box, is shown once, as the finding. When
 this session did not run the latest calculation, only the notes that persist
 with it are known, and the form says so.
@@ -142,7 +142,7 @@ def _working_figure(operation: PinnedAuthorityOperation) -> str:
     return next(key[1] for key in (address_key(field.address) for field in form.working_figures) if key[0] == "casilla")
 
 
-def test_a_printed_box_that_could_not_be_worked_out_blocks_and_never_reads_as_zero(
+def test_a_printed_box_that_could_not_be_worked_out_is_worth_checking_and_never_reads_as_zero(
     operation: PinnedAuthorityOperation,
 ) -> None:
     form = _form(operation, diagnostics=(_unresolved(_PRINTED),), zero_at=_PRINTED)
@@ -151,13 +151,13 @@ def test_a_printed_box_that_could_not_be_worked_out_blocks_and_never_reads_as_ze
     assert form.calculation_notes == (
         ModeloFormCalculationNote(
             reason="unresolved_binding",
-            attention=ModeloFormAttention.BLOCKS,
+            attention=ModeloFormAttention.CHECK,
             casilla_id=_PRINTED,
             box=_PRINTED,
-            durable=True,
+            durable=False,
         ),
     )
-    assert form.blocking_calculation_notes == form.calculation_notes
+    assert form.blocking_calculation_notes == ()
     assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
     assert field.value is None
     assert form.calculation_notes_held
@@ -171,7 +171,7 @@ def test_the_same_box_without_a_note_keeps_its_value(operation: PinnedAuthorityO
     assert field.value == Decimal("0")
 
 
-def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking_and_does_not_persist(
+def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking(
     operation: PinnedAuthorityOperation,
 ) -> None:
     working = _working_figure(operation)
@@ -269,6 +269,17 @@ def test_a_declaration_opened_afresh_knows_only_the_notes_that_persist_with_its_
 
     assert not form.calculation_notes_held
     assert [(note.reason, note.box, note.durable) for note in form.calculation_notes] == [
-        ("unresolved_binding", _PRINTED, True)
+        ("unresolved_binding", _PRINTED, False)
     ]
     assert _field(form, _PRINTED).value is None
+
+
+def test_an_amount_that_reached_no_box_blocks_filing(operation: PinnedAuthorityOperation) -> None:
+    unrouted = CalculationSourceDiagnostic(
+        reason="unrouted_declarable_quantity", source_kind="ledger_iva_aggregation", message="a base reached no box"
+    )
+    form = _form(operation, diagnostics=(unrouted,))
+
+    assert [(note.attention, note.durable) for note in form.blocking_calculation_notes] == [
+        (ModeloFormAttention.BLOCKS, True)
+    ]

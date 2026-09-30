@@ -6,12 +6,19 @@ the filer typed that differs from the worked-out one. Each reason has one
 place on the scale the findings list uses, one sentence for what happened and
 one for what to do, in every language.
 
-Those that mean a filed figure is missing or cannot be trusted block filing
-(:data:`BLOCKING_REASONS`): they persist with the calculation, so reopening the
-declaration keeps them, and a recalculation that clears them releases the
-filing. A box that could not be worked out blocks only when the form prints it;
-a working figure is worth checking. Every other diagnostic is held in this
-process only until the next calculation of the declaration
+The reasons that block filing are exactly those the application refuses
+(:data:`BLOCKING_REASONS`), by one of three routes: the calculation-note gate
+refuses checking, exporting and recording (:data:`GATE_REFUSED_REASONS`), a
+check step refuses on its own evidence (:data:`CHECK_REFUSED_REASONS`), or the
+export refuses the file (:data:`EXPORT_REFUSED_REASONS`). The editor withholds
+filing on the same set, so the two can never disagree.
+
+A box that could not be worked out, a source with no route, a source store not
+ready and a value arriving by an undeclared route are worth checking: they are
+persisted with the calculation and shown, but their producers still fire for
+sources that do not apply to the filer, so refusing on them would refuse valid
+declarations. Every diagnostic that does not persist is held in this process
+only until the next calculation of the declaration
 (:class:`CalculationNoteStore`), and a declaration opened afresh says to
 calculate again to see them.
 """
@@ -34,22 +41,32 @@ _A = ModeloFormAttention.CONFIRM
 _C = ModeloFormAttention.CHECK
 _I = ModeloFormAttention.INFO
 
+GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
+    {"unrouted_observation", "unrouted_declarable_quantity", "invoice_reverse_charge_cuota_not_derivable"}
+)
+"""Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out."""
+CHECK_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        "iva_selected_scope_evidence_failure",
+        "iva_compensation_annual_source_evidence_failure",
+        "withholding_detail_absent",
+    }
+)
+"""Reasons a check step refuses on its own evidence, which may also admit them (an attested empty detail)."""
+EXPORT_REFUSED_REASONS: Final[frozenset[str]] = frozenset({"rate_boxes_underaccount_total"})
+"""Reasons the export refuses the file on: a VAT total its rate boxes do not account for."""
+BLOCKING_REASONS: Final[frozenset[str]] = GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
+"""Every reason the application refuses filing on, and so the editor too."""
+
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
-        # A figure from the records reached no box, or a filed figure cannot be trusted: filing waits.
-        "unrouted_observation": _B,
-        "unrouted_declarable_quantity": _B,
-        "withholding_detail_absent": _B,
-        "terminal_origin_mismatch": _B,
-        "unhandled_binding_source": _B,
-        "source_domain_not_ready": _B,
-        "invoice_reverse_charge_cuota_not_derivable": _B,
-        "rate_boxes_underaccount_total": _B,
-        "iva_selected_scope_evidence_failure": _B,
-        "iva_compensation_annual_source_evidence_failure": _B,
-        # A box could not be worked out: blocking on a printed box, worth checking on a working figure.
-        "unresolved_binding": _B,
-        "unresolved_derived_binding": _B,
+        **dict.fromkeys(BLOCKING_REASONS, _B),
+        # Persisted and shown, not refused yet: their producers still fire for sources that do not apply.
+        "unresolved_binding": _C,
+        "unresolved_derived_binding": _C,
+        "terminal_origin_mismatch": _C,
+        "unhandled_binding_source": _C,
+        "source_domain_not_ready": _C,
         # Something only the filer can supply.
         "source_issue": _M,
         "prior_payment_not_deducted": _M,
@@ -99,25 +116,6 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
 UNWORKED_BOX_REASONS: Final[frozenset[str]] = frozenset({"unresolved_binding", "unresolved_derived_binding"})
 """Reasons that name a box that could not be worked out: it never reads as a zero."""
 
-BLOCKING_REASONS: Final[frozenset[str]] = frozenset(
-    {
-        "unrouted_observation",
-        "unrouted_declarable_quantity",
-        "withholding_detail_absent",
-        "unresolved_binding",
-        "terminal_origin_mismatch",
-        "unhandled_binding_source",
-        "source_domain_not_ready",
-        "invoice_reverse_charge_cuota_not_derivable",
-        "iva_selected_scope_evidence_failure",
-        "iva_compensation_annual_source_evidence_failure",
-    }
-)
-"""The reasons that persist with the calculation and withhold filing while they stand.
-
-An unresolved box among them persists only when the form prints it.
-"""
-
 RECORDS_REASONS: Final[frozenset[str]] = frozenset(
     {
         "unrouted_observation",
@@ -164,12 +162,9 @@ def printed_box_number(casilla: CasillaDefinition | None) -> str | None:
     return casilla.number if casilla.number.isdigit() else None
 
 
-def note_attention(reason: str, *, printed_box: bool) -> ModeloFormAttention:
-    """Place one diagnostic reason on the filer's scale; an unworked box blocks only where the form prints it."""
-    attention = CALCULATION_NOTE_ATTENTION[reason]
-    if reason in UNWORKED_BOX_REASONS and not printed_box:
-        return ModeloFormAttention.CHECK
-    return attention
+def note_attention(reason: str) -> ModeloFormAttention:
+    """Place one diagnostic reason on the filer's scale."""
+    return CALCULATION_NOTE_ATTENTION[reason]
 
 
 def what_locale_key(reason: str) -> str:
@@ -235,8 +230,9 @@ def _require_total_levels() -> None:
         missing = sorted(reasons - set(CALCULATION_NOTE_ATTENTION))
         extra = sorted(set(CALCULATION_NOTE_ATTENTION) - reasons)
         raise ValueError(f"calculation note levels must cover every reason; missing={missing} extra={extra}")
-    if not {reason for reason, level in CALCULATION_NOTE_ATTENTION.items() if level is _B} >= BLOCKING_REASONS:
-        raise ValueError("every blocking reason must sit at the blocking level")
+    blocking_level = frozenset(reason for reason, level in CALCULATION_NOTE_ATTENTION.items() if level is _B)
+    if blocking_level.symmetric_difference(BLOCKING_REASONS):
+        raise ValueError("the blocking level holds exactly the reasons the application refuses filing on")
 
 
 _require_total_levels()
@@ -246,6 +242,9 @@ __all__ = [
     "BLOCKING_REASONS",
     "CALCULATION_NOTES",
     "CALCULATION_NOTE_ATTENTION",
+    "CHECK_REFUSED_REASONS",
+    "EXPORT_REFUSED_REASONS",
+    "GATE_REFUSED_REASONS",
     "RECORDS_REASONS",
     "REOPEN_HINT_LOCALE_KEY",
     "STALE_LOCALE_KEY",
