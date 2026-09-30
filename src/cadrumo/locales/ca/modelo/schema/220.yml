@@ -209,14 +209,6 @@ modelo:
               inclòs el 1r fraccionament de l''art. 19,1 LIS procedent d''autoliquidacions
               anteriors corresponents al període impositiu 2024. Diputacions Forals
               i Navarra (totals)'
-          liquidacion-complementaria-resultado-fraccionamiento-estado:
-            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
-              (art. 19,1 LIS). Resultat de l'autoliquidació inclòs el 1r fraccionament
-              de l'art. 19.1 LIS. Estat.
-          liquidacion-complementaria-resultado-fraccionamiento-forales:
-            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
-              (art. 19,1 LIS). Resultat de l'autoliquidació inclòs el 1r fraccionament
-              de l'art. 19.1 LIS. Estat.
           t22007000-00043:
             label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Suma
               de bases imposables individuals de les entitats del grup fiscal (excloses

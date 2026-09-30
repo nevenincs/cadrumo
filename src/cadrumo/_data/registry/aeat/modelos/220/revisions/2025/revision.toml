@@ -7132,14 +7132,6 @@ position = 54
 id = "T22007000:t22007000.895-900"
 position = 55
 
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02796"
-position = 131
-
-[[revisions."2025".casilla_positions]]
-id = "T22009001:02797"
-position = 132
-
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "modelo-220-declaration-construct"}

@@ -127,30 +127,8 @@ legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
 # NOT CLAIMED: these casillas DECLARE the liquidacion; none of them computes it. The
 # record is a settlement chain and NOT ONE of those relations is modelled here.
 
-# Modelo 220 RECORD T22009001 -- only [02796] and [02797] are stated here. The record's other
-# 34 numbered fields are authored at 2024, whose design already prints them, and this edition
-# keys only their continuity claim and orden references. Both designs print the identical
-# description, ending "Estado.", for this pair at offsets 220 and 237, and the 2024 edition
-# holds the pair back on that ambiguity, so its predecessor edition stays silent on them.
-
-# @220+17 N. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19.1 LIS. Estado.
-[[revisions."2025".casillas]]
-id = "T22009001:02796"
-continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-estado"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 21, [02796], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
-number = "02796"
-segmento = "T22009001"
-section = ["liquidacion", "liquidacion_del_grupo"]
-legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
-
-# @237+17 N. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19.1 LIS. Estado.
-[[revisions."2025".casillas]]
-id = "T22009001:02797"
-continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-forales"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-220-2024 y aeat-dr-220-2025 contienen en T22009001 Liquidacion III el campo 22, [02797], con la misma descripcion, seleccion territorial y funcion. El registro 2024 no declara esta ocurrencia T22009001, aunque el diseno oficial ya la incluye; otros registros que repiten el numero no son su predecesor. La ausencia es de la declaracion, no una casilla nueva en el formulario."
-number = "02797"
-segmento = "T22009001"
-section = ["liquidacion", "liquidacion_del_grupo"]
-legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
+# Modelo 220 RECORD T22009001 -- no box is stated here. Its 34 identified numbered fields are
+# authored at 2024, whose design already prints them, and this edition keys only their
+# continuity claim and orden references. [02796] and [02797] are not authored in either
+# edition: both designs print the identical description, ending "Estado.", for the pair at
+# offsets 220 and 237, so which of them is the foral column is not stated.

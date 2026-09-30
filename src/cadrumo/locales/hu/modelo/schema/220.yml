@@ -227,14 +227,6 @@ modelo:
               a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2024. adózási
               időszak korábbi önadózásaiból. Külön jogállású tartományi tanácsok és
               Navarra (Összesen)'
-          liquidacion-complementaria-resultado-fraccionamiento-estado:
-            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19,1. cikk). Az önadózás eredménye a LIS 19.1. cikke szerinti 1.
-              részletfizetéssel együtt. Állam.
-          liquidacion-complementaria-resultado-fraccionamiento-forales:
-            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19,1. cikk). Az önadózás eredménye a LIS 19.1. cikke szerinti 1.
-              részletfizetéssel együtt. Állam.
           t22007000-00043:
             label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
               lap). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási

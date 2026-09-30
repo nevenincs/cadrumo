@@ -4,8 +4,9 @@ Record T22009001 is printed by every Modelo 220 record design the registry
 enrolls, field for field at the same offsets. Each edition must therefore
 declare every box of that record whose printed description identifies it, and
 a label naming the periodo impositivo must name the one its own design names.
-The pair the design prints with an identical description is not asserted
-either way: which of the two is the foral column is not stated by the design.
+The pair the design prints with an identical description is declared by no
+edition: which of the two is the foral column is not stated by the design, and
+declaring either box would assign it a jurisdiction the design does not give.
 """
 
 from __future__ import annotations
@@ -71,12 +72,28 @@ def _design_boxes(revision: ModeloRevision) -> dict[str, str]:
     return boxes
 
 
+def _wording(revision: ModeloRevision) -> dict[str, str]:
+    """Return each printed box's design description with its box number removed."""
+    return {box: _BOX.sub("", description).strip() for box, description in _design_boxes(revision).items()}
+
+
+def _declared_boxes(revision: ModeloRevision) -> set[str]:
+    return {str(casilla.number) for casilla in revision.casillas if casilla.segmento == _RECORD}
+
+
 def _undeclared_identified_boxes(revision: ModeloRevision) -> list[str]:
     """Return the design's boxes the edition omits, among those whose wording, box number aside, is unique."""
-    wording = {box: _BOX.sub("", description).strip() for box, description in _design_boxes(revision).items()}
+    wording = _wording(revision)
     repeated = Counter(wording.values())
-    declared = {str(casilla.number) for casilla in revision.casillas if casilla.segmento == _RECORD}
+    declared = _declared_boxes(revision)
     return sorted(box for box, text in wording.items() if repeated[text] == 1 and box not in declared)
+
+
+def _declared_ambiguous_boxes(revision: ModeloRevision) -> list[str]:
+    """Return the declared boxes whose wording the design prints for another box too."""
+    wording = _wording(revision)
+    repeated = Counter(wording.values())
+    return sorted(box for box in _declared_boxes(revision) if repeated[wording.get(box, "")] > 1)
 
 
 @pytest.mark.parametrize("year", _supported_years())
@@ -114,3 +131,21 @@ def test_a_dropped_liquidacion_iii_box_is_reported() -> None:
     dropped = declared[0]
     reduced = revision.model_copy(update={"casillas": tuple(c for c in revision.casillas if c is not dropped)})
     assert _undeclared_identified_boxes(reduced) == [str(dropped.number)]
+
+
+@pytest.mark.parametrize("year", _supported_years())
+def test_no_box_the_design_captions_identically_to_another_is_declared(year: int) -> None:
+    """Which of an identically captioned pair is the foral column is not stated, so neither box is declared."""
+    revision = _edition(year)
+    assert _declared_ambiguous_boxes(revision) == [], f"{year}: edition {revision.id}"
+
+
+def test_a_declared_identically_captioned_box_is_reported() -> None:
+    revision = _edition(_supported_years()[0])
+    template = next(casilla for casilla in revision.casillas if casilla.segmento == _RECORD)
+    wording = _wording(revision)
+    repeated = Counter(wording.values())
+    ambiguous = next(box for box, text in wording.items() if repeated[text] > 1)
+    declared = template.model_copy(update={"id": f"{_RECORD}:{ambiguous}", "number": ambiguous})
+    widened = revision.model_copy(update={"casillas": (*revision.casillas, declared)})
+    assert _declared_ambiguous_boxes(widened) == [ambiguous]

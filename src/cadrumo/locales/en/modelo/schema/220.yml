@@ -209,14 +209,6 @@ modelo:
               result including the first instalment under art. 19,1 LIS from earlier
               self-assessments for tax period 2024. Chartered provincial councils
               and Navarre (totals)'
-          liquidacion-complementaria-resultado-fraccionamiento-estado:
-            label: Settlement. Instalment option in cases of change of residence (art.
-              19,1 LIS). Self-assessment result including the first instalment under
-              art. 19.1 LIS. State.
-          liquidacion-complementaria-resultado-fraccionamiento-forales:
-            label: Settlement. Instalment option in cases of change of residence (art.
-              19,1 LIS). Self-assessment result including the first instalment under
-              art. 19.1 LIS. State.
           t22007000-00043:
             label: Taxable base and gross tax liability of the group (page 7 sheet
               00). Sum of the individual taxable bases of the tax group's entities
