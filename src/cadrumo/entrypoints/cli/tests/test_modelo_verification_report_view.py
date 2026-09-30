@@ -56,7 +56,7 @@ def test_verification_finding_message_resolves_from_each_supported_locale_catalo
     for message in rendered.values():
         assert locale_key not in message
         assert "%{" not in message
-        assert predicate_id in message
+        assert predicate_id not in message, "an internal predicate id reached the filer's sentence"
 
 
 def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:
@@ -95,7 +95,7 @@ def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale
         assert "%{" not in message
         assert str(source_ref_count) in message
         assert str(unidentified_source_count) in message
-        assert source_ref_ids in message
+        assert source_ref_ids not in message, "raw source references reached the filer's sentence"
 
 
 def test_iva_compensation_annual_source_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:

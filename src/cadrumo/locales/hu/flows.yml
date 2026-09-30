@@ -136,7 +136,7 @@ flows:
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet
-          collectible_invoice: Kimenő számla
+          collectible_invoice: Kimenő számlák
           design_constant: Tervezeti állandó
           donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
@@ -150,9 +150,8 @@ flows:
           ledger_oss_aggregation: OSS-nyilvántartás összesítése
           ledger_renta_gastos_estimacion_directa_aggregation: Közvetlen becslésű költségek
             összesítése
-          ledger_renta_gastos_pago_fraccionado_aggregation: Részletfizetési költségek
-            összesítése
-          ledger_renta_income_aggregation: Jövedelmek összesítése
+          ledger_renta_gastos_pago_fraccionado_aggregation: Kiadási nyilvántartás
+          ledger_renta_income_aggregation: Bevételi nyilvántartás
           ledger_transaction: Nyilvántartási tétel
           m303_regimen_simplificado_annual_summary: 303-es nyomtatvány egyszerűsített
             rendszer összesítő

@@ -1174,13 +1174,12 @@ application:
         income (renta atribuida) for %{filing_year}, but box [%{casilla_id}] does
         not include it.
       cross_casilla_invariant_violated: Two or more boxes on this form do not agree
-        with each other as the official rules require (check %{predicate_id}).
+        with each other as the official rules require.
       cross_period_activity_start_missing: Modelo %{target_modelo} for %{target_filing_year},
         period %{target_period}, needs the date your activity started.
       cross_period_dependency_unclean: This declaration uses figures from modelo %{source_modelo}
         for %{source_filing_year}, period %{source_period}, and that declaration still
-        has open problems (%{blocker_codes}) affecting %{origin_ids}. Resolve them
-        there first.
+        has open problems. Resolve them there first.
       cross_period_first_year_fractional_suppression: Modelo %{source_modelo} for
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.
@@ -1188,22 +1187,21 @@ application:
         period %{source_period}, declares no withholdings (retenciones) to carry into
         modelo %{target_modelo} for %{target_filing_year}, period %{target_period}.
       cross_period_modelo_not_applicable:
-        message: 'These %{source_modelo_count} modelos were not used, because they
-          do not apply to you: %{source_modelos}.'
+        message: '%{source_modelo_count} modelos were not used, because they do not
+          apply to you.'
       cross_period_non_official_local_chain:
         message: The figures from modelo %{source_modelo} for %{source_filing_year},
           period %{source_period}, come from a declaration recorded only on this computer,
-          not one confirmed by AEAT (%{origin_code}).
+          not one confirmed by AEAT.
       cross_period_operator_declared_suppression: Modelo %{source_modelo} for %{source_filing_year},
         period %{source_period}, is not used here, because you said your activity
-        started on %{activity_start_date} (%{origin_code}).
+        started on %{activity_start_date}.
       cross_period_zero_value_previous_filing: Modelo %{source_modelo} for %{source_filing_year},
         period %{source_period}, carried a zero into this declaration (modelo %{target_modelo}
         for %{target_filing_year}, period %{target_period}). Check that the zero is
         right.
-      cuota_less_ledger_row_base_missing: Entry %{transaction_id} in your records
-        (VAT category %{iva_category_code}) has no taxable amount (base imponible)
-        to declare.
+      cuota_less_ledger_row_base_missing: An entry in your records has no taxable
+        amount (base imponible) to declare.
       dt12a_reduccion_antiquity_possible: Box [%{reduccion_id}] shows a DT 12ª reduction
         of %{reduccion_value} EUR. Check that you meet the seniority (antigüedad)
         condition it requires.
@@ -1212,18 +1210,17 @@ application:
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
         whether it applies to you.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: the value
-        of your foreign asset %{position_key} (group %{group_code}) rose from %{prior_value_eur}
-        EUR to %{current_value_eur} EUR. The increase of %{delta_value_eur} EUR is
-        over the %{redeclaration_increase_threshold_eur} EUR above which you must
-        declare it again.'
+        of one of your foreign assets rose from %{prior_value_eur} EUR to %{current_value_eur}
+        EUR. The increase of %{delta_value_eur} EUR is over the %{redeclaration_increase_threshold_eur}
+        EUR above which you must declare it again.'
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} problem(s)
         with them are still open, so this declaration cannot be completed.
-      iva_selected_scope_evidence_failure: 'Some VAT entries in this declaration are
+      iva_selected_scope_evidence_failure: Some VAT entries in this declaration are
         missing supporting documents (%{source_ref_count} with a reference, %{unidentified_source_count}
-        without one), so the check cannot finish. References: %{source_ref_ids}.'
+        without one), so the check cannot finish.
       iva_wallet_precondition_failed: A condition for carrying VAT forward from earlier
-        periods (compensar) is not met (condition %{condition_id}, case %{scenario_id}).
+        periods (compensar) is not met.
       ledger_snapshot_drift: 'Your records changed after modelo %{modelo} %{filing_year},
         period %{period}, was calculated: %{changed_count} entries changed and %{removed_count}
         removed. Calculate it again.'
@@ -1232,12 +1229,11 @@ application:
         year. The official rules do not say how to report their base and withholding,
         so you cannot record this declaration as filed or export it yet.
       m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, period %{period_code}:
-        some income lines are grouped in a way the form does not accept (%{error_type}).'
+        some income lines are grouped in a way the form does not accept.'
       m210_convenio_lob_advisory: Income of type %{tipo_renta_code} from country %{country_code}
-        may be subject to a limitation-on-benefits clause in the tax treaty (document
-        %{document_id}).
-      m210_rate_unavailable: 'The modelo 210 tax rate for income type (tipo de renta)
-        %{tipo_renta_code} in %{filing_year} could not be determined (reason: %{reason_code}).'
+        may be subject to a limitation-on-benefits clause in the tax treaty.
+      m210_rate_unavailable: The modelo 210 tax rate for income type (tipo de renta)
+        %{tipo_renta_code} in %{filing_year} could not be determined.
       m303_m349_intracom_reconciliation_mismatch: For period %{period_code} %{filing_year},
         the intra-community total in modelo 303 (%{m303_total} EUR) and the total
         in modelo 349 (%{m349_total} EUR) differ by %{gap} EUR.
@@ -1246,60 +1242,57 @@ application:
         for birth or adoption.
       missing_required_casilla: Required box [%{casilla_id}] is empty.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
-        the value %{declared} you gave in your profile (%{profile_field_id}) is over
-        the %{threshold} limit for estimación objetiva (módulos) (%{fact_id}).'
+        the value %{declared} you gave in your profile is over the %{threshold} limit
+        for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
-      oss_source_unrouted: 'Some one-stop-shop (OSS) entries are not counted in any
-        box of this form (references: %{source_ref_ids}).'
+      oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
+        box of this form.
       pulled_filing_casilla_mismatch: 'Box [%{casilla_number}] for period %{period_code}
         %{filing_year}: the calculation gives %{computed_value}, but the declaration
-        filed with AEAT shows %{filed_value} (%{mismatch_kind}).'
+        filed with AEAT shows %{filed_value}.'
       registry_advisory_predicate_fired: A built-in check flagged this declaration
-        for a closer look (check %{predicate_id}).
-      registry_authority_grade_insufficient: 'The rules for modelo %{modelo} %{filing_year},
+        for a closer look.
+      registry_authority_grade_insufficient: The rules for modelo %{modelo} %{filing_year},
         period %{period}, are not yet checked against the official sources closely
-        enough to file it (level reached: %{declared_grade}; level needed: %{requested_grade}).'
+        enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
       suffered_retencion_capital_mobiliario_uncredited: This declaration includes
         savings income from movable capital (rendimientos del capital mobiliario del
-        ahorro), but no withholding (retención) is credited against it (check %{predicate_id}).
-        Enter the amount from your payer's certificado de retenciones e ingresos a
-        cuenta. The modelo 123 that declares it was filed by your payer, not by you,
-        so this value cannot be filled in automatically.
+        ahorro), but no withholding (retención) is credited against it. Enter the
+        amount from your payer's certificado de retenciones e ingresos a cuenta. The
+        modelo 123 that declares it was filed by your payer, not by you, so this value
+        cannot be filled in automatically.
       suffered_retencion_trabajo_uncredited: This declaration includes income from
         work (rendimientos del trabajo), but no withholding (retención) is credited
-        against it (check %{predicate_id}). Enter the amount from your payer's certificado
-        de retenciones e ingresos a cuenta. The modelo 111 that declares it was filed
-        by your payer, not by you, so this value cannot be filled in automatically.
+        against it. Enter the amount from your payer's certificado de retenciones
+        e ingresos a cuenta. The modelo 111 that declares it was filed by your payer,
+        not by you, so this value cannot be filled in automatically.
       transaction_evidence_missing_deductible: An expense you deduct has no invoice
-        or receipt attached. Attach it to the entry in your records (reference %{binding_id},
-        kind %{source_kind_code}, reason %{diagnostic_reason_code}).
+        or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: A sales invoice on which you charge VAT
-        has no supporting document. Attach it to the entry in your records (reference
-        %{binding_id}, kind %{source_kind_code}, reason %{diagnostic_reason_code}).
+        has no supporting document. Attach it to the entry in your records.
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments (percepciones) to anyone, but your records show payments
         subject to withholding (retención) made that year: %{contradicting_invoice_count}
         received invoice(s) with a retención you must pay in as the payer (retenedor),
         and %{contradicting_ledger_row_count} outgoing payment(s) in an IRPF withholding
-        category. The withholdings detail for modelo %{source_modelo} (%{source_family})
-        is empty, so nothing declares them. Enter them in this modelo''s per-payee
-        detail before you check it.'
+        category. The withholdings detail for modelo %{source_modelo} is empty, so
+        nothing declares them. Enter them in this modelo''s per-payee detail before
+        you check it.'
       withholding_detail_absent_attested: 'Modelo %{modelo} %{filing_year} declares
-        no payments (percepciones) to anyone, and your profile (%{attestation_profile_path})
-        records that in period(s) %{attested_periods} you paid no income subject to
-        withholding (retención). No annual summary is due for a year in which you
-        paid none of the income it declares. Review the year if you paid exempt income,
-        or income below the withholding threshold: those are declared even when nothing
-        was withheld. This is a local preparation, not a submission to AEAT.'
+        no payments (percepciones) to anyone, and your profile records that you paid
+        no income subject to withholding (retención) in the periods you confirmed.
+        No annual summary is due for a year in which you paid none of the income it
+        declares. Review the year if you paid exempt income, or income below the withholding
+        threshold: those are declared even when nothing was withheld. This is a local
+        preparation, not a submission to AEAT.'
       withholding_detail_absent_unproven: 'Modelo %{modelo} %{filing_year} declares
         no payments (percepciones) to anyone, and nothing confirms that: the withholdings
-        detail for modelo %{source_modelo} (%{source_family}) is empty, and for period(s)
-        %{unattested_periods} you have not confirmed that nothing was withheld. Enter
-        the payments for each payee in this modelo''s detail, or confirm each period
-        in your profile (%{attestation_profile_path}).'
+        detail for modelo %{source_modelo} is empty, and you have not confirmed for
+        every period that nothing was withheld. Enter the payments for each payee
+        in this modelo''s detail, or confirm each period in your profile.'
     help:
       constraint:
         at_least: At least {minimum}.

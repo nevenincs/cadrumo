@@ -134,7 +134,7 @@ flows:
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft
-          collectible_invoice: Customer invoice
+          collectible_invoice: Sales invoices
           design_constant: Design constant
           donativo_donor: Donation donor
           foreign_asset: Foreign asset
@@ -148,9 +148,8 @@ flows:
           ledger_oss_aggregation: OSS ledger totals
           ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
             ledger totals
-          ledger_renta_gastos_pago_fraccionado_aggregation: Instalment-payment expense
-            totals
-          ledger_renta_income_aggregation: Income ledger totals
+          ledger_renta_gastos_pago_fraccionado_aggregation: Expense records
+          ledger_renta_income_aggregation: Income records
           ledger_transaction: Ledger transaction
           m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
           m347_third_party_operation: Third-party operation

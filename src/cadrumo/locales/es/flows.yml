@@ -137,7 +137,7 @@ flows:
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT
-          collectible_invoice: Factura emitida
+          collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
           donativo_donor: Donante
           foreign_asset: Activo extranjero
@@ -151,9 +151,8 @@ flows:
           ledger_oss_aggregation: Totales del libro OSS
           ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
             estimación directa
-          ledger_renta_gastos_pago_fraccionado_aggregation: Totales de gastos del
-            pago fraccionado
-          ledger_renta_income_aggregation: Totales de ingresos
+          ledger_renta_gastos_pago_fraccionado_aggregation: Registros de gastos
+          ledger_renta_income_aggregation: Registros de ingresos
           ledger_transaction: Movimiento del libro
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)

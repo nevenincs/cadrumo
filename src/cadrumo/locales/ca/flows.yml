@@ -136,7 +136,7 @@ flows:
           atribucion_member: Membre d'atribució de rendes
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT
-          collectible_invoice: Factura emesa
+          collectible_invoice: Factures emeses
           design_constant: Constant del disseny
           donativo_donor: Donant
           foreign_asset: Actiu estranger
@@ -150,9 +150,8 @@ flows:
           ledger_oss_aggregation: Totals del llibre OSS
           ledger_renta_gastos_estimacion_directa_aggregation: Totals de despeses en
             estimació directa
-          ledger_renta_gastos_pago_fraccionado_aggregation: Totals de despeses del
-            pagament fraccionat
-          ledger_renta_income_aggregation: Totals d'ingressos
+          ledger_renta_gastos_pago_fraccionado_aggregation: Registres de despeses
+          ledger_renta_income_aggregation: Registres d'ingressos
           ledger_transaction: Moviment del llibre
           m303_regimen_simplificado_annual_summary: Resum règim simplificat (model
             303)
