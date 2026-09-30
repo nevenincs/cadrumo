@@ -1693,9 +1693,9 @@ application:
         másik közösséget.
       modify_descendants_via_door: Az eltartottak nem részei a profil szerkesztésének.
         Kezeld őket az eltartottak parancson keresztül.
-      modify_no_resume: A módosítások szerkesztő módban csak előkészülnek - küldés
-        nélkül kilépve elvesznek; mentés és folytatás csak profil-létrehozáskor érhető
-        el.
+      modify_no_resume: 'A módosítások szerkesztő módban még nincsenek alkalmazva:
+        küldés nélkül kilépve elvesznek; mentés és folytatás csak profil-létrehozáskor
+        érhető el.'
       setup_saved_resume_later: 'Elmentve. Bármikor folytathatod: aeat config profile
         create %{name}'
     output_labels:

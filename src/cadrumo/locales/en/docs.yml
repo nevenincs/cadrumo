@@ -13,17 +13,17 @@ docs:
       iva_compensation_annual_partition: from the IVA compensación carried across
         the year
       iva_wallet_decision: from your IVA compensación decision
-      ledger_impatriado_income_aggregation: from your ledger income under the impatriado
+      ledger_impatriado_income_aggregation: from your income records under the impatriado
         regime
-      ledger_irnr_income_aggregation: from your ledger IRNR income
-      ledger_iva_aggregation: from your IVA ledger entries
-      ledger_oss_aggregation: from your OSS ledger entries
-      ledger_renta_gastos_estimacion_directa_aggregation: from your ledger expenses
+      ledger_irnr_income_aggregation: from your IRNR income records
+      ledger_iva_aggregation: from your VAT records
+      ledger_oss_aggregation: from your OSS sales records
+      ledger_renta_gastos_estimacion_directa_aggregation: from your expense records
         under estimación directa
-      ledger_renta_gastos_pago_fraccionado_aggregation: from your ledger expenses
+      ledger_renta_gastos_pago_fraccionado_aggregation: from your expense records
         for the pago fraccionado
-      ledger_renta_income_aggregation: from your ledger income
-      ledger_transaction: from your ledger transactions
+      ledger_renta_income_aggregation: from your income records
+      ledger_transaction: from your records
       m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
         annual summary
       m347_third_party_operation: from your third-party operations

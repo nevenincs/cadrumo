@@ -12,15 +12,17 @@ docs:
       inventory: a készletnyilvántartásából
       iva_compensation_annual_partition: az adóév IVA-kompenzációjából
       iva_wallet_decision: az IVA-kompenzációs döntéséből
-      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
-      ledger_irnr_income_aggregation: az IRNR-bevételeiből
-      ledger_iva_aggregation: az IVA-tételeiből
-      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételi
+        nyilvántartásaiból
+      ledger_irnr_income_aggregation: az IRNR-bevételi nyilvántartásaiból
+      ledger_iva_aggregation: az áfanyilvántartásaiból
+      ledger_oss_aggregation: az OSS-értékesítési nyilvántartásaiból
       ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
-        szerinti költségeiből
-      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
-      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
-      ledger_transaction: a nyilvántartott tételeiből
+        szerinti kiadási nyilvántartásaiból
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado kiadási
+        nyilvántartásaiból
+      ledger_renta_income_aggregation: a bevételi nyilvántartásaiból
+      ledger_transaction: a nyilvántartásaiból
       m303_regimen_simplificado_annual_summary: a 303-es nyomtatvány egyszerűsített
         rendszerének éves összesítéséből
       m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből

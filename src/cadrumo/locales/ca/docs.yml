@@ -12,16 +12,17 @@ docs:
       inventory: des del seu inventari d'existències
       iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
       iva_wallet_decision: des de la seva decisió de compensació d'IVA
-      ledger_impatriado_income_aggregation: des dels seus ingressos del règim d'impatriats
-      ledger_irnr_income_aggregation: des dels seus ingressos d'IRNR
-      ledger_iva_aggregation: des dels seus apunts d'IVA
-      ledger_oss_aggregation: des dels seus apunts d'OSS
-      ledger_renta_gastos_estimacion_directa_aggregation: des de les seves despeses
-        en estimació directa
-      ledger_renta_gastos_pago_fraccionado_aggregation: des de les seves despeses
-        del pagament fraccionat
-      ledger_renta_income_aggregation: des dels seus ingressos registrats
-      ledger_transaction: des dels seus moviments registrats
+      ledger_impatriado_income_aggregation: des dels teus registres d'ingressos del
+        règim d'impatriats
+      ledger_irnr_income_aggregation: des dels teus registres d'ingressos d'IRNR
+      ledger_iva_aggregation: des dels teus registres d'IVA
+      ledger_oss_aggregation: des dels teus registres de vendes OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: des dels teus registres
+        de despeses en estimació directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: des dels teus registres de
+        despeses del pagament fraccionat
+      ledger_renta_income_aggregation: des dels teus registres d'ingressos
+      ledger_transaction: des dels teus registres
       m303_regimen_simplificado_annual_summary: des del resum anual del règim simplificat
         del model 303
       m347_third_party_operation: de les seves operacions amb tercers

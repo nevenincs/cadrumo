@@ -1735,9 +1735,8 @@ application:
         comunidad.
       modify_descendants_via_door: Los descendientes no forman parte de la edición
         del perfil. Gestiónalos con el comando de descendientes.
-      modify_no_resume: 'Los cambios en modo edición solo quedan preparados: salir
-        sin enviar los descarta; guardar y reanudar solo está disponible al crear
-        el perfil.'
+      modify_no_resume: 'Los cambios en modo edición aún no se aplican: salir sin
+        enviar los descarta; guardar y reanudar solo está disponible al crear el perfil.'
       setup_saved_resume_later: 'Guardado. Reanuda cuando quieras con: aeat config
         profile create %{name}'
     output_labels:

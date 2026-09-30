@@ -147,13 +147,13 @@ flows:
           iva_wallet_decision: Decisión de saldo de IVA
           ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
           ledger_irnr_income_aggregation: Totales de ingresos de no residentes
-          ledger_iva_aggregation: Totales del libro de IVA
-          ledger_oss_aggregation: Totales del libro OSS
-          ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
-            estimación directa
+          ledger_iva_aggregation: Registros de IVA
+          ledger_oss_aggregation: Registros de ventas OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Registros de gastos
+            (estimación directa)
           ledger_renta_gastos_pago_fraccionado_aggregation: Registros de gastos
           ledger_renta_income_aggregation: Registros de ingresos
-          ledger_transaction: Movimiento del libro
+          ledger_transaction: Registro
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)
           m347_third_party_operation: Operación con terceros

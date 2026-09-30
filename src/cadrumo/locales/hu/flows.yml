@@ -146,10 +146,10 @@ flows:
           iva_wallet_decision: Áfaegyenleg-döntés
           ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése
           ledger_irnr_income_aggregation: Nem rezidens jövedelmek összesítése
-          ledger_iva_aggregation: Áfanyilvántartás összesítése
-          ledger_oss_aggregation: OSS-nyilvántartás összesítése
-          ledger_renta_gastos_estimacion_directa_aggregation: Közvetlen becslésű költségek
-            összesítése
+          ledger_iva_aggregation: Áfanyilvántartás
+          ledger_oss_aggregation: OSS-értékesítési nyilvántartás
+          ledger_renta_gastos_estimacion_directa_aggregation: Kiadási nyilvántartás
+            (közvetlen becslés)
           ledger_renta_gastos_pago_fraccionado_aggregation: Kiadási nyilvántartás
           ledger_renta_income_aggregation: Bevételi nyilvántartás
           ledger_transaction: Nyilvántartási tétel

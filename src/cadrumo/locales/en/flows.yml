@@ -144,13 +144,13 @@ flows:
           iva_wallet_decision: VAT wallet decision
           ledger_impatriado_income_aggregation: Inbound-expatriate income totals
           ledger_irnr_income_aggregation: Non-resident income totals
-          ledger_iva_aggregation: VAT ledger totals
-          ledger_oss_aggregation: OSS ledger totals
-          ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
-            ledger totals
+          ledger_iva_aggregation: VAT records
+          ledger_oss_aggregation: OSS sales records
+          ledger_renta_gastos_estimacion_directa_aggregation: Expense records (direct
+            estimation)
           ledger_renta_gastos_pago_fraccionado_aggregation: Expense records
           ledger_renta_income_aggregation: Income records
-          ledger_transaction: Ledger transaction
+          ledger_transaction: Record
           m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
           m347_third_party_operation: Third-party operation
           manual_input: Manual input
