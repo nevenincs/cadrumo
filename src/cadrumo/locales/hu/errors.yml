@@ -951,8 +951,8 @@ errors:
     refused_actividad_asset_accelerated_da18_depreciation_not_computed: Ebben az adóévben
       a LIS DA 18 az új elektromos járművekre és töltőpontokra a maximális lineáris
       leírási kulcs kétszeresével számolt gyorsított értékcsökkenést biztosít, nem
-      szabad értékcsökkenést. A Cadrumo ezt a kedvezményt nem számítja ki, ezért nem
-      készült értékcsökkenési számítás.
+      szabad értékcsökkenést. Ez a kedvezmény nem kerül kiszámításra, ezért nem készült
+      értékcsökkenési számítás.
     refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
       az eszköz már rögzített elszámolásaival.
     refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik

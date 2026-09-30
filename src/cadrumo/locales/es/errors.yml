@@ -1003,8 +1003,8 @@ errors:
     refused_actividad_asset_accelerated_da18_depreciation_not_computed: En este período
       impositivo, la DA 18 LIS concede a los vehículos eléctricos nuevos y a los puntos
       de recarga amortización acelerada al doble del coeficiente lineal máximo, no
-      libertad de amortización. Cadrumo no calcula ese régimen, por lo que no se ha
-      calculado ninguna amortización.
+      libertad de amortización. Ese régimen no se calcula, por lo que no se ha calculado
+      ninguna amortización.
     refused_actividad_asset_claim_conflict: La amortización registrada entra en conflicto
       con las ya registradas para el activo.
     refused_actividad_asset_incomplete: Al cuadro de amortización del activo le falta
