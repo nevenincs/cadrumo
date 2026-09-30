@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:170d3807f65e8ddbd2b145bdc922fc143b50e195034c32297198cb0dc3fea5ac'
+body_hash: 'sha256:917fc378a419115b281e80e07f10ebe11abe54125679025dc61804577f9b6753'
 ---
 
 # `modelo-editor-workbench` plan
@@ -112,13 +112,25 @@ Converge the workbench on the filer-facing design the UX session specified, one 
 - [x] `P06.S34` - Rewrite the findings catalogue and the workbench texts in the filer's words and one register; `src/cadrumo/locales`.
 - [x] `P06.S35` - Show a permanent status header with result direction, deadline and attention chips, rename the steps, and add collapsible navigation, search, go-to-box and sort; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
 - [x] `P06.S36` - Let assumed values hold the journey until confirmed, with bulk confirm, save-and-next, and where-it-comes-from in the editor; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
-- [ ] `P06.S37` - Render the converged workbench in the review previews after each wave and close the phase with a review; `dev/tui`.
+- [x] `P06.S37` - Render the converged workbench in the review previews after each wave and close the phase with a review; `dev/tui`.
 - [x] `P06.S38` - Narrow assumed values to required or non-zero boxes, give findings a grounded action and level, and expose grounded rates for rate cells; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P06.S39` - Show empty optional boxes without repeating themselves, keep legal citations whole, and word review effects by source family; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
 - [x] `P06.S40` - Cap long box lists in the findings list, drop counts the chips already give, hide to-dos on recorded declarations, and name sources in the filer's words; `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`.
 - [x] `P06.S41` - Dim pages that do not apply this period, merge duplicate navigator rows, scope bulk confirm to a page or section, and drop redundant help lines; `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`.
 - [x] `P06.S42` - Drive the acceptance journeys through confirming assumed values and recording the filing; `dev/acceptance/income_tax/tui_journey.py`.
 - [x] `P06.S43` - Keep raw identifiers out of finding sentences and put them behind technical details; `src/cadrumo/locales`.
+
+### Phase `P07` - filer safety, honesty and the docked editor
+
+Close what the combined render and the design verification found: nothing unconfirmed reaches AEAT, every finding and blocker reads in the filer's words and colour, rows never contradict their own state, and the box panel docks beside the list as the operator decided.
+
+- [ ] `P07.S44` - Withhold export and recording while assumed values remain, count the next step as the blockers do, and draw every blocker mark in the error colour; `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`.
+- [ ] `P07.S45` - Word finding facts at the render boundary, name repeated-row findings in the filer's words at the missing level, carry calculation diagnostics to the workbench, and name an unnamed input by the box it feeds; `src/cadrumo/application/modelo/work_form.py`.
+- [ ] `P07.S46` - Keep a held zero apart from an empty box, give rate values their unit, and word sources, panels and staged changes in the filer's terms; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
+- [ ] `P07.S47` - Dock the box panel at the foot of the workbench, with the dialog below thirty rows of height; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [ ] `P07.S48` - Show the chain from an edited box to the result; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [ ] `P07.S49` - Author official headings for Modelo 100, then 349; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 
 ## Parallelization
 
@@ -158,6 +170,19 @@ closure. The UX session writes specs and catalogue text and edits no file here.
   - S36 owns `editor.py`, `session.py` and a new bulk-confirm module.
 - S37's preview worker owns `dev/tui/**`. It renders only in quiet windows the orchestrator
   declares, or from a frozen snapshot of a commit.
+
+P07 runs three lanes in the shared worktree, one writer per file, serialising locale batches and
+commits behind scratch locks:
+
+- S44 owns `progress.py`, `screen.py`, `header.py`, `review.py`, `bulk_confirm.py`, `keys.py` and
+  `wording.py` in the workbench package.
+- S45 owns `src/cadrumo/application/modelo/**` and the workbench's `issues.py`.
+- S46 owns the workbench's `casilla_list.py`, `grid.py`, `page_items.py`, `vocabulary.py`,
+  `sources.py`, `editor.py`, `legend.py`, `navigator.py` and `search.py`.
+- S47 and S48 follow once S44 and S46 land, since they rebuild the editor's container inside the
+  screen. S49 follows once the three lanes land, because publishing registry authority changes
+  what every lane's tests read. Wording that the design lane owns arrives as validated packs and
+  is wired, not written, by the lanes.
 
 ## Verification
 

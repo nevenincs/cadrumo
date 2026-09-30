@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f3e5e6ec7f6b0eb3b59a9d269af91413f4d2bfd46fcc059e19f1ec18d6e37ae'
+body_hash: 'sha256:d04d7ad0e8e28122a5f9794ee2a47d6f9e57f2789093317f9f4eae51e2f14105'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -218,6 +218,16 @@ override warnings precede apply. Apply runs through the operation modal, and a d
 operator's changes, recalculated values and values changed by new source data. A stale session
 keeps its changes and re-opens its review against the new head with every changed "before" value
 marked for the operator to acknowledge.
+
+Amendment 2026-09-30, decided by the operator. A box is edited in a panel docked at the foot of
+the workbench, in place of the help band, so the selected row and its neighbours stay visible
+and keeping a value and going to the next refills the panel as the list moves; below thirty rows
+of height the panel opens as the centred dialog instead. The panel's content blocks are those of
+the dialog. Typing into the value column is not offered: one way of editing keeps where a value
+comes from and whether it can change beside every entry. Repeated records (349 operators, 303
+simplified-regime activities, 390 activities) are read in the workbench and changed at their
+source, reached from the table; the row intents stay unoffered while every repeating block is fed
+from the filer's records, and a record list with no source is decided on its own when one appears.
 
 ### D6 Sources hub
 

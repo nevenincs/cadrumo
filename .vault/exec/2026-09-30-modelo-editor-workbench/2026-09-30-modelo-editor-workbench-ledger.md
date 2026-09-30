@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4629e2d066818055a781af0a3560bcac5cc14883bf173186fa43ab8da3bd710'
+body_hash: 'sha256:5ad1ee642fd73d0bb94c2da365c65f6b3c9ddd941310dc01d7f4fb61a1595609'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -703,6 +703,29 @@ related:
 - `S43` `by:` `orchestrator`
 - `S32` `verify:` `python -m dev.quality.types (17 diagnostics, all predating P06)` -> `pass`
 - `S38` `verify:` `python -m dev.quality.types (17 diagnostics, all predating P06)` -> `pass`
+- `S37` `M` `dev/tui/harness/sequences.py`
+- `S37` `M` `dev/tui/harness/tests/test_sequence_scenarios.py`
+- `S37` `M` `dev/tui/_harness.py`
+- `S37` `A` `dev/tui/tests/test_tui_harness_colour.py`
+- `S37` `M` `dev/tui/cli.py`
+- `S37` `M` `dev/tui/harness/__main__.py`
+- `S37` `A` `docs/api/cadrumo.application.modelo.required_inputs.rst`
+- `S37` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S37` `A` `docs/api/cadrumo.application.modelo.work_form_result.rst`
+- `S37` `A` `docs/api/cadrumo.application.modelo.work_form_sources.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.grid.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.header.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.issues.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.legend.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.navigator.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.result.rst`
+- `S37` `M` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.search.rst`
+- `S37` `A` `docs/api/cadrumo.entrypoints.tui.modelo.workbench.sorting.rst`
+- `S37` `verify:` `pytest -m 'unit or integration' dev/tui, 217 passed` -> `pass`
+- `S37` `verify:` `dev.tui render at 1ffb77f6ea, 640 frames, 0 failures, 0 refused, 0 diverging from goldens` -> `pass`
+- `S37` `by:` `orchestrator`
 
 ## Notes
 
@@ -758,3 +781,5 @@ related:
 - `S43` Commits 9e3a5fee59, 72b7266e91
 - `S32` Reopened by the phase review's type-gate finding and resolved in e07cb8d33b
 - `S38` Reopened by the phase review's type-gate finding and resolved in e07cb8d33b
+- `S37` Commits ac5863ae2f, 636798aa72, c258105639, ab8385cdeb, 77752aa749
+- `S37` The phase review's findings are resolved; the render at 1ffb77f6ea found further defects, carried into P07
