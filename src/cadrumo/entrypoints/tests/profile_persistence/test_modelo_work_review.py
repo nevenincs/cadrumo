@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     replace_test_profile_record,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,
     ModeloWorkProgress,
@@ -22,6 +23,13 @@ from cadrumo.application.modelo.work_review import (
     capture_modelo_work_review,
     read_modelo_work_review_current_coordinate,
 )
+from cadrumo.application.modelo.workspace import resolve_graded_snapshot_result
+from cadrumo.application.modelo.workspace_models import (
+    ModeloWorkspaceCapabilityDisposition,
+    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceGradedSnapshotResultV1,
+)
 from cadrumo.application.modelo.workspace_producers import (
     MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceBoundedReviewPortV1,
@@ -29,6 +37,8 @@ from cadrumo.application.modelo.workspace_producers import (
 )
 from cadrumo.application.producer_capture import ProducerCaptureError
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -61,6 +71,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_state_projection_read_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -464,6 +475,104 @@ def test_review_progress_fields_do_not_express_a_ratio() -> None:
     joined_names = " ".join(names).casefold()
     assert all(token not in joined_names for token in forbidden)
     assert all(field.annotation is not float for field in ModeloWorkProgress.model_fields.values())
+
+
+def _calculated_m130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
+    """Persist one Modelo 130 work unit and calculate it through the real action."""
+    work_repo, calculation_repo, _, _, bucket_event_repo = repos
+    work_unit = _persist_work_unit(repos)
+    profile = load_test_profile_record(_BUCKET_ID)
+    replace_test_profile_record(
+        profile.model_copy(
+            update={
+                "facts": (
+                    *profile.facts,
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
+                ),
+            },
+        ),
+    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    ) as ports:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
+            ports=ports,
+        )
+    return work_unit, revision
+
+
+def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, bucket_event_repo = repos
+    work_unit, revision = _calculated_m130(repos)
+    stored_unit = work_repo.load().work_units[work_unit.work_unit_id]
+
+    with (
+        calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=bucket_event_repo,
+        ) as ports,
+        bundled_indexed_authority().operation() as operation,
+    ):
+        result = resolve_graded_snapshot_result(
+            ModeloWorkspaceExactWorkUnitTargetV1(
+                target=ModeloExactWorkUnitTarget(work_unit_id=stored_unit.work_unit_id, bucket_id=stored_unit.bucket_id)
+            ),
+            required_grade=RegistryAuthorityGrade.CALCULATION,
+            bucket_id=stored_unit.bucket_id,
+            catalogue_repository=work_repo,
+            calculation_ports=ports,
+            verification_repository=verification_repo,
+            readiness_read_ports=build_state_projection_read_ports(),
+            operation=operation,
+            output_language=OutputLanguage.EN,
+        )
+        expected_review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+    projection = result.projection
+    assert projection.work_review.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    assert projection.work_review.review == expected_review
+    assert projection.work_review.review.calculation_revision_id == revision.calculation_revision_id
+    assert {contributor.owner for contributor in projection.contributors} >= {
+        MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor.owner
+    }
+    assert len(projection.contributors) == len(ModeloWorkspaceContributorKindV1)
+    computed = {
+        str(row.casilla_id) for row in projection.work_review.review.casillas if row.concrete_formula is not None
+    }
+    assert str(M130_NET_RESULT_CASILLA) in computed
+    verification = next(
+        capability
+        for capability in projection.capabilities
+        if capability.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
+    )
+    bounded_review = MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor
+    assert (verification.producer_owner, verification.producer) == (bounded_review.owner, bounded_review.producer)
+    assert verification.disposition is ModeloWorkspaceCapabilityDisposition.UNMEASURED
 
 
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:

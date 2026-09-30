@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:263099d5e0ea2893ad6f6e4c2984f3f872700ae1737b49c4b11b9e78218dec32'
+body_hash: 'sha256:17ed2ab5fefa9fc11f3e99242dc72756aefea0941fe1a20775af90bde77eac39'
 related:
   - "[[2026-09-23-tui-registry-api-gate-plan]]"
 ---
@@ -51,3 +51,11 @@ related:
 - `S03` `verify:` `pytest-workspace-producers` -> `pass`
 - `S03` `verify:` `ruff` -> `pass`
 - `S03` `verify:` `ty` -> `pass`
+- `S04` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_work_review.py`
+- `S04` `verify:` `pytest-work-review` -> `pass`
+- `S04` `verify:` `pytest-tui-modelo-and-workbench` -> `pass`
+- `S04` `verify:` `pytest-modelo-workspace` -> `pass`
+- `S04` `verify:` `ruff` -> `pass`
+- `S04` `verify:` `ty` -> `pass`

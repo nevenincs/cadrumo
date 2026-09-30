@@ -1278,6 +1278,7 @@ def resolve_modelo_workspace_graded_snapshot(
     here would force this seam to invent an exception for an outcome the
     contract already spells out.
     """
+    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_graded_snapshot_result
@@ -1295,6 +1296,7 @@ def resolve_modelo_workspace_graded_snapshot(
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
         calculation_ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+        verification_repository=VerificationReportCatalogueRepository(bucket_id=unit.bucket_id),
         readiness_read_ports=build_state_projection_read_ports(),
         operation=operation,
         output_language=output_language,

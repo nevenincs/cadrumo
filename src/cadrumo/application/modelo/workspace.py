@@ -140,8 +140,10 @@ from .workspace_models import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.protocols import VerificationReportCatalogueRepositoryProtocol
     from ..state_projection_ports import StateProjectionReadPorts
     from .calculation_action_ports import CalculationActionPorts
+    from .work_review import ModeloWorkReview
 
 from .workspace_producers import (
     MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
@@ -151,6 +153,7 @@ from .workspace_producers import (
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceBoundedReviewPortV1,
     ModeloWorkspaceCalculationPortV1,
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceEpochV1,
@@ -1589,19 +1592,6 @@ _GRADED_SNAPSHOT_PAGINATED_FACETS = frozenset(
     }
 )
 
-GRADED_SNAPSHOT_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
-    disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
-    review=None,
-)
-"""GRADED_SNAPSHOT does not read the bounded-review producer, so it declares the
-review unmeasured rather than assembling one of its own.
-
-Separate from ``STATIC_INSPECTION_WORK_REVIEW_FACET`` despite holding the same
-value: the two constants record different reasons, and folding them into one
-would make a later change to either admission's review posture silently change
-the other's.
-"""
-
 
 class ModeloWorkspaceMaterializationProvenanceMissingError(CadrumoError):
     """Raised when a persisted repeated-row value names no source binding.
@@ -1723,17 +1713,15 @@ def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorksp
 
 
 def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
-    """Return the six contributor identities GRADED_SNAPSHOT actually reads.
+    """Return the seven contributor identities GRADED_SNAPSHOT reads.
 
     The four STATIC_INSPECTION reads (registry, work, locale_catalogue,
     field_manifest) plus CALCULATION, which supplies the materialization and
-    provenance facets, and READINESS, which supplies the readiness projection.
-
-    BOUNDED_REVIEW is deliberately absent: this admission does not assemble a
-    work review, and it says so through
-    :data:`GRADED_SNAPSHOT_WORK_REVIEW_FACET` rather than by listing a
-    contributor it never captures. A contributor named here but never captured
-    would corrupt the epoch digest every facet revalidates against.
+    provenance facets, READINESS, which supplies the readiness projection, and
+    BOUNDED_REVIEW, which supplies the work review the Results and Verification
+    destinations partition and report from. Every contributor named here is
+    captured exactly once per admission; one named but never captured would
+    corrupt the epoch digest every facet revalidates against.
     """
     return tuple(
         sorted(
@@ -1742,6 +1730,7 @@ def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1
                 MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1.contributor,
             ),
@@ -2002,6 +1991,7 @@ def graded_snapshot_modelo_workspace_capabilities(
     resolved_target: ModeloWorkspaceResolvedTargetV1,
     *,
     calculation_revision: CalculationRevision,
+    review: ModeloWorkReview,
     readiness: ProjectionModeloReadiness,
 ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
     """Return the complete GRADED_SNAPSHOT capability denominator.
@@ -2016,10 +2006,11 @@ def graded_snapshot_modelo_workspace_capabilities(
       revision belongs to this target's own work unit, which reads the
       calculate producer's own persisted object rather than inferring
       "materialized" from non-empty values.
-    * ``VERIFICATION_READINESS`` is ``AVAILABLE`` when that same revision's
-      state is ``VERIFICADO_COMPLETO``, a state the record only reaches with
-      its ``verified_at``/``verified_by`` stamps present -- a separately
-      stamped verdict from the verify producer.
+    * ``VERIFICATION_READINESS`` is owned by the bounded review, as in a
+      static inspection, and is ``AVAILABLE`` when the review reports that
+      same revision in state ``VERIFICADO_COMPLETO``, a state the record only
+      reaches with its ``verified_at``/``verified_by`` stamps present -- a
+      separately stamped verdict from the verify producer.
     * ``FILING_DRAFT_READINESS`` reads the READINESS producer's own ``ready``
       verdict for this exact target. ``ready`` false is ``UNMEASURED`` rather
       than ``REFUSED``: the producer measured and found the target not ready,
@@ -2033,15 +2024,18 @@ def graded_snapshot_modelo_workspace_capabilities(
         resolved_target: The target every row is pinned to.
         calculation_revision: The captured
             :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
-            whose own persisted state settles the two calculate-side answers.
+            whose own persisted state settles the materialization answer.
+        review: The captured work review, which settles verification readiness.
         readiness: The readiness producer's own verdict for this target.
 
     Returns:
         The complete capability denominator, one row per capability.
     """
     calculation_available = calculation_revision.work_unit_id == resolved_target.work_unit_id
-    verification_available = calculation_available and (
-        calculation_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    verification_available = (
+        calculation_available
+        and review.calculation_revision_id == calculation_revision.calculation_revision_id
+        and review.lifecycle_state is CalculationRevisionState.VERIFICADO_COMPLETO
     )
     counts = graded_snapshot_schema_family_member_counts(snapshot)
     dispositions: tuple[
@@ -2062,7 +2056,7 @@ def graded_snapshot_modelo_workspace_capabilities(
         ),
         (
             ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
-            MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+            MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
             ModeloWorkspaceCapabilityDisposition.AVAILABLE
             if verification_available
             else ModeloWorkspaceCapabilityDisposition.UNMEASURED,
@@ -2095,6 +2089,7 @@ def resolve_graded_snapshot_result(
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_ports: CalculationActionPorts,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
     readiness_read_ports: StateProjectionReadPorts,
     operation: PinnedAuthorityOperation,
     output_language: OutputLanguage,
@@ -2105,8 +2100,8 @@ def resolve_graded_snapshot_result(
 
     Mirrors :func:`resolve_static_inspection_result`'s discipline: WORK is
     captured exactly once, REGISTRY exactly once from WORK's own resolved
-    coordinate rather than from the target's raw operands, and CALCULATION and
-    READINESS exactly once each. ``operation`` serves as both the registry
+    coordinate rather than from the target's raw operands, and CALCULATION,
+    BOUNDED_REVIEW and READINESS exactly once each. ``operation`` serves as both the registry
     authority and the pinned authority the calculation and readiness producers
     read through, so every contributor sees one generation of the registry.
 
@@ -2126,9 +2121,9 @@ def resolve_graded_snapshot_result(
       target the operator is being sent back to -- a graded read needs that
       capture anyway, so nothing is read that a success would not have read.
 
-    ``work_review`` is :data:`GRADED_SNAPSHOT_WORK_REVIEW_FACET`: this
-    admission reads no bounded-review producer and declares the review
-    unmeasured rather than assembling one of its own.
+    ``work_review`` carries the canonical review the bounded-review producer
+    built for the resolved work unit, so the destinations read the same review
+    the command line emits rather than assembling one of their own.
     """
     if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
         raise ModeloWorkspaceStaleCursorError(
@@ -2258,6 +2253,22 @@ def resolve_graded_snapshot_result(
     ).capture_projection_with_epoch()
     calculation_revision = calculation_capture.projection
 
+    review_capture = ModeloWorkspaceBoundedReviewPortV1(
+        bucket_id=resolved_target.bucket_id,
+        modelo=resolved_target.modelo,
+        filing_year=resolved_target.filing_year,
+        period=resolved_target.period,
+        operation=operation,
+        work_unit_repository=catalogue_repository,
+        calculation_repository=calculation_ports.calculation_repository,
+        verification_repository=verification_repository,
+    ).capture_projection_with_epoch()
+    review = review_capture.projection
+    if review.work_unit_id != resolved_target.work_unit_id:
+        raise InternalInvariantError(
+            "the bounded review resolved a different work unit than the graded admission it contributes to"
+        )
+
     readiness_capture = ModeloWorkspaceReadinessPortV1(
         requests=(
             ModeloReadinessRequest(
@@ -2292,6 +2303,7 @@ def resolve_graded_snapshot_result(
         locale_capture,
         field_manifest_capture,
         calculation_capture,
+        review_capture,
         readiness_capture,
     )
     baseline = resolve_graded_snapshot_baseline(
@@ -2365,12 +2377,16 @@ def resolve_graded_snapshot_result(
         schema_facet=schema_facet,
         materialization_facet=materialization_facet,
         provenance_facet=provenance_facet,
-        work_review=GRADED_SNAPSHOT_WORK_REVIEW_FACET,
+        work_review=ModeloWorkspaceWorkReviewFacetV1(
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            review=review,
+        ),
         readiness=readiness,
         capabilities=graded_snapshot_modelo_workspace_capabilities(
             snapshot,
             resolved_target,
             calculation_revision=calculation_revision,
+            review=review,
             readiness=readiness,
         ),
     )
