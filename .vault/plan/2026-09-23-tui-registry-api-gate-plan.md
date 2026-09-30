@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:8843e03b4bca1842e5dc11ba446ca71d7b264d39b2737197ff24d8faffd13b5c'
+body_hash: 'sha256:4e8d8737a421e8c5935843d411ef684a0514a18df5beb1adab26a556f4972fac'
 ---
 
 # `tui-registry-api-gate` plan
@@ -54,7 +54,7 @@ pages must show the calculated boxes and the review's findings.
 ## Steps
 
 - [x] `S01` - Author the bounded-review capture and its current-coordinate read in the work-review owner module, with its not-current refusal key; the calculation and readiness captures landed with the graded restoration; `src/cadrumo/application/modelo/work_review.py`.
-- [ ] `S03` - Add the bounded-review workspace port on the current producer contract, beside the calculation and readiness ports already restored; `src/cadrumo/application/modelo/workspace_producers.py`.
+- [x] `S03` - Add the bounded-review workspace port on the current producer contract, beside the calculation and readiness ports already restored; `src/cadrumo/application/modelo/workspace_producers.py`.
 - [ ] `S04` - Assemble graded snapshot over all seven contributors so the work-review facet carries the canonical review, with work-review parity and capture-once conformance tests; `src/cadrumo/application/modelo/workspace.py`.
 - [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
 - [ ] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.

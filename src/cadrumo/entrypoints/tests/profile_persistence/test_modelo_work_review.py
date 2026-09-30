@@ -22,6 +22,11 @@ from cadrumo.application.modelo.work_review import (
     capture_modelo_work_review,
     read_modelo_work_review_current_coordinate,
 )
+from cadrumo.application.modelo.workspace_producers import (
+    MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceBoundedReviewPortV1,
+    ModeloWorkspaceContributorKindV1,
+)
 from cadrumo.application.producer_capture import ProducerCaptureError
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
@@ -159,6 +164,38 @@ def test_a_work_review_capture_carries_exactly_the_built_review_and_stays_curren
     assert captured.value == built
     assert again.generation == captured.generation
     assert captured.require_current(current) is captured
+
+
+def test_the_bounded_review_port_stamps_its_contract_over_the_captured_review(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+
+    with bundled_indexed_authority().operation() as operation:
+        port = ModeloWorkspaceBoundedReviewPortV1(
+            bucket_id=work_unit.bucket_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+        contributed = port.capture_projection_with_epoch()
+        built = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+    assert contributed.projection == built
+    assert contributed.stamp.contributor_kind is ModeloWorkspaceContributorKindV1.BOUNDED_REVIEW
+    assert contributed.epoch.owner == MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor.owner
 
 
 def test_a_work_review_capture_refuses_as_not_current_after_an_interleaved_write(repos: Repos) -> None:
