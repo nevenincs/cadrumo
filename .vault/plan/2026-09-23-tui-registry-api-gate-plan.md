@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:07f29bbe2fccf8dbb7ccb9f1cc4e99eb7d1228b94ecf393a310b921d1d9d67ba'
+body_hash: 'sha256:2b8cdacdb98952c96a93bdea3d140dbef051dce517bcbc888514bdc479f5dc6b'
 ---
 
 # `tui-registry-api-gate` plan
@@ -56,16 +56,20 @@ pages must show the calculated boxes and the review's findings.
 - [x] `S01` - Author the bounded-review capture and its current-coordinate read in the work-review owner module, with its not-current refusal key; the calculation and readiness captures landed with the graded restoration; `src/cadrumo/application/modelo/work_review.py`.
 - [x] `S03` - Add the bounded-review workspace port on the current producer contract, beside the calculation and readiness ports already restored; `src/cadrumo/application/modelo/workspace_producers.py`.
 - [x] `S04` - Assemble graded snapshot over all seven contributors so the work-review facet carries the canonical review, with work-review parity and capture-once conformance tests; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
+- [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
 
 ## Parallelization
 
 S01 precedes S03, because the port wraps the owner capture. S04 needs S03.
-S02 follows S04, so its second pass covers all seven contributors, the bounded
-review included. S05 needs S04. S06 needs S05. There is no parallel execution;
-one writer owns the whole sequence.
+S05 needs S04. S06 needs S05. S02 runs last: its second pass covers all seven
+contributors, the bounded review included, and it changes no rendered value,
+so the operator-visible proof is not held behind it. Measurement at S04 showed
+that the work, locale-catalogue and field-manifest owners define current
+coordinates that nothing constructs, and calculation and readiness define none,
+so S02 authors those owner reads before the second pass can use them. There is
+no parallel execution; one writer owns the whole sequence.
 
 ## Verification
 
