@@ -181,6 +181,10 @@ _M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
+# The first exercise whose Modelo 190 totals route through the Modelo 111
+# relation prefills: they rest on the 2025 instrucciones, and the 2024 edition
+# totals its own type-2 records as its design states.
+_M190_RELATION_YEAR = 2025
 _M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
 _M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
 _M190_EXPECTED_RELATION_IDS = frozenset(
@@ -341,7 +345,7 @@ def _withholding_observation(
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
+        transaction_date=date(_M190_RELATION_YEAR, 6, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
@@ -484,13 +488,14 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "193",
         2024,
         # The closed `2024` edition is the last whose annual totals resolve from
-        # the quarterly modelo 123 filings; from `2025-y-siguientes` the design
-        # sums and counts the type-2 records and keeps 123 as a reconciliation
+        # the quarterly modelo 123 filings (its perceptor count already counts the
+        # type-2 records); from `2025-y-siguientes` the design also sums the
+        # type-2 records and keeps 123 as a reconciliation
         # check. This value is ASSERTED against the law-determined pick, never
         # injected into resolution.
         "2024",
         _m193_relation_source_values,
-        "modelo-193-123-perceptores-anual",
+        "modelo-193-perceptores-anual",
         frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
         "modelo-193-123-base-anual",
         "modelo-193-123-retenciones-anual",
@@ -612,8 +617,8 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     detail_nif, detail_clave, _placeholder_percepcion, _placeholder_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
 
-    snapshot = registry_snapshot("190", 2024, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2024, period="0A")
+    snapshot = registry_snapshot("190", _M190_RELATION_YEAR, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M190_RELATION_YEAR, period="0A")
     observations = _observations_from_requirements(
         requirements,
         lambda requirement, period_index: _m190_fixture_relation_source_value(
@@ -627,7 +632,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2024,
+        filing_year=_M190_RELATION_YEAR,
         period="0A",
     )
     observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
@@ -648,21 +653,21 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     # binding replaced.
     withholding_observations = (
         _withholding_observation(
-            "m190-2024-0A-detail-1",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-1",
             detail_nif,
             detail_clave,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[0],
             retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[0],
         ),
         _withholding_observation(
-            "m190-2024-0A-detail-2",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-2",
             detail_nif,
             detail_clave,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[1],
             retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[1],
         ),
         _withholding_observation(
-            "m190-2024-0A-detail-3",
+            f"m190-{_M190_RELATION_YEAR}-0A-detail-3",
             detail_nif,
             _M190_SECOND_CLAVE,
             percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[2],
@@ -678,7 +683,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(2024, "0A")},
+        date_context={"filing_period": _registry_filing_date(_M190_RELATION_YEAR, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
     )

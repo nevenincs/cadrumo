@@ -36,10 +36,16 @@ application_link_source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-pro
 # Extracting a clave-C subclave list from this PDF without honouring that marker
 # would transcribe 2025 law onto a 2024 edition.
 #
-# NOT CLAIMED: the formula, application-link and legal refs on this revision
-# still name 2025 authorities (aeat-modelo-190-instructions-2025,
-# boe-modelo-190-2025-form, orden-hac-1431-2025:art-2). Those are a separate
-# question from the design ref and are NOT adjudicated here.
+# THE DECLARANTE TOTALS ARE THE DESIGN'S OWN SUMS. aeat-dr-190-2024 states
+# positions 145-160 and 161-175 as sums over this declaration's type-2 records,
+# and no instrucciones for ejercicio 2024 are held that would ground the modelo
+# 111 relation prefills, so both formulas total the type-2 records as the 2022
+# and 2023 editions do and the relation starts with the 2025 edition.
+#
+# NOT CLAIMED: the application-link and legal refs on this revision still name
+# 2025 authorities (aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form,
+# orden-hac-1431-2025:art-2). Those are a separate question from the design ref
+# and are NOT adjudicated here.
 #
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
@@ -108,6 +114,12 @@ source_refs = [
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2024-amendment",
 ]
+
+[revisions."2024".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: aeat-dr-190-2024 states its totals as sums over this declaration's own type-2 perceptor records (positions 145-160 and 161-175 of the type-1 record), so the calculation closes inside the edition. The modelo 111 relation prefills of the 2025 edition rest on the 2025 instrucciones, and no instrucciones for ejercicio 2024 are held that would ground them for this exercise. Empty because no grounded cross-modelo edge exists here, not because one is unbuilt."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [revisions."2024".family_dispositions.parameters]
 reason = """
@@ -487,16 +499,15 @@ sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-190-percepciones-total"}
-sequence_additions = {"expression.args" = [{binding = "modelo-190-111-trabajo-dinerario-importe-anual"}, {binding = "modelo-190-111-trabajo-especie-importe-anual"}, {binding = "modelo-190-111-actividades-dinerario-importe-anual"}, {binding = "modelo-190-111-actividades-especie-importe-anual"}, {binding = "modelo-190-111-premios-dinerario-importe-anual"}, {binding = "modelo-190-111-premios-especie-importe-anual"}, {binding = "modelo-190-111-ganancias-dinerario-importe-anual"}, {binding = "modelo-190-111-ganancias-especie-importe-anual"}, {binding = "modelo-190-111-derechos-imagen-importe-anual"}], legal_refs = ["orden-hac-1431-2025:art-2"], source_citations = [{source_ref = "aeat-modelo-190-instructions-2025", required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra", "Valoración"]}], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
-sequence_removals = {"expression.args" = [0, 1, 2, 3], source_citations = [0], source_refs = [0, 1]}
-sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "modelo-190-retenciones-total"}
-fields = {expression = {op = "copy"}}
-sequence_additions = {"expression.args" = [{binding = "modelo-190-111-retenciones-anual"}], legal_refs = ["orden-hac-1431-2025:art-2"], source_citations = [{source_ref = "aeat-modelo-190-instructions-2025", required_text = ["Casilla 03. Total retenciones e ingresos a cuenta", "Retenciones practicadas", "Ingresos a cuenta efectuados"]}], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
-sequence_removals = {"expression.args" = [0, 1, 2, 3], source_citations = [0], source_refs = [0, 1]}
-sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
 [[revisions."2024".family_overrides]]
 family = "live_cross_references"
 selector = {revision = "2023", id = "modelo-190-filed-declarations-read"}
@@ -505,10 +516,10 @@ sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "modelo-190-annual-summary"}
-fields = {dependency_classifications = ["modelo-190-dep-111"], extraction_profiles = ["modelo-190-declaracion-pdf"]}
-sequence_additions = {application_links = ["modelo-190-extractor"], bindings = ["modelo-190-111-trabajo-dinerario-importe-anual", "modelo-190-111-trabajo-especie-importe-anual", "modelo-190-111-actividades-dinerario-importe-anual", "modelo-190-111-actividades-especie-importe-anual", "modelo-190-111-premios-dinerario-importe-anual", "modelo-190-111-premios-especie-importe-anual", "modelo-190-111-ganancias-dinerario-importe-anual", "modelo-190-111-ganancias-especie-importe-anual", "modelo-190-111-derechos-imagen-importe-anual", "modelo-190-111-retenciones-anual"], deadline_windows = ["modelo-190-2024-0a"], legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "boe-modelo-190-2024-amendment"]}
-sequence_removals = {application_links = [3], bindings = [1, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67], deadline_windows = [0], legal_refs = [1, 2, 3, 4, 5, 6, 7], source_refs = [0]}
-sequence_order = {application_links = [3, 2, 0, 8, 4, 5, 6, 7, 1], bindings = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 1, 2, 3, 4, 6, 5, 7], casilla_ids = [2, 0, 1], legal_refs = [1, 3, 4, 8, 5, 6, 0, 7, 2], source_refs = [1, 2, 0, 3, 4]}
+fields = {extraction_profiles = ["modelo-190-declaracion-pdf"]}
+sequence_additions = {application_links = ["modelo-190-extractor"], deadline_windows = ["modelo-190-2024-0a"], legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "boe-modelo-190-2024-amendment"]}
+sequence_removals = {application_links = [3], bindings = [1, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 63, 64, 65, 66, 67], deadline_windows = [0], legal_refs = [1, 2, 3, 4, 5, 6, 7], source_refs = [0]}
+sequence_order = {application_links = [3, 2, 0, 8, 4, 5, 6, 7, 1], bindings = [8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 1, 2, 3, 4, 6, 5, 7], casilla_ids = [2, 0, 1], legal_refs = [1, 3, 4, 8, 5, 6, 0, 7, 2], source_refs = [1, 2, 0, 3, 4]}
 [[revisions."2024".family_overrides]]
 family = "application_links"
 selector = {revision = "2023", id = "modelo-190-approval"}
@@ -795,6 +806,54 @@ sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-percepcion-dineraria-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-percepcion-especie-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-dineraria-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-especie-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-retencion-practicada-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-ingreso-a-cuenta-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-retencion-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"}
+sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
 selector = {revision = "2023", id = "modelo-190-perceptor-row-nif"}
 sequence_additions = {source_refs = ["aeat-dr-190-2024"]}
 sequence_removals = {source_refs = [0]}
@@ -933,144 +992,72 @@ sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = 
 sequence_removals = {source_refs = [0, 1]}
 sequence_order = {legal_refs = [4, 0, 6, 1, 7, 2, 3, 5]}
 
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-dineraria-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-especie-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-incapacidad-retencion-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-ingreso-a-cuenta-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-percepcion-dineraria-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-percepcion-especie-total"}
-
-[[revisions."2024".family_removals]]
-family = "bindings"
-selector = {revision = "2023", id = "modelo-190-perceptor-rows-retencion-practicada-total"}
-
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-111-trabajo-dinerario-importe-anual"
-position = 0
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-trabajo-especie-importe-anual"
-position = 1
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-actividades-dinerario-importe-anual"
-position = 2
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-actividades-especie-importe-anual"
-position = 3
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-premios-dinerario-importe-anual"
-position = 4
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-premios-especie-importe-anual"
-position = 5
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-ganancias-dinerario-importe-anual"
-position = 6
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-ganancias-especie-importe-anual"
-position = 7
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "modelo-190-111-derechos-imagen-importe-anual"
+id = "modelo-190-perceptor-row-retencion-practicada"
 position = 8
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-111-retenciones-anual"
-position = 9
+id = "modelo-190-percepciones-anual"
+position = 10
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-name"
+id = "modelo-190-perceptor-rows-percepcion-dineraria-total"
 position = 11
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-clave"
+id = "modelo-190-perceptor-rows-percepcion-especie-total"
 position = 12
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-subclave"
+id = "modelo-190-perceptor-rows-incapacidad-dineraria-total"
 position = 13
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-percibido-dinerario"
+id = "modelo-190-perceptor-rows-incapacidad-especie-total"
 position = 14
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-percibido-especie"
+id = "modelo-190-perceptor-rows-retencion-practicada-total"
 position = 15
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-retencion-practicada"
+id = "modelo-190-perceptor-rows-ingreso-a-cuenta-total"
 position = 16
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-ingreso-a-cuenta"
+id = "modelo-190-perceptor-rows-incapacidad-retencion-total"
 position = 17
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-percepciones-anual"
+id = "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"
 position = 18
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "modelo-190-perceptor-row-provincia"
-position = 19
+position = 18
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-territorial-deduccion"
-position = 20
+id = "modelo-190-perceptor-row-nif-representante"
+position = 23
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-ano-nacimiento"
-position = 21
+id = "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido"
+position = 23
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "modelo-190-perceptor-row-situacion-familiar"
-position = 22
+id = "modelo-190-perceptor-row-ejercicio-devengo"
+position = 23

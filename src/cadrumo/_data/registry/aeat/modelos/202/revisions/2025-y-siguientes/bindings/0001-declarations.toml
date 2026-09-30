@@ -1,12 +1,15 @@
 # Modelo 202 modalidad art. 40.2 LIS — base del pago fraccionado from the
 # prior period's cuota líquida.
 #
-# Under LIS art. 40.2 the instalment base (casilla 01) is the cuota
-# íntegra/líquida of the last período impositivo whose declaration deadline
-# had elapsed on the first day of the instalment's payment month, minored by
-# the deductions and withholdings of that same período. This binding copies
-# the prior Modelo 200 cuota líquida (DP200014B:00592, semantic_role
-# is_cuota_liquida) into casilla 01.
+# Under LIS art. 40.2 the instalment base (casilla 01) is the cuota íntegra
+# of the last período impositivo whose declaration deadline had elapsed on the
+# first day of the instalment's payment month, "minorado en las deducciones y
+# bonificaciones así como en las retenciones e ingresos a cuenta" of that same
+# período: the wording of the 2018-2022, 2023-2024 and current instrucciones
+# alike. The cuota líquida (DP200014B:00592) is only net of the deductions and
+# bonificaciones, so this binding copies the prior Modelo 200 cuota del
+# ejercicio a ingresar o a devolver (DP200014B:00599), which is the cuota
+# líquida minus the retenciones e ingresos a cuenta (01766 and 01784).
 #
 # The temporal member declares all three target periods: 1P reaches two filing
 # years back, 2P and 3P one year back, because the prior-year Modelo 200 July
@@ -29,7 +32,7 @@
 # not populated for a 40.3-mandatory filer.
 [[revisions.2025-y-siguientes.bindings]]
 id = "modelo-202-cuota-base-ejercicio-anterior"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "DP200014B:00592", temporal = { kind = "filing_year_offset_by_target_period", offsets = { "1P" = -2, "2P" = -1, "3P" = -1 }, source_periods = ["0A"] } }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "DP200014B:00599", temporal = { kind = "filing_year_offset_by_target_period", offsets = { "1P" = -2, "2P" = -1, "3P" = -1 }, source_periods = ["0A"] } }
 applicability = { kind = "target_periods", periods = ["1P", "2P", "3P"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
@@ -37,4 +40,4 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 
 [[revisions.2025-y-siguientes.bindings.source_citations]]
 source_ref = "aeat-modelo-202-instructions"
-required_text = ["modalidad", "40.2"]
+required_text = ["modalidad", "40.2", "minorado en las deducciones y bonificaciones", "retenciones e ingresos a cuenta"]
