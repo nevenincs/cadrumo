@@ -77,8 +77,50 @@ class _RuntimeClientStub:
         self.grant_change_calls += 1
         return self.enrollment
 
+    def status(self) -> SimpleNamespace:
+        return SimpleNamespace(status={"admission": "authorized"})
+
     def close(self) -> None:
         self.close_count += 1
+
+
+@pytest.mark.anyio
+async def test_authenticate_admits_exact_profile_for_mcp_and_close_releases_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile_id = uuid4()
+    credential_reference = uuid4()
+    admitted = _RuntimeClientStub(profile_id, enrollment=None)
+    opened: list[tuple[UUID, UUID, OperationFrontendProjection]] = []
+
+    async def open_credential_client(
+        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
+    ) -> _RuntimeClientStub:
+        opened.append((profile_id, credential_reference, frontend))
+        return admitted
+
+    monkeypatch.setattr(mcp_server, "open_installed_credential_client", open_credential_client)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as client:
+            authenticated = await client.call_tool("authenticate", {"credential_reference": str(credential_reference)})
+            assert authenticated.is_error is False
+            assert authenticated.structured_content == {
+                "outcome": "authenticated",
+                "status": {"admission": "authorized"},
+            }
+            status = await client.call_tool("status", {})
+            assert status.is_error is False
+            assert status.structured_content == {
+                "outcome": "status",
+                "status": {"admission": "authorized"},
+            }
+            assert adapter.client is admitted
+
+        assert opened == [(profile_id, credential_reference, OperationFrontendProjection.MCP)]
+    finally:
+        await adapter.close()
+    assert admitted.close_count == 1
 
 
 def _enrollment_stub(*, stage: EnrollmentStage | None, expires_at: datetime) -> SimpleNamespace:
