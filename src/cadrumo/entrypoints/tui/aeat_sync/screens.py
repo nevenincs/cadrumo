@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 
@@ -33,12 +34,15 @@ from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
+from ....core.operations import OperationTerminalCondition
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
+from ..operations.controller_port import OperationControllerPort
+from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
@@ -219,6 +223,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         super().__init__(id=id)
         self.controller = controller
         self._requests: dict[str, AeatSyncOperationRequestV1] = {}
+        self._operation_button_epoch = 0
         self._consumed_request_ids: set[str] = set()
         self._consumed_notification_ids: set[str] = set()
         self._in_flight_id: str | None = None
@@ -320,10 +325,13 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
         for button in tuple(self.query(".aeat-sync-operation")):
             button.remove()
+        self._operation_button_epoch += 1
         self._requests.clear()
+        self._consumed_request_ids.clear()
         self._notification_rows.clear()
         navigation.clear(columns=False)
         rows.clear(columns=True)
+        self.query_one("#aeat-sync-status", Static).update("")
         self._render_navigation(navigation)
         self.populate_rows(rows)
         self._render_zone_status(rows)
@@ -355,7 +363,11 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
                 aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
             )
             return
-        button_id = f"aeat-sync-operation-{len(self._requests)}"
+        button_id = (
+            f"aeat-sync-operation-{len(self._requests)}"
+            if self._operation_button_epoch == 0
+            else f"aeat-sync-operation-{self._operation_button_epoch}-{len(self._requests)}"
+        )
         self._requests[button_id] = request
         self.query_one("#aeat-sync-page", ContentScroll).mount(
             Button(aeat_sync_copy(label_key), id=button_id, classes="aeat-sync-operation")
@@ -383,7 +395,8 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self._set_operation_buttons_disabled(True)
         status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
         try:
-            await handoff(request)
+            controller = await handoff(request)
+            self._show_operation_modal(controller)
         except Exception:  # host boundary must not disclose protected diagnostics
             status.update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
         else:
@@ -392,6 +405,29 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             self._in_flight_id = None
             self._set_operation_buttons_disabled(False)
             event.button.disabled = True
+
+    def _show_operation_modal(self, controller: OperationControllerPort) -> None:
+        """Mount the canonical progress surface for the host-started operation."""
+        self.app.push_screen(OperationModal(controller), self._on_operation_settled)
+
+    def _on_operation_settled(self, outcome: OperationModalOutcomeV1 | None) -> None:
+        """Refresh the originating workspace after a successful operation."""
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            return
+        self.run_worker(self._refresh_after_success(), group="aeat-sync-refresh", exclusive=True)
+
+    async def _refresh_after_success(self) -> None:
+        """Read and apply a fresh snapshot outside the UI event loop."""
+        refresh = self.controller.refresh_snapshot
+        if refresh is None:
+            return
+        try:
+            refreshed = await asyncio.to_thread(refresh)
+            self.refresh_projection(refreshed)
+        except Exception:  # The installed host may lose the bound session during refresh.
+            self.query_one("#aeat-sync-status", Static).update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
 
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:
         """Make the one-shot operation guard visible during a host handoff."""

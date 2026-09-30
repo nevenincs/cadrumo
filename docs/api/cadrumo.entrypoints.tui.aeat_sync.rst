@@ -16,4 +16,5 @@ Submodules
    cadrumo.entrypoints.tui.aeat_sync.controller
    cadrumo.entrypoints.tui.aeat_sync.models
    cadrumo.entrypoints.tui.aeat_sync.routes
+   cadrumo.entrypoints.tui.aeat_sync.runtime_handoff
    cadrumo.entrypoints.tui.aeat_sync.screens

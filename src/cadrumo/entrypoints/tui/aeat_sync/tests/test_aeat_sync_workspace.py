@@ -6,6 +6,8 @@ import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
+from threading import get_ident
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -59,10 +61,13 @@ from .....application.user_profile.censal_operation import (
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from .....core.identity.bucket import BucketId
+from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
+from ...operations.controller_port import OperationControllerPort
+from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
     AeatSyncNotificationDocumentHandoffV1,
@@ -88,6 +93,18 @@ _T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
 _T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
 _BUCKET_ID = cast(BucketId, "11111111-1111-4111-8111-111111111111")
 _SUBJECT_KEY = "private-subject"
+
+
+class _StartedOperationController:
+    """Minimal controller identity; these screen tests replace modal mounting."""
+
+    operation_id = "a" * 64
+
+
+def _started_operation_controller() -> OperationControllerPort:
+    return cast(OperationControllerPort, _StartedOperationController())
+
+
 _LOCALES_ROOT = Path(__file__).parents[4] / "locales"
 _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
     {
@@ -1158,3 +1175,74 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
+
+
+@pytest.mark.asyncio
+async def test_census_review_handoff_pushes_the_canonical_operation_modal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started_controller = _started_operation_controller()
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return started_controller
+
+    screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+    presented: list[tuple[OperationModal, object]] = []
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        monkeypatch.setattr(screen.app, "push_screen", lambda modal, callback: presented.append((modal, callback)))
+        await pilot.click("#aeat-sync-operation-0")
+        await pilot.pause()
+
+    assert len(presented) == 1
+    assert isinstance(presented[0][0], OperationModal)
+    assert presented[0][0]._controller is started_controller
+    assert presented[0][1] == screen._on_operation_settled
+
+
+@pytest.mark.asyncio
+async def test_successful_census_review_refreshes_bound_snapshot_off_ui_loop_and_rearms_button() -> None:
+    projection = _projection()
+    refreshed = _projection()
+    reads: list[int] = []
+
+    def refresh() -> AeatSyncWorkspaceProjectionV1:
+        reads.append(get_ident())
+        return refreshed
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        raise AssertionError("refresh cannot submit another operation")
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_handoff=handoff,
+        refresh_snapshot=refresh,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncOverviewScreen(controller)
+    succeeded = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(
+            projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED)
+        )
+    )
+    refused = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(
+            projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED)
+        )
+    )
+
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        screen._consumed_request_ids.add("aeat-sync-operation-0")
+        ui_thread = get_ident()
+        screen._on_operation_settled(refused)
+        await pilot.pause()
+        assert reads == []
+        screen._on_operation_settled(succeeded)
+        await pilot.pause()
+
+    assert reads and reads[0] != ui_thread
+    assert controller.projection is refreshed
+    assert screen._consumed_request_ids == set()
+    assert not screen.query_one("#aeat-sync-operation-1-0", Button).disabled

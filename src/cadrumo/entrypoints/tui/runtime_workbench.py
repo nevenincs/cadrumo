@@ -19,6 +19,7 @@ from ...core.external_constants import OutputLanguage
 from ...domain.user_profile.values import ProfileSetupState
 from .account import AccountSessionExpiredError
 from .aeat_sync.routes import aeat_sync_screen_factory
+from .aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from .app import RootBindingV1, RootPresentationV1
 from .declarations.models import DeclarationsRefreshSnapshotV1
 from .declarations.routes import declarations_screen_factory
@@ -35,6 +36,7 @@ from .runtime_account_session import read_runtime_account_session, runtime_accou
 
 if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ...application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
     from ...application.user_profile.overview import ProfileOverview
     from ...application.workbench_generation import WorkbenchGenerationV1
     from .navigation import TuiDestinationCatalogueV1
@@ -205,7 +207,25 @@ class RuntimeWorkbenchRoot:
         if generation.aeat_sync_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             if generation.aeat_sync.projection is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            factories["workbench.aeat_sync"] = aeat_sync_screen_factory(generation.aeat_sync.projection)
+            operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(self._client)
+
+            def refresh_aeat_sync() -> AeatSyncWorkspaceProjectionV1:
+                captured = self._read().generation
+                self._require_binding()
+                projection = captured.aeat_sync.projection
+                if (
+                    captured.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+                    or projection is None
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                return projection
+
+            factories["workbench.aeat_sync"] = aeat_sync_screen_factory(
+                generation.aeat_sync.projection,
+                operation_handoff=operation_handoff,
+                refresh_snapshot=refresh_aeat_sync,
+                operation_contracts=operation_contracts,
+            )
         return build_destination_catalogue(admissions=admissions, factories=factories)
 
     def _presentation(self, capture: _Capture) -> RootPresentationV1:
