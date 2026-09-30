@@ -38,8 +38,13 @@ def _tree(root: Path) -> tuple[Path, Path]:
     return root, root / "docs"
 
 
-def _key(repo: Path, docs: Path, generation: str = "gen-1") -> str:
-    return verdict_key(docs_root=docs, goldens_root=None, authority_generation=generation, repo_root=repo)
+def _key(repo: Path, docs: Path, authority_database: str = "db-1") -> str:
+    return verdict_key(
+        docs_root=docs,
+        goldens_root=None,
+        authority_database_sha256=authority_database,
+        repo_root=repo,
+    )
 
 
 @pytest.mark.parametrize(
@@ -126,9 +131,9 @@ def test_a_dev_module_the_engine_imports_is_a_verdict_input(tmp_path: Path, rela
     assert (_key(repo, docs) != before) is changes_key
 
 
-def test_a_new_authority_generation_changes_the_key(tmp_path: Path) -> None:
+def test_a_new_authority_database_changes_the_key(tmp_path: Path) -> None:
     repo, docs = _tree(tmp_path)
-    assert _key(repo, docs, "gen-1") != _key(repo, docs, "gen-2")
+    assert _key(repo, docs, "db-1") != _key(repo, docs, "db-2")
 
 
 def test_page_prose_outside_the_directives_does_not_change_the_key(tmp_path: Path) -> None:

@@ -9,7 +9,8 @@ published registry authority, the locked dependencies and the interpreter. The
 key hashes all of them, enumerated from the filesystem and from the engine's
 static import graph, so any change to any input is a cache miss and a re-run.
 The registry tooling is the one deliberate omission: it reaches the verdict
-only through the published authority, whose generation the key carries.
+only through the published authority, whose exact database bytes the key
+carries.
 
 Only a clean verdict is stored. A divergence is never cached, so a cache can
 cost a re-run but can never turn a failing gate green; a hit always says which
@@ -44,8 +45,8 @@ _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache"
 #: The engine's entry points; every ``dev`` module they import, transitively, is a verdict input.
 ENGINE_ROOTS: Final[tuple[str, ...]] = ("dev/docs/sequences", "dev/docs/sequence_build_gate.py", "dev/docs/build.py")
 #: Registry tooling reaches the verdict only through the published authority,
-#: whose generation the key already carries. Following its imports would re-run
-#: the gate for every registry-tool edit without adding an input.
+#: whose database digest the key already carries. Following its imports would
+#: re-run the gate for every registry-tool edit without adding an input.
 _AUTHORITY_TOOLING: Final[str] = "dev/registry/"
 
 
@@ -175,12 +176,14 @@ def verdict_key(
     *,
     docs_root: Path,
     goldens_root: Path | None,
-    authority_generation: str,
+    authority_database_sha256: str,
     repo_root: Path = REPO_ROOT,
 ) -> str:
     """Return the content key of everything the gate's verdict depends on."""
     digest = hashlib.sha256()
-    digest.update(f"python:{sys.version}\nplatform:{platform.system()}\nauthority:{authority_generation}\n".encode())
+    digest.update(
+        f"python:{sys.version}\nplatform:{platform.system()}\nauthority:{authority_database_sha256}\n".encode()
+    )
     _hash_tree(digest, repo_root / "src" / "cadrumo", label="src")
     _hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
     for relative in engine_import_closure(repo_root):
@@ -227,18 +230,27 @@ def record_clean_verdict(key: str) -> None:
 def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
     """Return the verdict key under the published authority the runner will read.
 
-    A stale authority is refused before its generation can key anything, so a
-    clean verdict recorded under it can never be reused.
+    The authority enters as the physical digest its descriptor names: the exact
+    bytes every sequence child reads, and the same in every process that reads
+    them. A reader's generation pin is not usable here, because it carries an
+    incarnation drawn fresh for each reader, which would make every process's
+    key unique and no recorded verdict reusable. A stale authority is refused
+    before it can key anything, so a clean verdict recorded under it can never
+    be reused.
 
     Raises:
         SequenceEngineError: When the published authority is not current.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+    from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     require_current_authority()
-    with bundled_indexed_authority().operation() as operation:
-        generation = str(operation.generation)
-    return verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
+    descriptor = AuthorityDescriptor.read(bundled_authority_descriptor_path())
+    return verdict_key(
+        docs_root=docs_root,
+        goldens_root=goldens_root,
+        authority_database_sha256=descriptor.database_sha256,
+    )
 
 
 def check_reusing_verdict(key: str, check: Callable[[], tuple[str, ...]]) -> tuple[tuple[str, ...], str | None]:
