@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:525a69966727256244be60eb2249992b849cf29a8f7687623c1ff81cc30b7bd0'
+body_hash: 'sha256:26986bcc1c41be00075b3377e943ac37ec6584528f2524c576ce1503e3e3750a'
 ---
 
 # `modelo-editor-workbench` plan
@@ -91,7 +91,7 @@ Replace the page-per-destination workspace with one workbench per declaration bu
 - [x] `P04.S23` - Add inline and detail editors over the parser grammar, the staged session, the review screen, the unsaved-change guard, apply through the operation modal, refresh in place and the result diff; `src/cadrumo/entrypoints/tui/modelo/workbench/editing.py`.
 - [x] `P04.S24` - Add the sources view with family grouping, states, drill-down and deep links to the owning source surfaces; `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`.
 - [x] `P04.S25` - Retire the page-per-destination workspace and its route factories atomically and route declarations to the workbench; `src/cadrumo/entrypoints/tui/modelo`.
-- [ ] `P04.S26` - Author the workbench catalogue keys in all four locales and rewrite the remaining developer-language workspace strings; `src/cadrumo/locales`.
+- [x] `P04.S26` - Author the workbench catalogue keys in all four locales and rewrite the remaining developer-language workspace strings; `src/cadrumo/locales`.
 
 ### Phase `P05` - acceptance and review
 

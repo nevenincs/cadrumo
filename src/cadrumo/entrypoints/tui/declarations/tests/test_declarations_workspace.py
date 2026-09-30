@@ -82,28 +82,28 @@ _CASILLA = validated_casilla_id("01")
 _EXPECTED = {
     OutputLanguage.ES: (
         "Resumen de declaraciones",
-        "Revisiones de cálculo",
+        "Cálculos anteriores",
         "Historial de presentaciones",
         "El estado local de presentación, la confirmación de la AEAT y la evidencia observada de la AEAT son hechos distintos.",
         "Presentación registrada localmente",
     ),
     OutputLanguage.EN: (
         "Declarations overview",
-        "Calculation revisions",
+        "Earlier calculations",
         "Filing history",
         "Local filing status, AEAT confirmation and externally observed AEAT evidence are separate facts.",
         "Filing recorded locally",
     ),
     OutputLanguage.CA: (
         "Resum de declaracions",
-        "Revisions de càlcul",
+        "Càlculs anteriors",
         "Historial de presentacions",
         "L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada de l'AEAT són fets separats.",
         "Presentació registrada localment",
     ),
     OutputLanguage.HU: (
         "Bevallások áttekintése",
-        "Számítási változatok",
+        "Korábbi számítások",
         "Benyújtási előzmények",
         "A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-bizonyíték külön tények.",
         "Benyújtás helyben rögzítve",

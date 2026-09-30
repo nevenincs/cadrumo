@@ -54,7 +54,7 @@ async def test_the_workbench_opens_on_the_first_box_that_needs_the_filer() -> No
     assert "Completa las casillas marcadas (pendientes: 1) [n]" in next_line
     assert "Resultado" in page
     assert "página 2 de 3" in page
-    assert "sin revisar" in page
+    assert "ordenadas automáticamente" in page
 
 
 @pytest.mark.asyncio

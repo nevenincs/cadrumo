@@ -1217,8 +1217,8 @@ tui:
     availability:
       available: Elérhető
       locked: Zárolva
-      never_captured: Még nincs rögzítve
-      stale: Legutóbb rögzített adatok
+      never_captured: Még nincs beolvasva
+      stale: A legutóbbi beolvasás adatai
       unavailable: Nem érhető el
     calendar:
       action:
@@ -1307,11 +1307,11 @@ tui:
     column:
       aeat_confirmation: AEAT-megerősítés
       aeat_evidence: AEAT-bizonyíték
-      availability: Elérhetőség
+      availability: Állapot
       calculation: Aktuális számítás
       current: Aktuális
       declaration: Bevallás
-      destination: Cél
+      destination: Terület
       filed: Benyújtva
       local_filing: Helyi benyújtási állapot
       local_state: Helyi állapot
@@ -1331,9 +1331,9 @@ tui:
     destination:
       calendar: Bevallási naptár
       filing_history: Benyújtási előzmények
-      modelo_workspace: Bevallási munkaterület megnyitása
+      modelo_workspace: Bevallás megnyitása kitöltésre és benyújtásra
       overview: Bevallások
-      revisions: Számítási változatok
+      revisions: Korábbi számítások
     empty: Itt még nincs rögzítve semmi.
     evidence:
       aeat_csv_register: AEAT CSV-nyilvántartás észlelve
@@ -1368,7 +1368,7 @@ tui:
       aeat: AEAT
       local: Helyi
     overview:
-      areas: Bevallási területek
+      areas: Mit tehet
       declarations: Bevallások
       title: Bevallások áttekintése
     refusal:
@@ -2110,7 +2110,7 @@ tui:
         review: Módosítások
         sources: Források
       layout:
-        generated: elrendezés még nem ellenőrzött
+        generated: automatikusan rendezett oldalak
         inspection_only: 'nincs hivatalos elrendezés: csak megtekintés, rovatszám
           szerint'
       leave:

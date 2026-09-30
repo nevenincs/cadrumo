@@ -1193,8 +1193,8 @@ tui:
     availability:
       available: Available
       locked: Locked
-      never_captured: Never captured
-      stale: Last captured data
+      never_captured: Not read yet
+      stale: From the last reading
       unavailable: Unavailable
     calendar:
       action:
@@ -1282,11 +1282,11 @@ tui:
     column:
       aeat_confirmation: AEAT confirmation
       aeat_evidence: AEAT evidence
-      availability: Availability
+      availability: Status
       calculation: Current calculation
       current: Current
       declaration: Declaration
-      destination: Destination
+      destination: Area
       filed: Filed
       local_filing: Local filing status
       local_state: Local status
@@ -1306,9 +1306,9 @@ tui:
     destination:
       calendar: Filing calendar
       filing_history: Filing history
-      modelo_workspace: Open declaration workspace
+      modelo_workspace: Open a declaration to fill in and file
       overview: Declarations
-      revisions: Calculation revisions
+      revisions: Earlier calculations
     empty: Nothing recorded here yet.
     evidence:
       aeat_csv_register: AEAT CSV register observed
@@ -1343,7 +1343,7 @@ tui:
       aeat: AEAT
       local: Local
     overview:
-      areas: Declaration areas
+      areas: What you can do
       declarations: Declarations
       title: Declarations overview
     refusal:
@@ -2082,7 +2082,7 @@ tui:
         review: Review changes
         sources: Sources
       layout:
-        generated: layout not yet reviewed
+        generated: pages arranged automatically
         inspection_only: 'no official layout: view only, in box order'
       leave:
         discard: Discard and leave

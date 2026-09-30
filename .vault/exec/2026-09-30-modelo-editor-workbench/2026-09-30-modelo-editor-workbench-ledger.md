@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:eba485014029ce39e1ef6ee5247ce40820044970d16ca9188829fc3cc2ac01ef'
+body_hash: 'sha256:c21107ba076a2053be3676354de499a1a8c3b25d81d43599283c9c8dd716e355'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -464,6 +464,15 @@ related:
 - `S25` `M` `src/cadrumo/entrypoints/tui/tests/test_modelo_projection_reader.py`
 - `S25` `verify:` `pytest generation, TUI, harness, modelo, error registry and quality gates (2950)` -> `pass`
 - `S25` `verify:` `import gate clean; apidocs check` -> `pass`
+- `S26` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_workspace.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_screen.py`
+- `S26` `M` `src/cadrumo/locales/ca/common.yml`
+- `S26` `M` `src/cadrumo/locales/en/common.yml`
+- `S26` `M` `src/cadrumo/locales/es/common.yml`
+- `S26` `M` `src/cadrumo/locales/hu/common.yml`
+- `S26` `verify:` `pytest TUI suite (975)` -> `pass`
+- `S26` `verify:` `locale audit ca en es hu` -> `pass`
+- `S26` `by:` `orchestrator`
 
 ## Notes
 
@@ -499,3 +508,4 @@ related:
 - `S25` A CLI-calculated declaration records no operator layer, so its defaults read as to-confirm; they are reported beside the next action rather than blocking the journey
 - `S25` The overview-driven export integration test was retired with its page; the export through the workbench is proven again in the acceptance Step
 - `S25` The generation no longer reads each declaration's lifecycle history or keeps a graded-refusal map: both served only the retired pages; the Modelo projection reader now returns the projection the search indexes
+- `S26` The workbench's own keys were authored with each Step in four locales; this Step rewrites the Declarations entry and the layout note, which still spoke of workspaces, captures and revisions

@@ -1228,8 +1228,8 @@ tui:
     availability:
       available: Disponible
       locked: Bloquejat
-      never_captured: Mai capturat
-      stale: Últimes dades capturades
+      never_captured: Encara sense llegir
+      stale: Dades de l'última lectura
       unavailable: No disponible
     calendar:
       action:
@@ -1317,11 +1317,11 @@ tui:
     column:
       aeat_confirmation: Confirmació AEAT
       aeat_evidence: Evidència de l'AEAT
-      availability: Disponibilitat
+      availability: Estat
       calculation: Càlcul actual
       current: Actual
       declaration: Declaració
-      destination: Destinació
+      destination: Apartat
       filed: Presentada
       local_filing: Estat local de presentació
       local_state: Estat local
@@ -1341,9 +1341,9 @@ tui:
     destination:
       calendar: Calendari fiscal
       filing_history: Historial de presentacions
-      modelo_workspace: Obre l'espai de declaració
+      modelo_workspace: Obre una declaració per emplenar-la i presentar-la
       overview: Declaracions
-      revisions: Revisions de càlcul
+      revisions: Càlculs anteriors
     empty: Encara no hi ha res registrat aquí.
     evidence:
       aeat_csv_register: Registre CSV de l'AEAT observat
@@ -1378,7 +1378,7 @@ tui:
       aeat: AEAT
       local: Local
     overview:
-      areas: Àrees de declaracions
+      areas: Què pots fer
       declarations: Declaracions
       title: Resum de declaracions
     refusal:
@@ -2129,7 +2129,7 @@ tui:
         review: Revisa els canvis
         sources: Orígens
       layout:
-        generated: distribució sense revisar
+        generated: pàgines ordenades automàticament
         inspection_only: 'sense distribució oficial: només consulta, per número de
           casella'
       leave:
