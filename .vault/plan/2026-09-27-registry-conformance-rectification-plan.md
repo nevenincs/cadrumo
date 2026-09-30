@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:e0e872c3f07413d5a2432b246a3de9bfcee6d3ac1fcd131f98c2360d6cc88880'
+body_hash: 'sha256:8a89a3906c9a714c5c6cd7d971b03b90dbdd2e7d94d79aae63e515f9b7e3be0d'
 ---
 
 # `registry-conformance-rectification` plan
@@ -52,6 +52,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - Found in P05.S39: a calculation defect the official dictionary or manual confirms is corrected even when the fix spans domain code and shared tests, by one step that owns them all (P05.S47, P05.S48); a relation that cannot express the member's share is withdrawn rather than left summing entity totals; a legal catalogue's effective date is grounded in the governing law itself, not in a manual.
 - Found in P05.S26: a validator demanding coverage below the support floor contradicts the support declaration, which claims nothing there, so it is clamped at the floor (P05.S32) rather than splitting an edition to satisfy it; Modelo 131's 2022 and 2023 modulos engine is then authored in its root, its labels citing each year's own orden.
 - Found in P05.S19 and P05.S42: the storage baseline sits at the support floor and later editions are deltas over it, as the standard keys it and the edition scaffold already does, so an edition authored below an existing root becomes the root rather than storing against a later edition (P05.S49); once a computed chain moves into an edition, that edition's export writes the computed value, because preview and filing share one formula path (P05.S42); a test that names a real gap as its example is given a synthetic one, because real gaps get closed (P05.S51).
+- Merged from main on 2026-09-30 (PR #704, merge 6e46559590): the Modelo 100 0596 and 0597 re-sourcing this Description placed out of scope has landed, with payer-side sources removed, 0599 entered, and a gate forbidding any credit casilla reachable from a withholding-agent return; ruling 2 is therefore moot. Main fixed the same long-line runner and trusted-key defects as P05.S30 and P05.S31, and its single definitions are kept. Main keyed Modelo 303 like P04.S11 did, and where they differed the 2022 design decides: boxes 03, 06 and 09 stay per year because their 2022 rate field is free, while box 10's 2022 projection from this branch stands. Main's issued-invoice retencion change to Modelo 130 box 06 does not overlap the received-invoice work of P05.S22 and P05.S29. The 2020 to 2025 IVA manual editions are now declared sources. The Verification baseline below predates the merge and is re-measured before plan close (P05.S52, P05.S53).
 
 ## Steps
 
@@ -125,11 +126,13 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `P05.S45` - Capture the missing official texts and author the support-range cells they unblock: Modelos 200 and 220 for 2022 and 2023 with their approving ordenes, 182 and 189 for 2022 and 2023, 036 before its 2023 design, 038 before June 2024 and 210 for January to May 2022; `src/cadrumo/_data/corpus/`.
 - [ ] `P05.S46` - Show a draft's stored label-reading degradation in the ledger evidence review command, as batch results and the TUI already do; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
-- [ ] `P05.S47` - Move the 2025 maritime exemption formula off box 0525 onto an internal casilla with its domain constant, withdraw the Modelo 184 relation into box 1577 with the shared tests that name it, and prove stored revisions carrying the withdrawn Modelo 131 relation are handled explicitly; `src/cadrumo/domain/renta/maritime_exemption.py`.
-- [ ] `P05.S48` - Apply the autonomica scale to box 0523 as every dictionary states, compute box 0512 for 2022 and 2023 including Valencia's rule from 28 October 2022, and ground the catalogue's regional minimo effective dates in the regional laws; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P05.S47` - Move the 2025 maritime exemption formula off box 0525 onto an internal casilla with its domain constant, withdraw the Modelo 184 relation into box 1577 with the shared tests that name it, and prove stored revisions carrying the withdrawn Modelo 131 relation are handled explicitly; `src/cadrumo/domain/renta/maritime_exemption.py`.
+- [x] `P05.S48` - Apply the autonomica scale to box 0523 as every dictionary states, compute box 0512 for 2022 and 2023 including Valencia's rule from 28 October 2022, and ground the catalogue's regional minimo effective dates in the regional laws; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S49` - Re-author Modelos 222 and 296 for 2022 as the storage baseline and re-store their 2023 editions as deltas over it through the converter, instead of storing 2022 against the later edition; `src/cadrumo/_data/registry/aeat/modelos/222/`.
 - [ ] `P05.S50` - Finish Modelo 200's provenance and declaration debt: 2024 members still citing the 2025 design, the 00081 widening, the 03312 section and lineage, the catalogue entries for Ley 7/2024 art. 6 and Orden HAC/529/2026 art. 1, and the reused-number boxes neither edition declares; `src/cadrumo/_data/registry/aeat/modelos/200/`.
 - [ ] `P05.S51` - Give the capability, extemporaneidad and calendar tests synthetic missing-window examples instead of real gaps that this step closed; `dev/registry/tests/test_modelo_capability.py`.
+- [ ] `P05.S52` - Regenerate the docs sequence goldens through their generator against the published authority, and rewrite or retire the review-values-relation sequence now that no annual Modelo 100 relation survives; `docs/_sequences/`.
+- [ ] `P05.S53` - Give the three 2023 Modelo 303 internal carriers their continuity origin and evidence claims, which the 2022 relocation left without them; `src/cadrumo/_data/registry/aeat/modelos/303/`.
 
 ## Parallelization
 

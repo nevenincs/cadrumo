@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0485b0545447548c853afd30356924cbcc6ae3001bc338d79e114539c0dcce11'
+body_hash: 'sha256:52d168330ee34b39a389543bd2e22bd527a34860fcd05e0386af6084a9c1c7dd'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -761,6 +761,77 @@ related:
 - `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html.extracted.md`
 - `S42` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`
 - `S42` `verify:` `catalogue entry ley-35-2006:art-93-ahorro-2021 inspected clean` -> `pass`
+- `S47` `M` `dev/registry/tests/_modelo_100_registry_support.py`
+- `S47` `A` `dev/registry/tests/test_modelo_100_cuota_autonomica_minimo.py`
+- `S47` `A` `dev/registry/tests/test_modelo_100_exempt_income_and_attributed_yield.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_minimo_contribuyente_autonomico.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_registry_constructs.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S47` `M` `dev/registry/tests/test_modelo_100_settlement_chain.py`
+- `S47` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-dependencies.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/andalucia-ley-5-2021-art-23-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/baleares-dl-1-2014-art-2.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/canarias-dl-1-2009-art-18-quater.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/galicia-dl-1-2011-art-4-bis.html.extracted.md`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html.extracted.json`
+- `S47` `A` `src/cadrumo/_data/corpus/normatives/html/valenciana-ley-13-1997-art-2-bis.html.extracted.md`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-autonomica-minimos.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/constructs/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/dependency_classifications/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S47` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S47` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S47` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S47` `M` `src/cadrumo/application/calculations/tests/test_maritime_exemption_service.py`
+- `S47` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_deduccion_madrid_nacimiento_adopcion.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_settlement_chain.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_reduccion_art_84_conjunta.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S47` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
+- `S47` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_100_m190_retenciones_cli.py`
+- `S47` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_withdrawn_m131_fold_stored_revision.py`
+- `S47` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S47` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S47` `verify:` `0525 moved off by the maritime formula, 184 relation withdrawn, stored revisions with the withdrawn 131 relation proven through the encrypted store; detector test failed 3/3 before` -> `pass`
+- `S48` `verify:` `0531 reads 0523 in every edition; 0512 computed from 2022 with law-grounded dates; manual Valencia example reproduces in every edition; publish-if-stale current, runtime 1570 passed` -> `pass`
+- `S11` `verify:` `merge 6e46559590 of origin/main PR 704: candidate inspection 0 findings; converter proofs clean for 100, 130, 131, 303, 341, 390; republished dfa0ef6e; check-registry-gate valid, runtime-load and integrity passed; runtime adoption tests 11 passed` -> `pass`
 
 ## Notes
 
@@ -794,3 +865,8 @@ related:
 - `S19` 714, 721 and 100/2026 need no edit; 036, 038, 182, 189, 200 and 220 back-years and 210 January to May 2022 await captures (P05.S45); the docs readiness golden is regenerated after the Modelo 100 lane lands
 - `S41` 151 payment cutoff left undeclared: Orden HAP/2783/2015 art. 4.2 says 25 June while the 2023 calendar says 27 June
 - `S42` authoring staged, blocked on the below-floor coverage validator (P05.S32) and the 2015 export mapping of boxes 18 and 20
+- `S47` committed by the automatic checkpoint 084ce12d44, not by the orchestrator; rows cover both S47 and S48 files; DA 20 progressivity is never applied by any formula, left as a finding
+- `S48` Baleares mayores de 65 minimo not modelled; madrid-dl-1-2010 catalogue entry needs re-grounding
+- `S11` 303 boxes 03, 06 and 09 revert to per-year keying on the 2022 design's free rate field; box 10's 2022 projection kept; an unattributed working-tree edit removing the 303 bindings test's 120 and 122 expectations was left out of the merge
+- `S30` main's 66402446 fixed the same defect; the merge keeps main's reader as the single definition and this branch's extra test cases
+- `S31` main's 8f4b8306 moved the same check; the merge keeps main's validator as the single definition
