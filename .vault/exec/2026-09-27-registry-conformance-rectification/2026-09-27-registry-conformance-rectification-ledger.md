@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f245d63da55650340ef27248b75cd5f1a0d53013d049ad426edc9ce3059b0b4f'
+body_hash: 'sha256:0367d5a1ebee360a2513b68b909f95ef88e73d3289857c724d8b57539c51b735'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -407,6 +407,91 @@ related:
 - `S23` `M` `src/cadrumo/locales/es/errors.yml`
 - `S23` `M` `src/cadrumo/locales/hu/errors.yml`
 - `S23` `verify:` `application ledger, composition and core errors 1134 passed; label-reading CLI 6 passed; detector proves no load request on refusal` -> `pass`
+- `S18` `M` `dev/registry/tests/test_activity_asset_authority_across_supported_years.py`
+- `S18` `M` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S18` `M` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S18` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S18` `M` `src/cadrumo/domain/renta/actividad_asset/errors.py`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/tests/test_actividad_asset_accelerated_da18_cli.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S18` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S18` `M` `src/cadrumo/locales/en/errors.yml`
+- `S18` `M` `src/cadrumo/locales/es/errors.yml`
+- `S18` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S18` `verify:` `2023 DA 18 claim refused with REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED at domain and CLI, 2024 still admitted, 2022 and unrelated methods keep the generic token; 189 tests passed; import boundaries clean` -> `pass`
+- `S17` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S17` `M` `dev/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S17` `A` `dev/registry/tests/test_modelo_100_late_authoring_rulings.py`
+- `S17` `M` `dev/registry/tests/test_modelo_100_tarifa_real.py`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-32-2015.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-1.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html.extracted.json`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021-da-1.html.extracted.md`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml`
+- `S17` `A` `src/cadrumo/_data/corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/constructs/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh_profile_live.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_registry_support.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_minimo_contribuyente_age_increment.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_ahorro_base_chain.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_reducciones_fase_4a.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_rendimiento_base.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_retenciones_binding_wiring.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py`
+- `S17` `M` `src/cadrumo/domain/user_profile/tests/test_registry_contract.py`
+- `S17` `verify:` `candidate inspection publication_valid; converter no-op; source registry gates 806 passed; runtime 1580 passed then remaining fixed; count pin, profile real path, maternity and source mesh tests 83 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_165_design_surface_across_supported_years.py`
+- `S11` `A` `dev/registry/tests/test_modelo_210_payer_mode_parameter_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/casillas/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/workbook_parity_refs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/export_layouts/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/parameters/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/165.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/165.yml`
+- `S11` `verify:` `165 and 210 candidate inspection publication_valid; 419 dev tests and 59 runtime tests passed` -> `pass`
 
 ## Notes
 
@@ -429,3 +514,5 @@ related:
 - `S16` a passing -n0 run that opens the authority leaves the frozen sqlite snapshot on Windows until the reader closes; closing it at session end is the remaining S16 work
 - `S29` invoice refusal names 111 and 115, since 123 already refuses invoice evidence; --withholding-observation is equally unpersisted and is removed under ruling 14's precedent (P05.S36)
 - `S23` busy refusal and persistence of the degradation fact for batch and TUI follow in P05.S37
+- `S17` moved: 0245-0247 marriage members to 2022, maternity 0611 to 2023 and 2025, guardería cap to 2022; restored 0604 refs; amending-law refs per incentive year; kept with evidence: 193 relation (other branch owns 0597), 0613, 0150, 0512, 184 and 190 relations, Madrid, maritime; ruling 8: product cannot represent a shortened period, documented only; my corrections: count pin 23 to 25, a phantom covering-test reference, maternity in the source mesh expected set
+- `S11` 165 2023 design authored at 2023-2025 (Orden HFP/1284/2023 applies from ejercicio 2023) with storage reuse; 210 payer-mode parameter opens at 2023; 151 and 390 candidates genuinely new; 165 converter apply blocked by the export scenario table rendering below the floor (P05.S32)
