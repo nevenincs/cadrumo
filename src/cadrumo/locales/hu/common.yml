@@ -2078,7 +2078,8 @@ tui:
         not_writable: Ez a rovat itt nem szerkeszthető.
         overridable_source: Korábbi bevallásból származik; felülírhatja, és felülírtként
           jelenik meg, amíg vissza nem állítja a forrást.
-        source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
+        source_policy_undecided: Ezt az értéket itt még nem írhatja felül. Javítsa
+          ott, ahonnan származik, majd számoljon újra.
       editor:
         area:
           declarations: a korábbi bevallás
@@ -2248,8 +2249,8 @@ tui:
         capability_unavailable: Ennek a rovatnak a szerkesztése ebben a verzióban
           még nem érhető el.
         computed_by_formula: A Cadrumo más rovatokból számítja ki.
-        override_policy_undecided: Még nincs eldöntve, hogy ez a forrás felülírható-e
-          kézzel.
+        override_policy_undecided: Ezt az értéket itt még nem írhatja felül. Javítsa
+          ott, ahonnan származik, majd számoljon újra.
         row_field_template: Ez a rovat ismétlődő sorok egy oszlopát jelöli; a sorokat
           ott adja meg, ahol vezeti őket.
         schema_declared_read_only: A hivatalos minta nem engedi, hogy ebbe a rovatba

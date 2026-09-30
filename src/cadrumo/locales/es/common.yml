@@ -2107,8 +2107,8 @@ tui:
         not_writable: Esta casilla no se puede editar aquí.
         overridable_source: Viene de una declaración anterior; puedes sustituirlo,
           y se muestra como sustituido hasta que restaures el origen.
-        source_policy_undecided: Aún no se ha decidido si este origen puede sustituirse
-          a mano.
+        source_policy_undecided: Aún no puedes sustituir este valor aquí. Corrígelo
+          donde se origina y vuelve a calcular.
       editor:
         area:
           declarations: la declaración anterior
@@ -2272,8 +2272,8 @@ tui:
         capability_unavailable: Editar esta casilla aún no está disponible en esta
           versión.
         computed_by_formula: Cadrumo la calcula a partir de otras casillas.
-        override_policy_undecided: Aún no se ha decidido si este origen se puede sustituir
-          a mano.
+        override_policy_undecided: Aún no puedes sustituir este valor aquí. Corrígelo
+          donde se origina y vuelve a calcular.
         row_field_template: Esta casilla representa una columna de líneas repetidas;
           introduce las líneas donde se guardan.
         schema_declared_read_only: El diseño oficial no permite escribir en esta casilla.

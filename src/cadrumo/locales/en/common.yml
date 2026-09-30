@@ -2047,8 +2047,8 @@ tui:
         not_writable: This box cannot be edited here.
         overridable_source: Carried from an earlier filing; you may replace it, and
           it shows as replaced until you restore the source.
-        source_policy_undecided: It is not yet decided whether this source may be
-          replaced by hand.
+        source_policy_undecided: You cannot replace this value here yet. Correct it
+          where it comes from, then calculate again.
       editor:
         area:
           declarations: the earlier declaration
@@ -2214,8 +2214,8 @@ tui:
         capability_unavailable: Editing this box is not available in this version
           yet.
         computed_by_formula: Cadrumo calculates it from other boxes.
-        override_policy_undecided: It is not yet decided whether this source may be
-          replaced by hand.
+        override_policy_undecided: You cannot replace this value here yet. Correct
+          it where it comes from, then calculate again.
         row_field_template: This box stands for a column of repeated lines; enter
           the lines where they are kept.
         schema_declared_read_only: The official design does not let this box be typed

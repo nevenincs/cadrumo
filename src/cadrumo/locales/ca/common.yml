@@ -2096,8 +2096,8 @@ tui:
         not_writable: Aquesta casella no es pot editar aquí.
         overridable_source: Ve d'una declaració anterior; el pots substituir, i es
           mostra com a substituït fins que restauris l'origen.
-        source_policy_undecided: Encara no s'ha decidit si aquest origen es pot substituir
-          a mà.
+        source_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
+          on s'origina i torna a calcular.
       editor:
         area:
           declarations: la declaració anterior
@@ -2265,8 +2265,8 @@ tui:
         capability_unavailable: Editar aquesta casella encara no està disponible en
           aquesta versió.
         computed_by_formula: Cadrumo la calcula a partir d'altres caselles.
-        override_policy_undecided: Encara no s'ha decidit si aquest origen es pot
-          substituir a mà.
+        override_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
+          on s'origina i torna a calcular.
         row_field_template: Aquesta casella representa una columna de línies repetides;
           introdueix les línies on es guarden.
         schema_declared_read_only: El disseny oficial no permet escriure en aquesta
