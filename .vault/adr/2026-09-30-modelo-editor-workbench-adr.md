@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:a4ddc689dc3132ebec65ae1c4fd899e3b3c62c5fc901dfb7633491e989d951f8'
+body_hash: 'sha256:376b139fa37ff736b7d0559a0091b384699f666fd565834ccf09ed77f37f6554'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -19,6 +19,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-journey-help-research]]'
   - '[[2026-09-30-modelo-editor-workbench-reference]]'
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
+  - '[[2026-09-30-modelo-editor-workbench-audit]]'
 ---
 
 # `modelo-editor-workbench` adr: `Schema-derived modelo editor workbench` | (**status:** `accepted`)
@@ -187,6 +188,15 @@ family, with its state, the casillas it feeds, and actions: go to the owning sou
 enter or override where the policy allows with a reason, restore the source value, and
 recalculate keeping the operator's values. A carry override records the source value it
 displaced and stays disclosed until filing.
+
+Amendment 2026-09-30, from the plan-close review (`2026-09-30-modelo-editor-workbench-audit`,
+sources-hub-reason). The operator layer this workbench persists records neither an override
+reason nor the source value an override displaced, and adding either changes the persisted
+revision's content identity, a costly decision this record does not make. Until a follow-on
+decision settles it, an override is disclosed as replacing its source until restored, the
+workbench promises no reason, and the sources view reaches entry, override and restore through
+the chosen casilla's editor and recalculation through the workbench, rather than carrying those
+actions itself. Authorized under the standing advance authorization the plan records.
 
 ### D7 Help and headings
 
