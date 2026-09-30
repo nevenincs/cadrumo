@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ad1ee642fd73d0bb94c2da365c65f6b3c9ddd941310dc01d7f4fb61a1595609'
+body_hash: 'sha256:38d5f9fb32404d32625b1a35a87224f0dbe3af6e3d73c1ca5fc322080984bcf4'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -726,6 +726,55 @@ related:
 - `S37` `verify:` `pytest -m 'unit or integration' dev/tui, 217 passed` -> `pass`
 - `S37` `verify:` `dev.tui render at 1ffb77f6ea, 640 frames, 0 failures, 0 refused, 0 diverging from goldens` -> `pass`
 - `S37` `by:` `orchestrator`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/search.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_editor_panel.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S46` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S46` `M` `src/cadrumo/locales/ca/common.yml`
+- `S46` `M` `src/cadrumo/locales/en/common.yml`
+- `S46` `M` `src/cadrumo/locales/es/common.yml`
+- `S46` `M` `src/cadrumo/locales/hu/common.yml`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_and_footer.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S46` `verify:` `pytest src/cadrumo/entrypoints/tui plus the locale audit and pinned-font glyph test, 603 passed, failures only in other lanes' in-flight files` -> `pass`
+- `S46` `verify:` `ruff check, ruff format --check and ty check on the lane's files` -> `pass`
+- `S46` `by:` `orchestrator`
+- `S51` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py`
+- `S51` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S51` `M` `src/cadrumo/entrypoints/tui/tests/test_home.py`
+- `S51` `M` `src/cadrumo/application/modelo/tests/test_casilla_help.py`
+- `S51` `M` `dev/locales/tests/test_audit.py`
+- `S51` `M` `src/cadrumo/locales/ca/common.yml`
+- `S51` `M` `src/cadrumo/locales/ca/application.yml`
+- `S51` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S51` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S51` `M` `src/cadrumo/locales/ca/docs.yml`
+- `S51` `M` `src/cadrumo/locales/en/common.yml`
+- `S51` `M` `src/cadrumo/locales/en/application.yml`
+- `S51` `M` `src/cadrumo/locales/en/cli.yml`
+- `S51` `M` `src/cadrumo/locales/en/flows.yml`
+- `S51` `M` `src/cadrumo/locales/en/docs.yml`
+- `S51` `M` `src/cadrumo/locales/es/common.yml`
+- `S51` `M` `src/cadrumo/locales/es/application.yml`
+- `S51` `M` `src/cadrumo/locales/es/cli.yml`
+- `S51` `M` `src/cadrumo/locales/es/flows.yml`
+- `S51` `M` `src/cadrumo/locales/es/docs.yml`
+- `S51` `M` `src/cadrumo/locales/hu/common.yml`
+- `S51` `M` `src/cadrumo/locales/hu/application.yml`
+- `S51` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S51` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S51` `M` `src/cadrumo/locales/hu/docs.yml`
+- `S51` `verify:` `tests the packs moved, 15 files, 321 passed` -> `pass`
+- `S51` `verify:` `dev.docs.sequences check on the 15 moved sequences, 14 pass, modelo-390-annual-2025 diverges on a concurrent calculation change` -> `fail`
+- `S51` `by:` `orchestrator`
 
 ## Notes
 
@@ -783,3 +832,8 @@ related:
 - `S38` Reopened by the phase review's type-gate finding and resolved in e07cb8d33b
 - `S37` Commits ac5863ae2f, 636798aa72, c258105639, ab8385cdeb, 77752aa749
 - `S37` The phase review's findings are resolved; the render at 1ffb77f6ea found further defects, carried into P07
+- `S46` Commits 8fbfba2dbd, b89320b31c, d44ca9fac4
+- `S46` The records-table focus source `(page_items.py,` `casilla_list.py,` grid.py) landed in the external checkpoint 421f48dd30; d44ca9fac4 holds its test
+- `S46` Rates for 303 `[07]/[08]` and `[153]/[154]` cannot be grounded from the registry and show a dot with a note; the export scale and a row-level rate are registry follow-ups
+- `S51` All five catalogue packs, the docs batch (211 messages) and 12 source edits with their catalogues landed through the integration checkpoints 421f48dd30 and 19eecd8355 and the merge a4b108f6db, so the lane made no commit of its own
+- `S51` Two docs messages were dropped from the batch for pre-existing wrong translations, and CLI help wording (about 300 keys) waits for a design pack
