@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:c1e946a101174206261743727160b7d4021597c6f3fd8640286f2b5136084a06'
+body_hash: 'sha256:17e7c9380f41269d227c21830ad4a00c59e65c4734e2c902775f26cd08c44eae'
 ---
 
 # `registry-conformance-rectification` plan
@@ -47,6 +47,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - Found in P04.S11: Modelo 190 and 193 extraction profiles stay undeclared for 2022 and 2023 until a printed specimen is captured, since the record design describes the file, not the PDF; the 2024 Modelo 193 perceptor count follows its design and counts records, and the 2024 Modelo 190 relation to Modelo 111 is grounded in 2024 instructions or loses filing grade (P05.S25).
 - Found in P04.S11: an explicit root keeps storage reuse only where it is lossless and leaves an export layout a per-edition statement; a root whose reuse would fold its layout into one whole-layout override stays stated until the converter can keep it per edition (P05.S32, P05.S33). A cause token that is false is dropped rather than kept, as for the 308 roots. Modelo 296's stale earliest-authored note and Modelo 216's years before its 2024 design feed the support-range cells (P05.S19).
 - Found in P05.S17: a Modelo 100 calculation suspected wrong is adjudicated against official evidence before it changes, and stays as it is until then (P05.S39); a member whose citation was missing moves once its provision is catalogued (P05.S40, P05.S42); a year's missing calendar window is authored from its calendar source rather than projected from another year's (P05.S41).
+- Found in P05.S19: a declared inception year is a gate, because a modelo that did not exist answers no earlier year, while an unauthored-debt declaration is not, because the standard projects missing years (P05.S44). A year whose release is published in BOE but whose AEAT design is not yet out is authored from the BOE orden at applicability grade rather than served the replaced layout at filing grade; a year whose governing design differs is authored as a delta from the official text, at no higher grade than that text proves; Modelo 353's January 2026 is authored on the design that governs it, with its edition renamed to the span it truly covers.
 
 ## Steps
 
@@ -117,6 +118,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S41` - Author the missing ejercicio 2022 deadline windows of Modelos 151, 165 and 180 from their calendar sources, and remove Modelo 151's duplicate filing schedule and export link; `src/cadrumo/_data/registry/aeat/modelos/151/`.
 - [ ] `P05.S42` - Catalogue the 2022 wording of LIRPF art. 93.2.e).2.o and author Modelo 151's ahorro escala, formula and predicate at 2015-2022; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`.
 - [ ] `P05.S43` - Author Modelo 100's modulos engine for 2022 to 2024 from each year's orden, and the Madrid birth deduction years once its facts catalogue entry carries them; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [ ] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 
 ## Parallelization
 
