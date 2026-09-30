@@ -353,6 +353,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     shown without a note.
     """
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
+    from cadrumo.application.modelo.source_policy import SourceFamily
     from cadrumo.application.modelo.work_form_models import (
         ModeloFormEditability,
         ModeloFormLayoutProvenance,
@@ -366,13 +367,16 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
     from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
     from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
-    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, Attention
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, SOURCE_WORDED_ORIGINS
     from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
 
     root = "tui.modelo.workbench"
     vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
-        ("attention", tuple(item.value for item in Attention)),
         ("origin", tuple(item.value for item in ModeloFormOrigin)),
+        (
+            "origin_source",
+            tuple(f"{origin.value}.{family.value}" for origin in SOURCE_WORDED_ORIGINS for family in SourceFamily),
+        ),
         ("editability", tuple(item.value for item in ModeloFormEditability)),
         ("not_writable", NOT_WRITABLE_REASONS),
         (

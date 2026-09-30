@@ -6,11 +6,15 @@ The cursor is held as a field's semantic address, never a position: rebuilding
 the list after an edit, a refresh, a filter or a language switch keeps the same
 casilla under the cursor when it is still there.
 
-Each field line reads, left to right: the cursor mark, an attention mark (a
-staged change or a verification blocker), the official box number, the label,
-the value right-aligned, the origin glyph, and on wider terminals the origin in
-words and a detail column. A second line carries the rest of a long label or
-the first sentence of the help. Every mark comes from
+Each field reads, left to right: the cursor mark, an attention mark (a staged
+change or a verification blocker), the official box number, the label, the
+value right-aligned with its unit, the origin glyph, and where they fit the
+origin in words and a detail column. Every column is measured from the lines
+being shown: the box column is as wide as the widest box number, so a number is
+never cut, and the label column no wider than the longest label, so the value
+and its origin sit next to the words they belong to. A label too long for its
+column wraps onto further lines and is never cut; only the one optional line
+under it, the start of the box's description, may be. Every mark comes from
 :mod:`.vocabulary`, so the list never invents a state.
 
 The list decides nothing. It posts a message naming the address the filer
@@ -20,6 +24,7 @@ edit session answers it.
 
 from __future__ import annotations
 
+import re
 from bisect import bisect_right
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
@@ -35,6 +40,7 @@ from textual.message import Message
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
 
+from .....application.modelo.edit_value_grammar import ratio_unit
 from .....application.modelo.value_presentation import (
     absent_value_text,
     format_casilla_value,
@@ -54,25 +60,39 @@ from .keys import describe_bindings
 from .vocabulary import (
     ATTENTION_GLYPHS,
     ATTENTION_ROLES,
+    HERE_MARK,
     NEEDS_ATTENTION,
-    ORIGIN_GLYPHS,
     ORIGIN_ROLES,
     Attention,
     ColourRole,
-    origin_words_key,
+    attention_words_key,
+    origin_glyph,
+    origin_words,
 )
 
 type AddressKey = tuple[str, str]
 
-_BOX_WIDTH: Final[int] = 6
-_VALUE_WIDTH: Final[int] = 18
-_STATE_WIDTH: Final[int] = 28
+#: The cursor mark, the attention mark and the space after them.
+_LEAD: Final[int] = 3
+#: The widest value a column makes room for: the widest money figure, ``−99.999.999,99 €``, is 16 cells.
+_VALUE_CAP: Final[int] = 17
 _DETAIL_WIDTH: Final[int] = 32
-_WIDE: Final[int] = 110
 _WIDEST: Final[int] = 150
+#: The label keeps at least this much room before a value gives up any of its own.
+_LABEL_FLOOR: Final[int] = 8
+_NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
 _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicable"
 _FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
+_IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
+_SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
+    {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
+)
+_BOX_PREFIXES: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"^(?:Box|Casilla|Casella)\s+\d[\w.-]*\s*:\s*"),
+    re.compile(r"^\d[\w-]*\.\s+mező\s*:\s*"),
+)
+"""A description that opens by naming its box, in each language the catalogue writes: the row already shows it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +140,27 @@ type CasillaListItem = CasillaListHeading | CasillaListNote | CasillaListEntry
 type Density = Literal["comfortable", "compact"]
 
 
+@dataclass(frozen=True, slots=True)
+class _Measures:
+    """The widest box number, label, value and origin words among the fields shown, in cells."""
+
+    box: int = 1
+    label: int = 0
+    value: int = 1
+    words: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class _Columns:
+    """The cells each column gets at one width; ``label`` is an unindented field's."""
+
+    box: int
+    label: int
+    value: int
+    words: int
+    detail: bool
+
+
 def _fit(text: str, width: int) -> str:
     """Pad or cut ``text`` to exactly ``width`` cells, marking a cut with an ellipsis."""
     if width <= 0:
@@ -137,15 +178,49 @@ def _right(text: str, width: int) -> str:
     return " " * (width - cell_len(fitted)) + fitted
 
 
-def _split(text: str, width: int) -> tuple[str, str]:
-    """Split a label at the last space that fits, keeping the rest for the second line."""
-    if cell_len(text) <= width:
-        return text, ""
-    head = text[:width]
-    cut = head.rfind(" ")
-    if cut <= width // 3:
-        cut = width
-    return text[:cut].rstrip(), text[cut:].strip()
+def _wrap(text: str, width: int) -> tuple[str, ...]:
+    """Break ``text`` into lines of at most ``width`` cells, at spaces where it can; nothing is dropped."""
+    width = max(width, 1)
+    lines: list[str] = []
+    line = ""
+    for word in text.split():
+        candidate = f"{line} {word}" if line else word
+        if cell_len(candidate) <= width:
+            line = candidate
+            continue
+        if line:
+            lines.append(line)
+        line = word
+        while cell_len(line) > width:
+            cut = len(line)
+            while cut > 1 and cell_len(line[:cut]) > width:
+                cut -= 1
+            lines.append(line[:cut])
+            line = line[cut:]
+    if line or not lines:
+        lines.append(line)
+    return tuple(lines)
+
+
+def description_text(field: ModeloFormField) -> str | None:
+    """A field's description as a person reads it, without an opening that only names its box."""
+    text = field.help
+    if not text:
+        return None
+    for prefix in _BOX_PREFIXES:
+        stripped = prefix.sub("", text.strip(), count=1)
+        if stripped != text.strip():
+            return stripped[:1].upper() + stripped[1:] if stripped else None
+    return text
+
+
+def _label_width(entry: CasillaListEntry, columns: _Columns) -> int:
+    """The cells an entry's label gets: the label column less its indent, so every value lines up."""
+    return max(columns.label - entry.indent, 1)
+
+
+def _box_mark(field: ModeloFormField) -> str:
+    return f"[{field.box}]" if field.box else _NO_BOX
 
 
 def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
@@ -161,7 +236,10 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
         return _PENDING_VALUE
     if field.value is None or field.origin in {ModeloFormOrigin.CLEARED, ModeloFormOrigin.NOT_IMPORTED_YET}:
         return absent_value_text(language)
-    return format_casilla_value(field.value, data_type=field.data_type, language=language)
+    maximum = field.constraints.max_value if field.constraints is not None else None
+    return format_casilla_value(
+        field.value, data_type=field.data_type, language=language, ratio_unit=ratio_unit(field.data_type, maximum)
+    )
 
 
 class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
@@ -286,6 +364,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._starts: list[int] = []
         self._heights: list[int] = []
         self._laid_out_width = -1
+        self._measures = self._measure()
         self._select_first_entry()
 
     # ── public surface ───────────────────────────────────────────────────
@@ -311,6 +390,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._items = items
         if language is not None:
             self._language = language
+        self._measures = self._measure()
         if self._cursor_index() is None:
             self._select_first_entry()
         self._laid_out_width = -1
@@ -350,10 +430,56 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     def _content_width(self) -> int:
         return max(self.scrollable_content_region.width, 20)
 
+    def _measure(self) -> _Measures:
+        entries = [item for item in self._items if isinstance(item, CasillaListEntry)]
+        if not entries:
+            return _Measures()
+        return _Measures(
+            box=max(cell_len(_box_mark(entry.field)) for entry in entries),
+            label=max(entry.indent + cell_len(self._label(entry)) for entry in entries),
+            value=min(max(cell_len(value_text(entry, self._language)) for entry in entries), _VALUE_CAP),
+            words=max(cell_len(origin_words(entry.field)) for entry in entries),
+        )
+
+    def _columns(self, width: int) -> _Columns:
+        """Share one width out: the box whole, then the value, the label, and the origin words where they fit."""
+        measures = self._measures
+        # What is left once the lead, the box and its space, the space before
+        # the value and the space and glyph after it are placed.
+        room = width - (_LEAD + measures.box + 1 + 1 + 2)
+        words_cells = 1 + measures.words
+        # The words take room only while the label keeps as much as it needs,
+        # or at least as much as the value and the words it would give way to.
+        needed = min(measures.label, measures.value + measures.words)
+        show_words = measures.words > 0 and room - measures.value - words_cells >= needed
+        if show_words:
+            room -= words_cells
+        value = min(measures.value, max(room - min(measures.label, _LABEL_FLOOR), 1))
+        label = max(min(measures.label, room - value), 1)
+        detail = show_words and width >= _WIDEST and room - value - label >= 1 + _DETAIL_WIDTH
+        return _Columns(
+            box=measures.box, label=label, value=value, words=measures.words if show_words else 0, detail=detail
+        )
+
+    def _label_lines(self, entry: CasillaListEntry, columns: _Columns) -> tuple[str, ...]:
+        return _wrap(self._label(entry), _label_width(entry, columns))
+
+    def _note(self, entry: CasillaListEntry, columns: _Columns) -> str | None:
+        """The optional line under a field: what a change replaces, a blocker, or where the description starts."""
+        if self._density == "compact":
+            return None
+        if entry.previous_text is not None and not columns.detail:
+            return tr("tui.modelo.workbench.was", value=entry.previous_text)
+        if entry.field.blockers and not columns.detail:
+            return tr(attention_words_key(Attention.BLOCKED))
+        description = description_text(entry.field)
+        return description.split(". ")[0] if description else None
+
     def _height(self, item: CasillaListItem, width: int) -> int:
-        if not isinstance(item, CasillaListEntry) or self._density == "compact":
+        if not isinstance(item, CasillaListEntry):
             return 1
-        return 2 if self._second_line(item, width) else 1
+        columns = self._columns(width)
+        return len(self._label_lines(item, columns)) + (1 if self._note(item, columns) else 0)
 
     def _layout(self) -> None:
         width = self._content_width()
@@ -410,83 +536,52 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             return Text().append(_fit(" " * (3 + item.indent) + item.text, width), style=self._style("muted"))
         return self._entry_line(item, sub_line, width, focused=focused)
 
-    def _columns(self, width: int, indent: int) -> tuple[int, bool, bool]:
-        wide = width >= _WIDE
-        widest = width >= _WIDEST
-        fixed = 3 + indent + _BOX_WIDTH + _VALUE_WIDTH + 2 + (_STATE_WIDTH + 1 if wide else 0)
-        fixed += _DETAIL_WIDTH + 1 if widest else 0
-        return max(width - fixed, 8), wide, widest
-
     def _label(self, entry: CasillaListEntry) -> str:
         field = entry.field
         label = entry.label or field.label.text
-        if (
-            field.label.disclosure
-            in {
-                ModeloFormTextDisclosure.SPANISH_FALLBACK,
-                ModeloFormTextDisclosure.OFFICIAL_SPANISH,
-            }
-            and self._language is not OutputLanguage.ES
-        ):
-            return f"{label} (es)"
+        if field.label.disclosure in _SPANISH_DISCLOSURES and self._language is not OutputLanguage.ES:
+            return f"{label} {tr(_IN_SPANISH_LOCALE_KEY)}"
         return label
-
-    def _second_line(self, entry: CasillaListEntry, width: int) -> str:
-        label_width, wide, widest = self._columns(width, entry.indent)
-        _, rest = _split(self._label(entry), label_width)
-        if rest:
-            return rest
-        if entry.previous_text is not None and not widest:
-            return tr("tui.modelo.workbench.was", value=entry.previous_text)
-        if not wide:
-            return " "
-        help_text = entry.field.help
-        if help_text:
-            return help_text.split(". ")[0]
-        return ""
 
     def _entry_line(self, entry: CasillaListEntry, sub_line: int, width: int, *, focused: bool) -> Text:
         field = entry.field
-        label_width, wide, widest = self._columns(width, entry.indent)
+        columns = self._columns(width)
+        labels = self._label_lines(entry, columns)
+        label_width = _label_width(entry, columns)
         attention = entry.attention
         text = Text()
-        text.append("▸" if focused and sub_line == 0 else " ", style=self._style("staged") if focused else Style())
+        text.append(
+            HERE_MARK.glyph if focused and sub_line == 0 else " ", style=self._style("staged") if focused else Style()
+        )
         if sub_line == 0:
             text.append(
                 ATTENTION_GLYPHS[attention] if attention is not None else " ",
                 style=self._role_style(ATTENTION_ROLES[attention]) if attention is not None else Style(),
             )
             text.append(" " + " " * entry.indent)
-            text.append(_right(f"[{field.box}]" if field.box else "·", _BOX_WIDTH - 1) + " ", style=self._style("box"))
-            head, _ = _split(self._label(entry), label_width)
-            text.append(_fit(head, label_width))
+            text.append(_right(_box_mark(field), columns.box) + " ", style=self._style("box"))
+            text.append(_fit(labels[0], label_width))
             role = ColourRole.STAGED if entry.staged_text is not None else ORIGIN_ROLES[field.origin]
-            text.append(" " + _right(value_text(entry, self._language), _VALUE_WIDTH - 1), style=self._role_style(role))
-            text.append(" " + ORIGIN_GLYPHS[field.origin], style=self._role_style(ORIGIN_ROLES[field.origin]))
-            if wide:
-                text.append(" " + _fit(tr(origin_words_key(field.origin)), _STATE_WIDTH), style=self._style("muted"))
-            if widest:
+            text.append(" " + _right(value_text(entry, self._language), columns.value), style=self._role_style(role))
+            text.append(" " + origin_glyph(field), style=self._role_style(ORIGIN_ROLES[field.origin]))
+            if columns.words:
+                text.append(" " + _fit(origin_words(field), columns.words), style=self._style("muted"))
+            if columns.detail:
                 text.append(" " + _fit(self._detail(entry), _DETAIL_WIDTH), style=self._style("muted"))
             return text
-        text.append(" " * (2 + entry.indent + _BOX_WIDTH))
-        second = self._second_line(entry, width)
-        if not wide:
-            words = tr(origin_words_key(field.origin))
-            if attention is not None:
-                words = tr(f"tui.modelo.workbench.attention.{attention.value}")
-            rest_width = max(width - cell_len(text.plain) - 1, 0)
-            words_width = min(cell_len(words), max(rest_width // 2, 12))
-            text.append(_fit(second.strip(), rest_width - words_width - 1), style=self._style("muted"))
-            text.append(" " + _right(words, words_width), style=self._role_style(ORIGIN_ROLES[field.origin]))
+        text.append(" " * (_LEAD - 1 + entry.indent + columns.box + 1))
+        if sub_line < len(labels):
+            text.append(_fit(labels[sub_line], label_width))
             return text
-        text.append(_fit(second, label_width), style=self._style("muted"))
+        note = self._note(entry, columns) or ""
+        text.append(_fit(note, width - cell_len(text.plain)), style=self._style("muted"))
         return text
 
     def _detail(self, entry: CasillaListEntry) -> str:
         if entry.previous_text is not None:
             return tr("tui.modelo.workbench.was", value=entry.previous_text)
         if entry.field.blockers:
-            return tr("tui.modelo.workbench.attention.blocked")
+            return tr(attention_words_key(Attention.BLOCKED))
         bindings = entry.field.bindings
         if bindings:
             return tr(bindings[0].policy.label_key)
@@ -623,5 +718,6 @@ __all__ = [
     "CasillaListItem",
     "CasillaListNote",
     "Density",
+    "description_text",
     "value_text",
 ]

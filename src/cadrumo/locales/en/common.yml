@@ -2001,7 +2001,6 @@ tui:
       title: Modelo 303 filing facts
     workbench:
       attention:
-        blocked: Blocks filing
         staged: Changed, not applied
       calculate:
         apply_first: Apply or discard your changes before recalculating [R].
@@ -2072,6 +2071,7 @@ tui:
         no_explanation: There is no written explanation for this box yet.
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
+      in_spanish: (in Spanish)
       issues:
         action:
           advisory: Read it and decide whether it applies to you. It does not stop
@@ -2136,6 +2136,14 @@ tui:
           lost.'
         stay: Keep editing
         title: Changes not applied
+      legend:
+        name:
+          collapsed: Closed section
+          done: Done
+          earlier: From an earlier declaration
+          expanded: Open section
+          here: You are here
+          stale: Out of date
       level:
         blocks: Blocks filing
         check: Worth checking
@@ -2172,16 +2180,44 @@ tui:
         calculated: Calculated
         calculation_failed: Could not be calculated
         cleared: Cleared by you
-        default_to_confirm: Default, please confirm
+        default_to_confirm: Assumed, please confirm
         entered: Entered by you
         imported: Imported
-        informational: For information
+        informational: Reference value
         needs_input: Needs your input
         not_applicable: Not applicable
         not_calculated_yet: Not calculated yet
         not_imported_yet: Not imported yet
         optional_empty: Optional, empty
         overrides_source: Your value replaces the source
+      origin_source:
+        imported:
+          aeat_draft: From AEAT data
+          earlier_filings: From an earlier declaration
+          fixed_by_design: Set by the form
+          named_filing: From modelo {modelo}, {period}
+          profile: From your profile
+          records: From your records
+          registers: From a register you keep
+          your_entries: From your entries
+        not_imported_yet:
+          aeat_draft: Not in AEAT data yet
+          earlier_filings: No earlier declaration yet
+          fixed_by_design: Not set by the form yet
+          named_filing: Not in modelo {modelo}, {period} yet
+          profile: Not in your profile yet
+          records: Not in your records yet
+          registers: Not in your register yet
+          your_entries: Not entered yet
+        overrides_source:
+          aeat_draft: Yours, replaces AEAT data
+          earlier_filings: Yours, replaces an earlier declaration
+          fixed_by_design: Yours, replaces the form's value
+          named_filing: Yours, replaces modelo {modelo}, {period}
+          profile: Yours, replaces your profile
+          records: Yours, replaces your records
+          registers: Yours, replaces your register
+          your_entries: Yours, replaces your entry
       page_position: page {current} of {total}
       period:
         annual: Annual {year}

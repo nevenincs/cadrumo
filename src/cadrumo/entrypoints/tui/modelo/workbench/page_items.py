@@ -41,12 +41,10 @@ from .casilla_list import (
     CasillaListItem,
     CasillaListNote,
 )
-from .vocabulary import NEEDS_ATTENTION
+from .vocabulary import BLOCKS_MARK, CONFIRM_MARK, DONE_MARK, MISSING_MARK, NEEDS_ATTENTION, WorkbenchMark
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _DESIGN_CONSTANT_KEY: Final[str] = "tui.modelo.workbench.design_constant"
-_DONE_MARK: Final[str] = "✓"
-_PENDING_MARK: Final[str] = "!"
 
 
 class WorkbenchFilter(StrEnum):
@@ -125,24 +123,43 @@ def _entry(
     )
 
 
+def _needs_filer(field: ModeloFormField) -> bool:
+    return bool(field.blockers) or field.origin in NEEDS_ATTENTION
+
+
+def section_mark(section: ModeloFormSection) -> WorkbenchMark:
+    """The most severe thing a section still holds: a blocker, then a missing value, then an assumed one."""
+    fields = section_fields(section)
+    if any(field.blockers for field in fields):
+        return BLOCKS_MARK
+    if any(
+        field.origin in NEEDS_ATTENTION and field.origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM for field in fields
+    ):
+        return MISSING_MARK
+    if any(field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM for field in fields):
+        return CONFIRM_MARK
+    return DONE_MARK
+
+
 def section_heading_text(section: ModeloFormSection) -> str:
     """Say whether a section is complete, or how many of its fields still need the filer."""
-    pending = sum(1 for field in section_fields(section) if field.origin in NEEDS_ATTENTION)
+    mark = section_mark(section).glyph
+    pending = sum(1 for field in section_fields(section) if _needs_filer(field))
     if pending:
         pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=pending)
-        return f"{_PENDING_MARK} {pending_text}"
-    return f"{_DONE_MARK} {section.heading.text}"
+        return f"{mark} {pending_text}"
+    return f"{mark} {section.heading.text}"
 
 
 def section_nav_text(section: ModeloFormSection, width: int) -> str:
-    """Name a section in the navigator: a mark, the heading cut to fit, and what is still to do."""
-    pending = sum(1 for field in section_fields(section) if field.origin in NEEDS_ATTENTION)
-    mark, suffix = (_PENDING_MARK, f" ({pending})") if pending else (_DONE_MARK, "")
+    """Name a section in the navigator: its most severe mark, the heading cut to fit, and what is still to do."""
+    pending = sum(1 for field in section_fields(section) if _needs_filer(field))
+    suffix = f" ({pending})" if pending else ""
     room = max(width - 2 - len(suffix), 4)
     heading = section.heading.text
     if len(heading) > room:
         heading = heading[: room - 1] + "…"
-    return f"{mark} {heading}{suffix}"
+    return f"{section_mark(section).glyph} {heading}{suffix}"
 
 
 def _section_items(
@@ -225,6 +242,7 @@ __all__ = [
     "page_items",
     "page_of",
     "section_heading_text",
+    "section_mark",
     "section_nav_text",
     "workbench_pages",
 ]

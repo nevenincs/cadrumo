@@ -35,6 +35,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.iban import normalise_iban
 from ...core.models import STRICT_FROZEN_CONFIG
+from .edit_value_grammar import ModeloEditRatioUnit
 
 VALUE_TRUE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_true"
 VALUE_FALSE_LOCALE_KEY: Final[str] = "application.modelo.calculation_summary.value_false"
@@ -45,6 +46,11 @@ SCREEN_MINUS_SIGN: Final[str] = "\u2212"
 """The minus sign figures carry on screen, so a negative amount reads as one."""
 
 _EURO_SUFFIX: Final[str] = "\u00a0\u20ac"
+_PERCENT_SUFFIX: Final[str] = "\u00a0%"
+_PERCENT_SHIFT: Final[Mapping[ModeloEditRatioUnit, int]] = MappingProxyType(
+    {ModeloEditRatioUnit.PERCENT: 0, ModeloEditRatioUnit.FRACTION: 2}
+)
+"""How far a ratio's decimal point moves to read as a percentage, for each unit the registry lets be known."""
 _IBAN_MASK: Final[str] = "\u00b7\u00b7\u00b7\u00b7"
 _DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\d+)(?:\.(?P<fraction>\d+))?$")
 
@@ -196,14 +202,18 @@ def format_casilla_value(
     data_type: str,
     language: OutputLanguage,
     mask_iban: bool = True,
+    ratio_unit: ModeloEditRatioUnit | None = None,
 ) -> str:
     """Format one present casilla value for a person reading ``language``.
 
-    Money carries two places at least and a euro sign; a ratio, decimal or
-    count keeps its own places and takes the language's marks; a year stays
-    four plain digits; a yes-or-no is a word; a date follows the language's
-    order; a bank account is masked to its first and last four characters
-    unless ``mask_iban`` is false. Codes and text are shown as stored.
+    Money carries two places at least and a euro sign; a ratio whose
+    ``ratio_unit`` is known reads as a percentage, a fraction shifted by exactly
+    two places, and one whose unit is not declared keeps its bare figure rather
+    than guess a hundredfold; a decimal or count keeps its own places and takes
+    the language's marks; a year stays four plain digits; a yes-or-no is a
+    word; a date follows the language's order; a bank account is masked to its
+    first and last four characters unless ``mask_iban`` is false. Codes and
+    text are shown as stored.
     """
     kind = value_presentation_kind(data_type)
     if isinstance(value, bool):
@@ -212,6 +222,11 @@ def format_casilla_value(
         return value.strftime(LOCALE_NUMBER_FORMATS[language].date_pattern)
     if kind is ValuePresentationKind.BOOLEAN and isinstance(value, (int, Decimal)) and value in (0, 1):
         return _yes_no(bool(value), language)
+    shift = None if ratio_unit is None else _PERCENT_SHIFT.get(ratio_unit)
+    if kind is ValuePresentationKind.RATIO and shift is not None:
+        percentage = _format_percentage(value, shift=shift, language=language)
+        if percentage is not None:
+            return percentage
     if kind in {ValuePresentationKind.MONEY, ValuePresentationKind.RATIO, ValuePresentationKind.DECIMAL}:
         return _format_quantity(value, kind=kind, language=language)
     if kind is ValuePresentationKind.INTEGER and isinstance(value, (int, Decimal)):
@@ -235,6 +250,23 @@ def _format_quantity(value: object, *, kind: ValuePresentationKind, language: Ou
     if grouped is None:
         return text
     return f"{grouped}{_EURO_SUFFIX}" if kind is ValuePresentationKind.MONEY else grouped
+
+
+def _format_percentage(value: object, *, shift: int, language: OutputLanguage) -> str | None:
+    """Format a ratio as a percentage, moving the decimal point ``shift`` places; ``None`` when unreadable.
+
+    Moving the point is exact, so a stored fraction reads as its percentage
+    with every digit it carried and nothing rounded.
+    """
+    if isinstance(value, (Decimal, int)):
+        number = Decimal(value)
+    else:
+        text = str(value).strip()
+        if _DECIMAL_TOKEN.match(text) is None:
+            return None
+        number = Decimal(text)
+    grouped = group_decimal_text(_decimal_text(number.scaleb(shift)), language, minus=SCREEN_MINUS_SIGN)
+    return None if grouped is None else f"{grouped}{_PERCENT_SUFFIX}"
 
 
 def absent_value_text(language: OutputLanguage) -> str:

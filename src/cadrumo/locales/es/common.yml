@@ -2060,7 +2060,6 @@ tui:
       title: Datos de la autoliquidación del modelo 303
     workbench:
       attention:
-        blocked: Bloquea la presentación
         staged: Cambiada, sin aplicar
       calculate:
         apply_first: Aplica o descarta tus cambios antes de recalcular [R].
@@ -2132,6 +2131,7 @@ tui:
         no_explanation: Aún no hay una explicación escrita para esta casilla.
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+      in_spanish: (en español)
       issues:
         action:
           advisory: Léelo y decide si te afecta. No te impide presentar.
@@ -2196,6 +2196,14 @@ tui:
         message: 'Tienes cambios sin aplicar: {count}. Si sales ahora, se pierden.'
         stay: Seguir editando
         title: Cambios sin aplicar
+      legend:
+        name:
+          collapsed: Sección cerrada
+          done: Hecho
+          earlier: De una declaración anterior
+          expanded: Sección abierta
+          here: Estás aquí
+          stale: Desactualizado
       level:
         blocks: Impide presentar
         check: Conviene revisarlo
@@ -2232,16 +2240,44 @@ tui:
         calculated: Calculada
         calculation_failed: No se pudo calcular
         cleared: Vaciada por ti
-        default_to_confirm: Por defecto, confírmala
+        default_to_confirm: Supuesta, confírmala
         entered: Introducida por ti
         imported: Importada
-        informational: Informativa
+        informational: Valor de referencia
         needs_input: Falta tu dato
         not_applicable: No aplica
         not_calculated_yet: Aún sin calcular
         not_imported_yet: Aún sin importar
         optional_empty: Opcional, vacía
         overrides_source: Tu valor sustituye al origen
+      origin_source:
+        imported:
+          aeat_draft: De datos de la AEAT
+          earlier_filings: De una declaración anterior
+          fixed_by_design: Fijado por el modelo
+          named_filing: Del modelo {modelo}, {period}
+          profile: De tu perfil
+          records: De tus registros
+          registers: De un registro que llevas
+          your_entries: De lo que escribiste
+        not_imported_yet:
+          aeat_draft: Aún no está en los datos de la AEAT
+          earlier_filings: Aún sin declaración anterior
+          fixed_by_design: Aún sin fijar por el modelo
+          named_filing: Aún no está en el modelo {modelo}, {period}
+          profile: Aún no está en tu perfil
+          records: Aún no está en tus registros
+          registers: Aún no está en tu registro
+          your_entries: Aún sin escribir
+        overrides_source:
+          aeat_draft: Tuyo, sustituye a los datos de la AEAT
+          earlier_filings: Tuyo, sustituye a una declaración anterior
+          fixed_by_design: Tuyo, sustituye al valor del modelo
+          named_filing: Tuyo, sustituye al modelo {modelo}, {period}
+          profile: Tuyo, sustituye a tu perfil
+          records: Tuyo, sustituye a tus registros
+          registers: Tuyo, sustituye a tu registro
+          your_entries: Tuyo, sustituye a lo que escribiste
       page_position: página {current} de {total}
       period:
         annual: Anual {year}

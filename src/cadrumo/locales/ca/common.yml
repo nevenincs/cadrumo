@@ -2048,7 +2048,6 @@ tui:
       title: Dades de l'autoliquidació del Model 303
     workbench:
       attention:
-        blocked: Bloqueja la presentació
         staged: Canviada, sense aplicar
       calculate:
         apply_first: Aplica o descarta els teus canvis abans de recalcular [R].
@@ -2120,6 +2119,7 @@ tui:
         no_explanation: Encara no hi ha cap explicació escrita per a aquesta casella.
         official: 'Text oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+      in_spanish: (en castellà)
       issues:
         action:
           advisory: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
@@ -2186,6 +2186,14 @@ tui:
         message: 'Tens canvis sense aplicar: {count}. Si surts ara, es perden.'
         stay: Continua editant
         title: Canvis sense aplicar
+      legend:
+        name:
+          collapsed: Secció tancada
+          done: Fet
+          earlier: D'una declaració anterior
+          expanded: Secció oberta
+          here: Ets aquí
+          stale: Desactualitzat
       level:
         blocks: Impedeix presentar
         check: Convé revisar-ho
@@ -2223,16 +2231,44 @@ tui:
         calculated: Calculada
         calculation_failed: No s'ha pogut calcular
         cleared: Buidada per tu
-        default_to_confirm: Per defecte, confirma-la
+        default_to_confirm: Suposada, confirma-la
         entered: Introduïda per tu
         imported: Importada
-        informational: Informativa
+        informational: Valor de referència
         needs_input: Falta la teva dada
         not_applicable: No s'aplica
         not_calculated_yet: Encara sense calcular
         not_imported_yet: Encara sense importar
         optional_empty: Opcional, buida
         overrides_source: El teu valor substitueix l'origen
+      origin_source:
+        imported:
+          aeat_draft: De dades de l'AEAT
+          earlier_filings: D'una declaració anterior
+          fixed_by_design: Fixat pel model
+          named_filing: Del model {modelo}, {period}
+          profile: Del teu perfil
+          records: Dels teus registres
+          registers: D'un registre que portes
+          your_entries: Del que vas escriure
+        not_imported_yet:
+          aeat_draft: Encara no és a les dades de l'AEAT
+          earlier_filings: Encara sense declaració anterior
+          fixed_by_design: Encara sense fixar pel model
+          named_filing: Encara no és al model {modelo}, {period}
+          profile: Encara no és al teu perfil
+          records: Encara no és als teus registres
+          registers: Encara no és al teu registre
+          your_entries: Encara sense escriure
+        overrides_source:
+          aeat_draft: Teu, substitueix les dades de l'AEAT
+          earlier_filings: Teu, substitueix una declaració anterior
+          fixed_by_design: Teu, substitueix el valor del model
+          named_filing: Teu, substitueix el model {modelo}, {period}
+          profile: Teu, substitueix el teu perfil
+          records: Teu, substitueix els teus registres
+          registers: Teu, substitueix el teu registre
+          your_entries: Teu, substitueix el que vas escriure
       page_position: pàgina {current} de {total}
       period:
         annual: Anual {year}

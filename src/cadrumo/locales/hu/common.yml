@@ -2029,7 +2029,6 @@ tui:
       title: A 303-es nyomtatvány bevallási adatai
     workbench:
       attention:
-        blocked: Akadályozza a benyújtást
         staged: Módosítva, még nem alkalmazva
       calculate:
         apply_first: Az újraszámítás előtt alkalmazza vagy vesse el a módosításait
@@ -2102,6 +2101,7 @@ tui:
         no_explanation: Ehhez a rovathoz még nincs írott magyarázat.
         official: 'Hivatalos szöveg ({source}): „{text}”'
         origin: 'Forrás: {origin}'
+      in_spanish: (spanyolul)
       issues:
         action:
           advisory: Olvasd el, és döntsd el, hogy vonatkozik-e rád. Nem akadályozza
@@ -2169,6 +2169,14 @@ tui:
         message: 'Nem alkalmazott módosítások: {count}. Ha most kilép, elvesznek.'
         stay: Szerkesztés folytatása
         title: Nem alkalmazott módosítások
+      legend:
+        name:
+          collapsed: Bezárt szakasz
+          done: Kész
+          earlier: Korábbi bevallásból
+          expanded: Nyitott szakasz
+          here: Itt tart
+          stale: Elavult
       level:
         blocks: Akadályozza a benyújtást
         check: Érdemes átnézni
@@ -2205,16 +2213,44 @@ tui:
         calculated: Számított
         calculation_failed: Nem számítható ki
         cleared: Ön törölte
-        default_to_confirm: Alapérték, kérjük erősítse meg
+        default_to_confirm: Feltételezett, kérjük erősítse meg
         entered: Ön adta meg
         imported: Importált
-        informational: Tájékoztató
+        informational: Referenciaérték
         needs_input: Adat szükséges Öntől
         not_applicable: Nem alkalmazandó
         not_calculated_yet: Még nincs kiszámítva
         not_imported_yet: Még nincs importálva
         optional_empty: Nem kötelező, üres
         overrides_source: Az Ön értéke felülírja a forrást
+      origin_source:
+        imported:
+          aeat_draft: AEAT-adatokból
+          earlier_filings: Egy korábbi bevallásból
+          fixed_by_design: A nyomtatvány rögzíti
+          named_filing: A(z) {modelo} nyomtatványból ({period})
+          profile: Az Ön profiljából
+          records: Az Ön nyilvántartásaiból
+          registers: Az Ön által vezetett nyilvántartásból
+          your_entries: Az Ön bejegyzéseiből
+        not_imported_yet:
+          aeat_draft: Még nincs az AEAT-adatokban
+          earlier_filings: Még nincs korábbi bevallás
+          fixed_by_design: A nyomtatvány még nem rögzíti
+          named_filing: Még nincs a(z) {modelo} nyomtatványban ({period})
+          profile: Még nincs az Ön profiljában
+          records: Még nincs az Ön nyilvántartásaiban
+          registers: Még nincs az Ön által vezetett nyilvántartásban
+          your_entries: Még nincs megadva
+        overrides_source:
+          aeat_draft: Az Öné, felülírja az AEAT-adatokat
+          earlier_filings: Az Öné, felülírja a korábbi bevallást
+          fixed_by_design: Az Öné, felülírja a nyomtatvány értékét
+          named_filing: Az Öné, felülírja a(z) {modelo} nyomtatványt ({period})
+          profile: Az Öné, felülírja a profilját
+          records: Az Öné, felülírja a nyilvántartásait
+          registers: Az Öné, felülírja a vezetett nyilvántartást
+          your_entries: Az Öné, felülírja a bejegyzését
       page_position: '{current}/{total}. oldal'
       period:
         annual: '{year}. éves'

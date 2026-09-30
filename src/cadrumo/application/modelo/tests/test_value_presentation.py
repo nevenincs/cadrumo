@@ -15,6 +15,7 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ..edit_value_grammar import ModeloEditRatioUnit
 from ..value_presentation import (
     LOCALE_NUMBER_FORMATS,
     UnknownValuePresentationError,
@@ -31,6 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NBSP = "\u00a0"
 _MINUS = "\u2212"
 _EURO = f"{_NBSP}\u20ac"
+_PERCENT = f"{_NBSP}%"
 
 
 def test_every_registry_data_type_and_language_has_a_presentation() -> None:
@@ -70,6 +72,30 @@ def test_quantities_keep_every_place_they_carry_and_are_never_rounded() -> None:
     assert format_casilla_value(Decimal("21"), data_type="ratio", language=OutputLanguage.ES) == "21"
     assert format_casilla_value(Decimal("0.125"), data_type="ratio", language=OutputLanguage.EN) == "0.125"
     assert format_casilla_value(Decimal("12.3456"), data_type="money", language=OutputLanguage.EN) == f"12.3456{_EURO}"
+
+
+def test_a_ratio_reads_as_a_percentage_only_where_its_unit_is_declared() -> None:
+    def ratio(value: Decimal | str, unit: ModeloEditRatioUnit | None, language: OutputLanguage) -> str:
+        return format_casilla_value(value, data_type="ratio", language=language, ratio_unit=unit)
+
+    assert ratio(Decimal("21"), ModeloEditRatioUnit.PERCENT, OutputLanguage.EN) == f"21{_PERCENT}"
+    assert ratio(Decimal("10.50"), ModeloEditRatioUnit.PERCENT, OutputLanguage.ES) == f"10,50{_PERCENT}"
+    assert ratio("4", ModeloEditRatioUnit.PERCENT, OutputLanguage.CA) == f"4{_PERCENT}"
+    # A fraction moves its point by exactly two places, keeping every digit it carried.
+    assert ratio(Decimal("0.21"), ModeloEditRatioUnit.FRACTION, OutputLanguage.EN) == f"21{_PERCENT}"
+    assert ratio(Decimal("0.1275"), ModeloEditRatioUnit.FRACTION, OutputLanguage.HU) == f"12,75{_PERCENT}"
+    assert ratio(Decimal("-0.5"), ModeloEditRatioUnit.FRACTION, OutputLanguage.EN) == f"{_MINUS}50{_PERCENT}"
+    # Without a declared unit the figure stays bare rather than guessing a hundredfold.
+    assert ratio(Decimal("21"), ModeloEditRatioUnit.UNDECLARED, OutputLanguage.EN) == "21"
+    assert ratio(Decimal("0.21"), None, OutputLanguage.EN) == "0.21"
+    # A unit never turns another kind of figure into a percentage, nor an unreadable one into a guess.
+    assert (
+        format_casilla_value(
+            Decimal("21"), data_type="money", language=OutputLanguage.EN, ratio_unit=ModeloEditRatioUnit.PERCENT
+        )
+        == f"21.00{_EURO}"
+    )
+    assert ratio("1e3", ModeloEditRatioUnit.PERCENT, OutputLanguage.EN) == "1e3"
 
 
 def test_counts_group_and_years_stay_plain_digits() -> None:
