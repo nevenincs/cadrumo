@@ -24,7 +24,6 @@ Submodules
 
    cadrumo.entrypoints.adapter_composition
    cadrumo.entrypoints.auth_read_composition
-   cadrumo.entrypoints.censal_review
    cadrumo.entrypoints.diagnostics_run_health_composition
    cadrumo.entrypoints.exchange_rate_composition
    cadrumo.entrypoints.invoice_inspection_composition

@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
@@ -206,9 +206,21 @@ from ..application.user_profile.automation_operations import (
     build_automation_operation_definitions,
     build_automation_operation_registrations,
 )
+from ..application.user_profile.censal_file_import_operation import (
+    build_censal_file_import_operation_definition,
+    build_censal_file_import_operation_registration,
+)
 from ..application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
+)
+from ..application.user_profile.censal_prepare_operation import (
+    build_censal_prepare_operation_definition,
+    build_censal_prepare_operation_registration,
+)
+from ..application.user_profile.censal_preview_operation import (
+    build_censal_preview_operation_definition,
+    build_censal_preview_operation_registration,
 )
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
@@ -249,6 +261,7 @@ from .invoice_inspection_composition import build_invoice_inspection_read_ports
 from .ledger_action_composition import compose_ledger_action_ports
 from .live_state_composition import (
     compose_live_state,
+    preflight_filed_history_provider,
     pull_filed_history_with_shared_composition,
 )
 from .modelo_dependency_composition import build_dependency_read_ports
@@ -445,6 +458,16 @@ def build_production_operation_registry(
             censal_fetch_port=build_censal_fetch_port(),
         )
     )
+    censal_prepare_definition = build_censal_prepare_operation_definition()
+    censal_file_import_definition = build_censal_file_import_operation_definition()
+    censal_preview_definition = build_censal_preview_operation_definition(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_scope_ports=resolved_operator_scope_ports,
+        censal_fetch_port=build_censal_fetch_port(),
+        browser_resources_factory=BrowserRuntimeResourceScope,
+        provider_preflight=preflight_filed_history_provider,
+    )
     workbench_definition = build_workbench_generation_operation_definition(workbench_generation_reader)
     metadata_definition = build_modelo_metadata_definition(work_lifecycle_ports_factory)
     history_definition = build_modelo_work_history_definition(modelo_history_ports_factory)
@@ -515,6 +538,9 @@ def build_production_operation_registry(
                 *automation_definitions,
                 *modelo_definitions,
                 resolved_censal_definition,
+                censal_prepare_definition,
+                censal_file_import_definition,
+                censal_preview_definition,
                 filed_history_definition,
                 iva_wallet_history_definition,
                 resolved_google_export_definition,
@@ -571,6 +597,9 @@ def build_production_operation_registry(
                     revision_access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
                 ),
                 build_censal_operation_registration(resolved_censal_definition),
+                build_censal_prepare_operation_registration(censal_prepare_definition),
+                build_censal_file_import_operation_registration(censal_file_import_definition),
+                build_censal_preview_operation_registration(censal_preview_definition),
                 build_filed_history_operation_registration(filed_history_definition),
                 build_iva_wallet_history_registration(iva_wallet_history_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),

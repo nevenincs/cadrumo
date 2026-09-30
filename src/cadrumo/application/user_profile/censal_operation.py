@@ -55,6 +55,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ..operator_actions.models import ActionReference
 from .access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -697,6 +699,9 @@ def build_censal_operation_definition(
         ),
         phase_codes=_CENSAL_PHASES,
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        action_reference=ActionReference(
+            action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit").action_id
+        ),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RESUMABLE,
             cancellation=OperationCancellation.COOPERATIVE,

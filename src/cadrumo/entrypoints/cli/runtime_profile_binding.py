@@ -22,6 +22,16 @@ def bind_profile_client(ctx: typer.Context, client: RuntimeFrontendClient, *, pr
     ctx.meta[_CONTEXT_KEY] = ctx.with_resource(client)
 
 
+def bound_profile_client(ctx: typer.Context) -> RuntimeFrontendClient:
+    """Return the authenticated connection and its immutable profile target."""
+    client = ctx.meta.get(_CONTEXT_KEY)
+    if not isinstance(client, RuntimeFrontendClient):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if client.frontend is not OperationFrontendProjection.CLI:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return client
+
+
 def require_profile_client(ctx: typer.Context, *, expected_profile_id: UUID) -> RuntimeFrontendClient:
     """Return only the connection bound to this command's exact target."""
     client = ctx.meta.get(_CONTEXT_KEY)

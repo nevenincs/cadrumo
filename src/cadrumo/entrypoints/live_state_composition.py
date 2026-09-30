@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, override
+from uuid import UUID
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
@@ -60,6 +61,7 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..application.auth.operator import build_live_auth_preflight_report
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.protocols import BrowserSessionFactoryPort
 from ..application.auth.session_types import AeatSession
@@ -101,6 +103,8 @@ from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import active_verified_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
+from ..application.user_profile.access_contracts import AccessDenialCode
+from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
@@ -111,7 +115,7 @@ from ..core.period import Period
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
 from ..core.time.clock import now
-from ..domain.calculations.registry.authority import bundled_indexed_authority
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -124,6 +128,22 @@ from ..domain.iva_compensation.reconciliation import (
 )
 
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
+
+
+def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
+    """Probe configured provider readiness in the exact profile worker before remote work."""
+    from .auth_read_composition import compose_auth_read_ports
+
+    ports = compose_auth_read_ports(profile_id)
+    report = build_live_auth_preflight_report(
+        certificate_secret_backend_factory=ports.certificate_secret_backend_factory,
+        operator_probe_ports=ports.operator_probe_ports,
+        operator_scope_ports=ports.operator_scope_ports,
+        read_ports=ports.read_ports,
+        operation=operation,
+    )
+    if not report.configured or not report.available:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):

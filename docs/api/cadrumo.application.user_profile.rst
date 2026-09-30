@@ -38,8 +38,11 @@ Submodules
    cadrumo.application.user_profile.capsule_archive
    cadrumo.application.user_profile.capsule_record
    cadrumo.application.user_profile.capsule_restore
+   cadrumo.application.user_profile.censal_file_import_operation
    cadrumo.application.user_profile.censal_observation
    cadrumo.application.user_profile.censal_operation
+   cadrumo.application.user_profile.censal_prepare_operation
+   cadrumo.application.user_profile.censal_preview_operation
    cadrumo.application.user_profile.censo_errors
    cadrumo.application.user_profile.censo_sync
    cadrumo.application.user_profile.commands

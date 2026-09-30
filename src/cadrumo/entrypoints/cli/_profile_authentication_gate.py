@@ -46,6 +46,8 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _RUNTIME_PROFILE_KEYS = frozenset(
     {
         "config_auth_configure",
+        "config_profile_censo_pull",
+        "config_profile_censo_import",
         "app_live_iva_wallet_history",
         "app_overview_pipeline",
         "app_overview_status",
@@ -400,6 +402,13 @@ def _activate_parsed_profile_session(
     )
 
 
+def _uses_runtime_profile_client(spec: CommandSpec, arguments: Mapping[str, object]) -> bool:
+    """Select the runtime route, including commands with a local preview mode."""
+    if spec.key == "config_profile_censo_import":
+        return arguments.get("apply") is True
+    return spec.key in _RUNTIME_PROFILE_KEYS
+
+
 def preflight_parsed_leaf(
     ctx: typer.Context,
     *,
@@ -425,6 +434,7 @@ def preflight_parsed_leaf(
     source = parsed_root_profile_source(ctx)
     method = source.method
     credential_reference = source.credential_reference
+    runtime_profile_client = _uses_runtime_profile_client(spec, arguments)
     if spec.key == "config_profile_automation_change":
         if method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None:
             _refuse("automation_change_credential_ref_required")
@@ -433,12 +443,12 @@ def preflight_parsed_leaf(
     if credential_reference is not None:
         if method is not ProfileAuthenticationMethod.API_KEY:
             _refuse("profile_credential_ref_requires_api_key")
-        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or spec.key not in _RUNTIME_PROFILE_KEYS:
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
             _refuse("profile_credential_ref_inapplicable")
     elif method is ProfileAuthenticationMethod.API_KEY:
         if root is None:
             _refuse("profile_secrets_api_key_requires_channel")
-        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or spec.key not in _RUNTIME_PROFILE_KEYS:
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
             _refuse("profile_secrets_api_key_inapplicable")
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
@@ -523,7 +533,7 @@ def preflight_parsed_leaf(
             credential_reference=credential_reference,
         )
         return
-    if spec.key in _RUNTIME_PROFILE_KEYS:
+    if runtime_profile_client:
         from .runtime_profile_admission import activate_runtime_profile
 
         _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)

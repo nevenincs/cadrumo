@@ -26,6 +26,7 @@ from cadrumo.application.operations.models import (
 )
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operations.registry import OperationDefinition
+from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
@@ -86,6 +87,12 @@ _VALUES = {
     "contact.postcode": "28001",
     "contact.fiscal_address_cadastral_reference": "0000001AA0000A0001AA",
 }
+
+
+def test_censal_review_contract_joins_the_tui_profile_edit_action() -> None:
+    assert _test_censal_operation_definition().action_reference == ActionReference(
+        action_id="operator.profile.edit"
+    )
 
 
 def _test_censal_operation_definition() -> OperationDefinition:
