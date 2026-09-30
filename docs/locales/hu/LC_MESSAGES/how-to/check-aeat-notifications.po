@@ -266,7 +266,7 @@ msgid ""
 "register), or check a Spanish NIF in the Spanish ROI register."
 msgstr ""
 "Ellenőrizze, hogy egy NIF nyilvántartásba van-e véve a közösségen belüli "
-"áfa céljából (a VIES-nyilvántartás), vagy ellenőrizzen egy spanyol NIF-et"
+"IVA céljából (a VIES-nyilvántartás), vagy ellenőrizzen egy spanyol NIF-et"
 " a spanyol ROI-nyilvántartásban."
 
 #: ../../how-to/check-aeat-notifications.md:121

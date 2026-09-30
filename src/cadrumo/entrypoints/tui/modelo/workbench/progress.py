@@ -23,10 +23,12 @@ Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
 not checked, and a verification that found something to resolve sends the
 filer to what it found rather than back to verifying. The count beside a step
-counts what that step resolves: resolving counts what blocks filing, as the
-header's chip does. What a page that does not apply this period holds is never
-to do, so it neither keeps filling in open nor is counted on the next-action
-line. A blocked step is drawn in the error colour, as every blocker mark is.
+counts what that step resolves, as the header's chips count it: filling in
+counts the values still missing, boxes and findings alike, and resolving
+counts what blocks filing and any missing value only a finding names. What a
+page that does not apply this period holds is never to do, so it neither
+keeps filling in open nor is counted on the next-action line. A blocked
+step's mark is drawn in the error colour, as every blocker mark is.
 
 The next-action line always fits one line: it keeps its key and, when the
 words run out of room, shortens the words rather than wrapping.
@@ -46,7 +48,8 @@ from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import VerificationCompletenessStatus
-from .header import BLOCKS_STYLE, blocking_count
+from .header import blocking_count, missing_findings
+from .issues import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
 from .wording import date_text
@@ -97,7 +100,6 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
     StepStatus.PENDING: None,
 }
 _PENDING_STYLE: Final[str] = "dim"
-_STATUS_STYLES: Final[dict[StepStatus, str]] = {StepStatus.PENDING: _PENDING_STYLE, StepStatus.BLOCKED: BLOCKS_STYLE}
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
 _ELLIPSIS: Final[str] = "…"
 
@@ -149,6 +151,7 @@ def workbench_progress(
     """
     counts = to_do_counts(form)
     to_fill = counts.needs_input
+    unboxed = missing_findings(form)
     assumed = counts.default_to_confirm
     blocked = counts.blocked
     blocking = blocking_count(form)
@@ -177,6 +180,7 @@ def workbench_progress(
         form,
         staged=staged,
         to_fill=to_fill,
+        unboxed=unboxed,
         assumed=assumed,
         blocked=blocked,
         blocking=blocking,
@@ -200,6 +204,7 @@ def _next(
     *,
     staged: int,
     to_fill: int,
+    unboxed: int,
     assumed: int,
     blocked: int,
     blocking: int,
@@ -212,17 +217,18 @@ def _next(
     if filed:
         return NextAction.RECORDED, 0
     if to_fill and not verified:
-        return NextAction.FILL, to_fill
+        return NextAction.FILL, to_fill + unboxed
     if assumed:
         return NextAction.CONFIRM, assumed
     if verified and not blocking:
         return (NextAction.RECORD if exported else NextAction.EXPORT), 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
-    if blocked or blocking or form.verification in _UNRESOLVED_VERDICTS:
-        # The header's chip counts what blocks filing; boxes the check marked
-        # stand in only when no finding is left to count.
-        return NextAction.RESOLVE, blocking or blocked
+    if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
+        # The header's chips count what blocks filing and the missing values
+        # only a finding names; boxes the check marked stand in only when no
+        # finding is left to count.
+        return NextAction.RESOLVE, (blocking + unboxed) or blocked
     return NextAction.VERIFY, 0
 
 
@@ -233,15 +239,16 @@ def _step_name(step: WorkbenchStep) -> str:
 def stepper_text(progress: WorkbenchProgress) -> Content:
     """Render the steps as one line: a mark and a name each.
 
-    A step not started is dimmed and unmarked, and a blocked step is drawn in
-    the error colour.
+    A step not started is dimmed and unmarked, and a blocked step's mark is
+    drawn in the error colour.
     """
     parts: list[Content] = []
     for state in progress.steps:
         mark = _STATUS_MARKS[state.status]
-        words = _step_name(state.step) if mark is None else f"{mark.glyph} {_step_name(state.step)}"
-        style = _STATUS_STYLES.get(state.status)
-        parts.append(Content(words) if style is None else Content.styled(words, style))
+        if mark is None:
+            parts.append(Content.styled(_step_name(state.step), _PENDING_STYLE))
+        else:
+            parts.append(blocks_marked(f"{mark.glyph} {_step_name(state.step)}"))
     return Content(_STEP_SEPARATOR).join(parts)
 
 

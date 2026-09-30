@@ -359,7 +359,7 @@ msgid ""
 "Export the verified Modelo 130 fichero-BOE artefact, then record the "
 "quarter as filed locally:"
 msgstr ""
-"Exporta l'artefacte fichero-BOE del Model 130 verificat i després "
+"Exporta l'artefacte fichero-BOE del Modelo 130 verificat i després "
 "registra el trimestre com a presentat localment:"
 
 #: ../../how-to/quickstart.md:180
@@ -395,8 +395,8 @@ msgstr ""
 "L'esborrany agrupa la seva evidència quan el verifiques, per tant una "
 "factura adjuntada després no arriba a un esborrany que ja està verificat."
 " [Adjunta factures i rebuts](ledger-evidence.md) i [Prepara una "
-"presentació d'IVA amb el Model 303](modelo-303.md) expliquen tot el flux "
-"d'evidència."
+"presentació d'IVA amb el Modelo 303](modelo-303.md) expliquen tot el flux"
+" d'evidència."
 
 #: ../../how-to/quickstart.md:194
 msgid "6. Check what else is due (optional)"

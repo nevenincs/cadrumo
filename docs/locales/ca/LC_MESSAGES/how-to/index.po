@@ -86,29 +86,29 @@ msgstr ""
 
 #: ../../how-to/index.md:33
 msgid "The income-tax year: Modelo 130 → 100"
-msgstr "L'any de l'impost sobre la renda: Model 130 → 100"
+msgstr "L'any de l'impost sobre la renda: Modelo 130 → 100"
 
 #: ../../how-to/index.md:37
 msgid ""
 "Four quarterly Modelo 130 instalments, each building on the ones before "
 "it, closing with the annual Modelo 100 Renta declaration."
 msgstr ""
-"Quatre pagaments fraccionats trimestrals del Model 130, cadascun "
+"Quatre pagaments fraccionats trimestrals del Modelo 130, cadascun "
 "construït sobre els anteriors, que es tanquen amb la declaració anual de "
-"la Renda del Model 100."
+"la Renda del Modelo 100."
 
 #: ../../how-to/index.md:41
 msgid "The IVA year: Modelo 303 → 349 → 390"
-msgstr "L'any de l'IVA: Model 303 → 349 → 390"
+msgstr "L'any de l'IVA: Modelo 303 → 349 → 390"
 
 #: ../../how-to/index.md:45
 msgid ""
 "Four quarterly Modelo 303 returns with the IVA credit carrying between "
 "them, a Modelo 349 branch, and the annual Modelo 390 summary."
 msgstr ""
-"Quatre declaracions trimestrals del Model 303 amb el crèdit d'IVA que es "
-"trasllada entre elles, una branca del Model 349 i el resum anual del "
-"Model 390."
+"Quatre declaracions trimestrals del Modelo 303 amb el crèdit d'IVA que es"
+" trasllada entre elles, una branca del Modelo 349 i el resum anual del "
+"Modelo 390."
 
 #: ../../how-to/index.md:49
 msgid "Quickstart"
@@ -131,7 +131,7 @@ msgid ""
 "First-time walk-through of one Modelo 130 quarter: import a statement, "
 "classify the rows, prepare the draft, and confirm it verifies."
 msgstr ""
-"Recorregut per primera vegada d'un trimestre del Model 130: importa un "
+"Recorregut per primera vegada d'un trimestre del Modelo 130: importa un "
 "extracte, classifica les files, prepara l'esborrany i confirma que "
 "verifica."
 
@@ -167,7 +167,7 @@ msgstr ""
 
 #: ../../how-to/index.md:89
 msgid "Maintain Modelo 036 census facts"
-msgstr "Mantén les dades censals del Model 036"
+msgstr "Mantén les dades censals del Modelo 036"
 
 #: ../../how-to/index.md:93
 msgid "Keep AEAT census facts correct in the active profile."
@@ -299,7 +299,7 @@ msgid ""
 "to Modelo 349."
 msgstr ""
 "Registra factures emeses i rebudes i alimenta les operacions "
-"intracomunitàries al Model 349."
+"intracomunitàries al Modelo 349."
 
 #: ../../how-to/index.md:188
 msgid "Correct mistakes in your ledger"
@@ -357,7 +357,7 @@ msgstr ""
 
 #: ../../how-to/index.md:225
 msgid "Modelo 036"
-msgstr "Model 036"
+msgstr "Modelo 036"
 
 #: ../../how-to/index.md:229
 msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
@@ -367,7 +367,7 @@ msgstr ""
 
 #: ../../how-to/index.md:232
 msgid "Modelo 100 (Renta)"
-msgstr "Model 100 (Renda)"
+msgstr "Modelo 100 (Renda)"
 
 #: ../../how-to/index.md:236
 msgid "Prepare the annual Renta declaration that gathers the whole year."
@@ -375,7 +375,7 @@ msgstr "Prepara la declaració anual de la Renda que recull tot l'any."
 
 #: ../../how-to/index.md:239
 msgid "Modelo 130"
-msgstr "Model 130"
+msgstr "Modelo 130"
 
 #: ../../how-to/index.md:243
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
@@ -385,7 +385,7 @@ msgstr ""
 
 #: ../../how-to/index.md:246
 msgid "Modelo 303"
-msgstr "Model 303"
+msgstr "Modelo 303"
 
 #: ../../how-to/index.md:250
 msgid "Prepare, verify, and export a quarterly IVA return."
@@ -393,7 +393,7 @@ msgstr "Prepara, verifica i exporta una declaració trimestral de l'IVA."
 
 #: ../../how-to/index.md:253
 msgid "Modelo 349"
-msgstr "Model 349"
+msgstr "Modelo 349"
 
 #: ../../how-to/index.md:257
 msgid "Declare intra-community operations from your invoice records."
@@ -403,7 +403,7 @@ msgstr ""
 
 #: ../../how-to/index.md:260
 msgid "Modelo 390"
-msgstr "Model 390"
+msgstr "Modelo 390"
 
 #: ../../how-to/index.md:264
 msgid "Prepare the annual IVA summary."

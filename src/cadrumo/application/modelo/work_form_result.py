@@ -6,9 +6,10 @@ from a declaration and never from a label, a box number or a bare sign:
 * A modelo whose official design declares its "tipo de declaración" code set
   has its result boxes and its sign-to-code rule codified once, in
   :mod:`cadrumo.core.result_disposition`. The direction is read from the code
-  that rule derives (``I`` pays, ``D`` refunds, ``C`` and ``B`` carry the
-  credit forward, ``N`` is a nil return), before any payment or refund
-  election the filer makes when filing.
+  that rule derives (``I`` pays, ``D`` refunds, ``C`` carries the credit
+  forward, ``B`` is deducted from later instalments of the year, ``N`` is a
+  nil or negative return, told apart by the sign), before any payment or
+  refund election the filer makes when filing.
 * Otherwise the registry's declared final-result ``semantic_role`` names the
   settlement box (Modelo 100 today), and, with no sign rule declared, the
   direction is unknown rather than guessed from the sign.
@@ -25,6 +26,7 @@ from decimal import Decimal
 from typing import Final
 
 from ...core.casilla_id import CasillaId
+from ...core.period import Period
 from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -44,7 +46,7 @@ _DIRECTION_BY_DISPOSITION: Final[Mapping[ResultDisposition, ModeloFormResultDire
     ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION: ModeloFormResultDirection.TO_REFUND,
     ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO: ModeloFormResultDirection.TO_REFUND,
     ResultDisposition.COMPENSACION: ModeloFormResultDirection.TO_CARRY_FORWARD,
-    ResultDisposition.RESULTADO_A_DEDUCIR: ModeloFormResultDirection.TO_CARRY_FORWARD,
+    ResultDisposition.RESULTADO_A_DEDUCIR: ModeloFormResultDirection.TO_DEDUCT_LATER,
     ResultDisposition.NEGATIVA: ModeloFormResultDirection.NIL,
     # A renounced refund is an election, never derived from the result.
     ResultDisposition.RENUNCIA_DEVOLUCION: ModeloFormResultDirection.UNKNOWN,
@@ -65,7 +67,7 @@ def _amount(row: ModeloWorkReviewCasilla) -> Decimal | None:
 
 
 def _declared_type_result(
-    modelo: str, result_ids: tuple[CasillaId, ...], rows: Mapping[str, ModeloWorkReviewCasilla]
+    modelo: str, result_ids: tuple[CasillaId, ...], rows: Mapping[str, ModeloWorkReviewCasilla], period: Period
 ) -> ModeloFormResult | None:
     """The result by the modelo's declared "tipo de declaración" rule, over the result boxes this revision has."""
     present = tuple(casilla_id for casilla_id in result_ids if str(casilla_id) in rows)
@@ -77,21 +79,26 @@ def _declared_type_result(
     settling = nonzero[0] if len(nonzero) == 1 else present[0]
     if len(known) != len(present):
         return ModeloFormResult(casilla_id=settling, box=None, value=None, direction=ModeloFormResultDirection.UNKNOWN)
-    disposition = derive_result_disposition(modelo, known)
+    disposition = derive_result_disposition(modelo, known, period=period)
+    value = sum(known.values(), Decimal("0"))
+    direction = ModeloFormResultDirection.UNKNOWN if disposition is None else _DIRECTION_BY_DISPOSITION[disposition]
+    if direction is ModeloFormResultDirection.NIL and value < 0:
+        # "Negativa" covers a zero result and a negative one nothing carries; only the sign tells them apart.
+        direction = ModeloFormResultDirection.NEGATIVE
     return ModeloFormResult(
         casilla_id=settling,
         box=None,
-        value=sum(known.values(), Decimal("0")),
-        direction=ModeloFormResultDirection.UNKNOWN if disposition is None else _DIRECTION_BY_DISPOSITION[disposition],
+        value=value,
+        direction=direction,
         disposition=disposition,
         election_may_change=disposition in _ELECTABLE_DISPOSITIONS,
     )
 
 
 def settlement_result(
-    modelo: str, revision: ModeloRevision, rows: Mapping[str, ModeloWorkReviewCasilla]
+    modelo: str, revision: ModeloRevision, rows: Mapping[str, ModeloWorkReviewCasilla], period: Period
 ) -> ModeloFormResult | None:
-    """Return the settlement box of ``revision`` with its value and direction, or ``None``.
+    """Return the settlement box of ``revision`` with its value and direction in ``period``, or ``None``.
 
     ``rows`` are the work review's rows by casilla id. The returned ``box`` is
     left for the caller, which knows where the form prints the casilla.
@@ -102,7 +109,7 @@ def settlement_result(
     """
     result_ids = result_disposition_casilla_ids(modelo)
     if result_ids is not None:
-        declared = _declared_type_result(modelo, result_ids, rows)
+        declared = _declared_type_result(modelo, result_ids, rows, period)
         if declared is not None:
             return declared
     role_casilla = declaration_result_casilla_id(revision)

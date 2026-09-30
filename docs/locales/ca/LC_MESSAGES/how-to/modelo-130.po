@@ -48,7 +48,7 @@ msgid ""
 "backed fichero-BOE upload file locally; you still present that file "
 "through the official AEAT channel yourself."
 msgstr ""
-"`aeat` no presenta el Model 130 davant de l'AEAT. Pot produir localment "
+"`aeat` no presenta el Modelo 130 davant de l'AEAT. Pot produir localment "
 "el fitxer de pujada fichero-BOE basat en el registre; tot i així, "
 "presentes tu mateix aquest fitxer pel canal oficial de l'AEAT."
 

@@ -38,6 +38,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormValueSource,
     ModeloWorkForm,
+    address_key,
 )
 from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_review import (
@@ -54,10 +55,16 @@ from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.codes import ModeloCode
+from ......domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ....components.host import ScreenHostApp
 from ..casilla_list import (
     CasillaList,
     CasillaListEntry,
+    CasillaListNote,
     grid_value_text,
     rate_note,
     row_value_text,
@@ -65,7 +72,9 @@ from ..casilla_list import (
     value_text,
 )
 from ..editor import CasillaEditorScreen, EditorOutcome, read_only_reason, where_from_text
-from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, workbench_pages
+from ..grid import CasillaListRecords
+from ..page_items import StagedDisplay, WorkbenchFilter, WorkbenchPage, page_items, page_of, workbench_pages
+from ..screen import ModeloWorkbenchScreen
 from ..search import search_entries
 from ..sources import (
     SOURCE_GROUP_MARKS,
@@ -88,7 +97,7 @@ from ..vocabulary import (
     origin_words,
 )
 from ..wording import date_text
-from .workbench_fixture import FakeActions, fed_by, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -500,7 +509,12 @@ def test_the_real_first_quarter_130_carries_from_no_earlier_declaration(operatio
 
 
 def _real_form(
-    operation: PinnedAuthorityOperation, modelo: str, code: str, year: int = 2026, figure: Decimal | None = None
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    code: str,
+    year: int = 2026,
+    figure: Decimal | None = None,
+    findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
     """A real form built from the published authority, every rate casilla holding ``figure`` when one is given."""
     period = Period.from_year_and_code(year, code)
@@ -527,7 +541,7 @@ def _real_form(
         verification_outcome=None,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
         casillas=rows,
-        findings=(),
+        findings=findings,
         blockers=(),
     )
     return build_modelo_work_form(
@@ -566,3 +580,54 @@ def test_no_rate_cell_on_a_real_layout_shows_a_figure_without_a_percent_sign(
                             assert rate_note(item, language) is not None, (modelo, item.field.box, figure)
                         checked += 1
     assert checked
+
+
+# ── a finding about a table's records leads to the table ─────────────────
+
+
+@pytest.mark.asyncio
+async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operators_table(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    column = "op.codigo-pais"
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=column,
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        message_facts={"casilla_id": column},
+        legal_refs=("ley-37-1992:art-99",),
+    )
+    form = _real_form(operation, "349", "1T", findings=(finding,))
+    key = ("casilla", column)
+    pages = workbench_pages(form)
+    target = page_of(pages, key)
+    # No field is that column: only the page holding the operators' table shows it.
+    assert target is not None
+    assert not any(address_key(field.address) == key for page in pages for field in page.fields())
+    records = [
+        item
+        for item in page_items(pages[target], staged={})
+        if isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids
+    ]
+    assert records
+    with override_settings(cadrumo_output_language="en"):
+        heading = tr("tui.modelo.workbench.repeating", count=0)
+        unknown = tr("tui.modelo.workbench.grid.records_unknown")
+        screen = ModeloWorkbenchScreen(FakeReader(form=form))
+        async with ScreenHostApp(screen).run_test(size=(120, 36)) as pilot:
+            for _ in range(3):
+                await pilot.pause()
+            casilla_list = screen.query_one(CasillaList)
+            # Start from the far end, so landing on the table is the finding's doing.
+            await pilot.press("]", "]", "]")
+            for _ in range(2):
+                await pilot.pause()
+            await pilot.press("i")
+            for _ in range(3):
+                await pilot.pause()
+            await pilot.press("enter")
+            for _ in range(4):
+                await pilot.pause()
+            shown = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
+    assert any(heading in line or unknown in line for line in shown), shown

@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-09-30 21:18+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -30,8 +30,8 @@ msgid ""
 "happens on your computer - nothing is sent anywhere."
 msgstr ""
 "Javítsa ki a hibás tranzakciókat a ledgerében anélkül, hogy szem elől "
-"tévesztené, mi változott. Minden javítás látható előzménybejegyzést hagy, "
-"így mindig láthatja, hogyan nézett ki egy tranzakció előtte és utána. "
+"tévesztené, mi változott. Minden javítás látható előzménybejegyzést hagy,"
+" így mindig láthatja, hogyan nézett ki egy tranzakció előtte és utána. "
 "Minden az Ön számítógépén történik - semmi sem kerül elküldésre sehová."
 
 #: ../../how-to/correct-ledger-entries.md:5
@@ -80,8 +80,8 @@ msgid ""
 "lifecycle state. The [transactions guide](import-bank-statements.md) "
 "covers listing and filtering in depth."
 msgstr ""
-"A `view` parancs jelenti az azonosítót, az összeget, az irányt, a leírást "
-"és az életciklus-állapotot. A [tranzakciók útmutató](import-bank-"
+"A `view` parancs jelenti az azonosítót, az összeget, az irányt, a leírást"
+" és az életciklus-állapotot. A [tranzakciók útmutató](import-bank-"
 "statements.md) részletesen tárgyalja a listázást és a szűrést."
 
 #: ../../how-to/correct-ledger-entries.md:21
@@ -109,8 +109,8 @@ msgid ""
 "If the same purchase was imported twice, remove the duplicate - or "
 "[archive it](#archive-a-transaction) to keep a deliberate trace of it."
 msgstr ""
-"Ha ugyanazt a beszerzést kétszer importálta, távolítsa el a másodpéldányt "
-"- vagy [archiválja](#archive-a-transaction), hogy szándékos nyomot "
+"Ha ugyanazt a beszerzést kétszer importálta, távolítsa el a másodpéldányt"
+" - vagy [archiválja](#archive-a-transaction), hogy szándékos nyomot "
 "tartson róla."
 
 #: ../../how-to/correct-ledger-entries.md:26
@@ -126,8 +126,8 @@ msgid ""
 "If you split something and want it back together, [merge the parts"
 "](#merge-split-parts-back)."
 msgstr ""
-"Ha felosztott valamit, és újra egyben szeretné, [vonja össze a "
-"részeket](#merge-split-parts-back)."
+"Ha felosztott valamit, és újra egyben szeretné, [vonja össze a részeket"
+"](#merge-split-parts-back)."
 
 #: ../../how-to/correct-ledger-entries.md:28
 msgid ""
@@ -153,11 +153,11 @@ msgstr ""
 "Ha tévedésből félretett vagy archivált egy tranzakciót, [állítsa vissza "
 "aktívra](#restore-a-stashed-or-archived-transaction)."
 
-#: ../../how-to/correct-ledger-entries.md:32
+#: ../../how-to/correct-ledger-entries.md:33
 msgid "Update fields on a transaction"
 msgstr "Egy tranzakció mezőinek frissítése"
 
-#: ../../how-to/correct-ledger-entries.md:34
+#: ../../how-to/correct-ledger-entries.md:35
 msgid ""
 "Change one or more fields directly. The sequence records a chair at the "
 "wrong price, corrects the amount and description, and confirms the "
@@ -166,7 +166,7 @@ msgstr ""
 "Módosítson egy vagy több mezőt közvetlenül. A sorozat rögzít egy széket "
 "rossz áron, kijavítja az összeget és a leírást, és megerősíti a javítást:"
 
-#: ../../how-to/correct-ledger-entries.md:40
+#: ../../how-to/correct-ledger-entries.md:41
 msgid ""
 "Each flag fully replaces that field - write the complete new value, not "
 "an addition to the old one. Write the amount as a positive figure - the "
@@ -178,11 +178,11 @@ msgstr ""
 "Minden kapcsoló teljesen lecseréli az adott mezőt - a teljes új értéket "
 "írja be, ne a régihez való kiegészítést. Az összeget pozitív számként "
 "írja - az irány mező hordozza, hogy pénz jött be vagy ment ki, és a "
-"negatív összeg elutasításra kerül. A frissíthető mezők: dátum, "
-"értéknap, összeg, irány, pénznem, partner, leírás, adóalap, IVA-kulcs, "
-"IVA-összeg, IRPF-kategória, jegyzetek és csoport."
+"negatív összeg elutasításra kerül. A frissíthető mezők: dátum, értéknap, "
+"összeg, irány, pénznem, partner, leírás, adóalap, IVA-kulcs, IVA-összeg, "
+"IRPF-kategória, jegyzetek és csoport."
 
-#: ../../how-to/correct-ledger-entries.md:42
+#: ../../how-to/correct-ledger-entries.md:43
 msgid ""
 "An update gives the transaction a new ID - the update output prints it. "
 "You don't have to track the change for read commands: an ID you wrote "
@@ -194,14 +194,14 @@ msgid ""
 msgstr ""
 "Egy frissítés új azonosítót ad a tranzakciónak - a frissítés kimenete "
 "kinyomtatja. Az olvasási parancsokhoz nem kell nyomon követnie a "
-"változást: egy azonosító, amelyet a frissítés előtt feljegyzett, "
-"továbbra is válaszol a `history`, `view` és `track` parancsokban, a "
-"kijavított tranzakcióra feloldva, pontosan úgy, mint a fenti `view`. Egy "
-"további változtatáshoz - egy újabb `update`, `classify` vagy `archive` - "
-"használja az aktuális azonosítót a frissítés kimenetéből vagy a `list`-"
-"ből, mert ezek a parancsok az élő tranzakción hatnak."
+"változást: egy azonosító, amelyet a frissítés előtt feljegyzett, továbbra"
+" is válaszol a `history`, `view` és `track` parancsokban, a kijavított "
+"tranzakcióra feloldva, pontosan úgy, mint a fenti `view`. Egy további "
+"változtatáshoz - egy újabb `update`, `classify` vagy `archive` - "
+"használja az aktuális azonosítót a frissítés kimenetéből vagy a "
+"`list`-ből, mert ezek a parancsok az élő tranzakción hatnak."
 
-#: ../../how-to/correct-ledger-entries.md:44
+#: ../../how-to/correct-ledger-entries.md:45
 msgid ""
 "Update works on active transactions only. Archived and stashed "
 "transactions refuse it, as does a split parent - the active parts of a "
@@ -211,22 +211,22 @@ msgstr ""
 "tranzakciók elutasítják, ahogyan egy felosztási szülő is - egy felosztás "
 "aktív részei normálisan frissíthetők."
 
-#: ../../how-to/correct-ledger-entries.md:46
+#: ../../how-to/correct-ledger-entries.md:48
 msgid "Remove a transaction"
 msgstr "Egy tranzakció eltávolítása"
 
-#: ../../how-to/correct-ledger-entries.md:48
+#: ../../how-to/correct-ledger-entries.md:50
 msgid ""
 "Remove deletes a transaction from your active records. Preview it first "
 "with `--dry-run`, then remove it for real. The removed id no longer "
 "resolves, which is how the sequence confirms the deletion:"
 msgstr ""
-"Az eltávolítás töröl egy tranzakciót az aktív nyilvántartásaiból. Először "
-"tekintse meg előnézetben a `--dry-run` kapcsolóval, majd távolítsa el "
-"ténylegesen. Az eltávolított azonosító többé nem oldódik fel, így "
-"erősíti meg a sorozat a törlést:"
+"Az eltávolítás töröl egy tranzakciót az aktív nyilvántartásaiból. Először"
+" tekintse meg előnézetben a `--dry-run` kapcsolóval, majd távolítsa el "
+"ténylegesen. Az eltávolított azonosító többé nem oldódik fel, így erősíti"
+" meg a sorozat a törlést:"
 
-#: ../../how-to/correct-ledger-entries.md:54
+#: ../../how-to/correct-ledger-entries.md:56
 msgid ""
 "A removed transaction is gone from your active records: the final `view` "
 "refuses because the id no longer names an active row."
@@ -235,23 +235,23 @@ msgstr ""
 "utolsó `view` elutasítja a műveletet, mert az azonosító többé nem nevez "
 "meg aktív sort."
 
-#: ../../how-to/correct-ledger-entries.md:56
+#: ../../how-to/correct-ledger-entries.md:59
 msgid "Split one transaction into parts"
 msgstr "Egy tranzakció felosztása részekre"
 
-#: ../../how-to/correct-ledger-entries.md:58
+#: ../../how-to/correct-ledger-entries.md:61
 msgid ""
 "When one payment covers two different things - for example, a card "
 "payment that mixes business and personal items - split it into parts. "
 "Amounts and descriptions pair up one per part: the first amount goes with"
 " the first description, and so on:"
 msgstr ""
-"Amikor egy kifizetés két különböző dolgot fed le - például egy "
-"kártyás fizetés, amely üzleti és személyes tételeket kever -, ossza fel "
-"részekre. Az összegek és a leírások részenként egyesével párosulnak: az "
-"első összeg az első leíráshoz tartozik, és így tovább:"
+"Amikor egy kifizetés két különböző dolgot fed le - például egy kártyás "
+"fizetés, amely üzleti és személyes tételeket kever -, ossza fel részekre."
+" Az összegek és a leírások részenként egyesével párosulnak: az első "
+"összeg az első leíráshoz tartozik, és így tovább:"
 
-#: ../../how-to/correct-ledger-entries.md:64
+#: ../../how-to/correct-ledger-entries.md:67
 msgid ""
 "The original transaction becomes the split parent, and the parts carry "
 "the balance from then on. The split output prints one "
@@ -261,15 +261,16 @@ msgid ""
 msgstr ""
 "Az eredeti tranzakcióból a felosztási szülő lesz, és a részek hordozzák "
 "az egyenleget onnantól. A felosztás kimenete részenként egy "
-"`child_transactions` sort nyomtat ki, mindegyiket egy rövid `display_id`-"
-"vel és egy teljes `full_id`-vel. Másolja ki ezeket az azonosítókat - az "
-"összevonási parancsnak szüksége van rájuk a felosztás visszavonásához."
+"`child_transactions` sort nyomtat ki, mindegyiket egy rövid "
+"`display_id`-vel és egy teljes `full_id`-vel. Másolja ki ezeket az "
+"azonosítókat - az összevonási parancsnak szüksége van rájuk a felosztás "
+"visszavonásához."
 
-#: ../../how-to/correct-ledger-entries.md:66
+#: ../../how-to/correct-ledger-entries.md:70
 msgid "Merge split parts back"
 msgstr "A felosztott részek újbóli összevonása"
 
-#: ../../how-to/correct-ledger-entries.md:68
+#: ../../how-to/correct-ledger-entries.md:72
 msgid ""
 "To undo a split, merge the parts back together using the child ids the "
 "split printed. Name every sibling part - the command refuses a partial "
@@ -277,12 +278,12 @@ msgid ""
 "fresh transaction:"
 msgstr ""
 "Egy felosztás visszavonásához vonja össze újra a részeket a felosztás "
-"által kinyomtatott gyermekazonosítók használatával. Nevezze meg az összes "
-"testvérrészt - a parancs elutasítja a részleges összevonást. A sorozat "
+"által kinyomtatott gyermekazonosítók használatával. Nevezze meg az összes"
+" testvérrészt - a parancs elutasítja a részleges összevonást. A sorozat "
 "felosztja egy kifizetést, majd egyetlen friss tranzakcióvá vonja össze a "
 "részeket:"
 
-#: ../../how-to/correct-ledger-entries.md:74
+#: ../../how-to/correct-ledger-entries.md:78
 msgid ""
 "The parts and the original parent move to history, and the merge creates "
 "a fresh transaction in their place. If you no longer have the split "
@@ -294,11 +295,11 @@ msgstr ""
 "kimenete, a részek aktív sorok: futtassa az `aeat app ledger list` "
 "parancsot, és olvassa ki az azonosítóikat a listából."
 
-#: ../../how-to/correct-ledger-entries.md:76
+#: ../../how-to/correct-ledger-entries.md:81
 msgid "Stash a transaction you are unsure about"
 msgstr "Tegyen félre egy tranzakciót, amelyben nem biztos"
 
-#: ../../how-to/correct-ledger-entries.md:78
+#: ../../how-to/correct-ledger-entries.md:83
 msgid ""
 "Stash sets a transaction aside for later. A stashed transaction is kept "
 "out of ordinary work. The sequence stashes a row and confirms its new "
@@ -308,7 +309,7 @@ msgstr ""
 "tranzakció a szokásos munkán kívül marad. A sorozat félretesz egy sort, "
 "és megerősíti az új életciklus-állapotát:"
 
-#: ../../how-to/correct-ledger-entries.md:84
+#: ../../how-to/correct-ledger-entries.md:89
 msgid ""
 "Use stash for a row you have not resolved yet and archive for a row you "
 "have deliberately set aside, such as a confirmed duplicate. Both are "
@@ -321,26 +322,26 @@ msgstr ""
 "archiválást pedig egy olyan sorhoz, amelyet szándékosan tett félre, "
 "például egy megerősített másodpéldányhoz. Mindkettő visszafordítható: a "
 "[visszaállítás](#restore-a-stashed-or-archived-transaction) aktívra "
-"állítja vissza a sort. A `stash` parancs kinyomtatja a tranzakció "
-"mezőit, de nem az új életciklus-állapotát, ezért a `view` az, amivel "
-"megerősíti, hogy a változás életbe lépett."
+"állítja vissza a sort. A `stash` parancs kinyomtatja a tranzakció mezőit,"
+" de nem az új életciklus-állapotát, ezért a `view` az, amivel megerősíti,"
+" hogy a változás életbe lépett."
 
-#: ../../how-to/correct-ledger-entries.md:86
+#: ../../how-to/correct-ledger-entries.md:92
 msgid "Archive a transaction"
 msgstr "Egy tranzakció archiválása"
 
-#: ../../how-to/correct-ledger-entries.md:88
+#: ../../how-to/correct-ledger-entries.md:94
 msgid ""
 "Archive keeps a transaction in history but out of ordinary work - it's "
 "the right choice for duplicates you want to keep a deliberate trace of. "
 "The sequence archives a duplicate row and confirms the state change:"
 msgstr ""
-"Az archiválás az előzményekben tartja a tranzakciót, de a szokásos "
-"munkán kívül - ez a megfelelő választás azokhoz a másodpéldányokhoz, "
-"amelyekről szándékos nyomot szeretne tartani. A sorozat archivál egy "
-"másodpéldány-sort, és megerősíti az állapotváltozást:"
+"Az archiválás az előzményekben tartja a tranzakciót, de a szokásos munkán"
+" kívül - ez a megfelelő választás azokhoz a másodpéldányokhoz, amelyekről"
+" szándékos nyomot szeretne tartani. A sorozat archivál egy másodpéldány-"
+"sort, és megerősíti az állapotváltozást:"
 
-#: ../../how-to/correct-ledger-entries.md:94
+#: ../../how-to/correct-ledger-entries.md:100
 msgid ""
 "Like stash, the command prints the transaction's fields but not its new "
 "lifecycle state, so `view` confirms the row now reads `ARCHIVED`."
@@ -349,11 +350,11 @@ msgstr ""
 "nem az új életciklus-állapotát, ezért a `view` erősíti meg, hogy a sor "
 "most `ARCHIVED`-et mutat."
 
-#: ../../how-to/correct-ledger-entries.md:96
+#: ../../how-to/correct-ledger-entries.md:103
 msgid "Restore a stashed or archived transaction"
 msgstr "Egy félretett vagy archivált tranzakció visszaállítása"
 
-#: ../../how-to/correct-ledger-entries.md:98
+#: ../../how-to/correct-ledger-entries.md:105
 msgid ""
 "If you stashed or archived a transaction by mistake, restore it to "
 "active. Restore is the inverse of stash and archive: the row returns to "
@@ -361,11 +362,11 @@ msgid ""
 "restores it:"
 msgstr ""
 "Ha tévedésből félretett vagy archivált egy tranzakciót, állítsa vissza "
-"aktívra. A visszaállítás a félretétel és az archiválás fordítottja: a sor "
-"visszatér a mindennapi listáiba és összegeibe. A sorozat félretesz egy "
+"aktívra. A visszaállítás a félretétel és az archiválás fordítottja: a sor"
+" visszatér a mindennapi listáiba és összegeibe. A sorozat félretesz egy "
 "sort, majd visszaállítja:"
 
-#: ../../how-to/correct-ledger-entries.md:104
+#: ../../how-to/correct-ledger-entries.md:111
 msgid ""
 "Restore accepts the same id prefix the other commands accept. To recover "
 "several rows stashed by mistake, restore each one by id - you do not need"
@@ -380,23 +381,23 @@ msgstr ""
 "félretett sorokat a félretett azonosítók alapján, vagy az egyes sorok "
 "`view` által mutatott életciklus-állapota alapján."
 
-#: ../../how-to/correct-ledger-entries.md:106
+#: ../../how-to/correct-ledger-entries.md:113
 msgid ""
 "Restore refuses a row that is already active, and it refuses a row whose "
 "period you have already filed - restoring it would change the inputs "
 "behind a return you have presented. Restore one of these only after you "
-"have corrected the filing through an amendment."
+"have corrected the filing through a correction."
 msgstr ""
 "A visszaállítás elutasít egy már aktív sort, és elutasít egy olyan sort "
 "is, amelynek időszakát már benyújtotta - a visszaállítása megváltoztatná "
 "egy már benyújtott bevallás mögötti bemeneteket. Egy ilyet csak azután "
-"állítson vissza, hogy egy önellenőrzéssel kijavította a benyújtást."
+"állítson vissza, hogy egy helyesbítéssel kijavította a benyújtást."
 
-#: ../../how-to/correct-ledger-entries.md:108
+#: ../../how-to/correct-ledger-entries.md:115
 msgid "Review what changed"
 msgstr "Tekintse át, mi változott"
 
-#: ../../how-to/correct-ledger-entries.md:110
+#: ../../how-to/correct-ledger-entries.md:117
 msgid ""
 "Every correction is recorded. To see every action on a transaction in "
 "order, run `ledger history`. The sequence splits a payment, then reads "
@@ -404,10 +405,10 @@ msgid ""
 msgstr ""
 "Minden javítás rögzítésre kerül. Ha sorrendben szeretné látni egy "
 "tranzakció minden műveletét, futtassa a `ledger history` parancsot. A "
-"sorozat felosztja egy kifizetést, majd a testvér-kapcsolóval beolvassa az "
-"előzményeket, hogy kövesse a teljes felosztási családot:"
+"sorozat felosztja egy kifizetést, majd a testvér-kapcsolóval beolvassa az"
+" előzményeket, hogy kövesse a teljes felosztási családot:"
 
-#: ../../how-to/correct-ledger-entries.md:116
+#: ../../how-to/correct-ledger-entries.md:123
 msgid ""
 "The history lists each action in order with its timestamp and event "
 "reference. Details such as the reason and the new values are in the JSON "
@@ -422,11 +423,11 @@ msgstr ""
 "A [CLI-referencia](../cli/index.rst) minden mezőt tárgyal, amelyet az "
 "előzmények mutatnak."
 
-#: ../../how-to/correct-ledger-entries.md:118
+#: ../../how-to/correct-ledger-entries.md:125
 msgid "Evidence and corrections"
 msgstr "Bizonyítékok és javítások"
 
-#: ../../how-to/correct-ledger-entries.md:120
+#: ../../how-to/correct-ledger-entries.md:127
 msgid ""
 "An attached evidence record - a receipt or invoice - is not deleted when "
 "you correct a transaction. After a split or merge, check the new "
@@ -439,11 +440,11 @@ msgstr ""
 "bizonyítékot. A [bizonyíték útmutató](ledger-evidence.md) tárgyalja a "
 "bizonyítékok csatolását és ellenőrzését."
 
-#: ../../how-to/correct-ledger-entries.md:122
+#: ../../how-to/correct-ledger-entries.md:129
 msgid "Start over as a last resort"
 msgstr "Kezdje elölről végső megoldásként"
 
-#: ../../how-to/correct-ledger-entries.md:124
+#: ../../how-to/correct-ledger-entries.md:131
 msgid ""
 "If the ledger is beyond repair - for example, after importing the wrong "
 "files repeatedly - clear it and rebuild. Preview first, then confirm. The"
@@ -453,10 +454,10 @@ msgstr ""
 "Ha a ledger már javíthatatlan - például miután többször importálta a "
 "rossz fájlokat -, ürítse ki és építse újra. Először tekintse meg "
 "előnézetben, majd erősítse meg. A sorozat rögzít egy sort, előnézetben "
-"megmutatja a visszaállítást, kiüríti a ledgert, és megerősíti, hogy semmi "
-"sem marad:"
+"megmutatja a visszaállítást, kiüríti a ledgert, és megerősíti, hogy semmi"
+" sem marad:"
 
-#: ../../how-to/correct-ledger-entries.md:130
+#: ../../how-to/correct-ledger-entries.md:137
 msgid ""
 "Reset clears the whole ledger for the active profile. Use the "
 "[transactions guide](import-bank-statements.md) to rebuild it from your "
@@ -466,11 +467,11 @@ msgstr ""
 "[tranzakciók útmutatót](import-bank-statements.md) a bankszámlakivonatai "
 "alapján való újraépítéséhez."
 
-#: ../../how-to/correct-ledger-entries.md:132
+#: ../../how-to/correct-ledger-entries.md:139
 msgid "Where to get help"
 msgstr "Hol kérhet segítséget"
 
-#: ../../how-to/correct-ledger-entries.md:134
+#: ../../how-to/correct-ledger-entries.md:141
 #, python-brace-format
 msgid ""
 "If a command refuses or fails, check the [troubleshooting "
@@ -483,14 +484,14 @@ msgstr ""
 "[hibaelhárítási útmutatót](troubleshooting.md). Az ismeretlen "
 "kifejezéseket a {doc}`szójegyzék </_generated/glossary>` magyarázza el. "
 "Mielőtt bárkivel megosztaná a parancs kimenetét, távolítsa el az "
-"adóazonosítókat, például a NIF-jét, CIF-jét, DNI-jét, NIE-jét vagy "
-"NII-jét."
+"adóazonosítókat, például a NIF-jét, CIF-jét, DNI-jét, NIE-jét vagy NII-"
+"jét."
 
-#: ../../how-to/correct-ledger-entries.md:136
+#: ../../how-to/correct-ledger-entries.md:143
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/correct-ledger-entries.md:138
+#: ../../how-to/correct-ledger-entries.md:145
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring in "
 "new transactions."
@@ -498,7 +499,7 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](import-bank-statements.md) - új "
 "tranzakciók behozatala."
 
-#: ../../how-to/correct-ledger-entries.md:139
+#: ../../how-to/correct-ledger-entries.md:146
 msgid ""
 "[Attach evidence to transactions](ledger-evidence.md) - back your "
 "corrections with receipts."
@@ -506,7 +507,7 @@ msgstr ""
 "[Bizonyítékok csatolása tranzakciókhoz](ledger-evidence.md) - támassza "
 "alá a javításait bizonylatokkal."
 
-#: ../../how-to/correct-ledger-entries.md:140
+#: ../../how-to/correct-ledger-entries.md:147
 msgid ""
 "[Classify transactions](classify-transactions.md) - prepare corrected "
 "rows for tax calculations."
@@ -514,10 +515,11 @@ msgstr ""
 "[Tranzakciók osztályozása](classify-transactions.md) - készítse elő a "
 "kijavított sorokat az adószámításokhoz."
 
-#: ../../how-to/correct-ledger-entries.md:141
+#: ../../how-to/correct-ledger-entries.md:148
 msgid ""
 "[CLI reference](../cli/index.rst) - full field detail for every ledger "
 "command."
 msgstr ""
-"[CLI-referencia](../cli/index.rst) - teljes mezőrészletek minden "
-"ledger-parancshoz."
+"[CLI-referencia](../cli/index.rst) - teljes mezőrészletek minden ledger-"
+"parancshoz."
+

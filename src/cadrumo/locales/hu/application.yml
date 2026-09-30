@@ -792,12 +792,12 @@ application:
         unsupported_modelo: A tervezetkötés nem támogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjének deklarálnia kell a tervezet képességét.
     calculation_report:
-      local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem az AEAT hivatalos
-        benyújtási bizonylata. A hivatalos bizonylatot az AEAT adja ki a benyújtás
-        után: justificante; benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
+      local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem hivatalos AEAT-bizonyíték
+        a benyújtásról. A hivatalos bizonyítékot az AEAT adja ki a benyújtás után:
+        justificante; benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
     calculation_summary:
       column_amount: Összeg
-      column_casilla: Mező
+      column_casilla: Rovat
       column_concept: Megnevezés
       fact_exported_at: Exportálva
       fact_filing: Benyújtás
@@ -816,13 +816,13 @@ application:
       identity_none: A nyomtatvány rekordterve nem tartalmaz helyet szoftverazonosítónak.
       identity_reviewed: 'Ellenőrzött szoftverazonosító: a nyomtatvány benyújtási
         fájlja regisztrált szoftverazonosítót tartalmaz.'
-      legend: 'Értékek: a szám – a nullát is beleértve – számított érték; a „nincs
-        adat” azt jelenti, hogy a számítási változat nem rögzített értéket a mezőhöz;
-        az „n/a · nem alkalmazandó” azt jelenti, hogy a nyilvántartás igazolja: a
-        mező erre az időszakra nem vonatkozik.'
+      legend: 'Értékek: a szám (a nullát is beleértve) számított érték; a „nincs adat”
+        azt jelenti, hogy ez a számítás nem rögzített értéket a rovathoz; az „n/a
+        · nem alkalmazandó” azt jelenti, hogy a hivatalos szabályok szerint a rovat
+        erre az időszakra nem vonatkozik.'
       notice_title: 'Helyi számítás: nem AEAT-bizonylat'
       page_counter: '{page}. oldal / {pages}'
-      section_unnamed: Mezők
+      section_unnamed: Rovatok
       signature_meaning: 'A PDF-be ágyazott Cadrumo sértetlenségi aláírás azt igazolja,
         hogy ennek a profilnak a kulcsa kijelentette: az exportálás pillanatában,
         e telepítés órája szerint, a megnevezett számítási változat, ellenőrzési jelentés,
@@ -834,8 +834,8 @@ application:
         össze az ujjlenyomatát egy más csatornán kapott ujjlenyomattal.'
       state_borrador: Tervezet
       state_descartado: Elvetett
-      state_presentado: Benyújtott
-      state_presentado_supersedido: Benyújtott, felváltott
+      state_presentado: Benyújtottként rögzítve
+      state_presentado_supersedido: Benyújtottként rögzítve, majd felváltva
       state_verificado_completo: Teljeskörűen ellenőrzött
       subtitle: '{year}. adóév · {period} időszak · Nyilvántartási változat: {registry_revision}'
       title: Számítási összesítő · {modelo} nyomtatvány
@@ -843,8 +843,8 @@ application:
       trace_calculation_revision: Számítási változat
       trace_csv_sha256: A beágyazott CSV SHA-256 értéke
       trace_filing_record: Benyújtási nyilvántartás
-      trace_heading: Nyomonkövethetőség és sértetlenség
-      trace_ledger_snapshot: Főkönyvi pillanatkép ujjlenyomata
+      trace_heading: Technikai részletek
+      trace_ledger_snapshot: A nyilvántartás pillanatképének ujjlenyomata
       trace_none: nincs
       trace_registry_snapshot: Nyilvántartási pillanatkép (nyomtatvány · változat
         · év · időszak)
@@ -996,7 +996,7 @@ application:
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed}.'
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
-        hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
+        hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} probléma
         maradt.
       deductible_iva_evidence_missing: 'A levonható áfát tartalmazó könyvelési sorokhoz
         kapcsolt bejövő számla szükséges. Kapcsold a számlát a sorhoz, majd futtasd
@@ -1253,20 +1253,20 @@ application:
         quarter_4: IV. negyedévi
       value_absent: üres érték
     findings:
-      art20_reduccion_possible: A(z) %{rnt_id} rovat %{rnt_value} EUR nettó munkajövedelmet
+      art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
-        belül, ezért a(z) %{reduccion_id} rovatban Ön olyan csökkentést kaphat, amelyet
-        még nem alkalmaz. Ellenőrizze, hogy vonatkozik-e Önre.
-      art52_reduccion_individual_sublimit_possible: A(z) %{reduccion_id} rovat %{reduccion_value}
+        belül, ezért a(z) [%{reduccion_id}] rovatban Ön olyan csökkentést kaphat,
+        amelyet még nem alkalmaz. Ellenőrizze, hogy vonatkozik-e Önre.
+      art52_reduccion_individual_sublimit_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR nyugdíj-előtakarékossági (previsión social) csökkentést tartalmaz, ami
         meghaladja az Art. 52 LIRPF szerinti %{sublimit} EUR egyéni részhatárt, és
         munkáltatói hozzájárulás nincs bevallva. Ellenőrizze, hogy az egyéni részhatárt
         alkalmazták-e.
-      attribution_received_uncaptured: A(z) %{casilla_id} rovat %{filing_year} évre
+      attribution_received_uncaptured: A(z) [%{casilla_id}] rovat %{filing_year} évre
         %{casilla_value} EUR betudott jövedelmet (renta atribuida) tartalmaz, de a
         profilja nem rögzíti, honnan származik. Vegye fel a profiljába.
       attribution_received_unfolded: A profilja %{filing_year} évre %{total_base}
-        EUR betudott jövedelmet (renta atribuida) tartalmaz, de a(z) %{casilla_id}
+        EUR betudott jövedelmet (renta atribuida) tartalmaz, de a(z) [%{casilla_id}]
         rovat ezt nem tartalmazza.
       cross_casilla_invariant_violated: A nyomtatvány két vagy több rovata nem egyezik
         egymással, ahogy azt a hivatalos szabályok megkövetelik.
@@ -1298,12 +1298,12 @@ application:
         hogy a nulla helyes-e.
       cuota_less_ledger_row_base_missing: A nyilvántartásában egy tétel nem tartalmaz
         bevallható adóalapot (base imponible).
-      dt12a_reduccion_antiquity_possible: A(z) %{reduccion_id} rovat %{reduccion_value}
+      dt12a_reduccion_antiquity_possible: A(z) [%{reduccion_id}] rovat %{reduccion_value}
         EUR DT 12.ª szerinti csökkentést tartalmaz. Ellenőrizze, hogy teljesül-e az
         ehhez szükséges régiségi (antigüedad) feltétel.
-      dt12a_reduccion_possible: A(z) %{ingreso_id} rovat %{ingreso_value} EUR munkajövedelmet
+      dt12a_reduccion_possible: A(z) [%{ingreso_id}] rovat %{ingreso_value} EUR munkajövedelmet
         (rendimientos del trabajo) tartalmaz a DT 12.ª szerinti küszöb felett, ezért
-        a(z) %{reduccion_id} rovatban Ön olyan csökkentést kaphat, amelyet még nem
+        a(z) [%{reduccion_id}] rovatban Ön olyan csökkentést kaphat, amelyet még nem
         alkalmaz. Ellenőrizze, hogy vonatkozik-e Önre.
       foreign_asset_redeclaration: '%{modelo_code} nyomtatvány, %{filing_year}: az
         egyik külföldi vagyonelemének értéke %{prior_value_eur} EUR összegről %{current_value_eur}
@@ -1313,11 +1313,11 @@ application:
       iva_compensation_annual_source_evidence_failure: A 390-es nyomtatványhoz szükség
         van az év 303-as bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
-      iva_selected_scope_evidence_failure: A bevallás egyes áfatételeihez hiányoznak
+      iva_selected_scope_evidence_failure: A bevallás egyes IVA-tételeihez hiányoznak
         az alátámasztó bizonylatok (%{source_ref_count} hivatkozással, %{unidentified_source_count}
         hivatkozás nélkül), ezért az ellenőrzés nem fejezhető be.
       iva_wallet_precondition_failed: Nem teljesül a korábbi időszakokból származó
-        áfa beszámításának (compensar) egyik feltétele.
+        IVA beszámításának (compensar) egyik feltétele.
       ledger_snapshot_drift: 'A nyilvántartása megváltozott a(z) %{modelo} nyomtatvány
         (%{filing_year}, %{period} időszak) kiszámítása óta: %{changed_count} tétel
         módosult és %{removed_count} törlődött. Számítsa ki újra.'
@@ -1336,10 +1336,10 @@ application:
       m303_m349_intracom_reconciliation_mismatch: A(z) %{filing_year} %{period_code}
         időszakban a 303-as nyomtatvány közösségen belüli összege (%{m303_total} EUR)
         és a 349-es nyomtatvány összege (%{m349_total} EUR) %{gap} EUR-val eltér.
-      madrid_nacimiento_adopcion_eligibility_advisory: 'A(z) %{casilla_id} rovat alapján
-        (súlyozott szám: %{weighted_count}) Ön jogosult lehet a madridi születési
+      madrid_nacimiento_adopcion_eligibility_advisory: 'A(z) [%{casilla_id}] rovat
+        alapján (súlyozott szám: %{weighted_count}) Ön jogosult lehet a madridi születési
         vagy örökbefogadási kedvezményre.'
-      missing_required_casilla: A kötelező %{casilla_id} rovat üres.
+      missing_required_casilla: A kötelező [%{casilla_id}] rovat üres.
       objective_estimation_exclusion_threshold_exceeded: '%{modelo_id} nyomtatvány,
         %{filing_year}: a profiljában megadott %{declared} érték meghaladja az objektív
         becslés (estimación objetiva, módulos) %{threshold} határát.'
@@ -1347,7 +1347,7 @@ application:
         nincsenek hozzájuk mentett alátámasztó bizonylatok.
       oss_source_unrouted: Egyes egyablakos (OSS) tételek a nyomtatvány egyik rovatában
         sem szerepelnek.
-      pulled_filing_casilla_mismatch: '%{casilla_number} rovat, %{filing_year} %{period_code}
+      pulled_filing_casilla_mismatch: '[%{casilla_number}] rovat, %{filing_year} %{period_code}
         időszak: a számítás eredménye %{computed_value}, de az AEAT-hez benyújtott
         bevallásban %{filed_value} szerepel.'
       registry_advisory_predicate_fired: Egy beépített ellenőrzés alaposabb átnézésre
@@ -1370,7 +1370,7 @@ application:
         a kifizető nyújtotta be, nem Ön, ezért ez az érték nem tölthető ki automatikusan.
       transaction_evidence_missing_deductible: Egy levonható kiadáshoz nincs csatolva
         számla vagy bizonylat. Csatolja a nyilvántartása megfelelő tételéhez.
-      transaction_evidence_missing_output: Egy felszámított áfát tartalmazó kimenő
+      transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
         számlához nincs alátámasztó bizonylat. Csatolja a nyilvántartása megfelelő
         tételéhez.
       withholding_detail_absent_against_ledger_evidence: 'A(z) %{modelo} nyomtatvány
@@ -1447,20 +1447,19 @@ application:
     lifecycle:
       calculate: Számítás
       export: Exportálás
-      export_destination_placeholder: Export célútvonala
-      file_cancelled: A helyi bevallás rögzítése megszakadt; semmi sem került rögzítésre.
-      file_confirm_accept: Helyi bevallás rögzítése
+      export_destination_placeholder: Az exportálás célhelyének elérési útja
+      file_cancelled: Megszakítva. Semmi sem került rögzítésre.
+      file_confirm_accept: Benyújtás rögzítése
       file_confirm_cancel: Mégse
-      file_confirm_message: Ez a hitelesített bevallást az alkalmazás helyi bevallási
-        előzményeiben rögzíti. Semmit sem küld az AEAT-nak.
-      file_confirm_title: Rögzíti a helyi bevallást?
+      file_confirm_message: Ez az ellenőrzött bevallást benyújtottként rögzíti a Cadrumóban.
+        Semmit sem küld az AEAT-nak.
+      file_confirm_title: Rögzíti a benyújtást?
       refusal:
         calculation_required: A folytatás előtt számítsa ki ezt a bevallást.
         edit_unavailable: Ez a bevallás jelenleg nem kínál szerkeszthető értékeket;
           szerkesztés előtt számítsa újra, vagy nyissa meg újra.
-        export_destination_required: Adjon meg export célútvonalat.
-        verification_required: A helyi bevallás rögzítése előtt ellenőrizze ezt a
-          számítást.
+        export_destination_required: Adja meg az exportálás célhelyének elérési útját.
+        verification_required: A benyújtás rögzítése előtt ellenőrizze ezt a számítást.
     profile_binding:
       errors:
         boolean_value_channel_mismatch: A(z) {binding_id} kötés profiladata logikai
@@ -1483,52 +1482,52 @@ application:
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
       finding_action:
-        add_activity_start: Add meg a profilodban, mikor kezdted a tevékenységedet,
-          majd számolj újra.
-        add_attribution_to_profile: Rögzítsd a profilodban, honnan származik a betudott
-          jövedelem (renta atribuida), majd számolj újra.
-        add_base_to_entry: Add meg az adóalapot (base imponible) a nyilvántartásod
-          tételénél, majd számolj újra.
-        attach_document: Csatold a bizonylatot a nyilvántartásod megfelelő tételéhez.
+        add_activity_start: Adja meg a profiljában, mikor kezdte a tevékenységét,
+          majd számoljon újra.
+        add_attribution_to_profile: Rögzítse a profiljában, honnan származik a betudott
+          jövedelem (renta atribuida), majd számoljon újra.
+        add_base_to_entry: Adja meg az adóalapot (base imponible) a nyilvántartása
+          tételénél, majd számoljon újra.
+        attach_document: Csatolja a bizonylatot a nyilvántartása megfelelő tételéhez.
         await_update: Ezt itt még nem lehet megoldani. Frissítsd az alkalmazást, amikor
           elérhető olyan verzió, amely kezeli.
-        calculate_again: Számold ki újra a bevallást.
-        check_carried_zero: Ellenőrizd, hogy a korábbi bevallás valóban nullát tartalmazott.
-          Ha nem, javítsd ki ott, majd számolj újra.
-        check_condition: Ellenőrizd, hogy teljesül-e a megnevezett feltétel. Ha nem,
-          javítsd a rovatot, majd számolj újra.
-        check_earlier_figures: Mielőtt ezt a bevallást benyújtottként rögzíted, vesd
+        calculate_again: Számítsa ki újra a bevallást.
+        check_carried_zero: Ellenőrizze, hogy a korábbi bevallás valóban nullát tartalmazott.
+          Ha nem, javítsa ki ott, majd számoljon újra.
+        check_condition: Ellenőrizze, hogy teljesül-e a megnevezett feltétel. Ha nem,
+          javítsa a rovatot, majd számoljon újra.
+        check_earlier_figures: Mielőtt ezt a bevallást benyújtottként rögzíti, vesse
           össze a számait az AEAT-nál benyújtott bevallással.
-        check_possible_reduction: Ellenőrizd, hogy vonatkozik-e rád. Ha igen, írd
-          be a rovatába, majd számolj újra.
-        check_profile_value: Nézd át ezt az értéket a profilodban, javítsd, ha hibás,
-          majd számolj újra.
-        compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
+        check_possible_reduction: Ellenőrizze, hogy vonatkozik-e Önre. Ha igen, írja
+          be a rovatába, majd számoljon újra.
+        check_profile_value: Nézze át ezt az értéket a profiljában, javítsa, ha hibás,
+          majd számoljon újra.
+        compare_figures: Hasonlítsa össze a számokat, javítsa ki a hibásat, majd számoljon
           újra.
-        correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz
+        correct_and_recalculate: Javítsa ki, amit leír, majd számoljon és ellenőrizzen
           újra.
-        declare_asset_again: Vallsd be újra ezt a vagyontárgyat ebben a bevallásban.
-        enter_box_value: Írd be az értéket a rovatba, majd számolj újra.
-        enter_or_confirm_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket
-          a nyomtatvány részletezésében, vagy erősítsd meg az egyes időszakokat a
-          profilodban.
-        enter_payee_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket a nyomtatvány
-          részletezésében, majd ellenőrizz újra.
-        enter_withholding_certificate: Írd be a kifizetőd igazolásán (certificado
+        declare_asset_again: Vallja be újra ezt a vagyontárgyat ebben a bevallásban.
+        enter_box_value: Írja be az értéket a rovatba, majd számoljon újra.
+        enter_or_confirm_payments: Rögzítse a kedvezményezettenkénti kifizetéseket
+          a nyomtatvány részletezésében, vagy erősítse meg az egyes időszakokat a
+          profiljában.
+        enter_payee_payments: Rögzítse a kedvezményezettenkénti kifizetéseket a nyomtatvány
+          részletezésében, majd ellenőrizze újra.
+        enter_withholding_certificate: Írja be a kifizetője igazolásán (certificado
           de retenciones e ingresos a cuenta) szereplő levont adót (retención), majd
-          számolj újra.
+          számoljon újra.
         nothing_to_do: Nincs teendőd. Azt magyarázza el, mit csinált a számítás.
-        read_and_decide: Olvasd el, és döntsd el, hogy vonatkozik-e rád. Nem akadályozza
+        read_and_decide: Olvassa el, és döntse el, hogy vonatkozik-e Önre. Nem akadályozza
           a benyújtást.
-        regroup_income_lines: Javítsd a jövedelemsorok csoportosítását, majd számolj
+        regroup_income_lines: Javítsa a jövedelemsorok csoportosítását, majd számoljon
           újra.
-        resolve_303_returns: Rendezd az adott év 303-as bevallásainak nyitott problémáit,
-          majd számolj újra.
-        retry_or_update: Próbáld újra, vagy frissítsd az alkalmazást.
+        resolve_303_returns: Rendezze az adott év 303-as bevallásainak nyitott problémáit,
+          majd számoljon újra.
+        retry_or_update: Próbálja újra, vagy frissítse az alkalmazást.
         review_attested_year: Nincs teendőd, kivéve ha abban az évben adómentes vagy
           a levonási értékhatár alatti jövedelmet fizettél ki.
-        settle_earlier_declaration: Előbb rendezd a korábbi időszak bevallását, majd
-          számolj újra.
+        settle_earlier_declaration: Előbb rendezze a korábbi időszak bevallását, majd
+          számoljon újra.
       inspection_heading: Minden rovat, rovatszám szerint
       unnamed_box: Név nélküli rovat
   overview:

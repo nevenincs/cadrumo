@@ -241,7 +241,7 @@ msgid ""
 "annual IVA ledger aggregates for the full filing year (binding source "
 "`ledger_iva_aggregation`)"
 msgstr ""
-"éves áfa-főkönyvi összesítések a teljes benyújtási évre (kötési forrás: "
+"éves IVA-főkönyvi összesítések a teljes benyújtási évre (kötési forrás: "
 "`ledger_iva_aggregation`)"
 
 #: ../../how-to/modelo-390.md:84

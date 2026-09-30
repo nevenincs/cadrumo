@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/censo-update.md:1
 msgid "Maintain Modelo 036 census facts in your profile"
-msgstr "Mantén les dades censals del Model 036 al teu perfil"
+msgstr "Mantén les dades censals del Modelo 036 al teu perfil"
 
 #: ../../how-to/censo-update.md:3
 #, python-brace-format
@@ -31,14 +31,14 @@ msgid ""
 msgstr ""
 "Utilitza aquesta guia per mantenir correctes les teves dades censals de "
 "l'AEAT (el {term}`censo`) al perfil local actiu. A Espanya, el censo està"
-" lligat al registre i a les modificacions del Model 036."
+" lligat al registre i a les modificacions del Modelo 036."
 
 #: ../../how-to/censo-update.md:7
 msgid ""
 "This guide covers Modelo 036. Modelo 037 is superseded and not used in "
 "this workflow."
 msgstr ""
-"Aquesta guia tracta el Model 036. El Model 037 està substituït i no "
+"Aquesta guia tracta el Modelo 036. El Modelo 037 està substituït i no "
 "s'utilitza en aquest flux de treball."
 
 #: ../../how-to/censo-update.md:10
@@ -59,7 +59,7 @@ msgid ""
 "The tool never files Modelo 036, never submits changes to AEAT, and never"
 " modifies AEAT records. The pull reads and stops there."
 msgstr ""
-"L'eina mai no presenta el Model 036, mai no envia canvis a l'AEAT i mai "
+"L'eina mai no presenta el Modelo 036, mai no envia canvis a l'AEAT i mai "
 "no modifica els registres de l'AEAT. L'obtenció llegeix i s'atura aquí."
 
 #: ../../how-to/censo-update.md:18
@@ -92,7 +92,7 @@ msgid ""
 msgstr ""
 "les teves dades censals tal com les manté l'AEAT: descripció i data "
 "d'inici de l'activitat, règim fiscal, règim d'IVA i dades d'alta. "
-"Llegeix-les de la teva còpia del Model 036 o de la sede de l'AEAT."
+"Llegeix-les de la teva còpia del Modelo 036 o de la sede de l'AEAT."
 
 #: ../../how-to/censo-update.md:28
 msgid ""
@@ -183,7 +183,7 @@ msgid ""
 "Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do "
 "not guess a regime or a start date."
 msgstr ""
-"Copia cada valor de la teva còpia del Model 036 o de la sede de l'AEAT "
+"Copia cada valor de la teva còpia del Modelo 036 o de la sede de l'AEAT "
 "exactament. No endevinis un règim ni una data d'inici."
 
 #: ../../how-to/censo-update.md:77
@@ -391,7 +391,7 @@ msgstr ""
 
 #: ../../how-to/censo-update.md:169
 msgid "Record a Modelo 036 filing done outside Cadrumo"
-msgstr "Registra una presentació del Model 036 feta fora de Cadrumo"
+msgstr "Registra una presentació del Modelo 036 feta fora de Cadrumo"
 
 #: ../../how-to/censo-update.md:171
 msgid ""
@@ -402,9 +402,9 @@ msgid ""
 "change. After you record a filing, update the profile fields the filing "
 "changed."
 msgstr ""
-"Si presentes una alta, modificación o baja del Model 036 a la sede de "
+"Si presentes una alta, modificación o baja del Modelo 036 a la sede de "
 "l'AEAT, registres aquest fet localment perquè les presentacions "
-"posteriors s'hi puguin basar. [Registra una declaració del Model 036 "
+"posteriors s'hi puguin basar. [Registra una declaració del Modelo 036 "
 "presentada a l'AEAT](modelo-036.md) conté les ordres, la sortida d'èxit i"
 " què canvia i què no canvia el registre. Després de registrar una "
 "presentació, actualitza els camps del perfil que la presentació hagi "
@@ -457,7 +457,7 @@ msgid ""
 msgstr ""
 "El teu cens de l'AEAT pot canviar: una nova activitat, un canvi de règim,"
 " una baja. L'aplicació no pot detectar aquesta desviació. Torna a "
-"comprovar el perfil amb la teva còpia més recent del Model 036 cada "
+"comprovar el perfil amb la teva còpia més recent del Modelo 036 cada "
 "vegada que presentes un canvi censal, i abans de planificar un nou any de"
 " presentació."
 

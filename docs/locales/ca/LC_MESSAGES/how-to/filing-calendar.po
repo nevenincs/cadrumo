@@ -90,7 +90,7 @@ msgstr ""
 "contribuent, data d'inici de l'activitat, règim d'IVA, dades "
 "d'IRPF/Renda, obligacions de retenció i altres detalls d'alta. Aquestes "
 "dades les mantens manualment al perfil: consulta [Mantén les dades "
-"censals del Model 036 al teu perfil](censo-update.md)."
+"censals del Modelo 036 al teu perfil](censo-update.md)."
 
 #: ../../how-to/filing-calendar.md:32
 msgid ""
@@ -230,7 +230,7 @@ msgstr ""
 "dades d'alta basades en el cens són declarades per l'operador, no "
 "verificades per l'AEAT; l'AEAT no publica cap vista censal de només "
 "lectura contra la qual l'eina les pogués confirmar. Revisa les dades del "
-"perfil (consulta [Mantén les dades censals del Model 036 al teu perfil"
+"perfil (consulta [Mantén les dades censals del Modelo 036 al teu perfil"
 "](censo-update.md)) i afegeix `--allow-incomplete` per imprimir un "
 "calendari provisional. Les entrades provisionals es marquen "
 "`censo_enrolment=unverified`. Afegeix `--all-profiles` per incloure tots "
@@ -301,8 +301,8 @@ msgid ""
 msgstr ""
 "Quins tokens accepta un model és específic de cada model, no universal. "
 "Un model trimestral com el 130 accepta només de `1T` a `4T`; un model "
-"anual com el 390 accepta només `0A`; el Model 303 accepta de `1T` a `4T` "
-"i de `01` a `12`, però no `0A`. Un token que el model no accepta es "
+"anual com el 390 accepta només `0A`; el Modelo 303 accepta de `1T` a `4T`"
+" i de `01` a `12`, però no `0A`. Un token que el model no accepta es "
 "rebutja (per exemple, el 303 amb `0A` informa «no revision for ... "
 "period='0A'»). Per veure els tokens que accepta un model, executes `aeat "
 "app modelo describe 303` i llegeix la seva línia `Períodos`."
@@ -379,11 +379,11 @@ msgstr "[Començament ràpid: produeix un fitxer de model](quickstart.md)"
 
 #: ../../how-to/filing-calendar.md:174
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
-msgstr "[Com preparar una presentació trimestral del Model 303](modelo-303.md)"
+msgstr "[Com preparar una presentació trimestral del Modelo 303](modelo-303.md)"
 
 #: ../../how-to/filing-calendar.md:175
 msgid "[How to prepare the annual Modelo 390 summary](modelo-390.md)"
-msgstr "[Com preparar el resum anual del Model 390](modelo-390.md)"
+msgstr "[Com preparar el resum anual del Modelo 390](modelo-390.md)"
 
 #: ../../how-to/filing-calendar.md:176
 msgid "[The filing workflow](filing-spine.md)"
@@ -403,8 +403,8 @@ msgstr ""
 "Si una ordre informa de dades del perfil que falten, actualitzes el "
 "perfil amb [Configura el teu perfil de contribuent](profile-setup.md). Si"
 " les dades censals poden estar desactualitzades o faltar, torna-les a "
-"comprovar amb la teva còpia del Model 036 amb [Mantén les dades censals "
-"del Model 036 al teu perfil](censo-update.md)."
+"comprovar amb la teva còpia del Modelo 036 amb [Mantén les dades censals "
+"del Modelo 036 al teu perfil](censo-update.md)."
 
 #: ../../how-to/filing-calendar.md:185
 msgid ""

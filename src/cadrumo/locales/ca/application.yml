@@ -840,7 +840,7 @@ application:
       fact_filing: Presentació
       fact_revision_state: Estat de la revisió
       fact_taxpayer: Contribuent
-      fact_verification: Verificació
+      fact_verification: Comprovació
       filing_none: No presentat
       filing_recorded: Presentació registrada a Cadrumo; la prova oficial és el justificant
         de l'AEAT
@@ -855,9 +855,9 @@ application:
       identity_reviewed: 'Identitat de programari revisada: el fitxer de presentació
         d''aquest model porta una identitat de programari registrada.'
       legend: 'Valors: una xifra, inclòs un zero, és un valor calculat; «sense dada»
-        indica que la revisió no va registrar cap valor per a la casella; «n/a · no
-        aplicable» indica que el registre demostra que la casella no s''aplica a aquest
-        període.'
+        indica que aquest càlcul no va registrar cap valor per a la casella; «n/a
+        · no aplicable» indica que les regles oficials mostren que la casella no s''aplica
+        a aquest període.'
       notice_title: 'Càlcul local: no és un justificant de l''AEAT'
       page_counter: Pàgina {page} de {pages}
       section_unnamed: Caselles
@@ -872,23 +872,23 @@ application:
         clau amb una rebuda per un altre canal abans de confiar-hi.
       state_borrador: Esborrany
       state_descartado: Descartat
-      state_presentado: Presentat
-      state_presentado_supersedido: Presentat i substituït
-      state_verificado_completo: Verificat complet
+      state_presentado: Registrat com a presentat
+      state_presentado_supersedido: Registrat com a presentat i substituït
+      state_verificado_completo: Comprovació completa
       subtitle: Exercici {year} · Període {period} · Revisió del registre {registry_revision}
       title: Resum del càlcul · Model {modelo}
       trace_authority_generation: Generació lògica de l'autoritat del registre
       trace_calculation_revision: Revisió del càlcul
       trace_csv_sha256: SHA-256 del CSV adjunt
       trace_filing_record: Registre de presentació
-      trace_heading: Traçabilitat i integritat
-      trace_ledger_snapshot: Empremta de la instantània del llibre registre
+      trace_heading: Detalls tècnics
+      trace_ledger_snapshot: Empremta de la instantània dels teus registres
       trace_none: cap
       trace_registry_snapshot: Instantània del registre (model · revisió · any · període)
       trace_report_sha256: SHA-256 de l'informe (JSON adjunt)
       trace_signing_key: Empremta de la clau de signatura (SHA-256)
       trace_software_identity: Grau d'identitat de programari
-      trace_verification_report: Informe de verificació
+      trace_verification_report: Informe de comprovació
       trace_work_unit: Unitat de treball
       value_absent: sense dada
       value_false: 'No'
@@ -897,7 +897,7 @@ application:
       verification_blocked: Bloquejada
       verification_complete: Completa
       verification_incomplete: Incompleta
-      verification_none: Sense verificació registrada
+      verification_none: Sense comprovació registrada
     edit:
       parse:
         above_maximum: El valor màxim és {bound}.
@@ -1038,7 +1038,7 @@ application:
         afectades: %{computed}.'
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
-        troballa(es).
+        incidència(es).
       deductible_iva_evidence_missing: 'Les línies del llibre amb IVA deduïble requereixen
         una factura de compra vinculada. Vincula la factura a la línia i torna a executar
         work verify: la verificació no es completa mentre una línia deduïble no tingui
@@ -1300,25 +1300,26 @@ application:
         quarter_4: 4t trimestre
       value_absent: un valor buit
     findings:
-      art20_reduccion_possible: La casella %{rnt_id} recull %{rnt_value} EUR de rendiment
-        net del treball, dins del límit de l'art. 20 LIRPF, així que la casella %{reduccion_id}
-        et pot donar una reducció que encara no apliques. Comprova si et correspon.
-      art52_reduccion_individual_sublimit_possible: La casella %{reduccion_id} recull
+      art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
+        rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
+        casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
+        Comprova si et correspon.
+      art52_reduccion_individual_sublimit_possible: La casella [%{reduccion_id}] recull
         %{reduccion_value} EUR de reducció per previsió social, per sobre del sublímit
         individual de %{sublimit} EUR de l'art. 52 LIRPF, i no has declarat aportacions
         amb contribució empresarial. Comprova que s'ha aplicat el sublímit individual.
-      attribution_received_uncaptured: La casella %{casilla_id} de %{filing_year}
+      attribution_received_uncaptured: La casella [%{casilla_id}] de %{filing_year}
         recull %{casilla_value} EUR de renda atribuïda, però el teu perfil no indica
         d'on surt. Afegeix-la al teu perfil.
       attribution_received_unfolded: El teu perfil recull %{total_base} EUR de renda
-        atribuïda el %{filing_year}, però la casella %{casilla_id} no la inclou.
+        atribuïda el %{filing_year}, però la casella [%{casilla_id}] no la inclou.
       cross_casilla_invariant_violated: Dues o més caselles d'aquest model no concorden
         entre si com exigeixen les normes oficials.
       cross_period_activity_start_missing: El model %{target_modelo} de %{target_filing_year},
         període %{target_period}, necessita la data en què va començar la teva activitat.
       cross_period_dependency_unclean: Aquesta declaració fa servir dades del model
         %{source_modelo} de %{source_filing_year}, període %{source_period}, i aquella
-        declaració encara té problemes pendents. Resol-los allà primer.
+        declaració encara té incidències pendents. Resol-les allà primer.
       cross_period_first_year_fractional_suppression: El model %{source_modelo} de
         %{source_filing_year}, període %{source_period}, no et correspon perquè la
         teva activitat va començar el %{activity_start_date}.
@@ -1340,12 +1341,12 @@ application:
         que el zero és correcte.
       cuota_less_ledger_row_base_missing: Un apunt dels teus registres no té base
         imposable per declarar.
-      dt12a_reduccion_antiquity_possible: La casella %{reduccion_id} recull %{reduccion_value}
+      dt12a_reduccion_antiquity_possible: La casella [%{reduccion_id}] recull %{reduccion_value}
         EUR de reducció de la DT 12a. Comprova que compleixes la condició d'antiguitat
         que exigeix.
-      dt12a_reduccion_possible: La casella %{ingreso_id} recull %{ingreso_value} EUR
-        de rendiments del treball, per sobre del llindar de la DT 12a, així que la
-        casella %{reduccion_id} et pot donar una reducció que encara no apliques.
+      dt12a_reduccion_possible: La casella [%{ingreso_id}] recull %{ingreso_value}
+        EUR de rendiments del treball, per sobre del llindar de la DT 12a, així que
+        la casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
         Comprova si et correspon.
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el valor
         d''un dels teus béns a l''estranger ha passat de %{prior_value_eur} EUR a
@@ -1354,8 +1355,8 @@ application:
         tornar a declarar.'
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
-        problema(es) pendent(s) amb aquestes dades, així que aquesta declaració no
-        es pot completar.
+        incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
+        no es pot completar.
       iva_selected_scope_evidence_failure: Falten justificants en alguns apunts d'IVA
         d'aquesta declaració (%{source_ref_count} amb referència i %{unidentified_source_count}
         sense), així que la comprovació no pot acabar.
@@ -1379,10 +1380,10 @@ application:
       m303_m349_intracom_reconciliation_mismatch: En el període %{period_code} de
         %{filing_year}, el total intracomunitari del model 303 (%{m303_total} EUR)
         i el total del model 349 (%{m349_total} EUR) difereixen en %{gap} EUR.
-      madrid_nacimiento_adopcion_eligibility_advisory: La casella %{casilla_id}, amb
-        un recompte ponderat de %{weighted_count}, et pot donar dret a la deducció
+      madrid_nacimiento_adopcion_eligibility_advisory: La casella [%{casilla_id}],
+        amb un recompte ponderat de %{weighted_count}, et pot donar dret a la deducció
         de la Comunitat de Madrid per naixement o adopció.
-      missing_required_casilla: La casella obligatòria %{casilla_id} és buida.
+      missing_required_casilla: La casella obligatòria [%{casilla_id}] és buida.
       objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id} %{filing_year}:
         el valor %{declared} que vas indicar al teu perfil supera el límit de %{threshold}
         de l''estimació objectiva (mòduls).'
@@ -1390,7 +1391,7 @@ application:
         (OSS), però no hi ha justificants desats d'aquestes operacions.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
-      pulled_filing_casilla_mismatch: 'Casella %{casilla_number} del període %{period_code}
+      pulled_filing_casilla_mismatch: 'Casella [%{casilla_number}] del període %{period_code}
         de %{filing_year}: el càlcul dona %{computed_value}, però la declaració presentada
         a l''AEAT mostra %{filed_value}.'
       registry_advisory_predicate_fired: Una comprovació integrada ha marcat aquesta
@@ -1487,19 +1488,18 @@ application:
       calculate: Calcula
       export: Exporta
       export_destination_placeholder: Camí de destinació de l'exportació
-      file_cancelled: La presentació local s'ha cancel·lat; no s'ha registrat res.
-      file_confirm_accept: Registra la presentació local
+      file_cancelled: Cancel·lat. No s'ha registrat res.
+      file_confirm_accept: Registrar presentació
       file_confirm_cancel: Cancel·la
-      file_confirm_message: Això registra la declaració verificada a l'historial local
-        d'aquesta aplicació. No presenta res a l'AEAT.
-      file_confirm_title: Voleu registrar una presentació local?
+      file_confirm_message: Això registra la declaració comprovada com a presentada
+        a Cadrumo. No presenta res a l'AEAT.
+      file_confirm_title: Vols registrar la presentació?
       refusal:
         calculation_required: Calculeu aquesta declaració abans de continuar.
         edit_unavailable: Aquesta declaració no ofereix valors editables ara mateix;
           torneu-la a calcular o torneu-la a obrir abans d'editar.
-        export_destination_required: Introduïu un camí de destinació per a l'exportació.
-        verification_required: Verifiqueu aquest càlcul abans de registrar una presentació
-          local.
+        export_destination_required: Introdueix un camí de destinació per a l'exportació.
+        verification_required: Comprova aquest càlcul abans de registrar la presentació.
     profile_binding:
       errors:
         boolean_value_channel_mismatch: El fet del perfil per al vincle {binding_id}
@@ -1546,9 +1546,9 @@ application:
         correct_and_recalculate: Corregeix el que indica i torna a calcular i comprovar.
         declare_asset_again: Torna a declarar aquest bé en aquesta declaració.
         enter_box_value: Escriu el valor a la casella i torna a calcular.
-        enter_or_confirm_payments: Registra les percepcions de cada perceptor al detall
-          d'aquest model, o confirma cada període al teu perfil.
-        enter_payee_payments: Registra les percepcions de cada perceptor al detall
+        enter_or_confirm_payments: Introdueix les percepcions de cada perceptor al
+          detall d'aquest model, o confirma cada període al teu perfil.
+        enter_payee_payments: Introdueix les percepcions de cada perceptor al detall
           d'aquest model i torna a comprovar.
         enter_withholding_certificate: Introdueix la retenció que figura al certificat
           de retencions i ingressos a compte del teu pagador i torna a calcular.
@@ -1556,7 +1556,7 @@ application:
         read_and_decide: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
         regroup_income_lines: Corregeix com estan agrupades les línies de renda i
           torna a calcular.
-        resolve_303_returns: Resol els problemes pendents dels models 303 d'aquell
+        resolve_303_returns: Resol les incidències pendents dels models 303 d'aquell
           any i torna a calcular.
         retry_or_update: Torna-ho a provar o actualitza l'aplicació.
         review_attested_year: No has de fer res, tret que aquell any paguessis rendes

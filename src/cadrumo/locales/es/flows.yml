@@ -85,8 +85,8 @@ flows:
     namespace_detail: detalle {number}
     onboarding:
       continue: Continuar
-      done: La configuración está completa. Continúa al área de trabajo o sigue añadiendo
-        detalles opcionales abajo.
+      done: La configuración está completa. Continúa a Inicio o sigue añadiendo detalles
+        opcionales abajo.
       finish: Terminar la configuración
       heading: Configura tu perfil
       intro: Aquí solo se piden las respuestas necesarias para preparar tus declaraciones.
@@ -106,7 +106,7 @@ flows:
       sources_title: Importar datos (opcional)
       step: 'Paso {step} de {steps}: {section}'
       step_finish: 'Paso {step} de {steps}: terminar la configuración'
-      to_workbench: Continuar al área de trabajo
+      to_workbench: Continuar a Inicio
     plantilla_media:
       average_workforce: Plantilla media
       list_failed: No se han podido leer los años declarados. Vuelve a intentarlo.

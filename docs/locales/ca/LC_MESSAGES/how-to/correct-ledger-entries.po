@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-09-30 21:18+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -153,11 +153,11 @@ msgstr ""
 "Si has posat de banda o arxivat un moviment per error, [restaura'l a "
 "actiu](#restore-a-stashed-or-archived-transaction)."
 
-#: ../../how-to/correct-ledger-entries.md:32
+#: ../../how-to/correct-ledger-entries.md:33
 msgid "Update fields on a transaction"
 msgstr "Actualitza camps d'un moviment"
 
-#: ../../how-to/correct-ledger-entries.md:34
+#: ../../how-to/correct-ledger-entries.md:35
 msgid ""
 "Change one or more fields directly. The sequence records a chair at the "
 "wrong price, corrects the amount and description, and confirms the "
@@ -167,7 +167,7 @@ msgstr ""
 "preu incorrecte, corregeix l'import i la descripció i confirma la "
 "correcció:"
 
-#: ../../how-to/correct-ledger-entries.md:40
+#: ../../how-to/correct-ledger-entries.md:41
 msgid ""
 "Each flag fully replaces that field - write the complete new value, not "
 "an addition to the old one. Write the amount as a positive figure - the "
@@ -183,7 +183,7 @@ msgstr ""
 "date, value-date, amount, direction, currency, counterparty, description,"
 " taxable-base, iva-rate, iva-amount, irpf-category, notes i group."
 
-#: ../../how-to/correct-ledger-entries.md:42
+#: ../../how-to/correct-ledger-entries.md:43
 msgid ""
 "An update gives the transaction a new ID - the update output prints it. "
 "You don't have to track the change for read commands: an ID you wrote "
@@ -202,7 +202,7 @@ msgstr ""
 "actual de la sortida de l'actualització o de `list`, perquè aquestes "
 "ordres actuen sobre el moviment viu."
 
-#: ../../how-to/correct-ledger-entries.md:44
+#: ../../how-to/correct-ledger-entries.md:45
 msgid ""
 "Update works on active transactions only. Archived and stashed "
 "transactions refuse it, as does a split parent - the active parts of a "
@@ -212,11 +212,11 @@ msgstr ""
 "arxivats i posats de banda la rebutgen, igual que un pare de divisió: les"
 " parts actives d'una divisió es poden actualitzar amb normalitat."
 
-#: ../../how-to/correct-ledger-entries.md:46
+#: ../../how-to/correct-ledger-entries.md:48
 msgid "Remove a transaction"
 msgstr "Elimina un moviment"
 
-#: ../../how-to/correct-ledger-entries.md:48
+#: ../../how-to/correct-ledger-entries.md:50
 msgid ""
 "Remove deletes a transaction from your active records. Preview it first "
 "with `--dry-run`, then remove it for real. The removed id no longer "
@@ -226,7 +226,7 @@ msgstr ""
 "ho primer amb `--dry-run` i, tot seguit, elimina'l de veritat. L'id "
 "eliminat ja no es resol, que és com la seqüència confirma la supressió:"
 
-#: ../../how-to/correct-ledger-entries.md:54
+#: ../../how-to/correct-ledger-entries.md:56
 msgid ""
 "A removed transaction is gone from your active records: the final `view` "
 "refuses because the id no longer names an active row."
@@ -234,11 +234,11 @@ msgstr ""
 "Un moviment eliminat ja no és als teus registres actius: el `view` final "
 "es nega perquè l'id ja no anomena una fila activa."
 
-#: ../../how-to/correct-ledger-entries.md:56
+#: ../../how-to/correct-ledger-entries.md:59
 msgid "Split one transaction into parts"
 msgstr "Divideix un moviment en parts"
 
-#: ../../how-to/correct-ledger-entries.md:58
+#: ../../how-to/correct-ledger-entries.md:61
 msgid ""
 "When one payment covers two different things - for example, a card "
 "payment that mixes business and personal items - split it into parts. "
@@ -250,7 +250,7 @@ msgstr ""
 "parts. Els imports i les descripcions s'aparellen un per part: el primer "
 "import va amb la primera descripció, i així successivament:"
 
-#: ../../how-to/correct-ledger-entries.md:64
+#: ../../how-to/correct-ledger-entries.md:67
 msgid ""
 "The original transaction becomes the split parent, and the parts carry "
 "the balance from then on. The split output prints one "
@@ -264,11 +264,11 @@ msgstr ""
 "un `full_id` complet. Copia aquests ids: l'ordre de fusió els necessita "
 "per desfer la divisió."
 
-#: ../../how-to/correct-ledger-entries.md:66
+#: ../../how-to/correct-ledger-entries.md:70
 msgid "Merge split parts back"
 msgstr "Torna a fusionar les parts d'una divisió"
 
-#: ../../how-to/correct-ledger-entries.md:68
+#: ../../how-to/correct-ledger-entries.md:72
 msgid ""
 "To undo a split, merge the parts back together using the child ids the "
 "split printed. Name every sibling part - the command refuses a partial "
@@ -280,7 +280,7 @@ msgstr ""
 "rebutja una fusió parcial. La seqüència divideix un pagament i, tot "
 "seguit, fusiona les parts en un moviment nou:"
 
-#: ../../how-to/correct-ledger-entries.md:74
+#: ../../how-to/correct-ledger-entries.md:78
 msgid ""
 "The parts and the original parent move to history, and the merge creates "
 "a fresh transaction in their place. If you no longer have the split "
@@ -292,11 +292,11 @@ msgstr ""
 "parts són files actives: executa `aeat app ledger list` i llegeix-ne els "
 "ids del llistat."
 
-#: ../../how-to/correct-ledger-entries.md:76
+#: ../../how-to/correct-ledger-entries.md:81
 msgid "Stash a transaction you are unsure about"
 msgstr "Posa de banda un moviment del qual dubta"
 
-#: ../../how-to/correct-ledger-entries.md:78
+#: ../../how-to/correct-ledger-entries.md:83
 msgid ""
 "Stash sets a transaction aside for later. A stashed transaction is kept "
 "out of ordinary work. The sequence stashes a row and confirms its new "
@@ -306,7 +306,7 @@ msgstr ""
 "posat de banda es manté fora del treball ordinari. La seqüència posa de "
 "banda una fila i confirma el seu nou estat del cicle de vida:"
 
-#: ../../how-to/correct-ledger-entries.md:84
+#: ../../how-to/correct-ledger-entries.md:89
 msgid ""
 "Use stash for a row you have not resolved yet and archive for a row you "
 "have deliberately set aside, such as a confirmed duplicate. Both are "
@@ -322,11 +322,11 @@ msgstr ""
 " els camps del moviment però no el seu nou estat del cicle de vida, de "
 "manera que `view` és com confirma que el canvi ha tingut efecte."
 
-#: ../../how-to/correct-ledger-entries.md:86
+#: ../../how-to/correct-ledger-entries.md:92
 msgid "Archive a transaction"
 msgstr "Arxiva un moviment"
 
-#: ../../how-to/correct-ledger-entries.md:88
+#: ../../how-to/correct-ledger-entries.md:94
 msgid ""
 "Archive keeps a transaction in history but out of ordinary work - it's "
 "the right choice for duplicates you want to keep a deliberate trace of. "
@@ -337,7 +337,7 @@ msgstr ""
 "deliberat. La seqüència arxiva una fila duplicada i confirma el canvi "
 "d'estat:"
 
-#: ../../how-to/correct-ledger-entries.md:94
+#: ../../how-to/correct-ledger-entries.md:100
 msgid ""
 "Like stash, the command prints the transaction's fields but not its new "
 "lifecycle state, so `view` confirms the row now reads `ARCHIVED`."
@@ -346,11 +346,11 @@ msgstr ""
 "seu nou estat del cicle de vida, de manera que `view` confirma que la "
 "fila ara diu `ARCHIVED`."
 
-#: ../../how-to/correct-ledger-entries.md:96
+#: ../../how-to/correct-ledger-entries.md:103
 msgid "Restore a stashed or archived transaction"
 msgstr "Restaura un moviment posat de banda o arxivat"
 
-#: ../../how-to/correct-ledger-entries.md:98
+#: ../../how-to/correct-ledger-entries.md:105
 msgid ""
 "If you stashed or archived a transaction by mistake, restore it to "
 "active. Restore is the inverse of stash and archive: the row returns to "
@@ -362,7 +362,7 @@ msgstr ""
 " a les teves llistes i totals quotidians. La seqüència posa de banda una "
 "fila i després la restaura:"
 
-#: ../../how-to/correct-ledger-entries.md:104
+#: ../../how-to/correct-ledger-entries.md:111
 msgid ""
 "Restore accepts the same id prefix the other commands accept. To recover "
 "several rows stashed by mistake, restore each one by id - you do not need"
@@ -377,24 +377,24 @@ msgstr ""
 "posades de banda a partir dels ids que has posat de banda, o de l'estat "
 "del cicle de vida de cada fila que mostra `view`."
 
-#: ../../how-to/correct-ledger-entries.md:106
+#: ../../how-to/correct-ledger-entries.md:113
 msgid ""
 "Restore refuses a row that is already active, and it refuses a row whose "
 "period you have already filed - restoring it would change the inputs "
 "behind a return you have presented. Restore one of these only after you "
-"have corrected the filing through an amendment."
+"have corrected the filing through a correction."
 msgstr ""
 "Restaurar rebutja una fila que ja és activa, i rebutja una fila el "
 "període de la qual ja has presentat: restaurar-la canviaria les dades "
 "d'entrada darrere d'una declaració que has presentat. Restaura'n una "
 "d'aquestes només després d'haver corregit la presentació mitjançant una "
-"rectificació."
+"correcció."
 
-#: ../../how-to/correct-ledger-entries.md:108
+#: ../../how-to/correct-ledger-entries.md:115
 msgid "Review what changed"
 msgstr "Revisa què ha canviat"
 
-#: ../../how-to/correct-ledger-entries.md:110
+#: ../../how-to/correct-ledger-entries.md:117
 msgid ""
 "Every correction is recorded. To see every action on a transaction in "
 "order, run `ledger history`. The sequence splits a payment, then reads "
@@ -405,7 +405,7 @@ msgstr ""
 "tot seguit, llegeix l'historial amb l'indicador de germans per seguir "
 "tota la família de la divisió:"
 
-#: ../../how-to/correct-ledger-entries.md:116
+#: ../../how-to/correct-ledger-entries.md:123
 msgid ""
 "The history lists each action in order with its timestamp and event "
 "reference. Details such as the reason and the new values are in the JSON "
@@ -419,11 +419,11 @@ msgstr ""
 "esdeveniments anteriors de l'historial. La [referència de la "
 "CLI](../cli/index.rst) tracta cada camp que mostra l'historial."
 
-#: ../../how-to/correct-ledger-entries.md:118
+#: ../../how-to/correct-ledger-entries.md:125
 msgid "Evidence and corrections"
 msgstr "Evidència i correccions"
 
-#: ../../how-to/correct-ledger-entries.md:120
+#: ../../how-to/correct-ledger-entries.md:127
 msgid ""
 "An attached evidence record - a receipt or invoice - is not deleted when "
 "you correct a transaction. After a split or merge, check the new "
@@ -436,11 +436,11 @@ msgstr ""
 "d'evidència](ledger-evidence.md) tracta com adjuntar i comprovar "
 "l'evidència."
 
-#: ../../how-to/correct-ledger-entries.md:122
+#: ../../how-to/correct-ledger-entries.md:129
 msgid "Start over as a last resort"
 msgstr "Comença de nou com a últim recurs"
 
-#: ../../how-to/correct-ledger-entries.md:124
+#: ../../how-to/correct-ledger-entries.md:131
 msgid ""
 "If the ledger is beyond repair - for example, after importing the wrong "
 "files repeatedly - clear it and rebuild. Preview first, then confirm. The"
@@ -452,7 +452,7 @@ msgstr ""
 "primer i després confirma. La seqüència registra una fila, previsualitza "
 "el restabliment, buida el ledger i confirma que no queda res:"
 
-#: ../../how-to/correct-ledger-entries.md:130
+#: ../../how-to/correct-ledger-entries.md:137
 msgid ""
 "Reset clears the whole ledger for the active profile. Use the "
 "[transactions guide](import-bank-statements.md) to rebuild it from your "
@@ -462,11 +462,11 @@ msgstr ""
 "de moviments](import-bank-statements.md) per reconstruir-lo a partir dels"
 " teus extractes."
 
-#: ../../how-to/correct-ledger-entries.md:132
+#: ../../how-to/correct-ledger-entries.md:139
 msgid "Where to get help"
 msgstr "On obtenir ajuda"
 
-#: ../../how-to/correct-ledger-entries.md:134
+#: ../../how-to/correct-ledger-entries.md:141
 #, python-brace-format
 msgid ""
 "If a command refuses or fails, check the [troubleshooting "
@@ -481,11 +481,11 @@ msgstr ""
 "d'una ordre amb ningú, elimina els identificadors fiscals com ara el teu "
 "NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/correct-ledger-entries.md:136
+#: ../../how-to/correct-ledger-entries.md:143
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/correct-ledger-entries.md:138
+#: ../../how-to/correct-ledger-entries.md:145
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring in "
 "new transactions."
@@ -493,7 +493,7 @@ msgstr ""
 "[Importa i gestiona els moviments](import-bank-statements.md): incorpora "
 "moviments nous."
 
-#: ../../how-to/correct-ledger-entries.md:139
+#: ../../how-to/correct-ledger-entries.md:146
 msgid ""
 "[Attach evidence to transactions](ledger-evidence.md) - back your "
 "corrections with receipts."
@@ -501,7 +501,7 @@ msgstr ""
 "[Adjunta evidència als moviments](ledger-evidence.md): recolza les teves "
 "correccions amb rebuts."
 
-#: ../../how-to/correct-ledger-entries.md:140
+#: ../../how-to/correct-ledger-entries.md:147
 msgid ""
 "[Classify transactions](classify-transactions.md) - prepare corrected "
 "rows for tax calculations."
@@ -509,7 +509,7 @@ msgstr ""
 "[Classifica els moviments](classify-transactions.md): prepara les files "
 "corregides per als càlculs fiscals."
 
-#: ../../how-to/correct-ledger-entries.md:141
+#: ../../how-to/correct-ledger-entries.md:148
 msgid ""
 "[CLI reference](../cli/index.rst) - full field detail for every ledger "
 "command."

@@ -60,7 +60,7 @@ msgid ""
 msgstr ""
 "Quan la teva identitat hi tingui accés, la interfície de línia d'ordres "
 "(CLI) pot llegir declaracions presentades, expedients, notificacions i "
-"justificants presentats. Per a les dades censals del perfil (Model "
+"justificants presentats. Per a les dades censals del perfil (Modelo "
 "036/Cens), usa la [guia de dades del perfil/Cens](censo-update.md). "
 "Cadrumo ja no recupera aquestes dades en directe."
 
@@ -537,7 +537,7 @@ msgstr "Passos següents"
 
 #: ../../how-to/authenticate-with-aeat.md:284
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr "[Mantén les dades censals del Model 036 al teu perfil](censo-update.md)"
+msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
 #: ../../how-to/authenticate-with-aeat.md:285
 msgid "[Set up your taxpayer profile](profile-setup.md)"

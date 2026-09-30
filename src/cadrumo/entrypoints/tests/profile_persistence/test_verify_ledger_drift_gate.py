@@ -45,10 +45,14 @@ from cadrumo.application.ledger.actions_manual import (
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_form_models import ModeloWorkForm
+from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
@@ -197,6 +201,25 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
         assert row_fingerprint(reclassified) != before
 
 
+def _form(repos: _Repos) -> ModeloWorkForm:
+    """The declaration's editor form, read from the same storage the check wrote to."""
+    work_units, calculations, _filings, reports, _events, _transactions = repos
+    (unit,) = work_units.load().values()
+    with bundled_indexed_authority().operation() as operation:
+        return load_modelo_work_form(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+            verification_repository=reports,
+            admission=None,
+            language=OutputLanguage.EN,
+        ).form
+
+
 def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
     with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
@@ -257,10 +280,10 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         assert blocking, "a reclassified-away deduction must not leave the stale draft grantable"
         # The refusal resolves the operator's position instead of restating it.
         drift = next(
-            finding
-            for finding in blocking
-            if finding.message_locale_key == "application.modelo.findings.ledger_snapshot_drift"
+            finding for finding in blocking if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
         )
+        # Only entries changed, so the sentence names only them.
+        assert drift.message_locale_key == "application.modelo.findings.ledger_snapshot_drift_changed"
         assert dict(drift.message_facts) == {
             "anchored": True,
             "changed_count": 1,
@@ -277,6 +300,8 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         assert settled is not None
         assert settled.state is CalculationRevisionState.BORRADOR
         assert settled.ledger_filing_evidence is None
+        # The editor form reads the same check: the calculation is out of date until calculated again.
+        assert _form(repos).calculation_out_of_date is True
 
 
 def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
@@ -311,6 +336,7 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
 
         assert granted.granted_verificado_completo is True
         assert granted.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert _form(repos).calculation_out_of_date is False
 
 
 def test_a_ledger_derived_draft_carries_the_anchor_the_gate_compares(tmp_path: Path) -> None:

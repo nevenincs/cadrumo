@@ -128,20 +128,41 @@ def _drift_finding(
     """Build the blocking drift finding without persisting recovery prose.
 
     The locale-neutral presentation facts carry counts; the exact changed and
-    removed identities remain on the paired precondition evidence record.
+    removed identities remain on the paired precondition evidence record. The
+    sentence names only the counts that are not zero: entries changed, entries
+    removed, or both.
     """
+    facts = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+        "anchored": anchored,
+        "changed_count": changed,
+        "removed_count": removed,
+    }
+    if changed and not removed:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_changed",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+    if removed and not changed:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.ledger_snapshot_drift_removed",
+            message_facts=facts,
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
     return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key="application.modelo.findings.ledger_snapshot_drift",
-        message_facts={
-            "modelo": str(work_unit.modelo),
-            "filing_year": work_unit.filing_year,
-            "period": work_unit.period.registry_token,
-            "anchored": anchored,
-            "changed_count": changed,
-            "removed_count": removed,
-        },
+        message_facts=facts,
         legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
     )

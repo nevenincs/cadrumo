@@ -5,7 +5,7 @@ calculation that an accountant can read, that carries its own data, and that
 anyone can check for changes. You write it with one command, hand it on, and
 later confirm that a copy still matches what your encrypted store holds.
 
-A summary is a local calculation, not AEAT evidence. The official proof of a
+A summary is a local calculation, not an official AEAT value. The official proof of a
 filing is the AEAT receipt (justificante), the filed-declarations lookup, or the
 CSV check at the AEAT portal. The summary says so on its first page and in every
 footer.

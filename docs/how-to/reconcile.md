@@ -129,7 +129,7 @@ value next to the value in the justificante.
 
 Reconciliation does not compare box (casilla) values, so it cannot tell you that
 a computed total differs from what you filed. To correct a box value, use the
-amendment workflow rather than reconciliation. Re-check the inputs and
+correction workflow rather than reconciliation. Re-check the inputs and
 re-calculate. If the period was already filed, file a complementaria. See
 [Review and supply calculation inputs](review-calculation-values.md).
 
@@ -172,7 +172,7 @@ stored record.
 - [File your modelo at the AEAT portal](file-at-aeat.md) - the
   filing handoff that produces the justificante.
 - [Quickstart](quickstart.md) - the end-to-end filing workflow.
-- [Review and supply calculation inputs](review-calculation-values.md) - amend
+- [Review and supply calculation inputs](review-calculation-values.md) - correct
   a filing if reconciliation finds a mismatch.
 - [CLI reference](../cli/index.rst) - full option reference.
 - [Diagnose and repair your local setup](troubleshooting.md) - fix local

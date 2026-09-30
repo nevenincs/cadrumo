@@ -375,7 +375,7 @@ msgstr ""
 "modelo la lea mientras clasificas con `--read-evidence`. El modelo elige "
 "la categoría de gasto y la situación de IVA a partir de lo que lee; "
 "`aeat` deriva cada importe en euros del registro. Cómo se lee el "
-"documento depende del archivo:"
+"documento depende del fichero:"
 
 #: ../../how-to/classify-with-llm.md:171
 msgid ""
@@ -491,7 +491,7 @@ msgid ""
 msgstr ""
 "Los bytes de las facturas residen únicamente en el almacenamiento seguro "
 "cifrado. La lectura los descifra en memoria para esa única llamada y "
-"nunca los escribe en un archivo temporal, un registro o una caché."
+"nunca los escribe en un fichero temporal, un registro o una caché."
 
 #: ../../how-to/classify-with-llm.md:222
 msgid ""

@@ -98,7 +98,6 @@ from .header import (
     DeadlineTone,
     ResultLine,
     attention_chips,
-    blocks_marked,
     deadline_help,
     deadline_view,
     fit_identity,
@@ -107,7 +106,7 @@ from .header import (
     result_line_text,
     result_view,
 )
-from .issues import WorkbenchIssuesScreen
+from .issues import WorkbenchIssuesScreen, blocks_marked
 from .keys import describe_bindings
 from .legend import first_open_text, legend_panel, mark_for_glyph, more_text, on_screen_text
 from .navigator import (
@@ -158,6 +157,7 @@ from .vocabulary import (
     aeat_imported_on,
     attention_words_key,
     editability_text,
+    origin_explanation,
     origin_text,
 )
 from .wording import does_not_apply_text, wrap_words
@@ -396,14 +396,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen.-next-below #wb-next {
             margin: $cadrumo-space-0;
         }
-        ModeloWorkbenchScreen #wb-banner {
-            height: auto;
-            display: none;
-            color: $warning;
-        }
-        ModeloWorkbenchScreen.-recorded #wb-banner {
-            display: block;
-        }
         ModeloWorkbenchScreen #wb-notice {
             height: auto;
             color: $warning;
@@ -565,7 +557,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             with Horizontal(id="wb-steps", classes="wb-line"):
                 yield Static(id="wb-stepper", markup=False)
                 yield Static(id="wb-next", markup=False)
-            yield Static(tr("tui.modelo.workbench.filed.read_only"), id="wb-banner", markup=False)
             yield Static(id="wb-notice", markup=False)
         with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
@@ -750,7 +741,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
         self._inapplicable = inapplicable_pages(load.form)
-        self.set_class(self.recorded, "-recorded")
         page_ids = [page.id for page in self._pages]
         if previous_page in page_ids:
             self._page_index = page_ids.index(previous_page)
@@ -1068,6 +1058,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         note = rate_note(entry, self._language)
         if note is not None:
             lines.append(note)
+        explained = origin_explanation(field)
+        if explained is not None:
+            lines.append(explained)
         card = None
         if isinstance(field.address, ModeloFormCasillaAddressV1):
             card = self._cards.get((str(field.address.casilla_id), self._language))

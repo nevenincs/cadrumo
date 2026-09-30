@@ -88,8 +88,8 @@ msgid ""
 "[Link Modelo 036 census information](censo-update.md)"
 msgstr ""
 "per a les proporcions de despatx a casa derivades del cens de l'AEAT, "
-"dades censals revisades; consulta [Enllaça la informació censal del Model"
-" 036](censo-update.md)"
+"dades censals revisades; consulta [Enllaça la informació censal del "
+"Modelo 036](censo-update.md)"
 
 #: ../../how-to/import-bank-statements.md:25
 msgid "Confirm the active profile before you write transaction data:"
@@ -434,8 +434,8 @@ msgid ""
 msgstr ""
 "Extreu un document directament de Google Drive a l'emmagatzematge "
 "d'evidència xifrat amb `evidence pull`. Aquesta ordre accedeix a Google "
-"Drive, de manera que s'executa amb el teu propi compte autoritzat i no dins "
-"del sandbox de la documentació:"
+"Drive, de manera que s'executa amb el teu propi compte autoritzat i no "
+"dins del sandbox de la documentació:"
 
 #: ../../how-to/import-bank-statements.md:207
 msgid ""

@@ -120,7 +120,7 @@ msgid ""
 "Shortest path from profile and ledger to an exported modelo file: one "
 "modelo, one period, copy-paste commands."
 msgstr ""
-"El camino más corto desde el perfil y el ledger hasta un archivo de "
+"El camino más corto desde el perfil y el ledger hasta un fichero de "
 "modelo exportado: un modelo, un periodo, órdenes para copiar y pegar."
 
 #: ../../how-to/index.md:57
@@ -464,7 +464,7 @@ msgid ""
 "Export the file, upload it at the AEAT portal yourself, record, and "
 "reconcile."
 msgstr ""
-"Exporta el archivo, súbelo tú mismo en el portal de la AEAT, regístralo y"
+"Exporta el fichero, súbelo tú mismo en el portal de la AEAT, regístralo y"
 " concilia."
 
 #: ../../how-to/index.md:302

@@ -191,6 +191,7 @@ def base_modelo_result_disposition(
             period=period,
             operation=operation,
         ),
+        period=period,
     )
     return base or DECLARATION_TYPE_FALLBACK
 

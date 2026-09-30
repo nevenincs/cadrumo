@@ -592,6 +592,7 @@ FINDING_KIND_ACTION_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, st
             "application.modelo.work_form.finding_action.correct_and_recalculate"
         ),
         ModeloVerificationFindingKind.ADVISORY: "application.modelo.work_form.finding_action.read_and_decide",
+        ModeloVerificationFindingKind.STALE_CALCULATION: "application.modelo.work_form.finding_action.calculate_again",
     }
 )
 """What to do about a finding whose message has no action of its own, by the finding's kind."""
@@ -652,9 +653,6 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         ),
         "application.modelo.findings.iva_compensation_annual_source_evidence_failure": (
             "application.modelo.work_form.finding_action.resolve_303_returns"
-        ),
-        "application.modelo.findings.ledger_snapshot_drift": (
-            "application.modelo.work_form.finding_action.calculate_again"
         ),
         # Facts the filer supplies.
         "application.modelo.findings.cross_period_activity_start_missing": (
@@ -815,6 +813,10 @@ class ModeloFormResultDirection(StrEnum):
     TO_PAY = "to_pay"
     TO_REFUND = "to_refund"
     TO_CARRY_FORWARD = "to_carry_forward"
+    #: A negative instalment result the filer deducts from the positive results of later quarters of the same year.
+    TO_DEDUCT_LATER = "to_deduct_later"
+    #: A negative result that nothing carries: it is declared as negative and settles nothing.
+    NEGATIVE = "negative"
     NIL = "nil"
     #: Nothing declares how this result settles, or it has no value yet.
     UNKNOWN = "unknown"
@@ -906,6 +908,11 @@ class ModeloWorkForm(_FormModel):
         if self.edit_closure is not None and self.edit_admitted:
             raise ValueError("a form closed to editing admits no edit")
         return self
+
+    @property
+    def calculation_out_of_date(self) -> bool:
+        """Whether the last check found the records changed after the calculation, so it must be calculated again."""
+        return any(issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues)
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Return every field once, in reading order: pages, then working figures, then unplaced."""

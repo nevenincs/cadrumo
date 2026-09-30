@@ -31,7 +31,7 @@ msgid ""
 "employed taxpayer with a NIF, CIF, NIE, or other filing identity who is "
 "running Cadrumo for the first time."
 msgstr ""
-"Aquesta pàgina tracta la teva primera presentació del Model 130 "
+"Aquesta pàgina tracta la teva primera presentació del Modelo 130 "
 "trimestral, de cap a cap: incorpora un trimestre de moviments al ledger, "
 "classifica'ls com a ingressos de negoci i despeses deduïbles, prepara "
 "l'esborrany i comprova que ha passat la verificació abans d'exportar-lo. "
@@ -46,7 +46,7 @@ msgid ""
 msgstr ""
 "Cadrumo mai no presenta una declaració davant de l'Agència Estatal "
 "d'Administració Tributària (AEAT). Produeix localment l'artefacte "
-"fichero-BOE del Model 130; presentes aquest fitxer a través del canal "
+"fichero-BOE del Modelo 130; presentes aquest fitxer a través del canal "
 "oficial de l'AEAT."
 
 #: ../../how-to/first-quarterly-filing.md:13
@@ -141,7 +141,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:62
 msgid "Prepare the Modelo 130 draft"
-msgstr "Prepara l'esborrany del Model 130"
+msgstr "Prepara l'esborrany del Modelo 130"
 
 #: ../../how-to/first-quarterly-filing.md:64
 msgid ""
@@ -154,7 +154,7 @@ msgstr ""
 "Un cop classificades les files del trimestre, prepara el pagament "
 "fraccionat. La preparació següent configura un perfil d'autònom i un "
 "ledger classificat, i després crea l'esborrany, el calcula i el verifica."
-" El Model 130 és el pagament a compte de l'IRPF per a l'activitat "
+" El Modelo 130 és el pagament a compte de l'IRPF per a l'activitat "
 "d'autònom en estimación directa."
 
 #: ../../how-to/first-quarterly-filing.md:73
@@ -166,7 +166,7 @@ msgid ""
 "Create the draft for Modelo 130, first quarter 2026. The command reports "
 "a `work_unit_id` that addresses the draft."
 msgstr ""
-"Crea l'esborrany per al Model 130, primer trimestre del 2026. L'ordre "
+"Crea l'esborrany per al Modelo 130, primer trimestre del 2026. L'ordre "
 "reporta un `work_unit_id` que adreça l'esborrany."
 
 #: ../../how-to/first-quarterly-filing.md:77
@@ -325,7 +325,7 @@ msgstr ""
 "Un trimestre posterior es construeix sobre aquest: deixa les tres "
 "vinculacions del període anterior sense establir perquè es resolguin a "
 "partir del teu historial presentat. Consulta [Prepara un pagament "
-"fraccionat del Model 130 d'IRPF](modelo-130.md) per al comportament "
+"fraccionat del Modelo 130 d'IRPF](modelo-130.md) per al comportament "
 "acumulatiu de l'any fins a la data."
 
 #: ../../how-to/first-quarterly-filing.md:144
@@ -334,7 +334,7 @@ msgstr "Passos següents"
 
 #: ../../how-to/first-quarterly-filing.md:146
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
-msgstr "[Prepara un pagament fraccionat del Model 130 d'IRPF](modelo-130.md)"
+msgstr "[Prepara un pagament fraccionat del Modelo 130 d'IRPF](modelo-130.md)"
 
 #: ../../how-to/first-quarterly-filing.md:147
 msgid "[Classify transactions](classify-transactions.md)"

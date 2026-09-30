@@ -132,7 +132,7 @@ msgstr ""
 " la teva activitat manté existències, conserva el seu ledger d'inventari "
 "xifrat per separat i introdueix manualment les xifres d'existències de "
 "Renda que corresponguin. En aquesta versió no hi ha cap projecció "
-"automàtica de l'inventari al Model 100."
+"automàtica de l'inventari al Modelo 100."
 
 #: ../../how-to/modelo-100.md:47
 msgid ""

@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md:1
 msgid "Filesystem, state, and safety"
-msgstr "Sistema de archivos, estado y seguridad"
+msgstr "Sistema de ficheros, estado y seguridad"
 
 #: ../../reference/filesystem-state-and-safety.md:3
 msgid ""

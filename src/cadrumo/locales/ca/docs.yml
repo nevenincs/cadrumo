@@ -3,15 +3,15 @@ docs:
     binding_source:
       atribucion_member: des dels membres en atribució de rendes
       bienes_inversion_regularizacion: des de la regularització de béns d'inversió
-      borrador: des de l'esborrany de l'AEAT
+      borrador: des de les dades de l'AEAT (el borrador)
       collectible_invoice: des de les factures emeses
       design_constant: des d'una constant fixada pel disseny de registre de l'AEAT
       donativo_donor: des dels donants registrats
-      foreign_asset: des dels seus béns a l'estranger
+      foreign_asset: des dels teus béns a l'estranger
       gasto193_contributor: des de les despeses d'administració i dipòsit per contribuent
-      inventory: des del seu inventari d'existències
+      inventory: des del teu inventari d'existències
       iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
-      iva_wallet_decision: des de la seva decisió de compensació d'IVA
+      iva_wallet_decision: des de la teva decisió de compensació d'IVA
       ledger_impatriado_income_aggregation: des dels teus registres d'ingressos del
         règim d'impatriats
       ledger_irnr_income_aggregation: des dels teus registres d'ingressos d'IRNR
@@ -25,15 +25,15 @@ docs:
       ledger_transaction: des dels teus registres
       m303_regimen_simplificado_annual_summary: des del resum anual del règim simplificat
         del model 303
-      m347_third_party_operation: de les seves operacions amb tercers
-      manual_input: des d'un valor que vostè aporta
+      m347_third_party_operation: de les teves operacions amb tercers
+      manual_input: des d'un valor que aportes tu
       payable_invoice: des de les factures rebudes
-      previous_filing: des de la seva declaració anterior
-      profile: des del seu perfil de contribuent
+      previous_filing: des de la teva declaració anterior
+      profile: des del teu perfil de contribuent
       prorrata_regularizacion: des de la regularització de prorrata
-      purchase_invoice_evidence: des dels justificants de les seves factures de compra
-      refund_operation: des de les seves operacions de devolució
-      related_party_operation: des de les seves operacions vinculades
+      purchase_invoice_evidence: des dels justificants de les teves factures rebudes
+      refund_operation: des de les teves operacions de devolució
+      related_party_operation: des de les teves operacions vinculades
       relation_prefill: des del resultat d'un model relacionat
       retenciones_aggregation: des de les retencions registrades
       withholding: des de les retencions suportades
@@ -42,11 +42,11 @@ docs:
       ad_hoc: Es presenta quan es produeix el fet
       annual: Es presenta anualment
       monthly: Es presenta mensualment
-      profile_based: Es presenta segons el seu perfil
+      profile_based: Es presenta segons el teu perfil
       quarterly: Es presenta trimestralment
     chrome:
       alternative_join: ', o'
-      binding: Vincle de dades
+      binding: S'omple des de
       casilla_count: '{casillas} caselles en {sections} seccions'
       casilla_id: Identificador de casella
       casilla_index: Totes les caselles
@@ -55,8 +55,8 @@ docs:
       established_by: Establert per
       formula: Fórmula
       general_section: General
-      index_intro: Una pàgina per model. Cada casella indica com s'omple (la introdueix
-        vostè, es calcula a partir d'altres caselles o s'omple des dels seus registres),
+      index_intro: Una pàgina per model. Cada casella indica com s'omple (la introdueixes
+        tu, es calcula a partir d'altres caselles o s'omple des dels teus registres),
         on figura en el model oficial i quina norma l'estableix.
       index_title: Referència de caselles
       legal_basis: Base legal
@@ -96,13 +96,13 @@ docs:
       bound: S'omple automàticament
       computed: Es calcula automàticament
       informational: Només informativa
-      manual: Ho introdueix vostè
+      manual: Ho introdueixes tu
       projection_only: S'omple des de la seva fila d'origen
     input_kind_count:
-      bound: omplertes des dels seus registres
+      bound: omplertes des dels teus registres
       computed: calculades
       informational: només informatives
-      manual: que introdueix vostè
+      manual: que introdueixes tu
       projection_only: omplertes des de la seva fila d'origen
     length:
       at_least: Com a mínim {min} caràcters

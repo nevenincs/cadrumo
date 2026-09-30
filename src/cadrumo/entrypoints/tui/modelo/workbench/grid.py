@@ -135,6 +135,8 @@ class CasillaListRecords:
     headings: tuple[str, ...]
     data_types: tuple[str, ...]
     rows: tuple[ModeloFormRepeatingRow, ...]
+    #: The casilla each column shows, so a finding about a column can be placed on this table.
+    column_casilla_ids: tuple[str | None, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

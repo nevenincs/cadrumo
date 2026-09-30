@@ -772,18 +772,18 @@ overview:
 provisioning:
   condition:
     role_model_fit_for_role: '%{model} ha respost al document de prova, però la seva
-      resposta no serveix per llegir una factura. Trieu un altre model de text.'
+      resposta no serveix per llegir una factura. Tria un altre model de text.'
     role_model_fitness_verified: 'No hi ha cap comprovació d''aptitud registrada per
-      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executeu
+      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executa
       `aeat config provision verify` per comprovar-ho.'
     role_model_fitness_within_timeout: '%{model} no ha acabat la resposta de prova
       abans que s''esgotés el temps límit. Pot ser massa lent per a aquest equip;
-      trieu un model més petit o augmenteu el temps d''espera de l''LLM i torneu a
-      executar `aeat config provision verify`.'
+      tria un model més petit o augmenta el temps d''espera de l''LLM i torna a executar
+      `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
-        no permet l'ús comercial. L'heu indicat de manera explícita, així que Cadrumo
+        no permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
         l'utilitzarà, però una gestoria comercial necessita una llicència a part de
         l'editor.
 review:
@@ -1080,21 +1080,21 @@ tui:
       accepted: Acceptada
       not_observed: No observada
       rejected: Rebutjada
-      submitted: Presentada
+      submitted: Presentació observada
     area:
       census: Cens
-      evidence_comparison: Comparació d'evidències
+      evidence_comparison: Comparació amb l'AEAT
       filed_declarations: Declaracions presentades
       notifications: Notificacions
       reconciliation: Conciliació
     availability:
       available: Disponible
       locked: Bloquejat
-      never_captured: Mai capturat
+      never_captured: Encara sense llegir
       stale: Desactualitzat
       unavailable: No disponible
     census:
-      title: Cens de sincronització de l'AEAT
+      title: Cens de Sincronització AEAT
     census_category:
       activity: Activitat
       address: Adreça
@@ -1122,26 +1122,26 @@ tui:
       local_filing: Presentació local
       local_value: Valor local
       read: Llegida
-      receipt: Justificant
+      receipt: Justificant de l'AEAT
       resolution: Resolució
-      sources: Fonts
+      sources: Orígens
       status: Estat
     discrepancy:
       aeat_only: Només AEAT
-      contradictory_source: Font contradictòria
+      contradictory_source: Origen contradictori
       local_only: Només local
       none: Cap diferència
       state_mismatch: Estat no coincident
       unobserved: No observat
     document_custody_state:
       held: En custòdia
-      not_captured: No capturat
+      not_captured: Sense custòdia
       refused: Rebutjat
       unavailable: No disponible
     evidence_comparison:
-      title: Comparació d'evidències de l'AEAT
+      title: 'Sincronització AEAT: comparació amb l''AEAT'
     filed_declarations:
-      title: Declaracions presentades a l'AEAT
+      title: Declaracions presentades a Sincronització AEAT
     justificante_state:
       available: Disponible
       not_observed: No observat
@@ -1149,9 +1149,9 @@ tui:
       verified: Verificat
     local_filing_state:
       draft: Esborrany
-      filed: Presentada
+      filed: Registrada com a presentada
       not_observed: No observada
-      ready: Preparada
+      ready: Preparada per presentar
     notification:
       already_handled: Aquesta notificació ja s'ha obert.
       document_handed_off: Document de notificació lliurat a l'amfitrió.
@@ -1165,16 +1165,16 @@ tui:
       unknown: Desconeguda
       unread: No llegida
     notifications:
-      title: Notificacions de l'AEAT
+      title: Notificacions de Sincronització AEAT
     operation:
       already_handled: Aquesta operació ja s'ha lliurat a l'amfitrió.
       failed: No s'ha pogut iniciar l'operació.
       handed_off: Operació lliurada a l'amfitrió.
       in_flight: Ja hi ha una operació en curs.
     overview:
-      title: Resum de sincronització de l'AEAT
+      title: Resum de Sincronització AEAT
     reconciliation:
-      title: Conciliació de l'AEAT
+      title: Conciliació de Sincronització AEAT
     reconciliation_state:
       accept_aeat: Accepta l'AEAT
       dismissed: Descartada
@@ -1185,7 +1185,7 @@ tui:
       notification_handoff: La recuperació del document de notificació no està disponible.
       operation_handoff: Les operacions amb l'AEAT no es poden iniciar des d'aquesta
         sessió.
-      source: Aquesta font no està disponible per consultar-la.
+      source: Aquest origen no està disponible per consultar-lo.
       sources_missing: 'Aquesta àrea necessita dades que encara no estan disponibles:
         %{sources}.'
       unread_notification: Les notificacions no llegides no poden obrir documents.
@@ -1219,7 +1219,7 @@ tui:
       unobserved: No observat
     zone:
       census: Cens
-      evidence_comparison: Comparació d'evidències
+      evidence_comparison: Comparació amb l'AEAT
       filed_declarations: Declaracions presentades
       notifications: Notificacions
       overview: Resum
@@ -1229,7 +1229,7 @@ tui:
       available: Disponible
       locked: Bloquejat
       never_captured: Encara sense llegir
-      stale: Dades de l'última lectura
+      stale: Desactualitzat
       unavailable: No disponible
     calendar:
       action:
@@ -1237,33 +1237,33 @@ tui:
         open: Obre aquesta declaració
       aeat:
         accepted: Acceptada
-        justificante_verified: Justificant verificat
+        justificante_verified: Justificant de l'AEAT verificat
         not_observed: No observada
-        submitted_observed: Enviament observat
-        unknown: Font no observable
+        submitted_observed: Presentació observada
+        unknown: Desconegut
       column:
-        aeat: Evidència AEAT
-        close: Tancament
+        aeat: Estat a l'AEAT
+        close: Termini
         declaration: Declaració
         legal: Situació legal
         local: Estat local
       detail:
         action: 'Acció en prémer Retorn: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}
-          · Coherència de l''evidència: {conflict}'
-        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original}
-          · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant de l''AEAT:
+          {receipt} · Coherència amb l''AEAT: {conflict}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Termini original: {original}
+          · Termini efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
           {overdue} · Ajust: {shift}'
         holidays: 'Festius: {coverage}'
         source: '{source}: {availability} · Observat: {observed}'
       empty:
         known: No hi ha obligacions en aquest interval.
         search: Cap obligació coincideix amb la cerca i l'àmbit.
-        stale: L'última agenda observada ({observed}) no té files; les dades estan
-          desactualitzades.
+        stale: L'últim calendari fiscal observat ({observed}) no té files; les dades
+          estan desactualitzades.
       evidence:
         clear: No s'ha observat cap conflicte
-        conflicted: S'ha observat evidència AEAT contradictòria
+        conflicted: S'ha observat un estat contradictori a l'AEAT
       justificante:
         not_verified: No verificat
         unknown: Desconegut
@@ -1271,17 +1271,17 @@ tui:
       legal:
         due_soon: Venç aviat
         due_today: Venç avui
-        filed: Presentada
-        not_applicable: No aplicable
+        filed: Registrada com a presentada
+        not_applicable: No s'aplica
         overdue: Vençuda
         upcoming: Propera
       local:
-        external_baseline_imported: Registre extern importat
-        not_ready_to_file: No preparada
+        external_baseline_imported: Presentació externa importada
+        not_ready_to_file: No preparada per presentar
         ready_to_file: Preparada per presentar
-        unknown: Font no observable
+        unknown: Desconegut
       never_observed: Mai observat
-      none: No aplicable
+      none: No s'aplica
       observation:
         not_recorded: Actual i disponible; hora d'observació no registrada
         time_not_recorded: Hora d'observació no registrada
@@ -1295,8 +1295,8 @@ tui:
         success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
       scope:
         all: Totes
-        evidence_unknown: Evidència AEAT desconeguda
-        filed: Presentades localment
+        evidence_unknown: Estat a l'AEAT desconegut
+        filed: Registrades com a presentades
         overdue: Vençudes
         past: Passades
         upcoming: Properes
@@ -1304,25 +1304,25 @@ tui:
         placeholder: Cerca per model, exercici, període, estat o data
       source:
         aeat:
-          evidence: Evidència AEAT
+          evidence: Estat a l'AEAT
         local:
           filing: Presentació local
         schedule: Calendari legal
-      title: Agenda de declaracions
+      title: Calendari fiscal
       user:
         due: Pendent
-        filed: Presentada localment
-        late: Endarrerida
+        filed: Registrada com a presentada
+        late: Vençuda
         unknown: Desconeguda
     column:
       aeat_confirmation: Confirmació AEAT
-      aeat_evidence: Evidència de l'AEAT
+      aeat_evidence: Estat a l'AEAT
       availability: Estat
       calculation: Càlcul actual
       current: Actual
       declaration: Declaració
-      destination: Apartat
-      filed: Presentada
+      destination: Àrea
+      filed: Registrada com a presentada
       local_filing: Estat local de presentació
       local_state: Estat local
       result: Resultat
@@ -1349,31 +1349,31 @@ tui:
       aeat_csv_register: Registre CSV de l'AEAT observat
       aeat_justificante_pdf: Justificant PDF de l'AEAT observat
       aeat_live_capture: Observació en directe de l'AEAT
-      none: Sense evidència observada de l'AEAT
+      none: Sense estat observat a l'AEAT
     filing_history:
-      axes: L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada
-        de l'AEAT són fets separats.
+      axes: L'estat local de presentació, la confirmació de l'AEAT i l'estat observat
+        a l'AEAT són fets separats.
       chain_detail: 'Origen: {origin} · Tipus: {kind} · AEAT: {confirmation} · Corregeix
         una declaració anterior: {amends}'
       title: Historial de presentacions
     filing_state:
-      supersedido: Registre local substituït
-      vigente: Registre local vigent
+      supersedido: Presentació registrada substituïda
+      vigente: Presentació registrada vigent
     lifecycle:
-      amended: Rectificació iniciada
+      amended: Correcció iniciada
       calculated: Càlcul completat
       created: Declaració creada
       discarded: Declaració descartada
       exported: Declaració exportada
-      external_evidence_imported: Evidència externa de l'AEAT importada
-      filed: Presentació registrada localment
-      observation_overridden: Observació substituïda per l'operador
-      observation_override_cleared: Substitució de l'operador eliminada
+      external_evidence_imported: Dades externes de l'AEAT importades
+      filed: Presentació registrada
+      observation_overridden: Observació substituïda manualment
+      observation_override_cleared: Substitució manual eliminada
       reconciled: Conciliada amb l'AEAT
       renamed: Declaració reanomenada
-      superseded: Presentació substituïda localment
-      verification_refused: Verificació rebutjada
-      verified: Verificació completada
+      superseded: Presentació registrada substituïda
+      verification_refused: Comprovació rebutjada
+      verified: Comprovació completada
     origin:
       aeat: AEAT
       local: Local
@@ -1396,24 +1396,24 @@ tui:
             taxpayer_profile_incomplete: El calendari fiscal no es pot calcular fins
               que es completin les respostes obligatòries del perfil. Completa-les
               a la secció Perfil.
-      source: Aquesta font no està disponible actualment.
+      source: Aquest origen no està disponible actualment.
     revision_state:
       borrador: Esborrany
       descartado: Descartat
-      presentado: Càlcul presentat
-      presentado_supersedido: Càlcul presentat substituït
-      verificado_completo: Verificació completa
+      presentado: Registrat com a presentat
+      presentado_supersedido: Registrat com a presentat i substituït
+      verificado_completo: Comprovació completa
     revisions:
-      explanation: Les revisions de càlcul són versions desades del càlcul, no revisions
-        del registre del model.
-      title: Revisions de càlcul
+      explanation: Els càlculs anteriors són les versions desades del càlcul d'aquesta
+        declaració.
+      title: Càlculs anteriors
     unavailable:
       title: Àrea de declaracions no disponible
     value:
       available: Disponible
       'no': 'No'
       none: Cap
-      not_applicable: No aplicable
+      not_applicable: No s'aplica
       result_unknown: No disponible
       'yes': Sí
     work_create:
@@ -1439,15 +1439,14 @@ tui:
     aeat_sync: Sincronització AEAT
     declarations: Declaracions
     home: Inici
-    ledger: Llibre registre
+    ledger: Registres
     profile: Perfil
     withholding: Retencions
   filing_year_route:
-    invalid: Introduïu un exercici vàlid de quatre xifres.
-    open: Obre les retencions
-    prompt: Seleccioneu un exercici (AAAA)
-    unavailable: Els justificants de retencions no estan disponibles per a aquest
-      perfil i exercici.
+    invalid: Introdueix un exercici vàlid de quatre xifres.
+    open: Obre Retencions
+    prompt: Selecciona un exercici (AAAA)
+    unavailable: Retencions no està disponible per a aquest perfil i exercici.
   home:
     account_fallback: Compte
     action:
@@ -1455,7 +1454,7 @@ tui:
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
     address: Model %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'Evidència de l''AEAT: %{state}'
+    aeat_evidence: 'Estat a l''AEAT: %{state}'
     aeat_state:
       accepted: acceptada per l'AEAT
       justificante_verified: justificant de l'AEAT verificat
@@ -1466,35 +1465,35 @@ tui:
       available: Disponible
       available_empty: '%{label} - %{detail}'
       locked: Blocat - desbloca el perfil seleccionat per veure aquesta informació
-      never_captured: Encara sense capturar
+      never_captured: Encara sense llegir
       reason:
         workbench:
           calendar:
-            aeat_reader_unavailable: Encara sense capturar - apareix després de la
-              primera Sincronització AEAT
+            aeat_reader_unavailable: Encara sense llegir - apareix després de la primera
+              Sincronització AEAT
             taxpayer_model_undeclared: No disponible - el perfil encara no indica
               quin tipus de contribuent és
           home:
             actions_projector_unavailable: No disponible - les properes accions apareixen
-              quan s'han comprovat totes les àrees del llibre
+              quan s'han comprovat tots els teus registres
             agenda_projector_unavailable: No disponible - no s'ha pogut calcular el
               calendari de presentació
             declarations_resume_projector_unavailable: No disponible - no s'han pogut
               llegir les declaracions per reprendre
-            messages_never_pulled: Encara sense capturar - els missatges de l'AEAT
-              apareixen després de la primera Sincronització AEAT
+            messages_never_pulled: Encara sense llegir - els missatges de l'AEAT apareixen
+              després de la primera Sincronització AEAT
             taxpayer_profile_incomplete: No disponible - al perfil li falten respostes
               obligatòries; completa-les a Perfil
           ledger:
             snapshot_projector_unavailable: No disponible - es mostra quan s'han comprovat
-              totes les àrees del llibre
+              tots els teus registres
       stale: Desactualitzat - la darrera còpia local necessita actualitzar-se
       stale_observed: '%{label}; darrera observació %{observed_at}'
       unavailable: No disponible - aquesta informació no es pot mostrar ara
     declaration_state:
       discarded: Descartada
       draft: Esborrany
-      filed: Presentada
+      filed: Registrada com a presentada
       needs_review: Necessita revisió
       ready: Llesta
     empty:
@@ -1504,29 +1503,29 @@ tui:
     evidence: 'Local: %{local} · AEAT: %{aeat}'
     heading:
       actions: Properes accions
-      agenda: Agenda de presentació
+      agenda: Calendari fiscal
       declarations: Declaracions
-      ledger: Preparació del llibre
+      ledger: Preparació dels registres
       messages: Missatges
     ledger_summary: Disponible - %{entries} apunts; %{requiring_review} necessiten
       revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
     local_state:
-      external_baseline_imported: base de presentació externa desada localment
-      not_ready_to_file: no llesta localment
-      ready_to_file: llesta localment
+      external_baseline_imported: presentació externa importada
+      not_ready_to_file: no preparada per presentar
+      ready_to_file: preparada per presentar
     messages_summary: Disponible - %{count} requereixen atenció
     period_state:
       due: Pendent
-      filed: Presentada
-      late: Fora de termini
+      filed: Registrada com a presentada
+      late: Vençuda
       unknown: Calendari desconegut
     reason:
       blocked_dependency: Una dependència de la declaració està blocada
-      blocked_evidence: Un bloqueig necessita justificant de suport
+      blocked_evidence: Un bloqueig necessita un justificant
       blocked_review: La feina blocada necessita revisió
       declaration_needs_review: La declaració necessita revisió
-      evidence_missing: Falta el justificant de suport
-      ledger_classification_pending: Falta classificar apunts del llibre
+      evidence_missing: Falta un justificant
+      ledger_classification_pending: Falta classificar apunts a Registres
     session:
       active: Sessió local activa
       expired: Sessió caducada
@@ -1544,9 +1543,9 @@ tui:
       review: Revisió
     availability:
       available: Disponible
-      choose_entry: Tria un assentament
+      choose_entry: Tria un apunt
       locked: Bloquejat
-      never_captured: Encara no capturat
+      never_captured: Encara sense llegir
       stale: Desactualitzat
       unavailable: No disponible
     classification:
@@ -1560,10 +1559,10 @@ tui:
       failure: No s'ha pogut desar la classificació.
       field:
         business_pct: Percentatge professional (fracció de 0 a 1; només Mixta)
-        deduction_fact_kind: Tipus de fet de deducció (identificador del registre)
-        irpf_category: Categoria d'IRPF (identificador del registre)
+        deduction_fact_kind: Tipus de deducció (codi)
+        irpf_category: Categoria d'IRPF (codi)
         iva_amount: Quota d'IVA
-        iva_category: Categoria d'IVA (identificador del registre)
+        iva_category: Categoria d'IVA (codi)
         iva_rate: Tipus d'IVA (fracció decimal; p. ex., 0.21)
         prorrata_reference: Referència de prorrata
         taxable_base: Base imposable
@@ -1571,10 +1570,10 @@ tui:
       mixed: Mixta (percentatge professional)
       personal: Personal
       progress: S'està desant la classificació…
-      prompt: Tria una classificació per a l'assentament seleccionat.
+      prompt: Tria una classificació per a l'apunt seleccionat.
       success: Classificació desada.
-      target: Assentament {position} de {total} · referència {short_id}
-      title: Classificar assentament comptable
+      target: Apunt {position} de {total} · referència {short_id}
+      title: Classificar apunt
     column:
       amount: Import
       area: Àrea
@@ -1591,8 +1590,8 @@ tui:
       review_status: Estat de revisió
       status: Estat
     entries:
-      empty: Aquesta captura no conté cap apunt.
-      title: Apunts del llibre comptable
+      empty: Encara no hi ha cap apunt.
+      title: Apunts
     entry_label: '{date} · {description}'
     evidence:
       add: Afegeix el document
@@ -1611,7 +1610,7 @@ tui:
       confirm_failed: La factura no s'ha registrat.
       confirmed: 'Factura {number} registrada: total {total} {currency}.'
       confirming: S'està registrant la factura a partir del document…
-      detail: 'Mida: {size} bytes · capturat {captured}'
+      detail: 'Mida: {size} bytes · afegit {captured}'
       draft:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
@@ -1651,7 +1650,7 @@ tui:
         pantalla.
       refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
         a llegir. Torna a l'Inici per actualitzar-la.
-      refreshing: S'està actualitzant l'espai de treball…
+      refreshing: S'està actualitzant…
     import:
       again: Importa un altre fitxer
       browse: Navega
@@ -1674,8 +1673,8 @@ tui:
         did_import: 'Importades: {count}'
         did_skip: 'Omeses perquè ja estaven registrades: {count}'
         files: 'Fitxers llegits: {count}'
-        likely_duplicates: 'Possibles duplicats: {count} (ja al llibre o abans en
-          aquest fitxer). S''importen; revisa''ls.'
+        likely_duplicates: 'Possibles duplicats: {count} (ja als teus registres o
+          abans en aquest fitxer). S''importen; revisa''ls.'
         not_measured: Les factures noves i les ja registrades només es compten en
           aplicar la importació.
         refused_file: 'No llegit: {file}: {reason}'
@@ -1701,7 +1700,7 @@ tui:
         xlsx: Llibre d'Excel
       provider_label: Format de l'extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
-      title: Importar assentaments comptables
+      title: Importar apunts
     invoice:
       again: Afegeix una altra factura
       cancel: Cancel·la
@@ -1724,7 +1723,7 @@ tui:
         invoice_class: Classe de factura
         invoice_date: Data de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
-        iva_category: Tractament de l'IVA (clau del registre)
+        iva_category: Tractament de l'IVA (codi)
         iva_rate: Tipus d'IVA (%)
         kind: Tipus de factura
         notes: Notes
@@ -1744,8 +1743,8 @@ tui:
         field:
           description: Descripció de la línia
           iva_amount: Quota d'IVA de la línia
-          iva_rate: Tipus d'IVA (clau del registre, com RATE_21)
-          oss_rate_kind: Classe de tipus OSS (clau del registre)
+          iva_rate: Tipus d'IVA (codi, com RATE_21)
+          oss_rate_kind: Classe de tipus OSS (codi)
           quantity: Quantitat
           spending_category_id: Categoria de despesa
           subtotal: Base de la línia
@@ -1786,9 +1785,9 @@ tui:
       title: Afegeix una factura
     overview:
       affected_declarations: Declaracions afectades
-      areas: Àrees del llibre
+      areas: Àrees de Registres
       quality: Qualitat de les dades i feina pendent
-      title: Resum del llibre comptable
+      title: 'Registres: resum'
     reconciliation:
       affected: Declaracions afectades
       amount_match: Coincideix l'import
@@ -1799,24 +1798,25 @@ tui:
       counterparty_match: Coincideix la contrapart
       direction: Direcció
       direction_state:
-        invoice_only: Només la factura cita l'assentament
-        transaction_only: Només l'assentament cita la factura
+        invoice_only: Només la factura cita l'apunt
+        transaction_only: Només l'apunt cita la factura
       empty: No hi ha tasques locals de conciliació disponibles.
-      entry: Assentament
+      entry: Apunt
       failure: No s'ha pogut desar l'enllaç.
       inconsistencies: Incoherències d'enllaços
       invoice: Factura
       invoice_label: '{counterparty} · {total}'
-      local_only: Només dades locals del llibre. Sincronització AEAT és un espai diferent.
-      match_evidence: Evidència canònica de coincidència
+      local_only: Només dades locals de Registres. Sincronització AEAT és una altra
+        àrea.
+      match_evidence: Per què coincideixen
       modelo: Model
       'no': 'No'
       period: Període
       progress: S'està enllaçant…
-      score: Puntuació canònica
+      score: Puntuació de coincidència
       success: Enllaç desat.
       suggestions: Enllaços suggerits
-      title: Conciliació local del llibre
+      title: 'Registres: conciliació local'
       'yes': Sí
     records:
       failed: El canvi s'ha rebutjat o no s'ha pogut desar.
@@ -1828,16 +1828,15 @@ tui:
       loading: Llegint el registre…
       no_change: Introduïu un valor diferent abans de revisar.
       open_invoices: Veure factures
-      open_transaction: Veure o editar l'assentament seleccionat
+      open_transaction: Veure o editar l'apunt seleccionat
       reviewed: Reviseu el valor i després deseu-lo.
       save: Desar el canvi
       saved: Canvi desat.
       saving: Desant el canvi…
       source: Fitxer d'origen
-      transaction_detail: Detall de l'assentament
+      transaction_detail: Detall de l'apunt
     refusal:
-      application_state: Aquesta àrea no està disponible en l'estat actual del llibre
-        comptable.
+      application_state: Aquesta àrea no està disponible en l'estat actual de Registres.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
       no_entries: Encara no hi ha apunts per classificar.
       selection_required: Selecciona primer un apunt i obre després aquesta tasca
@@ -1846,17 +1845,17 @@ tui:
         aquesta sessió.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
-      exclude_cancel: Mantén l'assentament
-      exclude_confirm: Exclou l'assentament
-      exclude_failed: L'assentament no s'ha exclòs.
-      exclude_hint: Prem x per excloure de la declaració l'assentament ressaltat.
-      exclude_question: Excloure {entry} de la declaració? Continua al llibre i es
-        pot tornar a classificar més endavant.
+      exclude_cancel: Mantén l'apunt
+      exclude_confirm: Exclou l'apunt
+      exclude_failed: L'apunt no s'ha exclòs.
+      exclude_hint: Prem x per excloure de la declaració l'apunt ressaltat.
+      exclude_question: Excloure {entry} de la declaració? Continua als teus registres
+        i es pot tornar a classificar més endavant.
       excluded: '{entry} s''ha exclòs de la declaració.'
-      excluding: S'està excloent l'assentament…
+      excluding: S'està excloent l'apunt…
       filter_all: 'Filtre: tots els estats de revisió'
       open: Obre la revisió
-      title: Revisió del llibre comptable
+      title: 'Registres: revisió'
     review_status:
       excluded: Exclòs
       pending: Pendent
@@ -1868,7 +1867,7 @@ tui:
       ready: Preparat
       unmeasured: Sense mesurar
     unavailable:
-      title: Àrea del llibre comptable no disponible
+      title: Registres no disponibles
   local_reader:
     answer:
       'no': 'no'
@@ -1884,7 +1883,7 @@ tui:
       service_installed: Runtime instal·lat
       service_running: Runtime en marxa
       text_model_pulled: Model de text baixat
-      verified: Lector verificat
+      verified: Lector comprovat
       vision_model_pulled: Model d'escanejos baixat
     choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
       el model.
@@ -1912,7 +1911,7 @@ tui:
     extraction_ready: Els documents de factura es poden llegir en aquest equip.
     fitness:
       fit: apte
-      not_verified: sense verificar
+      not_verified: sense comprovar
       timed_out: temps esgotat
       unfit: no apte
     host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
@@ -1946,7 +1945,7 @@ tui:
       load: la càrrega
       pull: la baixada
       start: l'arrencada
-      verify: la verificació
+      verify: la comprovació
     setup_stopped: 'La preparació s''ha aturat a {step}: {condition}.'
     start: Inicia el runtime
     state:
@@ -1962,7 +1961,7 @@ tui:
         calculation_report_csv: Informe de càlcul (CSV), només registre local
         calculation_report_pdf: Resum del càlcul signat (PDF), només registre local
         fichero_boe: Fitxer BOE per presentar a l'AEAT
-        label: Artefacte a exportar
+        label: Document a exportar
       payment_election:
         cuenta_corriente: Compte corrent tributari
         domiciliacion: Domiciliació bancària
@@ -1977,22 +1976,23 @@ tui:
         devolver: Sol·licitar la devolució
         label: 'Resultat negatiu: compensar o sol·licitar la devolució'
       replace_existing:
-        label: Substituir el fitxer que ja existeixi en aquesta ruta
+        label: Substituir el fitxer que ja existeixi en aquest camí
       result:
         close: Tanca
         completeness:
           not_assessed: 'No avaluada: un informe de càlcul no és un fitxer de presentació'
-          not_flagged: L'exportació no ha emès cap avís d'integritat
-          unverified: 'Sense verificar: la revisió no declara cap manifest d''integritat'
+          not_flagged: L'exportació no ha assenyalat cap incidència d'integritat
+          unverified: 'Sense comprovar: Cadrumo no té llista d''integritat per a aquesta
+            versió del model'
         evidence_status:
           local_calculation_report_not_official_aeat_filing_evidence: Informe de càlcul
             local; no és evidència oficial de presentació davant l'AEAT
           local_export_not_official_aeat_filing_evidence: Exportació local; no és
             evidència oficial de presentació davant l'AEAT
         label:
-          artefact: Artefacte exportat
+          artefact: Document exportat
           byte_size: Mida (bytes)
-          calculation_revision_id: Revisió del càlcul
+          calculation_revision_id: Càlcul desat
           completeness: Integritat
           evidence_status: Estat com a evidència
           export_format: Format
@@ -2009,11 +2009,11 @@ tui:
           de manera que se'n desconeixen l'estat com a evidència, la integritat i
           la identitat de programari. Revisa el fitxer abans de confiar-hi.
         warning:
-          completeness_unverified: 'No s''ha verificat la integritat d''aquest fitxer
-            de presentació: la seva revisió no declara cap manifest d''integritat,
-            de manera que la comprovació de paritat estructural no ha pogut confirmar
-            que totes les caselles obligatòries arribin al fitxer. Revisa les caselles
-            exportades amb el Diseño de Registros oficial abans de presentar.'
+          completeness_unverified: 'No s''ha comprovat la integritat d''aquest fitxer
+            de presentació: Cadrumo no té llista d''integritat per a aquesta versió
+            del model, així que no ha pogut confirmar que totes les caselles obligatòries
+            arribin al fitxer. Revisa les caselles exportades amb el Diseño de Registros
+            oficial abans de presentar.'
           development_software_identity: La capçalera del fitxer porta la identitat
             de programari de desenvolupament amb tot zeros; l'AEAT no acceptarà aquest
             fitxer per presentar-lo.
@@ -2024,24 +2024,24 @@ tui:
             l''AEAT. L''evidència oficial l''emet l''AEAT després de la presentació:
             justificant; consulta de declaracions presentades; o acarament per CSV.'
     m303_evidence:
-      admission_unavailable: Aquí no es pot registrar una atestació nova per a aquesta
+      admission_unavailable: Aquí no es pot registrar una confirmació nova per a aquesta
         declaració. No s'ha calculat res.
-      attestation_attachment_id: Identificador de l'atestació existent
-      attestation_sha256: SHA-256 de l'atestació existent
+      attestation_attachment_id: Identificador de la confirmació existent
+      attestation_sha256: SHA-256 de la confirmació existent
       cancel: Cancel·la
       cancelled: Càlcul cancel·lat; no s'ha registrat cap dada de l'autoliquidació.
-      existing_attestation_hint: Respon la pregunta. Després, indica una atestació
-        existent que no escau l'apartat d'exoneració del Model 390 (el seu identificador
+      existing_attestation_hint: Respon la pregunta. Després, indica una confirmació
+        existent que no escau la secció d'exoneració del Model 390 (el seu identificador
         i SHA-256), o deixa'ls en blanc i indica quan ho vas confirmar per registrar
-        una atestació nova.
+        una confirmació nova.
       joint_return_elected: Autoliquidació conjunta?
       no_modelo_390_question_hint: Respon la pregunta. L'autoliquidació d'aquest període
         no pregunta per l'exoneració del Model 390; només ho fa la de l'últim període
         de l'any (desembre o quart trimestre).
-      observed_at: Confirmat el, per a una atestació nova (ISO 8601 amb desplaçament
+      observed_at: Confirmat el, per a una confirmació nova (data i hora amb desplaçament
         UTC, per exemple 2025-04-01T12:00:00Z)
       required: Respon la pregunta sobre l'autoliquidació conjunta. A l'últim període
-        de l'any indica també una atestació existent completa o una hora de confirmació
+        de l'any indica també una confirmació existent completa o una hora de confirmació
         amb el seu desplaçament UTC, però no totes dues.
       stale_context: La declaració seleccionada ha canviat mentre el formulari era
         obert. No s'ha calculat res; torna a triar Calcula.
@@ -2083,8 +2083,8 @@ tui:
           en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
           per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
           si els vas escriure tu. En tornar a calcular, cadascuna d''aquestes caselles
-          pren el valor que li donin el seu origen o el model, o queda buida perquè
-          l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
+          pren el valor que li donin el seu origen o el model oficial, o queda buida
+          perquè l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
         operator_entries_unknown: Aquesta declaració es va calcular per última vegada
           fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
           escriure. En tornar a calcular només es conserven els valors introduïts
@@ -2169,7 +2169,7 @@ tui:
         resolve_first: 'Resol el que impedeix presentar abans de generar el fitxer
           o registrar la presentació (impedeixen presentar: {count}) [i].'
         title: Exporta la declaració
-        verify_first: Verifica la declaració abans d'exportar-la [F8].
+        verify_first: Comprova la declaració abans d'exportar-la [F8].
       filed:
         read_only: 'Registrada com a presentada: la pots consultar, però no canviar.
           Per canviar-la, inicia una correcció d''aquesta declaració.'
@@ -2188,7 +2188,7 @@ tui:
         prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
       grid:
         column_unnamed: Columna {number}
-        records_read_only: Aquests registres surten de les teves dades. Canvia'ls
+        records_read_only: Aquesta taula s'omple amb els teus registres. Canvia'ls
           allà.
         records_unknown: Cadrumo no sap quants registres hi ha.
         row_boxes: '{heading} · [{first}] a [{last}]'
@@ -2215,8 +2215,8 @@ tui:
           negative: 'Resultat negatiu: res a ingressar'
           not_calculated: 'Resultat: encara sense calcular [{key}]'
           other_boxes: 'Altres caselles de resultat d''aquest model: {boxes}'
-          sign_help: La casella [{box}] figura al model com a {value}. A dalt es mostra
-            l'import sense signe i el sentit en paraules.
+          sign_help: La casella [{box}] figura al model oficial com a {value}. A dalt
+            es mostra l'import sense signe i el sentit en paraules.
           to_carry_forward: A compensar
           to_pay: A ingressar
           to_refund: A retornar
@@ -2330,12 +2330,12 @@ tui:
         meaning:
           level:
             blocks: Cal resoldre-ho abans de registrar la presentació.
-            check: Un avís. No t'impedeix presentar.
+            check: Convé revisar-ho. No t'impedeix presentar.
             info: Una explicació, per exemple per què no s'ha fet servir un origen.
           mark:
             collapsed: Prem → per obrir-la.
             done: 'Acabat: aquí no queda res per fer.'
-            earlier: Portat d'una declaració que vas presentar abans.
+            earlier: Portat d'una declaració anterior registrada com a presentada.
             expanded: Prem ← per tancar-la.
             here: La casella seleccionada o el pas en què ets.
             staged: Has canviat aquesta casella. El canvi encara no s'ha aplicat.
@@ -2350,8 +2350,8 @@ tui:
             entered: Has escrit tu aquest valor.
             imported: 'De les teves dades a Cadrumo: els teus registres, el teu perfil
               o dades de l''AEAT que has importat.'
-            informational: El fixa el model o es mostra com a referència. No l'has
-              d'emplenar.
+            informational: El fixa el model oficial o es mostra com a referència.
+              No l'has d'emplenar.
             needs_input: La declaració necessita aquesta dada i ningú no l'ha donada.
             not_applicable: Queda buida per norma o no s'aplica a aquesta declaració.
             not_calculated_yet: Calcula la declaració per emplenar-la.
@@ -2561,13 +2561,13 @@ tui:
           en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
           per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
           si els vas escriure tu. En aplicar, cadascuna d''aquestes caselles pren
-          el valor que li donin el seu origen o el model, o queda buida perquè l''emplenis.
-          Per conservar un valor, introdueix-lo aquí abans.'
+          el valor que li donin el seu origen o el model oficial, o queda buida perquè
+          l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
         operator_entries_unknown: Aquesta declaració es va calcular per última vegada
           fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
           escriure. En aplicar només es conserven els canvis d'aquesta llista. Qualsevol
           altre valor escrit fora d'aquesta pantalla pren el valor que li donin el
-          seu origen o el model, o queda buit.
+          seu origen o el model oficial, o queda buit.
         rebased: 'La declaració va canviar després que escrivissis aquests canvis,
           que encara no estan aplicats. Revisa de nou les línies marcades (canviades:
           {count}).'
@@ -2670,45 +2670,45 @@ tui:
     navigation:
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
-    opening: S'està obrint la teva àrea de treball…
+    opening: S'està obrint Cadrumo…
     palette:
       placeholder: Cerca àrees, registres i accions…
     system:
       quit: Surt
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
-    updating: S'està actualitzant l'àrea de treball…
+    updating: S'està actualitzant…
   search:
     action:
-      classify_ledger: Classifica el llibre major
+      classify_ledger: Classifica els registres
       edit_profile: Edita el perfil
       explain_overview: Explica el resum
-      link_ledger: Enllaça el registre del llibre major
+      link_ledger: Enllaça l'apunt
       list_filing_records: Mostra les presentacions
       list_notifications: Mostra les notificacions
-      list_work_revisions: Mostra les revisions del treball
-      review_ledger: Revisa el llibre major
-      review_ledger_evidence: Revisa l'evidència del llibre major
-      unknown: Acció no reconeguda de l'espai de treball
-      validate_ledger: Valida el llibre major
+      list_work_revisions: Mostra els càlculs anteriors
+      review_ledger: Revisa els registres
+      review_ledger_evidence: Revisa els justificants
+      unknown: Acció no reconeguda
+      validate_ledger: Comprova els registres
     destination:
-      aeat_sync: Obre la sincronització AEAT
-      declarations: Obre les declaracions
-      home: Obre inici
-      ledger: Obre el llibre major
-      profile: Obre el perfil
-      unknown: Obre l'espai de treball
-      withholding: Obre els justificants de retencions
+      aeat_sync: Obre Sincronització AEAT
+      declarations: Obre Declaracions
+      home: Obre Inici
+      ledger: Obre Registres
+      profile: Obre Perfil
+      unknown: Obre l'àrea
+      withholding: Obre Retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
-      declarations: Declaracions, revisions de càlcul, historial de presentacions
-        i calendari
+      declarations: Declaracions, càlculs anteriors, historial de presentacions i
+        calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
       ledger: Apunts, revisió, classificació i justificants
-      profile: Les dades d'aquest perfil i les fonts que les completen
+      profile: Les dades d'aquest perfil i els orígens que les completen
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
-      not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
+      not_composed: Encara no s'han pogut llegir totes les àrees.
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.
@@ -2718,39 +2718,39 @@ tui:
         declaration: Declaració
         filing: Presentació
         history: Historial de presentacions
-        ledger_entry: Apunt del llibre major
-        ledger_evidence: Evidència del llibre major
+        ledger_entry: Apunt
+        ledger_evidence: Justificant
         modelo: Model
         notification: Notificació
         reconciliation: Conciliació
-        revision: Revisió de càlcul
+        revision: Càlcul anterior
       source:
-        declaration: Registres de declaracions
-        filing: Registres de presentacions
+        declaration: Declaracions
+        filing: Presentacions
         history: Historial de presentacions
-        ledger_entry: Registres locals
-        ledger_evidence: Evidència del llibre major
+        ledger_entry: Registres
+        ledger_evidence: Justificants
         modelo: Catàleg de models
         notification: Notificacions de l'AEAT
         reconciliation: Incidències de conciliació
-        revision: Historial de càlculs
+        revision: Càlculs anteriors
       status:
         declaration_draft: Esborrany
-        declaration_filed: Presentada
+        declaration_filed: Registrada com a presentada
         declaration_in_progress: En curs
         declaration_needs_attention: Requereix atenció
         declaration_ready: A punt per presentar
         filing_accepted: Acceptada
         filing_rejected: Rebutjada
-        filing_submitted: Enviada
+        filing_submitted: Presentació observada
         history_not_observed: No observada
         history_observed: Observada
         ledger_entry_classified: Classificat
         ledger_entry_needs_review: Requereix revisió
         ledger_entry_ready: Preparat
-        ledger_evidence_captured: Capturada
+        ledger_evidence_captured: Afegit
         ledger_evidence_missing: Absent
-        ledger_evidence_stale: Desactualitzada
+        ledger_evidence_stale: Desactualitzat
         modelo_available: Disponible
         modelo_unavailable: No disponible
         notification_read: Llegida

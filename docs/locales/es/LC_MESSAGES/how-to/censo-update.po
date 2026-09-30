@@ -350,7 +350,7 @@ msgid ""
 msgstr ""
 "La sede emite un *Certificado de Situación Censal* (procedimiento G313) "
 "que indica tus datos censales tal como los conserva la AEAT. Descárgalo "
-"tú desde la sede y después léelo desde el archivo en tu perfil. El primer"
+"tú desde la sede y después léelo desde el fichero en tu perfil. El primer"
 " paso muestra una vista previa; el segundo lo registra:"
 
 #: ../../how-to/censo-update.md:151

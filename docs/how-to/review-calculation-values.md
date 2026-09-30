@@ -253,7 +253,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
 (correct-an-already-filed-local-record)=
 ## Correct an already filed local record
 
-If a filing was already uploaded and later needs correction, use the amendment
+If a filing was already uploaded and later needs correction, use the correction
 command. Do not recalculate the same period. That would not create the
 correct complementaria (supplementary return) record:
 
@@ -261,7 +261,7 @@ correct complementaria (supplementary return) record:
 ```
 
 Before using this command, import the {term}`justificante` for the filing you're
-correcting. The amendment command does not submit anything to AEAT.
+correcting. The correction command does not submit anything to AEAT.
 
 ## Where to go next
 

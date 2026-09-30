@@ -125,6 +125,8 @@ _LABEL_FLOOR: Final[int] = 8
 #: The label column is never wider than this, so on a wide terminal the value stays beside its label.
 _LABEL_CAP: Final[int] = 60
 _NO_BOX: Final[str] = "·"
+#: The kind of address that names a casilla, as a finding about a record column names it.
+_CASILLA_KIND: Final[str] = "casilla"
 _PENDING_VALUE: Final[str] = "…"
 _EMPTY_VALUE: Final[str] = "·"
 _SEPARATOR: Final[str] = " · "
@@ -188,10 +190,15 @@ class CasillaListHeading:
 
 @dataclass(frozen=True, slots=True)
 class CasillaListNote:
-    """An informational line, such as a value the official design fixes."""
+    """An informational line, such as a value the official design fixes.
+
+    A note standing in for a repeating group's records carries the group's
+    column casillas, so a finding about one of them can be placed on it.
+    """
 
     text: str
     indent: int = 0
+    column_casilla_ids: tuple[str | None, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -781,12 +788,37 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         return bindings[0] if bindings else None
 
     def focus_address(self, key: AddressKey) -> bool:
-        """Put the cursor on one address; ``False`` when this page does not show it."""
+        """Put the cursor on one address, or bring the table of records showing it into view.
+
+        A column of a repeating group's records is no field the cursor rests
+        on, so a casilla one of its columns shows scrolls to the group's
+        records heading, or to the note standing in for records whose number
+        is unknown. ``False`` when this page shows the address nowhere.
+        """
         for index, item in enumerate(self._items):
             if isinstance(item, CasillaListEntry) and item.key == key:
                 self._move_cursor_to(index)
                 return True
-        return False
+        records = self._records_showing(key)
+        if records is None:
+            return False
+        self._layout()
+        if records < len(self._starts):
+            self.scroll_to(y=max(self._starts[records] - 1, 0), animate=False)
+        self.refresh()
+        return True
+
+    def _records_showing(self, key: AddressKey) -> int | None:
+        """The line a group's records start at, when one of its columns shows the casilla ``key`` names."""
+        kind, identifier = key
+        if kind != _CASILLA_KIND:
+            return None
+        for index, item in enumerate(self._items):
+            if isinstance(item, CasillaListRecords | CasillaListNote) and identifier in item.column_casilla_ids:
+                heading = index - 1
+                before = self._items[heading] if heading >= 0 else None
+                return heading if isinstance(before, CasillaListHeading) else index
+        return None
 
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:

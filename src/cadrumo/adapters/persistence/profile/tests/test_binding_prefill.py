@@ -179,13 +179,14 @@ def _registry_observation(
     )
 
 
-def _filing_result_disposition(result: RegistryCalculationResult):
+def _filing_result_disposition(result: RegistryCalculationResult, *, filing_year: int, period: str):
     """Use the production result-disposition resolver at this test filing boundary."""
     casilla_ids = result_disposition_casilla_ids("303")
     assert casilla_ids is not None
     disposition = derive_result_disposition(
         "303",
         {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+        period=Period.from_year_and_code(filing_year, period),
     )
     assert disposition is not None
     return disposition
@@ -253,7 +254,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                     source_kind="app_filing",
                     stamped_revision_id=_snapshot("303", 2025, period).revision.id,
                     result_disposition=ResultDispositionProjection(
-                        disposition=_filing_result_disposition(result),
+                        disposition=_filing_result_disposition(result, filing_year=2025, period=period),
                         provenance_kind="app_filing",
                         provenance_locator=f"test-local-filing:2025:{period}",
                     ),

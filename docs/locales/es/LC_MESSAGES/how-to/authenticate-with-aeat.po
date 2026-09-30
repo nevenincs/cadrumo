@@ -115,7 +115,7 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:47
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: tu archivo de certificado digital (certificado digital)."
+msgstr "`certificate`: tu fichero de certificado digital (certificado digital)."
 
 #: ../../how-to/authenticate-with-aeat.md:48
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
@@ -160,8 +160,8 @@ msgid ""
 "Use `--file` for providers that need a file, such as your digital "
 "certificate. Keep credential files private and do not share them."
 msgstr ""
-"Usa `--file` para los proveedores que necesitan un archivo, como tu "
-"certificado digital. Mantén privados los archivos de credenciales y no "
+"Usa `--file` para los proveedores que necesitan un fichero, como tu "
+"certificado digital. Mantén privados los ficheros de credenciales y no "
 "los compartas."
 
 #: ../../how-to/authenticate-with-aeat.md:68
@@ -191,7 +191,7 @@ msgid ""
 " a failed live read caused by an expired certificate."
 msgstr ""
 "Un certificado digital tiene una fecha de caducidad. La herramienta lee "
-"esa fecha del archivo del certificado y te avisa a medida que se acerca. "
+"esa fecha del fichero del certificado y te avisa a medida que se acerca. "
 "Esto te ayuda a evitar una lectura en directo fallida por un certificado "
 "caducado."
 
@@ -245,12 +245,12 @@ msgid ""
 msgstr ""
 "Renueva el certificado ante el organismo que lo emitió, como la Fábrica "
 "Nacional de Moneda y Timbre (FNMT) o la AEAT. Esto ocurre fuera de la "
-"herramienta. Descarga a tu equipo el archivo del certificado renovado "
+"herramienta. Descarga a tu equipo el fichero del certificado renovado "
 "(`.p12` o `.pfx`)."
 
 #: ../../how-to/authenticate-with-aeat.md:107
 msgid "Point the tool at the renewed file:"
-msgstr "Apunta la herramienta al archivo renovado:"
+msgstr "Apunta la herramienta al fichero renovado:"
 
 #: ../../how-to/authenticate-with-aeat.md:112
 msgid ""

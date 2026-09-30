@@ -42,7 +42,7 @@ from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
-from .header import blocks_marked
+from .issues import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
