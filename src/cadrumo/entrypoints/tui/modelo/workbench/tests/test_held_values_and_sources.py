@@ -611,6 +611,8 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
         if isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids
     ]
     assert records
+    # The screen starts three pages on, away from the table, so landing there is the finding's doing.
+    assert min(3, len(pages) - 1) != target
     with override_settings(cadrumo_output_language="en"):
         heading = tr("tui.modelo.workbench.repeating", count=0)
         unknown = tr("tui.modelo.workbench.grid.records_unknown")
@@ -619,7 +621,6 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
             for _ in range(3):
                 await pilot.pause()
             casilla_list = screen.query_one(CasillaList)
-            # Start from the far end, so landing on the table is the finding's doing.
             await pilot.press("]", "]", "]")
             for _ in range(2):
                 await pilot.pause()
@@ -630,4 +631,9 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
             for _ in range(4):
                 await pilot.pause()
             shown = [casilla_list.render_line(y).text for y in range(casilla_list.size.height)]
+            listed = casilla_list.items
+    # The list now shows the page holding the table whose column the finding names, and the table is in view.
+    assert any(
+        isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids for item in listed
+    )
     assert any(heading in line or unknown in line for line in shown), shown
