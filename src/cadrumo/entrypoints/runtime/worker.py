@@ -61,6 +61,7 @@ from ...application.user_profile.automation_custody_port import AutomationCustod
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ..adapter_composition import profile_adapter_composition
+from ..exchange_rate_composition import live_exchange_rate_composition
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
@@ -513,6 +514,7 @@ def run(arguments: list[str] | None = None) -> int:
                 )
             )
             composition.enter_context(profile_adapter_composition())
+            composition.enter_context(live_exchange_rate_composition())
             operations = ProfileWorkerOperationHost(
                 custody,
                 authorization=WorkerAuthorizationClient(
