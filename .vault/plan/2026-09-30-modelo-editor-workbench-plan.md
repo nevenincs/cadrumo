@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:6350039c8aba10247109690fc02719152e9b02c512e1b1c6d857a0088d7bf650'
+body_hash: 'sha256:2f0446ab051bf9e046364bb61d13682aa9bd1b4506b18571100d86468c60b535'
 ---
 
 # `modelo-editor-workbench` plan
@@ -64,12 +64,12 @@ Make every edit and recalculation keep the operator's values, give every value a
 
 Give every modelo revision a generated, validated form layout published with the registry authority.
 
-- [ ] `P02.S09` - Define the form layout family: pages, sections, field, grid, repeating and binding-input blocks, placements with the unplaced arm, box numbers, aliases, design constants, review state and source digest; `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`.
-- [ ] `P02.S10` - Enrol the layout family on the modelo revision with its keyed-family policy, loader, compiler path and a validator in the registry dispatch that refuses omitted, duplicated, invented or stale placements; `src/cadrumo/domain/calculations/registry/schema.py`.
-- [ ] `P02.S11` - Build the modelo-independent layout generator over export offsets joined to record designs, the modelo 100 dictionary and schema, design box numbers and casilla numbers, fixing the record-design heading reader it depends on; `dev/registry/form_layout`.
-- [ ] `P02.S12` - Generate layouts for every revision and add the coverage report and the cross-edition stability gate; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P02.S13` - Author the shared grid column vocabulary and the heading keys of the most-filed modelos in all four locales through the catalogue workflow; `src/cadrumo/locales`.
-- [ ] `P02.S14` - Republish the registry authority with the layout family and prove the runtime reader serves it; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `P02.S09` - Define the form layout family: pages, sections, field, grid, repeating and binding-input blocks, placements with the unplaced arm, box numbers, aliases, design constants, review state and source digest; `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`.
+- [x] `P02.S10` - Enrol the layout family on the modelo revision with its keyed-family policy, loader, compiler path and a validator in the registry dispatch that refuses omitted, duplicated, invented or stale placements; `src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `P02.S11` - Build the modelo-independent layout generator over export offsets joined to record designs, the modelo 100 dictionary and schema, design box numbers and casilla numbers, fixing the record-design heading reader it depends on; `dev/registry/form_layout`.
+- [x] `P02.S12` - Generate layouts for every revision and add the coverage report and the cross-edition stability gate; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `P02.S13` - Author the shared grid column vocabulary and the heading keys of the most-filed modelos in all four locales through the catalogue workflow; `src/cadrumo/locales`.
+- [x] `P02.S14` - Republish the registry authority with the layout family and prove the runtime reader serves it; `src/cadrumo/domain/calculations/registry/authority.py`.
 
 ### Phase `P03` - form read model
 

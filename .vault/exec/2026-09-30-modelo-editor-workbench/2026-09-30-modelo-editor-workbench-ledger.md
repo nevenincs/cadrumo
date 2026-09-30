@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:85f0a974e224b87cc2bde41b9cfb1655c748b9214828a157a6c8cbd0aa4443dc'
+body_hash: 'sha256:d247614a5ac81de3fe93cfe71d46d26c1451782a8320ce078dd07a40930d111c'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -231,6 +231,90 @@ related:
 - `S08` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
 - `S08` `verify:` `TUI tests (745)` -> `pass`
 - `S08` `by:` `lane-a`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S09` `verify:` `layout family schema tests` -> `pass`
+- `S09` `by:` `lane-b`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `M` `dev/registry/compiler/_validate_revision_sections.py`
+- `S10` `M` `dev/registry/compiler/authority_database.py`
+- `S10` `A` `dev/registry/compiler/validate_form_layouts.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S10` `A` `src/cadrumo/domain/calculations/registry/form_layout_integrity.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/keyed_families.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S10` `verify:` `validator refusals on isolated fixtures` -> `pass`
+- `S10` `by:` `lane-b`
+- `S11` `A` `dev/registry/form_layout/__init__.py`
+- `S11` `A` `dev/registry/form_layout/__main__.py`
+- `S11` `A` `dev/registry/form_layout/cli.py`
+- `S11` `A` `dev/registry/form_layout/column_vocabulary.py`
+- `S11` `A` `dev/registry/form_layout/coverage.py`
+- `S11` `A` `dev/registry/form_layout/generator.py`
+- `S11` `A` `dev/registry/form_layout/official_text.py`
+- `S11` `A` `dev/registry/form_layout/serialization.py`
+- `S11` `A` `dev/registry/form_layout/stability.py`
+- `S11` `M` `dev/registry/record_design_labels.py`
+- `S11` `A` `dev/registry/tests/test_record_design_labels.py`
+- `S11` `verify:` `generator and record-design heading reader tests` -> `pass`
+- `S11` `by:` `lane-b`
+- `S12` `A` `dev/registry/form_layout/stability_acknowledgements.toml`
+- `S12` `A` `dev/registry/form_layout/tests/__init__.py`
+- `S12` `A` `dev/registry/form_layout/tests/test_form_layout_generation.py`
+- `S12` `A` `dev/registry/form_layout/tests/test_form_layout_integrity.py`
+- `S12` `A` `src/cadrumo/_data/registry/aeat/modelos`
+- `S12` `verify:` `146 of 146 revisions generate; byte-for-byte regeneration and stability gate` -> `pass`
+- `S12` `by:` `lane-b`
+- `S13` `A` `dev/registry/form_layout/tests/test_form_layout_headings.py`
+- `S13` `A` `src/cadrumo/locales/ca/modelo/general.yml`
+- `S13` `M` `src/cadrumo/locales/ca/modelo/schema/111.yml`
+- `S13` `M` `src/cadrumo/locales/ca/modelo/schema/115.yml`
+- `S13` `M` `src/cadrumo/locales/ca/modelo/schema/130.yml`
+- `S13` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S13` `M` `src/cadrumo/locales/ca/modelo/schema/390.yml`
+- `S13` `A` `src/cadrumo/locales/en/modelo/general.yml`
+- `S13` `M` `src/cadrumo/locales/en/modelo/schema/111.yml`
+- `S13` `M` `src/cadrumo/locales/en/modelo/schema/115.yml`
+- `S13` `M` `src/cadrumo/locales/en/modelo/schema/130.yml`
+- `S13` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S13` `M` `src/cadrumo/locales/en/modelo/schema/390.yml`
+- `S13` `A` `src/cadrumo/locales/es/modelo/general.yml`
+- `S13` `M` `src/cadrumo/locales/es/modelo/schema/111.yml`
+- `S13` `M` `src/cadrumo/locales/es/modelo/schema/115.yml`
+- `S13` `M` `src/cadrumo/locales/es/modelo/schema/130.yml`
+- `S13` `M` `src/cadrumo/locales/es/modelo/schema/303.yml`
+- `S13` `M` `src/cadrumo/locales/es/modelo/schema/390.yml`
+- `S13` `A` `src/cadrumo/locales/hu/modelo/general.yml`
+- `S13` `M` `src/cadrumo/locales/hu/modelo/schema/111.yml`
+- `S13` `M` `src/cadrumo/locales/hu/modelo/schema/115.yml`
+- `S13` `M` `src/cadrumo/locales/hu/modelo/schema/130.yml`
+- `S13` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S13` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S13` `M` `dev/locales/_registry_scanner.py`
+- `S13` `M` `dev/locales/manager.py`
+- `S13` `A` `dev/locales/tests/test_form_layout_heading_exemption.py`
+- `S13` `M` `dev/locales/tests/test_parity.py`
+- `S13` `A` `docs/api/cadrumo.domain.calculations.registry.form_layout_integrity.rst`
+- `S13` `M` `docs/api/cadrumo.domain.calculations.registry.rst`
+- `S13` `A` `docs/api/cadrumo.domain.calculations.registry.schema_form_layouts.rst`
+- `S13` `A` `src/cadrumo/domain/calculations/registry/tests/test_form_layout_component.py`
+- `S13` `M` `dev/registry/compiler/authority_database.py`
+- `S13` `M` `dev/registry/conformance/tests/test_registry_schema_part1.py`
+- `S13` `M` `dev/registry/form_layout/generator.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/tests/registry_tree.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S13` `A` `src/cadrumo/_data/registry/aeat/modelos`
+- `S13` `verify:` `heading keys real in es, en, ca, hu` -> `pass`
+- `S13` `verify:` `conformance, bindings, import gate, data files, apidocs` -> `pass`
+- `S13` `by:` `lane-b`
+- `S14` `M` `.authority/authority.current.json`
+- `S14` `verify:` `publish-authority --if-stale in the shared worktree, generation 84ac42c742a1` -> `pass`
+- `S14` `verify:` `operation.form_layout serves 130 (1 page, 20 placements), 303 (5, 220), 111 (1, 30)` -> `pass`
+- `S14` `by:` `orchestrator`
 
 ## Notes
 
@@ -251,3 +335,11 @@ related:
 - `S08` Implemented on the edit-correctness lane as commit f240889d37; merged into the feature branch
 - `S04` The CLI's own help does not yet state that its recalculation differs from the TUI's, as the operator-layer decision requires; the change regenerates the CLI reference and is open
 - `S07` Preflight's `operator_layer_unknown` finding for a head stored before the layer must reach the workbench review before apply; owned by the production adapter wiring
+- `S09` Implemented on the layout-family lane as 8c3fbdf23b; merged into the feature branch
+- `S10` Implemented on the layout-family lane as b6b6521325; merged into the feature branch
+- `S11` Implemented on the layout-family lane as 4fc8d3e6b0; merged into the feature branch
+- `S12` Implemented on the layout-family lane as 00a26694ff; merged into the feature branch
+- `S12` 146 generated per-revision `form_layouts` fragments are logged as their registry tree
+- `S13` Implemented on the layout-family lane as 628d73ef20, 836afe9110, 7d2a15f1ed; merged into the feature branch
+- `S13` 146 generated per-revision `form_layouts` fragments are logged as their registry tree
+- `S14` The authority tree is gitignored runtime state; the descriptor row records the publication, not a committed file
