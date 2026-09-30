@@ -40,6 +40,7 @@ from ..edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
+from ..edit_value_grammar import ModeloEditValueChannel, ModeloEditValueFamily, ModeloEditValueGrammarV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -76,6 +77,13 @@ def _scalar_surface_entry() -> ModeloEditWritableScalarSurfaceEntryV1:
         casilla_id="casilla-01",
         data_type=CasillaDataType.MONEY,
         allowed_intents=(ModeloEditScalarIntentKind.SET_TYPED_VALUE, ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE),
+        grammar=ModeloEditValueGrammarV1(
+            data_type=CasillaDataType.MONEY.value,
+            family=ModeloEditValueFamily.DECIMAL,
+            channel=ModeloEditValueChannel.DECIMAL,
+            max_fraction_digits=2,
+            money_operand_bound=True,
+        ),
     )
 
 
@@ -103,8 +111,8 @@ def _baseline(
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         work_unit_id=_WORK_UNIT_ID,
-        work_catalogue_revision=_DIGEST,
-        calculation_catalogue_revision=_DIGEST,
+        work_unit_record_digest=_DIGEST,
+        calculation_head_digest=_DIGEST,
         current_calculation_revision_id=None,
         law_selected_revision_id=_REVISION_ID,
         schema_identity=ModeloEditSchemaIdentityV1(
@@ -254,14 +262,14 @@ def test_domain_refusal_rejects_the_typed_stale_baseline_code() -> None:
         )
     ModeloEditStaleBaselineRefusalV1(
         baseline_id=_BASELINE_ID,
-        mismatching_coordinates=("work_catalogue_revision",),
+        mismatching_coordinates=("work_unit_record_digest",),
         responsible_owner="modelo.edit",
         reconsideration_condition="retry with a freshly admitted baseline",
     )
     with pytest.raises(ValidationError, match="must be unique"):
         ModeloEditStaleBaselineRefusalV1(
             baseline_id=_BASELINE_ID,
-            mismatching_coordinates=("work_catalogue_revision", "work_catalogue_revision"),
+            mismatching_coordinates=("work_unit_record_digest", "work_unit_record_digest"),
             responsible_owner="modelo.edit",
             reconsideration_condition="retry with a freshly admitted baseline",
         )
@@ -285,7 +293,7 @@ def test_execution_result_discriminates_on_effect() -> None:
 
     refusal = ModeloEditStaleBaselineRefusalV1(
         baseline_id=_BASELINE_ID,
-        mismatching_coordinates=("calculation_catalogue_revision",),
+        mismatching_coordinates=("calculation_head_digest",),
         responsible_owner="modelo.edit",
         reconsideration_condition="retry with a freshly admitted baseline",
     )

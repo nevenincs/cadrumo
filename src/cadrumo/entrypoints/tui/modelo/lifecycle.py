@@ -4,6 +4,14 @@ The door owns no tax or persistence behaviour.  It creates registered public
 requests and hands them to the session's composed operation services, so the
 modal remains the one place that observes cancellation, refusal and terminal
 success.
+
+Editing is admitted lazily: the door holds the application's admission,
+renewal and preflight as callables and runs them off the event loop when an
+edit session actually starts, reviews and submits. An admission refusal is
+returned to the caller as the typed refusal it is, never mapped to "no edit
+surface". Every edit is a typed intent -- set, clear or restore a casilla,
+set or remove a binding override -- and a submission renews its baseline
+first, so an unchanged declaration is never refused merely for time passing.
 """
 
 from __future__ import annotations
@@ -15,14 +23,15 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from ....application.modelo.action_errors import modelo_edit_refusal_error
+from ....application.modelo.edit_admission import ModeloEditRenewalResultV1
 from ....application.modelo.edit_contract import ModeloEditMutationFamily
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
+    ModeloEditAdmissionResultV1,
     ModeloEditBaselineV1,
-    ModeloEditBindingAddressV1,
-    ModeloEditBindingIntentKind,
-    ModeloEditScalarAddressV1,
-    ModeloEditScalarIntentKind,
+    ModeloEditPreflightResultV1,
+    ModeloEditRefusedV1,
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
@@ -76,7 +85,12 @@ class ModeloWorkspaceLifecycleDoor:
     calculation_revision_id: str | None = None
     verification_report_id: str | None = None
     refresh_after_success: Callable[[], object] | None = None
-    edit_baseline: ModeloEditBaselineV1 | None = None
+    #: Admits a fresh edit baseline from live storage; ``None`` when this declaration offers no editing.
+    edit_admission: Callable[[], ModeloEditAdmissionResultV1] | None = None
+    #: Renews a baseline when only its lifetime changed, or refuses naming what moved.
+    edit_renewal: Callable[[ModeloEditBaselineV1], ModeloEditRenewalResultV1] | None = None
+    #: Evaluates a submission in process and names the address of every finding.
+    edit_preflight: Callable[[ModeloEditSubmissionV1], ModeloEditPreflightResultV1] | None = None
     m303_exonerado_390_attestation_admission: (
         Callable[[datetime], M303Exonerado390ApplicabilityAttestationAdmission] | None
     ) = None
@@ -126,38 +140,54 @@ class ModeloWorkspaceLifecycleDoor:
             m303_exonerado_390_sha256=admission.sha256,
         )
 
-    async def apply_edits(
-        self,
-        *,
-        scalar_values: dict[str, str],
-        binding_values: dict[str, str],
-    ) -> OperationController:
-        """Apply staged registry-addressed values through Modelo Edit Contract V1."""
-        baseline = self.edit_baseline
-        if baseline is None:
+    async def admit_edit_baseline(self) -> ModeloEditAdmissionResultV1:
+        """Admit an edit baseline now, off the event loop; a refusal is returned, not hidden."""
+        admit = self.edit_admission
+        if admit is None:
             raise ModeloLifecycleActionUnavailableError(
                 translated_message="application.modelo.lifecycle.refusal.edit_unavailable"
             )
-        submission = ModeloEditSubmissionV1(
-            baseline=baseline,
-            mutation_family=ModeloEditMutationFamily.CALCULATE,
-            scalar_intents=tuple(
-                ModeloScalarEditIntentV1(
-                    address=ModeloEditScalarAddressV1(casilla_id=casilla_id),
-                    kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
-                    value=value,
-                )
-                for casilla_id, value in scalar_values.items()
-            ),
-            binding_intents=tuple(
-                ModeloBindingEditIntentV1(
-                    address=ModeloEditBindingAddressV1(binding_id=binding_id),
-                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
-                    value=value,
-                )
-                for binding_id, value in binding_values.items()
-            ),
+        return await asyncio.to_thread(admit)
+
+    async def renew_edit_baseline(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
+        """Renew ``baseline`` off the event loop, as an editor does when opening its review."""
+        return await asyncio.to_thread(self._require_renewal(), baseline)
+
+    async def preflight_edits(
+        self,
+        *,
+        baseline: ModeloEditBaselineV1,
+        scalar_intents: tuple[ModeloScalarEditIntentV1, ...] = (),
+        binding_intents: tuple[ModeloBindingEditIntentV1, ...] = (),
+    ) -> ModeloEditPreflightResultV1:
+        """Evaluate staged intents in process, off the event loop, naming every finding's address."""
+        preflight = self.edit_preflight
+        if preflight is None:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="application.modelo.lifecycle.refusal.edit_unavailable"
+            )
+        return await asyncio.to_thread(
+            preflight, _edit_submission(baseline, scalar_intents=scalar_intents, binding_intents=binding_intents)
         )
+
+    async def apply_edits(
+        self,
+        *,
+        baseline: ModeloEditBaselineV1,
+        scalar_intents: tuple[ModeloScalarEditIntentV1, ...] = (),
+        binding_intents: tuple[ModeloBindingEditIntentV1, ...] = (),
+    ) -> OperationController:
+        """Renew the baseline, then submit the typed intents through Modelo Edit Contract V1.
+
+        The renewal is silent when only the baseline's lifetime changed. When
+        the declaration itself moved, the stale refusal is raised as its
+        registered, localized error before anything is submitted, so the
+        operator's staged intents stay with the caller.
+        """
+        renewal = await asyncio.to_thread(self._require_renewal(), baseline)
+        if isinstance(renewal, ModeloEditRefusedV1):
+            raise modelo_edit_refusal_error(renewal.refusal)
+        submission = _edit_submission(renewal.baseline, scalar_intents=scalar_intents, binding_intents=binding_intents)
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
@@ -262,6 +292,14 @@ class ModeloWorkspaceLifecycleDoor:
             return None
         return resolved.projection
 
+    def _require_renewal(self) -> Callable[[ModeloEditBaselineV1], ModeloEditRenewalResultV1]:
+        renew = self.edit_renewal
+        if renew is None:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="application.modelo.lifecycle.refusal.edit_unavailable"
+            )
+        return renew
+
     def _require_calculation_revision(self) -> str:
         if self.calculation_revision_id is None:
             raise ModeloLifecycleActionUnavailableError(
@@ -274,6 +312,20 @@ class ModeloWorkspaceLifecycleDoor:
         controller = OperationController(services=self.services, submission=submission, actor_ref=_ACTOR_REF)
         await controller.start()
         return controller
+
+
+def _edit_submission(
+    baseline: ModeloEditBaselineV1,
+    *,
+    scalar_intents: tuple[ModeloScalarEditIntentV1, ...],
+    binding_intents: tuple[ModeloBindingEditIntentV1, ...],
+) -> ModeloEditSubmissionV1:
+    return ModeloEditSubmissionV1(
+        baseline=baseline,
+        mutation_family=ModeloEditMutationFamily.CALCULATE,
+        scalar_intents=scalar_intents,
+        binding_intents=binding_intents,
+    )
 
 
 __all__ = ["ModeloLifecycleActionUnavailableError", "ModeloWorkspaceLifecycleDoor"]

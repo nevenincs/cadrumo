@@ -24,9 +24,10 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import re
 from collections.abc import Callable, Mapping
 from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
@@ -129,11 +130,14 @@ from .edit_models import (
     ModeloEditScalarIntentKind,
     ModeloEditSchemaIdentityV1,
     ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
+from .edit_value_grammar import MONEY_OPERAND_MAXIMUM, ModeloEditValueGrammarV1
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
@@ -383,7 +387,19 @@ class ModeloWorkCalculatePublicResultV1(BaseModel):
 
 
 class ModeloWorkCalculateExecutor:
-    """Run the canonical ledger-backed calculation under the operation journal."""
+    """Recalculate a declaration from its ledger while keeping the operator's work.
+
+    This is the workspace's Calculate action. It replays the caller context of
+    the current calculation head -- the operator's own values and overrides,
+    explicit clears, detail rows, Modelo 303 filing evidence, Modelo 210
+    selections and borrador snapshot -- so new ledger data reaches the
+    declaration without discarding what the operator entered. A head stored
+    before operator layers existed replays no values (they are unknown, not
+    empty), and its recalculation records no layer either, so that
+    uncertainty is carried rather than silently resolved. The CLI
+    ``modelo work calculate`` command does not use this operation and keeps its
+    explicit full-specification semantics.
+    """
 
     def __init__(
         self,
@@ -400,9 +416,11 @@ class ModeloWorkCalculateExecutor:
         request: OperationRequest[ModeloWorkCalculateRequest],
         context: OperationExecutorContext,
     ) -> str | None:
-        """Delegate calculation without reinterpreting ledger or tax inputs."""
+        """Replay the head's caller context through the canonical calculation boundary."""
+        from ...core.authority_grade import RegistryAuthorityGrade
         from ...core.bucket_pointer import require_active_bucket_id
         from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+        from .caller_context import caller_context_calculation_inputs, caller_context_of
         from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
         await context.events.phase("modelo.work.calculate.ledger")
@@ -416,10 +434,26 @@ class ModeloWorkCalculateExecutor:
             repository_bucket_id=ports.work_unit_repository.bucket_id,
             use=ActiveWorkUnitUse.CALCULATE,
         )
+        head = (
+            ports.calculation_repository.load().get(work_unit.current_calculation_revision_id)
+            if work_unit.current_calculation_revision_id is not None
+            else None
+        )
+        caller_context = caller_context_of(head)
         filing_instance_evidence = self._ordinary_m303_filing_instance_evidence(
             payload=payload,
             work_unit=work_unit,
             operation=context.authority_operation,
+            replayed=caller_context.filing_instance_evidence,
+        )
+        replay = caller_context_calculation_inputs(
+            caller_context,
+            revision=context.authority_operation.snapshot(
+                str(work_unit.modelo),
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+                grade=RegistryAuthorityGrade.CALCULATION,
+            ).revision,
         )
         # Everything above only reads, so a refusal there truthfully changed
         # nothing; the outcome is open only once the persisting call begins.
@@ -429,7 +463,17 @@ class ModeloWorkCalculateExecutor:
             payload.work_unit_id,
             ports=ports,
             actor=payload.actor,
+            casilla_inputs=replay.casilla_inputs,
+            text_casilla_inputs=replay.text_casilla_inputs,
+            cleared_casilla_ids=replay.cleared_casilla_ids,
+            record_operator_layer=caller_context.operator_layer_known,
+            binding_values=replay.binding_values,
+            enum_binding_values=replay.enum_binding_values,
+            detail_rows=replay.detail_rows,
             filing_instance_evidence=filing_instance_evidence,
+            m210_official_tipo_renta_code=replay.m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=replay.m210_gross_income_source_mode,
+            borrador_snapshot_id=replay.borrador_snapshot_id,
         )
         await context.events.effect(OperationEffect.UPDATED)
         return str(result.revision.calculation_revision_id)
@@ -440,8 +484,15 @@ class ModeloWorkCalculateExecutor:
         payload: ModeloWorkCalculateRequest,
         work_unit: WorkUnit,
         operation: PinnedAuthorityOperation,
+        replayed: FilingInstanceEvidence | None,
     ) -> FilingInstanceEvidence | None:
-        """Author the one supported M303 envelope before calculation can persist it."""
+        """Author the one supported M303 envelope, or replay the head's, before calculation.
+
+        Newly supplied facts are authored and win: the operator answered the
+        questions again. Absent a new answer, the head's recorded evidence is
+        replayed, because those are the operator's standing filing facts for
+        this declaration. Only when neither exists is the evidence missing.
+        """
         from ...core.modelo import Modelo
 
         supplied = payload.ordinary_m303_filing_evidence
@@ -454,6 +505,8 @@ class ModeloWorkCalculateExecutor:
                     {"modelo": str(work_unit.modelo), "evidence_present": True},
                 )
             )
+        if supplied is None and replayed is not None:
+            return replayed
         if supplied is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
@@ -1667,8 +1720,8 @@ _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND = OperationTransientFinancialOperandDeclara
     operand_kind=_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND_KIND,
     currency="EUR",
     scale=2,
-    minimum=Decimal("-999999999999.99"),
-    maximum=Decimal("999999999999.99"),
+    minimum=-MONEY_OPERAND_MAXIMUM,
+    maximum=MONEY_OPERAND_MAXIMUM,
     lifetime=timedelta(minutes=5),
 )
 
@@ -1694,8 +1747,8 @@ class ModeloEditApplyBaselineV1(BaseModel):
     period_filing_year: FilingYear
     period_code: Annotated[str, Field(min_length=1, max_length=16)]
     work_unit_id: WorkUnitId
-    work_catalogue_revision: ContentDigest
-    calculation_catalogue_revision: ContentDigest
+    work_unit_record_digest: ContentDigest
+    calculation_head_digest: ContentDigest
     current_calculation_revision_id: CalculationRevisionId | None
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1
@@ -1756,9 +1809,9 @@ class ModeloEditApplyBaselineV1(BaseModel):
 #: values, though NOT where this once said. ``to_submission`` does not restore
 #: the ``Decimal``: ``ModeloScalar`` is a plain union and ``EditModel`` is
 #: strict, so a string crosses back as a string. The reconstruction happens one
-#: layer further in, at the execution boundary, which coerces with
-#: ``Decimal(str(value))`` keyed on the CASILLA'S DECLARED ``data_type`` from
-#: the registry rather than on the value's Python type. That is the stronger
+#: layer further in, at the execution boundary, which re-applies the address's
+#: admitted value grammar (the registry's declared type, precision and bounds)
+#: rather than trusting the value's Python type. That is the stronger
 #: guarantee -- the registry decides what a casilla holds, not the wire -- but
 #: it does mean a round trip through this mirror is not an identity for
 #: ``Decimal``, and a test asserting that it is will fail correctly.
@@ -1776,10 +1829,10 @@ def _wire_scalar_value(value: ModeloScalar) -> _ModeloEditApplyScalarValue:
     Not a total inverse of the round trip, deliberately. ``ModeloScalar``
     admits a plain ``str``, so a string that spells a number is
     indistinguishable on the wire from a ``Decimal`` and comes back as a
-    ``str``. Nothing is lost by that: the execution boundary reconstructs the
-    amount with ``Decimal(str(value))`` according to the casilla's declared
-    registry ``data_type``, so what a casilla holds is decided by the registry
-    rather than by which Python type happened to survive the trip.
+    ``str``. Nothing is lost by that: the execution boundary reads the value
+    again through the address's admitted grammar, so what a casilla holds is
+    decided by the registry rather than by which Python type happened to
+    survive the trip.
     """
     return str(value) if isinstance(value, Decimal) else value
 
@@ -1856,21 +1909,28 @@ class ModeloEditApplyRowIntentV1(BaseModel):
         )
 
 
-def _amount_within_declared_operand_bounds(value: _ModeloEditApplyScalarValue) -> bool:
-    """Report whether a wire scalar value that parses as a decimal amount stays in bounds.
+def _amount_within_declared_operand_bounds(
+    value: _ModeloEditApplyScalarValue,
+    grammar: ModeloEditValueGrammarV1 | None,
+) -> bool:
+    """Report whether a money address's canonical amount stays inside the declared operand.
 
-    A value that is not decimal-shaped (an integer, a plain non-numeric
-    string, a boolean, or a date) carries no financial-operand meaning and is
-    left to whatever business validation the domain reconstruction applies.
+    The operand is a euro amount, so the bound applies to money addresses
+    only: a ratio of ``0.125`` or a four-decimal quantity is a legitimate value
+    that the money bound must not refuse. Only the declared range is judged
+    here; a value that is not a canonical decimal, or a money amount finer than
+    cents, is refused by the executor with its typed, address-level reason
+    rather than by a validation error at the wire.
     """
-    if not isinstance(value, str):
+    if grammar is None or not grammar.money_operand_bound or not isinstance(value, str):
         return True
-    try:
-        amount = Decimal(value)
-    except InvalidOperation:
+    if _CANONICAL_WIRE_DECIMAL.fullmatch(value) is None:
         return True
-    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.admits(amount)
+    amount = Decimal(value)
+    return _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.minimum <= amount <= _MODELO_EDIT_MANUAL_OVERRIDE_OPERAND.maximum
 
+
+_CANONICAL_WIRE_DECIMAL = re.compile(r"^-?\d+(\.\d+)?$")
 
 _WIRE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -2235,20 +2295,35 @@ class ModeloEditApplySubmissionV1(BaseModel):
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
-        """Enforce the manual-override operand's own declared currency, scale and range.
+        """Enforce the manual-override operand's declared range on money addresses.
 
         The broker path (`OperationTransientFinancialOperandProtocolV1`) that
         would normally enforce `_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND` is not
         reachable from any executor today (`OperationExecutorContext` has no
         accessor for it). The manual-override amount instead arrives here,
-        through the already-admitted scalar intent value, so this duplicates
-        the bounds the declaration promises rather than leaving them
-        unenforced. It should collapse into the broker once that wire lands.
+        through the already-admitted intent value, so this duplicates the
+        bounds the declaration promises rather than leaving them unenforced.
+        The bound is looked up by address in the baseline's admitted grammar,
+        so only money casillas and money bindings are held to it. It should
+        collapse into the broker once that wire lands.
         """
+        grammars: dict[tuple[str, str], ModeloEditValueGrammarV1] = {}
+        for entry in self.baseline.permitted_surface:
+            if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                grammars["writable_scalar", entry.casilla_id] = entry.grammar
+            elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                grammars["writable_binding_override", entry.binding_id] = entry.grammar
         for intent in self.scalar_intents:
-            if not _amount_within_declared_operand_bounds(intent.value):
+            grammar = grammars.get(("writable_scalar", intent.address.casilla_id))
+            if not _amount_within_declared_operand_bounds(intent.value, grammar):
                 raise ValueError(
                     "scalar edit intent amount is outside the declared manual-override financial operand bounds"
+                )
+        for binding_intent in self.binding_intents:
+            grammar = grammars.get(("writable_binding_override", binding_intent.address.binding_id))
+            if not _amount_within_declared_operand_bounds(binding_intent.value, grammar):
+                raise ValueError(
+                    "binding edit intent amount is outside the declared manual-override financial operand bounds"
                 )
         return self
 
@@ -2374,7 +2449,10 @@ class ModeloEditApplyExecutor:
             submission=submission,
         )
         operation = context.authority_operation
-        outcome = apply_modelo_edit(
+        # The edit recalculates the whole declaration and writes encrypted
+        # storage; run it off the event loop exactly as calculation does.
+        outcome = await asyncio.to_thread(
+            apply_modelo_edit,
             apply_request,
             ports=self._calculation_action_ports_factory(
                 bucket_id=baseline.bucket_id,

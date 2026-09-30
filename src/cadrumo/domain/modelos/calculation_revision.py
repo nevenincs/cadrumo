@@ -87,6 +87,7 @@ from .calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -210,6 +211,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
     amendment_identity: CalculationRevisionAmendmentIdentity | None
     cleared_casilla_ids: Sequence[CasillaId]
+    operator_layer: CalculationOperatorLayer | None
 
 
 def calculation_revision_identity_inputs(
@@ -235,6 +237,7 @@ def calculation_revision_identity_inputs(
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -265,6 +268,7 @@ def calculation_revision_identity_inputs(
         "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
         "amendment_identity": amendment_identity,
         "cleared_casilla_ids": cleared_casilla_ids,
+        "operator_layer": operator_layer,
     }
 
 
@@ -291,6 +295,7 @@ def derive_calculation_revision_id(
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return derive_calculation_revision_id_from_identity_inputs(
@@ -316,6 +321,7 @@ def derive_calculation_revision_id(
             m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
             amendment_identity=amendment_identity,
             cleared_casilla_ids=cleared_casilla_ids,
+            operator_layer=operator_layer,
         ),
     )
 
@@ -529,6 +535,18 @@ def _validate_replay_channels(revision: CalculationRevision) -> None:
         "relation_overrides",
         revision.relation_overrides,
     )
+
+
+def _validate_operator_layer(revision: CalculationRevision) -> None:
+    """Keep an operator value and an explicit clear of the same casilla mutually exclusive."""
+    layer = revision.operator_layer
+    if layer is None:
+        return
+    both = sorted(layer.casilla_ids().intersection(revision.cleared_casilla_ids))
+    if both:
+        raise ModeloValidationError(
+            f"calculation revision operator layer sets casillas it also records as cleared: {both!r}",
+        )
 
 
 def _validate_observation_projection(revision: CalculationRevision) -> None:
@@ -846,6 +864,13 @@ class CalculationRevision(BaseModel):
     # absent from ``input_values_by_casilla_id``, but only the cleared one
     # appears here.
     cleared_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
+    # The caller tier this revision was calculated from, apart from every
+    # source tier merged into ``input_values_by_casilla_id`` and
+    # ``binding_overrides``. ``None`` means UNKNOWN -- every revision stored
+    # before the layer existed -- never "the operator authored nothing"; a
+    # calculation that knew its caller tier records an empty layer instead. It
+    # joins the content address only when present, so stored ids are unchanged.
+    operator_layer: CalculationOperatorLayer | None = Field(default=None, repr=False)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
     # casilla. Revisions with output values must populate this from the
@@ -953,6 +978,7 @@ class CalculationRevision(BaseModel):
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)
         _validate_replay_channels(self)
+        _validate_operator_layer(self)
         _validate_row_materialization(self)
         _validate_observation_projection(self)
         _validate_lifecycle_order(self)
@@ -1168,6 +1194,7 @@ def calculation_revision_identity_inputs_from_revision(
         m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
         amendment_identity=revision.amendment_identity,
         cleared_casilla_ids=revision.cleared_casilla_ids,
+        operator_layer=revision.operator_layer,
     )
 
 

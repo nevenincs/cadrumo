@@ -418,6 +418,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloClearedCasillaSourceFedError",
+        ErrorCode(
+            code="ERROR_MODELO_CLEARED_CASILLA_SOURCE_FED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_cleared_casilla_source_fed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",

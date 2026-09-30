@@ -43,9 +43,19 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import Button, Checkbox, DataTable, Input, Select, Static
 
+from .....application.modelo.action_errors import modelo_edit_refusal_error
 from .....application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditAdmittedV1,
+    ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditRefusedV1,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
+    ModeloScalarEditIntentV1,
 )
 from .....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....core.errors.error_codes import resolve_error_message
@@ -165,6 +175,20 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         super().__init__(id=id)
         self._session = session
         self._action_in_flight = False
+        self._edit_baseline: ModeloEditBaselineV1 | None = None
+
+    def _admitted_edit_baseline(self) -> ModeloEditBaselineV1 | ModeloEditRefusedV1 | None:
+        """Admit the edit baseline this screen composes its fields from; a refusal is shown, not hidden."""
+        admit = getattr(self._session.lifecycle_actions, "edit_admission", None)
+        if admit is None:
+            return None
+        admission = admit()
+        if isinstance(admission, ModeloEditAdmittedV1):
+            self._edit_baseline = admission.baseline
+            return admission.baseline
+        if isinstance(admission, ModeloEditRefusedV1):
+            return admission
+        return None
 
     @override
     def compose(self) -> ComposeResult:
@@ -179,8 +203,14 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
             yield Static(id="workspace-overview-actions")
             yield Static(id="modelo-lifecycle-notice")
             if self._session.lifecycle_actions is not None:
-                edit_baseline = getattr(self._session.lifecycle_actions, "edit_baseline", None)
-                if edit_baseline is not None:
+                edit_baseline = self._admitted_edit_baseline()
+                if isinstance(edit_baseline, ModeloEditRefusedV1):
+                    yield Static(
+                        resolve_error_message(modelo_edit_refusal_error(edit_baseline.refusal)),
+                        id="modelo-edit-refusal",
+                        markup=False,
+                    )
+                elif edit_baseline is not None:
                     for entry in edit_baseline.permitted_surface:
                         if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
                             yield Input(
@@ -353,21 +383,37 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         output_path = None
         keyword_arguments: dict[str, object] = {}
         if method_name == "apply_edits":
-            baseline = getattr(actions, "edit_baseline", None)
+            baseline = self._edit_baseline
             if baseline is None:
                 return
-            scalar_values: dict[str, str] = {}
-            binding_values: dict[str, str] = {}
+            scalar_intents: list[ModeloScalarEditIntentV1] = []
+            binding_intents: list[ModeloBindingEditIntentV1] = []
             for entry in baseline.permitted_surface:
                 if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
                     value = self.query_one(f"#{edit_control_id('scalar', str(entry.casilla_id))}", Input).value.strip()
                     if value:
-                        scalar_values[str(entry.casilla_id)] = value
+                        scalar_intents.append(
+                            ModeloScalarEditIntentV1(
+                                address=ModeloEditScalarAddressV1(casilla_id=entry.casilla_id),
+                                kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                                value=value,
+                            )
+                        )
                 elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
                     value = self.query_one(f"#{edit_control_id('binding', str(entry.binding_id))}", Input).value.strip()
                     if value:
-                        binding_values[str(entry.binding_id)] = value
-            keyword_arguments = {"scalar_values": scalar_values, "binding_values": binding_values}
+                        binding_intents.append(
+                            ModeloBindingEditIntentV1(
+                                address=ModeloEditBindingAddressV1(binding_id=entry.binding_id),
+                                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                                value=value,
+                            )
+                        )
+            keyword_arguments = {
+                "baseline": baseline,
+                "scalar_intents": tuple(scalar_intents),
+                "binding_intents": tuple(binding_intents),
+            }
         if method_name == "export":
             output_path = self.query_one("#modelo-lifecycle-export-path", Input).value.strip()
             if not output_path:

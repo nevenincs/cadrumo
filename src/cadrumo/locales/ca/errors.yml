@@ -278,6 +278,9 @@ errors:
       és compatible amb l'estat actual de la revisió de càlcul.
     error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
       té definició al registre.
+    error_modelo_cleared_casilla_source_fed: La casella {casilla_ids} no es pot buidar
+      perquè una de les seves fonts continua aportant-hi un valor. Restaureu el valor
+      de la font en lloc de buidar-la.
     error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
