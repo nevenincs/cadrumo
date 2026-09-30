@@ -2437,7 +2437,6 @@ tui:
           del {date}'
         fill: 'Completa las casillas marcadas (pendientes: {count})'
         recalculate: 'Vuelve a calcular: tus registros han cambiado'
-        record: Cuando la hayas presentado en la AEAT, registra aquí la presentación
         record_after_file: Fichero generado el {date}. Cuando lo hayas presentado
           en la AEAT, registra aquí la presentación
         recorded: Registrada como presentada el {date}

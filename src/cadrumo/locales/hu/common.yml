@@ -2428,7 +2428,6 @@ tui:
         export_again: 'Hozza létre újra a fájlt: a bevallás {date} után módosult'
         fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
         recalculate: 'Számolja újra: a nyilvántartása megváltozott'
-        record: Miután benyújtotta az AEAT-nál, rögzítse itt a benyújtást
         record_after_file: 'A fájl létrehozva: {date}. Miután benyújtotta az AEAT-nál,
           rögzítse itt a benyújtást'
         recorded: 'Benyújtottként rögzítve: {date}'

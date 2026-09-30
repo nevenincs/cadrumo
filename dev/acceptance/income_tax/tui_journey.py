@@ -65,8 +65,12 @@ _OFFERED_STEP_KEYS: Final[Mapping[str, str]] = {
     "record": "F8",
     "verify": "F8",
 }
+#: The catalogue action that names a step on the next-step line, where it differs from the step's name.
+_OFFERED_STEP_ACTIONS: Final[Mapping[str, str]] = {"record": "record_after_file"}
 #: Stands in for a count while the next-step line is turned into a pattern.
 _COUNT_PLACEHOLDER: Final = "\ue000"
+#: Stands in for a date while the next-step line is turned into a pattern.
+_DATE_PLACEHOLDER: Final = "\ue001"
 _BULK_TICK: Final = "#bulk-tick"
 _BULK_CONFIRM: Final = "#bulk-confirm"
 _REVIEW_APPLY: Final = "#review-apply"
@@ -983,32 +987,28 @@ def _offered_line(pilot: Pilot[Any]) -> str:
 
 
 def _offered_step_pattern(step: str) -> re.Pattern[str]:
-    """The next-step line that offers ``step``, from the catalogue, with any count left open.
+    """The next-step line that offers ``step``, from the catalogue, with any count or date left open.
 
-    Recording the filing is offered after the export file, on the same line,
-    with the next-step key; the line must end with it.
+    Recording the filing is offered on its own line once a file made from the
+    current calculation exists, naming the day that file was created.
     """
-    from cadrumo.core.i18n.render import tr
-
     key = _OFFERED_STEP_KEYS.get(step)
     if key is None:
         raise TuiJourneyError(f"the workbench offers no step named {step!r}")
-    if step == "record":
-        record = re.escape(f"{tr('tui.modelo.workbench.next.record')} [{key}]")
-        return re.compile(f"{_next_line_source('export', _OFFERED_STEP_KEYS['export'])}.*{record}$")
-    return re.compile(_next_line_source(step, key))
+    return re.compile(_next_line_source(_OFFERED_STEP_ACTIONS.get(step, step), key))
 
 
-def _next_line_source(step: str, key: str) -> str:
-    """The regular expression for the next-step line offering ``step``, matching any count."""
+def _next_line_source(action: str, key: str) -> str:
+    """The regular expression for the next-step line offering ``action``, matching any count and any date."""
     from cadrumo.core.i18n.render import tr
 
     line = tr(
         "tui.modelo.workbench.next_line",
-        action=tr(f"tui.modelo.workbench.next.{step}", count=_COUNT_PLACEHOLDER),
+        action=tr(f"tui.modelo.workbench.next.{action}", count=_COUNT_PLACEHOLDER, date=_DATE_PLACEHOLDER),
         key=key,
     )
-    return re.escape(line).replace(_COUNT_PLACEHOLDER, r"\d+")
+    source = re.escape(line).replace(_COUNT_PLACEHOLDER, r"\d+")
+    return source.replace(_DATE_PLACEHOLDER, r".+?")
 
 
 async def _tick(pilot: Pilot[Any], box: Checkbox) -> bool:

@@ -2432,7 +2432,6 @@ tui:
           del {date}'
         fill: 'Completa les caselles marcades (pendents: {count})'
         recalculate: 'Torna a calcular: els teus registres han canviat'
-        record: Quan l'hagis presentada a l'AEAT, registra'n aquí la presentació
         record_after_file: Fitxer generat el {date}. Quan l'hagis presentat a l'AEAT,
           registra'n aquí la presentació
         recorded: Registrada com a presentada el {date}

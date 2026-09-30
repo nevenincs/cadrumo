@@ -2379,7 +2379,6 @@ tui:
         export_again: 'Create the file again: the declaration changed after {date}'
         fill: 'Complete the marked boxes (to do: {count})'
         recalculate: 'Calculate again: your records changed'
-        record: Once you have filed it with AEAT, record the filing here
         record_after_file: File created on {date}. Once you have filed it with AEAT,
           record the filing here
         recorded: Recorded as filed on {date}

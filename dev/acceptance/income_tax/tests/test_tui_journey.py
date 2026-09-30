@@ -269,7 +269,12 @@ def test_the_next_step_key_is_refused_while_the_workbench_offers_another_step() 
 
 
 def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
-    """The fixture form, calculated and complete, with its withholding box holding a value nobody entered."""
+    """The fixture form, calculated and complete, with its withholding box holding a value nobody entered.
+
+    The box is made one the filer types, fed by no source, so the value is one
+    the confirmation dialog can list: a box a source fills is confirmed in its
+    own panel instead, since keeping a value there would replace the source.
+    """
     from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, ModeloFormOrigin
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
 
@@ -277,7 +282,7 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
 
     def swap(block: object) -> object:
         if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06":
-            field = block.field.model_copy(update={"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM})
+            field = block.field.model_copy(update={"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "bindings": ()})
             return block.model_copy(update={"field": field})
         return block
 
@@ -373,8 +378,14 @@ def test_nothing_is_confirmed_when_the_workbench_offers_another_step() -> None:
     assert actions.checked == []
 
 
-def test_a_verified_declaration_offers_the_export_file_then_records_the_filing_with_f8() -> None:
-    """The local-file binding runs only on the record offer, and F8 there asks, then submits the filing record."""
+def test_a_verified_declaration_with_a_current_file_records_the_filing_with_f8() -> None:
+    """The local-file binding runs only on the record offer, and F8 there asks, then submits the filing record.
+
+    Recording is offered once a file made from the current calculation exists.
+    """
+    from datetime import UTC, datetime
+
+    from cadrumo.application.modelo.work_form_models import ModeloFormExport
     from cadrumo.core.config import override_settings
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -383,7 +394,14 @@ def test_a_verified_declaration_offers_the_export_file_then_records_the_filing_w
     from ..tui_journey import wait_for_workbench, workbench_offers
 
     actions = FakeActions()
-    reader = FakeReader(form=synthetic_form(needs_input=False), verified=True)
+    form = synthetic_form(needs_input=False)
+    assert form.calculation_revision_id is not None
+    current_file = ModeloFormExport(
+        exported_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        calculation_revision_id=form.calculation_revision_id,
+        current=True,
+    )
+    reader = FakeReader(form=form.model_copy(update={"last_export": current_file}), verified=True)
 
     async def scenario() -> tuple[bool, bool, TuiTerminalEvidence]:
         with override_settings(cadrumo_output_language="es"):
