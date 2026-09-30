@@ -13,6 +13,7 @@ from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentCli
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import server as mcp_server
 from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
@@ -64,6 +65,7 @@ class _RuntimeClientStub:
     def __init__(self, profile_id: UUID, enrollment: object) -> None:
         self.profile_id = profile_id
         self.frontend = OperationFrontendProjection.MCP
+        self.session_id = uuid4()
         self.enrollment = enrollment
         self.close_count = 0
         self.enroll_calls = 0
@@ -78,7 +80,32 @@ class _RuntimeClientStub:
         return self.enrollment
 
     def status(self) -> SimpleNamespace:
-        return SimpleNamespace(status={"admission": "authorized"})
+        return SimpleNamespace(
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=now() + timedelta(minutes=5),
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=True,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.AVAILABLE,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                ),
+                denial=None,
+            )
+        )
 
     def close(self) -> None:
         self.close_count += 1
@@ -107,13 +134,13 @@ async def test_authenticate_admits_exact_profile_for_mcp_and_close_releases_clie
             assert authenticated.is_error is False
             assert authenticated.structured_content == {
                 "outcome": "authenticated",
-                "status": {"admission": "authorized"},
+                "status": admitted.status().status.model_dump(mode="json"),
             }
             status = await client.call_tool("status", {})
             assert status.is_error is False
             assert status.structured_content == {
                 "outcome": "status",
-                "status": {"admission": "authorized"},
+                "status": admitted.status().status.model_dump(mode="json"),
             }
             assert adapter.client is admitted
 

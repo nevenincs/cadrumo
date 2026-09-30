@@ -54,6 +54,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
@@ -249,6 +250,27 @@ def _refusal(error: Exception) -> str:
     return "runtime_unavailable"
 
 
+def _require_exact_admitted_status(client: RuntimeFrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
+    """Treat a live, exact MCP lease as the only successful admission witness."""
+    if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.MCP:
+        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+    session_id = client.session_id
+    status = client.status().status
+    if status.denial is not None:
+        raise RuntimeFrontendRefusedError(status.denial.value)
+    if status.session_expires_at is None or status.session_expires_at <= now():
+        raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_EXPIRED.value)
+    if (
+        not status.connected
+        or not status.credential_authenticated
+        or not status.profile_bound
+        or status.profile_id != profile_id
+        or status.session_id != session_id
+    ):
+        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+    return status
+
+
 class RuntimeMcpAdapter:
     """One MCP connection owns one admitted lease and independent enrollment door."""
 
@@ -419,10 +441,11 @@ class RuntimeMcpAdapter:
             frontend=OperationFrontendProjection.MCP,
         )
         try:
-            result = await self._wire(lambda: {"outcome": "authenticated", "status": _public(client.status().status)})
+            status = await self._wire(lambda: _require_exact_admitted_status(client, profile_id=self.profile_id))
         except BaseException:
             await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-admission-close")
             raise
+        result = {"outcome": "authenticated", "status": _public(status)}
         old_client = self.client
         self.client = client
         if old_client is not None:
@@ -442,7 +465,7 @@ class RuntimeMcpAdapter:
             return {"outcome": "status", "status": _public(client.status().status)}
         deadline = time.monotonic() + _TIMEOUT
         if name == "search":
-            status = client.status().status
+            status = _require_exact_admitted_status(client, profile_id=self.profile_id)
             query = str(args.get("query", "")).casefold()
             matches: list[Any] = []
             for definition_id in sorted(status.effective_scope.operations):
@@ -465,20 +488,31 @@ class RuntimeMcpAdapter:
             definition_id = args["definition_id"]
             client.describe(definition_id, deadline=deadline)
             payload_json = json.dumps(args["payload"], ensure_ascii=False, separators=(",", ":"), allow_nan=False)
-            reply = client.operation(
-                RuntimeOperationSubmit(
-                    request_id=uuid4(),
-                    profile_id=client.profile_id,
-                    session_id=client.session_id,
-                    definition_id=definition_id,
-                    subject_ref=args["subject_ref"],
-                    payload_json=payload_json,
-                    idempotency_key=args.get("idempotency_key"),
-                ),
-                deadline=deadline,
-            )
-            if not isinstance(reply, RuntimeOperationSubmitted):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            request_id = uuid4()
+            try:
+                reply = client.operation(
+                    RuntimeOperationSubmit(
+                        request_id=request_id,
+                        profile_id=client.profile_id,
+                        session_id=client.session_id,
+                        definition_id=definition_id,
+                        subject_ref=args["subject_ref"],
+                        payload_json=payload_json,
+                        idempotency_key=args.get("idempotency_key"),
+                    ),
+                    deadline=deadline,
+                )
+                if not isinstance(reply, RuntimeOperationSubmitted):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            except RuntimeRefusalError as error:
+                # The request may be durable even when its reply is lost.
+                # A request id is correlation, never an operation receipt.
+                return {
+                    "outcome": "unresolved",
+                    "code": _refusal(error),
+                    "request_id": str(request_id),
+                    "definition_id": definition_id,
+                }
             response: dict[str, Any] = {"outcome": "submitted", "receipt": _public(reply.receipt)}
             if args.get("start", True) and reply.receipt.secret_requirement is None:
                 try:
@@ -702,6 +736,14 @@ def serve(*, profile_id: UUID, credential_reference: UUID | None = None) -> None
                 credential_reference=credential_reference,
                 frontend=OperationFrontendProjection.MCP,
             )
+            try:
+                await await_cancellation_complete(
+                    asyncio.to_thread(_require_exact_admitted_status, client, profile_id=profile_id),
+                    task_name="mcp-startup-status",
+                )
+            except BaseException:
+                await await_cancellation_complete(asyncio.to_thread(client.close), task_name="mcp-startup-close")
+                raise
         adapter = RuntimeMcpAdapter(profile_id=profile_id, client=client)
         server = build_server(adapter)
         try:
