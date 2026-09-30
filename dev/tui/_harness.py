@@ -28,6 +28,8 @@ from ._viewports import Viewport
 
 HARNESS_MODULE: Final[str] = "dev.tui.harness"
 WORKSPACE_ENV_VAR: Final[str] = "CADRUMO_TUI_WORKSPACE"
+NO_COLOR_ENV_VAR: Final[str] = "NO_COLOR"
+"""The convention by which a terminal asks programs for monochrome output; the harness never inherits it."""
 
 _ELAPSED = re.compile(r"·\s*(?P<ms>[\d.]+)ms\s")
 """The wall-clock build cost the harness stamps into the frame header."""
@@ -124,12 +126,18 @@ class Capture:
 
 
 def _environment(workspace: str) -> dict[str, str]:
-    """A process environment with this run's private harness workspace.
+    """A process environment with this run's private harness workspace, drawing in colour.
 
     Concurrent reviewers each need their own session journal and storage
     root; the harness reads this variable to give them one.
+
+    ``NO_COLOR`` is dropped. Textual honours it by drawing every frame in
+    monochrome, so a render started from a shell that exports it -- as
+    automated shells commonly do -- would review surfaces whose colour roles
+    never appear. The review is of the product as a colour terminal shows it,
+    not of the terminal the render happened to be started from.
     """
-    environment = dict(os.environ)
+    environment = {name: value for name, value in os.environ.items() if name != NO_COLOR_ENV_VAR}
     environment[WORKSPACE_ENV_VAR] = workspace
     environment["PYTHONIOENCODING"] = UTF_8
     return environment
