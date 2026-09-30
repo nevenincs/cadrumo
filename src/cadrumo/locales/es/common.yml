@@ -2301,6 +2301,8 @@ tui:
           origin: De dónde sale el valor
           progress: Cambios y avance
         intro: Cada símbolo significa siempre lo mismo, aparezca donde aparezca.
+        keys:
+          grid: Moverse entre las celdas de una tabla
         meaning:
           level:
             blocks: Hay que resolverlo antes de registrar la presentación.

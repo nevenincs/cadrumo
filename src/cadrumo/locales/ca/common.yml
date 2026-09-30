@@ -2295,6 +2295,8 @@ tui:
           origin: D'on surt el valor
           progress: Canvis i progrés
         intro: Cada símbol significa sempre el mateix, surti on surti.
+        keys:
+          grid: Moure's entre les cel·les d'una taula
         meaning:
           level:
             blocks: Cal resoldre-ho abans de registrar la presentació.

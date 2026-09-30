@@ -80,7 +80,15 @@ from ...search import TuiSearchHostV1
 from ..export_result import ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .bulk_confirm import BulkConfirmScreen
-from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, description_text, rate_note
+from .casilla_list import (
+    AddressKey,
+    CasillaList,
+    CasillaListEntry,
+    Density,
+    description_text,
+    grid_cell_title,
+    rate_note,
+)
 from .editor import CasillaEditorScreen, EditorOutcome, read_only_reason
 from .export import WorkbenchExportScreen
 from .header import (
@@ -1036,7 +1044,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _help_title(self, entry: CasillaListEntry) -> str:
         field = entry.field
         box = f"[{field.box}] " if field.box else ""
-        title = f"{box}{field.label.text}"
+        title = f"{box}{grid_cell_title(entry) or field.label.text}"
         if field.label.disclosure is not ModeloFormTextDisclosure.LOCALIZED:
             title = f"{title} ({tr(f'tui.modelo.workbench.disclosure.{field.label.disclosure.value}')})"
         return title

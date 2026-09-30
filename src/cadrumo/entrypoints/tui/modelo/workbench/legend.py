@@ -192,6 +192,10 @@ def _heading(text: str) -> Text:
     return Text(f"{_RULE} {text} {_RULE}", style="bold")
 
 
+_GRID_KEYS: Final[str] = "← → h l"
+"""The keys that move between the cells of an official table, as the casilla list binds them."""
+
+
 def legend_panel(
     boxes: Iterable[WorkbenchMark], *, others: Iterable[WorkbenchMark] = (), keys: str, close: str
 ) -> Text:
@@ -211,7 +215,7 @@ def legend_panel(
             key = f"  [{entry.key}]" if entry.key else ""
             panel.append(f" {entry.mark.glyph} {mark_name(entry.mark)}: {tr(entry.meaning_key)}{key}\n")
     panel.append_text(_heading(tr("tui.modelo.workbench.legend.group.keys")))
-    panel.append(f"\n{keys}")
+    panel.append(f"\n{keys}\n{_GRID_KEYS}  {tr('tui.modelo.workbench.legend.keys.grid')}")
     return panel
 
 

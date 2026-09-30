@@ -2243,6 +2243,8 @@ tui:
           origin: Where the value comes from
           progress: Changes and progress
         intro: Each symbol always means the same thing, wherever it appears.
+        keys:
+          grid: Move between cells in a table
         meaning:
           level:
             blocks: Must be fixed before you can record the filing.

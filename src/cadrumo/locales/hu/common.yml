@@ -2278,6 +2278,8 @@ tui:
           origin: Honnan származik az érték
           progress: Módosítások és előrehaladás
         intro: Minden jel mindenhol ugyanazt jelenti.
+        keys:
+          grid: Mozgás a táblázat cellái között
         meaning:
           level:
             blocks: A benyújtás rögzítése előtt meg kell oldani.
