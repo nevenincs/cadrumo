@@ -816,6 +816,233 @@ application:
           listájához futtassa a `aeat app live borrador 100 list` parancsot.
         unsupported_modelo: A tervezetkötés nem támogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjének deklarálnia kell a tervezet képességét.
+    calc_diagnostic:
+      administrador_retencion_rate_mismatch:
+        what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
+        what_to_do: Hasonlítsa össze a kulcsot a hivatalos útmutatóval, és szükség
+          esetén javítsa a tételt.
+      aggregation_activity_undeclared:
+        what: A(z) {box} rovat nullát mutat, pedig ebben az időszakban vannak tevékenységtípus
+          nélküli bevételei.
+        what_to_do: Adja meg a tevékenység típusát ezeknél a bevételi tételeknél,
+          majd számoljon újra.
+      deferred_binding_source:
+        what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
+        what_to_do: Nincs teendője, hacsak az az érték nem vonatkozik Önre. Ha igen,
+          írja be maga.
+      devengo_date_proxy_attribution:
+        what: Egyes számlákon nincs megadva a művelet teljesítésének napja, ezért
+          a kiállítás napja döntötte el az időszakot.
+        what_to_do: Adja meg a teljesítés napját az időszak végéhez közeli számláknál,
+          majd számoljon újra.
+      dt12_parcial_rescate_guidance:
+        what: Ugyanazon nyugdíjterv részkifizetései a(z) {box} rovat csökkentéséhez
+          egyetlen közös határidőt használnak, amelyet egyszer számolnak.
+        what_to_do: Ellenőrizze, hogy minden kifizetés beleesik-e ebbe a határidőbe.
+      dt12_regime_window_closed:
+        what: A(z) {box} rovat 40 %-os csökkentése nem lett alkalmazva, mert az egy
+          összegben kifizetett összeg határideje lejárt.
+        what_to_do: Nincs teendője. Ha az esemény éve hibás, javítsa a profiljában,
+          majd számoljon újra.
+      dt12_regime_window_unverified:
+        what: Az egy összegben kifizetett nyugdíj 40 %-os csökkentése alkalmazva lett
+          a(z) {box} rovatban, de a határidejét nem ellenőrizték.
+        what_to_do: Adja meg a Cadrumónak a nyugdíj alapjául szolgáló esemény évét,
+          majd számoljon újra.
+      duplicate_binding_owner:
+        what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az Ön adataiban.
+        what_to_do: A nyilvántartásán nincs mit változtatnia. Jelezze a hibát, mielőtt
+          a számokra támaszkodna.
+      duplicate_bound_casilla_owner:
+        what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az Ön adataiban.
+        what_to_do: A nyilvántartásán nincs mit változtatnia. Jelezze a hibát, mielőtt
+          a számokra támaszkodna.
+      duplicate_relation_owner:
+        what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az Ön adataiban.
+        what_to_do: A nyilvántartásán nincs mit változtatnia. Jelezze a hibát, mielőtt
+          a számokra támaszkodna.
+      fallback:
+        what: A Cadrumo számolás közben valamit talált, amit érdemes átnézni.
+        what_to_do: Számoljon újra. Ha nem változik, nézze át kézzel a nyilatkozatot,
+          és jelezze.
+      inferred_retencion_rate_unmatched:
+        what: A Cadrumo egy befizetés hiányából becsült egy levonást, amely egyetlen
+          hivatalos kulcsnak sem felel meg.
+        what_to_do: Ha a különbség banki költség vagy engedmény volt, javítsa a tételt,
+          hogy ne igényeljen levonást.
+      inferred_retencion_sectoral_rate_unconfirmed:
+        what: A Cadrumo egy befizetés hiányából 1 % vagy 2 % levonást becsült, amelyet
+          banki költség vagy engedmény is magyarázhat.
+        what_to_do: Erősítse meg a levonást az ügyfele számlájával vagy igazolásával,
+          vagy javítsa a tételt.
+      invoice_category_counterparty_mismatch:
+        what: Egy számla áfa-kezelése nem illik az ügyfél országához, ezért a számla
+          kimaradt.
+        what_to_do: Ellenőrizze a számla áfa-kategóriáját vagy az országot a nyilvántartásában.
+      invoice_recargo_departs_from_published_rate:
+        what: Egy számlán rögzített egyenértékűségi pótlék eltér a hivatalos kulcstól.
+        what_to_do: Ellenőrizze a pótlékot ahhoz a számlához a nyilvántartásában.
+      invoice_recargo_not_attributable_to_a_tier:
+        what: Egyetlen pótlék több áfakulcsú sort is lefed, ezért nem lehetett összevetni
+          a hivatalos kulcsokkal.
+        what_to_do: Ellenőrizze maga a pótlékot, vagy ossza fel a számlát áfakulcsonként
+          a nyilvántartásában.
+      invoice_reverse_charge_cuota_not_derivable:
+        what: Egy fordított adózású beérkezett számlán nincs áfakulcs, ezért a rá
+          fizetendő áfa nem lett kiszámolva.
+        what_to_do: Adja meg az áfakulcsot ahhoz a számlához a nyilvántartásában,
+          majd számoljon újra.
+      iva_compensation_annual_source_evidence_failure:
+        what: Az éves, továbbvihető vagy beszámítható áfa olyan nyilvántartásokra
+          épül, amelyekből hiányzik az igazolás.
+        what_to_do: Nézze át az egész év áfa-nyilvántartását, pótolja a hiányzó igazolást,
+          majd számoljon újra.
+      iva_selected_scope_evidence_failure:
+        what: Az ebben a nyilatkozatban szereplő áfa alapjául szolgáló nyilvántartásokból
+          hiányzik az igazolás, vagy nem egyeznek.
+        what_to_do: Nyissa meg az erre az időszakra vonatkozó nyilvántartását, javítsa
+          a megjelölt tételeket, majd számoljon újra.
+      m193_settled_row_amounts_unresolved_authority:
+        what: Egy későbbi évben teljesített kifizetés tételének egyes összegeit nem
+          erősíti meg hivatalos forrás.
+        what_to_do: Benyújtás előtt vesse össze ezeket az összegeket a hivatalos útmutatóval.
+      m349_clave_inferred_from_category:
+        what: A Cadrumo az uniós ügyletek listájának egy sorához a számla áfa-kategóriája
+          alapján választott ügylettípust, és az más is lehet.
+        what_to_do: Ellenőrizze ezeknek a számláknak az ügylettípusát a nyilvántartásában,
+          és ha eltér, módosítsa.
+      missing_transaction_evidence:
+        what: Egy áfát tartalmazó tételhez nincs csatolva számla vagy bizonylat.
+        what_to_do: Csatolja a számlát vagy a bizonylatot ahhoz a tételhez a nyilvántartásában.
+      official_box_unpopulated:
+        what: A(z) {box} rovat összege ki van számolva, de az azt alkotó hivatalos
+          rovatok mind üresek.
+        what_to_do: Másolja át kézzel az összegeket a hivatalos rovatokba, majd ellenőrizze
+          újra a nyilatkozatot.
+      operator_override_diverges_from_computed:
+        what: A(z) {box} rovat értéke az Ön által beírt érték, nem a Cadrumo által
+          kiszámolt.
+        what_to_do: Csak akkor tartsa meg, ha biztos benne. A kiszámolt érték használatához
+          számoljon újra úgy, hogy nem ír be oda értéket.
+      orphaned_override:
+        what: Egy korábban beírt érték már egyetlen rovatnak sem felel meg ebben a
+          nyilatkozatban, ezért nem lett felhasználva.
+        what_to_do: Nézze meg, szüksége van-e még rá, és ha igen, írja be újra a megfelelő
+          rovatba.
+      oss_no_live_source:
+        what: Erre az időszakra nem található egyablakos (OSS) számla, ezért a Cadrumo
+          nem számolta ki ezt az adót.
+        what_to_do: Nincs teendője, ha nem volt ilyen értékesítése. Ha volt, írja
+          be maga az összegeket.
+      prior_payment_minoracion_not_captured:
+        what: A korábbi befizetésekből adódó csökkentés nincs rögzítve a(z) {box}
+          rovatban.
+        what_to_do: Ha Önre vonatkozik, írja be ezt a csökkentést a(z) {box} rovatba.
+      prior_payment_not_deducted:
+        what: Korábbi negyedévet már benyújtott, de a(z) {box} rovat nem vonja le
+          az akkor befizetett összeget.
+        what_to_do: Írja be a(z) {box} rovatba a korábbi negyedévekben befizetett
+          összeget.
+      prorrata_especial_check_unavailable:
+        what: A Cadrumo nem tudta ellenőrizni, hogy a különleges áfa-arányosítás kötelező-e
+          Önnek.
+        what_to_do: Ellenőrizze maga a hivatalos szabályok alapján, vagy kérdezze
+          a tanácsadóját.
+      prorrata_especial_obligatoria:
+        what: A különleges áfa-arányosítás kötelező lehet Önnek, mivel vegyesen van
+          mentes és adóköteles tevékenysége.
+        what_to_do: Nézze meg az áfa-arányosítás szabályait, vagy kérdezze a tanácsadóját,
+          és ha kötelező, alkalmazza a különleges arányosítást.
+      rate_boxes_underaccount_total:
+        what: A(z) {box} rovat áfa-összegének egy része egyetlen kulcsonkénti rovatban
+          sem szerepel.
+        what_to_do: Ellenőrizze a számlák és tételek áfakulcsát, majd számoljon újra.
+          A nyilatkozat exportálására addig nem kerülhet sor, amíg ez nincs rendezve.
+      register_owned_capital_acquisition:
+        what: Egy eszközvásárlás kimarad a költségei közül, mert az éves értékcsökkenési
+          leírásán keresztül vonható le.
+        what_to_do: Nincs teendője.
+      reopen_hint: Számoljon újra, hogy lássa a számítás megjegyzéseit.
+      settlement_not_computed:
+        what: A(z) {box} rovat a végső elszámolást tartalmazza, amelyet a Cadrumo
+          nem számol ki.
+        what_to_do: Írja be az összeget a(z) {box} rovatba, és vesse össze a hivatalos
+          útmutatóval.
+      source_domain_not_ready:
+        what: Az értékhez szükséges nyilvántartások még nem olvashatók.
+        what_to_do: Fejezze be ezeknek a nyilvántartásoknak a beállítását vagy importálását,
+          majd számoljon újra.
+      source_issue:
+        what: Hiányzik egy információ, amelytől ez az érték függ, vagy nem lehetett
+          felhasználni.
+        what_to_do: Nézze át a nyilvántartását és a profilját, nem hiányzik-e valami,
+          majd számoljon újra.
+      stale: Az utolsó számításból származik. Számoljon újra a frissítéshez.
+      storage_degraded:
+        what: A Cadrumo nem tudta beolvasni a mentett nyilvántartásának egy részét,
+          ezért néhány érték hiányos lehet.
+        what_to_do: Számoljon újra. Ha továbbra is előfordul, ellenőrizze, hogy az
+          adatai elérhetők-e, és jelezze a hibát.
+      structurally_unroutable_base_category:
+        what: Ebben a nyilatkozatban nincs rovat a nyilvántartása egyik kategóriájának
+          összegei számára.
+        what_to_do: A hivatalos útmutatóban nézze meg, hol kell ezeket az összegeket
+          bevallani; gyakran máshol szerepelnek.
+      terminal_origin_mismatch:
+        what: Egy érték olyan úton került a nyilatkozatba, amelyért a Cadrumo nem
+          vállalhat felelősséget, ezért így nem megbízható.
+        what_to_do: Nézze meg, honnan származik ez az érték a nyilvántartásában, majd
+          számoljon újra. Ha nem változik, jelezze.
+      unclassified_declarant_role_fact:
+        what: Egy számláról nem derül ki, hogy nem az Ön tevékenységéhez tartozik-e,
+          vagy támogatás-e, pedig ez dönti el, hogyan kell bevallani.
+        what_to_do: Válaszoljon erre a kérdésre a számlánál a nyilvántartásában, majd
+          számoljon újra.
+      unconverted_foreign_currency:
+        what: Egy devizás számlához nincs euróra váltási árfolyam, ezért kimarad a
+          listából.
+        what_to_do: Adja meg az árfolyamot ahhoz a számlához a nyilvántartásában,
+          majd számoljon újra.
+      ungrounded_income_substrate:
+        what: Egyes bevételi tételekhez nem tartozik adóalapot tartalmazó számla,
+          ezért a banki összeg lett felhasználva, a levonásuk pedig kimaradt.
+        what_to_do: Kapcsoljon kiállított számlát minden bevételi tételhez, vagy adja
+          meg az adóalapot, majd számoljon újra.
+      unhandled_binding_source:
+        what: A Cadrumo még nem tud kitölteni egy értéket ebben a nyilatkozatban az
+          Ön adataiból.
+        what_to_do: Ne nyújtsa be ezt az értéket úgy, ahogy van. Ha ismeri, írja be
+          maga, és jelezze a hiányosságot.
+      unresolved_binding:
+        what: A Cadrumo nem tudott egy értéket kiszámolni az Ön adataiból, és figyelmeztetés
+          nélkül nullát mutatott volna.
+        what_to_do: Pótolja a hiányzó nyilvántartásokat vagy profiladatokat, vagy
+          írja be maga az értéket, majd számoljon újra.
+      unresolved_derived_binding:
+        what: Egy olyan értéket, amelyet a Cadrumo más értékekből számol ki, nem sikerült
+          kiszámolni.
+        what_to_do: Ellenőrizze, hogy a hozzá szükséges értékek ki vannak-e töltve,
+          majd számoljon újra.
+      unrouted_declarable_quantity:
+        what: Egy tétel egy része, például egy levonás vagy egy adóalap, egyetlen
+          rovatba sem kerül be ebben a nyilatkozatban.
+        what_to_do: Ellenőrizze a tétel besorolását és összegeit a nyilvántartásában,
+          majd számoljon újra.
+      unrouted_observation:
+        what: A nyilvántartásában szereplő egyik összeg nem került be a nyilatkozat
+          egyik rovatába sem.
+        what_to_do: Nézze meg, hogyan van besorolva az a tétel a nyilvántartásában,
+          majd számoljon újra.
+      unusable_sales_invoice_evidence:
+        what: Egy bevételi tétel olyan kiállított számlához kapcsolódik, amely nem
+          megbízható, ezért a banki összeg kerül bevallásra, a levonás pedig elvész.
+        what_to_do: Javítsa a számlával való kapcsolatot a nyilvántartásában, vagy
+          adja meg közvetlenül az adóalapot, majd számoljon újra.
+      withholding_detail_absent:
+        what: Az évre nincs címzettenkénti levonási részletezés rögzítve, ezért a
+          nulla érték alátámasztás nélkül jelenik meg.
+        what_to_do: Pótolja a részletező tételeket az évre a nyilvántartásában, majd
+          számoljon újra.
     calculation_report:
       local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem hivatalos AEAT-bizonyíték
         a benyújtásról. A hivatalos bizonyítékot az AEAT adja ki a benyújtás után:

@@ -453,6 +453,18 @@ class CalculationSourceIssue(BaseModel):
     per-perceptor-clave detail store held no observation for the year, so its
     percepciones count rests on a zero the store cannot support. A contradictory
     source is refused during calculation before a revision can be persisted.
+
+    The remaining reasons each mean a filed figure is missing or cannot be
+    trusted, so they too block filing until a recalculation clears them.
+    ``unresolved_binding`` is a box printed on the form whose declared source
+    produced no value, named by ``casilla_id``, which must never read as a zero.
+    ``terminal_origin_mismatch`` is a value that reached the declaration by an
+    undeclared route. ``unhandled_binding_source`` is a declared source with no
+    executable route. ``source_domain_not_ready`` is a source store that could
+    not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
+    reverse-charge invoice whose VAT owed could not be derived.
+    ``binding_source`` is ``None`` only where the condition names no binding
+    source kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -463,11 +475,17 @@ class CalculationSourceIssue(BaseModel):
         "iva_selected_scope_evidence_failure",
         "iva_compensation_annual_source_evidence_failure",
         "withholding_detail_absent",
+        "unresolved_binding",
+        "terminal_origin_mismatch",
+        "unhandled_binding_source",
+        "source_domain_not_ready",
+        "invoice_reverse_charge_cuota_not_derivable",
     ]
-    binding_source: BindingSourceKind
+    binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    casilla_id: CasillaId | None = None
 
 
 def _validate_revision_identity(revision: CalculationRevision, derived: CalculationRevisionId) -> None:

@@ -65,9 +65,14 @@ from .common import activate_subcommand_output_language, emit_envelope
 from .errors import CliOutboundPayloadBoundaryError
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.work_unit import WorkUnit
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,7 +207,8 @@ def _run_work_calculate(
         saved_confirmation = _work_calculate_saved_confirmation(calculation_revision)
         modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
         source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
-            calculation_result.source_diagnostics
+            calculation_result.source_diagnostics,
+            _revision_casillas(calculation_ports.operation, unit_for_modality),
         )
         with validating_governed_facts(calculation_ports.operation):
             deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
@@ -292,8 +298,15 @@ def _work_calculate_modality_output(
     return ({"modality": modality.modality, "modality_reason": modality.reason}, [f"modality\t{modality.modality}"])
 
 
+def _revision_casillas(operation: PinnedAuthorityOperation, unit: WorkUnit) -> Mapping[str, CasillaDefinition]:
+    """The casillas of the revision a work unit calculates under, by id."""
+    snapshot = operation.snapshot(str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token)
+    return {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
+
+
 def _work_calculate_source_advisory_output(
     diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    casillas: Mapping[str, CasillaDefinition] | None = None,
 ) -> tuple[list[Notice], list[str]]:
     """Project NON-blocking source diagnostics into notices + human lines.
 
@@ -321,7 +334,7 @@ def _work_calculate_source_advisory_output(
     notices: list[Notice] = []
     seen_notices: set[str] = set()
     for diagnostic in diagnostics:
-        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
+        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory", casillas=casillas)
         notice_identity = notice.model_dump_json()
         if notice_identity in seen_notices:
             continue

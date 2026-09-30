@@ -283,14 +283,17 @@ def _source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
+    # A box is appended only when an issue names one, so every issue stored
+    # before issues could name a box keeps the identity it was stored under.
     canonical_source_issues = tuple(
         sorted(
             (
                 issue.reason,
-                issue.binding_source.value,
+                "" if issue.binding_source is None else issue.binding_source.value,
                 issue.source_ref or "",
                 issue.resolver_id or "",
                 issue.message,
+                *(() if issue.casilla_id is None else (str(issue.casilla_id),)),
             )
             for issue in source_issues
         )

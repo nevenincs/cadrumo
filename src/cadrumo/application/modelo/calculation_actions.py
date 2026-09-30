@@ -47,7 +47,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -154,6 +154,7 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .calculation_notes import CALCULATION_NOTES, durable_binding_source, is_printed_box
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -1609,7 +1610,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(channels.source_resolution),
-        source_issues=_unrouted_source_issues(channels.reconciliation.source_diagnostics),
+        source_issues=_unrouted_source_issues(
+            channels.reconciliation.source_diagnostics, preparation.snapshot.revision
+        ),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
             channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -1645,6 +1648,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + advisory_diagnostics
         + profile_text_diagnostics
     )
+    # Held for the editor form until the next calculation of this declaration; only the blocking ones persist.
+    CALCULATION_NOTES.record(str(revision.work_unit_id), str(revision.calculation_revision_id), source_diagnostics)
     return BucketAggregationCalculationResult(
         revision=revision,
         profile=preparation.profile,
@@ -1659,7 +1664,24 @@ _DurableSourceIssueReason = Literal[
     "iva_selected_scope_evidence_failure",
     "iva_compensation_annual_source_evidence_failure",
     "withholding_detail_absent",
+    "unresolved_binding",
+    "terminal_origin_mismatch",
+    "unhandled_binding_source",
+    "source_domain_not_ready",
+    "invoice_reverse_charge_cuota_not_derivable",
 ]
+
+
+_BINDING_SOURCE_KEYED_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+        "iva_selected_scope_evidence_failure",
+        "iva_compensation_annual_source_evidence_failure",
+        "withholding_detail_absent",
+    }
+)
+"""Reasons whose later gates select them by binding source, so an issue without one would never be read."""
 
 
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
@@ -1683,11 +1705,22 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "iva_compensation_annual_source_evidence_failure"
     if diagnostic.reason == "withholding_detail_absent":
         return "withholding_detail_absent"
+    if diagnostic.reason == "unresolved_binding":
+        return "unresolved_binding"
+    if diagnostic.reason == "terminal_origin_mismatch":
+        return "terminal_origin_mismatch"
+    if diagnostic.reason == "unhandled_binding_source":
+        return "unhandled_binding_source"
+    if diagnostic.reason == "source_domain_not_ready":
+        return "source_domain_not_ready"
+    if diagnostic.reason == "invoice_reverse_charge_cuota_not_derivable":
+        return "invoice_reverse_charge_cuota_not_derivable"
     return None
 
 
 def _unrouted_source_issues(
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    registry_revision: ModeloRevision,
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project unrouted source conditions into durable revision issues.
 
@@ -1701,16 +1734,31 @@ def _unrouted_source_issues(
     later gate would see a clean persisted revision for exactly the case the
     row-keyed screens cannot report — the silence the quantity screen exists to
     break, restored one layer down.
+
+    Every other reason that withholds filing persists the same way, so a
+    reopened declaration still says what blocks it. A box whose source
+    produced no value persists only when the form prints it: a working figure
+    that could not be worked out is worth checking, not a filed figure missing.
     """
+    casillas = {str(casilla.id): casilla for casilla in registry_revision.casillas}
     issues: list[CalculationSourceIssue] = []
     for diagnostic in source_diagnostics:
         reason = _durable_source_issue_reason(diagnostic)
-        if reason is None or diagnostic.binding_source is None:
+        if reason is None:
+            continue
+        binding_source = durable_binding_source(diagnostic)
+        if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
+            continue
+        casilla_id = None if diagnostic.casilla_id is None else str(diagnostic.casilla_id)
+        if reason == "unresolved_binding" and not is_printed_box(
+            None if casilla_id is None else casillas.get(casilla_id)
+        ):
             continue
         issues.append(
             CalculationSourceIssue(
                 reason=reason,
-                binding_source=diagnostic.binding_source,
+                binding_source=binding_source,
+                casilla_id=diagnostic.casilla_id,
                 message=(
                     "selected-scope IVA evidence failure"
                     if reason == "iva_selected_scope_evidence_failure"

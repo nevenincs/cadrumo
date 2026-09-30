@@ -45,6 +45,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .calculation_notes import CALCULATION_NOTES
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .work_form import build_modelo_work_form
@@ -243,6 +244,9 @@ def load_modelo_work_form(
             reference_on=reference_on if reference_on is not None else today_madrid(),
         ),
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
+        calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(
+            str(review.work_unit_id), review.calculation_revision_id
+        ),
     )
     state = review.lifecycle_state
     return ModeloWorkFormLoadV1(form=form, verified=state in _VERIFIED_STATES, filed=state in _FILED_STATES)

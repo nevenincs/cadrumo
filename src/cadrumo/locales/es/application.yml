@@ -851,6 +851,232 @@ application:
           activos con `aeat app live borrador 100 list`.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
+    calc_diagnostic:
+      administrador_retencion_rate_mismatch:
+        what: El tipo de retención de un registro de administrador no coincide con
+          el que corresponde.
+        what_to_do: Compara ese tipo con las instrucciones oficiales y corrige el
+          registro si hace falta.
+      aggregation_activity_undeclared:
+        what: La casilla {box} muestra cero, aunque tienes ingresos en este periodo
+          sin tipo de actividad.
+        what_to_do: Indica el tipo de actividad en esos registros de ingresos y vuelve
+          a calcular.
+      deferred_binding_source:
+        what: Cadrumo todavía no rellena automáticamente una cifra de esta declaración.
+        what_to_do: No tienes que hacer nada, salvo que esa cifra te afecte. Si te
+          afecta, escríbela tú.
+      devengo_date_proxy_attribution:
+        what: Algunas facturas no tienen la fecha en que se hizo la operación, así
+          que se ha usado la de emisión para elegir el periodo.
+        what_to_do: Añade la fecha de la operación a las facturas de final de periodo
+          y vuelve a calcular.
+      dt12_parcial_rescate_guidance:
+        what: Los cobros parciales del mismo plan de pensiones comparten un único
+          plazo para la reducción de la casilla {box}, que se cuenta una sola vez.
+        what_to_do: Comprueba que cada cobro cae dentro de ese plazo.
+      dt12_regime_window_closed:
+        what: La reducción del 40 % de la casilla {box} no se ha aplicado, porque
+          el plazo para este cobro de una vez ya ha pasado.
+        what_to_do: No tienes que hacer nada. Si el año del hecho no es correcto,
+          corrígelo en tu perfil y vuelve a calcular.
+      dt12_regime_window_unverified:
+        what: La reducción del 40 % por una pensión cobrada de una vez se ha aplicado
+          en la casilla {box}, pero no se ha comprobado su plazo.
+        what_to_do: Indica a Cadrumo el año del hecho que originó la pensión y vuelve
+          a calcular.
+      duplicate_binding_owner:
+        what: Cadrumo ha encontrado un fallo en cómo está montada esta declaración,
+          no en tus datos.
+        what_to_do: No tienes que cambiar nada en tus registros. Avísanos antes de
+          fiarte de las cifras.
+      duplicate_bound_casilla_owner:
+        what: Cadrumo ha encontrado un fallo en cómo está montada esta declaración,
+          no en tus datos.
+        what_to_do: No tienes que cambiar nada en tus registros. Avísanos antes de
+          fiarte de las cifras.
+      duplicate_relation_owner:
+        what: Cadrumo ha encontrado un fallo en cómo está montada esta declaración,
+          no en tus datos.
+        what_to_do: No tienes que cambiar nada en tus registros. Avísanos antes de
+          fiarte de las cifras.
+      fallback:
+        what: Cadrumo ha encontrado algo que revisar al calcular.
+        what_to_do: Vuelve a calcular. Si sigue, revisa la declaración a mano y avísanos.
+      inferred_retencion_rate_unmatched:
+        what: Cadrumo ha estimado una retención a partir de lo que faltaba en un cobro,
+          y no coincide con ningún tipo oficial.
+        what_to_do: Si la diferencia fue una comisión del banco o un descuento, corrige
+          el registro para no reclamar retención.
+      inferred_retencion_sectoral_rate_unconfirmed:
+        what: Cadrumo ha estimado una retención del 1 % o del 2 % a partir de lo que
+          faltaba en un cobro, y podría ser una comisión o un descuento.
+        what_to_do: Confirma la retención con la factura o el certificado de tu cliente,
+          o corrige el registro.
+      invoice_category_counterparty_mismatch:
+        what: El tratamiento de IVA de una factura no encaja con el país del cliente,
+          así que se ha dejado fuera.
+        what_to_do: Revisa la categoría de IVA o el país de esa factura en tus registros.
+      invoice_recargo_departs_from_published_rate:
+        what: El recargo de equivalencia anotado en una factura no coincide con el
+          tipo oficial.
+        what_to_do: Revisa el recargo de esa factura en tus registros.
+      invoice_recargo_not_attributable_to_a_tier:
+        what: Un único recargo cubre líneas con varios tipos de IVA, así que no se
+          ha podido comparar con los tipos oficiales.
+        what_to_do: Revisa el recargo por tu cuenta, o divide la factura por tipo
+          de IVA en tus registros.
+      invoice_reverse_charge_cuota_not_derivable:
+        what: Una factura recibida con inversión del sujeto pasivo no tiene tipo de
+          IVA, así que no se ha calculado el IVA que debes por ella.
+        what_to_do: Indica el tipo de IVA de esa factura en tus registros y vuelve
+          a calcular.
+      iva_compensation_annual_source_evidence_failure:
+        what: El IVA anual a compensar o arrastrar se apoya en registros que no tienen
+          justificante.
+        what_to_do: Revisa los registros de IVA de todo el año, añade el justificante
+          que falte y vuelve a calcular.
+      iva_selected_scope_evidence_failure:
+        what: Los registros que sustentan el IVA de esta declaración no tienen justificante
+          o no cuadran.
+        what_to_do: Abre tus registros de este periodo, corrige los que estén marcados
+          y vuelve a calcular.
+      m193_settled_row_amounts_unresolved_authority:
+        what: Algunos importes de un registro de un pago hecho en un año posterior
+          no tienen una fuente oficial que los confirme.
+        what_to_do: Comprueba esos importes con las instrucciones oficiales antes
+          de presentar.
+      m349_clave_inferred_from_category:
+        what: Cadrumo ha elegido el tipo de operación de una línea del listado de
+          operaciones con la UE según la categoría de IVA de la factura, y podría
+          ser otro.
+        what_to_do: Revisa el tipo de operación de esas facturas en tus registros
+          y cámbialo si es distinto.
+      missing_transaction_evidence:
+        what: Un apunte con IVA no tiene factura ni documento adjunto.
+        what_to_do: Adjunta la factura o el justificante a ese apunte en tus registros.
+      official_box_unpopulated:
+        what: El total de la casilla {box} está calculado, pero las casillas oficiales
+          que lo forman están todas vacías.
+        what_to_do: Copia los importes a mano en las casillas oficiales y vuelve a
+          comprobar la declaración.
+      operator_override_diverges_from_computed:
+        what: El valor de la casilla {box} es el que escribiste tú, no el que ha calculado
+          Cadrumo.
+        what_to_do: Mantenlo solo si estás seguro. Para usar el valor calculado, vuelve
+          a calcular sin escribir un valor ahí.
+      orphaned_override:
+        what: Un valor que escribiste antes ya no corresponde a ninguna casilla de
+          esta declaración, así que no se ha usado.
+        what_to_do: Mira si todavía lo necesitas y, si es así, vuelve a escribirlo
+          en la casilla correcta.
+      oss_no_live_source:
+        what: No se ha encontrado ninguna factura de ventanilla única (OSS) en este
+          periodo, así que Cadrumo no ha calculado ese impuesto.
+        what_to_do: No tienes que hacer nada si no hiciste ese tipo de ventas. Si
+          las hiciste, escribe tú los importes.
+      prior_payment_minoracion_not_captured:
+        what: La minoración que viene de pagos anteriores no está anotada en la casilla
+          {box}.
+        what_to_do: Escribe esa minoración en la casilla {box} si te corresponde.
+      prior_payment_not_deducted:
+        what: Presentaste un trimestre anterior, pero la casilla {box} no descuenta
+          lo que pagaste entonces.
+        what_to_do: Escribe en la casilla {box} lo que pagaste en los trimestres anteriores.
+      prorrata_especial_check_unavailable:
+        what: Cadrumo no ha podido comprobar si la prorrata especial de IVA es obligatoria
+          para ti.
+        what_to_do: Compruébalo tú con las reglas oficiales o con tu asesor.
+      prorrata_especial_obligatoria:
+        what: La prorrata especial de IVA puede ser obligatoria para ti, por tu mezcla
+          de actividad exenta y sujeta.
+        what_to_do: Consulta las reglas de la prorrata del IVA o a tu asesor, y aplica
+          la prorrata especial si es obligatoria.
+      rate_boxes_underaccount_total:
+        what: Una parte del total de IVA de la casilla {box} no está en ninguna casilla
+          por tipo.
+        what_to_do: Revisa el tipo de IVA de tus facturas y registros y vuelve a calcular.
+          No se podrá exportar la declaración hasta corregirlo.
+      register_owned_capital_acquisition:
+        what: Una compra de equipamiento se deja fuera de tus gastos, porque se deduce
+          mediante su amortización anual.
+        what_to_do: No tienes que hacer nada.
+      reopen_hint: Vuelve a calcular para ver las notas del cálculo.
+      settlement_not_computed:
+        what: La casilla {box} recoge la liquidación final y Cadrumo no la calcula.
+        what_to_do: Escribe el importe en la casilla {box} y compáralo con las instrucciones
+          oficiales.
+      source_domain_not_ready:
+        what: Los registros de los que depende esta cifra todavía no están listos
+          para leerse.
+        what_to_do: Termina de preparar o importar esos registros y vuelve a calcular.
+      source_issue:
+        what: Falta información de la que depende esta cifra, o no se ha podido usar.
+        what_to_do: Revisa tus registros y tu perfil por si falta algo y vuelve a
+          calcular.
+      stale: De la última calculación. Vuelve a calcular para actualizar.
+      storage_degraded:
+        what: Cadrumo no ha podido leer una parte de tus registros guardados, así
+          que algunas cifras pueden estar incompletas.
+        what_to_do: Vuelve a calcular. Si sigue pasando, comprueba que tus datos están
+          accesibles y avísanos.
+      structurally_unroutable_base_category:
+        what: Esta declaración no tiene casilla para los importes de una categoría
+          de tus registros.
+        what_to_do: Consulta en las instrucciones oficiales dónde se declaran esos
+          importes; a menudo van en otro sitio.
+      terminal_origin_mismatch:
+        what: Una cifra ha llegado a la declaración por un camino del que Cadrumo
+          no puede responder, así que no es fiable tal como está.
+        what_to_do: Mira de dónde sale esa cifra en tus registros y vuelve a calcular.
+          Avísanos si sigue igual.
+      unclassified_declarant_role_fact:
+        what: Una factura no dice si es ajena a tu actividad o si es una subvención,
+          y eso decide cómo se declara.
+        what_to_do: Responde a esa pregunta en la factura, en tus registros, y vuelve
+          a calcular.
+      unconverted_foreign_currency:
+        what: Una factura en moneda extranjera no tiene tipo de cambio a euros, así
+          que queda fuera del listado.
+        what_to_do: Añade el tipo de cambio a esa factura en tus registros y vuelve
+          a calcular.
+      ungrounded_income_substrate:
+        what: Algunos registros de ingresos no tienen factura con base imponible,
+          así que se ha usado el importe del banco y se deja fuera su retención.
+        what_to_do: Vincula una factura emitida a cada registro de ingresos, o indica
+          su base imponible, y vuelve a calcular.
+      unhandled_binding_source:
+        what: Cadrumo todavía no sabe rellenar una cifra de esta declaración a partir
+          de tus datos.
+        what_to_do: No presentes esa cifra tal como está. Escríbela tú si la conoces
+          y avísanos del hueco.
+      unresolved_binding:
+        what: Cadrumo no ha podido sacar una cifra de tus datos y habría mostrado
+          un cero sin avisar.
+        what_to_do: Añade los registros o los datos de perfil que falten, o escribe
+          tú el valor, y vuelve a calcular.
+      unresolved_derived_binding:
+        what: No se ha podido calcular una cifra que Cadrumo saca a partir de otras.
+        what_to_do: Comprueba que las cifras de las que depende están rellenas y vuelve
+          a calcular.
+      unrouted_declarable_quantity:
+        what: Una parte de un registro, como una retención o una base imponible, no
+          llega a ninguna casilla de esta declaración.
+        what_to_do: Revisa la clasificación y los importes de ese registro y vuelve
+          a calcular.
+      unrouted_observation:
+        what: Un importe de tus registros no se ha colocado en ninguna casilla de
+          esta declaración.
+        what_to_do: Revisa cómo está clasificado ese registro y vuelve a calcular.
+      unusable_sales_invoice_evidence:
+        what: Un registro de ingresos está vinculado a una factura emitida que no
+          es fiable, así que se declara el importe del banco y se pierde su retención.
+        what_to_do: Arregla el vínculo con la factura en tus registros, o indica la
+          base imponible directamente, y vuelve a calcular.
+      withholding_detail_absent:
+        what: No hay detalle de retenciones por perceptor en el año, así que se muestra
+          un cero sin respaldo.
+        what_to_do: Añade en tus registros el detalle del año y vuelve a calcular.
     calculation_report:
       local_calculation_notice: 'Informe de cálculo local de Cadrumo. No es evidencia
         oficial de presentación ante la AEAT. La evidencia oficial la emite la AEAT

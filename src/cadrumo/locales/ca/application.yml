@@ -850,6 +850,233 @@ application:
           actius amb `aeat app live borrador 100 list`.
         unsupported_modelo: El binding d'esborrany no està suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
+    calc_diagnostic:
+      administrador_retencion_rate_mismatch:
+        what: El tipus de retenció d'un registre d'administrador no coincideix amb
+          el que correspon.
+        what_to_do: Compara aquest tipus amb les instruccions oficials i corregeix
+          el registre si cal.
+      aggregation_activity_undeclared:
+        what: La casella {box} mostra zero, tot i que tens ingressos en aquest període
+          sense tipus d'activitat.
+        what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
+          torna a calcular.
+      deferred_binding_source:
+        what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
+        what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
+          escriu-la tu.
+      devengo_date_proxy_attribution:
+        what: Algunes factures no tenen la data en què es va fer l'operació, així
+          que s'ha fet servir la d'emissió per triar el període.
+        what_to_do: Afegeix la data de l'operació a les factures de final de període
+          i torna a calcular.
+      dt12_parcial_rescate_guidance:
+        what: Els cobraments parcials del mateix pla de pensions comparteixen un únic
+          termini per a la reducció de la casella {box}, que es compta una sola vegada.
+        what_to_do: Comprova que cada cobrament cau dins d'aquest termini.
+      dt12_regime_window_closed:
+        what: La reducció del 40 % de la casella {box} no s'ha aplicat, perquè el
+          termini per a aquest cobrament d'un sol cop ja ha passat.
+        what_to_do: No has de fer res. Si l'any del fet no és correcte, corregeix-lo
+          al teu perfil i torna a calcular.
+      dt12_regime_window_unverified:
+        what: La reducció del 40 % per una pensió cobrada d'un sol cop s'ha aplicat
+          a la casella {box}, però no se n'ha comprovat el termini.
+        what_to_do: Indica a Cadrumo l'any del fet que va originar la pensió i torna
+          a calcular.
+      duplicate_binding_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      duplicate_bound_casilla_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      duplicate_relation_owner:
+        what: Cadrumo ha trobat una errada en com està muntada aquesta declaració,
+          no en les teves dades.
+        what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
+          de les xifres.
+      fallback:
+        what: Cadrumo ha trobat alguna cosa per revisar en calcular.
+        what_to_do: Torna a calcular. Si continua, revisa la declaració a mà i avisa'ns.
+      inferred_retencion_rate_unmatched:
+        what: Cadrumo ha estimat una retenció a partir del que faltava en un cobrament,
+          i no coincideix amb cap tipus oficial.
+        what_to_do: Si la diferència va ser una comissió del banc o un descompte,
+          corregeix el registre per no reclamar retenció.
+      inferred_retencion_sectoral_rate_unconfirmed:
+        what: Cadrumo ha estimat una retenció de l'1 % o del 2 % a partir del que
+          faltava en un cobrament, i podria ser una comissió o un descompte.
+        what_to_do: Confirma la retenció amb la factura o el certificat del teu client,
+          o corregeix el registre.
+      invoice_category_counterparty_mismatch:
+        what: El tractament d'IVA d'una factura no encaixa amb el país del client,
+          així que s'ha deixat fora.
+        what_to_do: Revisa la categoria d'IVA o el país d'aquesta factura als teus
+          registres.
+      invoice_recargo_departs_from_published_rate:
+        what: El recàrrec d'equivalència anotat en una factura no coincideix amb el
+          tipus oficial.
+        what_to_do: Revisa el recàrrec d'aquesta factura als teus registres.
+      invoice_recargo_not_attributable_to_a_tier:
+        what: Un únic recàrrec cobreix línies amb diversos tipus d'IVA, així que no
+          s'ha pogut comparar amb els tipus oficials.
+        what_to_do: Revisa el recàrrec pel teu compte, o divideix la factura per tipus
+          d'IVA als teus registres.
+      invoice_reverse_charge_cuota_not_derivable:
+        what: Una factura rebuda amb inversió del subjecte passiu no té tipus d'IVA,
+          així que no s'ha calculat l'IVA que en deus.
+        what_to_do: Indica el tipus d'IVA d'aquesta factura als teus registres i torna
+          a calcular.
+      iva_compensation_annual_source_evidence_failure:
+        what: L'IVA anual a compensar o arrossegar es basa en registres que no tenen
+          justificant.
+        what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
+          que falti i torna a calcular.
+      iva_selected_scope_evidence_failure:
+        what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
+          o no quadren.
+        what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
+          marcats i torna a calcular.
+      m193_settled_row_amounts_unresolved_authority:
+        what: Alguns imports d'un registre d'un pagament fet en un any posterior no
+          tenen una font oficial que els confirmi.
+        what_to_do: Comprova aquests imports amb les instruccions oficials abans de
+          presentar.
+      m349_clave_inferred_from_category:
+        what: Cadrumo ha triat el tipus d'operació d'una línia del llistat d'operacions
+          amb la UE segons la categoria d'IVA de la factura, i podria ser un altre.
+        what_to_do: Revisa el tipus d'operació d'aquestes factures als teus registres
+          i canvia'l si és diferent.
+      missing_transaction_evidence:
+        what: Un apunt amb IVA no té factura ni document adjunt.
+        what_to_do: Adjunta la factura o el justificant a aquest apunt als teus registres.
+      official_box_unpopulated:
+        what: El total de la casella {box} està calculat, però les caselles oficials
+          que el formen estan totes buides.
+        what_to_do: Copia els imports a mà a les caselles oficials i torna a comprovar
+          la declaració.
+      operator_override_diverges_from_computed:
+        what: El valor de la casella {box} és el que vas escriure tu, no el que ha
+          calculat Cadrumo.
+        what_to_do: Mantén-lo només si n'estàs segur. Per fer servir el valor calculat,
+          torna a calcular sense escriure-hi cap valor.
+      orphaned_override:
+        what: Un valor que vas escriure abans ja no correspon a cap casella d'aquesta
+          declaració, així que no s'ha fet servir.
+        what_to_do: Mira si encara el necessites i, si és així, torna a escriure'l
+          a la casella correcta.
+      oss_no_live_source:
+        what: No s'ha trobat cap factura de finestreta única (OSS) en aquest període,
+          així que Cadrumo no ha calculat aquest impost.
+        what_to_do: No has de fer res si no vas fer aquest tipus de vendes. Si en
+          vas fer, escriu tu els imports.
+      prior_payment_minoracion_not_captured:
+        what: La minoració que ve de pagaments anteriors no està anotada a la casella
+          {box}.
+        what_to_do: Escriu aquesta minoració a la casella {box} si et correspon.
+      prior_payment_not_deducted:
+        what: Vas presentar un trimestre anterior, però la casella {box} no descompta
+          el que vas pagar llavors.
+        what_to_do: Escriu a la casella {box} el que vas pagar en els trimestres anteriors.
+      prorrata_especial_check_unavailable:
+        what: Cadrumo no ha pogut comprovar si la prorrata especial d'IVA és obligatòria
+          per a tu.
+        what_to_do: Comprova-ho tu amb les regles oficials o amb el teu assessor.
+      prorrata_especial_obligatoria:
+        what: La prorrata especial d'IVA pot ser obligatòria per a tu, per la teva
+          barreja d'activitat exempta i subjecta.
+        what_to_do: Consulta les regles de la prorrata de l'IVA o el teu assessor,
+          i aplica la prorrata especial si és obligatòria.
+      rate_boxes_underaccount_total:
+        what: Una part del total d'IVA de la casella {box} no és a cap casella per
+          tipus.
+        what_to_do: Revisa el tipus d'IVA de les teves factures i registres i torna
+          a calcular. No es podrà exportar la declaració fins que es corregeixi.
+      register_owned_capital_acquisition:
+        what: Una compra d'equipament es deixa fora de les teves despeses, perquè
+          es dedueix mitjançant la seva amortització anual.
+        what_to_do: No has de fer res.
+      reopen_hint: Torna a calcular per veure les notes del càlcul.
+      settlement_not_computed:
+        what: La casella {box} recull la liquidació final i Cadrumo no la calcula.
+        what_to_do: Escriu l'import a la casella {box} i compara'l amb les instruccions
+          oficials.
+      source_domain_not_ready:
+        what: Els registres dels quals depèn aquesta xifra encara no estan llestos
+          per llegir-se.
+        what_to_do: Acaba de preparar o importar aquests registres i torna a calcular.
+      source_issue:
+        what: Falta informació de la qual depèn aquesta xifra, o no s'ha pogut fer
+          servir.
+        what_to_do: Revisa els teus registres i el teu perfil per si falta alguna
+          cosa i torna a calcular.
+      stale: De l'últim càlcul. Torna a calcular per actualitzar.
+      storage_degraded:
+        what: Cadrumo no ha pogut llegir una part dels teus registres desats, així
+          que algunes xifres poden estar incompletes.
+        what_to_do: Torna a calcular. Si continua passant, comprova que les teves
+          dades són accessibles i avisa'ns.
+      structurally_unroutable_base_category:
+        what: Aquesta declaració no té casella per als imports d'una categoria dels
+          teus registres.
+        what_to_do: Consulta a les instruccions oficials on es declaren aquests imports;
+          sovint van en un altre lloc.
+      terminal_origin_mismatch:
+        what: Una xifra ha arribat a la declaració per un camí del qual Cadrumo no
+          pot respondre, així que no és fiable tal com està.
+        what_to_do: Mira d'on surt aquesta xifra als teus registres i torna a calcular.
+          Avisa'ns si continua igual.
+      unclassified_declarant_role_fact:
+        what: Una factura no diu si és aliena a la teva activitat o si és una subvenció,
+          i això decideix com es declara.
+        what_to_do: Respon aquesta pregunta a la factura, als teus registres, i torna
+          a calcular.
+      unconverted_foreign_currency:
+        what: Una factura en moneda estrangera no té tipus de canvi a euros, així
+          que queda fora del llistat.
+        what_to_do: Afegeix el tipus de canvi a aquesta factura als teus registres
+          i torna a calcular.
+      ungrounded_income_substrate:
+        what: Alguns registres d'ingressos no tenen factura amb base imposable, així
+          que s'ha fet servir l'import del banc i es deixa fora la retenció.
+        what_to_do: Vincula una factura emesa a cada registre d'ingressos, o indica'n
+          la base imposable, i torna a calcular.
+      unhandled_binding_source:
+        what: Cadrumo encara no sap emplenar una xifra d'aquesta declaració a partir
+          de les teves dades.
+        what_to_do: No presentis aquesta xifra tal com està. Escriu-la tu si la coneixes
+          i avisa'ns de la mancança.
+      unresolved_binding:
+        what: Cadrumo no ha pogut treure una xifra de les teves dades i hauria mostrat
+          un zero sense avisar.
+        what_to_do: Afegeix els registres o les dades de perfil que faltin, o escriu
+          tu el valor, i torna a calcular.
+      unresolved_derived_binding:
+        what: No s'ha pogut calcular una xifra que Cadrumo treu a partir d'altres.
+        what_to_do: Comprova que les xifres de les quals depèn estan emplenades i
+          torna a calcular.
+      unrouted_declarable_quantity:
+        what: Una part d'un registre, com una retenció o una base imposable, no arriba
+          a cap casella d'aquesta declaració.
+        what_to_do: Revisa la classificació i els imports d'aquest registre i torna
+          a calcular.
+      unrouted_observation:
+        what: Un import dels teus registres no s'ha col·locat a cap casella d'aquesta
+          declaració.
+        what_to_do: Revisa com està classificat aquest registre i torna a calcular.
+      unusable_sales_invoice_evidence:
+        what: Un registre d'ingressos està vinculat a una factura emesa que no és
+          fiable, així que es declara l'import del banc i es perd la retenció.
+        what_to_do: Arregla el vincle amb la factura als teus registres, o indica
+          directament la base imposable, i torna a calcular.
+      withholding_detail_absent:
+        what: No hi ha detall de retencions per perceptor durant l'any, així que es
+          mostra un zero sense suport.
+        what_to_do: Afegeix als teus registres el detall de l'any i torna a calcular.
     calculation_report:
       local_calculation_notice: 'Informe de càlcul local de Cadrumo. No és evidència
         oficial de presentació davant l''AEAT. L''evidència oficial l''emet l''AEAT

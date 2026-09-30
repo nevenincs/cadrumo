@@ -358,8 +358,11 @@ def _emit_wizard_result(
     notices: list[Notice] = []
     diagnostics = calculation_result.source_diagnostics
     if diagnostics:
+        unit = calculation_result.work_unit
+        snapshot = operation.snapshot(str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token)
+        casillas = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
         notices.extend(
-            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
+            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory", casillas=casillas)
             for diagnostic in diagnostics
         )
         lines.extend(source_diagnostic_notice_text(notice) for notice in notices)

@@ -514,6 +514,8 @@ class ModeloFormAttention(StrEnum):
     BLOCKS = "blocks"
     #: A value the declaration requires is missing; giving it resolves the finding.
     MISSING = "missing"
+    #: A value Cadrumo assumed or kept, waiting for the filer to confirm it.
+    CONFIRM = "confirm"
     #: A warning worth checking; it does not stop the filing.
     CHECK = "check"
     #: An explanation of what the calculation did; nothing to act on.
@@ -767,6 +769,22 @@ class ModeloFormIssue(_FormModel):
         return self
 
 
+class ModeloFormCalculationNote(_FormModel):
+    """One thing the latest calculation noticed, on the filer's scale, with the box it names.
+
+    ``reason`` is the calculation's own reason code, which the frontend words
+    from the catalogue; ``box`` is the printed box number when the note names a
+    box the form prints. ``durable`` says the note persists with the
+    calculation and withholds filing until a recalculation clears it.
+    """
+
+    reason: str = Field(min_length=1, max_length=64)
+    attention: ModeloFormAttention
+    casilla_id: CasillaId | None = None
+    box: str | None = None
+    durable: bool = False
+
+
 class ModeloFormAeatData(_FormModel):
     """The AEAT tax data (borrador) the current calculation took values from.
 
@@ -888,6 +906,10 @@ class ModeloWorkForm(_FormModel):
     verification: VerificationCompletenessStatus | None = None
     #: That verification's findings, blocking first, whether or not they name a casilla.
     issues: tuple[ModeloFormIssue, ...] = ()
+    #: What the latest calculation noticed that no finding of the check already says, most urgent first.
+    calculation_notes: tuple[ModeloFormCalculationNote, ...] = ()
+    #: ``False`` when this session did not run the latest calculation, so only its durable notes are known.
+    calculation_notes_held: bool = True
     #: The settlement box and its direction; ``None`` when the registry names no settlement box.
     result: ModeloFormResult | None = None
     #: The last day to file; ``None`` when the registry declares no window for this declaration.
@@ -913,6 +935,11 @@ class ModeloWorkForm(_FormModel):
     def calculation_out_of_date(self) -> bool:
         """Whether the last check found the records changed after the calculation, so it must be calculated again."""
         return any(issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues)
+
+    @property
+    def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:
+        """The latest calculation's notes that withhold filing, as blocking findings do."""
+        return tuple(note for note in self.calculation_notes if note.attention is ModeloFormAttention.BLOCKS)
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Return every field once, in reading order: pages, then working figures, then unplaced."""
@@ -951,6 +978,7 @@ __all__ = [
     "ModeloFormBindingInputsBlock",
     "ModeloFormBlock",
     "ModeloFormBlocker",
+    "ModeloFormCalculationNote",
     "ModeloFormCasillaAddressV1",
     "ModeloFormCounts",
     "ModeloFormDeadline",

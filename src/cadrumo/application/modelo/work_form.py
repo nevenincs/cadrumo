@@ -26,7 +26,10 @@ Classification is decided once, here, so every frontend shows the same states:
 * for a repeating column the design leaves unnamed, the label of the box it
   shows, and for an input no box owns that feeds exactly one numbered box, the
   words "additional data for" that box,
-* the settlement box and which way it settles, and
+* the settlement box and which way it settles,
+* what the latest calculation noticed, on the same scale as the check's
+  findings and without repeating one of them, and which box a note says could
+  not be worked out, which then reads as not calculated rather than as zero, and
 * whether the declaration is recorded as filed, which closes it to editing and
   leaves nothing counted as still to do.
 
@@ -85,7 +88,9 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .calculation_notes import BLOCKING_REASONS, UNWORKED_BOX_REASONS, is_printed_box, note_attention
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
 from .caller_context import caller_context_of
 from .edit_models import (
@@ -101,11 +106,13 @@ from .source_policy import SourceOverridePolicy, source_policy
 from .work_form_models import (
     ABSENT_FROM_ADMISSION,
     ModeloFormAeatData,
+    ModeloFormAttention,
     ModeloFormBinding,
     ModeloFormBindingAddressV1,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormBlocker,
+    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormDeadline,
@@ -178,6 +185,38 @@ _TO_DO_TALLIES: Final[tuple[str, ...]] = ("needs_input", "default_to_confirm")
 _PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*%\s*")
 """A design literal that states a percentage outright, such as ``21 %`` or ``1,75%``."""
 _DIGIT_LITERAL: Final[re.Pattern[str]] = re.compile(r"[0-9]+")
+_FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
+    "unresolved_binding": frozenset({"application.modelo.findings.missing_required_casilla"}),
+    "unresolved_derived_binding": frozenset({"application.modelo.findings.missing_required_casilla"}),
+    "unrouted_observation": frozenset(
+        {
+            "application.modelo.findings.cuota_less_ledger_row_base_missing",
+            "application.modelo.findings.oss_source_unrouted",
+        }
+    ),
+    "unrouted_declarable_quantity": frozenset({"application.modelo.findings.cuota_less_ledger_row_base_missing"}),
+    "iva_selected_scope_evidence_failure": frozenset(
+        {"application.modelo.findings.iva_selected_scope_evidence_failure"}
+    ),
+    "iva_compensation_annual_source_evidence_failure": frozenset(
+        {"application.modelo.findings.iva_compensation_annual_source_evidence_failure"}
+    ),
+    "withholding_detail_absent": frozenset(
+        {
+            "application.modelo.findings.withholding_detail_absent_unproven",
+            "application.modelo.findings.withholding_detail_absent_against_ledger_evidence",
+            "application.modelo.findings.withholding_detail_absent_attested",
+        }
+    ),
+    "missing_transaction_evidence": frozenset(
+        {
+            "application.modelo.findings.transaction_evidence_missing_deductible",
+            "application.modelo.findings.transaction_evidence_missing_output",
+        }
+    ),
+}
+"""The check's findings that say the same thing as a calculation note, by the note's reason."""
+_ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
 
 
 class ModeloWorkFormLayoutError(InternalInvariantError):
@@ -209,8 +248,10 @@ class _FormContext:
         entered_casilla_ids: frozenset[CasillaId] | None,
         overridden_binding_ids: frozenset[BindingId] | None,
         language: OutputLanguage,
+        unworked_casilla_ids: frozenset[str] = frozenset(),
     ) -> None:
         self.review = review
+        self.unworked = unworked_casilla_ids
         self.language = language
         self.revision = revision
         self.rows: dict[str, ModeloWorkReviewCasilla] = {str(row.casilla_id): row for row in review.casillas}
@@ -479,13 +520,17 @@ def _casilla_field(
     required = casilla_id in context.required
     editability, reason = _casilla_editability(row, context)
     origin = _casilla_origin(row, context, required=required)
+    value = row.value
+    if casilla_id in context.unworked and origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
+        # The calculation said this box could not be worked out: whatever it holds is not a figure.
+        origin, value = ModeloFormOrigin.CALCULATION_FAILED, None
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
         box=_box(casilla, placement),
         label=label,
         help=_help(casilla, label.text, context.language),
         data_type=str(row.data_type),
-        value=row.value,
+        value=value,
         origin=origin,
         editability=editability,
         not_writable_reason=reason,
@@ -998,6 +1043,7 @@ def build_modelo_work_form(
     language: OutputLanguage,
     deadline: ModeloFormDeadline | None = None,
     aeat_data_imported_at: datetime | None = None,
+    calculation_diagnostics: tuple[CalculationSourceDiagnostic, ...] | None = None,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -1013,10 +1059,15 @@ def build_modelo_work_form(
     when the AEAT tax data the revision replays was imported; the caller reads
     both, since neither is a fact of the review or the layout.
 
+    ``calculation_diagnostics`` are the diagnostics the latest calculation
+    raised, when this session ran it; ``None`` when it did not, in which case
+    only the notes that persist with the calculation are known.
+
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
             not define, places one twice, or leaves one without a placement.
     """
+    sources = _note_sources(revision, calculation_diagnostics)
     context = _FormContext(
         review=review,
         snapshot=snapshot,
@@ -1025,7 +1076,11 @@ def build_modelo_work_form(
         entered_casilla_ids=entered_casilla_ids,
         overridden_binding_ids=overridden_binding_ids,
         language=language,
+        unworked_casilla_ids=frozenset(
+            casilla_id for reason, casilla_id in sources if reason in UNWORKED_BOX_REASONS and casilla_id is not None
+        ),
     )
+    held = calculation_diagnostics is not None
     if layout is None or str(layout.revision_id) != str(snapshot.revision.id):
         reason = (
             ModeloFormInspectionReason.LAYOUT_ABSENT
@@ -1033,7 +1088,12 @@ def build_modelo_work_form(
             else ModeloFormInspectionReason.LAYOUT_FOR_ANOTHER_REVISION
         )
         return _inspection_form(
-            context, snapshot, reason, deadline=deadline, aeat_data_imported_at=aeat_data_imported_at
+            context,
+            snapshot,
+            reason,
+            deadline=deadline,
+            aeat_data_imported_at=aeat_data_imported_at,
+            notes=(sources, held),
         )
     context.placed_boxes = {
         str(placement.casilla_id): placement.box_number
@@ -1094,12 +1154,66 @@ def build_modelo_work_form(
         edit_admitted=context.surface is not None,
         verification=review.verification_outcome,
         issues=_issues(review, every_field),
+        calculation_notes=_calculation_notes(context, sources, every_field),
+        calculation_notes_held=held,
         result=_result(context, every_field),
         deadline=deadline,
         aeat_data=_aeat_data(context, aeat_data_imported_at),
         filing=_filing(context),
         edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
     )
+
+
+def _note_sources(
+    revision: CalculationRevision | None, diagnostics: tuple[CalculationSourceDiagnostic, ...] | None
+) -> tuple[tuple[str, str | None], ...]:
+    """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones."""
+    if diagnostics is not None:
+        return tuple(
+            (diagnostic.reason, None if diagnostic.casilla_id is None else str(diagnostic.casilla_id))
+            for diagnostic in diagnostics
+        )
+    if revision is None:
+        return ()
+    return tuple(
+        (issue.reason, None if issue.casilla_id is None else str(issue.casilla_id)) for issue in revision.source_issues
+    )
+
+
+def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[ModeloVerificationFinding]) -> bool:
+    """Whether a finding of the check already says what this note says, about the same box."""
+    causes = _FINDINGS_OF_THE_SAME_CAUSE.get(reason, frozenset())
+    return any(
+        finding.message_locale_key in causes
+        and (None if finding.casilla_id is None else str(finding.casilla_id)) == casilla_id
+        for finding in findings
+    )
+
+
+def _calculation_notes(
+    context: _FormContext, sources: tuple[tuple[str, str | None], ...], fields: Iterable[ModeloFormField]
+) -> tuple[ModeloFormCalculationNote, ...]:
+    """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says."""
+    boxes = {
+        str(field.address.casilla_id): field.box
+        for field in fields
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+    }
+    notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
+    for reason, casilla_id in sources:
+        if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
+            continue
+        box = None if casilla_id is None else boxes.get(casilla_id)
+        printed = box is not None or is_printed_box(None if casilla_id is None else context.casillas.get(casilla_id))
+        attention = note_attention(reason, printed_box=printed)
+        notes[(reason, casilla_id)] = ModeloFormCalculationNote(
+            reason=reason,
+            attention=attention,
+            casilla_id=casilla_id,
+            box=box,
+            durable=reason in BLOCKING_REASONS and attention is ModeloFormAttention.BLOCKS,
+        )
+    return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 
 
 def _issues(review: ModeloWorkReview, fields: Iterable[ModeloFormField]) -> tuple[ModeloFormIssue, ...]:
@@ -1178,6 +1292,7 @@ def _inspection_form(
     *,
     deadline: ModeloFormDeadline | None,
     aeat_data_imported_at: datetime | None,
+    notes: tuple[tuple[tuple[str, str | None], ...], bool],
 ) -> ModeloWorkForm:
     """Show every casilla read-only in official box order when no usable layout exists."""
     fields = sorted(
@@ -1226,6 +1341,8 @@ def _inspection_form(
         edit_admitted=False,
         verification=review.verification_outcome,
         issues=_issues(review, fields),
+        calculation_notes=_calculation_notes(context, notes[0], fields),
+        calculation_notes_held=notes[1],
         result=_result(context, fields),
         deadline=deadline,
         aeat_data=_aeat_data(context, aeat_data_imported_at),

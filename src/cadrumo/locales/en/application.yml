@@ -772,6 +772,233 @@ application:
           with `aeat app live borrador 100 list`.
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
+    calc_diagnostic:
+      administrador_retencion_rate_mismatch:
+        what: The withholding rate on a record for a company director differs from
+          the rate that applies.
+        what_to_do: Check that rate against the official instructions and correct
+          the record if needed.
+      aggregation_activity_undeclared:
+        what: Box {box} shows zero, although you have income this period with no type
+          of activity.
+        what_to_do: Set the type of activity on those income entries, then calculate
+          again.
+      deferred_binding_source:
+        what: Cadrumo does not fill in one figure of this declaration automatically
+          yet.
+        what_to_do: No action is needed unless that figure applies to you. If it does,
+          enter it yourself.
+      devengo_date_proxy_attribution:
+        what: Some invoices have no date for when the operation took place, so their
+          issue date chose the period.
+        what_to_do: Add the operation date to invoices near the end of a period, then
+          calculate again.
+      dt12_parcial_rescate_guidance:
+        what: Partial withdrawals from the same pension plan share one time limit
+          for the reduction in box {box}, counted once.
+        what_to_do: Check that each withdrawal falls inside that time limit.
+      dt12_regime_window_closed:
+        what: The 40 % reduction in box {box} was not applied, because the time limit
+          for this lump sum has passed.
+        what_to_do: No action is needed. If the year of the event is wrong, correct
+          it in your profile and calculate again.
+      dt12_regime_window_unverified:
+        what: The 40 % reduction for a pension paid as a lump sum was applied in box
+          {box}, but its time limit was not checked.
+        what_to_do: Give Cadrumo the year of the event behind the pension, then calculate
+          again.
+      duplicate_binding_owner:
+        what: Cadrumo found a fault in how this declaration is set up, not in your
+          data.
+        what_to_do: Nothing to change in your records. Report it before you rely on
+          the figures.
+      duplicate_bound_casilla_owner:
+        what: Cadrumo found a fault in how this declaration is set up, not in your
+          data.
+        what_to_do: Nothing to change in your records. Report it before you rely on
+          the figures.
+      duplicate_relation_owner:
+        what: Cadrumo found a fault in how this declaration is set up, not in your
+          data.
+        what_to_do: Nothing to change in your records. Report it before you rely on
+          the figures.
+      fallback:
+        what: Cadrumo found something to look at while calculating.
+        what_to_do: Calculate again. If it stays, check the declaration by hand and
+          report it.
+      inferred_retencion_rate_unmatched:
+        what: Cadrumo estimated a withholding from a shortfall in a payment, and it
+          matches no official rate.
+        what_to_do: If the difference was a bank fee or a discount, correct the record
+          so no withholding is claimed.
+      inferred_retencion_sectoral_rate_unconfirmed:
+        what: Cadrumo estimated a 1 % or 2 % withholding from a payment shortfall,
+          and a bank fee or a discount could explain it.
+        what_to_do: Confirm the withholding with your client's invoice or certificate,
+          or correct the record.
+      invoice_category_counterparty_mismatch:
+        what: The VAT treatment of an invoice does not fit its customer's country,
+          so the invoice was left out.
+        what_to_do: Check the VAT category or the country on that invoice in your
+          records.
+      invoice_recargo_departs_from_published_rate:
+        what: The equivalence surcharge recorded on an invoice differs from the official
+          rate.
+        what_to_do: Check the surcharge on that invoice in your records.
+      invoice_recargo_not_attributable_to_a_tier:
+        what: One surcharge covers lines at several VAT rates, so it could not be
+          compared with the official rates.
+        what_to_do: Check the surcharge on your own, or split the invoice by VAT rate
+          in your records.
+      invoice_reverse_charge_cuota_not_derivable:
+        what: A received invoice with reverse charge has no VAT rate, so the VAT you
+          owe on it was not worked out.
+        what_to_do: Record the VAT rate on that invoice in your records, then calculate
+          again.
+      iva_compensation_annual_source_evidence_failure:
+        what: The yearly VAT to carry forward or offset rests on records that are
+          missing proof.
+        what_to_do: Check the VAT records of the whole year, add the missing proof,
+          then calculate again.
+      iva_selected_scope_evidence_failure:
+        what: The records behind the VAT in this declaration are missing proof or
+          do not add up.
+        what_to_do: Open your records for this period, fix the ones that are marked,
+          then calculate again.
+      m193_settled_row_amounts_unresolved_authority:
+        what: Some amounts in a record of a payment made in a later year have no official
+          source that confirms them.
+        what_to_do: Check those amounts against the official instructions before filing.
+      m349_clave_inferred_from_category:
+        what: Cadrumo chose the operation type of a line in the EU sales listing from
+          the invoice's VAT category, and it may be another type.
+        what_to_do: Check the operation type on those invoices in your records and
+          set it if it differs.
+      missing_transaction_evidence:
+        what: A movement that carries VAT has no invoice or document attached.
+        what_to_do: Attach the invoice or receipt to that movement in your records.
+      official_box_unpopulated:
+        what: The total for box {box} is worked out, but the official boxes that make
+          it up are all empty.
+        what_to_do: Copy the amounts into the official boxes by hand, then check the
+          declaration again.
+      operator_override_diverges_from_computed:
+        what: The value in box {box} is the one you entered, not the one Cadrumo worked
+          out.
+        what_to_do: Keep it only if you are sure. To use the worked-out value, calculate
+          again without entering a value there.
+      orphaned_override:
+        what: A value you entered earlier no longer matches any box of this declaration,
+          so it was not used.
+        what_to_do: Check whether you still need it, and enter it again in the right
+          box if so.
+      oss_no_live_source:
+        what: No invoice for the one-stop shop (OSS) was found for this period, so
+          Cadrumo did not work out that tax.
+        what_to_do: No action is needed if you made no such sales. Otherwise enter
+          the amounts yourself.
+      prior_payment_minoracion_not_captured:
+        what: The reduction that comes from earlier payments is not recorded in box
+          {box}.
+        what_to_do: Enter that reduction in box {box} if it applies to you.
+      prior_payment_not_deducted:
+        what: You filed an earlier quarter, but box {box} does not deduct what you
+          paid then.
+        what_to_do: Enter what you paid in earlier quarters in box {box}.
+      prorrata_especial_check_unavailable:
+        what: Cadrumo could not check whether the special VAT prorrata is compulsory
+          for you.
+        what_to_do: Check it yourself with the official rules or with your advisor.
+      prorrata_especial_obligatoria:
+        what: The special VAT prorrata may be compulsory for you, because of your
+          mix of exempt and taxable activity.
+        what_to_do: Check the VAT prorrata rules or ask your advisor, and apply the
+          special prorrata if it is compulsory.
+      rate_boxes_underaccount_total:
+        what: Part of the VAT total in box {box} is not placed in any rate box.
+        what_to_do: Check the VAT rate on your invoices and records, then calculate
+          again. The declaration cannot be exported until this is fixed.
+      register_owned_capital_acquisition:
+        what: A purchase of equipment is left out of your expenses, because it is
+          deducted through its yearly depreciation.
+        what_to_do: No action is needed.
+      reopen_hint: Calculate again to see the calculation's notes.
+      settlement_not_computed:
+        what: Box {box} holds the final settlement, and Cadrumo does not work it out.
+        what_to_do: Enter the amount in box {box} and check it against the official
+          instructions.
+      source_domain_not_ready:
+        what: The records this figure depends on are not ready to be read yet.
+        what_to_do: Finish setting up or importing those records, then calculate again.
+      source_issue:
+        what: Some information this figure depends on is missing or could not be used.
+        what_to_do: Check your records and your profile for what is missing, then
+          calculate again.
+      stale: From the last calculation. Calculate again to refresh.
+      storage_degraded:
+        what: Cadrumo could not read part of your saved records, so some figures may
+          be incomplete.
+        what_to_do: Calculate again. If it keeps happening, check that your data is
+          reachable and report it.
+      structurally_unroutable_base_category:
+        what: This declaration has no box for the amounts of one category in your
+          records.
+        what_to_do: Look in the official instructions for where those amounts are
+          declared; they are often reported elsewhere.
+      terminal_origin_mismatch:
+        what: A figure reached the declaration by a route Cadrumo cannot vouch for,
+          so it cannot be trusted as it stands.
+        what_to_do: Check where that figure comes from in your records, then calculate
+          again. Report it if it stays.
+      unclassified_declarant_role_fact:
+        what: An invoice does not say whether it is unrelated to your business or
+          a subsidy, and that decides how it is reported.
+        what_to_do: Answer that question on the invoice in your records, then calculate
+          again.
+      unconverted_foreign_currency:
+        what: An invoice in a foreign currency has no euro exchange rate, so it is
+          left out of the listing.
+        what_to_do: Add the exchange rate to that invoice in your records, then calculate
+          again.
+      ungrounded_income_substrate:
+        what: Some income entries have no invoice with a tax base, so the bank amount
+          was used and their withholding is left out.
+        what_to_do: Link an issued invoice to each income entry, or enter its tax
+          base, then calculate again.
+      unhandled_binding_source:
+        what: Cadrumo has no way yet to fill in a figure of this declaration from
+          your data.
+        what_to_do: Do not file that figure as it stands. Enter it yourself if you
+          know it, and report the gap.
+      unresolved_binding:
+        what: Cadrumo could not work out a figure from your data, so it would have
+          shown a silent zero.
+        what_to_do: Add the missing records or profile details, or enter the value
+          yourself, then calculate again.
+      unresolved_derived_binding:
+        what: A figure that Cadrumo works out from other figures could not be worked
+          out.
+        what_to_do: Check that the figures it depends on are filled in, then calculate
+          again.
+      unrouted_declarable_quantity:
+        what: Part of a record, such as a withholding or a tax base, reaches no box
+          of this declaration.
+        what_to_do: Check the classification and amounts of that record in your records,
+          then calculate again.
+      unrouted_observation:
+        what: An amount from your records is not placed in any box of this declaration.
+        what_to_do: Check how that record is classified in your records, then calculate
+          again.
+      unusable_sales_invoice_evidence:
+        what: An income entry is linked to an issued invoice that cannot be trusted,
+          so the bank amount is declared and its withholding is lost.
+        what_to_do: Repair the invoice link in your records, or enter the tax base
+          directly, then calculate again.
+      withholding_detail_absent:
+        what: No withholding detail per recipient is recorded for the year, so a zero
+          is shown without support.
+        what_to_do: Add the detail records for the year in your records, then calculate
+          again.
     calculation_report:
       local_calculation_notice: 'Cadrumo local calculation report. Not official AEAT
         filing evidence. Official evidence comes from AEAT after filing: justificante;

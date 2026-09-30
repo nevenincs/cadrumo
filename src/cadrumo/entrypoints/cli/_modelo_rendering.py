@@ -17,8 +17,9 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from collections.abc import Mapping, Sequence
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final
 
 from ...application.modelo.calculation import (
     visible_calculation_casilla_values,
@@ -67,6 +68,7 @@ if TYPE_CHECKING:
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 
 def _modelo_rendering_value(key: str) -> str:
@@ -207,8 +209,32 @@ def advisory_notice(
     )
 
 
-def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: str) -> Notice:
+_LEVEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "blocks": "tui.modelo.workbench.level.blocks",
+        "missing": "tui.modelo.workbench.origin.needs_input",
+        "confirm": "tui.modelo.workbench.origin.default_to_confirm",
+        "check": "tui.modelo.workbench.level.check",
+        "info": "tui.modelo.workbench.level.info",
+    }
+)
+"""The words of each level, by the level's value, the ones the editor's findings list heads them with."""
+_UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+
+
+def source_diagnostic_notice(
+    diagnostic: CalculationSourceDiagnostic,
+    *,
+    code: str,
+    casillas: Mapping[str, CasillaDefinition] | None = None,
+) -> Notice:
     """Project one source diagnostic onto a notice whose context is routable.
+
+    The message is the catalogue's sentence for the diagnostic's reason, and
+    the context carries its place on the same scale the editor's findings list
+    uses (``level``), the printed box it names (``box``), and the calculation's
+    own technical account (``detail``). ``casillas`` are the revision's casilla
+    definitions, which decide whether the box is one the form prints.
 
     The single projection for source-resolution advisories, shared by every
     command that emits them so their context cannot diverge per call site.
@@ -250,19 +276,33 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         # remains reserved for Notice.action by the Notice validator.
         "remedy": diagnostic.remedy,
     }
+    from ...application.modelo.calculation_notes import note_attention, printed_box_number, what_locale_key
+    from ...application.modelo.work_form_models import ModeloFormAttention
+
+    casilla = None if diagnostic.casilla_id is None or casillas is None else casillas.get(str(diagnostic.casilla_id))
+    box = printed_box_number(casilla)
+    attention = note_attention(diagnostic.reason, printed_box=box is not None)
     context.update({key: value for key, value in optional.items() if value})
-    return advisory_notice(code, diagnostic.message, context=context)
+    context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
+    return Notice(
+        severity=NoticeSeverity.INFO if attention is ModeloFormAttention.INFO else NoticeSeverity.WARNING,
+        code=code,
+        message=tr(what_locale_key(diagnostic.reason), box=_box_words(box)),
+        context=context,
+    )
+
+
+def _box_words(box: str | None) -> str:
+    return box if box is not None else tr(_UNNUMBERED_BOX_LOCALE_KEY)
 
 
 def source_diagnostic_notice_text(notice: Notice) -> str:
-    """Render one source diagnosis together with its non-command remedy."""
+    """Render one diagnosis as the editor's findings list does: its level, what happened, and what to do."""
+    from ...application.modelo.calculation_notes import what_to_do_locale_key
+
     context = notice.context or {}
-    remedy = context.get("remedy")
-    message = notice.message if remedy is None else f"{notice.message} {remedy}"
-    return tr(
-        "cli.app.modelo.work.calculate_source_advisory",
-        message=message,
-    )
+    action = tr(what_to_do_locale_key(context["reason"]), box=_box_words(context.get("box")))
+    return f"{tr(_LEVEL_LOCALE_KEYS[context['level']])}: {notice.message} {action}"
 
 
 def short_id(value: str | None) -> str | None:

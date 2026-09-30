@@ -28,6 +28,13 @@ about one value of a table's records, such as a Modelo 349 operator's country
 code, is named by that value's heading, says whether the table has any records,
 and says to change them where they come from.
 
+What the latest calculation noticed joins the check's findings on the same
+scale and in the same three parts, worded from the catalogue by its reason,
+without repeating a finding about the same box and cause. While the
+calculation is out of date the list says its notes come from the last
+calculation; on a declaration opened afresh, whose calculation this session
+did not run, it says to calculate again to see them.
+
 Every fact in a finding's sentence reads in words: a period by its name, a date
 in the language's order, an amount with the language's marks, a box by its
 number or the words the form gives it. Every blocking mark is drawn in the
@@ -67,10 +74,18 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
+from .....application.modelo.calculation_notes import (
+    RECORDS_REASONS,
+    REOPEN_HINT_LOCALE_KEY,
+    STALE_LOCALE_KEY,
+    what_locale_key,
+    what_to_do_locale_key,
+)
 from .....application.modelo.finding_message_text import finding_message_text
 from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
+    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormIssue,
@@ -136,6 +151,7 @@ _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProx
     {
         ModeloFormAttention.BLOCKS: IssueLevel.BLOCKS,
         ModeloFormAttention.MISSING: IssueLevel.MISSING,
+        ModeloFormAttention.CONFIRM: IssueLevel.CONFIRM,
         ModeloFormAttention.CHECK: IssueLevel.CHECK,
         ModeloFormAttention.INFO: IssueLevel.INFO,
     }
@@ -214,6 +230,9 @@ _RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.rec
 _RECORDS_ACTION_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.action.records_at_source"
 _RECORD_VALUE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.record_value"
 _RECORDS_WHERE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.where.records"
+_UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_STALE_ID: Final[str] = "calculation-stale"
+_REOPEN_ID: Final[str] = "calculation-reopen"
 """Where a finding about the filer's records, rather than a box, sits: in those records."""
 
 
@@ -237,6 +256,8 @@ class IssueLine:
     in_records: bool = False
     #: The area of the application that owns the finding's value, when one does and can be opened.
     area: SourceSurface | None = None
+    #: Whether the latest calculation noticed this, rather than the check.
+    from_calculation: bool = False
 
     @property
     def blocking(self) -> bool:
@@ -392,6 +413,43 @@ def _record_issue_line(issue: ModeloFormIssue, value: _RecordValue, *, message: 
     )
 
 
+def _note_line(
+    note: ModeloFormCalculationNote,
+    *,
+    on_pages: Mapping[AddressKey, ModeloFormField],
+    box_words: Mapping[str, str],
+) -> IssueLine:
+    """One thing the latest calculation noticed, in the same three parts as a finding."""
+    casilla_id = None if note.casilla_id is None else str(note.casilla_id)
+    candidate = None if casilla_id is None else address_key(ModeloFormCasillaAddressV1(casilla_id=casilla_id))
+    field = None if candidate is None else on_pages.get(candidate)
+    named = None if casilla_id is None else (note.box or box_words.get(casilla_id))
+    box_text = named or tr(_UNNUMBERED_BOX_LOCALE_KEY)
+    if field is not None:
+        where = _field_name(field) or f"[{note.box}]"
+    elif note.box is not None:
+        where = f"[{note.box}]"
+    elif note.reason in RECORDS_REASONS:
+        where = tr(_RECORDS_WHERE_LOCALE_KEY)
+    else:
+        where = tr("tui.modelo.workbench.issues.where.declaration")
+    technical_codes = [note.reason, *([] if casilla_id is None else [casilla_id])]
+    return IssueLine(
+        level=_ATTENTION_LEVELS[note.attention],
+        box=note.box or "·",
+        where=where,
+        message=tr(what_locale_key(note.reason), box=box_text),
+        action=tr(
+            "tui.modelo.workbench.issues.what_to_do", action=tr(what_to_do_locale_key(note.reason), box=box_text)
+        ),
+        detail="",
+        technical=f"{tr('tui.modelo.workbench.issues.technical')}: {' · '.join(technical_codes)}",
+        key=candidate if field is not None else None,
+        area=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else None,
+        from_calculation=True,
+    )
+
+
 def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
     """The form's findings on the scale, most urgent first, each rendered in the filer's language.
 
@@ -453,6 +511,10 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
                 area=None if field is None else open_area_target(field),
             )
         )
+    pages = {
+        address_key(field.address): field for page in workbench_pages(presented_form(form)) for field in page.fields()
+    }
+    lines.extend(_note_line(note, on_pages=pages, box_words=box_words) for note in form.calculation_notes)
     order = tuple(IssueLevel)
     return tuple(sorted(lines, key=lambda line: order.index(line.level)))
 
@@ -704,9 +766,18 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
                 Option(_issue_prompt(line, expanded=False, technical=False), id=f"{_ISSUE_ID_PREFIX}{index}")
                 for index, line in indexed
             )
+        if self._form.calculation_notes and self._form.calculation_out_of_date:
+            options.insert(0, Option(Text(tr(STALE_LOCALE_KEY), style="italic"), id=_STALE_ID, disabled=True))
+        if self._reopen_hint():
+            options.append(Option(Text(tr(REOPEN_HINT_LOCALE_KEY), style="italic"), id=_REOPEN_ID, disabled=True))
         if not options:
             options.append(Option(tr("tui.modelo.workbench.issues.empty"), id="empty", disabled=True))
         return options
+
+    def _reopen_hint(self) -> bool:
+        """Whether this session did not run the latest calculation, so its passing notes are not known here."""
+        form = self._form
+        return not form.calculation_notes_held and form.calculation_revision_id is not None and not self._recorded
 
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""
