@@ -2178,6 +2178,9 @@ tui:
           confirm: Open each box and confirm its value, or type the right one.
           confirm_by_section: Open each section and confirm its values, or type the
             right ones.
+          fill: Open each box and type its value. If the right value is zero, enter
+            0.
+          fill_by_section: Open each section and type the values it needs.
         assumed: Nobody has entered the values in these boxes.
         box_not_on_form: Box {box} is not shown on this declaration's pages.
         detail:
@@ -2195,6 +2198,8 @@ tui:
         key:
           less: Show less
           more: Show more
+        missing: The declaration needs values in these boxes, and nobody has given
+          them.
         open_section: Open section
         technical: Technical details
         title: Issues to look at
@@ -2346,6 +2351,9 @@ tui:
         not_imported_yet: Not imported yet
         optional_empty: Optional, empty
         overrides_source: Your value replaces the source
+      origin_filed:
+        default_to_confirm: Assumed, nobody entered it
+        needs_input: Empty, nobody filled it in
       origin_source:
         imported:
           aeat_draft: From AEAT data
@@ -2397,6 +2405,8 @@ tui:
       rate:
         not_grounded: Cadrumo does not set a rate for this row, so none is shown here.
           Check the rate that applies to you in the official instructions.
+        of_row: This row's rate is {rate}.
+        of_row_printed: 'The official form prints this rate for this row: {rate}.'
         printed_by_form: The official form prints this rate for this row.
       read_failed: The declaration could not be read. Go back and open it again.
       rebase:
@@ -2511,6 +2521,9 @@ tui:
           set_by_form: Set by the form
           unnamed: From a source not named
           yours: Entered or confirmed by you
+        group_filed:
+          assumed: Assumed, nobody entered them
+          needs_you: Empty, nobody filled them in
         intro: Every box, grouped by where its value comes from. Open a group to see
           its boxes.
         key:

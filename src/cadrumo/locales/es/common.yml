@@ -2236,6 +2236,9 @@ tui:
           confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
           confirm_by_section: Abre cada sección y confirma sus valores, o escribe
             los correctos.
+          fill: Abre cada casilla y escribe su valor. Si el valor correcto es cero,
+            escribe 0.
+          fill_by_section: Abre cada sección y escribe los valores que necesita.
         assumed: Nadie ha escrito los valores de estas casillas.
         box_not_on_form: La casilla {box} no aparece en las páginas de esta declaración.
         detail:
@@ -2254,6 +2257,8 @@ tui:
         key:
           less: Ver menos
           more: Ver más
+        missing: La declaración necesita valores en estas casillas y nadie los ha
+          dado.
         open_section: Abrir la sección
         technical: Detalles técnicos
         title: Incidencias para revisar
@@ -2403,6 +2408,9 @@ tui:
         not_imported_yet: Aún sin importar
         optional_empty: Opcional, vacía
         overrides_source: Tu valor sustituye al origen
+      origin_filed:
+        default_to_confirm: Supuesta, nadie la introdujo
+        needs_input: Vacía, nadie la rellenó
       origin_source:
         imported:
           aeat_draft: De datos de la AEAT
@@ -2454,6 +2462,8 @@ tui:
       rate:
         not_grounded: Cadrumo no fija un tipo para esta fila, así que aquí no se muestra
           ninguno. Consulta en las instrucciones oficiales el tipo que te corresponde.
+        of_row: El tipo de esta fila es el {rate}.
+        of_row_printed: 'El modelo oficial imprime este tipo en esta fila: {rate}.'
         printed_by_form: El modelo oficial imprime este tipo en esta fila.
       read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
       rebase:
@@ -2571,6 +2581,9 @@ tui:
           set_by_form: Fijados por el modelo
           unnamed: De un origen sin nombre
           yours: Escritos o confirmados por ti
+        group_filed:
+          assumed: Supuestos, nadie los introdujo
+          needs_you: Vacías, nadie las rellenó
         intro: Todas las casillas, agrupadas según de dónde sale su valor. Abre un
           grupo para ver sus casillas.
         key:

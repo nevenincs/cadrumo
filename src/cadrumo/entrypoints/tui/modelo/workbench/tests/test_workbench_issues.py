@@ -35,6 +35,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
+    section_fields,
 )
 from ......core.config import override_settings
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
@@ -46,14 +47,16 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
+from ..header import ChipLevel, attention_chips
 from ..issues import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
     IssueLevel,
     WorkbenchIssuesScreen,
-    assumed_values,
     issue_lines,
     level_counts,
     title_text,
+    unentered_boxes,
+    unentered_levels,
     verdict_text,
 )
 from ..screen import ModeloWorkbenchScreen
@@ -190,8 +193,8 @@ def _words(text: str) -> str:
 def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(_checked())
-        assumed = assumed_values(_checked())
-        title = title_text(level_counts(lines, assumed))
+        assumed = unentered_boxes(_checked(), IssueLevel.CONFIRM)
+        title = title_text(level_counts(lines, unentered_levels(_checked())))
 
     assert [(line.level, line.box, line.where) for line in lines] == [
         (IssueLevel.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
@@ -215,7 +218,7 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
     form = _checked(assumed=False).model_copy(update={"issues": (_explanation(),)})
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines, None))
+        title = title_text(level_counts(lines))
 
     assert [line.level for line in lines] == [IssueLevel.INFO]
     assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
@@ -368,7 +371,7 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
 async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter_opens_one() -> None:
     form = _assumed_boxes(12, 15)
     with override_settings(cadrumo_output_language="en"):
-        assumed = assumed_values(form)
+        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
@@ -403,7 +406,7 @@ async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter
 async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_counts_nothing_to_do() -> None:
     form = recorded_as_filed(_checked())
     with override_settings(cadrumo_output_language="en"):
-        assumed = assumed_values(form)
+        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
         screen = WorkbenchIssuesScreen(form)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
@@ -426,10 +429,10 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
     )
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines, assumed_values(form)))
+        title = title_text(level_counts(lines, unentered_levels(form)))
 
     assert lines == ()
-    assert assumed_values(form) is None
+    assert unentered_levels(form) == ()
     assert title == "Issues to look at"
 
 
@@ -461,3 +464,90 @@ async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_st
     assert "issues-status" not in without
     assert title_style.bold
     assert title_style.color != verdict_style.color
+
+
+def _recounted(form: ModeloWorkForm) -> ModeloWorkForm:
+    """The form with every page's and the form's to-do counts taken again from its boxes, as the read model counts."""
+
+    def counted(fields: tuple[ModeloFormField, ...], counts: ModeloFormCounts) -> ModeloFormCounts:
+        return counts.model_copy(
+            update={
+                "needs_input": sum(1 for field in fields if field.origin is ModeloFormOrigin.NEEDS_INPUT),
+                "default_to_confirm": sum(1 for field in fields if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM),
+            }
+        )
+
+    pages = tuple(
+        page.model_copy(
+            update={
+                "counts": counted(
+                    tuple(field for section in page.sections for field in section_fields(section)), page.counts
+                )
+            }
+        )
+        for page in form.pages
+    )
+    recounted = form.model_copy(update={"pages": pages})
+    return recounted.model_copy(update={"counts": counted(recounted.fields(), form.counts)})
+
+
+def _chips(form: ModeloWorkForm) -> dict[ChipLevel, int]:
+    return {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
+
+
+@pytest.mark.asyncio
+async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level() -> None:
+    form = _recounted(synthetic_form(needs_input=True))
+    with override_settings(cadrumo_output_language="en"):
+        missing = unentered_boxes(form, IssueLevel.MISSING)
+        title = title_text(level_counts(issue_lines(form), unentered_levels(form)))
+        chips = _chips(form)
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await _settle(pilot)
+            await pilot.press("i")
+            await _settle(pilot)
+            issues = app.screen
+            assert isinstance(issues, WorkbenchIssuesScreen)
+            listed = _list_text(issues)
+            await pilot.press("down", "enter")
+            await _settle(pilot)
+            landed_on = screen.query_one(CasillaList).highlighted
+            app.exit(None)
+
+    assert missing is not None
+    assert missing.boxes == ("06",)
+    assert chips == {ChipLevel.MISSING: 1}
+    assert title == "Issues to look at   ! 1"
+    assert "! Needs your input (1)" in listed
+    assert "[06]" in listed
+    assert "If the right value is zero, enter 0" in _words(listed)
+    assert landed_on is not None and landed_on.field.box == "06"
+
+
+def test_boxes_on_a_page_that_does_not_apply_are_neither_listed_nor_counted() -> None:
+    both = _recounted(
+        replace_fields(
+            synthetic_form(needs_input=True),
+            {"19": {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "value": Decimal("5.00")}},
+        )
+    )
+    # Page 2 holds the missing box 06 and the assumed box 19; page 1 holds neither.
+    set_aside = both.model_copy(
+        update={
+            "pages": tuple(
+                page.model_copy(update={"applies": False}) if page.id == "p2" else page for page in both.pages
+            )
+        }
+    )
+    with override_settings(cadrumo_output_language="en"):
+        applying = {boxes.level: boxes.boxes for boxes in unentered_levels(both)}
+        not_applying = unentered_levels(set_aside)
+        chips_applying, chips_not_applying = _chips(both), _chips(set_aside)
+
+    # The instrument sees both boxes while their page applies, so their absence below is the page's doing.
+    assert applying == {IssueLevel.MISSING: ("06",), IssueLevel.CONFIRM: ("19",)}
+    assert chips_applying == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
+    assert not_applying == ()
+    assert chips_not_applying == {}

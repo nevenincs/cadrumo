@@ -1,28 +1,32 @@
 """Everything the filer should look at before filing, on one scale, with a way to act on each.
 
-The list gathers the last check's findings and the boxes whose value was
-assumed, grouped by one scale of levels, each with its glyph and words: what
-blocks filing first, then the assumed values waiting for the filer's
-confirmation, then what is worth checking, then what is only for the filer's
-information. A finding takes its level from the form, which places it on that
-scale. The title line counts each level that has anything in it, so the
-check's verdict below it says what the check concluded without a count.
+The list gathers the last check's findings and the boxes the filer still has
+to fill in or confirm, grouped by one scale of levels, each with its glyph and
+words: what blocks filing first, then the missing values the header counts,
+then the assumed values waiting for the filer's confirmation, then what is
+worth checking, then what is only for the filer's information. A finding takes
+its level from the form, which places it on that scale. The title line counts
+each level that has anything in it, so the check's verdict below it says what
+the check concluded without a count.
 
 Every finding reads in three parts, all wrapped and never cut: where it is (a
 box, or the whole declaration), what is wrong (the finding's own catalogue
 message, rendered from its key and facts), and what to do (the sentence the
-form names for that finding). The assumed values are one entry listing their
-box numbers in at most two lines, then how many more there are; past twenty
-boxes the entry lists the sections that hold them, with a count each, instead.
+form names for that finding). The missing values are one entry, and the
+assumed values another, listing their box numbers in at most two lines, then
+how many more there are; past twenty boxes the entry lists the sections that
+hold them, with a count each, instead. Both count exactly the boxes the header
+counts: none on a page that does not apply this period.
 
 A declaration recorded as filed asks nothing more of the filer: its list has
-no assumed values and counts nothing left to do.
+no missing or assumed values and counts nothing left to do.
 
-Enter always acts. A finding that names a box on the form, the assumed values
-and each of their sections return the first such box to the workbench; a
-finding about the whole declaration opens its detail in place; a finding whose
-box is not on the form says so there. Codes, facts and legal references never
-reach the list: ``t`` shows them for the selected finding only.
+Enter always acts. A finding that names a box on the form, the missing or
+assumed values and each of their sections return the first such box to the
+workbench; a finding about the whole declaration opens its detail in place; a
+finding whose box is not on the form says so there. Codes, facts and legal
+references never reach the list: ``t`` shows them for the selected finding
+only.
 """
 
 from __future__ import annotations
@@ -66,16 +70,17 @@ from ...components.theme import tokenised
 from .casilla_list import AddressKey
 from .dialog_width import fit_dialog_width
 from .keys import describe_bindings
-from .navigator import presented_form
+from .navigator import applicable_fields, presented_form
 from .page_items import workbench_pages
 from .sources import BoxNumbers
-from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, INFO_MARK, WorkbenchMark
+from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, INFO_MARK, MISSING_MARK, WorkbenchMark
 
 
 class IssueLevel(StrEnum):
     """The one scale everything the filer should notice is placed on, most urgent first."""
 
     BLOCKS = "blocks"
+    MISSING = "missing"
     CONFIRM = "confirm"
     CHECK = "check"
     INFO = "info"
@@ -84,6 +89,7 @@ class IssueLevel(StrEnum):
 LEVEL_MARKS: Final[Mapping[IssueLevel, WorkbenchMark]] = MappingProxyType(
     {
         IssueLevel.BLOCKS: BLOCKS_MARK,
+        IssueLevel.MISSING: MISSING_MARK,
         IssueLevel.CONFIRM: CONFIRM_MARK,
         IssueLevel.CHECK: CHECK_MARK,
         IssueLevel.INFO: INFO_MARK,
@@ -92,7 +98,7 @@ LEVEL_MARKS: Final[Mapping[IssueLevel, WorkbenchMark]] = MappingProxyType(
 """One mark per level, with its words, from the workbench's one vocabulary of marks."""
 
 #: Levels that count as something left to do; a declaration recorded as filed counts none of them.
-TO_DO_LEVELS: Final[frozenset[IssueLevel]] = frozenset({IssueLevel.BLOCKS, IssueLevel.CONFIRM})
+TO_DO_LEVELS: Final[frozenset[IssueLevel]] = frozenset({IssueLevel.BLOCKS, IssueLevel.MISSING, IssueLevel.CONFIRM})
 
 _ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProxyType(
     {
@@ -135,11 +141,30 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {"escape": "tui.modelo.workbench.key.back", "t": "tui.modelo.workbench.issues.technical"}
 )
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
-#: Past this many assumed boxes the list names the sections that hold them instead of their numbers.
+#: Past this many missing or assumed boxes the list names the sections that hold them instead of their numbers.
 ASSUMED_BOXES_BEFORE_SECTIONS: Final[int] = 20
-_ASSUMED_ID: Final[str] = "assumed"
-_ASSUMED_INTRO_ID: Final[str] = "assumed-intro"
-_SECTION_ID_PREFIX: Final[str] = "assumed-section-"
+_UNENTERED_ORIGINS: Final[Mapping[IssueLevel, ModeloFormOrigin]] = MappingProxyType(
+    {IssueLevel.MISSING: ModeloFormOrigin.NEEDS_INPUT, IssueLevel.CONFIRM: ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+"""The levels that list boxes nobody has entered, and the origin that places a box at each."""
+_UNENTERED_LOCALE_KEYS: Final[Mapping[IssueLevel, tuple[str, str, str]]] = MappingProxyType(
+    {
+        IssueLevel.MISSING: (
+            "tui.modelo.workbench.issues.missing",
+            "tui.modelo.workbench.issues.action.fill",
+            "tui.modelo.workbench.issues.action.fill_by_section",
+        ),
+        IssueLevel.CONFIRM: (
+            "tui.modelo.workbench.issues.assumed",
+            "tui.modelo.workbench.issues.action.confirm",
+            "tui.modelo.workbench.issues.action.confirm_by_section",
+        ),
+    }
+)
+"""Per level that lists boxes: what the boxes are, what to do with each, and what to do section by section."""
+_BOXES_SUFFIX: Final[str] = "-boxes"
+_INTRO_SUFFIX: Final[str] = "-intro"
+_SECTION_INFIX: Final[str] = "-section-"
 _ISSUE_ID_PREFIX: Final[str] = "issue-"
 _INDENT: Final[int] = 2
 
@@ -168,26 +193,27 @@ class IssueLine:
 
 
 @dataclass(frozen=True, slots=True)
-class AssumedSection:
-    """One section holding assumed values: its words and its assumed boxes, in form order."""
+class UnenteredSection:
+    """One section holding boxes nobody entered at one level: its words and those boxes, in form order."""
 
     title: str
     keys: tuple[AddressKey, ...]
 
 
 @dataclass(frozen=True, slots=True)
-class AssumedValues:
-    """The boxes whose value nobody entered, listed as one entry, and the sections that hold them.
+class UnenteredBoxes:
+    """The boxes at one level whose value nobody entered, listed as one entry, and the sections that hold them.
 
-    ``boxes`` are their official numbers and ``unnumbered`` counts those that
-    have none; ``keys`` are every one of them in form order, the first being
-    where Enter goes.
+    ``level`` is missing or assumed. ``boxes`` are their official numbers and
+    ``unnumbered`` counts those that have none; ``keys`` are every one of them
+    in form order, the first being where Enter goes.
     """
 
+    level: IssueLevel
     boxes: tuple[str, ...]
     unnumbered: int
     keys: tuple[AddressKey, ...]
-    sections: tuple[AssumedSection, ...]
+    sections: tuple[UnenteredSection, ...]
 
     @property
     def by_section(self) -> bool:
@@ -267,45 +293,54 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
     return tuple(sorted(lines, key=lambda line: order.index(line.level)))
 
 
-def _assumed_sections(form: ModeloWorkForm, assumed: frozenset[AddressKey]) -> tuple[AssumedSection, ...]:
-    """The sections holding assumed values, under the words the navigator shows them with."""
-    sections: list[AssumedSection] = []
+def _unentered_sections(form: ModeloWorkForm, wanted: frozenset[AddressKey]) -> tuple[UnenteredSection, ...]:
+    """The sections holding the wanted boxes, under the words the navigator shows them with."""
+    sections: list[UnenteredSection] = []
     for page in workbench_pages(presented_form(form)):
         parts = [(section.heading.text, section_fields(section)) for section in page.sections]
         if page.details:
             parts.append((page.heading.text, page.details))
         for title, fields in parts:
-            keys = tuple(key for key in (address_key(field.address) for field in fields) if key in assumed)
+            keys = tuple(key for key in (address_key(field.address) for field in fields) if key in wanted)
             if keys:
-                sections.append(AssumedSection(title=title, keys=keys))
+                sections.append(UnenteredSection(title=title, keys=keys))
     return tuple(sections)
 
 
-def assumed_values(form: ModeloWorkForm) -> AssumedValues | None:
-    """The boxes whose value was assumed, or ``None`` when none waits for the filer.
+def unentered_boxes(form: ModeloWorkForm, level: IssueLevel) -> UnenteredBoxes | None:
+    """The missing or assumed boxes the header counts, or ``None`` when none waits for the filer.
 
-    A declaration recorded as filed has none: nothing more is asked of it.
+    A box on a page that does not apply this period is not asked for, and a
+    declaration recorded as filed asks for nothing more, so neither lists any.
     """
+    origin = _UNENTERED_ORIGINS[level]
     if form.filing is not None:
         return None
-    fields = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
+    fields = [field for field in applicable_fields(form) if field.origin is origin]
     if not fields:
         return None
     keys = tuple(address_key(field.address) for field in fields)
-    return AssumedValues(
+    return UnenteredBoxes(
+        level=level,
         boxes=tuple(field.box for field in fields if field.box),
         unnumbered=sum(1 for field in fields if not field.box),
         keys=keys,
-        sections=_assumed_sections(form, frozenset(keys)),
+        sections=_unentered_sections(form, frozenset(keys)),
     )
 
 
-def level_counts(lines: tuple[IssueLine, ...], assumed: AssumedValues | None) -> Mapping[IssueLevel, int]:
-    """How many things sit at each level; the assumed values count one per box."""
+def unentered_levels(form: ModeloWorkForm) -> tuple[UnenteredBoxes, ...]:
+    """The missing boxes, then the assumed ones, each only when there are any."""
+    return tuple(boxes for level in _UNENTERED_ORIGINS if (boxes := unentered_boxes(form, level)) is not None)
+
+
+def level_counts(lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, ...] = ()) -> Mapping[IssueLevel, int]:
+    """How many things sit at each level; missing and assumed values count one per box."""
     counts = dict.fromkeys(IssueLevel, 0)
     for line in lines:
         counts[line.level] += 1
-    counts[IssueLevel.CONFIRM] += 0 if assumed is None else len(assumed.keys)
+    for boxes in unentered:
+        counts[boxes.level] += len(boxes.keys)
     return MappingProxyType(counts)
 
 
@@ -356,35 +391,27 @@ def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> Render
     )
 
 
-def _assumed_prompt(assumed: AssumedValues) -> RenderableType:
-    unnumbered = (
-        tr("tui.modelo.workbench.issues.where.unnumbered", count=assumed.unnumbered) if assumed.unnumbered else ""
-    )
+def _what_to_do(key: str) -> Text | None:
+    return _paragraph(tr("tui.modelo.workbench.issues.what_to_do", action=tr(key)), "italic")
+
+
+def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
+    what, action, _ = _UNENTERED_LOCALE_KEYS[boxes.level]
+    unnumbered = tr("tui.modelo.workbench.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
     return _entry(
-        BoxNumbers(assumed.boxes, style="bold") if assumed.boxes else None,
+        BoxNumbers(boxes.boxes, style="bold") if boxes.boxes else None,
         _paragraph(unnumbered, "bold"),
-        _paragraph(tr("tui.modelo.workbench.issues.assumed")),
-        _paragraph(
-            tr("tui.modelo.workbench.issues.what_to_do", action=tr("tui.modelo.workbench.issues.action.confirm")),
-            "italic",
-        ),
+        _paragraph(tr(what)),
+        _what_to_do(action),
     )
 
 
-def _assumed_intro() -> RenderableType:
-    return _entry(
-        _paragraph(tr("tui.modelo.workbench.issues.assumed")),
-        _paragraph(
-            tr(
-                "tui.modelo.workbench.issues.what_to_do",
-                action=tr("tui.modelo.workbench.issues.action.confirm_by_section"),
-            ),
-            "italic",
-        ),
-    )
+def _unentered_intro(boxes: UnenteredBoxes) -> RenderableType:
+    what, _, by_section = _UNENTERED_LOCALE_KEYS[boxes.level]
+    return _entry(_paragraph(tr(what)), _what_to_do(by_section))
 
 
-def _section_prompt(section: AssumedSection) -> RenderableType:
+def _section_prompt(section: UnenteredSection) -> RenderableType:
     return _entry(_paragraph(f"{section.title} ({len(section.keys)})", "bold"))
 
 
@@ -452,7 +479,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
     ]
 
     def __init__(self, form: ModeloWorkForm, *, status_line: str | None = None) -> None:
-        """Hold the form whose findings and assumed values are listed.
+        """Hold the form whose findings and missing and assumed values are listed.
 
         ``status_line`` is shown above everything else when given, so the
         declaration's result and deadline stay in view while the dialog covers
@@ -463,7 +490,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         self._status_line = status_line
         self._recorded = form.filing is not None
         self._lines = issue_lines(form)
-        self._assumed = assumed_values(form)
+        self._unentered = {boxes.level: boxes for boxes in unentered_levels(form)}
         self._expanded: set[int] = set()
         self._technical: set[int] = set()
 
@@ -472,7 +499,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         with Container(id="issues-backdrop"), Vertical(id="issues-panel"):
             if self._status_line is not None:
                 yield Static(self._status_line, id="issues-status", markup=False)
-            title = title_text(level_counts(self._lines, self._assumed), recorded=self._recorded)
+            title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
             yield Static(title, id="issues-title", markup=False)
             yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
             yield _IssueList(*self._options(), id="issues-list")
@@ -480,14 +507,16 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
                 yield Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary")
         yield Footer(compact=True)
 
-    def _assumed_options(self, assumed: AssumedValues) -> list[Option]:
-        if not assumed.by_section:
-            return [Option(_assumed_prompt(assumed), id=_ASSUMED_ID)]
+    @staticmethod
+    def _unentered_options(boxes: UnenteredBoxes) -> list[Option]:
+        level = boxes.level.value
+        if not boxes.by_section:
+            return [Option(_unentered_prompt(boxes), id=f"{level}{_BOXES_SUFFIX}")]
         return [
-            Option(_assumed_intro(), id=_ASSUMED_INTRO_ID, disabled=True),
+            Option(_unentered_intro(boxes), id=f"{level}{_INTRO_SUFFIX}", disabled=True),
             *(
-                Option(_section_prompt(section), id=f"{_SECTION_ID_PREFIX}{index}")
-                for index, section in enumerate(assumed.sections)
+                Option(_section_prompt(section), id=f"{level}{_SECTION_INFIX}{index}")
+                for index, section in enumerate(boxes.sections)
             ),
         ]
 
@@ -495,17 +524,16 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         options: list[Option] = []
         for level in IssueLevel:
             indexed = [(index, line) for index, line in enumerate(self._lines) if line.level is level]
-            count = len(indexed)
-            if level is IssueLevel.CONFIRM and self._assumed is not None:
-                count += len(self._assumed.keys)
+            unentered = self._unentered.get(level)
+            count = len(indexed) + (0 if unentered is None else len(unentered.keys))
             if not count:
                 continue
             heading = level_words(level)
             if not (self._recorded and level in TO_DO_LEVELS):
                 heading = f"{heading} ({count})"
             options.append(Option(heading, id=f"level-{level.value}", disabled=True))
-            if level is IssueLevel.CONFIRM and self._assumed is not None:
-                options.extend(self._assumed_options(self._assumed))
+            if unentered is not None:
+                options.extend(self._unentered_options(unentered))
             options.extend(
                 Option(_issue_prompt(line, expanded=False, technical=False), id=f"{_ISSUE_ID_PREFIX}{index}")
                 for index, line in indexed
@@ -533,12 +561,22 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         index = int(option_id.removeprefix(_ISSUE_ID_PREFIX))
         return index if index < len(self._lines) else None
 
-    def _section(self, option_id: str | None) -> AssumedSection | None:
-        if self._assumed is None or option_id is None or not option_id.startswith(_SECTION_ID_PREFIX):
+    def _section(self, option_id: str | None) -> UnenteredSection | None:
+        if option_id is None:
             return None
-        index = int(option_id.removeprefix(_SECTION_ID_PREFIX))
-        sections = self._assumed.sections
-        return sections[index] if index < len(sections) else None
+        for boxes in self._unentered.values():
+            prefix = f"{boxes.level.value}{_SECTION_INFIX}"
+            if option_id.startswith(prefix):
+                index = int(option_id.removeprefix(prefix))
+                return boxes.sections[index] if index < len(boxes.sections) else None
+        return None
+
+    def _listed(self, option_id: str | None) -> UnenteredBoxes | None:
+        """The missing or assumed boxes an entry lists by number, when it is that entry."""
+        return next(
+            (boxes for boxes in self._unentered.values() if option_id == f"{boxes.level.value}{_BOXES_SUFFIX}"),
+            None,
+        )
 
     def _highlighted_id(self) -> str | None:
         issues = self.query_one(_IssueList)
@@ -551,7 +589,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         index = self._issue_index(option_id)
         if self._section(option_id) is not None:
             choice = "section"
-        elif option_id == _ASSUMED_ID or (index is not None and self._lines[index].key is not None):
+        elif self._listed(option_id) is not None or (index is not None and self._lines[index].key is not None):
             choice = "go"
         elif index is not None and index in self._expanded:
             choice = "less"
@@ -570,8 +608,9 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         """Go to the chosen box or section, or open the chosen finding's detail where it has no box to go to."""
         event.stop()
-        if event.option.id == _ASSUMED_ID and self._assumed is not None:
-            self.dismiss(self._assumed.keys[0])
+        listed = self._listed(event.option.id)
+        if listed is not None:
+            self.dismiss(listed.keys[0])
             return
         section = self._section(event.option.id)
         if section is not None:
@@ -613,6 +652,8 @@ def _require_total_tables() -> None:
         raise ValueError("every attention the form gives a finding needs a level")
     if set(_DETAIL_LOCALE_KEYS) != set(ModeloVerificationFindingKind):
         raise ValueError("every finding kind needs a detail")
+    if set(_UNENTERED_LOCALE_KEYS) != set(_UNENTERED_ORIGINS):
+        raise ValueError("every level that lists boxes nobody entered needs its sentences")
 
 
 _require_total_tables()
@@ -622,17 +663,18 @@ __all__ = [
     "ASSUMED_BOXES_BEFORE_SECTIONS",
     "LEVEL_MARKS",
     "TO_DO_LEVELS",
-    "AssumedSection",
-    "AssumedValues",
     "IssueLevel",
     "IssueLine",
+    "UnenteredBoxes",
+    "UnenteredSection",
     "WorkbenchIssuesScreen",
-    "assumed_values",
     "issue_level",
     "issue_lines",
     "level_counts",
     "level_words",
     "technical_text",
     "title_text",
+    "unentered_boxes",
+    "unentered_levels",
     "verdict_text",
 ]

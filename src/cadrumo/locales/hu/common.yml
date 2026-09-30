@@ -2211,6 +2211,10 @@ tui:
             vagy írd be a helyeset.
           confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az
             értékeiket, vagy írd be a helyeseket.
+          fill: Nyisd meg a rovatokat egyenként, és írd be az értéküket. Ha a helyes
+            érték nulla, írj be 0-t.
+          fill_by_section: Nyisd meg a szakaszokat egyenként, és írd be a szükséges
+            értékeket.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
         detail:
@@ -2229,6 +2233,8 @@ tui:
         key:
           less: Kevesebb
           more: Továbbiak
+        missing: A bevalláshoz ezekben a rovatokban érték kell, de senki sem adta
+          meg.
         open_section: Szakasz megnyitása
         technical: Technikai részletek
         title: Átnézendő problémák
@@ -2383,6 +2389,9 @@ tui:
         not_imported_yet: Még nincs importálva
         optional_empty: Nem kötelező, üres
         overrides_source: Az Ön értéke felülírja a forrást
+      origin_filed:
+        default_to_confirm: Feltételezett, senki nem adta meg
+        needs_input: Üres, senki nem töltötte ki
       origin_source:
         imported:
           aeat_draft: AEAT-adatokból
@@ -2435,6 +2444,9 @@ tui:
         not_grounded: A Cadrumo ehhez a sorhoz nem rögzít adókulcsot, ezért itt nem
           jelenik meg. Az Önre vonatkozó kulcsot a hivatalos kitöltési útmutatóban
           ellenőrizze.
+        of_row: 'Ennek a sornak a kulcsa: {rate}.'
+        of_row_printed: 'A hivatalos nyomtatvány ennél a sornál ezt a kulcsot tünteti
+          fel: {rate}.'
         printed_by_form: A hivatalos nyomtatvány ennél a sornál ezt a kulcsot tünteti
           fel.
       read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
@@ -2556,6 +2568,9 @@ tui:
           set_by_form: A nyomtatvány rögzíti
           unnamed: Meg nem nevezett forrásból
           yours: Általad megadott vagy megerősített
+        group_filed:
+          assumed: Feltételezett, senki nem adta meg
+          needs_you: Üres, senki nem töltötte ki
         intro: Minden rovat aszerint csoportosítva, honnan származik az értéke. Nyiss
           meg egy csoportot a rovatai megtekintéséhez.
         key:

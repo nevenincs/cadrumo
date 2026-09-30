@@ -14,8 +14,10 @@ terminal in every language.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import override
 
 import pytest
+from textual.app import App, ComposeResult
 from textual.color import Color
 from textual.geometry import Region
 from textual.pilot import Pilot
@@ -36,6 +38,7 @@ from ......core.i18n.render import tr
 from ......core.period import Period
 from ....components.host import ScreenHostApp
 from ....tests.frame import screen_text
+from ..casilla_list import CasillaList, CasillaListEntry
 from ..editor import (
     CasillaEditorScreen,
     EditorDecision,
@@ -617,3 +620,62 @@ async def test_the_input_and_every_button_stay_in_view_however_long_the_answers(
     assert shown > 0, "some of the answers stay in view"
     if size == (80, 24):
         assert scrolls, "the long answers must scroll rather than push the buttons away"
+
+
+class _RowHarness(App[None]):
+    def __init__(self, entry: CasillaListEntry) -> None:
+        super().__init__()
+        self._entry = entry
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield CasillaList((self._entry,), language=OutputLanguage.EN)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("origin", "value", "filed_words", "asking"),
+    [
+        (
+            ModeloFormOrigin.DEFAULT_TO_CONFIRM,
+            Decimal("0.00"),
+            "Assumed, nobody entered it",
+            "◐ Assumed, please confirm",
+        ),
+        (ModeloFormOrigin.NEEDS_INPUT, None, "Empty, nobody filled it in", "! Needs your input"),
+    ],
+)
+async def test_on_a_filed_declaration_the_panel_and_the_row_say_what_a_box_holds_without_asking(
+    origin: ModeloFormOrigin, value: Decimal | None, filed_words: str, asking: str
+) -> None:
+    field = form_field("06", "Retenciones e ingresos a cuenta", origin, value)
+    with override_settings(cadrumo_output_language="en"):
+        reason = read_only_reason(field, OutputLanguage.EN, recorded=True)
+        filed = CasillaEditorScreen(
+            field, parse=FakeActions().parse, language=OutputLanguage.EN, read_only_reason=reason, recorded=True
+        )
+        async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            filed_now = _text(filed, "#editor-now-text")
+        still_open = _editor(field, "en")
+        async with ScreenHostApp(still_open).run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            open_now = _text(still_open, "#editor-now-text")
+        rows: dict[bool, str] = {}
+        for recorded in (False, True):
+            app = _RowHarness(CasillaListEntry(field, recorded=recorded))
+            async with app.run_test(size=(140, 10)) as pilot:
+                await pilot.pause()
+                widget = app.query_one(CasillaList)
+                rows[recorded] = next(
+                    text for y in range(widget.size.height) if "[06]" in (text := widget.render_line(y).text)
+                )
+
+    # The same declaration not yet filed still asks, so the filed words are the filing's doing.
+    assert open_now.endswith(asking)
+    assert asking in rows[False]
+    assert filed_now.endswith(f" · {filed_words}")
+    assert filed_words in rows[True]
+    for said in (filed_now, rows[True]):
+        assert asking.split(" ", 1)[1] not in said
+        assert asking[0] not in said.replace("[06]", "")

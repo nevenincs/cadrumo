@@ -18,7 +18,9 @@ nothing, which differs from a source not read yet because nothing has been
 calculated, and from a zero the source did give, which the box shows as its
 value. A closed group that asks something of the filer lists its box numbers
 in at most two lines, then says how many more there are. A declaration
-recorded as filed asks nothing more, so it has no group of assumed values.
+recorded as filed asks nothing more, so its assumed values and the values it
+was filed without keep their own groups, named for what they hold rather than
+for what they ask, without the mark that asks.
 
 The groups are a list; Enter opens one and shows its boxes below with the
 workbench's own row vocabulary, staged changes included, and the open group
@@ -153,6 +155,13 @@ _GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
         SourceGroupKind.UNNAMED: "tui.modelo.workbench.sources.group.unnamed",
     }
 )
+_FILED_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
+    {
+        SourceGroupKind.ASSUMED: "tui.modelo.workbench.sources.group_filed.assumed",
+        SourceGroupKind.NEEDS_YOU: "tui.modelo.workbench.sources.group_filed.needs_you",
+    }
+)
+"""Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
 _STATE_LOCALE_KEYS: Final[Mapping[SourceState, str]] = MappingProxyType(
     {
         SourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
@@ -230,6 +239,8 @@ class SourceGroup:
     kind: SourceGroupKind
     fields: tuple[ModeloFormField, ...]
     readings: tuple[SourceReading, ...] = ()
+    #: The declaration is recorded as filed, so the group asks nothing of the filer.
+    recorded: bool = False
 
     @property
     def keys(self) -> frozenset[AddressKey]:
@@ -261,17 +272,15 @@ def value_family(field: ModeloFormField) -> SourceFamily | None:
     return field.bindings[0].policy.family if field.bindings else None
 
 
-def source_group_kind(field: ModeloFormField, *, recorded: bool = False) -> SourceGroupKind:
+def source_group_kind(field: ModeloFormField) -> SourceGroupKind:
     """Place one box in the one group its origin and, for a sourced value, its source family name.
 
-    A declaration recorded as filed asks nothing more of the filer, so a value
-    nobody entered is shown as the calculated value it was filed with, never as
-    one waiting for confirmation.
+    A value nobody entered stays in its own group on a declaration recorded as
+    filed too: it was never calculated, only held, and the group's name then
+    says so without asking for a confirmation.
     """
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT:
         return SourceGroupKind.SET_BY_FORM
-    if recorded and field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM:
-        return SourceGroupKind.CALCULATED
     by_origin = _ORIGIN_GROUPS.get(field.origin)
     if by_origin is not None:
         return by_origin
@@ -337,7 +346,7 @@ def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
     recorded = form.filing is not None
     placed: dict[SourceGroupKind, list[ModeloFormField]] = {}
     for field in form.fields():
-        placed.setdefault(source_group_kind(field, recorded=recorded), []).append(field)
+        placed.setdefault(source_group_kind(field), []).append(field)
     calculated = form.calculation_revision_id is not None
     groups = []
     for kind in SourceGroupKind:
@@ -348,7 +357,7 @@ def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
             field.origin in _SOURCED_ORIGINS and field.bindings for field in fields
         )
         readings = _readings(fields, calculated=calculated) if sourced else ()
-        groups.append(SourceGroup(kind=kind, fields=fields, readings=readings))
+        groups.append(SourceGroup(kind=kind, fields=fields, readings=readings, recorded=recorded))
     return tuple(groups)
 
 
@@ -431,8 +440,13 @@ def group_summary(group: SourceGroup) -> str:
     return ""
 
 
-def group_words(kind: SourceGroupKind) -> str:
-    """A group's mark and name."""
+def group_words(kind: SourceGroupKind, *, recorded: bool = False) -> str:
+    """A group's mark and name; on a declaration ``recorded`` as filed, a group that would ask names what it holds.
+
+    Such a group draws no mark, as its boxes' rows draw none there.
+    """
+    if recorded and kind in _FILED_GROUP_LOCALE_KEYS:
+        return f"  {tr(_FILED_GROUP_LOCALE_KEYS[kind])}"
     return f"{SOURCE_GROUP_MARKS[kind].glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
 
 
@@ -444,7 +458,7 @@ def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:
     """
     toggle = EXPANDED_MARK if expanded else COLLAPSED_MARK
     count = tr("tui.modelo.workbench.sources.count", count=len(group.fields))
-    head = Text(f"{toggle.glyph} {group_words(group.kind)} · {count}", style="bold")
+    head = Text(f"{toggle.glyph} {group_words(group.kind, recorded=group.recorded)} · {count}", style="bold")
     if expanded:
         return head
     summary = group_summary(group)
@@ -465,9 +479,10 @@ def group_items(group: SourceGroup, *, staged: Mapping[AddressKey, StagedDisplay
             indent=indent,
             staged_text=None if change is None else change.text,
             previous_text=None if change is None else change.previous_text,
+            recorded=group.recorded,
         )
 
-    items: list[CasillaListItem] = [CasillaListHeading(group_words(group.kind))]
+    items: list[CasillaListItem] = [CasillaListHeading(group_words(group.kind, recorded=group.recorded))]
     if not group.readings:
         items.extend(entry(field, 0) for field in group.fields)
         return tuple(items)

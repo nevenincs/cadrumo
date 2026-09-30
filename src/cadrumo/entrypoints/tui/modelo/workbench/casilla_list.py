@@ -37,6 +37,7 @@ import re
 from bisect import bisect_right
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from types import MappingProxyType
 from typing import ClassVar, Final, Literal, override
 
@@ -67,7 +68,7 @@ from .....application.modelo.work_form_models import (
     address_key,
 )
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from ...components.app_access import TypedAppAccess
 from ...components.theme import tokenised
 from .grid import (
@@ -87,18 +88,24 @@ from .grid import (
 )
 from .keys import describe_bindings
 from .vocabulary import (
+    ASKS_FOR_A_VALUE,
     ATTENTION_GLYPHS,
     ATTENTION_ROLES,
     BLOCKS_MARK,
     CONFIRM_MARK,
+    FAILED_MARK,
     HERE_MARK,
     MISSING_MARK,
     NEEDS_ATTENTION,
+    NOT_CALCULATED_MARK,
+    NOT_IMPORTED_MARK,
     ORIGIN_ROLES,
     Attention,
     ColourRole,
     WorkbenchMark,
     attention_words_key,
+    field_counts,
+    field_needs_filer,
     origin_glyph,
     origin_words,
 )
@@ -119,10 +126,6 @@ _NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
 _EMPTY_VALUE: Final[str] = "·"
 _SEPARATOR: Final[str] = " · "
-_TO_DO_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
-)
-"""Origins whose glyph asks the filer for a value, which a recorded declaration no longer does."""
 _RATIO_DATA_TYPE: Final[str] = "ratio"
 _MONEY_DATA_TYPE: Final[str] = "money"
 _ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
@@ -144,6 +147,8 @@ _FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_de
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
 _RATE_NOT_GROUNDED_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
 _RATE_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
+_RATE_ROW_KEY: Final[str] = "tui.modelo.workbench.rate.of_row"
+_RATE_ROW_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.of_row_printed"
 _ROW_BOXES_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
 _RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingProxyType(
     {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
@@ -197,6 +202,8 @@ class CasillaListEntry:
     rate_of_row: bool = False
     #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
     recorded: bool = False
+    #: ``False`` on a page the read model states does not apply this period, which asks for no value.
+    applies: bool = True
     #: In an official grid, the heading of the row the box sits in, and of its column.
     row_label: str | None = None
     column_label: str | None = None
@@ -217,17 +224,26 @@ class CasillaListEntry:
 
     @property
     def needs_filer(self) -> bool:
-        """Whether the field asks the filer to act; nothing on a recorded declaration does."""
-        if self.attention is not None:
+        """Whether the filer can act on the field now: a staged change, or what the shared classing says.
+
+        A box waiting on an import or a calculation is not one, and nothing on
+        a recorded declaration is; ``n`` visits exactly these.
+        """
+        if self.staged_text is not None:
             return True
-        return not self.recorded and self.field.origin in NEEDS_ATTENTION
+        return field_needs_filer(self.field, recorded=self.recorded, applies=self.applies)
 
     @property
     def origin_mark(self) -> str:
         """The origin glyph the row draws; a recorded declaration draws no to-do mark, only its words."""
-        if self.recorded and self.field.origin in _TO_DO_ORIGINS:
+        if self.recorded and self.field.origin in ASKS_FOR_A_VALUE:
             return " "
         return origin_glyph(self.field)
+
+    @property
+    def origin_words(self) -> str:
+        """The origin in words, as the row and the box panel say it; a recorded declaration asks nothing."""
+        return origin_words(self.field, recorded=self.recorded)
 
     @property
     def origin_role(self) -> ColourRole:
@@ -324,10 +340,19 @@ def _box_mark(field: ModeloFormField) -> str:
 
 
 def shown_rate(field: ModeloFormField) -> ModeloFormRate | ModeloFormPrintedRate | None:
-    """The rate a rate box shows: the one its row is grounded on, else the one the design prints; ``None`` else."""
+    """The rate a rate box's row is taxed at: the grounded one, else the one the design prints; ``None`` else."""
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return None
     return field.grounded_rate or field.printed_rate
+
+
+def rate_is_value(field: ModeloFormField) -> bool:
+    """Whether a box shows its row's rate as its value: only a box the design fixes, which holds nothing of its own.
+
+    Any other rate box, typed, calculated, failed or empty, shows its own
+    value, and its row's rate is said beside it rather than in its place.
+    """
+    return field.editability is ModeloFormEditability.DESIGN_CONSTANT and shown_rate(field) is not None
 
 
 def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
@@ -338,7 +363,7 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_KEY)
     rate = shown_rate(field)
-    if rate is not None:
+    if rate is not None and rate_is_value(field):
         return rate_text(rate, language)
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
         # A rate the form leaves to the filer's own operations is not fixed,
@@ -369,17 +394,26 @@ def _ungrounded_rate(entry: CasillaListEntry) -> bool:
     return entry.rate_of_row and shown_rate(field) is None and field.value is None
 
 
-def rate_note(entry: CasillaListEntry) -> str | None:
-    """Say where a rate box's rate comes from when that needs saying, or ``None``.
+def rate_note(entry: CasillaListEntry, language: OutputLanguage | None = None) -> str | None:
+    """Say the rate a rate box's row is taxed at, and where it comes from, when that needs saying; ``None`` else.
 
-    A rate the design prints is only what the form prints, not a rate the
-    calculation is shown to apply; a row's rate box with no rate says why none
-    is shown. A grounded rate and any other box need no note.
+    A box whose value is its row's rate needs only to say when the design
+    merely prints it, which is not a rate the calculation is shown to apply.
+    A rate box that shows its own value says its row's rate here instead. A
+    row's rate box with no rate at all says why none is shown. ``language``
+    formats the rate, the active output language when not given.
     """
     field = entry.field
-    if field.grounded_rate is None and shown_rate(field) is not None:
-        return tr(_RATE_PRINTED_KEY)
-    return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) else None
+    rate = shown_rate(field)
+    if rate is None:
+        return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) else None
+    printed = field.grounded_rate is None
+    if rate_is_value(field):
+        return tr(_RATE_PRINTED_KEY) if printed else None
+    words = rate_text(rate, OutputLanguage(output_language()) if language is None else language)
+    if printed:
+        return tr(_RATE_ROW_PRINTED_KEY, rate=words)
+    return tr(_RATE_ROW_KEY, rate=words)
 
 
 def grid_cell_title(entry: CasillaListEntry) -> str | None:
@@ -392,10 +426,20 @@ def grid_cell_title(entry: CasillaListEntry) -> str | None:
     return _SEPARATOR.join((entry.row_label, entry.column_label, entry.field.label.text))
 
 
+def _holds_nothing(value: ModeloFormScalar) -> bool:
+    return value is None or (isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0)
+
+
 def _origin_says_absence(field: ModeloFormField) -> bool:
-    """Whether a field's origin words already say its value is not there."""
+    """Whether a field's origin words already say its value is not there.
+
+    An optional rate box nobody filled says so even over a held zero, which in
+    a rate column would read as a rate of nothing.
+    """
     if field.origin in _ABSENT_BY_ORIGIN:
         return True
+    if field.origin is ModeloFormOrigin.OPTIONAL_EMPTY and field.data_type == _RATIO_DATA_TYPE:
+        return _holds_nothing(field.value)
     return field.value is None and field.origin in _ABSENT_WHEN_NONE
 
 
@@ -403,14 +447,15 @@ def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     """Return the value cell of a row, where an origin that says the value is absent leaves only a dot.
 
     The row's origin column says the absence in words, so the value column
-    does not say it a second time. A row's rate box shows the rate its base is
-    grounded on, or the rate the design prints, or only a dot when there is
-    neither, since claiming a rate the row does not establish would be a fact
-    nobody established. Every other surface, which shows the value without the
-    origin words beside it, uses :func:`value_text`.
+    does not say it a second time. A rate box the design fixes shows the rate
+    its row is grounded on, or the rate the design prints, or only a dot when
+    there is neither, since claiming a rate the row does not establish would be
+    a fact nobody established; any other rate box shows its own value like any
+    box. Every other surface, which shows the value without the origin words
+    beside it, uses :func:`value_text`.
     """
     field = entry.field
-    if entry.staged_text is not None or shown_rate(field) is not None:
+    if entry.staged_text is not None or rate_is_value(field):
         return value_text(entry, language)
     if _ungrounded_rate(entry) or _origin_says_absence(field):
         return _EMPTY_VALUE
@@ -435,22 +480,35 @@ def grid_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
 
 
 def _row_level(entries: list[CasillaListEntry]) -> WorkbenchMark | None:
-    """The most severe thing a grid row's cells hold: a blocker, then a missing value, then an assumed one."""
-    if any(entry.attention is Attention.BLOCKED for entry in entries):
-        return BLOCKS_MARK
-    waiting = [entry.field.origin for entry in entries if not entry.recorded and entry.field.origin in NEEDS_ATTENTION]
-    if any(origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM for origin in waiting):
-        return MISSING_MARK
-    return CONFIRM_MARK if waiting else None
+    """The most severe thing a grid row's cells hold, on the scale its section heading and the navigator share.
+
+    ``None`` when nothing in the row is to do and nothing waits.
+    """
+    if not entries:
+        return None
+    first = entries[0]
+    return field_counts((entry.field for entry in entries), recorded=first.recorded, applies=first.applies).level
 
 
 _LEVEL_ROLES: Final[Mapping[str, ColourRole]] = MappingProxyType(
-    {BLOCKS_MARK.glyph: ColourRole.ERROR, MISSING_MARK.glyph: ColourRole.ERROR, CONFIRM_MARK.glyph: ColourRole.WARNING}
+    {
+        BLOCKS_MARK.glyph: ColourRole.ERROR,
+        MISSING_MARK.glyph: ColourRole.ERROR,
+        FAILED_MARK.glyph: ColourRole.ERROR,
+        CONFIRM_MARK.glyph: ColourRole.WARNING,
+        NOT_IMPORTED_MARK.glyph: ColourRole.MUTED,
+        NOT_CALCULATED_MARK.glyph: ColourRole.MUTED,
+    }
 )
 _SECTION_ROLES: Final[Mapping[str, str]] = MappingProxyType(
-    {BLOCKS_MARK.glyph: "heading-error", MISSING_MARK.glyph: "heading-warning", CONFIRM_MARK.glyph: "heading-warning"}
+    {
+        BLOCKS_MARK.glyph: "heading-error",
+        MISSING_MARK.glyph: "heading-warning",
+        FAILED_MARK.glyph: "heading-error",
+        CONFIRM_MARK.glyph: "heading-warning",
+    }
 )
-"""The style of a section heading by the most severe thing its section holds; any other reads plainly."""
+"""The style of a section heading by the most severe thing its section holds; what only waits reads plainly."""
 
 
 def _heading_role(heading: CasillaListHeading) -> str:
@@ -692,7 +750,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             box=max(cell_len(_box_mark(entry.field)) for entry in entries),
             label=min(max(entry.indent + cell_len(self._label(entry)) for entry in entries), _LABEL_CAP),
             value=min(max(cell_len(self._value(entry)) for entry in entries), _VALUE_CAP),
-            words=max(cell_len(origin_words(entry.field)) for entry in entries),
+            words=max(cell_len(entry.origin_words) for entry in entries),
         )
 
     def _value(self, entry: CasillaListEntry) -> str:
@@ -740,13 +798,17 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         description = description_text(entry.field)
         return description.split(". ")[0] if description else None
 
-    def _stacked_label(self, place: GridRowPlace) -> str:
-        """A stacked row's heading, told apart from its neighbours by its rate or by the boxes it holds."""
+    def _rated_label(self, place: GridRowPlace) -> str:
+        """A row's heading with the rate its row is taxed at, when it has one."""
         if place.rate is not None:
             return _SEPARATOR.join((place.heading, rate_text(place.rate, self._language)))
-        if len(place.boxes) > 1:
-            return tr(_ROW_BOXES_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
         return place.heading
+
+    def _stacked_label(self, place: GridRowPlace) -> str:
+        """A stacked row's heading, told apart from its neighbours by its rate or by the boxes it holds."""
+        if place.rate is None and len(place.boxes) > 1:
+            return tr(_ROW_BOXES_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
+        return self._rated_label(place)
 
     def _height(self, index: int, item: CasillaListItem, width: int) -> int:
         if index in self._tables:
@@ -835,14 +897,13 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._stacked = frozenset(stacked)
 
     def _shown_labels(self, places: list[GridRowPlace | None]) -> tuple[str, ...]:
-        """Each row's label as the paper form prints it: a heading repeated on the next row is shown once."""
-        labels: list[str] = []
-        previous: str | None = None
-        for place in places:
-            heading = "" if place is None else place.heading
-            labels.append("" if heading == previous else heading)
-            previous = heading
-        return tuple(labels)
+        """Each row's label: its heading, with its rate when it has one, on every row it heads.
+
+        The paper form prints a heading such as "General regime" once over the
+        rows it spans, but a row read on its own, as a terminal line is, needs
+        its own name, as the stacked form of the grid gives it.
+        """
+        return tuple("" if place is None else self._rated_label(place) for place in places)
 
     def _cell_text(self, index: int) -> GridCellText:
         item = self._items[index]
@@ -1065,7 +1126,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text.append(" " + _right(self._value(entry), columns.value), style=self._role_style(role))
             text.append(" " + entry.origin_mark, style=self._role_style(entry.origin_role))
             if columns.words:
-                text.append(" " + _fit(origin_words(field), columns.words), style=self._style("muted"))
+                text.append(" " + _fit(entry.origin_words, columns.words), style=self._style("muted"))
             if columns.detail:
                 text.append(" " + _fit(self._detail(entry), _DETAIL_WIDTH), style=self._style("muted"))
             return text

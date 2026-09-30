@@ -6,9 +6,11 @@ sits, never a registry id: a heading that reads like an identifier (such as
 is refused for the official heading, or the section is named by the boxes it
 holds, "Boxes 0018 to 0025", or, holding none, by its place, "Page 2, part 3".
 
-Each section counts what needs the filer on the one attention scale: what
-blocks filing, what is missing and what is assumed, and, dimmed, what the last
-check found worth checking. A section with none of the first three is done.
+Each section counts what needs the filer on the one attention scale the list
+headings, the grid rows and the header share: what blocks filing, what is
+missing, what could not be calculated and what is assumed, and, dimmed, what
+still waits on an import or a calculation and what the last check found worth
+checking. A section is done only when nothing is to do and nothing waits.
 Pages carry the same counts and fold open and closed; a finished page starts
 closed, and the page holding the cursor or anything to do starts open. Below
 the navigator's width the same facts become one breadcrumb line, so the counts
@@ -27,7 +29,7 @@ a guess.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -41,7 +43,6 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
-    ModeloFormOrigin,
     ModeloFormSection,
     ModeloFormText,
     ModeloFormTextDisclosure,
@@ -53,15 +54,14 @@ from .....core.i18n.render import tr
 from .casilla_list import AddressKey
 from .page_items import WorkbenchPage
 from .vocabulary import (
-    BLOCKS_MARK,
     CHECK_MARK,
     COLLAPSED_MARK,
-    CONFIRM_MARK,
     DONE_MARK,
     EXPANDED_MARK,
     HERE_MARK,
-    MISSING_MARK,
+    AttentionCounts,
     WorkbenchMark,
+    field_counts,
 )
 
 _JOINERS: Final[frozenset[str]] = frozenset("/-_.")
@@ -179,6 +179,25 @@ def inapplicable_pages(form: ModeloWorkForm) -> frozenset[str]:
     return frozenset(page.id for page in form.pages if page.applies is False)
 
 
+def applicable_fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
+    """Every field the filer may be asked about: all but those on pages the read model states do not apply.
+
+    It is the population :func:`to_do_counts` counts over, so a list of what
+    is missing or assumed names exactly the boxes the header counts.
+    """
+    set_aside = inapplicable_pages(form)
+    kept = [
+        field
+        for page in form.pages
+        if page.id not in set_aside
+        for section in page.sections
+        for field in section_fields(section)
+    ]
+    kept.extend(form.working_figures)
+    kept.extend(item.field for item in form.unplaced)
+    return tuple(kept)
+
+
 def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
     """The form's counts without what the pages that do not apply hold as missing or assumed.
 
@@ -199,72 +218,6 @@ def to_do_counts(form: ModeloWorkForm) -> ModeloFormCounts:
     )
 
 
-@dataclass(frozen=True, slots=True)
-class AttentionCounts:
-    """What in one part of the form needs the filer, on the attention scale."""
-
-    blocks: int = 0
-    missing: int = 0
-    confirm: int = 0
-    check: int = 0
-
-    @property
-    def to_do(self) -> int:
-        """What must be done before filing: blockers, missing values and assumed values."""
-        return self.blocks + self.missing + self.confirm
-
-    def __add__(self, other: AttentionCounts) -> AttentionCounts:
-        """Add two parts' counts."""
-        return AttentionCounts(
-            self.blocks + other.blocks,
-            self.missing + other.missing,
-            self.confirm + other.confirm,
-            self.check + other.check,
-        )
-
-    @property
-    def mark(self) -> WorkbenchMark:
-        """The most urgent level present, or done when nothing is to do."""
-        if self.blocks:
-            return BLOCKS_MARK
-        if self.missing:
-            return MISSING_MARK
-        if self.confirm:
-            return CONFIRM_MARK
-        return DONE_MARK
-
-    def chips(self) -> tuple[tuple[WorkbenchMark, int], ...]:
-        """The levels with anything in them, most urgent first."""
-        levels = ((BLOCKS_MARK, self.blocks), (MISSING_MARK, self.missing), (CONFIRM_MARK, self.confirm))
-        return tuple((mark, count) for mark, count in levels if count)
-
-    def text(self) -> Text:
-        """The counts as compact chips, what is worth checking dimmed."""
-        line = Text(" ".join(f"{mark.glyph}{count}" for mark, count in self.chips()))
-        if self.check:
-            line.append(f"{' ' if line.plain else ''}{CHECK_MARK.glyph}{self.check}", style=_DIMMED)
-        return line
-
-    def drawn(self) -> tuple[WorkbenchMark, ...]:
-        """The marks these counts draw as chips."""
-        return (*(mark for mark, _ in self.chips()), *((CHECK_MARK,) if self.check else ()))
-
-
-def field_counts(fields: Iterable[ModeloFormField], checked_boxes: Mapping[str, int]) -> AttentionCounts:
-    """Count what the fields need, with the check findings that name their boxes."""
-    blocks = missing = confirm = check = 0
-    for item in fields:
-        if item.blockers:
-            blocks += 1
-        if item.origin is ModeloFormOrigin.NEEDS_INPUT:
-            missing += 1
-        elif item.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM:
-            confirm += 1
-        if item.box is not None:
-            check += checked_boxes.get(item.box, 0)
-    return AttentionCounts(blocks, missing, confirm, check)
-
-
 def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
     """How many of the last check's warnings name each box."""
     counts: dict[str, int] = {}
@@ -276,7 +229,7 @@ def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
 
 def page_counts(page: WorkbenchPage, checked: Mapping[str, int]) -> AttentionCounts:
     """What one page needs, over its sections and its calculation details."""
-    return field_counts(page.fields(), checked)
+    return field_counts(page.fields(), checked, recorded=page.recorded, applies=page.applies)
 
 
 def _room(width: int, lead: Text, tail: Text) -> int:
@@ -290,8 +243,12 @@ def _fit(text: str, room: int) -> str:
 
 
 def _suffix(counts: AttentionCounts) -> tuple[Text, tuple[WorkbenchMark, ...]]:
-    """A page's counts after its title: its chips, or done with anything worth checking dimmed."""
-    if counts.to_do:
+    """A page's counts after its title: its chips, or done with anything worth checking dimmed.
+
+    A page whose boxes still wait on an import or a calculation is not done,
+    so it shows what waits rather than the done mark.
+    """
+    if counts.to_do or counts.waiting:
         return counts.text(), counts.drawn()
     text = Text(DONE_MARK.glyph)
     if not counts.check:
@@ -470,12 +427,11 @@ def breadcrumb(
 
 
 __all__ = [
-    "AttentionCounts",
     "NavigatorRow",
     "NavigatorState",
+    "applicable_fields",
     "breadcrumb",
     "checked_boxes",
-    "field_counts",
     "heading_groups",
     "inapplicable_pages",
     "looks_like_identifier",

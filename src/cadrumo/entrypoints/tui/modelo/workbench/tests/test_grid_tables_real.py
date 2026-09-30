@@ -57,7 +57,17 @@ from ..casilla_list import (
 )
 from ..page_items import StagedDisplay, WorkbenchPage, page_items, workbench_pages
 from ..screen import ModeloWorkbenchScreen
-from ..vocabulary import ATTENTION_GLYPHS, BLOCKS_MARK, MISSING_MARK, NEEDS_ATTENTION, Attention
+from ..vocabulary import (
+    ATTENTION_GLYPHS,
+    BLOCKS_MARK,
+    MISSING_MARK,
+    NEEDS_ATTENTION,
+    NOT_CALCULATED_MARK,
+    NOT_IMPORTED_MARK,
+    ORIGIN_STANDINGS,
+    Attention,
+    Standing,
+)
 from .workbench_fixture import FakeReader, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -225,14 +235,22 @@ async def test_the_303_accrued_vat_grid_is_the_official_table_in_the_published_o
         assert positions == sorted(positions), line
         row_lines.append(lines.index(line))
     assert row_lines == sorted(row_lines), "rows follow the published order"
-    grid_lines = lines[lines.index(header) : row_lines[-1] + 1]
-    # A heading repeated on consecutive rows is printed once, on the first.
-    assert sum("General regime" in line for line in grid_lines) == 1
-    assert sum("Equivalence surcharge" in line for line in grid_lines) == 1
-    # Rates: grounded ones are shown; none where the design prints zeros, no base grounds one,
-    # or the design's literal declares no scale.
+    # Every row carries its own label, as the stacked grid names it: its heading, and its rate when it has one.
+    for row in grid.rows:
+        # The cursor and level marks lead the line; the label follows them, its first line on the row's own line.
+        label = _line_with(lines, _boxes(row.cells)[0][1:-1])[3:].split("[")[0].strip()
+        assert label and row.heading.text.startswith(label.split(" · ")[0]), (label, row.heading.text)
     for box, rate in {"02": "4", "05": "10", "166": "2"}.items():
-        assert f"{rate}{_NBSP}%" in _line_with(lines, box), box
+        assert f"General regime · {rate}{_NBSP}%" in _line_with(lines, box), box
+    # Only a rate the design fixes stands in its cell; a rate box the calculation fills shows its own value.
+    for box, following, rate in (("02", "03", "4"), ("05", "06", "10"), ("166", "167", None)):
+        line = _line_with(lines, box)
+        slot = line[line.index(f"[{box}]") + len(box) + 2 : line.index(f"[{following}]")]
+        if rate is None:
+            assert "·" in slot and "%" not in slot, slot
+        else:
+            assert f"{rate}{_NBSP}%" in slot, slot
+    # No rate where the design prints zeros, no base grounds one, or the design's literal declares no scale.
     for box, following in {"151": "152", "154": "155", "17": "18", "08": "09", "157": "158", "23": "24"}.items():
         line = _line_with(lines, box)
         slot = line[line.index(f"[{box}]") + len(box) + 2 : line.index(f"[{following}]")]
@@ -350,7 +368,14 @@ async def test_past_the_last_row_the_cursor_leaves_the_table_and_side_arrows_are
 
 @pytest.mark.asyncio
 async def test_n_walks_the_boxes_needing_the_filer_row_by_row(operation: PinnedAuthorityOperation) -> None:
-    page = _page(_form(operation), _ACCRUED_PAGE)
+    form = _form(operation)
+    for box, update in (
+        ("165", {"origin": ModeloFormOrigin.NEEDS_INPUT}),
+        ("03", {"origin": ModeloFormOrigin.CALCULATION_FAILED}),
+        ("19", {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "value": Decimal("5.00")}),
+    ):
+        form = _with_field(form, box, update)
+    page = _page(form, _ACCRUED_PAGE)
     grid = _grids(page)[0]
     expected = [
         cell.field.box
@@ -358,10 +383,19 @@ async def test_n_walks_the_boxes_needing_the_filer_row_by_row(operation: PinnedA
         for cell in row.cells
         if cell.field is not None and cell.field.origin in NEEDS_ATTENTION
     ]
-    visited = await _walk(page_items(page, staged={}), 120, ("n",) * len(expected))
+    waiting = {
+        cell.field.box
+        for row in grid.rows
+        for cell in row.cells
+        if cell.field is not None and ORIGIN_STANDINGS[cell.field.origin] is Standing.WAITING
+    }
+    visited = await _walk(page_items(page, staged={}), 120, ("n",) * (len(expected) + 1))
 
-    assert expected
-    assert visited == expected
+    assert expected == ["165", "03", "19"]
+    # The boxes waiting on an import or a calculation are many, and n passes every one of them.
+    assert len(waiting) > 10
+    assert visited[: len(expected)] == expected
+    assert not waiting & set(filter(None, visited))
 
 
 @pytest.mark.asyncio
@@ -400,17 +434,21 @@ async def test_a_rows_left_edge_carries_its_most_severe_cell_and_a_cell_its_own_
     operation: PinnedAuthorityOperation,
 ) -> None:
     form = _with_field(_form(operation), "09", {"blockers": (ModeloFormBlocker(code="synthetic"),)})
+    form = _with_field(form, "12", {"origin": ModeloFormOrigin.NEEDS_INPUT})
     page = _page(form, _ACCRUED_PAGE)
     base = next(field for field in page.fields() if field.box == "07")
     staged = {address_key(base.address): StagedDisplay(text="7,000.00 €", previous_text="·")}
     lines = await _drawn(page_items(page, staged=staged), 120)
 
     blocked = _line_with(lines, "07")
-    assert blocked[1] == BLOCKS_MARK.glyph, "a blocker outranks the row's missing values"
+    assert blocked[1] == BLOCKS_MARK.glyph, "a blocker outranks what the row's other boxes wait on"
     assert blocked[blocked.index("[07]") - 2] == ATTENTION_GLYPHS[Attention.STAGED]
     assert blocked[blocked.index("[09]") - 2] == ATTENTION_GLYPHS[Attention.BLOCKED]
-    assert _line_with(lines, "04")[1] == MISSING_MARK.glyph
-    assert _line_with(lines, "150")[1] == " ", "a row with nothing to do has no mark"
+    assert _line_with(lines, "12")[1] == MISSING_MARK.glyph
+    # A row whose boxes wait on an import is marked as waiting, never as missing input nor as done.
+    assert _line_with(lines, "04")[1] == NOT_IMPORTED_MARK.glyph
+    assert _line_with(lines, "10")[1] == NOT_CALCULATED_MARK.glyph
+    assert _line_with(lines, "14")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
 
 
 def test_a_grid_cell_is_named_by_its_row_its_column_and_its_own_label(operation: PinnedAuthorityOperation) -> None:
@@ -426,6 +464,8 @@ def test_a_grid_cell_is_named_by_its_row_its_column_and_its_own_label(operation:
 @pytest.mark.asyncio
 async def test_section_headings_take_the_colour_of_their_most_severe_level(operation: PinnedAuthorityOperation) -> None:
     form = _with_field(_form(operation), "40", {"blockers": (ModeloFormBlocker(code="synthetic"),)})
+    form = _with_field(form, "150", {"origin": ModeloFormOrigin.NEEDS_INPUT})
+    form = _with_field(form, "27", {"origin": ModeloFormOrigin.CALCULATED, "value": Decimal("210.00")})
     items = page_items(_page(form, _ACCRUED_PAGE), staged={})
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)

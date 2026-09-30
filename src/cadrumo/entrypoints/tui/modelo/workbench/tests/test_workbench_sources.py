@@ -254,14 +254,34 @@ def test_a_value_carried_from_an_earlier_declaration_names_that_declaration() ->
     assert generic not in summary
 
 
-def test_a_declaration_recorded_as_filed_has_no_group_of_assumed_values() -> None:
-    assumed = replace_fields(synthetic_form(), {"07": {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM}})
-    open_groups = {group.kind: group for group in source_groups(assumed)}
-    recorded_groups = {group.kind: group for group in source_groups(recorded_as_filed(assumed))}
+def test_a_filed_declaration_keeps_its_unentered_values_in_their_own_groups_and_asks_for_nothing() -> None:
+    unentered = replace_fields(
+        synthetic_form(needs_input=True), {"07": {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM}}
+    )
+    filed = recorded_as_filed(unentered)
+    open_groups = {group.kind: group for group in source_groups(unentered)}
+    recorded_groups = {group.kind: group for group in source_groups(filed)}
+    with override_settings(cadrumo_output_language="en"):
+        open_names = [str(group_prompt(open_groups[kind], expanded=True)) for kind in _ASKING_GROUPS]
+        filed_names = [str(group_prompt(recorded_groups[kind], expanded=True)) for kind in _ASKING_GROUPS]
+        filed_rows = [
+            item.origin_words
+            for kind in _ASKING_GROUPS
+            for item in group_items(recorded_groups[kind], staged={})
+            if isinstance(item, CasillaListEntry)
+        ]
 
-    assert [field.box for field in open_groups[SourceGroupKind.ASSUMED].fields] == ["07"]
-    assert SourceGroupKind.ASSUMED not in recorded_groups
-    assert "07" in [field.box for field in recorded_groups[SourceGroupKind.CALCULATED].fields]
+    # A value nobody entered was held, never calculated, so filing does not move it to the calculated group.
+    for kind, box in zip(_ASKING_GROUPS, ("07", "06"), strict=True):
+        assert [field.box for field in open_groups[kind].fields] == [box]
+        assert [field.box for field in recorded_groups[kind].fields] == [box]
+    assert "07" not in [field.box for field in recorded_groups[SourceGroupKind.CALCULATED].fields]
+    assert open_names == ["▿ ◐ Assumed, please confirm · Boxes: 1", "▿ ! Need your value · Boxes: 1"]
+    assert filed_names == ["▿   Assumed, nobody entered them · Boxes: 1", "▿   Empty, nobody filled them in · Boxes: 1"]
+    assert filed_rows == ["Assumed, nobody entered it", "Empty, nobody filled it in"]
+
+
+_ASKING_GROUPS = (SourceGroupKind.ASSUMED, SourceGroupKind.NEEDS_YOU)
 
 
 def test_every_owning_surface_opens_a_declared_destination_and_none_opens_nothing() -> None:

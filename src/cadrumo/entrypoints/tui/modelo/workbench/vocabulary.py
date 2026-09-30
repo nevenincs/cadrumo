@@ -18,6 +18,13 @@ modules take their glyphs from these constants and define none of their own.
 The tables are total over the application's closed enums, and a glyph may
 repeat only where it means the same thing, which the module refuses at import
 rather than leaving two meanings to look alike on screen.
+
+Every origin also has one standing, shared by the navigator, the list's
+section headings, a grid row's edge, the header and ``n``: the filer has
+something to do about it (a missing, assumed or failed value), it waits on an
+import or a calculation the filer runs, or it is done. Only a missing value
+reads "needs your input", and done never stands over a value that was not
+imported or calculated.
 """
 
 from __future__ import annotations
@@ -28,6 +35,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
+
+from rich.text import Text
 
 from .....application.modelo.edit_models import ModeloEditNonWritableReason
 from .....application.modelo.source_policy import SourceFamily
@@ -188,15 +197,203 @@ def require_one_meaning_per_glyph(marks: Iterable[WorkbenchMark]) -> None:
         raise ValueError(f"a workbench meaning is drawn with more than one glyph: {split}")
 
 
-#: Origins that ask the filer to act before the declaration is ready.
-NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
+class Standing(StrEnum):
+    """Where one box stands on the filing journey, as every surface that counts boxes classes it."""
+
+    #: The filer has something to do about it: give a value, confirm one, or resolve why it failed.
+    NEEDS_YOU = "needs_you"
+    #: It waits on a step the filer runs, an import or a calculation, not on anything typed into it.
+    WAITING = "waiting"
+    #: Nothing is left to do about it.
+    DONE = "done"
+
+
+ORIGIN_STANDINGS: Final[Mapping[ModeloFormOrigin, Standing]] = MappingProxyType(
     {
-        ModeloFormOrigin.NEEDS_INPUT,
-        ModeloFormOrigin.DEFAULT_TO_CONFIRM,
-        ModeloFormOrigin.CALCULATION_FAILED,
-        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.NEEDS_INPUT: Standing.NEEDS_YOU,
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: Standing.NEEDS_YOU,
+        ModeloFormOrigin.CALCULATION_FAILED: Standing.NEEDS_YOU,
+        ModeloFormOrigin.NOT_IMPORTED_YET: Standing.WAITING,
+        ModeloFormOrigin.NOT_CALCULATED_YET: Standing.WAITING,
+        ModeloFormOrigin.NOT_APPLICABLE: Standing.DONE,
+        ModeloFormOrigin.OVERRIDES_SOURCE: Standing.DONE,
+        ModeloFormOrigin.CALCULATED: Standing.DONE,
+        ModeloFormOrigin.INFORMATIONAL: Standing.DONE,
+        ModeloFormOrigin.IMPORTED: Standing.DONE,
+        ModeloFormOrigin.OPTIONAL_EMPTY: Standing.DONE,
+        ModeloFormOrigin.CLEARED: Standing.DONE,
+        ModeloFormOrigin.ENTERED: Standing.DONE,
     }
 )
+"""The one classing of every origin that the navigator, the list headings, a grid row and ``n`` share."""
+
+#: Origins that ask the filer to act before the declaration is ready.
+NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    origin for origin, standing in ORIGIN_STANDINGS.items() if standing is Standing.NEEDS_YOU
+)
+#: Origins that ask the filer for a value, which neither a filed declaration nor a page that does not apply does.
+ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+#: A box the calculation could not produce, wherever it is counted.
+FAILED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.CALCULATION_FAILED]
+#: A box waiting on an import, wherever it is counted.
+NOT_IMPORTED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NOT_IMPORTED_YET]
+#: A box waiting on a calculation, wherever it is counted.
+NOT_CALCULATED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.NOT_CALCULATED_YET]
+
+
+def field_needs_filer(field: ModeloFormField, *, recorded: bool = False, applies: bool = True) -> bool:
+    """Whether the filer can act on a box now: a blocker, a value to give or confirm, or a failure to resolve.
+
+    A box waiting on an import or a calculation is not one: running that step
+    fills it, not anything the filer types into it. Nothing on a declaration
+    recorded as filed is one, and a page that does not apply asks for no value.
+    """
+    if recorded:
+        return False
+    if field.blockers:
+        return True
+    if not applies and field.origin in ASKS_FOR_A_VALUE:
+        return False
+    return ORIGIN_STANDINGS[field.origin] is Standing.NEEDS_YOU
+
+
+_DIMMED: Final[str] = "dim"
+
+
+@dataclass(frozen=True, slots=True)
+class AttentionCounts:
+    """What one part of the form holds on the one attention scale, most severe first.
+
+    Blockers, missing values, failed calculations and assumed values are to
+    do; boxes waiting on an import or a calculation are not to do but are not
+    done either; what the last check found worth checking is only counted.
+    ``pending`` counts the boxes with anything to do, each once.
+    """
+
+    blocks: int = 0
+    missing: int = 0
+    failed: int = 0
+    confirm: int = 0
+    not_imported: int = 0
+    not_calculated: int = 0
+    check: int = 0
+    pending: int = 0
+
+    @property
+    def to_do(self) -> int:
+        """What must be done before filing: blockers, missing, failed and assumed values."""
+        return self.blocks + self.missing + self.failed + self.confirm
+
+    @property
+    def waiting(self) -> int:
+        """The boxes waiting on an import or a calculation."""
+        return self.not_imported + self.not_calculated
+
+    def __add__(self, other: AttentionCounts) -> AttentionCounts:
+        """Add two parts' counts."""
+        return AttentionCounts(
+            self.blocks + other.blocks,
+            self.missing + other.missing,
+            self.failed + other.failed,
+            self.confirm + other.confirm,
+            self.not_imported + other.not_imported,
+            self.not_calculated + other.not_calculated,
+            self.check + other.check,
+            self.pending + other.pending,
+        )
+
+    def _levels(self) -> tuple[tuple[WorkbenchMark, int], ...]:
+        return (
+            (BLOCKS_MARK, self.blocks),
+            (MISSING_MARK, self.missing),
+            (FAILED_MARK, self.failed),
+            (CONFIRM_MARK, self.confirm),
+            (NOT_IMPORTED_MARK, self.not_imported),
+            (NOT_CALCULATED_MARK, self.not_calculated),
+        )
+
+    @property
+    def level(self) -> WorkbenchMark | None:
+        """The most severe level present, or ``None`` when nothing is to do and nothing waits."""
+        return next((mark for mark, count in self._levels() if count), None)
+
+    @property
+    def mark(self) -> WorkbenchMark:
+        """The most severe level present, or done only when nothing is to do and nothing waits."""
+        level = self.level
+        return DONE_MARK if level is None else level
+
+    def chips(self) -> tuple[tuple[WorkbenchMark, int], ...]:
+        """The levels to do with anything in them, most severe first."""
+        return tuple((mark, count) for mark, count in self._levels()[:4] if count)
+
+    def waiting_chips(self) -> tuple[tuple[WorkbenchMark, int], ...]:
+        """The waiting levels with anything in them, imports before calculations."""
+        return tuple((mark, count) for mark, count in self._levels()[4:] if count)
+
+    def text(self) -> Text:
+        """The counts as compact chips; what waits and what is worth checking dimmed."""
+        line = Text(" ".join(f"{mark.glyph}{count}" for mark, count in self.chips()))
+        dimmed = [f"{mark.glyph}{count}" for mark, count in self.waiting_chips()]
+        if self.check:
+            dimmed.append(f"{CHECK_MARK.glyph}{self.check}")
+        if dimmed:
+            line.append(f"{' ' if line.plain else ''}{' '.join(dimmed)}", style=_DIMMED)
+        return line
+
+    def drawn(self) -> tuple[WorkbenchMark, ...]:
+        """The marks these counts draw as chips."""
+        return (
+            *(mark for mark, _ in self.chips()),
+            *(mark for mark, _ in self.waiting_chips()),
+            *((CHECK_MARK,) if self.check else ()),
+        )
+
+
+_ORIGIN_TALLIES: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
+    {
+        ModeloFormOrigin.NEEDS_INPUT: "missing",
+        ModeloFormOrigin.CALCULATION_FAILED: "failed",
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: "confirm",
+        ModeloFormOrigin.NOT_IMPORTED_YET: "not_imported",
+        ModeloFormOrigin.NOT_CALCULATED_YET: "not_calculated",
+    }
+)
+"""The level each origin that is not done counts at; the tallies are the fields of :class:`AttentionCounts`."""
+
+
+def field_counts(
+    fields: Iterable[ModeloFormField],
+    checked_boxes: Mapping[str, int] | None = None,
+    *,
+    recorded: bool = False,
+    applies: bool = True,
+) -> AttentionCounts:
+    """Count what the fields hold on the attention scale, with the check findings that name their boxes.
+
+    A declaration recorded as filed has nothing blocking, missing or assumed
+    left, and a page that does not apply asks for no value; what failed or
+    still waits stays counted on either, since it is a fact about the box,
+    not a request.
+    """
+    checked = checked_boxes or {}
+    tallies = dict.fromkeys(("blocks", "missing", "failed", "confirm", "not_imported", "not_calculated"), 0)
+    check = pending = 0
+    asked = not recorded and applies
+    for item in fields:
+        if item.blockers and not recorded:
+            tallies["blocks"] += 1
+        bucket = _ORIGIN_TALLIES.get(item.origin)
+        if bucket is not None and (asked or item.origin not in ASKS_FOR_A_VALUE):
+            tallies[bucket] += 1
+        if field_needs_filer(item, recorded=recorded, applies=applies):
+            pending += 1
+        if item.box is not None:
+            check += checked.get(item.box, 0)
+    return AttentionCounts(**tallies, check=check, pending=pending)
+
 
 #: Editabilities under which the filer may stage a typed value on the field itself.
 TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
@@ -233,14 +430,27 @@ def origin_source_words_key(origin: ModeloFormOrigin, family: SourceFamily) -> s
     return f"tui.modelo.workbench.origin_source.{origin.value}.{family.value}"
 
 
-def origin_words(field: ModeloFormField) -> str:
-    """Say where one field's value stands, in the few words its row and help band share.
+_FILED_LOCALE_KEYS: Final[Mapping[ModeloFormOrigin, str]] = MappingProxyType(
+    {
+        ModeloFormOrigin.NEEDS_INPUT: "tui.modelo.workbench.origin_filed.needs_input",
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: "tui.modelo.workbench.origin_filed.default_to_confirm",
+    }
+)
+"""Words for an origin that asks for a value, on a declaration recorded as filed: what the value is, not a request."""
+
+
+def origin_words(field: ModeloFormField, *, recorded: bool = False) -> str:
+    """Say where one field's value stands, in the few words its row, help band and panel share.
 
     A value from a source names the kind of place, and an earlier declaration by
     its modelo and period when exactly one is known; any other says its origin.
-    A row too narrow for these words keeps only the glyph, so the help band
-    calls this to say them for the field under the cursor.
+    On a declaration ``recorded`` as filed nothing is asked any more, so a box
+    that would ask for a value says what it holds instead. A row too narrow
+    for these words keeps only the glyph, so the help band calls this to say
+    them for the field under the cursor.
     """
+    if recorded and field.origin in _FILED_LOCALE_KEYS:
+        return tr(_FILED_LOCALE_KEYS[field.origin])
     source = field.source
     if field.origin not in SOURCE_WORDED_ORIGINS or source is None:
         return tr(origin_words_key(field.origin))
@@ -262,8 +472,14 @@ def origin_glyph(field: ModeloFormField) -> str:
     return ORIGIN_GLYPHS[field.origin]
 
 
-def origin_text(field: ModeloFormField) -> str:
-    """The origin glyph followed by its words, as a help band or an editor states it."""
+def origin_text(field: ModeloFormField, *, recorded: bool = False) -> str:
+    """The origin glyph followed by its words, as a help band or an editor states it.
+
+    On a declaration ``recorded`` as filed a box that would ask for a value
+    draws no glyph, as its row draws none, and says only what it holds.
+    """
+    if recorded and field.origin in ASKS_FOR_A_VALUE:
+        return origin_words(field, recorded=True)
     return f"{origin_glyph(field)} {origin_words(field)}"
 
 
@@ -296,6 +512,14 @@ def _require_closed_and_distinct() -> None:
         raise ValueError("every attention mark needs its words")
     if set(_NAMED_FILING_LOCALE_KEYS) != set(SOURCE_WORDED_ORIGINS):
         raise ValueError("every origin worded by its source needs words for a named earlier declaration")
+    if set(ORIGIN_STANDINGS) != set(ModeloFormOrigin):
+        raise ValueError("every origin needs exactly one standing")
+    if set(_ORIGIN_TALLIES) != {
+        origin for origin, standing in ORIGIN_STANDINGS.items() if standing is not Standing.DONE
+    }:
+        raise ValueError("every origin that is not done needs a level to count at, and only those")
+    if set(_FILED_LOCALE_KEYS) != ASKS_FOR_A_VALUE:
+        raise ValueError("every origin that asks for a value needs words for a declaration recorded as filed")
     require_one_meaning_per_glyph(WORKBENCH_MARKS)
 
 
@@ -303,6 +527,7 @@ _require_closed_and_distinct()
 
 
 __all__ = [
+    "ASKS_FOR_A_VALUE",
     "ATTENTION_GLYPHS",
     "ATTENTION_MARKS",
     "ATTENTION_ROLES",
@@ -314,23 +539,31 @@ __all__ = [
     "EARLIER_FILING_GLYPH",
     "EARLIER_FILING_MARK",
     "EXPANDED_MARK",
+    "FAILED_MARK",
     "HERE_MARK",
     "INFO_MARK",
     "MISSING_MARK",
     "NEEDS_ATTENTION",
+    "NOT_CALCULATED_MARK",
+    "NOT_IMPORTED_MARK",
     "NOT_WRITABLE_REASONS",
     "ORIGIN_GLYPHS",
     "ORIGIN_MARKS",
     "ORIGIN_ROLES",
+    "ORIGIN_STANDINGS",
     "SOURCE_WORDED_ORIGINS",
     "STALE_MARK",
     "TYPED_EDITABILITIES",
     "WORKBENCH_MARKS",
     "Attention",
+    "AttentionCounts",
     "ColourRole",
+    "Standing",
     "WorkbenchMark",
     "attention_words_key",
     "editability_text",
+    "field_counts",
+    "field_needs_filer",
     "origin_glyph",
     "origin_source_words_key",
     "origin_text",

@@ -3,7 +3,9 @@
 The form is built by the real read model from the published authority, and the
 rows come from the workbench's own page layout. Expected rates are the ones the
 official 303 design prints for these rows: 4 % super-reduced, 10 % reduced and
-the 2 % transitional rate, grounded on their base bindings. The design's own
+the 2 % transitional rate, grounded on their base bindings. Only a rate box the
+design fixes shows its row's rate as its value; a rate box the calculation
+fills shows its own value and says the row's rate beside it. The design's own
 literals ("02100") declare no scale, so a rate box with no grounded rate shows
 none, and a literal is only printed as a rate where it states one outright.
 """
@@ -46,17 +48,20 @@ from ..casilla_list import (
     CasillaListEntry,
     CasillaListHeading,
     CasillaListItem,
+    grid_value_text,
     rate_note,
     row_value_text,
     value_text,
 )
 from ..page_items import WorkbenchFilter, first_attention, page_items, section_nav_text, workbench_pages
-from ..vocabulary import DONE_MARK, origin_words
+from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK, origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PERCENT = "\u00a0%"
-_GROUNDED = {"02": f"4{_PERCENT}", "05": f"10{_PERCENT}", "166": f"2{_PERCENT}"}
+# 02 and 05 are fixed by the design; 166 is calculated, so the rate is its row's and not its own value.
+_GROUNDED = {"02": f"4{_PERCENT}", "05": f"10{_PERCENT}"}
+_CALCULATED_RATE = ("166", f"2{_PERCENT}")
 # 151 and 17 print zeros, the design's placeholder; 154 and 169 are rate boxes no base binding grounds;
 # 08, 157, 20 and 23 print literals whose scale nothing declares.
 _UNGROUNDED = ("08", "151", "154", "157", "169", "17", "20", "23")
@@ -130,6 +135,34 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
             assert row_value_text(entry, OutputLanguage.EN) == rate, box
             assert value_text(entry, OutputLanguage.EN) == rate, box
             assert rate_note(entry) is None, box
+        # A rate box the calculation fills shows its own value, not yet calculated here, and says the rate apart.
+        box, rate = _CALCULATED_RATE
+        calculated = entries[box]
+        assert calculated.rate_of_row
+        assert calculated.field.origin is ModeloFormOrigin.NOT_CALCULATED_YET
+        assert calculated.field.grounded_rate is not None
+        assert row_value_text(calculated, OutputLanguage.EN) == "·"
+        assert value_text(calculated, OutputLanguage.EN) == "…"
+        assert rate_note(calculated, OutputLanguage.EN) == f"This row's rate is {rate}."
+        typed = replace(calculated, staged_text="3,50")
+        assert row_value_text(typed, OutputLanguage.EN) == "3,50"
+        worked_out = replace(
+            calculated,
+            field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATED, "value": Decimal("0.00")}),
+        )
+        failed = replace(
+            calculated, field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATION_FAILED})
+        )
+        assert rate_note(worked_out, OutputLanguage.EN) == f"This row's rate is {rate}."
+        shown = row_value_text(worked_out, OutputLanguage.EN)
+        assert "%" not in shown and shown not in {"·", "…"}
+        assert row_value_text(failed, OutputLanguage.EN) == "·"
+        # An optional rate box nobody filled reads as empty, even over a held zero that would read as a rate.
+        optional = entries["169"]
+        assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
+        held_zero = replace(optional, field=optional.field.model_copy(update={"value": Decimal("0")}))
+        assert row_value_text(held_zero, OutputLanguage.EN) == "·"
+        assert grid_value_text(held_zero, OutputLanguage.EN) == "·"
         assert row_value_text(entries["05"], OutputLanguage.ES) == f"10{_PERCENT}"
         # A literal that states its rate outright is printed, and the band says only the form prints it.
         stated = replace(
@@ -188,7 +221,9 @@ def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAu
 
     def marks(form: ModeloWorkForm) -> str:
         pages = workbench_pages(form)
-        navigator = [section_nav_text(section, 60) for page in pages for section in page.sections]
+        navigator = [
+            section_nav_text(section, 60, recorded=page.recorded) for page in pages for section in page.sections
+        ]
         headings = [
             item.text for page in pages for item in page_items(page, staged={}) if isinstance(item, CasillaListHeading)
         ]
@@ -244,27 +279,54 @@ def _page_with(form: ModeloWorkForm, box: str) -> tuple[CasillaListItem, ...]:
 async def test_a_filed_declaration_draws_no_attention_mark_but_keeps_its_origin_words(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    draft = _page_with(_form(operation), "65")
-    filed = _page_with(_form(operation, lifecycle=CalculationRevisionState.PRESENTADO), "65")
+    unheld = _page_with(_form(operation), "65")
+    optional = next(
+        item.field
+        for item in unheld
+        if isinstance(item, CasillaListEntry)
+        and item.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY
+        and item.field.data_type == "money"
+    )
+    held = {str(optional.box): Decimal("35.00")}
+    draft = _page_with(_form(operation, held=held), "65")
+    filed = _page_with(_form(operation, held=held, lifecycle=CalculationRevisionState.PRESENTADO), "65")
 
-    def box(items: tuple[CasillaListItem, ...]) -> CasillaListEntry:
-        return next(item for item in items if isinstance(item, CasillaListEntry) and item.field.box == "65")
+    def box(items: tuple[CasillaListItem, ...], number: str) -> CasillaListEntry:
+        return next(item for item in items if isinstance(item, CasillaListEntry) and item.field.box == number)
 
-    assert box(draft).field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
-    assert box(draft).needs_filer
-    assert box(filed).field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
-    assert not box(filed).needs_filer
+    # A box waiting on an import is not the filer's to type into, filed or not.
+    assert box(draft, "65").field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
+    assert not box(draft, "65").needs_filer
+    assert box(filed, "65").field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
+    assert not box(filed, "65").needs_filer
+    # An assumed value is, until the declaration is filed.
+    assert box(draft, str(optional.box)).field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
+    assert box(draft, str(optional.box)).needs_filer
+    assert not box(filed, str(optional.box)).needs_filer
 
     draft_lines = await _drawn(draft)
     filed_lines = await _drawn(filed)
     with override_settings(cadrumo_output_language="en"):
-        words = origin_words(box(filed).field)
+        words = origin_words(box(filed, "65").field)
     row = next(line for line in filed_lines if "[65]" in line)
     assert f" {words}" in row
-    headings = [item.text for item in filed if isinstance(item, CasillaListHeading) and item.level == 0]
-    assert headings and all(heading.startswith(DONE_MARK.glyph) for heading in headings)
+    waiting = _heading_over(filed, "65")
+    # A section still holding a value that was never imported is not done, even once filed.
+    assert waiting.mark == NOT_IMPORTED_MARK
+    assert not waiting.text.startswith(DONE_MARK.glyph)
     # The same draft still marks what is left to do, so the filed page's silence is the filing's doing.
-    assert any(" ! " in line or " ◐ " in line for line in draft_lines)
+    assert any(" ◐ " in line for line in draft_lines)
     for line in filed_lines:
         assert "▲" not in line and "◐" not in line, line
         assert " ! " not in line, line
+
+
+def _heading_over(items: tuple[CasillaListItem, ...], number: str) -> CasillaListHeading:
+    """The section heading a box is listed under."""
+    heading: CasillaListHeading | None = None
+    for item in items:
+        if isinstance(item, CasillaListHeading) and item.level == 0:
+            heading = item
+        if isinstance(item, CasillaListEntry) and item.field.box == number and heading is not None:
+            return heading
+    raise AssertionError(number)

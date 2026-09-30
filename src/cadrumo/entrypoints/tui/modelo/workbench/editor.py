@@ -348,6 +348,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         read_only_reason: str | None = None,
         feeds: tuple[str, ...] = (),
         status_line: str | None = None,
+        recorded: bool = False,
     ) -> None:
         """Bind the field, the parser, which of clear and restore it allows, and the boxes it feeds.
 
@@ -356,9 +357,12 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         of an input, and offers to open the area that owns the value's source.
         ``feeds`` names the boxes this box's value is used in. ``status_line``
         is the header's result line, shown first because the panel covers it.
+        ``recorded`` is the declaration being recorded as filed, whose "Now"
+        line says what a box holds rather than asking the filer for a value.
         """
         super().__init__()
         self._field = field
+        self._recorded = recorded
         self._parse = parse
         self._language = language
         self._limits = limits
@@ -386,7 +390,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         return self._open_area
 
     def _current(self) -> str:
-        return value_text(CasillaListEntry(self._field), self._language)
+        return value_text(CasillaListEntry(self._field, recorded=self._recorded), self._language)
 
     @staticmethod
     def _block(block_id: str, label_key: str, text: str) -> Horizontal:
@@ -403,7 +407,9 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         blocks = [
             self._block("editor-asks", "tui.modelo.workbench.editor.block.asks", asks),
             self._block(
-                "editor-now", "tui.modelo.workbench.editor.block.now", f"{self._current()} · {origin_text(field)}"
+                "editor-now",
+                "tui.modelo.workbench.editor.block.now",
+                f"{self._current()} · {origin_text(field, recorded=self._recorded)}",
             ),
         ]
         where = where_from_text(field)

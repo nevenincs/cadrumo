@@ -2228,6 +2228,9 @@ tui:
           confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
           confirm_by_section: Obre cada secció i confirma'n els valors, o escriu els
             correctes.
+          fill: Obre cada casella i escriu-ne el valor. Si el valor correcte és zero,
+            escriu 0.
+          fill_by_section: Obre cada secció i escriu-hi els valors que necessita.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
         detail:
@@ -2247,6 +2250,8 @@ tui:
         key:
           less: Mostra'n menys
           more: Mostra'n més
+        missing: La declaració necessita valors en aquestes caselles i ningú no els
+          ha donat.
         open_section: Obrir la secció
         technical: Detalls tècnics
         title: Incidències per revisar
@@ -2399,6 +2404,9 @@ tui:
         not_imported_yet: Encara sense importar
         optional_empty: Opcional, buida
         overrides_source: El teu valor substitueix l'origen
+      origin_filed:
+        default_to_confirm: Suposada, ningú no la va introduir
+        needs_input: Buida, ningú no la va omplir
       origin_source:
         imported:
           aeat_draft: De dades de l'AEAT
@@ -2451,6 +2459,9 @@ tui:
         not_grounded: Cadrumo no fixa cap tipus per a aquesta fila, així que aquí
           no se'n mostra cap. Consulta a les instruccions oficials el tipus que et
           correspon.
+        of_row: El tipus d'aquesta fila és el {rate}.
+        of_row_printed: 'El model oficial imprimeix aquest tipus en aquesta fila:
+          {rate}.'
         printed_by_form: El model oficial imprimeix aquest tipus en aquesta fila.
       read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
       rebase:
@@ -2568,6 +2579,9 @@ tui:
           set_by_form: Fixats pel model
           unnamed: D'un origen sense nom
           yours: Escrits o confirmats per tu
+        group_filed:
+          assumed: Suposats, ningú no els va introduir
+          needs_you: Buides, ningú no les va omplir
         intro: Totes les caselles, agrupades segons d'on surt el valor. Obre un grup
           per veure'n les caselles.
         key:

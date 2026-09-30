@@ -84,7 +84,8 @@ async def test_a_heading_the_real_layout_prints_twice_is_listed_once(workbench: 
 
     assert headings == ["Result", "Corrective return"]
     for heading in headings:
-        listed = [row for row in rows if row.strip().removeprefix("✓ ").startswith(heading)]
+        # A section row leads with its mark, whichever level it shows; the heading follows it.
+        listed = [row for row in rows if row.strip().partition(" ")[2].startswith(heading)]
         assert len(listed) == 1, f"{heading!r} is listed {len(listed)} times: {rows}"
 
 

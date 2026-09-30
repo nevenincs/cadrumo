@@ -1,10 +1,12 @@
 """Turn one page of the editor form into the lines of the casilla list.
 
-A section becomes a heading that says whether anything in it still needs the
-filer; an official grid becomes its printed rows, each row heading followed by
-its boxes in column order, labelled by their column, and carrying the row's
-place in its grid so the list can draw the paper form's table; the records of
-a repeating group become a read-only table. A value the official design fixes
+A section becomes a heading that says, on the attention scale the navigator
+and the header share, whether anything in it still needs the filer or waits
+on an import or a calculation; an official grid becomes its printed rows,
+each row heading followed by its boxes in column order, labelled by their
+column, and carrying the row's place in its grid so the list can draw the
+paper form's table; the records of a repeating group become a read-only
+table. A value the official design fixes
 is never an editable field. The working figures and the unplaced casillas are
 one more page, so nothing the form holds is out of the filer's reach.
 
@@ -22,7 +24,6 @@ from typing import Final
 
 from .....application.modelo.work_form_models import (
     ModeloFormBindingInputsBlock,
-    ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -48,15 +49,15 @@ from .casilla_list import (
     shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
-from .vocabulary import BLOCKS_MARK, CONFIRM_MARK, DONE_MARK, MISSING_MARK, NEEDS_ATTENTION, WorkbenchMark
+from .vocabulary import AttentionCounts, WorkbenchMark, field_counts, field_needs_filer
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
-_COUNTED_TO_DO: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
-)
-"""Origins a section's counts tally as still to do; the counts, not the bare origins, say how many."""
 _COLUMN_UNNAMED_KEY: Final[str] = "tui.modelo.workbench.grid.column_unnamed"
+_NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
+    {ModeloFormTextDisclosure.TECHNICAL, ModeloFormTextDisclosure.UNNAMED}
+)
+"""Labels that name no column: a technical name, or words saying the form gives the box no name."""
 _RECORDS_KEY: Final[str] = "tui.modelo.workbench.repeating"
 _RECORDS_UNKNOWN_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
 _RECORDS_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
@@ -88,6 +89,8 @@ class WorkbenchPage:
     details: tuple[ModeloFormField, ...] = ()
     #: The declaration is recorded as filed, so nothing on it is left to enter or confirm.
     recorded: bool = False
+    #: ``False`` when the read model states the page does not apply this period, so it asks for no value.
+    applies: bool = True
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Every field the page holds, in reading order."""
@@ -100,7 +103,13 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
     """Return the form's pages, followed by the calculation details when it has any."""
     recorded = form.filing is not None
     pages = [
-        WorkbenchPage(id=page.id, heading=page.heading, sections=page.sections, recorded=recorded)
+        WorkbenchPage(
+            id=page.id,
+            heading=page.heading,
+            sections=page.sections,
+            recorded=recorded,
+            applies=page.applies is not False,
+        )
         for page in form.pages
     ]
     details = (*form.working_figures, *(item.field for item in form.unplaced))
@@ -119,39 +128,14 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
     return tuple(pages)
 
 
-def _to_do(field: ModeloFormField, counts: ModeloFormCounts | None, *, recorded: bool) -> bool:
-    """Whether a field still needs the filer.
-
-    Nothing on a declaration recorded as filed does, whatever origin its boxes
-    keep. Otherwise a missing or assumed value counts only while its section's
-    counts still tally one; a field outside any section has no counts, so its
-    origin decides.
-    """
-    if recorded:
-        return False
-    if field.blockers:
-        return True
-    if field.origin in _COUNTED_TO_DO:
-        if counts is None:
-            return True
-        tally = counts.needs_input if field.origin is ModeloFormOrigin.NEEDS_INPUT else counts.default_to_confirm
-        return tally > 0
-    return field.origin in NEEDS_ATTENTION
-
-
 def _shown(
-    field: ModeloFormField,
-    staged: Mapping[AddressKey, StagedDisplay],
-    mode: WorkbenchFilter,
-    counts: ModeloFormCounts | None = None,
-    *,
-    recorded: bool = False,
+    field: ModeloFormField, staged: Mapping[AddressKey, StagedDisplay], mode: WorkbenchFilter, page: WorkbenchPage
 ) -> bool:
     if mode is WorkbenchFilter.ALL:
         return True
     key = address_key(field.address)
     if mode is WorkbenchFilter.ATTENTION:
-        return key in staged or _to_do(field, counts, recorded=recorded)
+        return key in staged or field_needs_filer(field, recorded=page.recorded, applies=page.applies)
     return key in staged or field.origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
 
 
@@ -163,7 +147,7 @@ def _entry(
     label: str | None = None,
     row_label: str | None = None,
     rate_of_row: bool = False,
-    recorded: bool = False,
+    page: WorkbenchPage,
 ) -> CasillaListEntry:
     change = staged.get(address_key(field.address))
     return CasillaListEntry(
@@ -173,7 +157,8 @@ def _entry(
         staged_text=None if change is None else change.text,
         previous_text=None if change is None else change.previous_text,
         rate_of_row=rate_of_row,
-        recorded=recorded,
+        recorded=page.recorded,
+        applies=page.applies,
         row_label=row_label,
         column_label=None if row_label is None else label,
     )
@@ -196,7 +181,7 @@ def _column_headings(columns: tuple[ModeloFormGridColumn, ...], rows: tuple[Mode
             cell.field.label
             for row in rows
             for cell in row.cells[index : index + 1]
-            if cell.field is not None and cell.field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL
+            if cell.field is not None and cell.field.label.disclosure not in _NAMELESS_DISCLOSURES
         )
         label = next(labels, None)
         headings.append(label.text if label is not None else tr(_COLUMN_UNNAMED_KEY, number=index + 1))
@@ -207,9 +192,7 @@ def _grid_items(
     block: ModeloFormGridBlock,
     staged: Mapping[AddressKey, StagedDisplay],
     mode: WorkbenchFilter,
-    counts: ModeloFormCounts,
-    *,
-    recorded: bool,
+    page: WorkbenchPage,
 ) -> list[CasillaListItem]:
     """An official grid as its printed rows: each row's heading, then its boxes in column order.
 
@@ -226,7 +209,7 @@ def _grid_items(
         rate_box = _rate_box(row)
         for heading, cell in zip(headings, row.cells, strict=True):
             field = cell.field
-            if field is not None and _shown(field, staged, mode, counts, recorded=recorded):
+            if field is not None and _shown(field, staged, mode, page):
                 row_items.append(
                     _entry(
                         field,
@@ -235,7 +218,7 @@ def _grid_items(
                         label=heading,
                         row_label=row.heading.text,
                         rate_of_row=field is rate_box,
-                        recorded=recorded,
+                        page=page,
                     )
                 )
                 slots.append(GridSlot(key=address_key(field.address)))
@@ -271,88 +254,66 @@ def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
     return items
 
 
-def _pending(section: ModeloFormSection, *, recorded: bool = False) -> int:
-    """How many of a section's fields still need the filer, taking missing and assumed values from its counts.
+def section_counts(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> AttentionCounts:
+    """What one section holds on the attention scale the navigator, the grid rows and the header share."""
+    return field_counts(section_fields(section), recorded=recorded, applies=applies)
 
-    Nothing on a declaration recorded as filed does.
+
+def section_mark(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> WorkbenchMark:
+    """The most severe thing a section holds: a blocker, a missing, failed or assumed value, then what still waits.
+
+    A section is done only when nothing is to do and nothing waits on an
+    import or a calculation. On a declaration recorded as filed, and on a page
+    that does not apply, no value is asked, but a failure or a wait is still a
+    fact about the box and keeps its mark.
     """
-    if recorded:
-        return 0
-    counts = section.counts
-    others = sum(
-        1
-        for field in section_fields(section)
-        if field.origin not in _COUNTED_TO_DO and (field.blockers or field.origin in NEEDS_ATTENTION)
-    )
-    return counts.needs_input + counts.default_to_confirm + others
+    return section_counts(section, recorded=recorded, applies=applies).mark
 
 
-def section_mark(section: ModeloFormSection, *, recorded: bool = False) -> WorkbenchMark:
-    """The most severe thing a section still holds: a blocker, then a missing value, then an assumed one.
-
-    A section of a declaration recorded as filed holds nothing left to do.
-    """
-    if recorded:
-        return DONE_MARK
-    fields = section_fields(section)
-    if any(field.blockers for field in fields):
-        return BLOCKS_MARK
-    missing = any(field.origin in NEEDS_ATTENTION and field.origin not in _COUNTED_TO_DO for field in fields)
-    if missing or section.counts.needs_input:
-        return MISSING_MARK
-    if section.counts.default_to_confirm:
-        return CONFIRM_MARK
-    return DONE_MARK
-
-
-def section_heading_text(section: ModeloFormSection, *, recorded: bool = False) -> str:
+def section_heading_text(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> str:
     """Say whether a section is complete, or how many of its fields still need the filer."""
-    mark = section_mark(section, recorded=recorded).glyph
-    pending = _pending(section, recorded=recorded)
-    if pending:
-        pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=pending)
-        return f"{mark} {pending_text}"
-    return f"{mark} {section.heading.text}"
+    counts = section_counts(section, recorded=recorded, applies=applies)
+    if counts.pending:
+        pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=counts.pending)
+        return f"{counts.mark.glyph} {pending_text}"
+    return f"{counts.mark.glyph} {section.heading.text}"
 
 
 def section_nav_text(section: ModeloFormSection, width: int, *, recorded: bool = False) -> str:
     """Name a section in the navigator: its most severe mark, the heading cut to fit, and what is still to do."""
-    pending = _pending(section, recorded=recorded)
-    suffix = f" ({pending})" if pending else ""
+    counts = section_counts(section, recorded=recorded)
+    suffix = f" ({counts.pending})" if counts.pending else ""
     room = max(width - 2 - len(suffix), 4)
     heading = section.heading.text
     if len(heading) > room:
         heading = heading[: room - 1] + "…"
-    return f"{section_mark(section, recorded=recorded).glyph} {heading}{suffix}"
+    return f"{counts.mark.glyph} {heading}{suffix}"
 
 
 def _section_items(
     section: ModeloFormSection,
     staged: Mapping[AddressKey, StagedDisplay],
     mode: WorkbenchFilter,
-    *,
-    recorded: bool,
+    page: WorkbenchPage,
 ) -> list[CasillaListItem]:
     items: list[CasillaListItem] = []
-    counts = section.counts
     for block in section.blocks:
         if isinstance(block, ModeloFormFieldBlock):
-            if _shown(block.field, staged, mode, counts, recorded=recorded):
-                items.append(_entry(block.field, staged, recorded=recorded))
+            if _shown(block.field, staged, mode, page):
+                items.append(_entry(block.field, staged, page=page))
         elif isinstance(block, ModeloFormBindingInputsBlock):
             items.extend(
-                _entry(field, staged, recorded=recorded)
-                for field in block.fields
-                if _shown(field, staged, mode, counts, recorded=recorded)
+                _entry(field, staged, page=page) for field in block.fields if _shown(field, staged, mode, page)
             )
         elif isinstance(block, ModeloFormGridBlock):
-            items.extend(_grid_items(block, staged, mode, counts, recorded=recorded))
+            items.extend(_grid_items(block, staged, mode, page))
         elif mode is WorkbenchFilter.ALL:
             items.extend(_record_items(block))
     if not items:
         return []
     heading = CasillaListHeading(
-        section_heading_text(section, recorded=recorded), mark=section_mark(section, recorded=recorded)
+        section_heading_text(section, recorded=page.recorded, applies=page.applies),
+        mark=section_mark(section, recorded=page.recorded, applies=page.applies),
     )
     return [heading, *items]
 
@@ -366,12 +327,8 @@ def page_items(
     """Lay one page out as list lines, overlaying the filer's staged changes."""
     items: list[CasillaListItem] = []
     for section in page.sections:
-        items.extend(_section_items(section, staged, mode, recorded=page.recorded))
-    details = [
-        _entry(field, staged, recorded=page.recorded)
-        for field in page.details
-        if _shown(field, staged, mode, recorded=page.recorded)
-    ]
+        items.extend(_section_items(section, staged, mode, page))
+    details = [_entry(field, staged, page=page) for field in page.details if _shown(field, staged, mode, page)]
     if details:
         items.append(CasillaListHeading(page.heading.text))
         items.extend(details)
@@ -389,10 +346,8 @@ def page_of(pages: tuple[WorkbenchPage, ...], key: AddressKey) -> int | None:
 def first_attention(pages: tuple[WorkbenchPage, ...]) -> tuple[int, AddressKey] | None:
     """Return the first field anywhere in the form that needs the filer."""
     for index, page in enumerate(pages):
-        placed = [(field, section.counts) for section in page.sections for field in section_fields(section)]
-        details: list[tuple[ModeloFormField, ModeloFormCounts | None]] = [(field, None) for field in page.details]
-        for field, counts in (*placed, *details):
-            if _to_do(field, counts, recorded=page.recorded):
+        for field in page.fields():
+            if field_needs_filer(field, recorded=page.recorded, applies=page.applies):
                 return index, address_key(field.address)
     return None
 
@@ -411,6 +366,7 @@ __all__ = [
     "official_page",
     "page_items",
     "page_of",
+    "section_counts",
     "section_heading_text",
     "section_mark",
     "section_nav_text",
