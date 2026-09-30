@@ -3469,15 +3469,13 @@ cli:
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
         live_filed_discover: Egy letöltés által bejárandó nyomtatvány-évpárok listázása,
           letöltés nélkül.
-        live_filed_list: Az AEAT-ből beolvasott és helyben tárolt benyújtott bevallás-megfigyelések
-          listázása.
+        live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
         live_filed_pull_all: Egyetlen menetben letölti a teljes AEAT-nál benyújtott
           bevallási előzményt.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
         modelo_audit_view: Megjeleníti egy bizonyítékcsomag manifesztjét egy bevallás-felülvizsgálathoz.
-        modelo_bindings: Annak vizsgálata, hogy a nyomtatványdefiníciók mely rovatokhoz
-          adnak forrást (honnan származik az egyes rovatok értéke).
+        modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
         modelo_list: Támogatott nyomtatványok listázása.
         modelo_m036: Az AEAT-nál benyújtott Modelo 036 bevallás rögzítése.
