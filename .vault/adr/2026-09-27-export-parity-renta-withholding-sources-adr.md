@@ -1,11 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#export-parity'
+  - "#adr"
+  - "#export-parity"
 date: '2026-09-27'
-modified: '2026-09-27'
-body_schema: 'body-v2'
-body_hash: 'sha256:840dd5204d9a6244a299cdf0f99bf2ce9833abef3b578d7c8c859efe82f50fe1'
 related:
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-research]]"
@@ -16,6 +13,11 @@ related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]"
   - "[[2026-06-01-calculation-test-oracle-discipline-adr]]"
   - "[[2026-06-12-live-pull-verification-sweep-adr]]"
+supersedes:
+  - '2026-06-19-m100-dependent-modelo-applicability-adr'
+modified: '2026-09-29'
+body_schema: 'body-v2'
+body_hash: 'sha256:840dd5204d9a6244a299cdf0f99bf2ce9833abef3b578d7c8c859efe82f50fe1'
 ---
 # `export-parity` adr: `source Modelo 100 withholding credits from the perceptor side` | (**status:** `accepted`)
 

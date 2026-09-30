@@ -214,21 +214,53 @@ def test_the_declaration_kind_fills_the_tipo_declaracion_casilla(
     assert resolved.text_casilla_inputs[casilla.id] == kind.value
 
 
-def test_a_result_clave_is_not_given_a_declaration_kind() -> None:
-    """Modelo 222's "tipo de declaracion" is the result clave (I/U/G/N), a different fact."""
-    revision = published_snapshot(
-        "222", filing_year=2025, period="1P", grade=RegistryAuthorityGrade.CALCULATION
-    ).revision
+@pytest.mark.parametrize(
+    ("modelo", "period", "grade"),
+    [
+        ("222", "1P", RegistryAuthorityGrade.CALCULATION),
+        ("122", "0A", RegistryAuthorityGrade.APPLICABILITY),
+        ("576", "0A", RegistryAuthorityGrade.APPLICABILITY),
+    ],
+)
+def test_a_result_clave_is_not_given_a_declaration_kind(
+    modelo: str, period: str, grade: RegistryAuthorityGrade
+) -> None:
+    """A design's "Tipo de declaracion" that holds the result clave (I, U, G, N) is a different fact."""
+    revision = published_snapshot(modelo, filing_year=2025, period=period, grade=grade).revision
     casilla_id = validated_casilla_id("decl.tipo-declaracion", surface="test")
+    (casilla,) = (casilla for casilla in revision.casillas if casilla.id == casilla_id)
 
     resolved = resolve_declaration_period_inputs(
         revision,
         filing_year=2025,
-        period=Period.from_year_and_code(2025, "1P"),
+        period=Period.from_year_and_code(2025, period),
         declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
+    assert casilla.semantic_role == "tipo_declaracion_resultado"
     assert casilla_id not in resolved.text_casilla_inputs
+
+
+def test_the_modelo_341_period_casilla_takes_the_filing_period() -> None:
+    """Modelo 341's "Periodo" (1T to 4T) is the solicitud's quarter, filled from the filing context.
+
+    Both record designs print it as the period (@22+2, and campo 11 "Devengo -
+    Periodo" @107+2); the "D" clave is a separate literal campo. No declaration
+    kind may land on it.
+    """
+    revision = published_snapshot(
+        "341", filing_year=2025, period="2T", grade=RegistryAuthorityGrade.APPLICABILITY
+    ).revision
+    casilla_id = validated_casilla_id("decl.periodo", surface="test")
+
+    resolved = resolve_declaration_period_inputs(
+        revision,
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "2T"),
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
+    )
+
+    assert resolved.text_casilla_inputs == {casilla_id: "2T"}
 
 
 # ---------------------------------------------------------------------------

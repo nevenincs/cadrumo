@@ -63,7 +63,7 @@ modelo:
                 anteriormente; en otro caso se deja en blanco.
               label: Indicador de página complementaria
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+              label: 'Tipo de declaración: clave del resultado (I ingreso)'
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Importe del abono anticipado de la deducción efectivamente percibido
                 en el periodo impositivo. La regularización procede cuando lo percibido

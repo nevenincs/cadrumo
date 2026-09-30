@@ -26,6 +26,67 @@ def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytes
     assert "COMMAND " in (run_dir / "run.log").read_text(encoding="utf-8")
 
 
+def test_command_run_streams_a_line_longer_than_the_stream_buffer(tmp_path: Path) -> None:
+    long_line = "x" * (256 * 1024)
+    script = f"import sys; sys.stdout.write('x' * {len(long_line)} + '\\n' + 'after'); sys.stdout.flush()"
+
+    status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
+
+    assert status == 0
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    transcript = (run_dir / "run.log").read_text(encoding="utf-8")
+    assert f"{long_line}\nafter" in transcript
+
+
+def test_locale_signal_reads_a_status_payload_longer_than_the_stream_buffer(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    missing = 4000
+    script = f"""
+import json
+backlog = [
+    {{"domain": "cli", "key": f"cli.key_{{index:05d}}", "locale": "es", "state": "missing"}}
+    for index in range({missing})
+]
+payload = {{
+    "outcome": "backlog",
+    "headline": "Translate {missing} locale cells.",
+    "summary": {{
+        "inventory": {{"closed": True, "required_keys": {missing}}},
+        "translation_backlog": {{
+            "exact": True, "unique_keys_to_translate": {missing}, "cells_to_translate": {missing}
+        }},
+        "cells": {{"required": {missing}, "ready": 0, "missing": {missing}}},
+        "locales": [{{"locale": "es", "to_translate": {missing}}}],
+        "domains": [{{"domain": "cli", "state": "translate", "to_translate": {missing}}}],
+        "catalogue_only": {{"keys": 0, "cells": 0}},
+        "next_action": {{"action": "create_missing_catalogue_leaves", "command": "just locales-scaffold"}},
+    }},
+    "details": {{"backlog": backlog, "findings": []}},
+}}
+line = json.dumps(payload)
+assert len(line) > 64 * 1024
+print(line)
+"""
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 0
+    finished = [json.loads(line) for line in capsys.readouterr().out.splitlines()][-1]
+    assert finished["event"] == "run_finished"
+    assert finished["translation_backlog"]["cells_to_translate"] == missing
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(persisted) == missing
+
+
 def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
     status = run(
         (sys.executable, "-c", "raise SystemExit(7)"),
@@ -42,7 +103,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class InterruptingOutput:
-        async def readline(self) -> bytes:
+        async def read(self, size: int = -1) -> bytes:
             run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130

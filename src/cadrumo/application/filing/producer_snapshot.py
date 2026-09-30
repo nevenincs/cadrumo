@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, StringConstraints, model_validator
+from pydantic import BaseModel, StringConstraints, ValidationError, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
@@ -1150,8 +1150,11 @@ def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
 def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
         raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-    unsupported = ", ".join(item.value for item in snapshot.model_profile.unsupported_producer_ids)
-    raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
+    missing_ids = tuple(item.value for item in snapshot.model_profile.unsupported_producer_ids)
+    raise FilingProducerSnapshotError(
+        f"Modelo 202 producer snapshot is incomplete: {', '.join(missing_ids)}",
+        context={"missing_fact_ids": missing_ids, "reason": "m202_producer_facts_unsupported"},
+    )
 
 
 def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -1220,6 +1223,25 @@ def _profile_iva(model_profile: FilingModelProfileFacts) -> ModeloIVAProfile | N
     return None
 
 
+def _registered_snapshot_refusal(error: ValueError) -> FilingProducerSnapshotError | None:
+    """Return the typed refusal a snapshot validator raised, if it raised one.
+
+    The validation boundary re-raises a registered refusal as the builtin
+    ``ValueError`` Pydantic requires, keeping the refusal as its cause, and
+    Pydantic keeps that ``ValueError`` in the error context. Recovering it
+    keeps the refusal's structured context rather than only its message.
+    """
+    if not isinstance(error, ValidationError):
+        return None
+    for detail in error.errors(include_url=False):
+        context = detail.get("ctx")
+        nested = context.get("error") if isinstance(context, dict) else None
+        cause = nested.__cause__ if isinstance(nested, BaseException) else None
+        if isinstance(cause, FilingProducerSnapshotError):
+            return cause
+    return None
+
+
 def build_filing_producer_snapshot(
     *,
     modelo: Modelo,
@@ -1275,7 +1297,7 @@ def build_filing_producer_snapshot(
             declaration_contact=declaration_contact or DeclarationContactFacts(),
         )
     except ValueError as exc:
-        raise FilingProducerSnapshotError(str(exc)) from exc
+        raise _registered_snapshot_refusal(exc) or FilingProducerSnapshotError(str(exc)) from exc
 
 
 def _without_embedded_accounts(model_profile: FilingModelProfileFacts) -> FilingModelProfileFacts:

@@ -76,7 +76,7 @@
         "--binding",
         "renta-base-liquidable-negativa-general-anterior=0",
         "--relation",
-        "renta-modelo-123-retenciones-periodicas=450"
+        "renta-modelo-184-atribucion-actividades-economicas=450"
       ],
       "captures": [],
       "envelope": {
@@ -187,7 +187,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "922cdf4493d07cf9f046de1fa56e7c21e863db78f6d60ec81c5dad72fbc9536f",
+          "calculation_revision_id": "4b79463a8314a43b0653911f9e2bf5402eb69b201032d29dabc575fbbf774aa1",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -710,7 +710,7 @@
             "0594": "0",
             "0595": "3506.69",
             "0596": "2400",
-            "0597": "450",
+            "0597": "0",
             "0598": "0.00",
             "0599": "0",
             "0600": "0",
@@ -722,8 +722,8 @@
             "0606": "0",
             "0607": "0",
             "0608": "0",
-            "0609": "2850.00",
-            "0610": "656.69",
+            "0609": "2400.00",
+            "0610": "1106.69",
             "0611": "0",
             "0612": "0",
             "0613": "0",
@@ -757,7 +757,7 @@
             "0664": "0",
             "0666": "0",
             "0669": "0",
-            "0670": "656.69",
+            "0670": "1106.69",
             "0671": "1651.19",
             "0672": "0.00",
             "0675": "1651.19",
@@ -767,7 +767,7 @@
             "0689": "0",
             "0693": "0",
             "0694": "0",
-            "0695": "656.69",
+            "0695": "1106.69",
             "0698": "0",
             "0699": "0",
             "0700": "0",
@@ -1522,13 +1522,13 @@
             "1574": "0",
             "1575": "0.00",
             "1576": "0",
-            "1577": "0",
+            "1577": "450",
             "1578": "0",
             "1579": "0",
             "1580": "0",
             "1581": "0",
             "1582": "0",
-            "1583": "0.00",
+            "1583": "450.00",
             "1584": "0",
             "1585": "0",
             "1586": "0",
@@ -1550,7 +1550,7 @@
             "1602": "0.00",
             "1603": "0.00",
             "1604": "0.00",
-            "1605": "0.00",
+            "1605": "450.00",
             "1606": "0.00",
             "1607": "0.00",
             "1608": "0.00",
@@ -15178,7 +15178,7 @@
                 "aeat-modelo-193-296-note-2025",
                 "boe-modelo-193-2011-form"
               ],
-              "value": "450"
+              "value": "0"
             },
             {
               "absent_by_design": false,
@@ -15472,7 +15472,7 @@
                 "0",
                 "0",
                 "2400",
-                "450",
+                "0",
                 "0.00",
                 "0",
                 "0",
@@ -15487,7 +15487,7 @@
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "2850.00"
+              "value": "2400.00"
             },
             {
               "absent_by_design": false,
@@ -15508,13 +15508,13 @@
               ],
               "operand_values": [
                 "3506.69",
-                "2850.00"
+                "2400.00"
               ],
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "656.69"
+              "value": "1106.69"
             },
             {
               "absent_by_design": false,
@@ -16271,7 +16271,7 @@
                 "0669"
               ],
               "operand_values": [
-                "656.69",
+                "1106.69",
                 "0",
                 "0",
                 "0",
@@ -16293,7 +16293,7 @@
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "656.69"
+              "value": "1106.69"
             },
             {
               "absent_by_design": false,
@@ -16532,13 +16532,13 @@
                 "0693"
               ],
               "operand_values": [
-                "656.69",
+                "1106.69",
                 "0"
               ],
               "source_refs": [
                 "lirpf-cuota-chain-authority"
               ],
-              "value": "656.69"
+              "value": "1106.69"
             },
             {
               "absent_by_design": false,
@@ -35441,7 +35441,7 @@
               "value": "0"
             },
             {
-              "absent_by_design": true,
+              "absent_by_design": false,
               "casilla_id": "1577",
               "formula_id": null,
               "legal_refs": [
@@ -35463,7 +35463,7 @@
                 "aeat-dr-100-2025-xsd",
                 "aeat-renta-2025-manual-parte1"
               ],
-              "value": "0"
+              "value": "450"
             },
             {
               "absent_by_design": false,
@@ -35620,7 +35620,7 @@
                 "0384"
               ],
               "operand_values": [
-                "0",
+                "450",
                 "0",
                 "0",
                 "0",
@@ -35631,7 +35631,7 @@
               "source_refs": [
                 "lirpf-cuota-chain-authority"
               ],
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "absent_by_design": false,
@@ -36195,12 +36195,12 @@
                 "1583"
               ],
               "operand_values": [
-                "0.00"
+                "450.00"
               ],
               "source_refs": [
                 "lirpf-cuota-chain-authority"
               ],
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "absent_by_design": false,
@@ -47242,7 +47242,7 @@
             "revision_id": "2025"
           },
           "relation_overrides": {
-            "renta-modelo-123-retenciones-periodicas": "450"
+            "renta-modelo-184-atribucion-actividades-economicas": "450"
           },
           "result_summary": [
             {
@@ -47361,7 +47361,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 922cdf4493d07cf9f046de1fa56e7c21e863db78f6d60ec81c5dad72fbc9536f (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 4b79463a8314a43b0653911f9e2bf5402eb69b201032d29dabc575fbbf774aa1 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",

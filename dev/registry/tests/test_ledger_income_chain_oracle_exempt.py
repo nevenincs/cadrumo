@@ -7,8 +7,8 @@ This module covers the case that runs the other way, and it is the dangerous
 one. An IVA-exempt professional service (LIVA art. 20) has no cuota to offset
 the withholding, so the bank credit is strictly BELOW the ingresos integros:
 without its base, casilla 01 receives the net-of-retencion cash and the return
-under-declares by exactly the withheld amount, while the offsetting retenciones
-credit disappears at the same time. One missing field, two losses, both in the
+under-declares by exactly the withheld amount, while the retencion itself stops
+being determinable at the same time. One missing field, two losses, both in the
 taxpayer's disfavour and neither previously watched.
 
 The invoice::
@@ -58,6 +58,7 @@ from cadrumo.core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDer
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
+    ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
@@ -197,12 +198,18 @@ def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None
 
 
 def test_the_exempt_invoice_recovers_its_retencion_at_the_statutory_figure() -> None:
-    """The withheld binding resolves to the statutory 15 % of the base.
+    """The recovered retencion equals the statutory 15 % of the base.
 
-    This is the assertion the old both-fields precondition made impossible: no
-    cuota was recorded, so the derivation never ran and the credit was zero.
-    The expectation arrives from RIRPF art. 95.1 on the base; the engine
+    This is the recovery the old both-fields precondition made impossible: no
+    cuota was recorded, so the derivation never ran and nothing was reconstructed
+    at all. The expectation arrives from RIRPF art. 95.1 on the base; the engine
     arrives by subtracting cash from a gross whose cuota the category supplied.
+
+    The figure is read off the observation, not off the resolved credit. No
+    invoice DECLARES this retencion -- it is reconstructed from the cash
+    shortfall -- and the credit takes declared figures only, so it reports the
+    reconstruction as an excluded amount instead. What this module owns is that
+    the recovery is rated correctly; the exclusion is asserted alongside it.
 
     The rated sibling additionally proves the figure is not a rate inverted off
     the cash. That guard cannot discriminate HERE and is deliberately absent:
@@ -215,16 +222,23 @@ def test_the_exempt_invoice_recovers_its_retencion_at_the_statutory_figure() -> 
     revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
-    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    recovered = aggregation.observations[0].withheld_amount
     statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate).quantize(
         Decimal("0.01")
     )
 
-    assert resolved[_RETENCIONES_BINDING] == statutory
-    assert resolved[_RETENCIONES_BINDING] == _RETENCION
-    assert resolved[_RETENCIONES_BINDING] != Decimal("0"), (
-        "a cuota-less invoice still withholds; a zero here is the pre-relaxation defect"
+    assert recovered == statutory
+    assert recovered == _RETENCION
+    assert recovered != Decimal("0"), "a cuota-less invoice still withholds; a zero here is the pre-relaxation defect"
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
+
+    assert resolved[_RETENCIONES_BINDING] == Decimal("0")
+    assert partition.inferred_total == statutory, (
+        "the excluded amount is reported at full value, so the operator can see what recording it would recover"
     )
+    assert partition.unresolved_observations == ()
 
 
 def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
@@ -247,10 +261,15 @@ def test_the_unrecorded_invoice_under_declares_by_exactly_the_withheld_amount() 
     """Without its base, casilla 01 falls to the cash and the credit is lost.
 
     The shortfall is not incidental: casilla 01 loses exactly what the payer
-    withheld, and the retenciones casilla loses the same figure again, so the
-    taxpayer both declares too little income and claims too little credit for
-    it. Pinning the shortfall to the withheld amount rather than to a bare 150
-    keeps the two halves tied to one another rather than to a literal.
+    withheld, and the retencion itself becomes undeterminable at the same time,
+    so the taxpayer both declares too little income and has nothing to claim
+    against it. Pinning the shortfall to the withheld amount rather than to a
+    bare 150 keeps the two halves tied to one another rather than to a literal.
+
+    The zero credit is the same zero the declared variant shows, which is why
+    the derivation classification is asserted beside it: there the figure exists
+    and is excluded, here no figure exists at all. Collapsing the two would make
+    an undeterminable retencion indistinguishable from a recovered one.
     """
     revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
@@ -261,11 +280,16 @@ def test_the_unrecorded_invoice_under_declares_by_exactly_the_withheld_amount() 
     assert observation.withheld_derivation is LedgerWithholdingDerivation.NO_SUBSTRATE
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
     assert resolved[_INGRESOS_BINDING] == _CASH
     assert _BASE - resolved[_INGRESOS_BINDING] == _RETENCION
     assert resolved[_RETENCIONES_BINDING] == Decimal("0")
     assert resolved[_TAXABLE_BASE_BINDING] == Decimal("0")
+    assert partition.unresolved_observations == (observation,)
+    assert partition.inferred_total == Decimal("0"), (
+        "nothing was reconstructed here, so there is no excluded amount to report"
+    )
 
 
 def test_the_under_declaration_is_surfaced_rather_than_silently_folded() -> None:

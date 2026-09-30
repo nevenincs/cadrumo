@@ -83,9 +83,7 @@ class TestFiledObservationRelations:
             # resolver's wiring contract only, and no bundled oracle reconciles
             # these relation ids against an AEAT-computed figure today.
             quarterly_aggregations = {
-                "renta-modelo-111-retenciones-periodicas": Decimal("40"),  # max single quarter
-                "renta-modelo-123-retenciones-periodicas": Decimal("24"),
-                "renta-modelo-130-pagos-fraccionados": Decimal("56"),
+                "renta-modelo-130-pagos-fraccionados": Decimal("56"),  # max single quarter
                 "renta-modelo-131-pagos-fraccionados": Decimal("88"),
             }
             for relation_id, max_single in quarterly_aggregations.items():
@@ -95,15 +93,10 @@ class TestFiledObservationRelations:
                     f"{max_single} — at least one period did not contribute"
                 )
 
-            # Monthly relation: same INCLUSION property — value must exceed max month (12).
-            assert resolved["renta-modelo-111-retenciones-periodicas"] > Decimal("12")
-
             # Annual receivers are op=copy passthroughs — assert the
             # fixture's literal threads through to the resolved relation
             # value unchanged.
             annual_copies = {
-                "renta-modelo-190-retenciones-anuales": Decimal("178"),
-                "renta-modelo-193-retenciones-anuales": Decimal("60"),
                 "renta-modelo-184-atribucion-actividades-economicas": Decimal("77"),
             }
             for relation_id, fixture_value in annual_copies.items():

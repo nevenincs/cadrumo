@@ -542,9 +542,6 @@ def _verb_baseline_projection_bindings(
         binding("renta-profile-marriage-month-start"): Decimal("0"),
         binding("renta-profile-marriage-month-end"): Decimal("0"),
         binding("renta-base-liquidable-negativa-general-anterior"): Decimal("0"),
-        binding("renta-modelo-111-retenciones-periodicas"): Decimal("0"),
-        binding("renta-modelo-123-retenciones-periodicas"): Decimal("0"),
-        binding("renta-modelo-193-retenciones-anuales"): Decimal("0"),
     }
     verb_baseline_enum_bindings: dict[BindingId, str] = {
         binding("renta-profile-tax-residence-ccaa"): ccaa,

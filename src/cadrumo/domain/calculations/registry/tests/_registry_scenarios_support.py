@@ -165,9 +165,9 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0592": Decimal("1.00"),
                 "0593": Decimal("2.00"),
                 "0594": Decimal("3.00"),
-                # 0596/0597 are bound casillas (the M111/M123
-                # retención cross-period folds), so they are supplied through the
-                # binding channel below, not as raw casilla inputs.
+                # 0596 is a bound casilla whose salary-certificate source is
+                # supplied through the binding channel below; 0597 is keyed here.
+                "0597": Decimal("5.00"),
                 "0153": Decimal("6.00"),
                 "0599": Decimal("7.00"),
                 "0600": Decimal("8.00"),
@@ -189,10 +189,9 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-            # 0596/0597 retención credits fold from M111/M123;
-            # supply their values via the bound source, not raw casilla inputs.
-            "renta-modelo-111-retenciones-periodicas": Decimal("4.00"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("5.00"),
+            # 0596 takes the salary certificate the payee holds, through the
+            # bound source rather than a raw casilla input.
+            "renta-certificado-trabajo-retenciones": Decimal("4.00"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero.
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -605,8 +604,9 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0592": Decimal("10.00"),
                 "0593": Decimal("20.00"),
                 "0594": Decimal("30.00"),
-                # 0596/0597 are bound casillas (M111/M123 folds);
-                # supplied via the binding channel below, not as raw casilla inputs.
+                # 0596 is a bound casilla supplied through the binding channel
+                # below; 0597 is keyed here.
+                "0597": Decimal("50.00"),
                 "0153": Decimal("60.00"),
                 "0599": Decimal("70.00"),
                 "0600": Decimal("80.00"),
@@ -645,9 +645,8 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
-            # 0596/0597 retención credits fold from M111/M123.
-            "renta-modelo-111-retenciones-periodicas": Decimal("40.00"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("50.00"),
+            # 0596 takes the salary certificate the payee holds.
+            "renta-certificado-trabajo-retenciones": Decimal("40.00"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={

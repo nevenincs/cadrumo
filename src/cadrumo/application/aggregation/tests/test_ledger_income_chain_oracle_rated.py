@@ -66,6 +66,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
+    ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
@@ -233,32 +234,45 @@ def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None
 
 
 def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_figure() -> None:
-    """The withheld binding resolves to the statutory 15 % of the base.
+    """The inferred retención equals the statutory 15 % of the base.
 
     The engine reached 150 by subtracting cash from gross; the expectation
-    reached it from RIRPF art. 95.1. Asserting the resolved binding equals the
+    reached it from RIRPF art. 95.1. Asserting the projected figure equals the
     statutory product is the independent check -- an engine that inferred from
     the IVA-inclusive total, or that inverted a rate off the cash, would land
     somewhere else.
+
+    The figure is read off the observation rather than off the resolved binding
+    because no invoice DECLARES it here: it is reconstructed, and the credit the
+    binding carries takes declared figures only. What this module owns is that
+    the reconstruction is rated correctly; that it is then excluded from the
+    credit is asserted below.
     """
     revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
-    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    inferred = aggregation.observations[0].withheld_amount
     statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate).quantize(
         Decimal("0.01")
     )
 
     rate = load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
 
-    assert resolved[_RETENCIONES_BINDING] == statutory
-    assert resolved[_RETENCIONES_BINDING] == _RETENCION
-    assert resolved[_RETENCIONES_BINDING] != (_TOTAL * rate).quantize(Decimal("0.01")), (
+    assert inferred == statutory
+    assert inferred == _RETENCION
+    assert inferred != (_TOTAL * rate).quantize(Decimal("0.01")), (
         "withholding on the IVA-inclusive total would over-state the credit"
     )
-    assert resolved[_RETENCIONES_BINDING] != (_CASH / (Decimal("1") - rate) - _CASH).quantize(Decimal("0.01")), (
+    assert inferred != (_CASH / (Decimal("1") - rate) - _CASH).quantize(Decimal("0.01")), (
         "the base is never reconstructed from the cash by assuming a rate"
     )
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    assert resolved[_RETENCIONES_BINDING] == Decimal("0"), (
+        "a correctly rated inference is still an inference, and the credit takes only the retención an invoice declares"
+    )
+    partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
+    assert partition.inferred_total == statutory
 
 
 def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
@@ -296,11 +310,16 @@ def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() 
     assert observation.withheld_derivation is LedgerWithholdingDerivation.NO_SUBSTRATE
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
 
     assert resolved[_INGRESOS_BINDING] == _CASH
     assert resolved[_INGRESOS_BINDING] - _BASE == Decimal("60.00")
     assert resolved[_RETENCIONES_BINDING] == Decimal("0")
     assert resolved[_TAXABLE_BASE_BINDING] == Decimal("0")
+    assert partition.unresolved_observations == (observation,)
+    assert partition.inferred_total == Decimal("0"), (
+        "nothing was reconstructed here, so there is no excluded amount to report"
+    )
 
 
 def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> None:
@@ -381,13 +400,16 @@ def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bo
 
 
 def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutory_figure() -> None:
-    """The filed casilla carries the 7 % figure, resolved through the registry.
+    """The inferred retención carries the 7 % figure, and the income is unchanged.
 
     Asserted against the statutory product rather than against the engine's
     derivation, so the two routes to 70 stay independent: one from RIRPF art.
     95.1 second paragraph, one from gross minus cash. Casilla 01 is asserted
     unchanged, because the rate the payer applied does not alter the ingresos
     integros the article names as the base.
+
+    As above, the retención is read off the observation: no invoice declares it,
+    so the credit excludes it and reports the excluded amount instead.
     """
     revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True, cash=_inicio_cash())
@@ -397,5 +419,7 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
         Decimal("0.01")
     )
 
-    assert resolved[_RETENCIONES_BINDING] == statutory
+    assert aggregation.observations[0].withheld_amount == statutory
+    assert resolved[_RETENCIONES_BINDING] == Decimal("0")
+    assert ledger_renta_withholding_derivation_partition(revision, aggregation.observations).inferred_total == statutory
     assert resolved[_INGRESOS_BINDING] == _BASE

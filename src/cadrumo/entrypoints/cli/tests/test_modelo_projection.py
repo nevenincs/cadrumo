@@ -548,9 +548,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         # the comparison exercises an identical engine input set.
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-descendientes-guarderia": Decimal("0"),
             "renta-profile-guarderia-gastos-reales": Decimal("0"),

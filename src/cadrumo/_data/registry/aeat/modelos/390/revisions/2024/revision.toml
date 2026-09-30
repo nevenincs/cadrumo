@@ -290,7 +290,7 @@ from_revision = "2023"
 to_revision = "2024"
 origin = "grounded"
 evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:211 (sha256 179c02eddc8b) box [665] (82 1305 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:258 (sha256 8be79bacc860) box [665] (12 115 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
 
 [[revisions."2024".lineage_attestations]]
@@ -300,7 +300,7 @@ from_revision = "2023"
 to_revision = "2024"
 origin = "grounded"
 evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:207 (sha256 179c02eddc8b) box [663] (78 1237 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:252 (sha256 8be79bacc860) box [663] (6 13 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
 
 [[revisions."2024".lineage_attestations]]
@@ -310,23 +310,8 @@ from_revision = "2023"
 to_revision = "2024"
 origin = "grounded"
 evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:208 (sha256 179c02eddc8b) box [664] (79 1254 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:253 (sha256 8be79bacc860) box [664] (7 30 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "iva.anual.repercutido.recargo.tipo-0-62.base" }
-fields = { legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], section = ["operaciones_regimen_general", "recargo_equivalencia"] }
-removed_fields = []
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "iva.anual.repercutido.recargo.tipo-0.base" }
-fields = { legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], section = ["operaciones_regimen_general", "recargo_equivalencia"] }
-removed_fields = []
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "iva.anual.repercutido.recargo.tipo-0.cuota" }
-fields = { legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], section = ["operaciones_regimen_general", "recargo_equivalencia"] }
-removed_fields = []
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "iva.anual.repercutido.recargo.tipo-0-62.cuota" }
