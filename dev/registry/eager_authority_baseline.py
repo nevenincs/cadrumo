@@ -171,16 +171,21 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
     identity_digest = _string(payload, "identity_digest")
     build_document = _mapping(payload, "build_identity")
     evidence_document = _mapping(payload, "evidence")
-    facts = GovernedFactCatalogue.model_validate(_mapping(catalogues_document, "facts"), context=_TAGGED_CONTEXT)
-    support = SupportedFilingYearsCatalogue.model_validate(
-        _mapping(catalogues_document, "supported_filing_years"), context=_TAGGED_CONTEXT
+    facts = GovernedFactCatalogue.model_validate_json(
+        canonical_json_bytes(_mapping(catalogues_document, "facts")), context=_TAGGED_CONTEXT
+    )
+    support = SupportedFilingYearsCatalogue.model_validate_json(
+        canonical_json_bytes(_mapping(catalogues_document, "supported_filing_years")), context=_TAGGED_CONTEXT
     )
     decode_context = {**_TAGGED_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format_from_catalogue(facts)}
     with validating_governed_facts(CandidateFactAuthority(facts, support, authority_digest=identity_digest)):
         modelos = tuple(
-            ModeloDefinition.model_validate(_mapping_item(item), context=decode_context) for item in modelos_document
+            ModeloDefinition.model_validate_json(canonical_json_bytes(_mapping_item(item)), context=decode_context)
+            for item in modelos_document
         )
-        catalogues = RegistryCatalogues.model_validate({**catalogues_document, "facts": facts}, context=decode_context)
+        catalogues = RegistryCatalogues.model_validate_json(
+            canonical_json_bytes(catalogues_document), context=decode_context
+        )
     legal = tuple(
         PublishedLegalEvidence(
             legal_reference_id=_string(row := _mapping_item(item), "legal_reference_id"),
@@ -211,7 +216,7 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         ),
         compiler_closure=_compiler_closure(_mapping(payload, "compiler_closure")),
         evidence=AuthorityEvidenceProjection(legal=legal, sources=sources),
-        profile_schema=ProfileSchemaDefinition.model_validate(payload["profile_schema"]),
+        profile_schema=ProfileSchemaDefinition.model_validate_json(canonical_json_bytes(payload["profile_schema"])),
     )
     artifact.catalogues.runtime.require_complete()
     require_evidence_closure(artifact)
