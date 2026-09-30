@@ -2161,15 +2161,9 @@ tui:
       in_spanish: (in Spanish)
       issues:
         action:
-          advisory: Read it and decide whether it applies to you. It does not stop
-            you from filing.
           confirm: Open each box and confirm its value, or type the right one.
-          cross_period_dependency_unclean: Settle the declaration of the earlier period
-            first, then calculate again.
-          generic: Correct what it describes, then calculate and check again.
-          missing_required_casilla: Enter the value in the box, then calculate again.
-          reconciliation_mismatch: Compare the figures, correct the one that is wrong,
-            then calculate again.
+          confirm_by_section: Open each section and confirm its values, or type the
+            right ones.
         assumed: Nobody has entered the values in these boxes.
         box_not_on_form: Box {box} is not shown on this declaration's pages.
         detail:
@@ -2187,13 +2181,14 @@ tui:
         key:
           less: Show less
           more: Show more
+        open_section: Open section
         technical: Technical details
         title: Issues to look at
         verdict:
-          blocked: 'The check found something that blocks filing. Issues: {count}.'
-          complete: 'The check passed. Issues to look at: {count}.'
+          blocked: The check found something that blocks filing.
+          complete: The check passed.
           incomplete: 'The check is not complete: some values the declaration needs
-            are missing. Issues: {count}.'
+            are missing.'
           none: The declaration has not been checked yet.
         what_to_do: 'What to do: {action}'
         where:

@@ -2219,14 +2219,9 @@ tui:
       in_spanish: (en español)
       issues:
         action:
-          advisory: Léelo y decide si te afecta. No te impide presentar.
           confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
-          cross_period_dependency_unclean: Resuelve primero la declaración del periodo
-            anterior y vuelve a calcular.
-          generic: Corrige lo que indica y vuelve a calcular y comprobar.
-          missing_required_casilla: Escribe el valor en la casilla y vuelve a calcular.
-          reconciliation_mismatch: Compara las cifras, corrige la que esté mal y vuelve
-            a calcular.
+          confirm_by_section: Abre cada sección y confirma sus valores, o escribe
+            los correctos.
         assumed: Nadie ha escrito los valores de estas casillas.
         box_not_on_form: La casilla {box} no aparece en las páginas de esta declaración.
         detail:
@@ -2245,14 +2240,14 @@ tui:
         key:
           less: Ver menos
           more: Ver más
+        open_section: Abrir la sección
         technical: Detalles técnicos
         title: Incidencias para revisar
         verdict:
-          blocked: 'La comprobación encontró algo que impide presentar. Incidencias:
-            {count}.'
-          complete: 'La comprobación es correcta. Incidencias para revisar: {count}.'
+          blocked: La comprobación encontró algo que impide presentar.
+          complete: La comprobación es correcta.
           incomplete: 'La comprobación no está completa: faltan datos que la declaración
-            necesita. Incidencias: {count}.'
+            necesita.'
           none: La declaración aún no se ha comprobado.
         what_to_do: 'Qué hacer: {action}'
         where:

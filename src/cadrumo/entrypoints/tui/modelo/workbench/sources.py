@@ -11,13 +11,18 @@ names for it, so a value the calculation took from imported AEAT data reads as
 AEAT data whatever its binding would otherwise fetch; the view reads both from
 the form and decides nothing else.
 
-A group fed by sources names each source and whether it produced anything.
-"None found" means the last calculation read that source and it gave nothing,
-which differs from a source not read yet because nothing has been calculated,
-and from a zero the source did give, which the box shows as its value.
+A group fed by sources names each source and whether it produced anything; a
+value carried from an earlier declaration names that declaration when the form
+does. "None found" means the last calculation read that source and it gave
+nothing, which differs from a source not read yet because nothing has been
+calculated, and from a zero the source did give, which the box shows as its
+value. A closed group that asks something of the filer lists its box numbers
+in at most two lines, then says how many more there are. A declaration
+recorded as filed asks nothing more, so it has no group of assumed values.
 
 The groups are a list; Enter opens one and shows its boxes below with the
-workbench's own row vocabulary, staged changes included. Enter on a box returns
+workbench's own row vocabulary, staged changes included, and the open group
+drops its summary, which the list below already shows. Enter on a box returns
 to it in the workbench, which opens its editor where the box can be changed.
 ``o`` asks the workbench to open the product area that owns the source of the
 box under the cursor, such as your records.
@@ -25,13 +30,16 @@ box under the cursor, such as your records.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 from typing import ClassVar, Final, override
 
-from rich.console import Group, RenderableType
+from rich.cells import cell_len
+from rich.console import Console, ConsoleOptions, Group, RenderableType, RenderResult
+from rich.measure import Measurement
+from rich.padding import Padding
 from rich.text import Text
 from textual import events
 from textual.app import ComposeResult
@@ -43,6 +51,7 @@ from textual.widgets.option_list import Option
 
 from .....application.modelo.source_policy import SourceFamily, SourcePolicyV1, SourceSurface
 from .....application.modelo.work_form_models import (
+    ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
@@ -64,6 +73,17 @@ from .casilla_list import (
 from .dialog_width import fit_dialog_width
 from .keys import describe_bindings
 from .page_items import StagedDisplay
+from .vocabulary import (
+    COLLAPSED_MARK,
+    CONFIRM_MARK,
+    EARLIER_FILING_MARK,
+    EXPANDED_MARK,
+    INFO_MARK,
+    MISSING_MARK,
+    ORIGIN_MARKS,
+    WorkbenchMark,
+)
+from .wording import modelo_number, period_words
 
 
 class SourceGroupKind(StrEnum):
@@ -93,25 +113,27 @@ class SourceState(StrEnum):
     NOT_YET = "not_yet"
 
 
-SOURCE_GROUP_GLYPHS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
+_IMPORTED_MARK: Final[WorkbenchMark] = ORIGIN_MARKS[ModeloFormOrigin.IMPORTED]
+
+SOURCE_GROUP_MARKS: Final[Mapping[SourceGroupKind, WorkbenchMark]] = MappingProxyType(
     {
-        SourceGroupKind.RECORDS: "↓",
-        SourceGroupKind.REGISTERS: "↓",
-        SourceGroupKind.PROFILE: "↓",
-        SourceGroupKind.EARLIER_DECLARATIONS: "«",
-        SourceGroupKind.AEAT_DATA: "↓",
-        SourceGroupKind.YOURS: "●",
-        SourceGroupKind.REPLACED: "≠",
-        SourceGroupKind.ASSUMED: "◐",
-        SourceGroupKind.NEEDS_YOU: "!",
-        SourceGroupKind.CALCULATED: "=",
-        SourceGroupKind.SET_BY_FORM: "◇",
-        SourceGroupKind.INFORMATION: "i",
-        SourceGroupKind.BLANK: "─",
-        SourceGroupKind.UNNAMED: "↓",
+        SourceGroupKind.RECORDS: _IMPORTED_MARK,
+        SourceGroupKind.REGISTERS: _IMPORTED_MARK,
+        SourceGroupKind.PROFILE: _IMPORTED_MARK,
+        SourceGroupKind.EARLIER_DECLARATIONS: EARLIER_FILING_MARK,
+        SourceGroupKind.AEAT_DATA: _IMPORTED_MARK,
+        SourceGroupKind.YOURS: ORIGIN_MARKS[ModeloFormOrigin.ENTERED],
+        SourceGroupKind.REPLACED: ORIGIN_MARKS[ModeloFormOrigin.OVERRIDES_SOURCE],
+        SourceGroupKind.ASSUMED: CONFIRM_MARK,
+        SourceGroupKind.NEEDS_YOU: MISSING_MARK,
+        SourceGroupKind.CALCULATED: ORIGIN_MARKS[ModeloFormOrigin.CALCULATED],
+        SourceGroupKind.SET_BY_FORM: ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL],
+        SourceGroupKind.INFORMATION: INFO_MARK,
+        SourceGroupKind.BLANK: ORIGIN_MARKS[ModeloFormOrigin.NOT_APPLICABLE],
+        SourceGroupKind.UNNAMED: _IMPORTED_MARK,
     }
 )
-"""The mark in front of each group, every one present in the pinned font."""
+"""The mark in front of each group, taken from the workbench's one vocabulary of marks."""
 
 _GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
     {
@@ -168,7 +190,12 @@ _ORIGIN_GROUPS: Final[Mapping[ModeloFormOrigin, SourceGroupKind]] = MappingProxy
 _SOURCED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET, ModeloFormOrigin.INFORMATIONAL}
 )
-_LISTED_BOXES: Final[int] = 10
+#: Groups that ask something of the filer, so a closed group lists their box numbers.
+_BOX_LISTING_GROUPS: Final[frozenset[SourceGroupKind]] = frozenset(
+    {SourceGroupKind.REPLACED, SourceGroupKind.ASSUMED, SourceGroupKind.NEEDS_YOU}
+)
+#: A list of box numbers wraps to at most this many lines, then says how many more there are.
+BOX_LIST_LINES: Final[int] = 2
 _SURFACE_DESTINATIONS: Final[Mapping[SourceSurface, tuple[TuiDestinationIdV1, str]]] = {
     SourceSurface.LEDGER: ("workbench.ledger", "ledger.overview"),
     SourceSurface.WITHHOLDING: ("workbench.withholding", "withholding.overview"),
@@ -192,6 +219,8 @@ class SourceReading:
     policy: SourcePolicyV1
     state: SourceState
     fields: tuple[ModeloFormField, ...]
+    #: The earlier declarations its boxes are carried from, when the form names them.
+    earlier_filings: tuple[ModeloFormEarlierFiling, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,10 +261,17 @@ def value_family(field: ModeloFormField) -> SourceFamily | None:
     return field.bindings[0].policy.family if field.bindings else None
 
 
-def source_group_kind(field: ModeloFormField) -> SourceGroupKind:
-    """Place one box in the one group its origin and, for a sourced value, its source family name."""
+def source_group_kind(field: ModeloFormField, *, recorded: bool = False) -> SourceGroupKind:
+    """Place one box in the one group its origin and, for a sourced value, its source family name.
+
+    A declaration recorded as filed asks nothing more of the filer, so a value
+    nobody entered is shown as the calculated value it was filed with, never as
+    one waiting for confirmation.
+    """
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT:
         return SourceGroupKind.SET_BY_FORM
+    if recorded and field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM:
+        return SourceGroupKind.CALCULATED
     by_origin = _ORIGIN_GROUPS.get(field.origin)
     if by_origin is not None:
         return by_origin
@@ -273,15 +309,35 @@ def _readings(fields: tuple[ModeloFormField, ...], *, calculated: bool) -> tuple
             state = SourceState.PRODUCED
         else:
             state = SourceState.NONE_FOUND if calculated else SourceState.NOT_YET
-        readings.append(SourceReading(policy=policy, state=state, fields=tuple(led[kind])))
+        readings.append(
+            SourceReading(
+                policy=policy, state=state, fields=tuple(led[kind]), earlier_filings=earlier_filings(led[kind])
+            )
+        )
     return tuple(readings)
+
+
+def earlier_filings(fields: Iterable[ModeloFormField]) -> tuple[ModeloFormEarlierFiling, ...]:
+    """The earlier declarations the form names as the origin of these boxes, each once, in form order."""
+    named: dict[ModeloFormEarlierFiling, None] = {}
+    for field in fields:
+        source = field.source
+        if source is not None and source.family is SourceFamily.EARLIER_FILINGS:
+            named.update(dict.fromkeys(source.earlier_filings))
+    return tuple(named)
+
+
+def earlier_filing_text(filings: Sequence[ModeloFormEarlierFiling]) -> str:
+    """Name earlier declarations by their modelo and period in words."""
+    return ", ".join(f"{modelo_number(filing.modelo)} · {period_words(filing.period)}" for filing in filings)
 
 
 def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
     """Every box of the form in exactly one group, groups in the filer's order, boxes in form order."""
+    recorded = form.filing is not None
     placed: dict[SourceGroupKind, list[ModeloFormField]] = {}
     for field in form.fields():
-        placed.setdefault(source_group_kind(field), []).append(field)
+        placed.setdefault(source_group_kind(field, recorded=recorded), []).append(field)
     calculated = form.calculation_revision_id is not None
     groups = []
     for kind in SourceGroupKind:
@@ -297,42 +353,106 @@ def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
 
 
 def reading_text(reading: SourceReading) -> str:
-    """Name one source, saying when it found nothing or has not been read yet."""
-    label = tr(reading.policy.label_key)
+    """Name one source, by the earlier declaration when the form names it, saying when it found nothing yet."""
+    label = earlier_filing_text(reading.earlier_filings) if reading.earlier_filings else tr(reading.policy.label_key)
     state_key = _STATE_LOCALE_KEYS.get(reading.state)
     return label if state_key is None else tr(state_key, source=label)
 
 
-def _box_list(fields: tuple[ModeloFormField, ...]) -> str:
-    numbers = [f"[{field.box}]" for field in fields if field.box]
-    shown = " ".join(numbers[:_LISTED_BOXES])
-    rest = len(numbers) - _LISTED_BOXES
-    if rest <= 0:
-        return shown
-    more = tr("tui.modelo.workbench.sources.and_more", count=rest)
-    return f"{shown} {more}"
+class BoxNumbers:
+    """Box numbers in brackets, wrapped to at most a few lines at the width they are drawn at.
+
+    Numbers that do not fit give way, from the end, to a count of how many more
+    there are, so a long list never grows into a wall of numbers and never
+    loses how many boxes it stands for.
+    """
+
+    def __init__(self, boxes: Sequence[str], *, lines: int = BOX_LIST_LINES, style: str = "") -> None:
+        """Hold the box numbers, without brackets, and the most lines they may take."""
+        self._tokens = tuple(f"[{box}]" for box in boxes)
+        self._lines = lines
+        self._style = style
+
+    def text(self, console: Console, width: int) -> str:
+        """The numbers that fit in the lines at ``width``, followed by how many more there are."""
+        width = max(width, 1)
+        full = " ".join(self._tokens)
+        fitted = self._fitting(width)
+        if fitted == len(self._tokens):
+            return full
+        for shown in range(fitted, -1, -1):
+            candidate = self._with_rest(shown)
+            if len(Text(candidate).wrap(console, width)) <= self._lines:
+                return candidate
+        return self._with_rest(0)
+
+    def _fitting(self, width: int) -> int:
+        """How many numbers fit in the lines, wrapped between numbers, with nothing after them."""
+        line, used = 1, 0
+        for fitted, token in enumerate(self._tokens):
+            size = cell_len(token)
+            if used and used + 1 + size <= width:
+                used += 1 + size
+            elif not used and size <= width:
+                used = size
+            elif line < self._lines and size <= width:
+                line, used = line + 1, size
+            else:
+                return fitted
+        return len(self._tokens)
+
+    def _with_rest(self, shown: int) -> str:
+        more = tr("tui.modelo.workbench.sources.and_more", count=len(self._tokens) - shown)
+        return " ".join((*self._tokens[:shown], more))
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
+        """Draw the numbers that fit at the width offered."""
+        yield Text(self.text(console, options.max_width), style=self._style)
+
+    def __rich_measure__(self, console: Console, options: ConsoleOptions) -> Measurement:
+        """Ask for the whole list on one line, and at least the longest number."""
+        widest = max((cell_len(token) for token in self._tokens), default=0)
+        return Measurement(widest, max(widest, cell_len(" ".join(self._tokens)))).clamp(max_width=options.max_width)
+
+
+def group_boxes(group: SourceGroup) -> tuple[str, ...]:
+    """The box numbers a closed group lists, for the groups that ask something of the filer."""
+    if group.kind not in _BOX_LISTING_GROUPS:
+        return ()
+    return tuple(field.box for field in group.fields if field.box)
 
 
 def group_summary(group: SourceGroup) -> str:
-    """The second line of a group: its sources, or the boxes that ask something of the filer."""
+    """The sources of a group in words, or the earlier declarations its boxes are carried from."""
     if group.readings:
         return " · ".join(reading_text(reading) for reading in group.readings)
-    if group.kind in {SourceGroupKind.REPLACED, SourceGroupKind.ASSUMED, SourceGroupKind.NEEDS_YOU}:
-        return _box_list(group.fields)
+    if group.kind is SourceGroupKind.EARLIER_DECLARATIONS:
+        return earlier_filing_text(earlier_filings(group.fields))
     return ""
 
 
 def group_words(kind: SourceGroupKind) -> str:
     """A group's mark and name."""
-    return f"{SOURCE_GROUP_GLYPHS[kind]} {tr(_GROUP_LOCALE_KEYS[kind])}"
+    return f"{SOURCE_GROUP_MARKS[kind].glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
 
 
 def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:
-    """One line of the map: open or closed, the group, its box count and its summary."""
+    """One entry of the map: open or closed, the group and its box count, and, while closed, its summary.
+
+    An open group lists its sources and boxes below, so its summary would only
+    repeat them.
+    """
+    toggle = EXPANDED_MARK if expanded else COLLAPSED_MARK
     count = tr("tui.modelo.workbench.sources.count", count=len(group.fields))
-    head = Text(f"{'▾' if expanded else '▸'} {group_words(group.kind)} · {count}", style="bold")
+    head = Text(f"{toggle.glyph} {group_words(group.kind)} · {count}", style="bold")
+    if expanded:
+        return head
     summary = group_summary(group)
-    return head if not summary else Group(head, Text(f"  {summary}", style="dim"))
+    boxes = group_boxes(group)
+    detail: RenderableType | None = (
+        Text(summary, style="dim") if summary else BoxNumbers(boxes, style="dim") if boxes else None
+    )
+    return head if detail is None else Group(head, Padding(detail, (0, 0, 0, _ENTRY_INDENT)))
 
 
 def group_items(group: SourceGroup, *, staged: Mapping[AddressKey, StagedDisplay]) -> tuple[CasillaListItem, ...]:
@@ -402,6 +522,10 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         WorkbenchSourcesScreen.-narrow #sources-panel {
             width: 100%;
         }
+        WorkbenchSourcesScreen #sources-status {
+            color: $foreground;
+            margin-bottom: $cadrumo-stack;
+        }
         WorkbenchSourcesScreen #sources-title {
             text-style: bold;
             color: $primary;
@@ -435,9 +559,16 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         language: OutputLanguage,
         staged: Mapping[AddressKey, StagedDisplay],
         focus: AddressKey | None = None,
+        status_line: str | None = None,
     ) -> None:
-        """Hold the form to map, the filer's staged changes and the box to start on."""
+        """Hold the form to map, the filer's staged changes and the box to start on.
+
+        ``status_line`` is shown above everything else when given, so the
+        declaration's result and deadline stay in view while the map covers the
+        workbench's header.
+        """
         super().__init__()
+        self._status_line = status_line
         self._groups = source_groups(form)
         self._boxes = sum(len(group.fields) for group in self._groups)
         self._staged = staged
@@ -450,6 +581,8 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
     @override
     def compose(self) -> ComposeResult:
         with Container(id="sources-backdrop"), Vertical(id="sources-panel"):
+            if self._status_line is not None:
+                yield Static(self._status_line, id="sources-status", markup=False)
             title = tr("tui.modelo.workbench.sources.title")
             count = tr("tui.modelo.workbench.sources.count", count=self._boxes)
             yield Static(f"{title} · {count}", id="sources-title", markup=False)
@@ -537,7 +670,7 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
 
 def _require_total_tables() -> None:
     """Refuse a group without a mark or name, or a source family without a group."""
-    if set(SOURCE_GROUP_GLYPHS) != set(SourceGroupKind) or set(_GROUP_LOCALE_KEYS) != set(SourceGroupKind):
+    if set(SOURCE_GROUP_MARKS) != set(SourceGroupKind) or set(_GROUP_LOCALE_KEYS) != set(SourceGroupKind):
         raise ValueError("every source group needs one mark and one name")
     if set(_FAMILY_GROUPS) != set(SourceFamily):
         raise ValueError("every source family needs a group")
@@ -549,7 +682,9 @@ _require_total_tables()
 
 
 __all__ = [
-    "SOURCE_GROUP_GLYPHS",
+    "BOX_LIST_LINES",
+    "SOURCE_GROUP_MARKS",
+    "BoxNumbers",
     "GoToCasilla",
     "OpenSourceSurface",
     "SourceGroup",
@@ -558,6 +693,9 @@ __all__ = [
     "SourceState",
     "SourcesChoice",
     "WorkbenchSourcesScreen",
+    "earlier_filing_text",
+    "earlier_filings",
+    "group_boxes",
     "group_items",
     "group_prompt",
     "group_summary",

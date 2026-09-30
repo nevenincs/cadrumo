@@ -2210,14 +2210,9 @@ tui:
       in_spanish: (en castellà)
       issues:
         action:
-          advisory: Llegeix-ho i decideix si t'afecta. No t'impedeix presentar.
           confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
-          cross_period_dependency_unclean: Resol primer la declaració del període
-            anterior i torna a calcular.
-          generic: Corregeix el que indica i torna a calcular i comprovar.
-          missing_required_casilla: Escriu el valor a la casella i torna a calcular.
-          reconciliation_mismatch: Compara les xifres, corregeix la que estigui malament
-            i torna a calcular.
+          confirm_by_section: Obre cada secció i confirma'n els valors, o escriu els
+            correctes.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
         detail:
@@ -2237,14 +2232,14 @@ tui:
         key:
           less: Mostra'n menys
           more: Mostra'n més
+        open_section: Obrir la secció
         technical: Detalls tècnics
         title: Incidències per revisar
         verdict:
-          blocked: 'La comprovació ha trobat alguna cosa que impedeix presentar. Incidències:
-            {count}.'
-          complete: 'La comprovació és correcta. Incidències per revisar: {count}.'
+          blocked: La comprovació ha trobat alguna cosa que impedeix presentar.
+          complete: La comprovació és correcta.
           incomplete: 'La comprovació no és completa: falten dades que la declaració
-            necessita. Incidències: {count}.'
+            necessita.'
           none: La declaració encara no s'ha comprovat.
         what_to_do: 'Què cal fer: {action}'
         where:

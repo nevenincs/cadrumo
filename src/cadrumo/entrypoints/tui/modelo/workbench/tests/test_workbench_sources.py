@@ -12,15 +12,18 @@ bundled registry.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from decimal import Decimal
 
 import pytest
+from rich.console import Console
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.source_policy import SourceFamily, SourceSurface
+from ......application.modelo.source_policy import SourceFamily, SourceSurface, source_policy
 from ......application.modelo.work_form_models import (
+    ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormOrigin,
     ModeloFormValueSource,
@@ -29,6 +32,9 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
+from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import tr
+from ......core.period import Period
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
@@ -36,29 +42,37 @@ from ..casilla_list import CasillaList, CasillaListEntry
 from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from ..sources import (
+    SourceGroup,
     SourceGroupKind,
     SourceState,
     WorkbenchSourcesScreen,
+    group_boxes,
     group_items,
+    group_prompt,
     group_summary,
     source_groups,
     surface_target,
 )
+from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, fed_by, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
 
 
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
+async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
     for _ in range(times):
         await pilot.pause()
 
 
 def _lines(widget: CasillaList) -> list[str]:
     return [widget.render_line(y).text.rstrip() for y in range(widget.size.height)]
+
+
+def _group_lines(groups: OptionList) -> list[str]:
+    return [groups.render_line(y).text.strip() for y in range(groups.size.height)]
 
 
 def _unread_expenses(form: ModeloWorkForm) -> ModeloWorkForm:
@@ -154,8 +168,8 @@ def test_assumed_replaced_fixed_and_blank_boxes_each_have_their_own_group() -> N
     assert [field.box for field in groups[SourceGroupKind.REPLACED].fields] == ["02"]
     assert [field.box for field in groups[SourceGroupKind.SET_BY_FORM].fields] == ["09"]
     assert [field.box for field in groups[SourceGroupKind.BLANK].fields] == ["99"]
-    assert assumed == "[07]"
-    assert replaced == "[02]"
+    assert (assumed, group_boxes(groups[SourceGroupKind.ASSUMED])) == ("", ("07",))
+    assert (replaced, group_boxes(groups[SourceGroupKind.REPLACED])) == ("", ("02",))
 
 
 def test_a_group_lists_its_boxes_under_each_of_its_sources() -> None:
@@ -164,14 +178,90 @@ def test_a_group_lists_its_boxes_under_each_of_its_sources() -> None:
         texts = [
             item.field.box if isinstance(item, CasillaListEntry) else getattr(item, "text", None) for item in items
         ]
+        income = tr(source_policy(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION).label_key)
+        expenses = tr(source_policy(BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION).label_key)
 
-    assert texts == [
-        "↓ Tus registros",
-        "Totales de ingresos",
-        "01",
-        "Totales de gastos en estimación directa",
-        "02",
-    ]
+    assert texts == ["↓ Tus registros", income, "01", expenses, "02"]
+
+
+def _prompt_lines(group: SourceGroup, *, expanded: bool, width: int = 60) -> list[str]:
+    console = Console(width=width)
+    with console.capture() as captured:
+        console.print(group_prompt(group, expanded=expanded))
+    return [line.rstrip() for line in captured.get().splitlines()]
+
+
+def test_a_group_opens_with_the_open_mark_and_drops_the_summary_its_list_repeats() -> None:
+    form = replace_fields(
+        synthetic_form(),
+        {
+            "07": {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "value": Decimal("0")},
+            "99": {"origin": ModeloFormOrigin.NOT_APPLICABLE, "value": None},
+        },
+    )
+    groups = {group.kind: group for group in source_groups(form)}
+    with override_settings(cadrumo_output_language="en"):
+        closed = _prompt_lines(groups[SourceGroupKind.ASSUMED], expanded=False)
+        opened = _prompt_lines(groups[SourceGroupKind.ASSUMED], expanded=True)
+        records_closed = _prompt_lines(groups[SourceGroupKind.RECORDS], expanded=False)
+        records_opened = _prompt_lines(groups[SourceGroupKind.RECORDS], expanded=True)
+        blank = _prompt_lines(groups[SourceGroupKind.BLANK], expanded=False)
+
+    assert closed == ["▹ ◐ Assumed, please confirm · Boxes: 1", "  [07]"]
+    assert opened == ["▿ ◐ Assumed, please confirm · Boxes: 1"]
+    assert records_closed[0] == "▹ ↓ Your records · Boxes: 2"
+    assert len(records_closed) == 2
+    assert records_opened == ["▿ ↓ Your records · Boxes: 2"]
+    assert blank == ["▹ - Left blank or do not apply · Boxes: 1"]
+
+
+def test_a_closed_group_lists_its_boxes_in_two_lines_then_counts_the_rest() -> None:
+    fields = tuple(
+        form_field(str(number), "Importe", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("5.00"))
+        for number in range(1000, 1030)
+    )
+    group = SourceGroup(kind=SourceGroupKind.ASSUMED, fields=fields)
+    with override_settings(cadrumo_output_language="en"):
+        lines = _prompt_lines(group, expanded=False, width=40)
+
+    listed = lines[1:]
+    rest = re.search(r"and (\d+) more", listed[-1])
+    assert len(listed) == 2
+    assert rest is not None
+    assert len(re.findall(r"\[\d+\]", " ".join(listed))) + int(rest.group(1)) == len(fields)
+
+
+def test_a_value_carried_from_an_earlier_declaration_names_that_declaration() -> None:
+    earlier = ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2025, "4T"))
+    carried = ModeloFormValueSource(family=SourceFamily.EARLIER_FILINGS, earlier_filings=(earlier,))
+    bound = replace_fields(
+        synthetic_form(),
+        {"02": {"source": carried, "bindings": (fed_by("m130.anterior", BindingSourceKind.PREVIOUS_FILING),)}},
+    )
+    unbound = replace_fields(synthetic_form(), {"02": {"source": carried, "bindings": ()}})
+    with override_settings(cadrumo_output_language="en"):
+        group = {group.kind: group for group in source_groups(bound)}[SourceGroupKind.EARLIER_DECLARATIONS]
+        summary = group_summary(group)
+        headings = [getattr(item, "text", None) for item in group_items(group, staged={})]
+        unbound_group = {group.kind: group for group in source_groups(unbound)}[SourceGroupKind.EARLIER_DECLARATIONS]
+        unbound_summary = group_summary(unbound_group)
+        generic = tr(source_policy(BindingSourceKind.PREVIOUS_FILING).label_key)
+
+    assert summary == "Modelo 130 · 4th quarter 2025"
+    assert headings[:2] == ["« Earlier declarations", "Modelo 130 · 4th quarter 2025"]
+    assert unbound_group.readings == ()
+    assert unbound_summary == "Modelo 130 · 4th quarter 2025"
+    assert generic not in summary
+
+
+def test_a_declaration_recorded_as_filed_has_no_group_of_assumed_values() -> None:
+    assumed = replace_fields(synthetic_form(), {"07": {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM}})
+    open_groups = {group.kind: group for group in source_groups(assumed)}
+    recorded_groups = {group.kind: group for group in source_groups(recorded_as_filed(assumed))}
+
+    assert [field.box for field in open_groups[SourceGroupKind.ASSUMED].fields] == ["07"]
+    assert SourceGroupKind.ASSUMED not in recorded_groups
+    assert "07" in [field.box for field in recorded_groups[SourceGroupKind.CALCULATED].fields]
 
 
 def test_every_owning_surface_opens_a_declared_destination_and_none_opens_nothing() -> None:
@@ -200,9 +290,11 @@ async def test_the_map_opens_on_the_group_of_the_box_under_the_cursor_and_enter_
             opened_group = groups.highlighted
             opened_on = sources.query_one(CasillaList).highlighted
             first_listing = _lines(sources.query_one(CasillaList))
+            first_groups = _group_lines(groups)
             await pilot.press("shift+tab", "home", "enter")
             await _settle(pilot)
             records_listing = _lines(sources.query_one(CasillaList))
+            records_groups = _group_lines(groups)
             focused_list = sources.focused is sources.query_one(CasillaList)
             await pilot.press("enter")
             await _settle(pilot)
@@ -210,6 +302,10 @@ async def test_the_map_opens_on_the_group_of_the_box_under_the_cursor_and_enter_
             landed_on = screen.query_one(CasillaList).highlighted
 
     assert title.endswith("Casillas: 8")
+    assert [line[:1] for line in first_groups if line[:1] in "▹▿"] == ["▹", "▹", "▿", "▹"]
+    assert not any("[06]" in line for line in first_groups)
+    assert [line[:1] for line in records_groups if line[:1] in "▹▿"] == ["▿", "▹", "▹", "▹"]
+    assert any(line.strip() == "[06]" for line in records_groups)
     assert opened_group == 2
     assert opened_on is not None
     assert opened_on.field.box == "06"
@@ -312,3 +408,31 @@ async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workb
     assert isinstance(editor, CasillaEditorScreen)
     assert landed_on is not None
     assert landed_on.field.box == "06"
+
+
+@pytest.mark.asyncio
+async def test_the_declarations_status_line_leads_the_map_and_the_title_is_strong() -> None:
+    status = "To pay 1,300.00 € · file by 20 Apr 2026"
+    with override_settings(cadrumo_output_language="en"):
+        screen = WorkbenchSourcesScreen(synthetic_form(), language=OutputLanguage.EN, staged={}, status_line=status)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=_SIZE) as pilot:
+            await _settle(pilot)
+            children = list(screen.query_one("#sources-panel").children)
+            shown = str(children[0].render()) if isinstance(children[0], Static) else ""
+            title = screen.query_one("#sources-title", Static).rich_style
+            intro = screen.query_one("#sources-intro", Static).rich_style
+            app.exit(None)
+        plain = WorkbenchSourcesScreen(synthetic_form(), language=OutputLanguage.EN, staged={})
+        plain_app = ScreenHostApp(plain)
+        async with plain_app.run_test(size=_SIZE) as pilot:
+            await _settle(pilot)
+            without = [child.id for child in plain.query_one("#sources-panel").children]
+            plain_app.exit(None)
+
+    assert children[0].id == "sources-status"
+    assert shown == status
+    assert without[0] == "sources-title"
+    assert "sources-status" not in without
+    assert title.bold
+    assert title.color != intro.color

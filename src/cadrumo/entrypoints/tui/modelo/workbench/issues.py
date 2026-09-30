@@ -3,20 +3,26 @@
 The list gathers the last check's findings and the boxes whose value was
 assumed, grouped by one scale of levels, each with its glyph and words: what
 blocks filing first, then the assumed values waiting for the filer's
-confirmation, then what is worth checking. The title line counts each level
-that has anything in it.
+confirmation, then what is worth checking, then what is only for the filer's
+information. A finding takes its level from the form, which places it on that
+scale. The title line counts each level that has anything in it, so the
+check's verdict below it says what the check concluded without a count.
 
 Every finding reads in three parts, all wrapped and never cut: where it is (a
 box, or the whole declaration), what is wrong (the finding's own catalogue
-message, rendered from its key and facts), and what to do (a sentence for the
-finding's kind, or a general one where nothing more specific is grounded). The
-assumed values are one entry listing their boxes.
+message, rendered from its key and facts), and what to do (the sentence the
+form names for that finding). The assumed values are one entry listing their
+box numbers in at most two lines, then how many more there are; past twenty
+boxes the entry lists the sections that hold them, with a count each, instead.
 
-Enter always acts. A finding that names a box on the form, and the assumed
-values, return that box to the workbench; a finding about the whole
-declaration opens its detail in place; a finding whose box is not on the form
-says so there. Codes and legal references never reach the list: ``t`` shows
-them for the selected finding only.
+A declaration recorded as filed asks nothing more of the filer: its list has
+no assumed values and counts nothing left to do.
+
+Enter always acts. A finding that names a box on the form, the assumed values
+and each of their sections return the first such box to the workbench; a
+finding about the whole declaration opens its detail in place; a finding whose
+box is not on the form says so there. Codes, facts and legal references never
+reach the list: ``t`` shows them for the selected finding only.
 """
 
 from __future__ import annotations
@@ -40,24 +46,30 @@ from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.work_form_models import (
+    ModeloFormAttention,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
+    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
+    section_fields,
 )
 from .....core.i18n.render import tr
 from .....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
 from ...components.theme import tokenised
 from .casilla_list import AddressKey
 from .dialog_width import fit_dialog_width
 from .keys import describe_bindings
+from .navigator import presented_form
+from .page_items import workbench_pages
+from .sources import BoxNumbers
+from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, INFO_MARK, WorkbenchMark
 
 
 class IssueLevel(StrEnum):
@@ -69,38 +81,24 @@ class IssueLevel(StrEnum):
     INFO = "info"
 
 
-LEVEL_GLYPHS: Final[Mapping[IssueLevel, str]] = MappingProxyType(
-    {IssueLevel.BLOCKS: "▲", IssueLevel.CONFIRM: "◐", IssueLevel.CHECK: "◆", IssueLevel.INFO: "i"}
+LEVEL_MARKS: Final[Mapping[IssueLevel, WorkbenchMark]] = MappingProxyType(
+    {
+        IssueLevel.BLOCKS: BLOCKS_MARK,
+        IssueLevel.CONFIRM: CONFIRM_MARK,
+        IssueLevel.CHECK: CHECK_MARK,
+        IssueLevel.INFO: INFO_MARK,
+    }
 )
-"""One mark per level, every one present in the pinned font."""
+"""One mark per level, with its words, from the workbench's one vocabulary of marks."""
 
-_LEVEL_LOCALE_KEYS: Final[Mapping[IssueLevel, str]] = MappingProxyType(
+#: Levels that count as something left to do; a declaration recorded as filed counts none of them.
+TO_DO_LEVELS: Final[frozenset[IssueLevel]] = frozenset({IssueLevel.BLOCKS, IssueLevel.CONFIRM})
+
+_ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProxyType(
     {
-        IssueLevel.BLOCKS: "tui.modelo.workbench.level.blocks",
-        IssueLevel.CONFIRM: "tui.modelo.workbench.origin.default_to_confirm",
-        IssueLevel.CHECK: "tui.modelo.workbench.level.check",
-        IssueLevel.INFO: "tui.modelo.workbench.level.info",
-    }
-)
-_SEVERITY_LEVELS: Final[Mapping[ModeloVerificationFindingSeverity, IssueLevel]] = MappingProxyType(
-    {
-        ModeloVerificationFindingSeverity.BLOCKING: IssueLevel.BLOCKS,
-        ModeloVerificationFindingSeverity.WARNING: IssueLevel.CHECK,
-    }
-)
-_ACTION_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
-    {
-        ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: (
-            "tui.modelo.workbench.issues.action.missing_required_casilla"
-        ),
-        ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: (
-            "tui.modelo.workbench.issues.action.reconciliation_mismatch"
-        ),
-        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: (
-            "tui.modelo.workbench.issues.action.cross_period_dependency_unclean"
-        ),
-        ModeloVerificationFindingKind.BLOCKING_RULE: "tui.modelo.workbench.issues.action.generic",
-        ModeloVerificationFindingKind.ADVISORY: "tui.modelo.workbench.issues.action.advisory",
+        ModeloFormAttention.BLOCKS: IssueLevel.BLOCKS,
+        ModeloFormAttention.CHECK: IssueLevel.CHECK,
+        ModeloFormAttention.INFO: IssueLevel.INFO,
     }
 )
 _DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
@@ -128,6 +126,7 @@ _VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = Mapp
 _ENTER_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "go": "tui.modelo.workbench.issues.go_to_box",
+        "section": "tui.modelo.workbench.issues.open_section",
         "more": "tui.modelo.workbench.issues.key.more",
         "less": "tui.modelo.workbench.issues.key.less",
     }
@@ -136,7 +135,11 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {"escape": "tui.modelo.workbench.key.back", "t": "tui.modelo.workbench.issues.technical"}
 )
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
+#: Past this many assumed boxes the list names the sections that hold them instead of their numbers.
+ASSUMED_BOXES_BEFORE_SECTIONS: Final[int] = 20
 _ASSUMED_ID: Final[str] = "assumed"
+_ASSUMED_INTRO_ID: Final[str] = "assumed-intro"
+_SECTION_ID_PREFIX: Final[str] = "assumed-section-"
 _ISSUE_ID_PREFIX: Final[str] = "issue-"
 _INDENT: Final[int] = 2
 
@@ -165,16 +168,36 @@ class IssueLine:
 
 
 @dataclass(frozen=True, slots=True)
-class AssumedValues:
-    """The boxes whose value nobody entered, listed as one entry, and the first box to go to."""
+class AssumedSection:
+    """One section holding assumed values: its words and its assumed boxes, in form order."""
 
-    where: str
+    title: str
     keys: tuple[AddressKey, ...]
 
 
-def issue_level(finding: ModeloVerificationFinding) -> IssueLevel:
-    """Place one finding on the scale by its severity."""
-    return _SEVERITY_LEVELS[finding.severity]
+@dataclass(frozen=True, slots=True)
+class AssumedValues:
+    """The boxes whose value nobody entered, listed as one entry, and the sections that hold them.
+
+    ``boxes`` are their official numbers and ``unnumbered`` counts those that
+    have none; ``keys`` are every one of them in form order, the first being
+    where Enter goes.
+    """
+
+    boxes: tuple[str, ...]
+    unnumbered: int
+    keys: tuple[AddressKey, ...]
+    sections: tuple[AssumedSection, ...]
+
+    @property
+    def by_section(self) -> bool:
+        """Whether there are too many to list by number, so the list names their sections instead."""
+        return len(self.keys) > ASSUMED_BOXES_BEFORE_SECTIONS
+
+
+def issue_level(issue: ModeloFormIssue) -> IssueLevel:
+    """Place one finding on the scale by the attention the form gives it."""
+    return _ATTENTION_LEVELS[issue.attention]
 
 
 def _field_name(field: ModeloFormField) -> str:
@@ -184,12 +207,14 @@ def _field_name(field: ModeloFormField) -> str:
     return " ".join(parts)
 
 
-def _technical_text(finding: ModeloVerificationFinding) -> str:
+def technical_text(finding: ModeloVerificationFinding) -> str:
+    """The finding's codes, facts and references, for the filer who asks for technical details."""
     codes = [
         finding.kind.value,
         finding.severity.value,
         *([] if finding.casilla_id is None else [str(finding.casilla_id)]),
         *([] if finding.expectation_id is None else [str(finding.expectation_id)]),
+        *(f"{name}={value}" for name, value in finding.message_facts.items()),
         *(str(ref) for ref in finding.legal_refs),
         *(str(ref) for ref in finding.source_refs),
         finding.message_locale_key,
@@ -228,13 +253,13 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
                 where = _field_name(field) or f"[{box}]"
         lines.append(
             IssueLine(
-                level=issue_level(finding),
+                level=issue_level(issue),
                 box=box,
                 where=where,
                 message=tr(finding.message_locale_key, **finding.message_facts),
-                action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(_ACTION_LOCALE_KEYS[finding.kind])),
+                action=tr("tui.modelo.workbench.issues.what_to_do", action=tr(issue.action_locale_key)),
                 detail=detail,
-                technical=_technical_text(finding),
+                technical=technical_text(finding),
                 key=key,
             )
         )
@@ -242,17 +267,37 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
     return tuple(sorted(lines, key=lambda line: order.index(line.level)))
 
 
+def _assumed_sections(form: ModeloWorkForm, assumed: frozenset[AddressKey]) -> tuple[AssumedSection, ...]:
+    """The sections holding assumed values, under the words the navigator shows them with."""
+    sections: list[AssumedSection] = []
+    for page in workbench_pages(presented_form(form)):
+        parts = [(section.heading.text, section_fields(section)) for section in page.sections]
+        if page.details:
+            parts.append((page.heading.text, page.details))
+        for title, fields in parts:
+            keys = tuple(key for key in (address_key(field.address) for field in fields) if key in assumed)
+            if keys:
+                sections.append(AssumedSection(title=title, keys=keys))
+    return tuple(sections)
+
+
 def assumed_values(form: ModeloWorkForm) -> AssumedValues | None:
-    """The boxes whose value was assumed, or ``None`` when the filer has confirmed or entered every one."""
+    """The boxes whose value was assumed, or ``None`` when none waits for the filer.
+
+    A declaration recorded as filed has none: nothing more is asked of it.
+    """
+    if form.filing is not None:
+        return None
     fields = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
     if not fields:
         return None
-    numbered = " ".join(f"[{field.box}]" for field in fields if field.box)
-    unnumbered = sum(1 for field in fields if not field.box)
-    parts = [numbered] if numbered else []
-    if unnumbered:
-        parts.append(tr("tui.modelo.workbench.issues.where.unnumbered", count=unnumbered))
-    return AssumedValues(where=" · ".join(parts), keys=tuple(address_key(field.address) for field in fields))
+    keys = tuple(address_key(field.address) for field in fields)
+    return AssumedValues(
+        boxes=tuple(field.box for field in fields if field.box),
+        unnumbered=sum(1 for field in fields if not field.box),
+        keys=keys,
+        sections=_assumed_sections(form, frozenset(keys)),
+    )
 
 
 def level_counts(lines: tuple[IssueLine, ...], assumed: AssumedValues | None) -> Mapping[IssueLevel, int]:
@@ -266,12 +311,21 @@ def level_counts(lines: tuple[IssueLine, ...], assumed: AssumedValues | None) ->
 
 def level_words(level: IssueLevel) -> str:
     """One level's glyph and words, as every surface shows it."""
-    return f"{LEVEL_GLYPHS[level]} {tr(_LEVEL_LOCALE_KEYS[level])}"
+    mark = LEVEL_MARKS[level]
+    return f"{mark.glyph} {tr(mark.translation_key)}"
 
 
-def title_text(counts: Mapping[IssueLevel, int]) -> str:
-    """The list's name followed by a count for each level that has anything in it."""
-    chips = "   ".join(f"{LEVEL_GLYPHS[level]} {count}" for level, count in counts.items() if count)
+def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> str:
+    """The list's name followed by a count for each level that has anything in it.
+
+    A declaration recorded as filed has nothing left to do, so its title counts
+    only what is worth checking and what is for information.
+    """
+    chips = "   ".join(
+        f"{LEVEL_MARKS[level].glyph} {count}"
+        for level, count in counts.items()
+        if count and not (recorded and level in TO_DO_LEVELS)
+    )
     title = tr("tui.modelo.workbench.issues.title")
     return f"{title}   {chips}" if chips else title
 
@@ -280,36 +334,58 @@ def verdict_text(form: ModeloWorkForm) -> str:
     """Say what the last check concluded, or that the declaration has not been checked."""
     if form.verification is None:
         return tr("tui.modelo.workbench.issues.verdict.none")
-    return tr(_VERDICT_LOCALE_KEYS[form.verification], count=len(form.issues))
+    return tr(_VERDICT_LOCALE_KEYS[form.verification])
 
 
-def _entry(*paragraphs: tuple[str, str]) -> RenderableType:
-    """Wrap each paragraph under the level heading; the style marks what each one says."""
-    return Padding(
-        Group(*(Text(text, style=style) for text, style in paragraphs if text)),
-        (0, 0, 0, _INDENT),
-    )
+def _entry(*parts: RenderableType | None) -> RenderableType:
+    """Wrap each part of an entry under its level heading."""
+    return Padding(Group(*(part for part in parts if part is not None)), (0, 0, 0, _INDENT))
+
+
+def _paragraph(text: str, style: str = "") -> Text | None:
+    return Text(text, style=style) if text else None
 
 
 def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
     return _entry(
-        (line.where, "bold"),
-        (line.message, ""),
-        (line.action, "italic"),
-        (line.detail if expanded else "", ""),
-        (line.technical if technical else "", "dim"),
+        _paragraph(line.where, "bold"),
+        _paragraph(line.message),
+        _paragraph(line.action, "italic"),
+        _paragraph(line.detail) if expanded else None,
+        _paragraph(line.technical, "dim") if technical else None,
     )
 
 
 def _assumed_prompt(assumed: AssumedValues) -> RenderableType:
+    unnumbered = (
+        tr("tui.modelo.workbench.issues.where.unnumbered", count=assumed.unnumbered) if assumed.unnumbered else ""
+    )
     return _entry(
-        (assumed.where, "bold"),
-        (tr("tui.modelo.workbench.issues.assumed"), ""),
-        (
+        BoxNumbers(assumed.boxes, style="bold") if assumed.boxes else None,
+        _paragraph(unnumbered, "bold"),
+        _paragraph(tr("tui.modelo.workbench.issues.assumed")),
+        _paragraph(
             tr("tui.modelo.workbench.issues.what_to_do", action=tr("tui.modelo.workbench.issues.action.confirm")),
             "italic",
         ),
     )
+
+
+def _assumed_intro() -> RenderableType:
+    return _entry(
+        _paragraph(tr("tui.modelo.workbench.issues.assumed")),
+        _paragraph(
+            tr(
+                "tui.modelo.workbench.issues.what_to_do",
+                action=tr("tui.modelo.workbench.issues.action.confirm_by_section"),
+            ),
+            "italic",
+        ),
+    )
+
+
+def _section_prompt(section: AssumedSection) -> RenderableType:
+    return _entry(_paragraph(f"{section.title} ({len(section.keys)})", "bold"))
 
 
 class _IssueList(OptionList):
@@ -341,6 +417,10 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         WorkbenchIssuesScreen.-narrow #issues-panel {
             width: 100%;
         }
+        WorkbenchIssuesScreen #issues-status {
+            color: $foreground;
+            margin-bottom: $cadrumo-stack;
+        }
         WorkbenchIssuesScreen #issues-title {
             text-style: bold;
             color: $primary;
@@ -365,10 +445,17 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         Binding("t", "technical", "", show=False),
     ]
 
-    def __init__(self, form: ModeloWorkForm) -> None:
-        """Hold the form whose findings and assumed values are listed."""
+    def __init__(self, form: ModeloWorkForm, *, status_line: str | None = None) -> None:
+        """Hold the form whose findings and assumed values are listed.
+
+        ``status_line`` is shown above everything else when given, so the
+        declaration's result and deadline stay in view while the dialog covers
+        the workbench's header.
+        """
         super().__init__()
         self._form = form
+        self._status_line = status_line
+        self._recorded = form.filing is not None
         self._lines = issue_lines(form)
         self._assumed = assumed_values(form)
         self._expanded: set[int] = set()
@@ -377,13 +464,26 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
     @override
     def compose(self) -> ComposeResult:
         with Container(id="issues-backdrop"), Vertical(id="issues-panel"):
-            title = title_text(level_counts(self._lines, self._assumed))
+            if self._status_line is not None:
+                yield Static(self._status_line, id="issues-status", markup=False)
+            title = title_text(level_counts(self._lines, self._assumed), recorded=self._recorded)
             yield Static(title, id="issues-title", markup=False)
             yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
                 yield Button(tr("tui.modelo.workbench.result_diff.close"), id="issues-close", variant="primary")
         yield Footer(compact=True)
+
+    def _assumed_options(self, assumed: AssumedValues) -> list[Option]:
+        if not assumed.by_section:
+            return [Option(_assumed_prompt(assumed), id=_ASSUMED_ID)]
+        return [
+            Option(_assumed_intro(), id=_ASSUMED_INTRO_ID, disabled=True),
+            *(
+                Option(_section_prompt(section), id=f"{_SECTION_ID_PREFIX}{index}")
+                for index, section in enumerate(assumed.sections)
+            ),
+        ]
 
     def _options(self) -> list[Option]:
         options: list[Option] = []
@@ -394,9 +494,12 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
                 count += len(self._assumed.keys)
             if not count:
                 continue
-            options.append(Option(f"{level_words(level)} ({count})", id=f"level-{level.value}", disabled=True))
+            heading = level_words(level)
+            if not (self._recorded and level in TO_DO_LEVELS):
+                heading = f"{heading} ({count})"
+            options.append(Option(heading, id=f"level-{level.value}", disabled=True))
             if level is IssueLevel.CONFIRM and self._assumed is not None:
-                options.append(Option(_assumed_prompt(self._assumed), id=_ASSUMED_ID))
+                options.extend(self._assumed_options(self._assumed))
             options.extend(
                 Option(_issue_prompt(line, expanded=False, technical=False), id=f"{_ISSUE_ID_PREFIX}{index}")
                 for index, line in indexed
@@ -424,6 +527,13 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         index = int(option_id.removeprefix(_ISSUE_ID_PREFIX))
         return index if index < len(self._lines) else None
 
+    def _section(self, option_id: str | None) -> AssumedSection | None:
+        if self._assumed is None or option_id is None or not option_id.startswith(_SECTION_ID_PREFIX):
+            return None
+        index = int(option_id.removeprefix(_SECTION_ID_PREFIX))
+        sections = self._assumed.sections
+        return sections[index] if index < len(sections) else None
+
     def _highlighted_id(self) -> str | None:
         issues = self.query_one(_IssueList)
         if issues.highlighted is None:
@@ -433,7 +543,9 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
     def _describe_enter(self) -> None:
         option_id = self._highlighted_id()
         index = self._issue_index(option_id)
-        if option_id == _ASSUMED_ID or (index is not None and self._lines[index].key is not None):
+        if self._section(option_id) is not None:
+            choice = "section"
+        elif option_id == _ASSUMED_ID or (index is not None and self._lines[index].key is not None):
             choice = "go"
         elif index is not None and index in self._expanded:
             choice = "less"
@@ -450,10 +562,14 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         self._describe_enter()
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        """Go to the chosen box, or open the chosen finding's detail where it has no box to go to."""
+        """Go to the chosen box or section, or open the chosen finding's detail where it has no box to go to."""
         event.stop()
         if event.option.id == _ASSUMED_ID and self._assumed is not None:
             self.dismiss(self._assumed.keys[0])
+            return
+        section = self._section(event.option.id)
+        if section is not None:
+            self.dismiss(section.keys[0])
             return
         index = self._issue_index(event.option.id)
         if index is None:
@@ -467,7 +583,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         self._describe_enter()
 
     def action_technical(self) -> None:
-        """Show or hide the codes and legal references of the finding under the cursor."""
+        """Show or hide the codes, facts and legal references of the finding under the cursor."""
         index = self._issue_index(self._highlighted_id())
         if index is None:
             return
@@ -484,21 +600,23 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
 
 
 def _require_total_tables() -> None:
-    """Refuse a scale or a finding kind that has no words, glyph or sentence."""
-    if set(LEVEL_GLYPHS) != set(IssueLevel) or set(_LEVEL_LOCALE_KEYS) != set(IssueLevel):
-        raise ValueError("every issue level needs one glyph and one name")
-    if set(_SEVERITY_LEVELS) != set(ModeloVerificationFindingSeverity):
-        raise ValueError("every finding severity needs a level")
-    kinds = set(ModeloVerificationFindingKind)
-    if set(_ACTION_LOCALE_KEYS) != kinds or set(_DETAIL_LOCALE_KEYS) != kinds:
-        raise ValueError("every finding kind needs a sentence saying what to do and a detail")
+    """Refuse a scale or a finding kind that has no mark, level or sentence."""
+    if set(LEVEL_MARKS) != set(IssueLevel):
+        raise ValueError("every issue level needs one mark")
+    if set(_ATTENTION_LEVELS) != set(ModeloFormAttention):
+        raise ValueError("every attention the form gives a finding needs a level")
+    if set(_DETAIL_LOCALE_KEYS) != set(ModeloVerificationFindingKind):
+        raise ValueError("every finding kind needs a detail")
 
 
 _require_total_tables()
 
 
 __all__ = [
-    "LEVEL_GLYPHS",
+    "ASSUMED_BOXES_BEFORE_SECTIONS",
+    "LEVEL_MARKS",
+    "TO_DO_LEVELS",
+    "AssumedSection",
     "AssumedValues",
     "IssueLevel",
     "IssueLine",
@@ -508,6 +626,7 @@ __all__ = [
     "issue_lines",
     "level_counts",
     "level_words",
+    "technical_text",
     "title_text",
     "verdict_text",
 ]

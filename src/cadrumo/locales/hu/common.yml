@@ -2192,16 +2192,10 @@ tui:
       in_spanish: (spanyolul)
       issues:
         action:
-          advisory: Olvasd el, és döntsd el, hogy vonatkozik-e rád. Nem akadályozza
-            a benyújtást.
           confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket,
             vagy írd be a helyeset.
-          cross_period_dependency_unclean: Előbb rendezd a korábbi időszak bevallását,
-            majd számolj újra.
-          generic: Javítsd ki, amit leír, majd számolj és ellenőrizz újra.
-          missing_required_casilla: Írd be az értéket a rovatba, majd számolj újra.
-          reconciliation_mismatch: Hasonlítsd össze a számokat, javítsd ki a hibásat,
-            majd számolj újra.
+          confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az
+            értékeiket, vagy írd be a helyeseket.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
         detail:
@@ -2220,14 +2214,14 @@ tui:
         key:
           less: Kevesebb
           more: Továbbiak
+        open_section: Szakasz megnyitása
         technical: Technikai részletek
         title: Átnézendő problémák
         verdict:
-          blocked: 'Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást. Problémák:
-            {count}.'
-          complete: 'Az ellenőrzés sikeres. Átnézendő problémák: {count}.'
+          blocked: Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást.
+          complete: Az ellenőrzés sikeres.
           incomplete: 'Az ellenőrzés nem teljes: hiányoznak a bevalláshoz szükséges
-            adatok. Problémák: {count}.'
+            adatok.'
           none: A bevallást még nem ellenőrizték.
         what_to_do: 'Teendő: {action}'
         where:

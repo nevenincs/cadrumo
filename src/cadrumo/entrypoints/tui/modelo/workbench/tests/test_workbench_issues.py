@@ -5,8 +5,11 @@ the synthetic form: one that blocks filing on a box, one worth checking about
 the whole declaration, one about a box the form does not show, and the boxes
 whose value was assumed. Driven through the workbench, the list is grouped by
 level with a count per level, reads where, what is wrong and what to do for
-each finding without cutting a word, keeps codes behind ``t``, and Enter goes
-to a box, opens a detail in place or says the box is not on the form.
+each finding without cutting a word, keeps codes and facts behind ``t``, and
+Enter goes to a box, opens a detail in place or says the box is not on the
+form. A finding the form marks as an explanation sits at the information level
+and asks nothing; a long run of assumed boxes is cut to two lines, and a very
+long one is listed by section; a declaration recorded as filed asks for nothing.
 """
 
 from __future__ import annotations
@@ -15,17 +18,26 @@ import re
 from decimal import Decimal
 
 import pytest
+from rich.console import Console
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
+    ModeloFormCounts,
+    ModeloFormField,
+    ModeloFormFieldBlock,
     ModeloFormIssue,
     ModeloFormOrigin,
+    ModeloFormPage,
+    ModeloFormSection,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
 )
 from ......core.config import override_settings
+from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -34,18 +46,30 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..issues import IssueLevel, WorkbenchIssuesScreen, assumed_values, issue_lines, level_counts, title_text
+from ..issues import (
+    ASSUMED_BOXES_BEFORE_SECTIONS,
+    IssueLevel,
+    WorkbenchIssuesScreen,
+    assumed_values,
+    issue_lines,
+    level_counts,
+    title_text,
+    verdict_text,
+)
 from ..screen import ModeloWorkbenchScreen
+from ..sources import BoxNumbers
+from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _MESSAGE_KEY = "application.modelo.findings.oss_evidence_missing"
+_EXPLANATION_KEY = "application.modelo.findings.cross_period_modelo_not_applicable.message"
 _LEGAL_REF = "ley-37-1992:art-99"
 
 
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
+async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
     for _ in range(times):
         await pilot.pause()
 
@@ -61,6 +85,19 @@ def _finding(
         casilla_id=casilla_id,
         message_locale_key=_MESSAGE_KEY,
         legal_refs=(_LEGAL_REF,),
+    )
+
+
+def _explanation() -> ModeloFormIssue:
+    """An advisory the verification emits to explain a dependency it scoped out: for information only."""
+    return ModeloFormIssue(
+        finding=ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            message_locale_key=_EXPLANATION_KEY,
+            message_facts={"source_modelo_count": 2},
+            legal_refs=(_LEGAL_REF,),
+        )
     )
 
 
@@ -91,6 +128,56 @@ def _checked(*, assumed: bool = True) -> ModeloWorkForm:
     )
 
 
+def _text(text: str) -> ModeloFormText:
+    return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.LOCALIZED)
+
+
+def _counts(total: int) -> ModeloFormCounts:
+    return ModeloFormCounts(
+        total=total,
+        needs_input=0,
+        entered=0,
+        imported=0,
+        calculated=0,
+        overridden=0,
+        default_to_confirm=total,
+        not_applicable=0,
+        blocked=0,
+    )
+
+
+def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
+    """A declaration whose boxes nobody entered, numbered 1000 upward, in sections of the given sizes."""
+    number = iter(range(1000, 10000))
+    sections: list[ModeloFormSection] = []
+    for index, size in enumerate(section_sizes, start=1):
+        fields: list[ModeloFormField] = [
+            form_field(str(next(number)), "Importe", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("5.00"))
+            for _ in range(size)
+        ]
+        sections.append(
+            ModeloFormSection(
+                id=f"s{index}",
+                heading=_text(f"Apartado {index}"),
+                official_heading=None,
+                blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
+                counts=_counts(size),
+            )
+        )
+    page = ModeloFormPage(
+        id="p1",
+        heading=_text("Liquidación"),
+        official_ref=None,
+        condition=FormPageCondition.ALWAYS,
+        applies=True,
+        sections=tuple(sections),
+        counts=_counts(sum(section_sizes)),
+    )
+    return synthetic_form(needs_input=False).model_copy(
+        update={"pages": (page,), "working_figures": (), "result_addresses": (), "counts": _counts(sum(section_sizes))}
+    )
+
+
 def _list_text(screen: WorkbenchIssuesScreen) -> str:
     options = screen.query_one("#issues-list", OptionList)
     return "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
@@ -111,25 +198,45 @@ def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
         (IssueLevel.CHECK, "·", "Whole declaration"),
         (IssueLevel.CHECK, "71", "[71]"),
     ]
-    assert [line.action for line in lines] == [
-        "What to do: Correct what it describes, then calculate and check again.",
-        "What to do: Read it and decide whether it applies to you. It does not stop you from filing.",
-        "What to do: Compare the figures, correct the one that is wrong, then calculate again.",
-    ]
+    # The missing document is the finding's message, so the form names one step for it whatever its kind.
+    assert [line.action for line in lines] == ["What to do: Attach the document to the entry in your records."] * 3
     assert all(line.message.startswith("This declaration includes one-stop-shop") for line in lines)
     assert lines[0].key == address_key(ModeloFormCasillaAddressV1(casilla_id="06"))
     assert lines[1].key is None
     assert lines[2].key is None
     assert lines[2].detail.startswith("Box [71] is not shown on this declaration's pages.")
     assert assumed is not None
-    assert assumed.where == "[07]"
+    assert assumed.boxes == ("07",)
+    assert not assumed.by_section
     assert title == "Issues to look at   ▲ 1   ◐ 1   ◆ 2"
 
 
-@pytest.mark.asyncio
-async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_behind_t() -> None:
+def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_nothing() -> None:
+    form = _checked(assumed=False).model_copy(update={"issues": (_explanation(),)})
     with override_settings(cadrumo_output_language="en"):
-        screen = ModeloWorkbenchScreen(FakeReader(form=_checked()), actions=FakeActions())
+        lines = issue_lines(form)
+        title = title_text(level_counts(lines, None))
+
+    assert [line.level for line in lines] == [IssueLevel.INFO]
+    assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
+    assert lines[0].message == "2 modelos were not used, because they do not apply to you."
+    assert title == "Issues to look at   i 1"
+
+
+def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_the_title() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        blocked = verdict_text(_checked())
+        passed = verdict_text(_checked().model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE}))
+
+    assert blocked == "The check found something that blocks filing."
+    assert passed == "The check passed."
+
+
+@pytest.mark.asyncio
+async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_facts_behind_t() -> None:
+    form = _checked().model_copy(update={"issues": (*_checked().issues, _explanation())})
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(80, 100)) as pilot:
             await _settle(pilot)
@@ -138,21 +245,32 @@ async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_behind_
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
             title = str(issues.query_one("#issues-title", Static).render())
+            verdict = str(issues.query_one("#issues-verdict", Static).render())
             before = _list_text(issues)
             await pilot.press("t")
             await _settle(pilot)
             technical = _list_text(issues)
+            await pilot.press("t", "end", "t")
+            await _settle(pilot)
+            explained = _list_text(issues)
             app.exit(None)
 
-    headings = [line.strip() for line in before.splitlines() if line.strip().startswith(("▲", "◐", "◆"))]
-    assert headings == ["▲ Blocks filing (1)", "◐ Assumed, please confirm (1)", "◆ Worth checking (2)"][: len(headings)]
-    assert len(headings) == 3
-    assert title.startswith("Issues to look at")
+    headings = [line.strip() for line in before.splitlines() if line.strip().startswith(("▲", "◐", "◆", "i "))]
+    assert headings == [
+        "▲ Blocks filing (1)",
+        "◐ Assumed, please confirm (1)",
+        "◆ Worth checking (2)",
+        "i For your information (1)",
+    ]
+    assert title == "Issues to look at   ▲ 1   ◐ 1   ◆ 2   i 1"
+    assert verdict == "The check found something that blocks filing."
     message = "This declaration includes one-stop-shop (OSS) activity, but no supporting documents for it are saved."
     assert _words(before).count(message) == 3
     assert "…" not in before
     assert _LEGAL_REF not in before
+    assert "source_modelo_count" not in before
     assert _words(technical).count(_LEGAL_REF) == 1
+    assert "source_modelo_count=2" in _words(explained)
 
 
 @pytest.mark.asyncio
@@ -207,6 +325,101 @@ async def test_enter_on_the_assumed_values_goes_to_the_first_of_their_boxes() ->
     assert landed_on.field.box == "07"
 
 
+def test_a_list_of_box_numbers_takes_at_most_two_lines_and_counts_the_rest() -> None:
+    boxes = tuple(str(number) for number in range(1000, 1018))
+    console = Console(width=40)
+    with override_settings(cadrumo_output_language="en"):
+        with console.capture() as captured:
+            console.print(BoxNumbers(boxes))
+        wide = BoxNumbers(boxes).text(console, 200)
+
+    lines = captured.get().splitlines()
+    shown = re.findall(r"\[(\d+)\]", " ".join(lines))
+    rest = re.search(r"and (\d+) more", lines[-1])
+    assert len(lines) == 2
+    assert rest is not None
+    assert len(shown) + int(rest.group(1)) == len(boxes)
+    assert shown == list(boxes[: len(shown)])
+    assert wide == " ".join(f"[{box}]" for box in boxes)
+
+
+@pytest.mark.asyncio
+async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
+    form = _assumed_boxes(ASSUMED_BOXES_BEFORE_SECTIONS)
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(60, 40)) as pilot:
+            await _settle(pilot)
+            await pilot.press("i")
+            await _settle(pilot)
+            issues = app.screen
+            assert isinstance(issues, WorkbenchIssuesScreen)
+            listed = [line for line in _list_text(issues).splitlines() if "[" in line or " more" in line]
+            app.exit(None)
+
+    assert len(listed) == 2
+    rest = re.search(r"and (\d+) more", listed[-1])
+    assert rest is not None
+    assert len(re.findall(r"\[\d+\]", " ".join(listed))) + int(rest.group(1)) == ASSUMED_BOXES_BEFORE_SECTIONS
+
+
+@pytest.mark.asyncio
+async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter_opens_one() -> None:
+    form = _assumed_boxes(12, 15)
+    with override_settings(cadrumo_output_language="en"):
+        assumed = assumed_values(form)
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await _settle(pilot)
+            await pilot.press("i")
+            await _settle(pilot)
+            issues = app.screen
+            assert isinstance(issues, WorkbenchIssuesScreen)
+            listed = _list_text(issues)
+            await pilot.press("down", "enter")
+            await _settle(pilot)
+            back = app.screen is screen
+            landed_on = screen.query_one(CasillaList).highlighted
+            app.exit(None)
+
+    assert assumed is not None
+    assert assumed.by_section
+    assert [(section.title, len(section.keys)) for section in assumed.sections] == [
+        ("Apartado 1", 12),
+        ("Apartado 2", 15),
+    ]
+    assert "Apartado 1 (12)" in listed
+    assert "Apartado 2 (15)" in listed
+    assert "Open each section and confirm its values" in _words(listed)
+    assert not re.search(r"\[\d{4}\]", listed)
+    assert back
+    assert landed_on is not None
+    assert landed_on.field.box == "1012"
+
+
+@pytest.mark.asyncio
+async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_counts_nothing_to_do() -> None:
+    form = recorded_as_filed(_checked())
+    with override_settings(cadrumo_output_language="en"):
+        assumed = assumed_values(form)
+        screen = WorkbenchIssuesScreen(form)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await _settle(pilot)
+            title = str(screen.query_one("#issues-title", Static).render())
+            listed = _list_text(screen)
+            app.exit(None)
+
+    assert assumed is None
+    assert title == "Issues to look at   ◆ 2"
+    assert "◐" not in listed
+    assert "Assumed, please confirm" not in listed
+    assert "▲ Blocks filing" in listed
+    assert "▲ Blocks filing (" not in listed
+
+
 def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_look_at() -> None:
     form = _checked(assumed=False).model_copy(
         update={"issues": (), "verification": VerificationCompletenessStatus.COMPLETE}
@@ -218,3 +431,33 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
     assert lines == ()
     assert assumed_values(form) is None
     assert title == "Issues to look at"
+
+
+@pytest.mark.asyncio
+async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_strong() -> None:
+    status = "To pay 1,300.00 € · file by 20 Apr 2026"
+    with override_settings(cadrumo_output_language="en"):
+        screen = WorkbenchIssuesScreen(_checked(), status_line=status)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await _settle(pilot)
+            panel = screen.query_one("#issues-panel")
+            first = panel.children[0]
+            shown = str(first.render()) if isinstance(first, Static) else ""
+            title = screen.query_one("#issues-title", Static)
+            verdict = screen.query_one("#issues-verdict", Static)
+            title_style, verdict_style = title.rich_style, verdict.rich_style
+            app.exit(None)
+        plain = WorkbenchIssuesScreen(_checked())
+        plain_app = ScreenHostApp(plain)
+        async with plain_app.run_test(size=(100, 40)) as pilot:
+            await _settle(pilot)
+            without = [child.id for child in plain.query_one("#issues-panel").children]
+            plain_app.exit(None)
+
+    assert first.id == "issues-status"
+    assert shown == status
+    assert without[0] == "issues-title"
+    assert "issues-status" not in without
+    assert title_style.bold
+    assert title_style.color != verdict_style.color
