@@ -359,7 +359,7 @@
               "source_period": "1T",
               "source_refs": "aeat-modelo-130-instructions"
             },
-            "message": "The figures from modelo 130 for 2026, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (previous_filing_binding).",
+            "message": "The figures from modelo 130 for 2026, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT.",
             "severity": "warning"
           },
           {
@@ -376,7 +376,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01 (previous_filing_binding).",
+            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -391,7 +391,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, kind output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           },
           {
@@ -406,7 +406,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb, kind output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           },
           {
@@ -421,7 +421,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68, kind output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           }
         ],
@@ -442,7 +442,7 @@
                 "rd-439-2007:art-110",
                 "rd-439-2007:art-95"
               ],
-              "message": "The figures from modelo 130 for 2026, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT (previous_filing_binding).",
+              "message": "The figures from modelo 130 for 2026, period 1T, come from a declaration recorded only on this computer, not one confirmed by AEAT.",
               "severity": "warning",
               "source_refs": [
                 "aeat-modelo-130-instructions"
@@ -456,7 +456,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01 (previous_filing_binding).",
+              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -472,7 +472,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, kind output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -488,7 +488,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 41922f71722d942a709837a264846035827bf65e470ef805e4978f5bfdd71beb, kind output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -504,7 +504,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records (reference 4432506b527db6047d42beb91b7d07a64752d99f54605ca04a3755cef582bb68, kind output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "A sales invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
