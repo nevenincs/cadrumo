@@ -72,7 +72,7 @@ from .page_items import (
 from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchChangeKind, WorkbenchExportRequest
 from .progress import NextAction, defaults_text, next_action_text, stepper_text, workbench_progress
 from .review import EditReviewScreen, ReviewDecision
-from .session import StageRefusal, WorkbenchEditSession
+from .session import StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
 from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_words_key, origin_words_key
 from .wording import modelo_number, modelo_title, period_words
@@ -302,6 +302,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def form(self) -> ModeloWorkForm | None:
         """The form currently shown, once read."""
         return None if self._load is None else self._load.form
+
+    @property
+    def staged_changes(self) -> tuple[StagedChange, ...]:
+        """The changes the filer has staged and not yet applied or discarded."""
+        return self._session.changes
 
     async def _read(self) -> None:
         try:

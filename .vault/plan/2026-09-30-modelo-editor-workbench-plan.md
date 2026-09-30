@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:26986bcc1c41be00075b3377e943ac37ec6584528f2524c576ce1503e3e3750a'
+body_hash: 'sha256:b1456bd20c609d725810e291c2c3e2a36625085b86cd5109765eaf35157650c9'
 ---
 
 # `modelo-editor-workbench` plan
@@ -97,7 +97,7 @@ Replace the page-per-destination workspace with one workbench per declaration bu
 
 Prove the workbench across locales, geometries and themes through the production composition, render the visual review and close the plan review.
 
-- [ ] `P05.S27` - Prove the workbench through the production composition in four locales, three geometries and two themes, with token-leak, focus-return and sensitive non-retention assertions; `src/cadrumo/entrypoints/tui/modelo/workbench/tests`.
+- [x] `P05.S27` - Prove the workbench through the production composition in four locales, three geometries and two themes, with token-leak, focus-return and sensitive non-retention assertions; `src/cadrumo/entrypoints/tui/modelo/workbench/tests`.
 - [ ] `P05.S28` - Render the sequence-backed visual review of the workbench and record before and after captures; `dev/tui`.
 - [ ] `P05.S29` - Update the user documentation for filing a modelo in the TUI; `docs`.
 - [ ] `P05.S30` - Run the plan-close review of the integrated workbench against both decisions and resolve its findings; `.vault/audit`.

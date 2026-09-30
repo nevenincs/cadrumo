@@ -8,6 +8,7 @@ operator's walk to each page.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -110,3 +111,31 @@ def test_a_scenario_whose_sequence_leaves_no_such_declaration_is_refused(tmp_pat
         capture_scenario(mismatched, (Shot("workbench", 80, 24, "dark", tmp_path / "workbench.svg"),))
 
     assert not (tmp_path / "overview.svg").exists()
+
+
+_DIGEST = re.compile(r"\b[0-9a-f]{64}\b")
+_GEOMETRIES = ((80, 24), (120, 36), (160, 48))
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_the_workbench_reads_cleanly_at_every_geometry_and_theme_through_the_production_root(tmp_path: Path) -> None:
+    """Through the installed root over a documented declaration, every size and theme lands, fits and leaks nothing."""
+    shots = [
+        Shot(page, width, height, theme, tmp_path / f"{page}-{width}x{height}-{theme}.svg")
+        for page in ("workbench", "sources")
+        for width, height in _GEOMETRIES
+        for theme in ("light", "dark")
+    ]
+
+    _, frames = capture_scenario(_FIRST_QUARTER, shots)
+
+    expected = {"workbench": _qualname(ModeloWorkbenchScreen), "sources": _qualname(WorkbenchSourcesScreen)}
+    assert len(frames) == len(shots)
+    for frame in frames:
+        label = f"{frame.shot.page} {frame.shot.width}x{frame.shot.height} {frame.shot.theme}"
+        surface = frame.frame_text.split("── focus:")[0]
+        assert frame.screen == expected[frame.shot.page], label
+        assert "painted past the side edges" not in frame.frame_text, label
+        assert not _DIGEST.search(surface), label
+        assert "303" in surface, label

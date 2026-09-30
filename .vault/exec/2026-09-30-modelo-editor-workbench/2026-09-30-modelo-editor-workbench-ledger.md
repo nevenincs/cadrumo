@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:c21107ba076a2053be3676354de499a1a8c3b25d81d43599283c9c8dd716e355'
+body_hash: 'sha256:50cd46787275d76364757d4a1f7ba38d53c101d77f70a9d1e4490eab091c0472'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -473,6 +473,13 @@ related:
 - `S26` `verify:` `pytest TUI suite (975)` -> `pass`
 - `S26` `verify:` `locale audit ca en es hu` -> `pass`
 - `S26` `by:` `orchestrator`
+- `S27` `A` `src/cadrumo/entrypoints/tui/tests/test_workbench_acceptance.py`
+- `S27` `M` `dev/tui/harness/tests/test_sequence_scenarios.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S27` `verify:` `token leak, focus return and typed-value retention over real 130 and 303 declarations in es, en, ca, hu (26)` -> `pass`
+- `S27` `verify:` `production root over the documented 303 declaration at 80x24, 120x36, 160x48 in light and dark (12 frames)` -> `pass`
+- `S27` `verify:` `locale, geometry and theme proofs retargeted to the workbench in S25 (64)` -> `pass`
+- `S27` `by:` `orchestrator`
 
 ## Notes
 
@@ -509,3 +516,4 @@ related:
 - `S25` The overview-driven export integration test was retired with its page; the export through the workbench is proven again in the acceptance Step
 - `S25` The generation no longer reads each declaration's lifecycle history or keeps a graded-refusal map: both served only the retired pages; the Modelo projection reader now returns the projection the search indexes
 - `S26` The workbench's own keys were authored with each Step in four locales; this Step rewrites the Declarations entry and the layout note, which still spoke of workspaces, captures and revisions
+- `S27` The production-root frames report two vertical scroll owners (section navigator and casilla list); the harness reads it as advisory and the visual review judges it
