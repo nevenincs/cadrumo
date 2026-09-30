@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
-    ModeloWorkspaceProjectedReadV1,
     WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
@@ -38,6 +37,7 @@ if TYPE_CHECKING:
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
     from ...application.modelo.workspace_models import (
+        ModeloWorkspaceProjectionV1,
         ModeloWorkspaceRefusedResultV1,
         ModeloWorkspaceResultV1,
         ModeloWorkspaceStaticInspectionResultV1,
@@ -371,12 +371,10 @@ def _declaration_result_casilla_reader(
 
 def _modelo_projection_reader(
     operation: PinnedAuthorityOperation,
-) -> Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1]:
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
     """Read one work unit's canonical workspace projection for the whole session.
 
-    The read every Modelo destination and the workbench search share, so a
-    searchable declaration and an opened one cannot describe different
-    registry state. The output language is resolved per read rather than
+    The read the workbench search indexes each declaration from. The output language is resolved per read rather than
     closed over: a profile language change clears the resolver cache, and a
     projection captured under the previous language would leave the workbench
     half-translated until sign-out.
@@ -386,8 +384,7 @@ def _modelo_projection_reader(
     that carries materialized values, their provenance and the canonical
     readiness report; a static inspection carries the form's layout and says
     plainly that it measured no values. Asking for the static one first would
-    leave every destination showing a layout for a declaration that has been
-    calculated.
+    index a calculated declaration as if nothing had been measured.
 
     The graded arm is MATCHED, never assumed: a target with no calculation
     yet, or a revision whose declared authority cannot satisfy the requested
@@ -404,12 +401,6 @@ def _modelo_projection_reader(
     no-calculation admission. A refusal this function cannot enumerate would
     be a defect in that resolver, not a case to silently paper over here.
 
-    The refusal is never discarded on that fallback: it travels back on
-    :class:`ModeloWorkspaceProjectedReadV1` beside the static projection, for
-    whichever destination later opens this exact work unit to render
-    honestly -- reason, evidence, facts and the catalogued recovery action --
-    instead of a plain, unexplained static page.
-
     A read whose stored data moved between its captures and its currentness
     pass refuses as ``WORKSPACE_CHANGED``; that is no answer about the
     declaration, so the unit is read again, at most
@@ -423,7 +414,7 @@ def _modelo_projection_reader(
     from ...core.external_constants import OutputLanguage as _OutputLanguage
     from ...core.i18n.render import output_language as resolve_output_language
 
-    def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
         for _attempt in range(MODELO_WORKSPACE_READ_ATTEMPTS):
             language = _OutputLanguage(resolve_output_language())
             admission = resolve_modelo_workspace_graded_snapshot(
@@ -433,7 +424,7 @@ def _modelo_projection_reader(
                 required_grade=_RegistryAuthorityGrade.CALCULATION,
             )
             if not isinstance(admission, ModeloWorkspaceRefusedResultV1):
-                return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
+                return admission.projection
             if admission.refusal.code is ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
                 continue
             static = resolve_modelo_workspace_static_inspection(
@@ -445,7 +436,7 @@ def _modelo_projection_reader(
                 if static.refusal.code is not ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED:
                     raise InternalInvariantError(f"static inspection refused with {static.refusal.code.value}")
                 continue
-            return ModeloWorkspaceProjectedReadV1(projection=static.projection, graded_refusal=admission.refusal)
+            return static.projection
         raise ProducerCaptureError(
             translated_message="errors.refused.producer_capture_not_current",
             context={"reason": "contended", "attempts": MODELO_WORKSPACE_READ_ATTEMPTS},

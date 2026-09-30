@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc64381eb259b20afbfb2847e4473b4291427f70e2eed9312d07978eea88bc4e'
+body_hash: 'sha256:eba485014029ce39e1ef6ee5247ce40820044970d16ca9188829fc3cc2ac01ef'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -458,6 +458,12 @@ related:
 - `S25` `verify:` `dev/locales casilla orthography (11) need spelling dictionaries not installed in this worktree` -> `fail`
 - `S25` `verify:` `dev/locales baseline failures outside this diff (composed segment; finding facts x3)` -> `fail`
 - `S25` `by:` `orchestrator`
+- `S25` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S25` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S25` `M` `src/cadrumo/application/workbench_generation.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/tests/test_modelo_projection_reader.py`
+- `S25` `verify:` `pytest generation, TUI, harness, modelo, error registry and quality gates (2950)` -> `pass`
+- `S25` `verify:` `import gate clean; apidocs check` -> `pass`
 
 ## Notes
 
@@ -492,3 +498,4 @@ related:
 - `S25` Modelo 130 leaves boxes 13 to 19 without a value when `[07]` is negative; the workbench labels them could-not-calculate, which may overstate a failure
 - `S25` A CLI-calculated declaration records no operator layer, so its defaults read as to-confirm; they are reported beside the next action rather than blocking the journey
 - `S25` The overview-driven export integration test was retired with its page; the export through the workbench is proven again in the acceptance Step
+- `S25` The generation no longer reads each declaration's lifecycle history or keeps a graded-refusal map: both served only the retired pages; the Modelo projection reader now returns the projection the search indexes

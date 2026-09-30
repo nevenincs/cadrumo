@@ -24,9 +24,8 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.modelo.workspace_models import ModeloWorkspaceRefusalCode
+from ....application.modelo.workspace_models import ModeloWorkspaceAdmissionKind
 from ....application.producer_capture import ProducerCaptureError
-from ....application.workbench_generation import ModeloWorkspaceProjectedReadV1
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.authority import (
@@ -99,16 +98,14 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
         yield profile.bucket_id, repository
 
 
-def test_the_reader_falls_back_to_static_and_carries_the_refusal_it_fell_back_from(
+def test_the_reader_falls_back_to_the_static_inspection_of_an_uncalculated_unit(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """A freshly created work unit has no calculation, so the graded read refuses honestly.
+    """A freshly created work unit has no calculation, so the graded read refuses and the static one answers.
 
-    The refused arm is CALCULATION_UNAVAILABLE: the seeded work unit exists
-    (ruling out TARGET_NOT_FOUND) but was never calculated. The returned
-    projection is still admitted -- STATIC_INSPECTION remains valid for this
-    refusal -- and the refusal travels alongside it rather than being
-    silently discarded.
+    The seeded work unit exists but was never calculated, so a graded snapshot
+    is refused; STATIC_INSPECTION remains valid for that refusal, and the
+    reader returns it for the same work unit rather than failing the source.
     """
     bucket_id, repository = bucket_and_repository
     catalogue, _ = repository.load_revisioned()
@@ -117,13 +114,9 @@ def test_the_reader_falls_back_to_static_and_carries_the_refusal_it_fell_back_fr
     with bundled_indexed_authority().operation() as operation:
         read = _modelo_projection_reader(operation)(unit)
 
-    assert isinstance(read, ModeloWorkspaceProjectedReadV1)
-    assert read.graded_refusal is not None
-    assert read.graded_refusal.code is ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE
-    assert read.graded_refusal.selected_target is not None
-    assert read.graded_refusal.selected_target.work_unit_id == unit.work_unit_id
-    assert read.projection.target.work_unit_id == unit.work_unit_id
-    assert read.projection.target.bucket_id == bucket_id
+    assert read.admission.kind is ModeloWorkspaceAdmissionKind.STATIC_INSPECTION
+    assert read.target.work_unit_id == unit.work_unit_id
+    assert read.target.bucket_id == bucket_id
 
 
 class _RepublishedAfterEveryCapture:

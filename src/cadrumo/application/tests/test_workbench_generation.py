@@ -39,12 +39,10 @@ from ..live.tests.unopened_live_ports import unopened_browser_session_factory, u
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.work_addressing import ModeloExactWorkUnitTarget
-from ..modelo.workspace import graded_snapshot_refusal, resolve_static_inspection_result
+from ..modelo.workspace import resolve_static_inspection_result
 from ..modelo.workspace_models import (
-    ModeloWorkspaceCapabilityName,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceProjectionV1,
-    ModeloWorkspaceRefusalCode,
     ModeloWorkspaceStaticInspectionResultV1,
 )
 from ..operations.registry import OperationPublicContractSetV1
@@ -65,7 +63,6 @@ from ..user_profile.censal_operation import (
 )
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    ModeloWorkspaceProjectedReadV1,
     SecureProfileWorkbenchGenerationReadDoorV1,
     WorkbenchGenerationAvailability,
     WorkbenchGenerationInputsV1,
@@ -270,7 +267,6 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     assert generation.ledger.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
 
 
@@ -330,17 +326,10 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     assert generation.declarations_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
 
 
-def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
+def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A GRADED_SNAPSHOT refusal for one work unit reaches the generation, keyed by its identity.
-
-    The projection itself is never dropped on that refusal -- STATIC_INSPECTION
-    remains a valid secondary view for every taxpayer-facing refusal code the
-    graded resolver returns -- so this proves both halves travel: the Modelo
-    source still names the unit, and the refusal map explains why its
-    projection is the static fallback rather than the requested graded one.
-    """
+    """The Modelo source names every work unit the profile holds, through the reader it is given."""
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
@@ -376,18 +365,6 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
         output_language=OutputLanguage.ES,
     )
     assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
-    refusal = graded_snapshot_refusal(
-        ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
-        requested_target=exact_target,
-        selected_target=static_result.projection.target,
-        capability=ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
-        reconsideration_condition="calculate this work unit, then request a graded snapshot again",
-        facts=(),
-        evidence=(),
-        source_disposition=None,
-        recovery_action=None,
-    ).refusal
-
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=authority_operation,
@@ -401,9 +378,7 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
             profile_label="Perfil local",
             expires_at=_NOW,
         ),
-        modelo_projection_reader=lambda _unit: ModeloWorkspaceProjectedReadV1(
-            projection=static_result.projection, graded_refusal=refusal
-        ),
+        modelo_projection_reader=lambda _unit: static_result.projection,
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(door)()
@@ -411,71 +386,6 @@ def test_secure_profile_modelo_graded_refusal_travels_beside_its_projection(
     assert generation.modelo.availability is WorkbenchGenerationAvailability.AVAILABLE
     assert generation.modelo.projection is not None
     assert [projection.target.work_unit_id for projection in generation.modelo.projection] == [unit.work_unit_id]
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.AVAILABLE
-    assert generation.modelo_graded_refusals.projection == {str(unit.work_unit_id): refusal}
-
-
-def test_secure_profile_modelo_reader_with_no_refusal_leaves_the_refusal_map_empty(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """A work unit admitted at its requested grade has no entry, not a ``None`` one."""
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=period,
-            revision_id=revision_id,
-        ),
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=period,
-        revision_id=revision_id,
-        name="declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
-    profile = _Repository(_profile_record(authority_operation))
-    work_units = _Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
-    revisions = _Repository(CalculationRevisionCatalogue())
-    filings = _Repository(ModeloRecordCatalogue())
-
-    exact_target = ModeloWorkspaceExactWorkUnitTargetV1(
-        target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
-    )
-    static_result = resolve_static_inspection_result(
-        exact_target,
-        bucket_id=_PROFILE_ID,
-        catalogue_repository=cast(Any, work_units),
-        authority=authority_operation,
-        output_language=OutputLanguage.ES,
-    )
-    assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
-
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
-        modelo_projection_reader=lambda _unit: ModeloWorkspaceProjectedReadV1(projection=static_result.projection),
-    )
-
-    generation = InstalledWorkbenchGenerationProviderV1(door)()
-
-    assert generation.modelo.projection is not None
-    assert generation.modelo_graded_refusals.availability is WorkbenchGenerationAvailability.AVAILABLE
-    assert generation.modelo_graded_refusals.projection == {}
 
 
 def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
