@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:19b5ead10c950783924575e4ca956f65d5889505f570eb2974c08d18d2ba7ed1'
+body_hash: 'sha256:a2146d4b8638a25bfe6214de117808aa2ec9a487554e40349096c0e81d98694e'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -115,9 +115,26 @@ related:
 - `S22` `verify:` `ruff + ty` -> `pass`
 - `S22` `verify:` `rasterised captures 80x24 en, 120x36 es and hu, 160x48 es, light and dark, missing glyphs none` -> `pass`
 - `S22` `by:` `orchestrator`
+- `S23` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S23` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S23` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S23` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S23` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S23` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S23` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S23` `M` `src/cadrumo/locales/ca/common.yml`
+- `S23` `M` `src/cadrumo/locales/en/common.yml`
+- `S23` `M` `src/cadrumo/locales/es/common.yml`
+- `S23` `M` `src/cadrumo/locales/hu/common.yml`
+- `S23` `verify:` `pytest workbench tests (20)` -> `pass`
+- `S23` `verify:` `ruff + ty` -> `pass`
+- `S23` `verify:` `rasterised editor and review captures at 80x24 and 120x36` -> `pass`
+- `S23` `by:` `orchestrator`
 
 ## Notes
 
 - `S20` 6 TUI tests errored at import on a concurrent session's uncommitted launcher.py edit (ModeloWorkspaceReadContendedError without an error-code entry); not caused by this Step
 - `S17` Builder consumes the declared layout types merged from the layout-family lane; integration over every published layout waits for that lane's generator
 - `S22` Screen reads through a port the composition root will supply; production wiring lands with the page retirement Step
+- `S23` The parse, apply and lifecycle actions arrive through a port; the production adapter onto the edit contract's parser and door lands with the page retirement Step once the edit-correctness lane merges
+- `S23` Result diff after apply deferred to acceptance phase

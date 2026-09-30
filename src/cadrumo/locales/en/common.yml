@@ -2098,6 +2098,32 @@ tui:
           state why.
         source_policy_undecided: It is not yet decided whether this source may be
           replaced by hand.
+      editor:
+        cancel: Cancel
+        clear: Clear
+        current: 'Now: {value} · {origin}'
+        format:
+          boolean: Answer yes or no.
+          date: A calendar date.
+          decimal: Decimal number; nothing is rounded.
+          integer: Whole number.
+          money: Amount in euros; nothing is rounded.
+          ratio: Type the value as it appears on the form.
+          text: Free text.
+          year: A four-digit year.
+        placeholder:
+          boolean: yes or no
+          date: Date, e.g. 31/03/2026
+          decimal: Number, e.g. 12.5
+          integer: Whole number, e.g. 3
+          money: Amount, e.g. 1,234.56
+          ratio: Percentage, e.g. 21
+          text: Text
+          year: Year, e.g. 2026
+        read_as: ✓ Will be read as {value}
+        restore: Restore source
+        save: Add to changes
+        unreadable: This value could not be read.
       filter:
         all: all boxes
         attention: only what needs attention
@@ -2117,10 +2143,18 @@ tui:
         help: Help
         next_attention: Next to do
         next_page: Next page
+        next_step: Next step
         previous_page: Previous page
+        review: Review changes
       layout:
         generated: layout not yet reviewed
         inspection_only: 'no official layout: view only, in box order'
+      leave:
+        discard: Discard and leave
+        message: 'You have changes not applied: {count}. If you leave now, they are
+          lost.'
+        stay: Keep editing
+        title: Changes not applied
       loading: Loading the declaration…
       modelo_number: Modelo {modelo}
       modelo_title: Modelo {modelo} · {title}
@@ -2133,6 +2167,9 @@ tui:
         resolve: 'Resolve what blocks filing (to do: {count})'
         verify: Verify the declaration
       next_line: 'Next: {action} [{key}]'
+      operation:
+        done: Done. The declaration has been updated.
+        not_done: It did not complete; your changes are still here.
       origin:
         calculated: Calculated
         calculation_failed: Could not be calculated
@@ -2170,8 +2207,39 @@ tui:
       repeating: 'Detail rows: {count}'
       repeating_unknown: These rows cannot be shown here yet.
       result: 'Result [{box}]: {value}'
+      review:
+        apply: Apply and recalculate
+        back: Back to editing
+        column:
+          after: After
+          before: Before
+          box: Box
+          concept: Item
+          effect: Effect
+        discard: Discard all
+        discarded: Your changes were discarded.
+        displacing: 'Changes that replace an imported or calculated value: {count}.
+          Your value will win until you restore the source.'
+        effect:
+          clear: will have no value
+          restore: goes back to the source value
+          set_calculation: replaces the calculated value
+          set_filer: changes your value
+          set_nothing: new value
+          set_source: replaces the imported value
+        none: There are no changes to apply.
+        nothing_saved: Nothing is saved until you press “Apply and recalculate”.
+        title: 'Changes to apply: {count}'
       section:
         pending: '{heading} · to do: {count}'
+      source_line: 'Source: {source}'
+      stage_refused:
+        not_editable: This box cannot be changed that way.
+        nothing_to_clear: There is no value of yours to clear in this box.
+        nothing_to_restore: This box already shows its source's value.
+      staged:
+        clear: (will be cleared)
+        restore: (back to source)
       step:
         calculate: Calculate
         file: File

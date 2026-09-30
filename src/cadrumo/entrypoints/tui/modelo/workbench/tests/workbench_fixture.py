@@ -9,7 +9,8 @@ test can prove the screen read off the event loop exactly as often as it should.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
+from typing import TYPE_CHECKING
 
 from ......application.modelo.calculation_report import CalculationReportRowRole
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1, ModeloHelpFormulaV1
@@ -37,7 +38,16 @@ from ......core.external_constants import OutputLanguage
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
-from ..ports import WorkbenchLoadV1
+from ..ports import (
+    WorkbenchChange,
+    WorkbenchLoadV1,
+    WorkbenchParsed,
+    WorkbenchParseOutcome,
+    WorkbenchRefused,
+)
+
+if TYPE_CHECKING:
+    from ....operations.controller import OperationController
 
 
 def _text(text: str) -> ModeloFormText:
@@ -235,4 +245,45 @@ class FakeReader:
         )
 
 
-__all__ = ["FakeReader", "form_field", "synthetic_form"]
+@dataclass
+class FakeActions:
+    """Parses Spanish decimals and records every operation the workbench asks for.
+
+    Operations raise instead of opening a supervised operation, so a test proves
+    what the workbench submitted and that a failure leaves the staged changes in
+    place.
+    """
+
+    applied: list[tuple[WorkbenchChange, ...]] = field(default_factory=list)
+    requested: list[str] = field(default_factory=list)
+
+    def parse(self, field: ModeloFormField, lexeme: str, language: OutputLanguage) -> WorkbenchParseOutcome:
+        """Read a Spanish decimal, or refuse with a fix-it sentence."""
+        try:
+            value = Decimal(lexeme.replace(".", "").replace(",", "."))
+        except InvalidOperation:
+            return WorkbenchRefused(message="Escribe un importe, por ejemplo 1.234,56.")
+        return WorkbenchParsed(value=value, display=f"{value:.2f}".replace(".", ",") + "\u00a0\u20ac")
+
+    async def apply(self, changes: tuple[WorkbenchChange, ...]) -> OperationController:
+        """Record the submitted changes, then fail as an unavailable service would."""
+        self.applied.append(changes)
+        raise RuntimeError("no operation service in this test")
+
+    async def calculate(self) -> OperationController:
+        """Record a calculate request."""
+        self.requested.append("calculate")
+        raise RuntimeError("no operation service in this test")
+
+    async def verify(self) -> OperationController:
+        """Record a verify request."""
+        self.requested.append("verify")
+        raise RuntimeError("no operation service in this test")
+
+    async def file(self) -> OperationController:
+        """Record a file request."""
+        self.requested.append("file")
+        raise RuntimeError("no operation service in this test")
+
+
+__all__ = ["FakeActions", "FakeReader", "form_field", "synthetic_form"]

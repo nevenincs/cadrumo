@@ -2145,6 +2145,32 @@ tui:
           el motiu.
         source_policy_undecided: Encara no s'ha decidit si aquest origen es pot substituir
           a mà.
+      editor:
+        cancel: Cancel·la
+        clear: Buida
+        current: 'Ara: {value} · {origin}'
+        format:
+          boolean: Respon sí o no.
+          date: Una data del calendari.
+          decimal: Nombre decimal; sense arrodoniments.
+          integer: Nombre enter.
+          money: Import en euros; sense arrodoniments.
+          ratio: Escriu el valor tal com figura a l'imprès.
+          text: Text lliure.
+          year: Un any de quatre xifres.
+        placeholder:
+          boolean: sí o no
+          date: Data, p. ex. 31/03/2026
+          decimal: Nombre, p. ex. 12,5
+          integer: Nombre enter, p. ex. 3
+          money: Import, p. ex. 1.234,56
+          ratio: Percentatge, p. ex. 21
+          text: Text
+          year: Any, p. ex. 2026
+        read_as: ✓ Es llegirà com {value}
+        restore: Restaura l'origen
+        save: Afegeix als canvis
+        unreadable: No s'ha pogut llegir aquest valor.
       filter:
         all: totes les caselles
         attention: només el que està pendent
@@ -2164,11 +2190,18 @@ tui:
         help: Ajuda
         next_attention: Següent pendent
         next_page: Pàgina següent
+        next_step: Pas següent
         previous_page: Pàgina anterior
+        review: Revisa els canvis
       layout:
         generated: distribució sense revisar
         inspection_only: 'sense distribució oficial: només consulta, per número de
           casella'
+      leave:
+        discard: Descarta i surt
+        message: 'Tens canvis sense aplicar: {count}. Si surts ara, es perden.'
+        stay: Continua editant
+        title: Canvis sense aplicar
       loading: Carregant la declaració…
       modelo_number: Model {modelo}
       modelo_title: Model {modelo} · {title}
@@ -2181,6 +2214,9 @@ tui:
         resolve: 'Resol el que impedeix presentar (pendents: {count})'
         verify: Verifica la declaració
       next_line: 'Següent: {action} [{key}]'
+      operation:
+        done: Fet. La declaració s'ha actualitzat.
+        not_done: No s'ha completat; els teus canvis continuen aquí.
       origin:
         calculated: Calculada
         calculation_failed: No s'ha pogut calcular
@@ -2218,8 +2254,39 @@ tui:
       repeating: 'Files de detall: {count}'
       repeating_unknown: Aquestes files encara no es poden mostrar aquí.
       result: 'Resultat [{box}]: {value}'
+      review:
+        apply: Aplica i recalcula
+        back: Torna a editar
+        column:
+          after: Després
+          before: Abans
+          box: Casella
+          concept: Concepte
+          effect: Efecte
+        discard: Descarta-ho tot
+        discarded: S'han descartat els teus canvis.
+        displacing: 'Canvis que substitueixen un valor importat o calculat: {count}.
+          El teu valor manarà fins que restauris l''origen.'
+        effect:
+          clear: quedarà sense valor
+          restore: torna al valor d'origen
+          set_calculation: substitueix el valor calculat
+          set_filer: canvia el teu valor
+          set_nothing: valor nou
+          set_source: substitueix el valor importat
+        none: No hi ha canvis per aplicar.
+        nothing_saved: No es desa res fins que premis «Aplica i recalcula».
+        title: 'Canvis per aplicar: {count}'
       section:
         pending: '{heading} · pendents: {count}'
+      source_line: 'Origen: {source}'
+      stage_refused:
+        not_editable: Aquesta casella no es pot canviar així.
+        nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.
+        nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
+      staged:
+        clear: (es buidarà)
+        restore: (torna a l'origen)
       step:
         calculate: Calcular
         file: Presentar

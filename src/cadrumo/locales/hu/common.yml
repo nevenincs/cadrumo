@@ -2125,6 +2125,32 @@ tui:
         not_writable: Ez a rovat itt nem szerkeszthető.
         overridable_source: Korábbi bevallásból származik; indoklással felülírhatja.
         source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
+      editor:
+        cancel: Mégse
+        clear: Törlés
+        current: 'Most: {value} · {origin}'
+        format:
+          boolean: Válaszoljon igennel vagy nemmel.
+          date: Naptári dátum.
+          decimal: Tizedes szám; nincs kerekítés.
+          integer: Egész szám.
+          money: Összeg euróban; nincs kerekítés.
+          ratio: Az értéket úgy adja meg, ahogy a nyomtatványon szerepel.
+          text: Szabad szöveg.
+          year: Négyjegyű évszám.
+        placeholder:
+          boolean: igen vagy nem
+          date: Dátum, pl. 2026.03.31.
+          decimal: Szám, pl. 12,5
+          integer: Egész szám, pl. 3
+          money: Összeg, pl. 1 234,56
+          ratio: Százalék, pl. 21
+          text: Szöveg
+          year: Év, pl. 2026
+        read_as: '✓ Így kerül rögzítésre: {value}'
+        restore: Forrás visszaállítása
+        save: Hozzáadás a módosításokhoz
+        unreadable: Ez az érték nem olvasható.
       filter:
         all: minden rovat
         attention: csak a teendők
@@ -2144,11 +2170,18 @@ tui:
         help: Súgó
         next_attention: Következő teendő
         next_page: Következő oldal
+        next_step: Következő lépés
         previous_page: Előző oldal
+        review: Módosítások
       layout:
         generated: elrendezés még nem ellenőrzött
         inspection_only: 'nincs hivatalos elrendezés: csak megtekintés, rovatszám
           szerint'
+      leave:
+        discard: Elvetés és kilépés
+        message: 'Nem alkalmazott módosítások: {count}. Ha most kilép, elvesznek.'
+        stay: Szerkesztés folytatása
+        title: Nem alkalmazott módosítások
       loading: A bevallás betöltése…
       modelo_number: '{modelo}-es nyomtatvány'
       modelo_title: '{modelo}-es nyomtatvány · {title}'
@@ -2161,6 +2194,9 @@ tui:
         resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
         verify: Ellenőrizze a bevallást
       next_line: 'Következő: {action} [{key}]'
+      operation:
+        done: Kész. A bevallás frissült.
+        not_done: Nem fejeződött be; a módosításai megmaradtak.
       origin:
         calculated: Számított
         calculation_failed: Nem számítható ki
@@ -2198,8 +2234,40 @@ tui:
       repeating: 'Részletező sorok: {count}'
       repeating_unknown: Ezek a sorok itt még nem jeleníthetők meg.
       result: 'Eredmény [{box}]: {value}'
+      review:
+        apply: Alkalmazás és újraszámítás
+        back: Vissza a szerkesztéshez
+        column:
+          after: Utána
+          before: Előtte
+          box: Rovat
+          concept: Megnevezés
+          effect: Hatás
+        discard: Összes elvetése
+        discarded: A módosításai elvetve.
+        displacing: 'Importált vagy számított értéket felülíró módosítások: {count}.
+          Az Ön értéke marad érvényben, amíg vissza nem állítja a forrást.'
+        effect:
+          clear: érték nélkül marad
+          restore: visszaáll a forrás értékére
+          set_calculation: felülírja a számított értéket
+          set_filer: módosítja az Ön értékét
+          set_nothing: új érték
+          set_source: felülírja az importált értéket
+        none: Nincs alkalmazandó módosítás.
+        nothing_saved: Semmi sem mentődik, amíg meg nem nyomja az „Alkalmazás és újraszámítás”
+          gombot.
+        title: 'Alkalmazandó módosítások: {count}'
       section:
         pending: '{heading} · teendő: {count}'
+      source_line: 'Forrás: {source}'
+      stage_refused:
+        not_editable: Ez a rovat így nem módosítható.
+        nothing_to_clear: Ebben a rovatban nincs törölhető saját érték.
+        nothing_to_restore: Ez a rovat már a forrás értékét mutatja.
+      staged:
+        clear: (törlésre kerül)
+        restore: (vissza a forráshoz)
       step:
         calculate: Számítás
         file: Benyújtás

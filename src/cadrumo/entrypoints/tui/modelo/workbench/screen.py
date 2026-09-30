@@ -17,7 +17,7 @@ address so a refresh or a language switch lands on the same box.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from functools import partial
 from typing import ClassVar, Final, override
 
@@ -41,12 +41,16 @@ from .....application.modelo.work_form_models import (
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
+from .....core.operations import OperationTerminalCondition
 from ...components.account_chrome import AccountChromeScreen
+from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance, tokenised
-from .casilla_list import AddressKey, CasillaList, CasillaListEntry, Density, value_text
+from ...operations.controller import OperationController
+from ...operations.refusal_explanation import public_refusal_explanation
+from .casilla_list import CasillaList, CasillaListEntry, Density, value_text
+from .editor import CasillaEditorScreen, EditorDecision
 from .keys import describe_bindings
 from .page_items import (
-    StagedDisplay,
     WorkbenchFilter,
     WorkbenchPage,
     first_attention,
@@ -54,9 +58,11 @@ from .page_items import (
     section_nav_text,
     workbench_pages,
 )
-from .ports import ModeloWorkbenchReaderV1, WorkbenchLoadV1
+from .ports import ModeloWorkbenchActionsV1, ModeloWorkbenchReaderV1, WorkbenchChangeKind, WorkbenchLoadV1
 from .progress import NextAction, next_action_text, stepper_text, workbench_progress
-from .vocabulary import ORIGIN_GLYPHS, editability_words_key, origin_words_key
+from .review import EditReviewScreen, ReviewDecision
+from .session import StageRefusal, WorkbenchEditSession
+from .vocabulary import ORIGIN_GLYPHS, TYPED_EDITABILITIES, editability_words_key, origin_words_key
 from .wording import modelo_number, modelo_title, period_words
 
 _NARROW: Final[int] = 110
@@ -82,6 +88,8 @@ _SCREEN_KEYS: Final[Mapping[str, str]] = {
     "f": "tui.modelo.workbench.key.filter",
     "question_mark": "tui.modelo.workbench.key.help",
     "escape": "tui.modelo.workbench.key.back",
+    "R": "tui.modelo.workbench.key.review",
+    "f8": "tui.modelo.workbench.key.next_step",
 }
 _LIST_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
@@ -102,6 +110,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen #wb-next {
             color: $accent;
             text-style: bold;
+        }
+        ModeloWorkbenchScreen #wb-notice {
+            height: auto;
+            color: $warning;
         }
         ModeloWorkbenchScreen #wb-body {
             height: 1fr;
@@ -151,19 +163,29 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         Binding("question_mark,f1", "toggle_help", "", show=False),
         Binding("escape,q", "leave", "", show=False),
         Binding("f3", "toggle_appearance", "", show=False),
+        Binding("R", "review", "", show=False),
+        Binding("f8", "next_step", "", show=False),
     ]
 
-    def __init__(self, reader: ModeloWorkbenchReaderV1, *, id: str | None = None) -> None:
-        """Hold the port this workbench reads its declaration through."""
+    def __init__(
+        self,
+        reader: ModeloWorkbenchReaderV1,
+        *,
+        actions: ModeloWorkbenchActionsV1 | None = None,
+        id: str | None = None,
+    ) -> None:
+        """Hold the ports this workbench reads through and, when editing is available, acts through."""
         super().__init__(id=id)
         self._reader = reader
+        self._actions = actions
+        self._operation_in_flight = False
         self._load: WorkbenchLoadV1 | None = None
         self._pages: tuple[WorkbenchPage, ...] = ()
         self._page_index = 0
         self._filter = WorkbenchFilter.ALL
-        self._staged: dict[AddressKey, StagedDisplay] = {}
         self._cards: dict[tuple[str, OutputLanguage], ModeloCasillaHelpCardV1] = {}
         self._language = OutputLanguage(output_language())
+        self._session = WorkbenchEditSession(self._language)
 
     # ── composition ─────────────────────────────────────────────────────
 
@@ -173,6 +195,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         with Vertical(id="wb-status"):
             yield Static(id="wb-stepper", markup=False)
             yield Static(id="wb-next", markup=False)
+            yield Static(id="wb-notice", markup=False)
         with Horizontal(id="wb-body"):
             yield OptionList(id="wb-sections")
             with Vertical(id="wb-main"):
@@ -269,7 +292,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         load = self._load
         if load is None:
             return
-        progress = workbench_progress(load.form, staged=len(self._staged), verified=load.verified, filed=load.filed)
+        staged = len(self._session.changes)
+        progress = workbench_progress(load.form, staged=staged, verified=load.verified, filed=load.filed)
         self.query_one("#wb-stepper", Static).update(stepper_text(progress))
         key = _NEXT_KEYS[progress.next_action]
         action = next_action_text(progress)
@@ -297,7 +321,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             notes.append(tr(f"tui.modelo.workbench.layout.{form.layout_provenance.value}"))
         self.query_one("#wb-page", Static).update(f"{page.heading.text}   " + " · ".join(notes))
         casilla_list = self.query_one(CasillaList)
-        casilla_list.set_items(page_items(page, staged=self._staged, mode=self._filter), language=self._language)
+        items = page_items(page, staged=self._session.display(), mode=self._filter)
+        casilla_list.set_items(items, language=self._language)
         if casilla_list.highlighted is None:
             self._render_help(None)
 
@@ -420,8 +445,204 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.query_one("#wb-help", Static).toggle_class("-expanded")
 
     def action_leave(self) -> None:
-        """Return to where the workbench was opened from."""
-        self.dismiss(None)
+        """Return to where the workbench was opened from, asking first when changes are staged."""
+        if not self._session.dirty:
+            self.dismiss(None)
+            return
+
+        def closed(discard: bool | None) -> None:
+            if discard:
+                self._session.discard()
+                self.dismiss(None)
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("tui.modelo.workbench.leave.title"),
+                message=tr("tui.modelo.workbench.leave.message", count=len(self._session.changes)),
+                confirm_label=tr("tui.modelo.workbench.leave.discard"),
+                cancel_label=tr("tui.modelo.workbench.leave.stay"),
+            ),
+            closed,
+        )
+
+    # ── editing ─────────────────────────────────────────────────────────
+
+    def _notice(self, message: str) -> None:
+        self.query_one("#wb-notice", Static).update(message)
+
+    def _refresh_after_staging(self) -> None:
+        self._render_progress()
+        self._render_navigator()
+        self._render_page()
+
+    def on_casilla_list_edit_requested(self, message: CasillaList.EditRequested) -> None:
+        """Open the editor for the casilla under the cursor, or say why it cannot be edited."""
+        field = message.entry.field
+        actions = self._actions
+        form = self.form
+        if actions is None or form is None or not form.edit_admitted:
+            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+            return
+        if field.editability not in TYPED_EDITABILITIES:
+            self._notice(tr(editability_words_key(field.editability)))
+            return
+        card = None
+        if isinstance(field.address, ModeloFormCasillaAddressV1):
+            card = self._cards.get((str(field.address.casilla_id), self._language))
+        probe = WorkbenchEditSession(self._language)
+        self.app.push_screen(
+            CasillaEditorScreen(
+                field,
+                parse=actions.parse,
+                language=self._language,
+                limits=() if card is None else card.constraints,
+                can_clear=probe.stage_clear(field) is None,
+                can_restore=probe.stage_restore(field) is None,
+            ),
+            partial(self._editor_closed, message.entry),
+        )
+
+    def _editor_closed(self, entry: CasillaListEntry, decision: EditorDecision | None) -> None:
+        if decision is None:
+            return
+        field = entry.field
+        if decision.kind is WorkbenchChangeKind.SET:
+            refusal = self._session.stage_value(field, decision.value, decision.display)
+        elif decision.kind is WorkbenchChangeKind.CLEAR:
+            refusal = self._session.stage_clear(field)
+        else:
+            refusal = self._session.stage_restore(field)
+        self._after_stage(refusal)
+
+    def _after_stage(self, refusal: StageRefusal | None) -> None:
+        if refusal is not None:
+            self._notice(tr(f"tui.modelo.workbench.stage_refused.{refusal.value}"))
+            return
+        self._notice("")
+        self._refresh_after_staging()
+
+    def on_casilla_list_clear_requested(self, message: CasillaList.ClearRequested) -> None:
+        """Stage removing the value the filer declared on the casilla under the cursor."""
+        self._after_stage(self._session.stage_clear(message.entry.field))
+
+    def on_casilla_list_revert_requested(self, message: CasillaList.RevertRequested) -> None:
+        """Drop the change staged on the casilla under the cursor."""
+        if self._session.revert(message.entry.key):
+            self._notice("")
+            self._refresh_after_staging()
+
+    def on_casilla_list_source_requested(self, message: CasillaList.SourceRequested) -> None:
+        """Say where the value under the cursor comes from."""
+        bindings = message.entry.field.bindings
+        if not bindings:
+            self._notice(tr(editability_words_key(message.entry.field.editability)))
+            return
+        self._notice(tr("tui.modelo.workbench.source_line", source=tr(bindings[0].policy.label_key)))
+
+    def action_review(self) -> None:
+        """Open the review of every staged change."""
+        if not self._session.dirty:
+            self._notice(tr("tui.modelo.workbench.review.none"))
+            return
+        self.app.push_screen(EditReviewScreen(self._session.changes), self._review_closed)
+
+    def _review_closed(self, decision: ReviewDecision | None) -> None:
+        actions = self._actions
+        if decision is ReviewDecision.APPLY and actions is not None:
+            changes = self._session.payload()
+            self._run_operation(partial(actions.apply, changes), applies_changes=True)
+        elif decision is ReviewDecision.DISCARD:
+            self._session.discard()
+            self._notice(tr("tui.modelo.workbench.review.discarded"))
+            self._refresh_after_staging()
+
+    # ── lifecycle ───────────────────────────────────────────────────────
+
+    def action_next_step(self) -> None:
+        """Run the next step the stepper offers."""
+        load = self._load
+        if load is None:
+            return
+        staged = len(self._session.changes)
+        progress = workbench_progress(load.form, staged=staged, verified=load.verified, filed=load.filed)
+        actions = self._actions
+        action = progress.next_action
+        if action is NextAction.APPLY:
+            self.action_review()
+        elif action in {NextAction.FILL, NextAction.RESOLVE}:
+            self.query_one(CasillaList).action_attention(1)
+        elif actions is None:
+            self._notice(tr("tui.modelo.workbench.editability.no_admission"))
+        elif action is NextAction.CALCULATE:
+            self._run_operation(actions.calculate)
+        elif action is NextAction.VERIFY:
+            self._run_operation(actions.verify)
+        elif action is NextAction.FILE:
+            self._confirm_file(actions.file)
+
+    def _confirm_file(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
+        def closed(confirmed: bool | None) -> None:
+            if confirmed:
+                self._run_operation(submit)
+            else:
+                self._notice(tr("application.modelo.lifecycle.file_cancelled"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("application.modelo.lifecycle.file_confirm_title"),
+                message=tr("application.modelo.lifecycle.file_confirm_message"),
+                confirm_label=tr("application.modelo.lifecycle.file_confirm_accept"),
+                cancel_label=tr("application.modelo.lifecycle.file_confirm_cancel"),
+            ),
+            closed,
+        )
+
+    def _run_operation(
+        self, submit: Callable[[], Awaitable[OperationController]], *, applies_changes: bool = False
+    ) -> None:
+        if self._operation_in_flight:
+            return
+        self._operation_in_flight = True
+        self.run_worker(
+            partial(self._open_operation, submit, applies_changes), group="workbench-operation", exclusive=True
+        )
+
+    async def _open_operation(
+        self, submit: Callable[[], Awaitable[OperationController]], applies_changes: bool
+    ) -> None:
+        from ...operations.modal import OperationModal
+
+        try:
+            controller = await submit()
+        except Exception as failure:
+            self._operation_in_flight = False
+            get_logger(__name__).error(
+                "modelo workbench operation failed before it opened: %s", type(failure).__qualname__, exc_info=True
+            )
+            self._notice(tr("operation.modal.terminal.failed"))
+            return
+        self.app.push_screen(OperationModal(controller), partial(self._operation_settled, applies_changes))
+
+    def _operation_settled(self, applies_changes: bool, outcome: object) -> None:
+        from ...operations.modal import OperationModalSettledOutcomeV1
+
+        self._operation_in_flight = False
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        condition = outcome.view_model.projection.terminal_condition
+        if condition is not OperationTerminalCondition.SUCCEEDED:
+            explanation = (
+                public_refusal_explanation(outcome.view_model.receipt_ref)
+                if outcome.view_model.receipt_kind == "refusal"
+                else None
+            )
+            message = tr("tui.modelo.workbench.operation.not_done")
+            self._notice(message if explanation is None else f"{message} {explanation}")
+            return
+        if applies_changes:
+            self._session.discard()
+        self._notice(tr("tui.modelo.workbench.operation.done"))
+        self.run_worker(self._read, group="workbench-read", exclusive=True)
 
     def action_toggle_appearance(self) -> None:
         """Switch between the two shipped appearances."""
