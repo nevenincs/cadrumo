@@ -94,20 +94,32 @@ def test_an_unknown_direction_keeps_the_sign_under_the_plain_word_and_says_why()
     assert "Cadrumo does not yet say whether this amount is to pay or to refund." in help_lines[1]
 
 
-def test_a_nil_return_and_a_negative_instalment_read_as_words_alone() -> None:
+def test_a_nil_return_and_a_negative_result_nothing_carries_read_as_words_alone() -> None:
     nil, _ = _view(with_result(synthetic_form(), ModeloFormResultDirection.NIL, Decimal("0")))
-    negative, help_lines = _view(
-        with_result(
-            synthetic_form(),
-            ModeloFormResultDirection.TO_CARRY_FORWARD,
-            Decimal("-40"),
-            disposition=ResultDisposition.RESULTADO_A_DEDUCIR,
-        )
-    )
+    negative, help_lines = _view(with_result(synthetic_form(), ModeloFormResultDirection.NEGATIVE, Decimal("-40")))
+    with override_settings(cadrumo_output_language="en"):
+        words = tr("tui.modelo.workbench.header.result.negative")
 
     assert nil == "Result zero  [19]"
-    assert negative == "Negative result: nothing to pay  [19]"
+    assert negative == f"{words}  [19]"
     assert not [line for line in help_lines if "without its sign" in line]
+
+
+def test_a_negative_instalment_to_deduct_later_names_its_amount_and_the_signed_box() -> None:
+    form = with_result(
+        synthetic_form(),
+        ModeloFormResultDirection.TO_DEDUCT_LATER,
+        Decimal("-100"),
+        disposition=ResultDisposition.RESULTADO_A_DEDUCIR,
+    )
+    text, help_lines = _view(form)
+    with override_settings(cadrumo_output_language="en"):
+        words = tr("tui.modelo.workbench.header.result.negative_carried", amount=f"100.00{_NBSP}€")
+        sign_help = tr("tui.modelo.workbench.header.result.sign_help", box="19", value=f"−100.00{_NBSP}€")
+
+    assert text == f"{words}  [19]"
+    assert "100.00" in words
+    assert sign_help in help_lines
 
 
 def test_a_refund_election_still_to_make_names_both_ways_and_the_magnitude() -> None:

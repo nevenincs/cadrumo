@@ -2164,6 +2164,7 @@ tui:
             to pay or to refund. Check it against the official form before you file.
           failed: 'Result: could not be calculated [{key}]'
           negative: 'Negative result: nothing to pay'
+          negative_carried: 'Negative result: {amount} to deduct in later quarters'
           not_calculated: 'Result: not calculated yet [{key}]'
           other_boxes: 'Other result boxes on this form: {boxes}'
           sign_help: Box [{box}] shows {value} on the official form. The header shows
@@ -2175,6 +2176,7 @@ tui:
           zero: Result zero
         stale:
           changes: 'out of date: changes not applied yet: {count} [{key}]'
+          recalculate: 'out of date: calculate again [{key}]'
       help:
         empty: There are no boxes in this view.
         feeds: 'Used in: {boxes}'
@@ -2335,6 +2337,7 @@ tui:
         confirm: 'Confirm the assumed values (to confirm: {count})'
         export: Create the file to file with AEAT
         fill: 'Complete the marked boxes (to do: {count})'
+        recalculate: 'Calculate again: your records changed'
         record: Once you have filed it with AEAT, record the filing here
         recorded: Recorded as filed on {date}
         resolve: 'Resolve what blocks filing (to do: {count})'

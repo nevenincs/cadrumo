@@ -2198,6 +2198,8 @@ tui:
             vagy visszatérítendő. Benyújtás előtt ellenőrizze a hivatalos nyomtatványon.
           failed: 'Eredmény: nem számítható ki [{key}]'
           negative: 'Negatív eredmény: nincs fizetendő'
+          negative_carried: 'Negatív eredmény: {amount} a következő negyedévekben
+            levonható'
           not_calculated: 'Eredmény: még nincs kiszámítva [{key}]'
           other_boxes: 'A nyomtatvány további eredményrovatai: {boxes}'
           sign_help: A(z) [{box}] rovat a hivatalos nyomtatványon {value} értéket
@@ -2210,6 +2212,7 @@ tui:
           zero: Nulla eredmény
         stale:
           changes: 'elavult: még nem alkalmazott módosítások: {count} [{key}]'
+          recalculate: 'elavult: számolja újra [{key}]'
       help:
         empty: Ebben a nézetben nincs rovat.
         feeds: 'Felhasználva: {boxes}'
@@ -2377,6 +2380,7 @@ tui:
         confirm: 'Erősítse meg a feltételezett értékeket (megerősítendő: {count})'
         export: Hozza létre a fájlt az AEAT-nál történő benyújtáshoz
         fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
+        recalculate: 'Számolja újra: a nyilvántartása megváltozott'
         record: Miután benyújtotta az AEAT-nál, rögzítse itt a benyújtást
         recorded: 'Benyújtottként rögzítve: {date}'
         resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'

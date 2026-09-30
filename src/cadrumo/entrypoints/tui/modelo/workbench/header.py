@@ -6,7 +6,8 @@ the filing window with the days left, "today" or "passed". The second gives
 the result: the direction in words, the amount and the box that settles it,
 "not calculated yet" before the first calculation, an out-of-date mark while
 changes wait to be applied or after the filer's records changed under the
-calculation, and one chip per attention level that has anything in it. The third, the stepper and the next action, is :mod:`.progress`'s.
+calculation, and one chip per attention level that has anything in it. The
+third, the stepper and the next action, is :mod:`.progress`'s.
 
 Everything shown is what the read model states. The direction comes from the
 settlement box's declared disposition, never from the sign; when nothing

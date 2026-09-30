@@ -227,6 +227,7 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.CONFIRM: "n",
     NextAction.RESOLVE: "i",
     NextAction.CALCULATE: "F8",
+    NextAction.RECALCULATE: "c",
     NextAction.VERIFY: "F8",
     NextAction.EXPORT: "e",
     NextAction.RECORD: "F8",
@@ -1743,7 +1744,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._advance_attention(1)
         elif actions is None:
             self._edit_unavailable()
-        elif action is NextAction.CALCULATE:
+        elif action in {NextAction.CALCULATE, NextAction.RECALCULATE}:
             self._calculate(actions)
         elif action is NextAction.VERIFY:
             self._run_operation(actions.verify)

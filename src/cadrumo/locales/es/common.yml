@@ -2219,6 +2219,8 @@ tui:
             o a devolver. Compruébalo en el modelo oficial antes de presentar.
           failed: 'Resultado: no se pudo calcular [{key}]'
           negative: 'Resultado negativo: nada a ingresar'
+          negative_carried: 'Resultado negativo: {amount} a deducir en los siguientes
+            trimestres'
           not_calculated: 'Resultado: aún sin calcular [{key}]'
           other_boxes: 'Otras casillas de resultado de este modelo: {boxes}'
           sign_help: La casilla [{box}] figura en el modelo oficial como {value}.
@@ -2230,6 +2232,7 @@ tui:
           zero: Resultado cero
         stale:
           changes: 'desactualizado: cambios sin aplicar: {count} [{key}]'
+          recalculate: 'desactualizado: vuelve a calcular [{key}]'
       help:
         empty: No hay casillas en esta vista.
         feeds: 'Se usa en: {boxes}'
@@ -2389,6 +2392,7 @@ tui:
         confirm: 'Confirma los valores supuestos (por confirmar: {count})'
         export: Genera el fichero para presentarlo en la AEAT
         fill: 'Completa las casillas marcadas (pendientes: {count})'
+        recalculate: 'Vuelve a calcular: tus registros han cambiado'
         record: Cuando la hayas presentado en la AEAT, registra aquí la presentación
         recorded: Registrada como presentada el {date}
         resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
