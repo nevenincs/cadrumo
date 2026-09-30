@@ -2823,7 +2823,6 @@
         "dev.packaging.evidence",
         "dev.packaging.evidence_scrub",
         "dev.packaging.hashing",
-        "dev.packaging.installed_mcp_oracle",
         "dev.packaging.installed_tax_oracle",
         "dev.packaging.installed_wheel_binding",
         "dev.packaging.lane_verification_core",

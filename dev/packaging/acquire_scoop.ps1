@@ -337,10 +337,6 @@ function Invoke-HostAcquisition {
         verified_artifact_digests = $verifiedDigests
         installed_prefix = $prefix
         installed_tax_oracle = (Get-Content -LiteralPath $oracle.tax_evidence -Raw | ConvertFrom-Json)
-        # The Scoop manifest is CLI-only by scope: its bin block shims aeat
-        # alone, so the cadrumo-mcp console script the same distribution
-        # declares is never exposed for this lane to drive.
-        installed_mcp_oracle = $null
     }
     $evidence | ConvertTo-Json -Depth 20 |
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "acquire-scoop-evidence.json") -Encoding UTF8
