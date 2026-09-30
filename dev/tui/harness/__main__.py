@@ -88,7 +88,7 @@ def _capture_sequence(
         _emit(f"refused: {refusal}")
         return 1
     shots: list[Shot] = []
-    for page in pages or scenario_pages():
+    for page in pages or scenario_pages(scenario):
         for size in sizes:
             width, _, height = size.partition("x")
             for theme in themes:
@@ -201,11 +201,11 @@ def main(argv: list[str] | None = None) -> int:
         # would otherwise pay for.
         from .sequences import SEQUENCE_SCENARIOS, page_interfaces, scenario_pages, scenario_surface
 
-        for scenario in sorted(SEQUENCE_SCENARIOS):
-            for page in scenario_pages():
+        for name, scenario in sorted(SEQUENCE_SCENARIOS.items()):
+            for page in scenario_pages(scenario):
                 declared = page_interfaces(page)
                 if declared:
-                    _emit(f"{scenario_surface(scenario, page)} {','.join(declared)}")
+                    _emit(f"{scenario_surface(name, page)} {','.join(declared)}")
         return 0
 
     if args.command == "sequences":
@@ -215,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
             {
                 "name": name,
                 "summary": scenario.summary,
-                "pages": {page: scenario_surface(name, page) for page in scenario_pages()},
+                "pages": {page: scenario_surface(name, page) for page in scenario_pages(scenario)},
             }
             for name, scenario in sorted(SEQUENCE_SCENARIOS.items())
         ]

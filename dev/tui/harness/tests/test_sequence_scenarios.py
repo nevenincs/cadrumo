@@ -13,6 +13,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
+from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
+from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from dev.docs.sequences.checks import discover_sequences
@@ -22,6 +25,8 @@ from ... import _harness, _viewports
 from ..._artifacts import ThemeName
 from ..sequences import (
     DECLARATIONS_PAGE,
+    ISSUES_PAGE,
+    REFUSED_REVIEW_PAGE,
     SEQUENCE_SCENARIOS,
     ScenarioError,
     SequenceScenario,
@@ -31,6 +36,9 @@ from ..sequences import (
 )
 
 _FIRST_QUARTER = SEQUENCE_SCENARIOS["modelo-303-first-quarter"]
+_INSTALMENT = SEQUENCE_SCENARIOS["modelo-130-first-quarter"]
+_UNVERIFIED = SEQUENCE_SCENARIOS["verification-reports-incomplete"]
+_FIRST_QUARTER_PAGES = ("workbench", "sources", "review", "recalculate", ISSUES_PAGE)
 
 
 def _qualname(screen: object) -> str:
@@ -65,6 +73,24 @@ def test_a_page_no_route_builds_is_refused_before_any_sequence_runs(tmp_path: Pa
     assert not any(tmp_path.iterdir())
 
 
+@pytest.mark.unit
+@pytest.mark.hex_core
+def test_a_scenario_offers_only_the_pages_its_declaration_can_reach() -> None:
+    assert ISSUES_PAGE in scenario_pages(_FIRST_QUARTER)
+    assert ISSUES_PAGE not in scenario_pages(_UNVERIFIED)
+    assert REFUSED_REVIEW_PAGE in scenario_pages(_INSTALMENT)
+    assert REFUSED_REVIEW_PAGE not in scenario_pages(_FIRST_QUARTER)
+
+
+@pytest.mark.unit
+@pytest.mark.hex_core
+def test_a_page_the_scenario_does_not_offer_is_refused_before_its_sequence_runs(tmp_path: Path) -> None:
+    with pytest.raises(ScenarioError, match="unknown page"):
+        capture_scenario(_UNVERIFIED, (Shot(ISSUES_PAGE, 80, 24, "dark", tmp_path / "issues.svg"),))
+
+    assert not any(tmp_path.iterdir())
+
+
 @pytest.mark.integration
 @pytest.mark.hex_core
 def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(tmp_path: Path) -> None:
@@ -79,27 +105,64 @@ def test_a_scenario_walks_to_every_page_over_the_declaration_its_sequence_built(
 
     assert provenance.sequence_id == _FIRST_QUARTER.sequence_id
     assert provenance.matches_golden, provenance.golden_problems
-    assert [item.page for item in captures] == list(scenario_pages())
+    assert [item.page for item in captures] == list(scenario_pages(_FIRST_QUARTER))
     for item in captures:
         assert item.capture.svg_path.stat().st_size > 0
         assert item.capture.viewport == viewport
     workbench_pages = [item for item in captures if item.page != DECLARATIONS_PAGE]
-    assert [item.page for item in workbench_pages] == ["workbench", "sources"]
-    for item in workbench_pages:
+    assert tuple(item.page for item in workbench_pages) == _FIRST_QUARTER_PAGES
+    for item in workbench_pages[:2]:
         assert "303" in item.capture.frame_text, item.page
 
 
 @pytest.mark.integration
 @pytest.mark.hex_core
 def test_the_walk_lands_on_the_screen_each_route_builds(tmp_path: Path) -> None:
-    shots = [
-        Shot(page, 100, 30, "light", tmp_path / f"{page}.svg") for page in scenario_pages() if page != DECLARATIONS_PAGE
-    ]
+    shots = [Shot(page, 100, 30, "light", tmp_path / f"{page}.svg") for page in _FIRST_QUARTER_PAGES]
 
     _, frames = capture_scenario(_FIRST_QUARTER, shots)
 
     painted = {frame.shot.page: frame.screen for frame in frames}
-    assert painted == {"workbench": _qualname(ModeloWorkbenchScreen), "sources": _qualname(WorkbenchSourcesScreen)}
+    assert painted == {
+        "workbench": _qualname(ModeloWorkbenchScreen),
+        "sources": _qualname(WorkbenchSourcesScreen),
+        "review": _qualname(EditReviewScreen),
+        "recalculate": _qualname(ConfirmScreen),
+        ISSUES_PAGE: _qualname(WorkbenchIssuesScreen),
+    }
+
+
+def _surface_text(frame_text: str) -> str:
+    """The painted surface without the header line, which carries the capture's own timing."""
+    return frame_text.split("\n", 1)[1].split("── focus:")[0]
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_no_walk_changes_the_declaration_the_later_captures_read(tmp_path: Path) -> None:
+    """Every capture shares one sandbox, so a walk that saved anything would show on the next workbench."""
+    walked = [page for page in scenario_pages(_INSTALMENT) if page not in {DECLARATIONS_PAGE, "workbench"}]
+    shots = [
+        Shot(page, 120, 40, "dark", tmp_path / f"{index}-{page}.svg")
+        for index, page in enumerate(("workbench", *walked, "workbench"))
+    ]
+
+    _, frames = capture_scenario(_INSTALMENT, shots)
+
+    assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_the_refused_review_lists_the_blocking_finding_the_plain_review_does_not(tmp_path: Path) -> None:
+    shots = [Shot(page, 120, 40, "dark", tmp_path / f"{page}.svg") for page in ("review", REFUSED_REVIEW_PAGE)]
+
+    _, frames = capture_scenario(_INSTALMENT, shots)
+
+    plain, refused = (_surface_text(frame.frame_text) for frame in frames)
+    assert all(frame.screen == _qualname(EditReviewScreen) for frame in frames)
+    assert "▲" in refused
+    assert "▲" not in plain
 
 
 @pytest.mark.integration
