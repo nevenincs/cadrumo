@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-09-30 11:51+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -184,41 +184,16 @@ msgstr ""
 "incluidas las evidencias complementarias mantenidas manualmente."
 
 #: ../../reference/registry-legal-api.md
-msgid "Compiler receipt"
-msgstr "Recibo del compilador"
-
-#: ../../reference/registry-legal-api.md
-msgid ""
-"The Cadrumo and compiler source files the canonical compiler process "
-"loaded, dependency manifests, Python major/minor, and Pydantic versions."
-msgstr ""
-"Los ficheros fuente de Cadrumo y del compilador que cargó el proceso "
-"canónico del compilador, los manifiestos de dependencias, la versión "
-"mayor/menor de Python y las versiones de Pydantic."
-
-#: ../../reference/registry-legal-api.md
-msgid "Component receipt"
-msgstr "Recibo de componentes"
-
-#: ../../reference/registry-legal-api.md
-msgid ""
-"The source and compiler receipts bound to one fresh, complete-authority "
-"generation."
-msgstr ""
-"Los recibos de fuentes y de compilador vinculados a una única generación "
-"de autoridad completa y nueva."
-
-#: ../../reference/registry-legal-api.md
 msgid "Identity digest"
 msgstr "Resumen de identidad"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
-"The content-addressed combination of those receipts, recorded so a stale "
-"artifact can be detected."
+"The content-addressed digest of the source receipt, recorded as the "
+"logical generation so a stale artifact can be detected."
 msgstr ""
-"La combinación direccionada por contenido de esos recibos, registrada "
-"para poder detectar un artefacto obsoleto."
+"El resumen direccionado por contenido del recibo de fuentes, registrado "
+"como generación lógica para poder detectar un artefacto obsoleto."
 
 #: ../../reference/registry-legal-api.md
 msgid "Authority descriptor"
@@ -245,32 +220,31 @@ msgstr ""
 "La publicación SQLite direccionada por contenido que contiene los "
 "componentes tipados, las filas de dependencias y el manifiesto completo."
 
-#: ../../reference/registry-legal-api.md:54
+#: ../../reference/registry-legal-api.md:52
 msgid ""
 "The descriptor format is `cadrumo-authority-descriptor-v1`; its exact "
 "members are `format`, `database`, `database_size`, `database_sha256`, and"
 " `logical_generation`. The database format is `cadrumo-authority-"
-"sqlite-v3`. Its manifest binds the logical generation and the complete "
-"component directory, and it records the compiler source closure and "
-"environment the compiler receipt is computed from. A database in an older"
-" format is refused rather than read. The physical database digest is both"
-" the descriptor's admission check and the content-addressed filename, so "
-"a changed or colliding payload is refused before runtime work begins."
+"sqlite-v4`. Its manifest binds the logical generation and the complete "
+"component directory; it records nothing about the compiler or the "
+"environment that built it. A database in an older format is refused "
+"rather than read. The physical database digest is both the descriptor's "
+"admission check and the content-addressed filename, so a changed or "
+"colliding payload is refused before runtime work begins."
 msgstr ""
 "El formato del descriptor es `cadrumo-authority-descriptor-v1`; sus "
 "miembros exactos son `format`, `database`, `database_size`, "
 "`database_sha256` y `logical_generation`. El formato de la base de datos "
-"es `cadrumo-authority-sqlite-v3`. Su manifiesto vincula la generación "
-"lógica y el directorio completo de componentes, y registra el cierre de "
-"fuentes del compilador y el entorno a partir de los cuales se calcula el "
-"recibo del compilador. Una base de datos en un formato anterior se "
-"rechaza en lugar de leerse. El resumen físico de la base de datos es a la"
-" vez la comprobación de admisión del descriptor y el nombre de fichero "
-"direccionado por contenido, de modo que una carga útil modificada o en "
-"colisión se rechaza antes de que empiece el trabajo del entorno de "
-"ejecución."
+"es `cadrumo-authority-sqlite-v4`. Su manifiesto vincula la generación "
+"lógica y el directorio completo de componentes; no registra nada sobre el"
+" compilador ni sobre el entorno que la generó. Una base de datos en un "
+"formato anterior se rechaza en lugar de leerse. El resumen físico de la "
+"base de datos es a la vez la comprobación de admisión del descriptor y el"
+" nombre de fichero direccionado por contenido, de modo que una carga útil"
+" modificada o en colisión se rechaza antes de que empiece el trabajo del "
+"entorno de ejecución."
 
-#: ../../reference/registry-legal-api.md:64
+#: ../../reference/registry-legal-api.md:62
 msgid ""
 "The development publication command is `python -m dev.registry.pipeline "
 "publish-authority`. It writes to the configured authority root, and "
@@ -289,44 +263,40 @@ msgstr ""
 "schema` explícito. El paquete del producto que lleva los comandos no "
 "tiene ningún comando que compile o repare esta publicación."
 
-#: ../../reference/registry-legal-api.md:73
+#: ../../reference/registry-legal-api.md:71
 msgid ""
 "The source receipt folds each registry and source-evidence file's root-"
-"relative path and content digest. Registry files fold CRLF to LF; source "
-"evidence is byte-exact. The compiler receipt hashes the portable path and"
-" content of every non-test `cadrumo` and `dev/registry` source file "
-"loaded to compile, validate and project the authority, together with "
-"`pyproject.toml`, `uv.lock`, Python major/minor, and the installed "
-"`pydantic` and `pydantic-core` versions. Every publication, whether "
-"started from the publication command or by the package build, compiles in"
-" one fresh interpreter running the same module, so the recorded files do "
-"not depend on the launching tool. The currency check re-hashes exactly "
-"those recorded files without compiling: an edit to a recorded file, or "
-"its removal, makes the publication stale, while an edit to a module the "
-"compiler never loaded does not. A fresh clone in the same declared "
-"environment is stable, without promising identity across incompatible "
-"build environments."
+"relative path and content digest, and the profile schema. Registry files "
+"fold CRLF to LF; source evidence is byte-exact. That receipt is the "
+"publication's whole identity: the authority names the law it encodes, not"
+" the software that compiled it. The currency check reads only those "
+"sources, without compiling, so an edit to a registry or evidence file "
+"makes the publication stale, while a change to the compiler, the Python "
+"version or the dependency set does not. A compiler change reaches the "
+"publication when it is republished; the database file, addressed by its "
+"own bytes, then changes under the same logical generation. Every "
+"publication, whether started from the publication command or by the "
+"package build, compiles in one fresh interpreter running the same module,"
+" and a fresh clone of the same sources derives the same identity."
 msgstr ""
 "El recibo de fuentes pliega la ruta relativa a la raíz y el resumen de "
-"contenido de cada fichero de registro y de evidencia de origen. Los "
-"ficheros de registro convierten CRLF en LF; la evidencia de origen es "
-"exacta byte a byte. El recibo del compilador calcula el hash de la ruta "
-"portable y del contenido de cada fichero fuente de `cadrumo` y de "
-"`dev/registry`, excluidas las pruebas, que se carga para compilar, "
-"validar y proyectar la autoridad, junto con `pyproject.toml`, `uv.lock`, "
-"la versión mayor/menor de Python y las versiones instaladas de `pydantic`"
-" y `pydantic-core`. Toda publicación, tanto si se inicia con el comando "
-"de publicación como con la compilación del paquete, se compila en un "
-"único intérprete nuevo que ejecuta el mismo módulo, de modo que los "
-"ficheros registrados no dependen de la herramienta que la inicia. La "
-"comprobación de vigencia vuelve a calcular el hash exactamente de esos "
-"ficheros registrados sin compilar: la modificación de un fichero "
-"registrado, o su eliminación, deja obsoleta la publicación, mientras que "
-"la modificación de un módulo que el compilador nunca cargó no lo hace. "
-"Una copia nueva del repositorio en el mismo entorno declarado es estable,"
-" sin prometer identidad entre entornos de compilación incompatibles."
+"contenido de cada fichero de registro y de evidencia de origen, y el "
+"esquema de perfil. Los ficheros de registro convierten CRLF en LF; la "
+"evidencia de origen es exacta byte a byte. Ese recibo es toda la "
+"identidad de la publicación: la autoridad nombra la ley que codifica, no "
+"el software que la compiló. La comprobación de vigencia lee solo esas "
+"fuentes, sin compilar, de modo que la modificación de un fichero de "
+"registro o de evidencia deja obsoleta la publicación, mientras que un "
+"cambio en el compilador, en la versión de Python o en el conjunto de "
+"dependencias no lo hace. Un cambio en el compilador llega a la "
+"publicación cuando se vuelve a publicar; el fichero de la base de datos, "
+"direccionado por sus propios bytes, cambia entonces bajo la misma "
+"generación lógica. Toda publicación, tanto si se inicia con el comando de"
+" publicación como con la compilación del paquete, se compila en un único "
+"intérprete nuevo que ejecuta el mismo módulo, y una copia nueva del "
+"repositorio con las mismas fuentes deriva la misma identidad."
 
-#: ../../reference/registry-legal-api.md:87
+#: ../../reference/registry-legal-api.md:84
 msgid ""
 "Each component payload is a compact canonical projection of one typed "
 "authority value. Required fields are always written; a field is omitted "
@@ -405,7 +375,7 @@ msgstr "Texto"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "La cadena JSON sin etiqueta, por ejemplo `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:105
+#: ../../reference/registry-legal-api.md:102
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
@@ -418,7 +388,7 @@ msgstr ""
 "valor de hecho no textual sin etiqueta; nunca infiere un tipo a partir de"
 " la forma de una cadena."
 
-#: ../../reference/registry-legal-api.md:110
+#: ../../reference/registry-legal-api.md:107
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The database also carries typed runtime "
@@ -439,7 +409,7 @@ msgstr ""
 "cuando cualquier catálogo obligatorio del entorno de ejecución está "
 "vacío."
 
-#: ../../reference/registry-legal-api.md:117
+#: ../../reference/registry-legal-api.md:114
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -456,7 +426,7 @@ msgstr ""
 "`hard_ceiling` opcional) que se utiliza para admitir coordenadas "
 "compatibles."
 
-#: ../../reference/registry-legal-api.md:123
+#: ../../reference/registry-legal-api.md:120
 msgid ""
 "The `IndexedRegistryAuthority.operation()` path has no source "
 "compilation, raw authored-tree loader, repair path, eager JSON runtime "
@@ -481,7 +451,7 @@ msgstr ""
 " solo cuando una operación fijada los solicita; los valores correctos "
 "permanecen en una caché acotada al ámbito de la generación."
 
-#: ../../reference/registry-legal-api.md:133
+#: ../../reference/registry-legal-api.md:130
 msgid ""
 "The runtime contract is for ordinary filesystem-installed wheels, where "
 "the descriptor and SQLite database have stable physical paths. Direct "
@@ -494,27 +464,28 @@ msgstr ""
 "por importación desde un zip: SQLite no puede abrir un miembro de archivo"
 " comprimido como su base de datos de solo lectura."
 
-#: ../../reference/registry-legal-api.md:138
+#: ../../reference/registry-legal-api.md:135
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses a "
 "descriptor/database publication whose recorded identity digest differs "
-"from the identity of the live registry and its compiler environment. See "
-"[Publish a validated runtime authority](../how-to/publish-runtime-"
-"authority.md) for the canonical command, publication guarantees, "
-"currentness checks, and recovery path."
+"from the identity of the live registry and source evidence. See [Publish "
+"a validated runtime authority](../how-to/publish-runtime-authority.md) "
+"for the canonical command, publication guarantees, currentness checks, "
+"and recovery path."
 msgstr ""
 "`python -m dev.registry.conformance integrity` rechaza una publicación "
 "descriptor/base de datos cuyo resumen de identidad registrado difiere de "
-"la identidad del registro activo y de su entorno de compilación. Consulta"
-" [Publicar una autoridad de ejecución validada](../how-to/publish-"
-"runtime-authority.md) para conocer el comando canónico, las garantías de "
-"publicación, las comprobaciones de actualidad y la ruta de recuperación."
+"la identidad del registro y de las evidencias de origen vigentes. "
+"Consulta [Publicar una autoridad de ejecución validada](../how-to"
+"/publish-runtime-authority.md) para conocer el comando canónico, las "
+"garantías de publicación, las comprobaciones de actualidad y la ruta de "
+"recuperación."
 
-#: ../../reference/registry-legal-api.md:145
+#: ../../reference/registry-legal-api.md:142
 msgid "Filing-input contract shapes"
 msgstr "Formas del contrato de entrada de la presentación"
 
-#: ../../reference/registry-legal-api.md:147
+#: ../../reference/registry-legal-api.md:144
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -583,7 +554,7 @@ msgstr "Operandos tipados y operación fundamentada en referencias del registro"
 msgid "A calculated casilla observation"
 msgstr "Una observación de casilla calculada"
 
-#: ../../reference/registry-legal-api.md:158
+#: ../../reference/registry-legal-api.md:155
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -600,7 +571,7 @@ msgstr ""
 " binding `inventory`, que proyecta por actividad las casillas 0177, 0181 "
 "y 0182 del modelo 100 de 2025."
 
-#: ../../reference/registry-legal-api.md:165
+#: ../../reference/registry-legal-api.md:162
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -613,11 +584,11 @@ msgstr ""
 "verificación y auditoría de los modelos. Usa el {doc}`glosario "
 "</_generated/glossary>` para las definiciones dirigidas a contribuyentes."
 
-#: ../../reference/registry-legal-api.md:169
+#: ../../reference/registry-legal-api.md:166
 msgid "Python public API lookup"
 msgstr "Consulta de la API pública de Python"
 
-#: ../../reference/registry-legal-api.md:171
+#: ../../reference/registry-legal-api.md:168
 msgid ""
 "The [Cadrumo Python API overview](../api/index.md) is the entry point for"
 " Python lookup. The `cadrumo` package and its subpackages export nothing."
@@ -631,7 +602,7 @@ msgstr ""
 " define. El árbol de paquetes generado enumera las superficies admitidas "
 "de adaptadores, aplicación, núcleo, dominio, punto de entrada y locales."
 
-#: ../../reference/registry-legal-api.md:176
+#: ../../reference/registry-legal-api.md:173
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

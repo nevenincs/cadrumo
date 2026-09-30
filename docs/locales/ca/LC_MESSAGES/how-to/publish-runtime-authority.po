@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:28+0200\n"
+"POT-Creation-Date: 2026-09-30 11:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -57,24 +57,25 @@ msgid ""
 "The publication is generated output. It consists of one small descriptor "
 "and one content-addressed SQLite database. The descriptor records the "
 "database byte count and digest plus the logical generation; the database "
-"manifest and component rows record the complete source/compiler receipts "
-"and dependency closure. The descriptor is the only cutover edge, so an "
-"installed process can admit one exact generation and retain it for an in-"
-"flight operation. It is also the sole shipped runtime source: installed "
-"code does not open the authored registry tree, parse profile TOML, or "
-"maintain a parallel cache of tables parsed from it."
+"manifest records the legal identity of the sources it was compiled from, "
+"and the component rows record their dependency closure. The descriptor is"
+" the only cutover edge, so an installed process can admit one exact "
+"generation and retain it for an in-flight operation. It is also the sole "
+"shipped runtime source: installed code does not open the authored "
+"registry tree, parse profile TOML, or maintain a parallel cache of tables"
+" parsed from it."
 msgstr ""
 "La publicació és contingut generat. Consta d'un descriptor petit i una "
 "base de dades SQLite adreçada per contingut. El descriptor registra el "
 "nombre de bytes i el resum de la base de dades, a més de la generació "
-"lògica; el manifest de la base de dades i les files de components "
-"registren els rebuts complets de font i compilador i el tancament de "
-"dependències. El descriptor és l'única vora de commutació, de manera que "
-"un procés instal·lat pot admetre una generació exacta i conservar-la per "
-"a una operació en curs. També és l'única font distribuïda per a l'entorn "
-"d'execució: el codi instal·lat no obre l'arbre de registre d'autoria, no "
-"analitza TOML de perfils ni manté una memòria cau paral·lela de taules "
-"extretes d'ell."
+"lògica; el manifest de la base de dades registra la identitat de les "
+"fonts jurídiques a partir de les quals es va compilar, i les files de "
+"components registren el seu tancament de dependències. El descriptor és "
+"l'única vora de commutació, de manera que un procés instal·lat pot "
+"admetre una generació exacta i conservar-la per a una operació en curs. "
+"També és l'única font distribuïda per a l'entorn d'execució: el codi "
+"instal·lat no obre l'arbre de registre d'autoria, no analitza TOML de "
+"perfils ni manté una memòria cau paral·lela de taules extretes d'ell."
 
 #: ../../how-to/publish-runtime-authority.md:25
 msgid ""
@@ -154,7 +155,17 @@ msgstr ""
 " segons on una publicació costa minuts, cosa que fa que la recepta "
 "associada sigui segura d'executar després de cada edició del registre:"
 
-#: ../../how-to/publish-runtime-authority.md:64
+#: ../../how-to/publish-runtime-authority.md:65
+msgid ""
+"The identity names the sources only, so a compiler change never makes the"
+" artifact stale. After changing the compiler, publish without `--if-"
+"stale`."
+msgstr ""
+"La identitat només anomena les fonts, de manera que un canvi en el "
+"compilador mai no deixa obsolet l'artefacte. Després de canviar el "
+"compilador, publica sense `--if-stale`."
+
+#: ../../how-to/publish-runtime-authority.md:67
 msgid ""
 "Do not commit the result. The descriptor and its content-addressed "
 "database are generated output, and the directory they are published into "
@@ -169,11 +180,11 @@ msgstr ""
 "pròpia autoritat a partir d'ell. No reanomenis cap base de dades ni "
 "editis el descriptor a mà."
 
-#: ../../how-to/publish-runtime-authority.md:70
+#: ../../how-to/publish-runtime-authority.md:73
 msgid "Where the authority lives"
 msgstr "On viu l'autoritat"
 
-#: ../../how-to/publish-runtime-authority.md:72
+#: ../../how-to/publish-runtime-authority.md:75
 msgid ""
 "The published authority is generated output, so a checkout keeps it "
 "outside the packaged tree, in `.authority/` at the repository root. That "
@@ -186,7 +197,7 @@ msgstr ""
 "regenera a partir del registre confirmat, és gran i canvia amb cada "
 "edició del registre."
 
-#: ../../how-to/publish-runtime-authority.md:77
+#: ../../how-to/publish-runtime-authority.md:80
 msgid ""
 "`CADRUMO_AUTHORITY_ROOT` names the directory to resolve it from. Whether "
 "you set it depends on how you start the process:"
@@ -226,7 +237,7 @@ msgstr "L'ordre `aeat` des d'un Cadrumo instal·lat"
 msgid "Never set. The distribution carries the authority."
 msgstr "No es defineix mai. La distribució porta l'autoritat."
 
-#: ../../how-to/publish-runtime-authority.md:86
+#: ../../how-to/publish-runtime-authority.md:89
 msgid ""
 "The seeding is deliberate rather than incidental: the development tooling"
 " knows where a repository is, and the product does not. Cadrumo's runtime"
@@ -243,7 +254,7 @@ msgstr ""
 "de treball. Per executar l'ordre `aeat` contra l'autoritat pròpia d'una "
 "còpia de treball, indica-la a l'entorn:"
 
-#: ../../how-to/publish-runtime-authority.md:97
+#: ../../how-to/publish-runtime-authority.md:100
 msgid ""
 "An explicit value always wins, so a release verification pointed at "
 "another authority tree is never overridden by the checkout's own."
@@ -252,7 +263,7 @@ msgstr ""
 "apuntada a un altre arbre d'autoritat no queda mai substituïda per la "
 "pròpia de la còpia de treball."
 
-#: ../../how-to/publish-runtime-authority.md:100
+#: ../../how-to/publish-runtime-authority.md:103
 msgid ""
 "An installed Cadrumo needs no variable at all. The distribution carries "
 "the descriptor and the exact database it names at "
@@ -264,11 +275,11 @@ msgstr ""
 "`cadrumo/_data/registry/authority/`, i un `CADRUMO_AUTHORITY_ROOT` sense "
 "definir resol allà."
 
-#: ../../how-to/publish-runtime-authority.md:105
+#: ../../how-to/publish-runtime-authority.md:108
 msgid "The candidate directory is not the runtime location"
 msgstr "El directori de candidats no és la ubicació de l'entorn d'execució"
 
-#: ../../how-to/publish-runtime-authority.md:107
+#: ../../how-to/publish-runtime-authority.md:110
 msgid ""
 "For an isolated package or installed-cohort check, set "
 "`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory holding an accepted "
@@ -285,7 +296,7 @@ msgstr ""
 "modifiquen mai la còpia de treball i no recorren mai a un parell promogut"
 " quan la variable està definida."
 
-#: ../../how-to/publish-runtime-authority.md:114
+#: ../../how-to/publish-runtime-authority.md:117
 msgid ""
 "This is a development and release-verification variable. A product "
 "operator never sets it, and it is deliberately not part of the "
@@ -297,7 +308,7 @@ msgstr ""
 "forma part de la configuració de l'aplicació, per això no apareix a la "
 "referència d'entorn."
 
-#: ../../how-to/publish-runtime-authority.md:118
+#: ../../how-to/publish-runtime-authority.md:121
 msgid ""
 "It is not an alternative spelling of `CADRUMO_AUTHORITY_ROOT`, and the "
 "two must not be pointed at the same directory. `CADRUMO_AUTHORITY_ROOT` "
@@ -315,7 +326,7 @@ msgstr ""
 "d'execució a un candidat sense promoure durant una compilació de versió "
 "és exactament la confusió que la segona variable existeix per evitar."
 
-#: ../../how-to/publish-runtime-authority.md:126
+#: ../../how-to/publish-runtime-authority.md:129
 msgid ""
 "Publication holds the destination lock while it captures the input "
 "receipt, validates and serializes the complete component set, stages and "
@@ -338,7 +349,7 @@ msgstr ""
 "descriptor anterior intacte byte a byte. Corregeix l'entrada i torna a "
 "publicar."
 
-#: ../../how-to/publish-runtime-authority.md:136
+#: ../../how-to/publish-runtime-authority.md:139
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -357,24 +368,24 @@ msgstr ""
 "pertinença correspon a aquesta autoritat validada; un identificador "
 "absent del seu vocabulari publicat no s'hi admet silenciosament."
 
-#: ../../how-to/publish-runtime-authority.md:144
+#: ../../how-to/publish-runtime-authority.md:147
 msgid "Verify a release candidate"
 msgstr "Verifica una versió candidata"
 
-#: ../../how-to/publish-runtime-authority.md:146
+#: ../../how-to/publish-runtime-authority.md:149
 msgid ""
 "Verify the descriptor-selected SQLite generation directly. The "
 "publication must admit every component through the indexed reader, match "
-"the current compiler receipt, and pass the packaging boundary checks. "
-"There is no eager JSON runtime backend or runtime fallback."
+"the current source receipt, and pass the packaging boundary checks. There"
+" is no eager JSON runtime backend or runtime fallback."
 msgstr ""
 "Verifica directament la generació SQLite seleccionada pel descriptor. La "
 "publicació ha d'admetre cada component a través del lector indexat, "
-"coincidir amb el rebut actual del compilador i superar les comprovacions "
-"del límit d'empaquetatge. No hi ha cap backend JSON de càrrega total per "
-"a l'entorn d'execució ni cap via alternativa en execució."
+"coincidir amb el rebut de fonts actual i superar les comprovacions del "
+"límit d'empaquetatge. No hi ha cap backend JSON de càrrega total per a "
+"l'entorn d'execució ni cap via alternativa en execució."
 
-#: ../../how-to/publish-runtime-authority.md:151
+#: ../../how-to/publish-runtime-authority.md:154
 msgid ""
 "The packaging checks stage only the descriptor and its selected database "
 "into their private cohort. Superseded content-addressed files retained by"
@@ -385,7 +396,7 @@ msgstr ""
 "adreçats per contingut superats que conservi una còpia de treball no són "
 "membres del paquet candidat."
 
-#: ../../how-to/publish-runtime-authority.md:155
+#: ../../how-to/publish-runtime-authority.md:158
 msgid ""
 "The development-only paired benchmark accepts that same isolated "
 "descriptor and an explicit JSON baseline produced from the same validated"
@@ -401,7 +412,7 @@ msgstr ""
 "`publish-authority`, i mantén el fitxer fora dels recursos del paquet "
 "distribuït. Executa el mesurament comparat amb:"
 
-#: ../../how-to/publish-runtime-authority.md:168
+#: ../../how-to/publish-runtime-authority.md:171
 msgid ""
 "The baseline is development evidence only: it is generated from the exact"
 " validated in-memory authority, eagerly decodes the complete graph, and "
@@ -420,15 +431,15 @@ msgstr ""
 "alternativa de l'entorn d'execució. Cada càrrega de treball (Modelo 100, "
 "200 i 303) s'informa de manera independent."
 
-#: ../../how-to/publish-runtime-authority.md:175
+#: ../../how-to/publish-runtime-authority.md:178
 msgid "Check that the publication is current"
 msgstr "Comprova que la publicació està actualitzada"
 
-#: ../../how-to/publish-runtime-authority.md:177
+#: ../../how-to/publish-runtime-authority.md:180
 msgid "Run the registry gate:"
 msgstr "Executa el control del registre:"
 
-#: ../../how-to/publish-runtime-authority.md:183
+#: ../../how-to/publish-runtime-authority.md:186
 msgid ""
 "Its authority step admits the descriptor and its named database in read-"
 "only mode. It exits 1 with a refusal on standard error when either "
@@ -444,32 +455,26 @@ msgstr ""
 "d'identitat registrat i esperat i l'ordre que torna a publicar "
 "l'autoritat."
 
-#: ../../how-to/publish-runtime-authority.md:189
+#: ../../how-to/publish-runtime-authority.md:192
 msgid ""
 "The source receipt depends on file content and paths relative to the "
 "registry and source roots, including manually maintained evidence "
-"sidecars. The compiler receipt covers the compiler and relevant Cadrumo "
-"code, `pyproject.toml`, `uv.lock`, the Python major/minor version, and "
-"the installed `pydantic` and `pydantic-core` versions. A fresh clone in "
-"the same declared environment is stable; an incompatible interpreter, "
-"dependency set, manifest, or compiler change makes the publication stale "
-"and requires republication. The component receipt binds those source and "
-"compiler receipts to the complete-authority generation. The database "
-"digest independently protects all stored component bytes, while each on-"
-"demand component load checks its own payload digest and dependency "
-"closure."
+"sidecars, and on the profile schema. It is the publication's whole "
+"identity: the compiler, the Python version and the dependency set are not"
+" part of it, so only a change to those sources makes the publication "
+"stale, and a fresh clone of the same sources derives the same identity. "
+"The database digest independently protects all stored component bytes, "
+"while each on-demand component load checks its own payload digest and "
+"dependency closure."
 msgstr ""
 "El rebut de fonts depèn del contingut dels fitxers i dels camins relatius"
 " a les arrels de registre i de fonts, incloses les proves complementàries"
-" mantingudes manualment. El rebut del compilador cobreix el compilador i "
-"el codi relevant de Cadrumo, `pyproject.toml`, `uv.lock`, la versió "
-"major/menor de Python i les versions instal·lades de `pydantic` i "
-"`pydantic-core`. Una còpia nova del repositori en el mateix entorn "
-"declarat és estable; un intèrpret, conjunt de dependències, manifest o "
-"compilador incompatibles deixen la publicació obsoleta i obliguen a "
-"tornar a publicar. El rebut de components vincula aquests rebuts de fonts"
-" i de compilador a la generació d'autoritat completa. El resum de la base"
-" de dades protegeix de manera independent tots els bytes de components "
+" mantingudes manualment, i de l'esquema de perfil. És tota la identitat "
+"de la publicació: el compilador, la versió de Python i el conjunt de "
+"dependències no en formen part, de manera que només un canvi en aquestes "
+"fonts deixa obsoleta la publicació, i una còpia nova del repositori amb "
+"les mateixes fonts en deriva la mateixa identitat. El resum de la base de"
+" dades protegeix de manera independent tots els bytes de components "
 "emmagatzemats, mentre que cada càrrega de component sota demanda comprova"
 " el seu propi resum de càrrega útil i el seu tancament de dependències."
 

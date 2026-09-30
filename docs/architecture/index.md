@@ -143,7 +143,7 @@ flowchart LR
     end
     C --> P
     P --> D
-    RC["source and compiler receipts"]
+    RC["legal source receipt"]
     RC -.->|"detect a stale publication"| P
 ```
 
@@ -151,8 +151,8 @@ flowchart LR
 compiler, which expands deltas and validates them into frozen revisions. The
 publication step writes them as a descriptor and a content-addressed SQLite
 database. At runtime the indexed authority opens the descriptor-selected
-generation and builds frozen snapshots for the runtime projections. Receipts
-over the source and compiler files identify a stale publication.
+generation and builds frozen snapshots for the runtime projections. A receipt
+over the legal sources identifies a stale publication.
 
 Each modelo and revision is authored as fragments of TOML under
 `src/cadrumo/_data/registry/`. The compiler in `dev/registry` merges those

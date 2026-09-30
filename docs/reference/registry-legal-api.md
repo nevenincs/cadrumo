@@ -45,19 +45,17 @@ refusal naming the publication command, not an empty authority. See
 | --- | --- |
 | Validated candidate | The registry and source-evidence inputs accepted by the development compiler. |
 | Source receipt | Root-relative registry and source-evidence content, including manually maintained evidence sidecars. |
-| Compiler receipt | The Cadrumo and compiler source files the canonical compiler process loaded, dependency manifests, Python major/minor, and Pydantic versions. |
-| Component receipt | The source and compiler receipts bound to one fresh, complete-authority generation. |
-| Identity digest | The content-addressed combination of those receipts, recorded so a stale artifact can be detected. |
+| Identity digest | The content-addressed digest of the source receipt, recorded as the logical generation so a stale artifact can be detected. |
 | Authority descriptor | The atomically replaced selector containing the database basename, byte count, physical SHA-256, and logical generation. |
 | Authority database | The content-addressed SQLite publication containing typed components, dependency rows, and the complete manifest. |
 
 The descriptor format is `cadrumo-authority-descriptor-v1`; its exact members
 are `format`, `database`, `database_size`, `database_sha256`, and
 `logical_generation`. The database format is
-`cadrumo-authority-sqlite-v3`. Its manifest binds the logical generation and
-the complete component directory, and it records the compiler source closure
-and environment the compiler receipt is computed from. A database in an older
-format is refused rather than read. The physical database digest is both the
+`cadrumo-authority-sqlite-v4`. Its manifest binds the logical generation and
+the complete component directory; it records nothing about the compiler or the
+environment that built it. A database in an older format is refused rather than
+read. The physical database digest is both the
 descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
@@ -71,18 +69,17 @@ The command-bearing product package has no command that compiles or repairs
 this publication.
 
 The source receipt folds each registry and source-evidence file's root-relative
-path and content digest. Registry files fold CRLF to LF; source evidence is
-byte-exact. The compiler receipt hashes the portable path and content of every
-non-test `cadrumo` and `dev/registry` source file loaded to compile, validate
-and project the authority, together with `pyproject.toml`, `uv.lock`, Python
-major/minor, and the installed `pydantic` and `pydantic-core` versions. Every
+path and content digest, and the profile schema. Registry files fold CRLF to LF;
+source evidence is byte-exact. That receipt is the publication's whole identity:
+the authority names the law it encodes, not the software that compiled it. The
+currency check reads only those sources, without compiling, so an edit to a
+registry or evidence file makes the publication stale, while a change to the
+compiler, the Python version or the dependency set does not. A compiler change
+reaches the publication when it is republished; the database file, addressed by
+its own bytes, then changes under the same logical generation. Every
 publication, whether started from the publication command or by the package
-build, compiles in one fresh interpreter running the same module, so the recorded
-files do not depend on the launching tool. The currency check re-hashes exactly
-those recorded files without compiling: an edit to a recorded file, or its
-removal, makes the publication stale, while an edit to a module the compiler
-never loaded does not. A fresh clone in the same declared environment is
-stable, without promising identity across incompatible build environments.
+build, compiles in one fresh interpreter running the same module, and a fresh
+clone of the same sources derives the same identity.
 
 Each component payload is a compact canonical projection of one typed authority
 value. Required fields are always written; a field is omitted only when its
@@ -137,7 +134,7 @@ read-only database.
 
 `python -m dev.registry.conformance integrity` refuses a descriptor/database
 publication whose recorded identity digest differs from the identity of the
-live registry and its compiler environment. See
+live registry and source evidence. See
 [Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
 for the canonical command, publication guarantees, currentness checks, and
 recovery path.

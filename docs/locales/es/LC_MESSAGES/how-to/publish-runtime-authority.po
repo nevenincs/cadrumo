@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:28+0200\n"
+"POT-Creation-Date: 2026-09-30 11:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -58,24 +58,26 @@ msgid ""
 "The publication is generated output. It consists of one small descriptor "
 "and one content-addressed SQLite database. The descriptor records the "
 "database byte count and digest plus the logical generation; the database "
-"manifest and component rows record the complete source/compiler receipts "
-"and dependency closure. The descriptor is the only cutover edge, so an "
-"installed process can admit one exact generation and retain it for an in-"
-"flight operation. It is also the sole shipped runtime source: installed "
-"code does not open the authored registry tree, parse profile TOML, or "
-"maintain a parallel cache of tables parsed from it."
+"manifest records the legal identity of the sources it was compiled from, "
+"and the component rows record their dependency closure. The descriptor is"
+" the only cutover edge, so an installed process can admit one exact "
+"generation and retain it for an in-flight operation. It is also the sole "
+"shipped runtime source: installed code does not open the authored "
+"registry tree, parse profile TOML, or maintain a parallel cache of tables"
+" parsed from it."
 msgstr ""
 "La publicación es contenido generado. Consta de un descriptor pequeño y "
 "una base de datos SQLite direccionada por contenido. El descriptor "
 "registra el número de bytes y el resumen de la base de datos, además de "
-"la generación lógica; el manifiesto de la base de datos y las filas de "
-"componentes registran los recibos completos de fuente y compilador y el "
-"cierre de dependencias. El descriptor es el único punto de conmutación, "
-"de modo que un proceso instalado puede admitir una generación exacta y "
-"conservarla para una operación en curso. Es además la única fuente "
-"distribuida para el entorno de ejecución: el código instalado no abre el "
-"árbol de registro de autoría, no analiza TOML de perfiles ni mantiene una"
-" caché paralela de tablas extraídas de él."
+"la generación lógica; el manifiesto de la base de datos registra la "
+"identidad de las fuentes jurídicas a partir de las cuales se compiló, y "
+"las filas de componentes registran su cierre de dependencias. El "
+"descriptor es el único punto de conmutación, de modo que un proceso "
+"instalado puede admitir una generación exacta y conservarla para una "
+"operación en curso. Es además la única fuente distribuida para el entorno"
+" de ejecución: el código instalado no abre el árbol de registro de "
+"autoría, no analiza TOML de perfiles ni mantiene una caché paralela de "
+"tablas extraídas de él."
 
 #: ../../how-to/publish-runtime-authority.md:25
 msgid ""
@@ -157,7 +159,17 @@ msgstr ""
 "una publicación cuesta minutos, lo que hace que la receta asociada sea "
 "segura de ejecutar tras cada edición del registro:"
 
-#: ../../how-to/publish-runtime-authority.md:64
+#: ../../how-to/publish-runtime-authority.md:65
+msgid ""
+"The identity names the sources only, so a compiler change never makes the"
+" artifact stale. After changing the compiler, publish without `--if-"
+"stale`."
+msgstr ""
+"La identidad solo nombra las fuentes, de modo que un cambio en el "
+"compilador nunca deja obsoleto el artefacto. Después de cambiar el "
+"compilador, publica sin `--if-stale`."
+
+#: ../../how-to/publish-runtime-authority.md:67
 msgid ""
 "Do not commit the result. The descriptor and its content-addressed "
 "database are generated output, and the directory they are published into "
@@ -172,11 +184,11 @@ msgstr ""
 "publica su propia autoridad a partir de él. No renombres una base de "
 "datos ni edites el descriptor a mano."
 
-#: ../../how-to/publish-runtime-authority.md:70
+#: ../../how-to/publish-runtime-authority.md:73
 msgid "Where the authority lives"
 msgstr "Dónde vive la autoridad"
 
-#: ../../how-to/publish-runtime-authority.md:72
+#: ../../how-to/publish-runtime-authority.md:75
 msgid ""
 "The published authority is generated output, so a checkout keeps it "
 "outside the packaged tree, in `.authority/` at the repository root. That "
@@ -189,7 +201,7 @@ msgstr ""
 "versiones: se regenera a partir del registro confirmado, es grande y "
 "cambia con cada edición del registro."
 
-#: ../../how-to/publish-runtime-authority.md:77
+#: ../../how-to/publish-runtime-authority.md:80
 msgid ""
 "`CADRUMO_AUTHORITY_ROOT` names the directory to resolve it from. Whether "
 "you set it depends on how you start the process:"
@@ -231,7 +243,7 @@ msgstr "El comando `aeat` desde un Cadrumo instalado"
 msgid "Never set. The distribution carries the authority."
 msgstr "Nunca se define. La distribución lleva la autoridad."
 
-#: ../../how-to/publish-runtime-authority.md:86
+#: ../../how-to/publish-runtime-authority.md:89
 msgid ""
 "The seeding is deliberate rather than incidental: the development tooling"
 " knows where a repository is, and the product does not. Cadrumo's runtime"
@@ -248,7 +260,7 @@ msgstr ""
 "Para ejecutar el comando `aeat` contra la autoridad propia de una copia "
 "de trabajo, indícala en el entorno:"
 
-#: ../../how-to/publish-runtime-authority.md:97
+#: ../../how-to/publish-runtime-authority.md:100
 msgid ""
 "An explicit value always wins, so a release verification pointed at "
 "another authority tree is never overridden by the checkout's own."
@@ -257,7 +269,7 @@ msgstr ""
 "apuntada a otro árbol de autoridad nunca queda sustituida por la propia "
 "de la copia de trabajo."
 
-#: ../../how-to/publish-runtime-authority.md:100
+#: ../../how-to/publish-runtime-authority.md:103
 msgid ""
 "An installed Cadrumo needs no variable at all. The distribution carries "
 "the descriptor and the exact database it names at "
@@ -269,11 +281,11 @@ msgstr ""
 "`cadrumo/_data/registry/authority/`, y un `CADRUMO_AUTHORITY_ROOT` sin "
 "definir resuelve ahí."
 
-#: ../../how-to/publish-runtime-authority.md:105
+#: ../../how-to/publish-runtime-authority.md:108
 msgid "The candidate directory is not the runtime location"
 msgstr "El directorio de candidatos no es la ubicación del entorno de ejecución"
 
-#: ../../how-to/publish-runtime-authority.md:107
+#: ../../how-to/publish-runtime-authority.md:110
 msgid ""
 "For an isolated package or installed-cohort check, set "
 "`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory holding an accepted "
@@ -290,7 +302,7 @@ msgstr ""
 "nunca modifican la copia de trabajo y nunca recurren a un par promovido "
 "cuando la variable está definida."
 
-#: ../../how-to/publish-runtime-authority.md:114
+#: ../../how-to/publish-runtime-authority.md:117
 msgid ""
 "This is a development and release-verification variable. A product "
 "operator never sets it, and it is deliberately not part of the "
@@ -302,7 +314,7 @@ msgstr ""
 "la configuración de la aplicación, por lo que no aparece en la referencia"
 " de entorno."
 
-#: ../../how-to/publish-runtime-authority.md:118
+#: ../../how-to/publish-runtime-authority.md:121
 msgid ""
 "It is not an alternative spelling of `CADRUMO_AUTHORITY_ROOT`, and the "
 "two must not be pointed at the same directory. `CADRUMO_AUTHORITY_ROOT` "
@@ -321,7 +333,7 @@ msgstr ""
 "de versión es exactamente la confusión que la segunda variable existe "
 "para evitar."
 
-#: ../../how-to/publish-runtime-authority.md:126
+#: ../../how-to/publish-runtime-authority.md:129
 msgid ""
 "Publication holds the destination lock while it captures the input "
 "receipt, validates and serializes the complete component set, stages and "
@@ -344,7 +356,7 @@ msgstr ""
 "compilador o dependencia, el comando falla y deja el descriptor anterior "
 "intacto byte a byte. Corrige la entrada y vuelve a publicar."
 
-#: ../../how-to/publish-runtime-authority.md:136
+#: ../../how-to/publish-runtime-authority.md:139
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -363,25 +375,25 @@ msgstr ""
 "pertenencia corresponde a esta autoridad validada; un identificador "
 "ausente de su vocabulario publicado no se admite de forma silenciosa."
 
-#: ../../how-to/publish-runtime-authority.md:144
+#: ../../how-to/publish-runtime-authority.md:147
 msgid "Verify a release candidate"
 msgstr "Verifica una versión candidata"
 
-#: ../../how-to/publish-runtime-authority.md:146
+#: ../../how-to/publish-runtime-authority.md:149
 msgid ""
 "Verify the descriptor-selected SQLite generation directly. The "
 "publication must admit every component through the indexed reader, match "
-"the current compiler receipt, and pass the packaging boundary checks. "
-"There is no eager JSON runtime backend or runtime fallback."
+"the current source receipt, and pass the packaging boundary checks. There"
+" is no eager JSON runtime backend or runtime fallback."
 msgstr ""
 "Verifica directamente la generación SQLite seleccionada por el "
 "descriptor. La publicación debe admitir cada componente a través del "
-"lector indexado, coincidir con el recibo actual del compilador y superar "
-"las comprobaciones del límite de empaquetado. No existe un backend JSON "
-"de carga total para el entorno de ejecución ni una vía alternativa en "
+"lector indexado, coincidir con el recibo de fuentes actual y superar las "
+"comprobaciones del límite de empaquetado. No existe un backend JSON de "
+"carga total para el entorno de ejecución ni una vía alternativa en "
 "ejecución."
 
-#: ../../how-to/publish-runtime-authority.md:151
+#: ../../how-to/publish-runtime-authority.md:154
 msgid ""
 "The packaging checks stage only the descriptor and its selected database "
 "into their private cohort. Superseded content-addressed files retained by"
@@ -392,7 +404,7 @@ msgstr ""
 "direccionados por contenido superados que conserve una copia de trabajo "
 "no son miembros del paquete candidato."
 
-#: ../../how-to/publish-runtime-authority.md:155
+#: ../../how-to/publish-runtime-authority.md:158
 msgid ""
 "The development-only paired benchmark accepts that same isolated "
 "descriptor and an explicit JSON baseline produced from the same validated"
@@ -408,7 +420,7 @@ msgstr ""
 "`publish-authority`, y mantén el fichero fuera de los recursos del "
 "paquete distribuido. Ejecuta la medición comparada con:"
 
-#: ../../how-to/publish-runtime-authority.md:168
+#: ../../how-to/publish-runtime-authority.md:171
 msgid ""
 "The baseline is development evidence only: it is generated from the exact"
 " validated in-memory authority, eagerly decodes the complete graph, and "
@@ -427,15 +439,15 @@ msgstr ""
 " entorno de ejecución. Cada carga de trabajo (Modelo 100, 200 y 303) se "
 "informa de forma independiente."
 
-#: ../../how-to/publish-runtime-authority.md:175
+#: ../../how-to/publish-runtime-authority.md:178
 msgid "Check that the publication is current"
 msgstr "Comprueba que la publicación está actualizada"
 
-#: ../../how-to/publish-runtime-authority.md:177
+#: ../../how-to/publish-runtime-authority.md:180
 msgid "Run the registry gate:"
 msgstr "Ejecuta el control del registro:"
 
-#: ../../how-to/publish-runtime-authority.md:183
+#: ../../how-to/publish-runtime-authority.md:186
 msgid ""
 "Its authority step admits the descriptor and its named database in read-"
 "only mode. It exits 1 with a refusal on standard error when either "
@@ -451,35 +463,29 @@ msgstr ""
 "de identidad registrado y esperado y el comando que vuelve a publicar la "
 "autoridad."
 
-#: ../../how-to/publish-runtime-authority.md:189
+#: ../../how-to/publish-runtime-authority.md:192
 msgid ""
 "The source receipt depends on file content and paths relative to the "
 "registry and source roots, including manually maintained evidence "
-"sidecars. The compiler receipt covers the compiler and relevant Cadrumo "
-"code, `pyproject.toml`, `uv.lock`, the Python major/minor version, and "
-"the installed `pydantic` and `pydantic-core` versions. A fresh clone in "
-"the same declared environment is stable; an incompatible interpreter, "
-"dependency set, manifest, or compiler change makes the publication stale "
-"and requires republication. The component receipt binds those source and "
-"compiler receipts to the complete-authority generation. The database "
-"digest independently protects all stored component bytes, while each on-"
-"demand component load checks its own payload digest and dependency "
-"closure."
+"sidecars, and on the profile schema. It is the publication's whole "
+"identity: the compiler, the Python version and the dependency set are not"
+" part of it, so only a change to those sources makes the publication "
+"stale, and a fresh clone of the same sources derives the same identity. "
+"The database digest independently protects all stored component bytes, "
+"while each on-demand component load checks its own payload digest and "
+"dependency closure."
 msgstr ""
 "El recibo de fuentes depende del contenido de los ficheros y de las rutas"
 " relativas a las raíces de registro y de fuentes, incluidas las "
-"evidencias complementarias mantenidas manualmente. El recibo del "
-"compilador cubre el compilador y el código relevante de Cadrumo, "
-"`pyproject.toml`, `uv.lock`, la versión mayor/menor de Python y las "
-"versiones instaladas de `pydantic` y `pydantic-core`. Una copia nueva del"
-" repositorio en el mismo entorno declarado es estable; un intérprete, "
-"conjunto de dependencias, manifiesto o compilador incompatibles dejan la "
-"publicación obsoleta y obligan a volver a publicar. El recibo de "
-"componentes vincula esos recibos de fuentes y de compilador a la "
-"generación de autoridad completa. El resumen de la base de datos protege "
-"de forma independiente todos los bytes de componentes almacenados, "
-"mientras que cada carga de componente bajo demanda comprueba su propio "
-"resumen de carga útil y su cierre de dependencias."
+"evidencias complementarias mantenidas manualmente, y del esquema de "
+"perfil. Es toda la identidad de la publicación: el compilador, la versión"
+" de Python y el conjunto de dependencias no forman parte de ella, de modo"
+" que solo un cambio en esas fuentes deja obsoleta la publicación, y una "
+"copia nueva del repositorio con las mismas fuentes deriva la misma "
+"identidad. El resumen de la base de datos protege de forma independiente "
+"todos los bytes de componentes almacenados, mientras que cada carga de "
+"componente bajo demanda comprueba su propio resumen de carga útil y su "
+"cierre de dependencias."
 
 #: ../../how-to/publish-runtime-authority.md:201
 msgid "Recover from an invalid authority"
