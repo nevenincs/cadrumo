@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:17b9e40b5404553731ee5be8e1c10161f770a5d5321a299a6b58f504a643b7c7'
+body_hash: 'sha256:67a694c6c19f2fd6c3c54550cbe54ceea96cae09aa47e2503fa212e5a0809bff'
 ---
 
 # `registry-conformance-rectification` plan
@@ -112,8 +112,8 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S34` - Withdraw the 2025 Modelo 220 jurisdiction assignment of boxes 02796 and 02797, which rests on an identical ambiguous caption, and leave the pair unauthored in both editions until an official source states the foral column; `src/cadrumo/_data/registry/aeat/modelos/220/`.
 - [ ] `P05.S35` - Re-review the Modelo 184 2022, 182 2024, 220 2024 and 165 2023-2025 editions against their new members and restamp them through the conformance stamp command; `src/cadrumo/_data/registry/aeat/modelos/`.
 - [x] `P05.S36` - Remove the unpersisted --withholding-observation option under ruling 14's precedent, and correct the clave breakdown docstring that still names only Modelo 190; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
-- [ ] `P05.S37` - Extend the label-reading fallback to a busy refusal of the optional model fill, and persist the degradation fact with the draft so batch results and the TUI draft row show it; `src/cadrumo/application/ledger/invoice_draft_extraction.py`.
-- [ ] `P05.S38` - Correct the aggregate help that still describes the retired retención observation values, and the mis-encoded accents in the withholding bindings module; `src/cadrumo/locales/`.
+- [x] `P05.S37` - Extend the label-reading fallback to a busy refusal of the optional model fill, and persist the degradation fact with the draft so batch results and the TUI draft row show it; `src/cadrumo/application/ledger/invoice_draft_extraction.py`.
+- [x] `P05.S38` - Correct the aggregate help that still describes the retired retención observation values, and the mis-encoded accents in the withholding bindings module; `src/cadrumo/locales/`.
 - [ ] `P05.S39` - Adjudicate against official evidence the suspected Modelo 100 defects: the 2025 maritime exemption writing box 0525, the 184 relation summing every type-2 record, the 131 binding summing four quarterly copies into box 1481, and box 0512 ignoring regions with their own minimo; re-cite the 2020 to 2022 casillas to art. 32's 2015 redaction and rename the maternity test constant that still names 2024; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S40` - Author Modelo 184's reduccion binding at 2022 now that art. 23 and art. 32 carry their 2022 redactions; `src/cadrumo/_data/registry/aeat/modelos/184/`.
 - [ ] `P05.S41` - Author the missing ejercicio 2022 deadline windows of Modelos 151, 165 and 180 from their calendar sources, and remove Modelo 151's duplicate filing schedule and export link; `src/cadrumo/_data/registry/aeat/modelos/151/`.
@@ -121,6 +121,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S43` - Author Modelo 100's modulos engine for 2022 to 2024 from each year's orden, and the Madrid birth deduction years once its facts catalogue entry carries them; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `P05.S45` - Capture the missing official texts and author the support-range cells they unblock: Modelos 200 and 220 for 2022 and 2023 with their approving ordenes, 182 and 189 for 2022 and 2023, 036 before its 2023 design, 038 before June 2024 and 210 for January to May 2022; `src/cadrumo/_data/corpus/`.
+- [ ] `P05.S46` - Show a draft's stored label-reading degradation in the ledger evidence review command, as batch results and the TUI already do; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
 
 ## Parallelization
 

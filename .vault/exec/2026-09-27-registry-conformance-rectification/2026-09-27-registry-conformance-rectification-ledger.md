@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:51e9178444b18bf06a709fd4c0fa5a7d6ee210e005fdd1e9a6dc6fa7e7fe7fab'
+body_hash: 'sha256:d6df62e9b6b545eea4448e7247c32dbff1efa1fa13c7e8578dbb08cf83638d43'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -493,6 +493,43 @@ related:
 - `S11` `M` `src/cadrumo/locales/hu/modelo/schema/165.yml`
 - `S11` `verify:` `165 and 210 candidate inspection publication_valid; 419 dev tests and 59 runtime tests passed` -> `pass`
 - `S11` `verify:` `registry_collapse_verification --modelo 202 against published 0b6bfacc (complete, rollout complete, 0 findings)` -> `pass`
+- `S37` `M` `src/cadrumo/adapters/persistence/storage/tests/test_extraction_draft_store.py`
+- `S37` `M` `src/cadrumo/application/ledger/batch_ingest.py`
+- `S37` `M` `src/cadrumo/application/ledger/extraction_draft_store.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S37` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S37` `M` `src/cadrumo/application/ledger/tests/test_batch_ingest.py`
+- `S37` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S37` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_evidence_field_notices.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_batch_payloads.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S37` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_label_reading_notice.py`
+- `S37` `M` `src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S37` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_evidence_draft_label_reading.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/ledger_doors.py`
+- `S37` `A` `src/cadrumo/entrypoints/tui/tests/test_ledger_evidence_draft_row.py`
+- `S37` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S37` `M` `src/cadrumo/locales/ca/common.yml`
+- `S37` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S37` `M` `src/cadrumo/locales/en/cli.yml`
+- `S37` `M` `src/cadrumo/locales/en/common.yml`
+- `S37` `M` `src/cadrumo/locales/en/errors.yml`
+- `S37` `M` `src/cadrumo/locales/es/cli.yml`
+- `S37` `M` `src/cadrumo/locales/es/common.yml`
+- `S37` `M` `src/cadrumo/locales/es/errors.yml`
+- `S37` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S37` `M` `src/cadrumo/locales/hu/common.yml`
+- `S37` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S37` `verify:` `busy refusal degrades with its own notice, required read still refuses; degradation persisted through the encrypted draft store and shown in batch and TUI; old-shape draft round trip; 1063 focused passed (23 locale failures from other lanes and missing spelling dictionaries)` -> `pass`
+- `S38` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S38` `verify:` `aggregate help describes only live options in four locales; six replacement characters restored, code parses identically` -> `pass`
+- `S18` `verify:` `product-identity audit assertions pass for the reworded message; DA 18 CLI test passes` -> `pass`
 
 ## Notes
 
@@ -519,3 +556,4 @@ related:
 - `S11` 165 2023 design authored at 2023-2025 (Orden HFP/1284/2023 applies from ejercicio 2023) with storage reuse; 210 payer-mode parameter opens at 2023; 151 and 390 candidates genuinely new; 165 converter apply blocked by the export scenario table rendering below the floor (P05.S32)
 - `S11` Correction to the preceding 202 verify row: the run reported complete=True with `registry_rollout=incomplete,` not rollout complete; `registry_rollout` is the registry-wide collapse state, which stays incomplete while other modelos are still being rectified
 - `S11` 210 verification against 0b6bfacc: equivalence, facts, indexed (3307 coordinates), cache and publication readiness passed, but `inputs_stable=False` because a concurrent lane captured corpus evidence mid-run, so the run is not certifying; the verification round is suspended while lanes write and runs once over every touched modelo when they finish
+- `S18` the S18 message named the product, which the locale audit reserves for a closed set of keys
