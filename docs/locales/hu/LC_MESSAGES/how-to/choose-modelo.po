@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-26 15:14+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/choose-modelo.md:1
 msgid "Find out which modelos apply to you"
-msgstr "Tudja meg, mely modelók vonatkoznak Önre"
+msgstr "Tudd meg, mely modelók vonatkoznak rád"
 
 #: ../../how-to/choose-modelo.md:3
 msgid ""
@@ -33,19 +33,19 @@ msgid ""
 msgstr ""
 "A modelo egy számmal azonosított hivatalos AEAT-adónyomtatvány, például a"
 " 303-as az IVA-hoz vagy a 130-as a negyedéves jövedelemadó-előlegekhez. "
-"Ezzel az útmutatóval kérdezheti meg az eszköztől, hogy egy adott modelo "
-"vonatkozik-e Önre, és miért. Az eszköz a választ helyileg számítja ki az "
-"elmentett profiladataiból, így csak annyira megbízható, amennyire az Ön "
-"által karbantartott profil. A határidőkért és a mikor mi esedékesért lásd"
-" a [benyújtási naptár útmutatót](filing-calendar.md)."
+"Ezzel az útmutatóval megkérdezheted az eszközt, hogy egy adott modelo "
+"vonatkozik-e rád, és miért. Az eszköz a választ helyileg számítja ki az "
+"elmentett profiladataidból, így csak annyira megbízható, amennyire a "
+"karbantartott profilod. A határidőkről és arról, hogy mikor mi esedékes, "
+"lásd a [benyújtási naptár útmutatót](filing-calendar.md)."
 
 #: ../../how-to/choose-modelo.md:5
 msgid "Before you start"
-msgstr "Mielőtt hozzákezd"
+msgstr "Mielőtt hozzákezdesz"
 
 #: ../../how-to/choose-modelo.md:7
 msgid "You need:"
-msgstr "Szüksége lesz a következőkre:"
+msgstr "Szükséged lesz a következőkre:"
 
 #: ../../how-to/choose-modelo.md:9
 msgid ""
@@ -53,58 +53,69 @@ msgid ""
 "filled in. See the [profile setup guide](profile-setup.md), or the "
 "[quickstart](quickstart.md) if you're starting from nothing."
 msgstr ""
-"Egy aktív profil, amelyben ki van töltve az adózói típusa, a tevékenysége"
-" és az adózási rendszere. Lásd a [profilbeállítási útmutatót](profile-"
-"setup.md), vagy a [gyorsindítót](quickstart.md), ha a semmiből indul."
+"Egy aktív profil, amelyben ki van töltve az adózói típusod, a "
+"tevékenységed és az adózási rendszered. Lásd a [profilbeállítási "
+"útmutatót](profile-setup.md), vagy a [gyorsindítót](quickstart.md), ha a "
+"nulláról indulsz."
 
 #: ../../how-to/choose-modelo.md:10
 msgid ""
-"Your master-key passphrase. Every profile-scoped command needs it; the "
-"tool prompts for it."
+"Your passphrase. Every profile-scoped command needs it; the tool prompts "
+"for it."
 msgstr ""
-"A mesterkulcs-jelmondata. Minden profilhoz kötött parancshoz szükség van "
-"rá; az eszköz bekéri Öntől."
+"A jelmondatod. Minden profilhoz kötött parancshoz szükség van rá; az "
+"eszköz bekéri."
 
 #: ../../how-to/choose-modelo.md:12
 msgid ""
 "Check the profile first with `aeat config profile status`. It confirms "
 "the profile exists and carries the basics. If a fact is missing, the "
-"verdict says so. The CLI emits the rationale, legal references, and "
-"refusals in Spanish."
+"verdict says so."
 msgstr ""
-"Először ellenőrizze a profilt az `aeat config profile status` paranccsal."
-" Ez megerősíti, hogy a profil létezik, és tartalmazza az alapadatokat. Ha"
-" egy adat hiányzik, a döntés jelzi ezt. A CLI az indoklást, a jogszabályi"
-" hivatkozásokat és az elutasításokat spanyolul jeleníti meg."
+"Először ellenőrizd a profilt az `aeat config profile status` paranccsal. "
+"Megerősíti, hogy a profil létezik, és tartalmazza az alapadatokat. Ha egy"
+" adat hiányzik, a döntés jelzi ezt."
 
 #: ../../how-to/choose-modelo.md:14
-msgid "Ask whether one modelo applies"
-msgstr "Kérdezze meg, vonatkozik-e Önre egy modelo"
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language). The verdict rationale comes from "
+"the official rules and stays in Spanish."
+msgstr ""
+"A dokumentációban szereplő példák angol nyelven készültek. Az `aeat` az "
+"üzeneteit spanyolul írja ki, hacsak nem [választasz másik nyelvet"
+"](profile-setup.md#choose-the-output-language). A döntés indoklása a "
+"hivatalos szabályokból származik, és spanyol marad."
 
 #: ../../how-to/choose-modelo.md:16
+msgid "Ask whether one modelo applies"
+msgstr "Kérdezd meg, vonatkozik-e rád egy modelo"
+
+#: ../../how-to/choose-modelo.md:18
 msgid ""
 "Run `overview explain` with the modelo code. By default the tool answers "
 "for the current year; to ask about a different year, add `--year`. The "
-"card below confirms the profile, asks whether Modelo 303 applies for "
-"2026, then checks readiness for the first quarter, the whole diagnostic "
-"flow in order."
+"following example confirms the profile, asks whether Modelo 303 applies "
+"for 2026, then checks readiness for the first quarter, the whole "
+"diagnostic flow in order."
 msgstr ""
-"Futtassa az `overview explain` parancsot a modelo kódjával. "
-"Alapértelmezésben az eszköz az aktuális évre válaszol; egy másik évről "
-"úgy kérdezhet, hogy hozzáadja a `--year` kapcsolót. Az alábbi kártya "
-"megerősíti a profilt, megkérdezi, hogy a Modelo 303 vonatkozik-e a "
-"2026-os évre, majd ellenőrzi az első negyedévre való felkészültséget - "
-"sorrendben a teljes diagnosztikai folyamatot."
+"Futtasd az `overview explain` parancsot a modelo kódjával. Alapértelmezés"
+" szerint az eszköz az aktuális évre válaszol; egy másik évről a `--year` "
+"kapcsoló hozzáadásával kérdezhetsz. Az alábbi példa megerősíti a profilt,"
+" megkérdezi, hogy a Modelo 303 vonatkozik-e a 2026-os évre, majd "
+"ellenőrzi az első negyedévre vonatkozó készenlétet: a teljes "
+"diagnosztikai folyamatot sorrendben."
 
-#: ../../how-to/choose-modelo.md:22
+#: ../../how-to/choose-modelo.md:24
 msgid "The explain answer has four parts:"
 msgstr "Az explain válasza négy részből áll:"
 
-#: ../../how-to/choose-modelo.md:24
+#: ../../how-to/choose-modelo.md:26
 msgid "**The verdict** - whether the modelo applies to you for that year."
-msgstr "**A döntés** - hogy a modelo vonatkozik-e Önre az adott évre."
+msgstr "**A döntés** - hogy a modelo vonatkozik-e rád az adott évre."
 
-#: ../../how-to/choose-modelo.md:25
+#: ../../how-to/choose-modelo.md:27
 msgid ""
 "**The rationale** - a plain-language explanation derived from the "
 "official rules."
@@ -112,70 +123,71 @@ msgstr ""
 "**Az indoklás** - egy közérthető magyarázat, amely a hivatalos "
 "szabályokból származik."
 
-#: ../../how-to/choose-modelo.md:26
+#: ../../how-to/choose-modelo.md:28
 msgid ""
 "**The legal references** - the provisions the decision rests on. Use them"
 " to check the verdict or share it with an advisor."
 msgstr ""
 "**A jogszabályi hivatkozások** - azok a rendelkezések, amelyeken a döntés"
-" nyugszik. Használja őket a döntés ellenőrzésére, vagy ossza meg egy "
+" nyugszik. Használd őket a döntés ellenőrzésére, vagy oszd meg egy "
 "tanácsadóval."
 
-#: ../../how-to/choose-modelo.md:27
+#: ../../how-to/choose-modelo.md:29
 msgid ""
 "**The profile facts used** - exactly which of your saved facts the "
 "decision read. If one of those facts is wrong, the verdict is wrong too."
 msgstr ""
-"**A felhasznált profiladatok** - pontosan mely elmentett adatait olvasta "
-"be a döntés. Ha ezek közül az egyik adat helytelen, a döntés is helytelen"
-" lesz."
+"**A felhasznált profiladatok** - pontosan mely elmentett adataidat "
+"olvasta be a döntés. Ha ezek közül az egyik adat helytelen, a döntés is "
+"helytelen lesz."
 
-#: ../../how-to/choose-modelo.md:29
+#: ../../how-to/choose-modelo.md:31
 msgid ""
 "Some answers also include a scheduling note. Treat it as a pointer, not a"
 " calendar - the [filing calendar guide](filing-calendar.md) is the place "
 "for deadlines."
 msgstr ""
-"Egyes válaszok ütemezési megjegyzést is tartalmaznak. Kezelje ezt "
-"iránymutatásként, ne naptárként - a határidőkhöz a [benyújtási naptár "
-"útmutató](filing-calendar.md) a megfelelő hely."
+"Egyes válaszok ütemezési megjegyzést is tartalmaznak. Iránymutatásként "
+"kezeld, ne naptárként - a határidőkhöz a [benyújtási naptár útmutató"
+"](filing-calendar.md) a megfelelő hely."
 
-#: ../../how-to/choose-modelo.md:31
+#: ../../how-to/choose-modelo.md:33
 msgid "What each verdict means"
 msgstr "Mit jelent az egyes döntések"
 
-#: ../../how-to/choose-modelo.md:33
+#: ../../how-to/choose-modelo.md:35
 msgid ""
 "**Applicable** - the form applies to you for that year. Plan to prepare "
 "and file it."
 msgstr ""
-"**Alkalmazandó** - a nyomtatvány vonatkozik Önre az adott évre. Tervezze "
-"be az elkészítését és a benyújtását."
+"**Alkalmazandó** - a nyomtatvány vonatkozik rád az adott évre. Tervezd be"
+" az elkészítését és a benyújtását."
 
-#: ../../how-to/choose-modelo.md:34
+#: ../../how-to/choose-modelo.md:36
 msgid ""
 "**Not applicable** - your taxpayer situation excludes it. The rationale "
 "tells you which fact rules it out."
 msgstr ""
-"**Nem alkalmazandó** - az adózói helyzete kizárja azt. Az indoklás "
+"**Nem alkalmazandó** - az adózói helyzeted kizárja. Az indoklás "
 "megmondja, melyik adat zárja ki."
 
-#: ../../how-to/choose-modelo.md:35
+#: ../../how-to/choose-modelo.md:37
 msgid ""
 "**Attribution pass-through** - your entity is in régimen de atribución de"
 " rentas, such as a comunidad de bienes or a sociedad civil without a "
 "commercial object (sin objeto mercantil). The entity passes its income "
-"through to its members, so it doesn't file this self-assessment form "
-"itself. The members declare the attributed income on their own returns."
+"through to its members, so it doesn't file the income-tax self-assessment"
+" itself (Modelo 100, 130, 200, or 202). The members declare the "
+"attributed income on their own returns."
 msgstr ""
-"**Jövedelem-hozzárendeléses átvezetés** - a szervezete a régimen de "
+"**Jövedelem-hozzárendeléses átvezetés** - a szervezeted a régimen de "
 "atribución de rentas hatálya alá tartozik, például egy comunidad de "
 "bienes vagy egy kereskedelmi cél nélküli (sin objeto mercantil) sociedad "
-"civil. A szervezet a jövedelmét átvezeti a tagjaihoz, így ezt az "
-"önbevallási nyomtatványt maga nem nyújtja be. A tagok a hozzárendelt "
-"jövedelmet a saját bevallásaikban vallják be."
+"civil. A szervezet a jövedelmét átvezeti a tagjaihoz, így a "
+"jövedelemadó-önbevallást (Modelo 100, 130, 200 vagy 202) maga nem nyújtja"
+" be. A tagok a hozzárendelt jövedelmet a saját bevallásaikban vallják be."
 
-#: ../../how-to/choose-modelo.md:36
+#: ../../how-to/choose-modelo.md:38
 msgid ""
 "**Incomplete** - the tool cannot decide and refuses to guess. Usually "
 "your profile is missing the facts needed; see [When the verdict is "
@@ -184,63 +196,63 @@ msgid ""
 "that case no profile change alters the verdict."
 msgstr ""
 "**Hiányos** - az eszköz nem tud dönteni, és nem hajlandó találgatni. "
-"Általában a profiljából hiányoznak a szükséges adatok; lásd [Amikor a "
+"Általában a profilodból hiányoznak a szükséges adatok; lásd: [Amikor a "
 "döntés hiányos](#when-the-verdict-is-incomplete). Néhány nyomtatványhoz "
 "az eszköz még nem vezetett le alkalmazhatósági szabályt. Az indoklás "
 "jelzi ezt, és ebben az esetben egyetlen profilmódosítás sem változtatja "
 "meg a döntést."
 
-#: ../../how-to/choose-modelo.md:39
+#: ../../how-to/choose-modelo.md:41
 msgid "When the verdict is incomplete"
 msgstr "Amikor a döntés hiányos"
 
-#: ../../how-to/choose-modelo.md:41
+#: ../../how-to/choose-modelo.md:43
 msgid ""
 "An incomplete verdict usually means the decision depends on facts your "
 "profile doesn't declare yet. The main groups:"
 msgstr ""
 "A hiányos döntés általában azt jelenti, hogy a döntés olyan adatoktól "
-"függ, amelyeket a profilja még nem közöl. A fő csoportok:"
+"függ, amelyeket a profilod még nem közöl. A fő csoportok:"
 
-#: ../../how-to/choose-modelo.md:43
+#: ../../how-to/choose-modelo.md:45
 msgid ""
 "**Who you are** - your taxpayer type and entity form (an individual "
-"identified by NIF; a company identified by NIF or CIF; an entity in "
+"identified by NIF; a legal entity identified by its NIF; an entity in "
 "atribución de rentas)."
 msgstr ""
-"**Ki Ön** - az adózói típusa és a szervezeti formája (NIF-fel azonosított"
-" magánszemély; NIF-fel vagy CIF-fel azonosított társaság; atribución de "
-"rentas hatálya alá tartozó szervezet)."
+"**Ki vagy** - az adózói típusod és a szervezeti formád (NIF-fel "
+"azonosított magánszemély; NIF-fel azonosított jogi személy; atribución de"
+" rentas hatálya alá tartozó szervezet)."
 
-#: ../../how-to/choose-modelo.md:44
+#: ../../how-to/choose-modelo.md:46
 msgid ""
 "**Your income-tax situation** - your IRPF estimation regime and which "
 "income categories you receive."
 msgstr ""
-"**A jövedelemadó-helyzete** - az IRPF becslési rendszere, és hogy mely "
-"jövedelemkategóriákat kapja."
+"**A jövedelemadó-helyzeted** - az IRPF-becslési rendszered, és hogy mely "
+"jövedelemkategóriákat kapod."
 
-#: ../../how-to/choose-modelo.md:45
+#: ../../how-to/choose-modelo.md:47
 msgid ""
 "**Your IVA situation** - your IVA regime and any special enrolments, such"
 " as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop"
 " Shop), or intra-community operations."
 msgstr ""
-"**Az IVA-helyzete** - az IVA-rendszere és bármely különleges "
+"**Az IVA-helyzeted** - az IVA-rendszered és bármely különleges "
 "nyilvántartásba vétel, például a ROI (Registro de Operadores "
 "Intracomunitarios), az OSS (One-Stop Shop) vagy a közösségen belüli "
 "ügyletek."
 
-#: ../../how-to/choose-modelo.md:46
+#: ../../how-to/choose-modelo.md:48
 msgid ""
 "**Whether you employ or withhold** - employees on payroll, or "
 "withholdings on professional fees, rent, or capital payments."
 msgstr ""
-"**Hogy foglalkoztat-e vagy von-e le forrásadót** - bérszámfejtésben lévő "
-"alkalmazottak, vagy forrásadó szakmai díjakon, bérleti díjon vagy "
+"**Hogy foglalkoztatsz-e vagy vonsz-e le forrásadót** - bérszámfejtésben "
+"lévő alkalmazottak, vagy forrásadó szakmai díjakon, bérleti díjon vagy "
 "tőkekifizetéseken."
 
-#: ../../how-to/choose-modelo.md:47
+#: ../../how-to/choose-modelo.md:49
 msgid ""
 "**Informative-declaration thresholds** - facts such as third-party "
 "transaction volume or assets held abroad, which gate the informative "
@@ -250,7 +262,7 @@ msgstr ""
 "felekkel folytatott ügyletek volumene vagy a külföldön tartott vagyon, "
 "amelyek meghatározzák az információs nyomtatványokat."
 
-#: ../../how-to/choose-modelo.md:49
+#: ../../how-to/choose-modelo.md:51
 msgid ""
 "Fix the missing facts by hand with the [profile setup guide](profile-"
 "setup.md). For your censo - your AEAT census record, the registration "
@@ -258,35 +270,43 @@ msgid ""
 "from your Modelo 036 copy with the [censo facts guide](censo-update.md). "
 "Then re-run `overview explain` and read the new verdict."
 msgstr ""
-"Javítsa ki a hiányzó adatokat kézzel a [profilbeállítási útmutatóval"
-"](profile-setup.md). A censójához - az AEAT nyilvántartási bejegyzéséhez,"
-" azokhoz a nyilvántartási adatokhoz, amelyeket az AEAT a tevékenységeiről"
-" és kötelezettségeiről vezet - vigye be az adatokat a Modelo 036 "
-"másolatából a [censo-adatok útmutatóval](censo-update.md). Ezután "
-"futtassa újra az `overview explain` parancsot, és olvassa el az új "
-"döntést."
-
-#: ../../how-to/choose-modelo.md:51
-msgid "Check readiness for one filing"
-msgstr "Ellenőrizze a felkészültséget egy benyújtáshoz"
+"Javítsd ki a hiányzó adatokat kézzel a [profilbeállítási útmutató"
+"](profile-setup.md) segítségével. A censódhoz - az AEAT nyilvántartási "
+"bejegyzéséhez, azokhoz a nyilvántartási adatokhoz, amelyeket az AEAT a "
+"tevékenységeidről és kötelezettségeidről vezet - vidd be az adatokat a "
+"Modelo 036 másolatodból a [censo-adatok útmutatója](censo-update.md) "
+"szerint. Ezután futtasd újra az `overview explain` parancsot, és olvasd "
+"el az új döntést."
 
 #: ../../how-to/choose-modelo.md:53
-msgid ""
-"When you already know which modelo, year, and period you're aiming at, "
-"ask for a readiness check with `aeat app modelo readiness`, the closing "
-"frame of the card above."
-msgstr "Ha már tudod, melyik modellt, évet és időszakot célzod, kérj felkészültségi ellenőrzést az `aeat app modelo readiness` paranccsal, amely a fenti kártya záró képkockája."
+msgid "Check readiness for one filing"
+msgstr "Egy benyújtás készenlétének ellenőrzése"
 
 #: ../../how-to/choose-modelo.md:55
+msgid ""
+"When you already know which modelo, year, and period you're aiming at, "
+"ask for a readiness check with `aeat app modelo readiness`, the final "
+"command in the applicability example."
+msgstr ""
+"Ha már tudod, melyik modelót, évet és időszakot célzod, kérj készenléti "
+"ellenőrzést az `aeat app modelo readiness` paranccsal, amely az "
+"alkalmazhatósági példa záró parancsa."
+
+#: ../../how-to/choose-modelo.md:57
 msgid ""
 "Readiness reports what still stands between you and working on that "
 "specific filing: the profile facts still missing, the registry revision "
 "that applies, and any ledger rows that would block a calculation. Where "
 "`overview explain` answers whether the form applies, readiness answers "
 "whether you're ready to work on it."
-msgstr "A felkészültségi ellenőrzés megmutatja, mi áll még közted és az adott bevalláson végzett munka között: a hiányzó profiladatok, az érvényes registry-revízió és azok a főkönyvi sorok, amelyek blokkolnák a számítást. Míg az `overview explain` arra válaszol, hogy a nyomtatvány vonatkozik-e rád, a felkészültség arra, hogy készen állsz-e a munkára."
+msgstr ""
+"A készenléti ellenőrzés megmutatja, mi áll még közted és az adott "
+"bevalláson végzett munka között: a hiányzó profiladatok, az érvényes "
+"nyilvántartási revízió és azok a ledger-sorok, amelyek blokkolnák a "
+"számítást. Míg az `overview explain` arra válaszol, hogy a nyomtatvány "
+"vonatkozik-e rád, a készenlét arra, hogy készen állsz-e a munkára."
 
-#: ../../how-to/choose-modelo.md:57
+#: ../../how-to/choose-modelo.md:59
 msgid ""
 "These two commands read different facts, so they can disagree for the "
 "same profile and modelo, and that is expected. `overview explain` checks "
@@ -297,9 +317,19 @@ msgid ""
 "period. A `ready` result is not a confirmation that the form applies to "
 "you - read `overview explain` for applicability and `modelo readiness` "
 "for filing readiness, not one as a proxy for the other."
-msgstr "Ez a két parancs eltérő adatokat olvas, így ugyanarra a profilra és modellre eltérő eredményt adhatnak, és ez így helyes. Az `overview explain` az alkalmazhatósági adatokat vizsgálja (adózói típus, adózási mód, jövedelemkategóriák); olyan profilnál, amely nem deklarálta az adózói típusát, `applicable false / verdict incomplete` értéket ad (\"el tipo de contribuyente no está declarado\"). A `modelo readiness` azt vizsgálja, tudsz-e dolgozni az adott időszakon. A `ready` eredmény nem igazolja, hogy a nyomtatvány vonatkozik rád: az alkalmazhatósághoz olvasd az `overview explain`, a bevallási felkészültséghez a `modelo readiness` kimenetét, és egyiket se használd a másik helyett."
+msgstr ""
+"Ez a két parancs eltérő adatokat olvas, így ugyanarra a profilra és "
+"modelóra eltérő eredményt adhatnak, és ez így helyes. Az `overview "
+"explain` az alkalmazhatósági adatokat vizsgálja (adózói típus, adózási "
+"rendszer, jövedelemkategóriák); olyan profilnál, amely nem deklarálta az "
+"adózói típusát, `applicable false / verdict incomplete` értéket ad (\"el "
+"tipo de contribuyente no está declarado\"). A `modelo readiness` azt "
+"vizsgálja, tudsz-e dolgozni az adott időszakon. A `ready` eredmény nem "
+"igazolja, hogy a nyomtatvány vonatkozik rád: az alkalmazhatósághoz az "
+"`overview explain`, a bevallási készenléthez a `modelo readiness` "
+"kimenetét olvasd, és egyiket se használd a másik helyett."
 
-#: ../../how-to/choose-modelo.md:59
+#: ../../how-to/choose-modelo.md:61
 msgid ""
 "Readiness reports several axes separately, and a complete profile is only"
 " one of them. A freshly set up profile commonly returns `profile_ready "
@@ -308,32 +338,44 @@ msgid ""
 "`missing_bindings` - are not yet available. Readiness exits with status "
 "`2` while any axis is unready, so read the axis that is `False` rather "
 "than the single overall verdict."
-msgstr "A felkészültségi ellenőrzés több tengelyt külön jelent, és a teljes profil ezek közül csak az egyik. Egy frissen beállított profil gyakran `profile_ready True` értéket ad `binding_ready False` mellett: a saját adataid megvannak, de azok a számok, amelyekből a nyomtatvány dolgozik - a `missing_bindings` alatt felsorolt források - még nem érhetők el. Az ellenőrzés `2` állapottal lép ki, amíg bármelyik tengely nincs készen, ezért a `False` értékű tengelyt olvasd, ne az összesített végeredményt."
+msgstr ""
+"A készenléti ellenőrzés több tengelyt külön jelent, és a teljes profil "
+"ezek közül csak az egyik. Egy frissen beállított profil gyakran "
+"`profile_ready True` értéket ad `binding_ready False` mellett: a saját "
+"adataid megvannak, de azok a számok, amelyekből a nyomtatvány dolgozik - "
+"a `missing_bindings` alatt felsorolt források - még nem érhetők el. Az "
+"ellenőrzés `2` állapottal lép ki, amíg bármelyik tengely nincs készen, "
+"ezért a `False` értékű tengelyt olvasd, ne az összesített végeredményt."
 
-#: ../../how-to/choose-modelo.md:61
+#: ../../how-to/choose-modelo.md:63
 msgid ""
 "Readiness picks the active revision for that modelo, year, and period "
 "automatically. Add `--revision-id` only when you need to pin an exact "
 "past revision for replay; it is accepted only when it names the same "
 "revision the year and period already select."
-msgstr "A felkészültségi ellenőrzés automatikusan kiválasztja az adott modellhez, évhez és időszakhoz tartozó aktív revíziót. A `--revision-id` kapcsolót csak akkor add meg, ha pontosan egy korábbi revíziót kell rögzítened visszajátszáshoz; csak akkor fogadja el, ha ugyanazt a revíziót nevezi meg, amelyet az év és az időszak már kiválaszt."
+msgstr ""
+"A készenléti ellenőrzés automatikusan kiválasztja az adott modelóhoz, "
+"évhez és időszakhoz tartozó aktív revíziót. A `--revision-id` kapcsolót "
+"csak akkor add meg, ha pontosan egy korábbi revíziót kell rögzítened "
+"visszajátszáshoz; csak akkor fogadja el, ha ugyanazt a revíziót nevezi "
+"meg, amelyet az év és az időszak már kiválaszt."
 
-#: ../../how-to/choose-modelo.md:63
+#: ../../how-to/choose-modelo.md:65
 msgid "Browse the catalogue"
 msgstr "A katalógus böngészése"
 
-#: ../../how-to/choose-modelo.md:65
+#: ../../how-to/choose-modelo.md:67
 msgid ""
 "To see every form the tool knows, list the catalogue with `aeat app "
 "modelo list`, add `--year` to narrow it to one fiscal year, then look one"
 " form up in detail with `aeat app modelo describe 303`:"
 msgstr ""
-"Ha látni szeretné az összes nyomtatványt, amelyet az eszköz ismer, "
-"listázza a katalógust az `aeat app modelo list` paranccsal, adja hozzá a "
-"`--year` kapcsolót egy adóévre való szűkítéshez, majd nézzen meg egy "
+"Ha látni szeretnéd az összes nyomtatványt, amelyet az eszköz ismer, "
+"listázd a katalógust az `aeat app modelo list` paranccsal, add hozzá a "
+"`--year` kapcsolót egy adóévre való szűkítéshez, majd nézz meg egy "
 "nyomtatványt részletesen az `aeat app modelo describe 303` paranccsal:"
 
-#: ../../how-to/choose-modelo.md:71
+#: ../../how-to/choose-modelo.md:73
 msgid ""
 "The list shows each modelo's code, official Spanish title, cadence, tax "
 "domain, and revision count. Cadence values include `quarterly`, `annual`,"
@@ -347,15 +389,15 @@ msgstr ""
 "A lista minden modelo kódját, hivatalos spanyol címét, gyakoriságát, "
 "adónemét és revízióinak számát mutatja. A gyakorisági értékek: "
 "`quarterly` (negyedéves), `annual` (éves), `monthly` (havi), `ad_hoc` "
-"(eseti) és `profile_based` (a ritmus a helyzetétől függ). Az adónemek "
+"(eseti) és `profile_based` (a ritmus a helyzetedtől függ). Az adónemek "
 "között szerepel az `iva`, `irpf`, `is` (társasági adó), `censo`, "
 "`informative` (információs), `cross_tax` (adónemeken átívelő), `irnr` "
 "(külföldi illetőségűek jövedelemadója), `patrimonio` (vagyonadó) és `iae`"
 " (gazdasági tevékenységek adója). Az, hogy egy nyomtatvány szerepel a "
-"listán, nem jelenti azt, hogy vonatkozik Önre - a katalógus mindent "
-"lefed, amit az eszköz ismer."
+"listán, nem jelenti azt, hogy vonatkozik rád - a katalógus mindent lefed,"
+" amit az eszköz ismer."
 
-#: ../../how-to/choose-modelo.md:73
+#: ../../how-to/choose-modelo.md:75
 msgid ""
 "The description shows the form's official name (Spanish), domain, "
 "cadence, active revision ID, the full list of revision IDs, the valid "
@@ -367,16 +409,16 @@ msgstr ""
 "A leírás a nyomtatvány hivatalos nevét (spanyolul), adónemét, "
 "gyakoriságát, aktív revíziójának azonosítóját, a revízióazonosítók teljes"
 " listáját, az érvényes időszak-tokeneket és három szerkezeti számadatot -"
-" casillák (rovatok), vinculaciones (adatkötések) és fórmulas (képletek) -"
-" mutatja, amelyek leírják, mennyire összetett a nyomtatvány. Mindkét "
-"parancsot tartsa meg keresési segédeszközként. Az alkalmazhatóság mindig "
-"az `overview explain`-ból származik."
+" casillák, vinculaciones (adatkötések) és fórmulas (képletek) - mutatja, "
+"amelyek leírják, mennyire összetett a nyomtatvány. Mindkét parancsot "
+"tartsd meg keresési segédeszközként. Az alkalmazhatóság mindig az "
+"`overview explain`-ból származik."
 
-#: ../../how-to/choose-modelo.md:75
+#: ../../how-to/choose-modelo.md:77
 msgid "What these commands don't tell you"
 msgstr "Amit ezek a parancsok nem mondanak meg"
 
-#: ../../how-to/choose-modelo.md:77
+#: ../../how-to/choose-modelo.md:79
 msgid ""
 "These commands read your local profile and the built-in rules only. They "
 "do not file, submit, or contact AEAT, and they cannot tell you what AEAT "
@@ -384,78 +426,76 @@ msgid ""
 "statement about the rules and your facts - not a confirmation that a "
 "filing exists or is pending."
 msgstr ""
-"Ezek a parancsok csak a helyi profilját és a beépített szabályokat "
+"Ezek a parancsok csak a helyi profilodat és a beépített szabályokat "
 "olvassák. Nem nyújtanak be, nem küldenek be és nem lépnek kapcsolatba az "
 "AEAT-tal, és nem tudják megmondani, mit kapott meg valójában az AEAT "
-"Öntől. Az **Alkalmazandó** döntés a szabályokról és az Ön adatairól szóló"
+"tőled. Az **Alkalmazandó** döntés a szabályokról és a te adataidról szóló"
 " megállapítás - nem megerősítése annak, hogy egy benyújtás létezik vagy "
 "folyamatban van."
 
-#: ../../how-to/choose-modelo.md:79
+#: ../../how-to/choose-modelo.md:81
 msgid ""
 "For AEAT's own view of your situation, see the [notifications guide"
 "](check-aeat-notifications.md)."
 msgstr ""
-"Az AEAT saját nézetéhez a helyzetéről lásd az [értesítések útmutatót"
+"Az AEAT saját nézetéhez a helyzetedről lásd az [értesítések útmutatót"
 "](check-aeat-notifications.md)."
 
-#: ../../how-to/choose-modelo.md:80
+#: ../../how-to/choose-modelo.md:82
 msgid ""
 "For deadlines and what's due when, see the [filing calendar guide"
 "](filing-calendar.md)."
 msgstr ""
-"A határidőkért és a mikor mi esedékesért lásd a [benyújtási naptár "
-"útmutatót](filing-calendar.md)."
-
-#: ../../how-to/choose-modelo.md:82
-msgid "Where to get help"
-msgstr "Hol kérhet segítséget"
+"A határidőkről és arról, hogy mikor mi esedékes, lásd a [benyújtási "
+"naptár útmutatót](filing-calendar.md)."
 
 #: ../../how-to/choose-modelo.md:84
+msgid "Where to get help"
+msgstr "Hol kérhetsz segítséget"
+
+#: ../../how-to/choose-modelo.md:86
 #, python-brace-format
 msgid ""
 "If a verdict looks wrong or a command fails, see the [troubleshooting "
 "guide](troubleshooting.md). Unfamiliar terms are defined in the "
 "{doc}`glossary </_generated/glossary>`. Before you share command output "
-"to ask for help, remove personal tax identifiers such as your NIF, CIF, "
-"DNI, NIE, or NII."
+"to ask for help, remove personal tax identifiers such as your NIF or NIE."
 msgstr ""
 "Ha egy döntés helytelennek tűnik, vagy egy parancs hibázik, lásd a "
 "[hibaelhárítási útmutatót](troubleshooting.md). Az ismeretlen "
 "kifejezéseket a {doc}`szójegyzék </_generated/glossary>` határozza meg. "
-"Mielőtt megosztja a parancs kimenetét segítségkéréshez, távolítsa el a "
-"személyes adóazonosítóit, például a NIF-jét, CIF-jét, DNI-jét, NIE-jét "
-"vagy NII-jét."
+"Mielőtt megosztod a parancs kimenetét segítségkéréshez, távolítsd el a "
+"személyes adóazonosítóidat, például a NIF-edet vagy a NIE-det."
 
-#: ../../how-to/choose-modelo.md:86
+#: ../../how-to/choose-modelo.md:88
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/choose-modelo.md:88
-msgid "[Plan your filing deadlines](filing-calendar.md)"
-msgstr "[Tervezze meg a benyújtási határidőit](filing-calendar.md)"
-
-#: ../../how-to/choose-modelo.md:89
-msgid "[Set up or correct your profile](profile-setup.md)"
-msgstr "[Állítsa be vagy javítsa a profilját](profile-setup.md)"
-
 #: ../../how-to/choose-modelo.md:90
-msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr "[A Modelo 036 censo-adatok karbantartása a profiljában](censo-update.md)"
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr "[Tervezd meg a benyújtási naptáradat](filing-calendar.md)"
 
 #: ../../how-to/choose-modelo.md:91
-msgid "[Start from nothing with the quickstart](quickstart.md)"
-msgstr "[Kezdje a semmiből a gyorsindítóval](quickstart.md)"
+msgid "[Set up or correct your profile](profile-setup.md)"
+msgstr "[Állítsd be vagy javítsd a profilodat](profile-setup.md)"
 
 #: ../../how-to/choose-modelo.md:92
-msgid "[Prepare Modelo 303](modelo-303.md)"
-msgstr "[Modelo 303 elkészítése](modelo-303.md)"
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr "[Tartsd karban a profilod Modelo 036 censo-adatait](censo-update.md)"
 
 #: ../../how-to/choose-modelo.md:93
-msgid "[Prepare Modelo 390](modelo-390.md)"
-msgstr "[Modelo 390 elkészítése](modelo-390.md)"
+msgid "[Start from nothing with the quickstart](quickstart.md)"
+msgstr "[Kezdd a nulláról a gyorsindítóval](quickstart.md)"
 
 #: ../../how-to/choose-modelo.md:94
+msgid "[Prepare Modelo 303](modelo-303.md)"
+msgstr "[A Modelo 303 elkészítése](modelo-303.md)"
+
+#: ../../how-to/choose-modelo.md:95
+msgid "[Prepare Modelo 390](modelo-390.md)"
+msgstr "[A Modelo 390 elkészítése](modelo-390.md)"
+
+#: ../../how-to/choose-modelo.md:96
 msgid "[Browse the full CLI reference](../cli/index.rst)"
 msgstr "[A teljes CLI-referencia böngészése](../cli/index.rst)"
 

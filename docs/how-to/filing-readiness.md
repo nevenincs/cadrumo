@@ -6,9 +6,13 @@ in place: profile facts, transaction data, and earlier filings? Use the
 commands in this guide before you calculate, and again before you export, so
 nothing silent is missing underneath a clean-looking draft.
 
-These commands read the active profile and prompt for your master-key
-passphrase. Create a profile first with
-[Set up your taxpayer profile](profile-setup.md) if you have none.
+These commands read the active profile and prompt for your passphrase. If you
+have no profile, create one first with
+[Set up your taxpayer profile](profile-setup.md).
+
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you [choose another
+language](profile-setup.md#choose-the-output-language).
 
 ## Run the readiness report
 
@@ -23,14 +27,18 @@ The command exits with status 2 while the target is not ready, so a script
 detects the gap from the exit status. In this example `ready` is `false`
 because the fresh profile still has missing source bindings.
 
-The report covers two things:
+The report covers four axes, each reported separately:
 
-- **Profile readiness** - every profile fact the modelo requires. Each
-  missing fact is listed by its section and field key, so you know exactly
-  what to fill in with `aeat config profile edit`.
-- **Ledger readiness** - for ledger-fed modelos, the same source checks as
-  `aeat app ledger preflight`, listing each transaction that blocks the
-  period and why.
+- **Profile readiness** (`profile_ready`) - every profile fact the modelo
+  requires. Each missing fact is listed by its section and field key, so you
+  know exactly what to fill in with `aeat config profile edit`.
+- **Registry readiness** (`registry_ready`) - whether a registry revision
+  covers the modelo, year, and period.
+- **Ledger readiness** (`ledger_ready`) - for ledger-fed modelos, the same
+  source checks as `aeat app ledger preflight`, listing each transaction that
+  blocks the period and why.
+- **Source bindings** (`binding_ready`) - the figures the form pulls from other
+  sources. `missing_bindings` lists each binding that is not available yet.
 
 Readiness does not check box-level completeness of a draft. That is what
 `aeat app modelo work verify` does. See
@@ -51,7 +59,7 @@ to one modelo and period:
 current blockers for that exact filing (for example an earlier period whose
 official evidence is still missing), so you see what must be resolved before
 this period can safely build on the ones before it. For the background, see
-[Building on earlier filings](../explanation/building-on-earlier-filings.md).
+[How filings build on earlier ones](../explanation/building-on-earlier-filings.md).
 
 ## See everything that happened to a filing
 
@@ -74,7 +82,8 @@ See how this year's figures moved against last year's, box by box:
 ```{cli-sequence} filing-readiness-compare
 ```
 
-Pass `--year` exactly twice. Each row shows the box, its label and section,
+Pass `--year` exactly twice. Each compared year needs a work unit with a
+calculated revision; the command refuses otherwise. Each row shows the box, its label and section,
 both values, the difference, and the percent change; all-zero rows are
 omitted from the text output. The comparison uses the most recent verified
 revision of each year and falls back to the latest draft when no verified
@@ -95,10 +104,15 @@ Modelo 100 would look like from the quarters filed so far:
 `--ccaa` names your autonomous community of tax residence, which selects the
 regional scale for the Modelo 100 calculation.
 
+The projection needs a registry revision of Modelo 100 for the year you
+project. Until that year's revision is published, `project` refuses and says
+that no registry revision covers the filing year. A covered year also needs the
+date-valued profile facts a Renta filer declares.
+
 The output shows the accumulated Modelo 130 figures (income, expenses, net
 result, instalments paid) and the projected Modelo 100 result: the taxable
-base, the state and regional gross tax (cuota íntegra), the net tax (cuota
-líquida), and the resulting balance after instalments (cuota resultante).
+base, the state and regional gross tax (cuota íntegra), the state and regional
+net tax (cuota líquida), and the resulting tax (cuota resultante).
 
 **Read the extrapolation flag before trusting the numbers.** With fewer than
 four quarters filed, the projection extrapolates a full year from the
@@ -123,9 +137,7 @@ For when the year-end filing actually happens, see
 
 ## Trace a value to its legal basis
 
-Every computed value carries its grounding, and you can surface it at each
-review stage:
-
+Every computed value carries its grounding, and each review stage surfaces it.
 The formula behind each computed box carries its legal and source references.
 See [Review and supply calculation inputs](review-calculation-values.md):
 
@@ -147,7 +159,7 @@ Two more grounding surfaces round out the trace:
   draft.
 - [Review and supply calculation inputs](review-calculation-values.md) -
   fill missing values readiness or verification surfaced.
-- [Building on earlier filings](../explanation/building-on-earlier-filings.md) -
+- [How filings build on earlier ones](../explanation/building-on-earlier-filings.md) -
   how cross-period dependencies work.
 - [The filing workflow](filing-spine.md) - workspaces,
   revisions, and per-workspace history.

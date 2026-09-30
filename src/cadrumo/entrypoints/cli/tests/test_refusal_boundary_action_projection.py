@@ -291,10 +291,20 @@ def test_shared_boundary_maps_declared_s114_producers(
     assert action["conditionality"] == "not_applicable"
     assert action["no_recovery_outcome"] == "operator_decision"
     if isinstance(error, MissingOptionalExtraError):
-        assert envelope["context"] == {"extra": "proof", "import_name": "absent.proof", "importable": "false"}
-        assert "feature" not in envelope["context"]
-        assert "install_hint" not in envelope["context"]
-        assert "pip install" not in result.stderr
+        # `feature` is a fixed label from the extras registry and the message
+        # key interpolates it, so it rides the envelope. What the narrow view
+        # still withholds is the `extra` record itself and the module
+        # `name`/`path` attributes the exception carries.
+        assert envelope["context"] == {
+            "extra": "proof",
+            "feature": "proof",
+            "import_name": "absent.proof",
+            "importable": "false",
+        }
+        assert "import_name" in envelope["context"]
+        # The refusal must be actionable: it names the extra and how to get it
+        # rather than rendering the catch-all internal-error sentence.
+        assert "pip install cadrumo[proof]" in result.stderr
     else:
         assert envelope["context"] == {"section": "aeat.pre303", "validation_error_type": "ValidationError"}
         assert "validation_error" not in envelope["context"]

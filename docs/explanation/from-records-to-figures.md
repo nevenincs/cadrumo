@@ -6,7 +6,7 @@ and why the tool is built to let you explain every figure later. It walks
 through the idea, not the buttons - the how-to guides linked from each
 section carry the commands.
 
-The forms in question are modelos that you send to the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
+The forms in question are modelos that you file with the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
 
 ## A bank movement means nothing on its own
 
@@ -43,7 +43,7 @@ any total - see the readiness section of
 
 A calculation is always for one form, one year, and one period. The period decides which of your records count.
 
-A period is a quarter, a single month, or a whole year. The tool turns it into a start and end date, then keeps only the records whose date falls inside that window. A first-quarter filing sees January through March; a March filing sees only March.
+A period is a quarter, a single month, or a whole year. The tool turns it into a start and end date, then keeps only the records whose date falls inside that window. A first-quarter filing sees January through March; a March filing sees only March. Some forms count cumulatively: a Modelo 130 instalment reads the year to date, so its second-quarter filing sees January through June.
 
 Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Period tokens and dates](../how-to/filing-calendar.md#period-tokens-and-dates).
 
@@ -57,7 +57,7 @@ You don't wire any of this by hand. You make your records tax-ready and keep you
 
 ## Tracing a number back to the law
 
-Every figure the tool produces keeps three things attached: the rule that produced it, the law article behind that rule, and the section of the official manual that explains it. Input figures you entered yourself carry the same trail back to their source.
+Every figure the tool produces keeps three things attached: the rule that produced it, the law article behind that rule, and the official source that explains it, such as an AEAT manual or the BOE form. Input figures you entered yourself carry the same trail back to their source.
 
 This is the point of the whole design. Spanish tax filing expects you to justify every number. If an inspector asks why a box holds a certain figure, you can show the records behind it and the rule and law that turned those records into that figure. Nothing is a black box.
 

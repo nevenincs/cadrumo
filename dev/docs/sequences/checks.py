@@ -25,6 +25,7 @@ from cadrumo.tests.golden_comparison import canonicalise
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
+from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations
 from .contracts import read_sequence_contract
 from .errors import SequenceEngineError, SequenceParseError
@@ -377,8 +378,14 @@ def refresh_sequences(
         ``(written, problems, advisories)``: the golden paths written, the
         discovery/execution problems (a non-empty tuple means the refresh is
         incomplete), and the non-failing advisories.
+
+    Raises:
+        SequenceEngineError: When a sequence would execute and the registry
+            authority the runner reads is not current.
     """
     discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
+    if any(item.sequence.executed_frames for item in discovered):
+        require_current_authority()
     written: list[Path] = []
     advisories: list[str] = []
     all_problems = list(problems)
@@ -417,8 +424,14 @@ def check_sequences(
         refresh invocation (appended by :func:`main`'s check mode; callers
         composing their own output can use
         :func:`~dev.docs.sequences.golden_store.refresh_invocation`).
+
+    Raises:
+        SequenceEngineError: When a sequence would execute and the registry
+            authority the runner reads is not current.
     """
     discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
+    if any(item.sequence.executed_frames for item in discovered):
+        require_current_authority()
     all_problems = list(problems)
     advisories: list[str] = []
     for item in discovered:
@@ -613,8 +626,12 @@ def check_sequences_in_subprocess(
         on a golden divergence.
 
     Raises:
-        SequenceEngineError: When a child cannot run the check surface.
+        SequenceEngineError: When the registry authority is not current, or a
+            child cannot run the check surface.
     """
+    # Refused here, once, so a stale authority is not reported by every child
+    # as a golden divergence.
+    require_current_authority()
     if jobs > 1 and page is None and sequence_id is None:
         return _check_pages_in_subprocesses(
             docs_root=docs_root,
@@ -653,8 +670,10 @@ def check_page_coherence_in_subprocess(
         An empty tuple on success, or the complete diagnostic report(s).
 
     Raises:
-        SequenceEngineError: When a child cannot run the check surface.
+        SequenceEngineError: When the registry authority is not current, or a
+            child cannot run the check surface.
     """
+    require_current_authority()
     if page is not None:
         command = _scoped_check_command(
             page=page,
@@ -700,8 +719,14 @@ def check_page_coherence(
         plus coherence-tier failures, each prefixed with
         :data:`COHERENCE_TIER_PREFIX` and naming the page, sequence, frame,
         argv, and the failed expectation with actual vs expected.
+
+    Raises:
+        SequenceEngineError: When a sequence would execute and the registry
+            authority the runner reads is not current.
     """
     discovered, problems = discover_sequences(docs_root=docs_root, page=page)
+    if any(item.sequence.executed_frames for item in discovered):
+        require_current_authority()
     all_problems = list(problems)
 
     by_page: dict[str, list[DiscoveredSequence]] = {}

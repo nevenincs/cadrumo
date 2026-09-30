@@ -10,7 +10,7 @@ reads a measurement rather than re-deriving one.
 
 - **Merge gate** (`merge-gate.yml`) is the only pull request workflow. It runs
   two Linux jobs, lint then gate (security scan, registry gate, import
-  boundaries, scoped tests); the required check is
+  boundaries, scoped tests, committed sequence goldens); the required check is
   `Check: Merge gate (Linux)`.
 - **Release** (`release.yml`) is dispatched only by release-please, using the
   default `GITHUB_TOKEN`. `phase=prove` runs against the release pull request's

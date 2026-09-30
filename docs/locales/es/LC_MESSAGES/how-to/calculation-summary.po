@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 16:02+0000\n"
+"POT-Creation-Date: 2026-09-29 18:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../how-to/calculation-summary.md:1
 msgid "Share and verify a calculation summary"
-msgstr "Comparte y verifica un resumen del cálculo"
+msgstr "Compartir y verificar un resumen del cálculo"
 
 #: ../../how-to/calculation-summary.md:3
 msgid ""
@@ -29,58 +29,69 @@ msgid ""
 "calculation that an accountant can read, that carries its own data, and "
 "that anyone can check for changes. You write it with one command, hand it"
 " on, and later confirm that a copy still matches what your encrypted "
-"store holds."
+"store holds. The same command writes a plain CSV table instead when you "
+"choose `--document-format csv`."
 msgstr ""
 "Esta página trata del resumen del cálculo: un PDF de un cálculo "
 "verificado o presentado que un asesor puede leer, que lleva sus propios "
 "datos y en el que cualquiera puede comprobar si ha habido cambios. Lo "
-"escribes con un solo comando, lo entregas y más tarde confirmas que una "
-"copia sigue coincidiendo con lo que guarda tu almacén cifrado."
+"generas con un solo comando, se lo entregas a quien corresponda y, más "
+"tarde, confirmas que una copia sigue coincidiendo con lo que guarda tu "
+"almacén cifrado. El mismo comando escribe en su lugar una tabla CSV "
+"sencilla cuando eliges `--document-format csv`."
 
-#: ../../how-to/calculation-summary.md:8
+#: ../../how-to/calculation-summary.md:10
 msgid ""
-"A summary is a local calculation, not AEAT evidence. The official proof "
-"of a filing is the AEAT receipt (justificante), the filed-declarations "
-"lookup, or the CSV check at the AEAT portal. The summary says so on its "
-"first page and in every footer."
+"A summary is a local calculation, not evidence from the Agencia Estatal "
+"de Administración Tributaria (AEAT). The official proof of a filing is "
+"the AEAT receipt (justificante), the filed-declarations lookup, or the "
+"Código Seguro de Verificación check at the AEAT portal. The summary says "
+"so on its first page and in every footer."
 msgstr ""
-"Un resumen es un cálculo local, no evidencia de la AEAT. La prueba "
-"oficial de una presentación es el justificante de la AEAT, la consulta de"
-" declaraciones presentadas o la comprobación del CSV en el portal de la "
+"Un resumen es un cálculo local, no una prueba de la Agencia Estatal de "
+"Administración Tributaria (AEAT). La prueba oficial de una presentación "
+"es el justificante de la AEAT, la consulta de declaraciones presentadas o"
+" la comprobación del Código Seguro de Verificación en el portal de la "
 "AEAT. El resumen lo indica en su primera página y en cada pie de página."
 
-#: ../../how-to/calculation-summary.md:13
+#: ../../how-to/calculation-summary.md:16
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: ../../how-to/calculation-summary.md:15
+#: ../../how-to/calculation-summary.md:18
 msgid ""
 "**Requirement:** a calculation that has passed verification or been "
-"filed. See [Verify a filing](verification-reports.md)."
+"filed. See [Verify a filing](verification-reports.md). The command "
+"refuses a calculation that is still a draft. The profile must also "
+"declare your NIF and name, because the report names the filer in full."
 msgstr ""
 "**Requisito:** un cálculo que haya superado la verificación o que se haya"
-" presentado. Consulta [Verifica una presentación](verification-"
-"reports.md)."
+" presentado. Consulta [Verificar una presentación](verification-"
+"reports.md). El comando rechaza un cálculo que todavía es un borrador. El"
+" perfil también debe declarar tu NIF y tu nombre, porque el informe "
+"identifica al declarante con su nombre completo."
 
-#: ../../how-to/calculation-summary.md:18
-msgid "Writing a summary needs the optional `pdf` extra. Checking one does not."
+#: ../../how-to/calculation-summary.md:23
+msgid ""
+"Writing a PDF summary needs the optional `pdf` extra. The CSV format and "
+"checking a summary do not."
 msgstr ""
-"Para escribir un resumen se necesita el complemento opcional `pdf`. Para "
-"comprobarlo, no."
+"Para escribir un resumen en PDF se necesita el extra opcional `pdf`. El "
+"formato CSV y la comprobación de un resumen no lo necesitan."
 
-#: ../../how-to/calculation-summary.md:24
+#: ../../how-to/calculation-summary.md:30
 msgid ""
 "Without the extra, the command refuses before it reads your data and "
 "names the extra to install."
 msgstr ""
-"Sin el complemento, el comando se niega a continuar antes de leer tus "
-"datos e indica qué complemento instalar."
+"Sin el extra, el comando se niega a continuar antes de leer tus datos e "
+"indica qué extra instalar."
 
-#: ../../how-to/calculation-summary.md:27
+#: ../../how-to/calculation-summary.md:33
 msgid "Write a summary"
 msgstr "Escribe un resumen"
 
-#: ../../how-to/calculation-summary.md:29
+#: ../../how-to/calculation-summary.md:35
 msgid ""
 "Address the work unit the way `aeat app modelo work review` does, and "
 "choose the `pdf` document format:"
@@ -88,49 +99,64 @@ msgstr ""
 "Indica la unidad de trabajo igual que con `aeat app modelo work review` y"
 " elige el formato de documento `pdf`:"
 
-#: ../../how-to/calculation-summary.md:36
+#: ../../how-to/calculation-summary.md:42
+msgid ""
+"`--output` is required. `--document-format` defaults to `csv`, which "
+"writes the same calculation as a table without pages or a signature. The "
+"`pdf` format writes the signed summary described on this page."
+msgstr ""
+"`--output` es obligatorio. `--document-format` tiene `csv` como valor "
+"predeterminado, que escribe el mismo cálculo como una tabla sin páginas "
+"ni firma. El formato `pdf` escribe el resumen firmado que se describe en "
+"esta página."
+
+#: ../../how-to/calculation-summary.md:46
 msgid ""
 "The summary is written in the language the command runs in; add "
 "`--output-language en` (or `es`, `ca`, `hu`) to choose another. An "
-"existing file is never overwritten unless you add `--replace`."
+"existing file is never overwritten unless you add `--replace`, and the "
+"output's parent folder must already exist."
 msgstr ""
 "El resumen se escribe en el idioma en que se ejecuta el comando; añade "
-"`--output-language en` (o `es`, `ca`, `hu`) para elegir otro. Un archivo "
-"existente nunca se sobrescribe salvo que añadas `--replace`."
+"`--output-language en` (o `es`, `ca`, `hu`) para elegir otro. Un fichero "
+"existente nunca se sobrescribe salvo que añadas `--replace`, y la carpeta"
+" que contiene el fichero de salida debe existir ya."
 
-#: ../../how-to/calculation-summary.md:40
+#: ../../how-to/calculation-summary.md:51
 msgid ""
 "The result reports the file's SHA-256, the report's own SHA-256 and the "
 "fingerprint of the key the summary is signed with. Writing the same "
 "calculation again, at the same export instant, produces the same bytes."
 msgstr ""
-"El resultado indica el SHA-256 del archivo, el SHA-256 del propio informe"
+"El resultado indica el SHA-256 del fichero, el SHA-256 del propio informe"
 " y la huella de la clave con la que se firma el resumen. Volver a "
 "escribir el mismo cálculo, en el mismo instante de exportación, produce "
 "los mismos bytes."
 
-#: ../../how-to/calculation-summary.md:44
+#: ../../how-to/calculation-summary.md:55
 msgid "Read the summary"
 msgstr "Lee el resumen"
 
-#: ../../how-to/calculation-summary.md:46
+#: ../../how-to/calculation-summary.md:57
 msgid ""
 "The first page states that the document is a local calculation and names "
 "the software identity the filing file would carry. For the development "
 "identity (program `0000`, developer NIF `00000000T`) it says that file "
-"cannot be presented at AEAT. A table then shows the calculation's state, "
-"its verification, whether a filing is recorded, the export instant, and "
-"your NIF and name."
+"cannot be presented at AEAT. For a modelo whose layout Cadrumo does not "
+"fill with a software identity, such as Modelo 130, it says so instead. A "
+"table then shows the calculation's state, its verification, whether a "
+"filing is recorded, the export instant, and your NIF and name."
 msgstr ""
 "La primera página indica que el documento es un cálculo local y nombra la"
 " identidad de software que llevaría el fichero de presentación. Con la "
 "identidad de desarrollo (programa `0000`, NIF de desarrollador "
-"`00000000T`) indica que ese fichero no se puede presentar en la AEAT. A "
-"continuación, una tabla muestra el estado del cálculo, su verificación, "
-"si hay una presentación registrada, el instante de exportación y tu NIF y"
-" nombre."
+"`00000000T`) indica que ese fichero no se puede presentar en la AEAT. "
+"Para un modelo cuyo diseño Cadrumo no rellena con una identidad de "
+"software, como el Modelo 130, lo indica en su lugar. A continuación, una "
+"tabla muestra el estado del cálculo, su verificación, si hay una "
+"presentación registrada, el instante de exportación y tu NIF y nombre."
 
-#: ../../how-to/calculation-summary.md:52
+#: ../../how-to/calculation-summary.md:64
 msgid ""
 "Each registry section follows as a table of casilla, concept and amount. "
 "Three states read differently:"
@@ -138,17 +164,17 @@ msgstr ""
 "A continuación aparece cada sección del registro como una tabla de "
 "casilla, concepto e importe. Tres estados se leen de forma distinta:"
 
-#: ../../how-to/calculation-summary.md:55
+#: ../../how-to/calculation-summary.md:67
 msgid "a figure, including a zero, is a calculated value;"
 msgstr "una cifra, incluido un cero, es un valor calculado;"
 
-#: ../../how-to/calculation-summary.md:56
+#: ../../how-to/calculation-summary.md:68
 msgid "`sin dato` (`no data`) means the calculation recorded no value;"
 msgstr ""
 "`sin dato` (`no data` en un resumen en inglés) significa que el cálculo "
 "no registró ningún valor;"
 
-#: ../../how-to/calculation-summary.md:57
+#: ../../how-to/calculation-summary.md:69
 msgid ""
 "`n/a · no aplicable` (`n/a · not applicable`) means the registry proves "
 "the casilla does not apply to the period."
@@ -156,58 +182,64 @@ msgstr ""
 "`n/a · no aplicable` (`n/a · not applicable` en inglés) significa que el "
 "registro demuestra que la casilla no se aplica al periodo."
 
-#: ../../how-to/calculation-summary.md:60
+#: ../../how-to/calculation-summary.md:72
 msgid ""
 "Subtotals are set in bold and the result row is shaded. The last section,"
 " Traceability and integrity, prints every identifier in full: the "
 "calculation revision, work unit, verification report, filing record, "
-"registry snapshot and authority generation, the report and CSV digests, "
-"and the signing key's fingerprint."
+"registry snapshot and authority generation, the ledger snapshot "
+"fingerprint, the report and CSV digests, and the signing key's "
+"fingerprint."
 msgstr ""
 "Los subtotales aparecen en negrita y la fila del resultado, sombreada. La"
 " última sección, Trazabilidad e integridad, imprime cada identificador "
-"completo: la revisión de cálculo, la unidad de trabajo, el informe de "
+"completo: la revisión del cálculo, la unidad de trabajo, el informe de "
 "verificación, el registro de presentación, la instantánea del registro y "
-"la generación de la autoridad, los SHA-256 del informe y del CSV, y la "
-"huella de la clave de firma."
+"la generación de la autoridad, la huella de la instantánea del ledger, "
+"los resúmenes criptográficos del informe y del CSV, y la huella de la "
+"clave de firma."
 
-#: ../../how-to/calculation-summary.md:66
+#: ../../how-to/calculation-summary.md:78
 msgid "What travels inside the file"
-msgstr "Qué viaja dentro del archivo"
+msgstr "Qué viaja dentro del fichero"
 
-#: ../../how-to/calculation-summary.md:68
+#: ../../how-to/calculation-summary.md:80
 msgid ""
 "The PDF is archival (PDF/A-3) and tagged for assistive technology "
 "(PDF/UA-1). It embeds four files, which any PDF viewer lists as "
 "attachments:"
 msgstr ""
 "El PDF es de archivo (PDF/A-3) y está etiquetado para tecnologías de "
-"apoyo (PDF/UA-1). Incorpora cuatro archivos, que cualquier visor de PDF "
+"apoyo (PDF/UA-1). Incorpora cuatro ficheros, que cualquier visor de PDF "
 "muestra como adjuntos:"
 
-#: ../../how-to/calculation-summary.md:71
+#: ../../how-to/calculation-summary.md:83
 msgid ""
 "`cadrumo-calculation-report.json`, the authoritative data the pages "
 "render;"
 msgstr ""
-"`cadrumo-calculation-report.json`, los datos de referencia que muestran "
-"las páginas;"
+"`cadrumo-calculation-report.json`, los datos de referencia que reproducen"
+" las páginas;"
 
-#: ../../how-to/calculation-summary.md:72
-msgid "`cadrumo-calculation-report.csv`, the same table the CSV format writes;"
+#: ../../how-to/calculation-summary.md:84
+msgid ""
+"`cadrumo-calculation-report.csv`, the same table the CSV format writes, "
+"with one row per casilla and a `value_state` of `value`, `absent`, or "
+"`not_applicable`;"
 msgstr ""
 "`cadrumo-calculation-report.csv`, la misma tabla que escribe el formato "
-"CSV;"
+"CSV, con una fila por casilla y un `value_state` de `value`, `absent` o "
+"`not_applicable`;"
 
-#: ../../how-to/calculation-summary.md:73
+#: ../../how-to/calculation-summary.md:87
 msgid "`cadrumo-report-certification.json`, the signed integrity statement;"
 msgstr "`cadrumo-report-certification.json`, la declaración de integridad firmada;"
 
-#: ../../how-to/calculation-summary.md:74
+#: ../../how-to/calculation-summary.md:88
 msgid "`cadrumo-report-certification.sig`, its 64-byte Ed25519 signature."
 msgstr "`cadrumo-report-certification.sig`, su firma Ed25519 de 64 bytes."
 
-#: ../../how-to/calculation-summary.md:76
+#: ../../how-to/calculation-summary.md:90
 msgid ""
 "Your NIF and name appear on the pages and in the embedded JSON and CSV, "
 "because the summary is your own document. They never appear in the "
@@ -224,11 +256,11 @@ msgstr ""
 "criptográficos con clave. El fichero de presentación y tus documentos de "
 "evidencia no se incorporan."
 
-#: ../../how-to/calculation-summary.md:82
+#: ../../how-to/calculation-summary.md:96
 msgid "What the signature means"
 msgstr "Qué significa la firma"
 
-#: ../../how-to/calculation-summary.md:84
+#: ../../how-to/calculation-summary.md:98
 msgid ""
 "The summary is signed with your profile's key, the same key that signs "
 "your review packages. A valid signature means that this key declared "
@@ -242,7 +274,7 @@ msgstr ""
 "cálculo, la verificación, la instantánea del registro y la autoridad "
 "indicados produjeron exactamente este informe, este CSV y estas páginas."
 
-#: ../../how-to/calculation-summary.md:89
+#: ../../how-to/calculation-summary.md:103
 msgid ""
 "It does not mean that AEAT accepted or received a filing, that the "
 "calculation is legally correct, that the inputs were true, or that the "
@@ -259,11 +291,11 @@ msgstr ""
 " en la clave al comparar su huella, impresa en la última página, con una "
 "que haya recibido de ti por otro canal."
 
-#: ../../how-to/calculation-summary.md:96
+#: ../../how-to/calculation-summary.md:110
 msgid "Verify a summary with Cadrumo"
 msgstr "Verifica un resumen con Cadrumo"
 
-#: ../../how-to/calculation-summary.md:98
+#: ../../how-to/calculation-summary.md:112
 msgid ""
 "On the computer holding the profile that wrote it, check a summary "
 "against your encrypted store:"
@@ -271,7 +303,7 @@ msgstr ""
 "En el ordenador que guarda el perfil que lo escribió, comprueba un "
 "resumen contra tu almacén cifrado:"
 
-#: ../../how-to/calculation-summary.md:105
+#: ../../how-to/calculation-summary.md:119
 msgid ""
 "Cadrumo checks the signature, the embedded data, the metadata and the "
 "pages, then rebuilds the report from the store and compares it. The "
@@ -281,11 +313,11 @@ msgstr ""
 "páginas; después reconstruye el informe a partir del almacén y lo "
 "compara. El resultado es uno de estos:"
 
-#: ../../how-to/calculation-summary.md:108
+#: ../../how-to/calculation-summary.md:122
 msgid "`verified`: the file is intact and still matches the store;"
-msgstr "`verified`: el archivo está intacto y sigue coincidiendo con el almacén;"
+msgstr "`verified`: el fichero está intacto y sigue coincidiendo con el almacén;"
 
-#: ../../how-to/calculation-summary.md:109
+#: ../../how-to/calculation-summary.md:123
 msgid ""
 "`verified_with_later_changes`: it matches the store as it was at export, "
 "and the calculation has since moved on, for example it was filed;"
@@ -294,25 +326,25 @@ msgstr ""
 " la exportación, y desde entonces el cálculo ha avanzado; por ejemplo, se"
 " ha presentado;"
 
-#: ../../how-to/calculation-summary.md:111
+#: ../../how-to/calculation-summary.md:125
 msgid ""
 "`valid_unpinned`: the file is internally consistent, but no key was "
 "trusted and the store was not consulted;"
 msgstr ""
-"`valid_unpinned`: el archivo es coherente internamente, pero no se ha "
+"`valid_unpinned`: el fichero es coherente internamente, pero no se ha "
 "indicado ninguna clave de confianza ni se ha consultado el almacén;"
 
-#: ../../how-to/calculation-summary.md:113
+#: ../../how-to/calculation-summary.md:127
 msgid "`refused`: a check failed; each check row names its reason."
 msgstr ""
 "`refused`: una comprobación ha fallado; cada fila de comprobación indica "
 "su motivo."
 
-#: ../../how-to/calculation-summary.md:115
+#: ../../how-to/calculation-summary.md:129
 msgid "The command exits with status 1 when the outcome is `refused`."
 msgstr "El comando termina con el estado 1 cuando el resultado es `refused`."
 
-#: ../../how-to/calculation-summary.md:117
+#: ../../how-to/calculation-summary.md:131
 msgid ""
 "To check only the document, without opening your store, add `--document-"
 "only`. Anyone can forge a consistent document with their own key, so a "
@@ -324,11 +356,11 @@ msgstr ""
 " su propia clave, así que una comprobación solo del documento da "
 "`valid_unpinned` salvo que también indiques la clave en la que confías:"
 
-#: ../../how-to/calculation-summary.md:125
+#: ../../how-to/calculation-summary.md:139
 msgid "Verify a summary without Cadrumo"
 msgstr "Verifica un resumen sin Cadrumo"
 
-#: ../../how-to/calculation-summary.md:127
+#: ../../how-to/calculation-summary.md:141
 msgid ""
 "A recipient with OpenSSL 3 can check the signature. First save the four "
 "embedded files into one folder, from the attachments panel of a PDF "
@@ -340,23 +372,23 @@ msgid ""
 "`PUBLIC_KEY_HEX` below with that value."
 msgstr ""
 "Un destinatario con OpenSSL 3 puede comprobar la firma. Primero guarda "
-"los cuatro archivos incorporados en una carpeta, desde el panel de "
+"los cuatro ficheros incorporados en una carpeta, desde el panel de "
 "adjuntos de un visor de PDF o con `pdfdetach -saveall summary.pdf` de "
 "poppler. El resumen firmado es el SHA-256 del texto `cadrumo/calculation-"
-"report-certification/v1`, un byte NUL y el archivo de la declaración. La "
+"report-certification/v1`, un byte NUL y el fichero de la declaración. La "
 "clave pública es el valor `public_key_hex` dentro de la declaración; "
-"compara su SHA-256 con la huella que te dieron antes de confiar en ella. "
-"Sustituye `PUBLIC_KEY_HEX` más abajo por ese valor."
+"compara su SHA-256 con la huella que te han dado antes de confiar en "
+"ella. Sustituye `PUBLIC_KEY_HEX` más abajo por ese valor."
 
-#: ../../how-to/calculation-summary.md:135
+#: ../../how-to/calculation-summary.md:149
 msgid "On Linux or macOS:"
 msgstr "En Linux o macOS:"
 
-#: ../../how-to/calculation-summary.md:145
+#: ../../how-to/calculation-summary.md:159
 msgid "In PowerShell 7:"
 msgstr "En PowerShell 7:"
 
-#: ../../how-to/calculation-summary.md:156
+#: ../../how-to/calculation-summary.md:170
 msgid ""
 "OpenSSL prints `Signature Verified Successfully` for an intact statement "
 "and `Signature Verification Failure` otherwise. The statement also lists "
@@ -370,7 +402,7 @@ msgstr ""
 "intacta y `Signature Verification Failure` en caso contrario. La "
 "declaración también indica el SHA-256 del JSON y del CSV incorporados "
 "como `report_sha256` y `csv_sha256`: calcula el SHA-256 de esos dos "
-"archivos (`sha256sum`, `shasum -a 256` en macOS o `Get-FileHash` en "
+"ficheros (`sha256sum`, `shasum -a 256` en macOS o `Get-FileHash` en "
 "PowerShell, que lo imprime en mayúsculas) y compáralos para confirmar que"
 " los datos no se han modificado. Para comprobar que las propias páginas "
 "coinciden con la declaración se necesita Cadrumo."

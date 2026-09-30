@@ -23,13 +23,22 @@ and the intra-community invoice records the declaration lists. Create a profile
 with `aeat config profile create <name>`. See [Set up your taxpayer
 profile](profile-setup.md).
 
-- Check applicability and cadence. Modelo 349 is quarterly (`1T`-`4T`) or
-  monthly (`01`-`12`) depending on your profile and operation volumes; the
-  calendar surfaces which applies to you:
+- Check applicability and cadence. Modelo 349 applies when your profile
+  declares intra-community operations. Cadrumo files it quarterly (`1T`-`4T`)
+  unless the profile declares
+  `--iva-intracommunity-operations-exceed-50000-eur`. Declare it when your
+  intra-community supplies of goods and services, excluding IVA, exceed 50,000
+  euros in the quarter or in any of the four quarters before it (art. 81 of the
+  IVA regulation); the filing is then monthly (`01`-`12`).
+  The following command reports whether Modelo 349 applies to your profile and
+  why. A profile that has not declared its intra-community operations reports
+  `applicable` false with the verdict `incomplete`, as the example shows.
+  Declare them with `aeat config profile edit --does-intracomunitario`:
 
   ```{cli-sequence} modelo-349-applicability
-  :verify: Confirm the modelo's applicability and cadence read back.
+  :verify: Confirm the applicability verdict and the profile facts it rests on read back.
   ```
+
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
   operators feed the entregas side, received invoices from EU suppliers feed
@@ -39,13 +48,12 @@ profile](profile-setup.md).
 - Verify each counterparty's EU VAT number against the VIES register before
   relying on it with `aeat app live verify nif-iva ESB12345678`. An invalid or
   unregistered number is the most common 349 correction later; checking now is
-  cheaper. This is a live read-only command - see [Check AEAT notifications and
-  live observations](check-aeat-notifications.md).
+  cheaper. This is a live read-only command - see [Read AEAT notifications and other live data](check-aeat-notifications.md).
 
 ## Create, calculate, and verify
 
-The preparation below records two intra-community issued invoices - a goods
-supply to a German customer and a service to a French one - then creates the
+The example starts with two intra-community issued invoices recorded - a goods
+supply to a German customer and a service to a French one. It then creates the
 draft, aggregates the invoices into the declaration, and verifies it:
 
 ```{cli-sequence} modelo-349-first-quarter
@@ -53,7 +61,7 @@ draft, aggregates the invoices into the declaration, and verifies it:
 ```
 
 Calculation aggregates the period's invoice records into the summary casillas
-and builds the per-operator detail rows. With the two invoices above, the
+and builds the per-operator detail rows. With the example's two invoices, the
 summary reports two intra-community operators (`decl.numero-operadores`) for a
 total of 8000 euros of operations (`decl.importe-operaciones`), and verify
 grants verified-complete. Inspect what was bound and what is missing, then
@@ -80,7 +88,8 @@ operation; the rectification rows aggregate from there.
 
 Export the verified declaration. The command writes a local file in the
 official layout, including the per-operator detail rows, for you to upload
-through the AEAT channel:
+through the AEAT channel. It refuses to overwrite an existing file unless you
+add `--replace`, and refuses when the output folder does not exist:
 
 ```{cli-sequence} modelo-349-export
 :verify: Confirm export writes the local file and flags it as not official filing evidence.
@@ -88,8 +97,9 @@ through the AEAT channel:
 
 After you file at the portal, record the local marker, then
 [reconcile against the justificante](reconcile.md). The marker needs a pending
-filing obligation, so the preparation below declares the intra-community
-obligation on the profile first:
+filing obligation, so the example starts with the intra-community operations
+declared on the profile, as `aeat config profile edit --does-intracomunitario`
+does:
 
 ```{cli-sequence} modelo-349-file
 :verify: Confirm the local filed marker records the quarter without claiming AEAT accepted it.

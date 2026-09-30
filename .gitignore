@@ -87,6 +87,10 @@ docs/cli/
 # Glossary is generated fresh at build time from the approved Terminology
 # Handbook concepts (docs/conf.py builder-inited); never committed.
 docs/_generated/
+# API automodule stubs are generated fresh at build time from the src/cadrumo
+# module tree (docs/conf.py builder-inited) on every full-scope build; never
+# committed. The hand-written docs/api/index.md stays tracked.
+docs/api/*.rst
 # cli-tree.json help projection is generated fresh at build time from the live
 # command tree (docs/conf.py builder-inited); the widget fetches it same-origin
 # from _static. Never committed, so it cannot drift.
@@ -473,6 +477,8 @@ cache/
 /.codex/config.toml.lock
 /.gitignore.lock
 /.mcp.json.lock
+/.vaultspec/.env
+/.vaultspec/.env.*
 # <<< vaultspec-managed <<<
 
 # Claude Code machine-local (not team-shared)
@@ -528,3 +534,7 @@ cache/
 # and never durable; promote a specific snapshot into .vault/ evidence
 # deliberately instead of tracking the whole scratch tree.
 /.artifacts/
+
+# Private VaultSpec environment (never commit)
+/.vaultspec/.env
+/.vaultspec/.env.*

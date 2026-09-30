@@ -3,19 +3,25 @@
 This page covers the calculation summary: a PDF of a verified or filed
 calculation that an accountant can read, that carries its own data, and that
 anyone can check for changes. You write it with one command, hand it on, and
-later confirm that a copy still matches what your encrypted store holds.
+later confirm that a copy still matches what your encrypted store holds. The
+same command writes a plain CSV table instead when you choose `--document-format
+csv`.
 
-A summary is a local calculation, not AEAT evidence. The official proof of a
-filing is the AEAT receipt (justificante), the filed-declarations lookup, or the
-CSV check at the AEAT portal. The summary says so on its first page and in every
-footer.
+A summary is a local calculation, not evidence from the Agencia Estatal de
+Administración Tributaria (AEAT). The official proof of a filing is the AEAT
+receipt (justificante), the filed-declarations lookup, or the Código Seguro de
+Verificación check at the AEAT portal. The summary says so on its first page and
+in every footer.
 
 ## Before you start
 
 **Requirement:** a calculation that has passed verification or been filed. See
-[Verify a filing](verification-reports.md).
+[Verify a filing](verification-reports.md). The command refuses a calculation
+that is still a draft. The profile must also declare your NIF and name, because
+the report names the filer in full.
 
-Writing a summary needs the optional `pdf` extra. Checking one does not.
+Writing a PDF summary needs the optional `pdf` extra. The CSV format and checking
+a summary do not.
 
 ```text
 pip install "cadrumo[pdf]"
@@ -33,9 +39,14 @@ Address the work unit the way `aeat app modelo work review` does, and choose the
 aeat app modelo work report WORK_UNIT_ID --document-format pdf --output modelo-130-2026-1T.pdf
 ```
 
+`--output` is required. `--document-format` defaults to `csv`, which writes the
+same calculation as a table without pages or a signature. The `pdf` format
+writes the signed summary described on this page.
+
 The summary is written in the language the command runs in; add
 `--output-language en` (or `es`, `ca`, `hu`) to choose another. An existing file
-is never overwritten unless you add `--replace`.
+is never overwritten unless you add `--replace`, and the output's parent folder
+must already exist.
 
 The result reports the file's SHA-256, the report's own SHA-256 and the
 fingerprint of the key the summary is signed with. Writing the same calculation
@@ -46,7 +57,8 @@ again, at the same export instant, produces the same bytes.
 The first page states that the document is a local calculation and names the
 software identity the filing file would carry. For the development identity
 (program `0000`, developer NIF `00000000T`) it says that file cannot be
-presented at AEAT. A table then shows the calculation's state, its verification,
+presented at AEAT. For a modelo whose layout Cadrumo does not fill with a
+software identity, such as Modelo 130, it says so instead. A table then shows the calculation's state, its verification,
 whether a filing is recorded, the export instant, and your NIF and name.
 
 Each registry section follows as a table of casilla, concept and amount. Three
@@ -60,8 +72,8 @@ states read differently:
 Subtotals are set in bold and the result row is shaded. The last section,
 Traceability and integrity, prints every identifier in full: the calculation
 revision, work unit, verification report, filing record, registry snapshot and
-authority generation, the report and CSV digests, and the signing key's
-fingerprint.
+authority generation, the ledger snapshot fingerprint, the report and CSV
+digests, and the signing key's fingerprint.
 
 ## What travels inside the file
 
@@ -69,7 +81,9 @@ The PDF is archival (PDF/A-3) and tagged for assistive technology (PDF/UA-1). It
 embeds four files, which any PDF viewer lists as attachments:
 
 - `cadrumo-calculation-report.json`, the authoritative data the pages render;
-- `cadrumo-calculation-report.csv`, the same table the CSV format writes;
+- `cadrumo-calculation-report.csv`, the same table the CSV format writes, with
+  one row per casilla and a `value_state` of `value`, `absent`, or
+  `not_applicable`;
 - `cadrumo-report-certification.json`, the signed integrity statement;
 - `cadrumo-report-certification.sig`, its 64-byte Ed25519 signature.
 

@@ -204,7 +204,7 @@ cli:
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
-        iva_rate_help: Applied IVA rate as a decimal
+        iva_rate_help: Applied IVA rate as a percentage, for example 21
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Operator label.
@@ -816,10 +816,11 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           output_required: Supply --output PATH for the fichero-BOE artefact.
-        help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
-          fichero-BOE file. Local-only; never contacts AEAT, and the generated file
+        help: 'Export a verified-complete or filed modelo revision to a local AEAT-compatible
+          file in the modelo''s own official layout: fichero-BOE for most modelos,
+          XML for Modelo 100. Local-only; never contacts AEAT, and the generated file
           is not official AEAT filing evidence. Use AEAT justificante, declaration
-          consultation, or CSV cotejo evidence after filing.
+          consultation, or CSV cotejo evidence after filing.'
         output_help: Path to write the fichero-BOE artefact to.
         replace_help: Replace a file already at --output. Without it, an existing
           export file is refused so an earlier export is never destroyed.
@@ -1796,7 +1797,7 @@ cli:
       no_active_bucket: No active profile. Run 'aeat config profile create NAME' before
         configuring authentication.
       output_language_help: Output language for the response text (es, en, ca, hu).
-      provider_help: Authentication provider id (e.g. certificado-electronico)
+      provider_help: Authentication provider id (e.g. certificate)
       providers_help: List supported authentication providers
       reset_all_help: Reset every known authentication provider
       reset_help: Remove local provider configuration, sessions, locks, certificate
@@ -2381,8 +2382,9 @@ cli:
       profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
-      quarantine_help: Preview undecryptable rows; active quarantine is disabled by
-        preserve-first repair policy
+      quarantine_help: Move undecryptable secure-object rows into the auditable quarantine
+        archive; requires --yes. The encrypted payload is preserved, never deleted.
+        Use --dry-run to preview the rows without moving anything.
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
@@ -2414,9 +2416,11 @@ cli:
         concertado for the Modelo 111 header.
       help: Initialize the active tax profile
       profile_name_help: Profile name to write the answers into
-      quiet_help: Run non-interactively using only the supplied flag values; required
-        flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
-        to fill the rest from descriptor defaults.
+      quiet_help: Run non-interactively using only the supplied flag values, asking
+        nothing. A flag left unset is not written rather than refused, so a new profile
+        stays setup-incomplete; `aeat config profile complete-setup` names the facts
+        it still needs. Sufficient on its own; combine with --accept-defaults to fill
+        the rest from descriptor defaults.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.
@@ -3137,7 +3141,8 @@ cli:
       id_help: Parent transaction id (or unambiguous hex prefix) to split
       llm_exclusive: --llm cannot be combined with --child-amount/--child-description;
         the manual path is the explicit operator override.
-      llm_help: Propose an evidence-driven N-way split with the given LLM provider.
+      llm_help: Ask the on-host local reader to propose an evidence-driven N-way split;
+        preview by default, persist with --apply.
       read_evidence_help: Read the transaction's attached invoice on-host and feed
         it to the --llm split proposer.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
@@ -3517,6 +3522,7 @@ cli:
       review and run diagnostics.'
     app_help: Access application-level commands.
     app_help_help: Show help for application commands.
+    app_tui_help: Open the full-screen workbench on your local records.
     debug_help: Enable detailed debug output.
     detail_help: Enable detailed output.
     errors:

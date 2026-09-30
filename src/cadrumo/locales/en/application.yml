@@ -155,6 +155,14 @@ application:
           active profile tax identity; clear auth sessions and authenticate the matching
           profile before live AEAT reads.
   calculations:
+    bienes_inversion_regularizacion:
+      register_advisory: '%{count} capital good(s) in the regularisation period (LIVA
+        arts. 107-110) for %{year}: %{computed} computed, %{pending} awaiting the
+        definitive prorrata. Regularisation proposed for box %{casilla}: %{value}.
+        Confirm the value before filing.'
+      transmision_advisory: '%{count} capital good(s) transferred in %{year} require
+        the single transfer regularisation (LIVA art. 110). Regularisation proposed
+        for box %{casilla}: %{value}. Confirm the value before filing.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'Observations for different modelo, year or
@@ -297,6 +305,15 @@ application:
           {period}.
         taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
           wallet decision key.
+    prorrata_regularizacion:
+      advisory: 'Prorrata regularisation by definitive percentage (LIVA arts. 104-105)
+        for %{year}: provisional prorrata %{provisional}% → definitive %{definitiva}%
+        (%{sentido}). Regularisation proposed for %{target}: %{value}. Confirm the
+        value before filing.'
+      sentido_deduccion: additional deduction
+      sentido_ingreso: payment due
+      target_casilla: box %{number}
+      target_declared: the declared regularisation box
     row_set:
       errors:
         grouping_dispatch_fell_through: 'The row-set grouping {grouping} resolved
@@ -520,7 +537,9 @@ application:
         invoice_id_required: An invoice id is required.
         invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
         remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
-          linked to transactions: %{linked_transaction_ids}. Unlink them first.'
+          linked to transactions: %{linked_transaction_ids}. There is no unlink command:
+          remove those transactions with `aeat app ledger remove`, which releases
+          the link, then remove the invoice.'
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -583,6 +602,10 @@ application:
         or omit the key to append a deliberate duplicate.
       purchase_evidence_already_set: Purchase invoice evidence is immutable once attached.
         Remove the ledger transaction and re-add it with the correct evidence.
+      split_requires_image_evidence: The on-host reader can only propose a split for
+        transaction %{transaction_id} from scanned or image evidence, and this transaction
+        has none it can read. Attach a scanned or image invoice and re-run with --read-evidence,
+        or state the split yourself with --child-amount and --child-description.
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
       transaction_id_prefix_empty: transaction id prefix is empty
@@ -1104,7 +1127,7 @@ application:
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
-        --year %{year} separately and use a period token such as 0A, Q1, 1T, or 01.
+        --year %{year} separately and use a period token such as 0A, 1T, or 01.
       work_unit_already_discarded: The work unit is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded work unit, so the target cannot be resumed.

@@ -98,6 +98,7 @@ from pydantic import BaseModel, Field, StringConstraints
 if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
 
+from ....core.i18n.render import tr
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import today_madrid
@@ -507,27 +508,21 @@ def _registry_applicability_reason(key: str, *, operation: PinnedAuthorityOperat
         raise RegistryValidationError(f"modelo applicability reason is missing {key!r}") from exc
 
 
-_INCOMPLETE_UNDECLARED_REASON = (
-    "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
-    "está declarado. Faltan el tipo de entidad y, en su caso, las "
-    "categorías de renta del IRPF."
-)
+_INCOMPLETE_UNDECLARED_REASON_LOCALE_KEY = "filing.applicability.incomplete_undeclared_taxpayer"
 """``INCOMPLETE`` rationale for an *undeclared taxpayer model*.
 
 Used only when the engine cannot decide because the profile itself is
 incomplete: no ``entity_type``, or a natural person with no declared
 IRPF income category against a category-gated rule. The guidance to
 declare the taxpayer type first is correct here.
+
+These rationales reach the operator through ``overview explain``, so they
+are catalogue keys rendered in the active output language rather than
+authored prose. Registry-authored legal text keeps its authored wording;
+this text is the engine's own, and the engine speaks the user's language.
 """
 
-_INCOMPLETE_UNRULED_REASON = (
-    "No se puede determinar la aplicabilidad de este modelo: todavía no se "
-    "ha derivado una regla de aplicabilidad para él. La cobertura de reglas "
-    "es deliberadamente reducida (el conjunto inicial de personas) y la "
-    "expansión por entidad y régimen está pendiente. No es una afirmación "
-    "sobre su perfil: su tipo de contribuyente puede estar correctamente "
-    "declarado."
-)
+_INCOMPLETE_UNRULED_REASON_LOCALE_KEY = "filing.applicability.incomplete_no_rule"
 """``INCOMPLETE`` rationale for a *modelo with no seed rule*.
 
 Used when :data:`MODELO_APPLICABILITY_RULES` carries no rule for the
@@ -536,13 +531,8 @@ statement about the seed coverage, not about the operator. It must never tell a 
 their taxpayer type.
 """
 
-_INCOMPLETE_UNDETERMINED_REASON = (
-    "No se puede determinar la aplicabilidad de este modelo desde el modelo "
-    "de contribuyente declarado: depende de un hecho que el perfil no "
-    "expresa con certeza. El modelo solo se afirma aplicable cuando ese "
-    "hecho se declara positivamente; en otro caso no se conjetura una "
-    "obligación."
-)
+_INCOMPLETE_UNDETERMINED_REASON_LOCALE_KEY = "filing.applicability.incomplete_undetermined_fact"
+"""``INCOMPLETE`` rationale for a fact only the taxpayer can supply."""
 
 _IMPATRIADO_M720_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
@@ -577,31 +567,13 @@ _IMPATRIADO_M151_ROUTE_LEGAL_REFS: tuple[LegalRefId, ...] = (
 )
 """Legal refs grounding the Art. 93 Modelo 151 route and M100 suppression."""
 
-_IMPATRIADO_M100_SUPPRESSED_REASON = (
-    "Modelo 100 no aplica: el contribuyente tiene activo el régimen especial "
-    "de trabajadores, profesionales, emprendedores e inversores desplazados "
-    "a territorio español (LIRPF Art. 93) dentro de la ventana de seis "
-    "ejercicios. Durante esa ventana tributa por las reglas del IRNR "
-    "manteniendo la condición de contribuyente IRPF, y la declaración anual "
-    "correspondiente es el Modelo 151, no el Modelo 100."
-)
+_IMPATRIADO_M100_SUPPRESSED_REASON_LOCALE_KEY = "filing.applicability.impatriado_m100_suppressed"
 """``NOT_APPLICABLE`` rationale for suppressing M100 during Art. 93."""
 
-_IMPATRIADO_M151_APPLICABLE_REASON = (
-    "Modelo 151 aplica: el contribuyente tiene activo el régimen especial de "
-    "impatriados del Art. 93 LIRPF dentro de la ventana de seis ejercicios "
-    "del año de opción y los cinco siguientes; la declaración anual del "
-    "régimen se presenta por Modelo 151."
-)
+_IMPATRIADO_M151_APPLICABLE_REASON_LOCALE_KEY = "filing.applicability.impatriado_m151_applicable"
 """``APPLICABLE`` rationale for the active Art. 93 Modelo 151 route."""
 
-_IMPATRIADO_M151_NOT_APPLICABLE_REASON = (
-    "Modelo 151 no aplica: el perfil no tiene activo el régimen especial de "
-    "impatriados del Art. 93 LIRPF dentro de su ventana de seis ejercicios. "
-    "Fuera de esa ventana, o sin opción por el régimen, la persona física "
-    "residente vuelve a la ruta ordinaria del IRPF y al Modelo 100 cuando "
-    "proceda."
-)
+_IMPATRIADO_M151_NOT_APPLICABLE_REASON_LOCALE_KEY = "filing.applicability.impatriado_m151_not_applicable"
 """``NOT_APPLICABLE`` rationale for M151 outside the active Art. 93 window."""
 
 
@@ -630,7 +602,7 @@ def _incomplete_applicability(
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
         appropriate rationale for the given cause.
     """
-    reason = _INCOMPLETE_UNRULED_REASON if unruled else _INCOMPLETE_UNDECLARED_REASON
+    reason = tr(_INCOMPLETE_UNRULED_REASON_LOCALE_KEY if unruled else _INCOMPLETE_UNDECLARED_REASON_LOCALE_KEY)
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
@@ -682,12 +654,17 @@ def _undetermined_applicability(
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
         undetermined-payer-fact rationale.
     """
-    reason = (
-        f"{_INCOMPLETE_UNDETERMINED_REASON} "
-        f"Hecho requerido para este modelo: {payer_fact_incomplete_label(payer_fact)}."
+    required = tr(
+        "filing.applicability.incomplete_undetermined_fact_required",
+        fact=payer_fact_incomplete_label(payer_fact),
     )
+    reason = f"{tr(_INCOMPLETE_UNDETERMINED_REASON_LOCALE_KEY)} {required}"
     if periods_missing and isinstance(payer_fact, PayerFactProjection) and payer_fact.period_companion is not None:
-        reason = f"{reason} Periodos sin declarar: {payer_fact.period_companion.label}."
+        periods = tr(
+            "filing.applicability.incomplete_undetermined_periods_missing",
+            periods=payer_fact.period_companion.label,
+        )
+        reason = f"{reason} {periods}"
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
@@ -1117,7 +1094,7 @@ def derive_modelo_applicability(
         return ModeloApplicability(
             modelo=Modelo("100"),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
-            reason=_IMPATRIADO_M100_SUPPRESSED_REASON,
+            reason=tr(_IMPATRIADO_M100_SUPPRESSED_REASON_LOCALE_KEY),
             legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
         )
     if modelo == Modelo("151"):
@@ -1125,7 +1102,11 @@ def derive_modelo_applicability(
             modelo=Modelo("151"),
             verdict=(ApplicabilityVerdict.APPLICABLE if beckham_window_active else ApplicabilityVerdict.NOT_APPLICABLE),
             reason=(
-                _IMPATRIADO_M151_APPLICABLE_REASON if beckham_window_active else _IMPATRIADO_M151_NOT_APPLICABLE_REASON
+                tr(
+                    _IMPATRIADO_M151_APPLICABLE_REASON_LOCALE_KEY
+                    if beckham_window_active
+                    else _IMPATRIADO_M151_NOT_APPLICABLE_REASON_LOCALE_KEY,
+                )
             ),
             legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
         )

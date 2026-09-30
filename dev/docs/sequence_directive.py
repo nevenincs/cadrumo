@@ -70,6 +70,10 @@ _SHELL_CONTINUATION: dict[str, str] = {"bash": "\\", "pwsh": "`"}
 #: Display-column budget for the wrapped command line.
 _WRAP_WIDTH: int = 88
 
+# Token spans multiply large provenance documents into megabytes of markup.
+# Keep their full escaped JSON readable without that per-token overhead.
+_JSON_HIGHLIGHT_MAX_BYTES: int = 16_384
+
 #: Continuation-line indent, in spaces, for wrapped command lines.
 _CONTINUATION_INDENT: str = "  "
 
@@ -183,12 +187,12 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
     normalised stdout text is shown, or an empty view when the frame produced no
     stdout content.
     """
-    from cadrumo.tests.golden_comparison import canonicalise, mask_document
+    from cadrumo.tests.golden_comparison import mask_document
+
+    from .sequences.json_layout import format_sequence_json
 
     if golden_frame.envelope is not None:
-        # canonicalise already renders the key-sorted, indented JSON string;
-        # dumping it again would double-encode the display into `\n`-escape noise.
-        return {"format": "json", "body": canonicalise(mask_document(golden_frame.envelope))}
+        return {"format": "json", "body": format_sequence_json(mask_document(golden_frame.envelope))}
     if golden_frame.text:
         return {"format": "text", "body": _with_live_version(golden_frame.text)}
     return {"format": "empty", "body": ""}
@@ -366,14 +370,13 @@ def _render_command_variant(tokens: list[dict[str, Any]], wrapped_lines: list[li
 def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
     """Render a ``{format, body}`` output view as a ``pre`` block, or empty string.
 
-    A JSON body is syntax-highlighted at build time with Pygments (the same
-    engine and CSS classes the docs' code blocks use, so the theme palette
-    applies in light and dark); text bodies render escaped and plain.
+    Small JSON bodies are highlighted at build time with Pygments. Large JSON
+    and text bodies render escaped and plain, retaining their complete output.
     """
     if not view or view["format"] == "empty" or not view["body"]:
         return ""
     data_format = html.escape(view["format"])
-    if view["format"] == "json":
+    if view["format"] == "json" and len(view["body"].encode("utf-8")) <= _JSON_HIGHLIGHT_MAX_BYTES:
         from pygments import highlight
         from pygments.formatters.html import HtmlFormatter
         from pygments.lexers.data import JsonLexer
@@ -383,7 +386,7 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
         # coloured by the panel's own palette in cadrumo-docs.css.
         body = highlight(view["body"], JsonLexer(), HtmlFormatter(nowrap=True)).rstrip("\n")
         return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
-    body = html.escape(view["body"])
+    body = html.escape(view["body"], quote=False)
     return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
 
 
@@ -434,7 +437,7 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
     shells = payload["shells"]
     default_shell = html.escape(shells[0])
     frames_html = "".join(_render_frame_html(frame, payload["verify"], shells) for frame in payload["frames"])
-    payload_json = json.dumps(inline_sequence_payload(payload), ensure_ascii=False)
+    payload_json = json.dumps(inline_sequence_payload(payload), ensure_ascii=False, separators=(",", ":"))
     # </script> in JSON content is escaped so the inline payload cannot break out
     # of its own script element.
     payload_json = payload_json.replace("</", "<\\/")

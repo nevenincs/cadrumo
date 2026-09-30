@@ -16,11 +16,11 @@ You need:
 
 - a working `aeat` command
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
-- a master-key passphrase. The tool prompts for it the first time it opens your
+- your profile passphrase. The tool prompts for it the first time it opens your
   encrypted storage in a session
 - a bank statement file or directory, unless you are adding transactions by hand
 - for AEAT census-derived home-office ratios, reviewed censo facts; see
-  [Link Modelo 036 census information](censo-update.md)
+  [Maintain Modelo 036 census facts in your profile](censo-update.md)
 
 Confirm the active profile before you write transaction data:
 
@@ -30,8 +30,11 @@ Confirm the active profile before you write transaction data:
 
 ## Statement file format
 
-A bank CSV uses a semicolon (`;`) separator and comma decimals. The first
-line is the column header; each later line is one movement:
+`--provider csv` reads bank exports in the BBVA, Santander, CaixaBank, Revolut,
+and N26 layouts. `aeat` detects the delimiter and matches the header row to a
+layout. The Spanish layouts use comma decimals; Revolut and N26 use period
+decimals. The first line is the column header; each later line is one movement.
+A BBVA-style file looks like this:
 
 ```text
 Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
@@ -59,8 +62,9 @@ detect it. The recognized providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
 replace `auto` with the exact provider - run `aeat app ledger import --help` or
 see the [CLI reference](../cli/index.rst) for the current provider list.
 
-If the path does not exist, the command refuses cleanly and names the missing
-file (`El archivo de origen no existe: ...`); fix the path and run it again.
+If the path does not exist or is not readable, the command refuses cleanly and
+names the path (`Invalid value for '--file': the path ... does not exist or is
+not a readable file.`); fix the path and run it again.
 
 ## Save imported rows with diagnostics
 
@@ -70,10 +74,10 @@ Add `--verify` when you want import diagnostics alongside the save:
 :verify: Confirm the verified import saved the statement's rows.
 ```
 
-If the diagnostic source should point at a different original file, pass it with
-`--file <original>`. Use `--period` only when you intentionally want to label the
-import with a fiscal period; leave it out and aeat assigns the period from each
-transaction's date automatically.
+If the diagnostics should check the rows against a different original file,
+pass it with `--verify-source <original>`. Use `--period` with `--year` only when
+you intentionally want to label the import with a filing period; leave both out
+and `aeat` assigns the period from each transaction's date automatically.
 
 ## Add one transaction manually
 
@@ -108,6 +112,10 @@ Useful optional fields:
 - `--category-id` assigns the income or expense category. Run
   `aeat app ledger categories` to list the ids.
 - `--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA breakdown.
+- `--deduction-kind` names the source of a purchase's input IVA deduction, and
+  `--purchase-invoice-evidence-id` links the invoice evidence. Without a
+  deduction kind the input IVA is not deducted. See
+  [Classify transactions](classify-transactions.md#say-where-the-input-iva-comes-from).
 - `--irpf-category` records the IRPF (personal income tax) category.
 - `--source-jurisdiction` records the country a movement belongs to, as an
   ISO two-letter code, which matters for non-resident scopes.
@@ -120,7 +128,9 @@ category, EU member-state, and usage-ratio semantics behind these fields, see
 
 Use the invoice commands when you also need to track whether an invoice exists
 separately from the bank movement. Received invoices are supplier invoices you
-owe; issued invoices are customer invoices owed to you:
+owe; issued invoices are customer invoices owed to you. `invoice add` takes the
+IVA rate as a percentage, such as `--iva-rate 21`, unlike `ledger add`, which
+takes a decimal:
 
 ```{cli-sequence} import-invoice-records
 :verify: Confirm the recorded invoice resolved to a payable invoice.
@@ -132,7 +142,8 @@ For the full invoice-record workflow, see
 ## Review rows
 
 List rows, narrow the list with filters, inspect one row, and read its event
-history. The sequence imports the quarter and walks the read commands:
+history. The example starts from the imported quarter and walks the read
+commands:
 
 ```{cli-sequence} import-review-rows
 :verify: Confirm the inspected row reads the imported income movement.
@@ -180,19 +191,19 @@ splitting, merging, archiving, stashing, removing, and resetting rows - see
 ## Attach evidence to a transaction
 
 Attach secure purchase evidence to a transaction. The evidence id comes from
-`aeat app ledger evidence add`. The sequence records evidence and an expense,
-then attaches one to the other:
+`aeat app ledger evidence add`, which registers the invoice PDF or image as
+encrypted evidence. The example registers the invoice PDF as evidence, records
+the expense, then attaches one to the other. `evidence add` takes the IVA rate
+as a percentage (`21`), while `ledger add` takes a decimal (`0.21`):
 
 ```{cli-sequence} import-attach-evidence
 :verify: Confirm the purchase-invoice evidence attached to the transaction.
 ```
 
 `attach` is the single door for purchase evidence. The `link` command binds a
-transaction to a reconciliation-catalogue invoice only.
-
-The `link --invoice-id` option expects an id from the reconciliation invoice
-catalogue (populated by the import and reconcile flows), not an id from `aeat app
-ledger invoice add`. See
+transaction to an invoice record only. Its `--invoice-id` option takes the id
+that `aeat app ledger invoice add` prints, or the id of an imported or
+reconciled invoice. See
 [Attach invoices and receipts](ledger-evidence.md) for the full evidence and
 invoice-record workflow, including the `--attachment-id` option and its current
 limitation.
@@ -208,8 +219,8 @@ The command downloads the Drive file, stores its bytes encrypted with the
 transaction, and keeps the original link as provenance. Gmail links, arbitrary
 URLs, and Drive files outside the granted scope are refused - evidence always
 carries the document itself, never a bare link. For a refused source, download
-the document yourself and attach it with `aeat app ledger attach
---attachment-id`.
+the document yourself, register it with `aeat app ledger evidence add`, and
+attach it with `aeat app ledger attach --purchase-invoice-evidence-id`.
 
 ## Fix a wrong row
 
@@ -268,6 +279,6 @@ ledger is not ready, use
 - [Classify transactions with an LLM](classify-with-llm.md)
 - [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
-- [Quickstart: produce a modelo file](quickstart.md)
+- [Quickstart: prepare a modelo filing](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

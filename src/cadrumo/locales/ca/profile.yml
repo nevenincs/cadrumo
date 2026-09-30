@@ -1,10 +1,11 @@
 profile:
   errors:
-    foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
-      en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
+    foral_regime: 'Els residents a {tax_region} tributen davant la Hisenda Foral corresponent,
+      no davant l''AEAT: els territoris bascos en virtut del Concert Econòmic (Llei
+      12/2002) i Navarra en virtut del Conveni Econòmic (Llei 28/1990). Aquest CLI
       no modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
       (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
-      el vostre territori.
+      el vostre territori.'
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
       Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
   journey:

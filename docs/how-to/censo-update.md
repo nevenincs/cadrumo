@@ -9,8 +9,9 @@ workflow.
 
 You fill census facts three ways: pull them from AEAT, read them from a
 certificate you downloaded, or enter them by hand. The pull reads AEAT's own
-*Mis Datos Censales* consulta and fills your identity and address; it cannot
-reach the regime facts, so you enter those yourself.
+*Mis Datos Censales* consulta and fills your address; it cannot reach the
+regime facts, so you enter those yourself. Reading a certificate is not yet
+active.
 
 The tool never files Modelo 036, never submits changes to AEAT, and never
 modifies AEAT records. The pull reads and stops there.
@@ -20,13 +21,15 @@ modifies AEAT records. The pull reads and stops there.
 You need:
 
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
-- the taxpayer's fiscal ID (NIF, CIF, DNI, or NIE) saved in that profile
+- the taxpayer's fiscal ID (NIF or NIE) saved in that profile
 - your censo facts as AEAT holds them: activity description and start date,
   tax regime, IVA regime, and enrollment facts. Read them from your Modelo 036
   copy or from the AEAT sede.
 
-Every command on this page needs your master-key passphrase; the tool
-prompts for it. The tool's messages are in Spanish.
+Every command on this page needs your passphrase; the tool prompts for it.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you [choose another
+language](profile-setup.md#choose-the-output-language).
 
 If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
@@ -64,8 +67,8 @@ Edit the active profile with the wizard:
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
-scripted update, pass the field flags with `--quiet`. Name your own profile in
-place of `docs-sequence-sandbox`:
+scripted update, pass the field flags with `--quiet`. Without a profile name,
+the edit applies to the active profile:
 
 ```{cli-sequence} censo-update-record-facts
 :verify: Confirm the profile validates after you record the census facts.
@@ -77,22 +80,18 @@ guess a regime or a start date.
 ## Pull your census facts from AEAT
 
 AEAT publishes your current census position at *Mis Datos Censales*. Pull it
-into the active profile. The first step previews; the second performs a new
-authenticated read and records that read's eligible facts:
+into the active profile. Both steps read your record from AEAT over an
+authenticated session. The first step previews and writes nothing. The second
+opens the proposal for your review and records the facts you approve:
 
 ```{cli-sequence} censo-update-censo-pull
 ```
 
-Nothing is written until you add `--apply`.
-
-```{warning}
-The current CLI does not turn the first command's preview into a saved approval.
-The `--apply` command reads AEAT again and applies that new observation. Review
-the `--apply` result itself before relying on the updated profile. Work is in
-progress to expose the application's captured, exact-baseline reviewed-apply
-lifecycle on this command; until that lands, do not treat the earlier preview
-as the operand that was applied.
-```
+Nothing is written until you add `--apply`. The `--apply` command performs a
+new read, prints each field with its intent (`adopt` or `preserve`), and asks
+whether to apply that exact proposal. The default answer is no, which writes
+nothing. The preview and the `--apply` proposal come from separate reads, so
+review the `--apply` proposal itself.
 
 Authenticate first; see
 [Authenticate with AEAT](authenticate-with-aeat.md). The pull reads your own
@@ -120,14 +119,16 @@ declared yourself stays yours.
 
 ### What the pull cannot fill
 
-The pull fills your fiscal address, postcode, and cadastral reference.
+The pull fills your fiscal address, postcode, and cadastral reference. It
+reports these as the fields `contact.fiscal_address`, `contact.postcode`, and
+`contact.fiscal_address_cadastral_reference`.
 
 It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
 AEAT returned is yours, and never writes it.
 
 It does not fill your regime facts: activity, tax regime, IVA regime,
 enrollment. AEAT publishes no read-only surface that carries them. Enter those
-by hand as described below.
+by hand as described in [Enter or correct census facts](#enter-or-correct-census-facts).
 
 It does not split your name. AEAT returns surnames and given names as one
 string, and a wrong split is worse than a blank field, so the pull leaves both
@@ -162,7 +163,7 @@ gave in setup, the profile keeps a record of the divergence and
 Reading the certificate's contents is not yet active: the command currently
 refuses every document while layout coverage for AEAT-issued certificates is
 being completed, and tells you so. Until then, enter the facts by hand as
-described above. The command's interface is stable, and this page applies
+described in [Enter or correct census facts](#enter-or-correct-census-facts). The command's interface is stable, and this page applies
 unchanged once reading activates.
 ```
 
@@ -193,11 +194,15 @@ For modelo-specific readiness, use modelo readiness:
 :verify: Confirm the readiness check runs for the target modelo and period.
 ```
 
+The command exits with status 2 while the modelo is not ready. `profile_ready`
+covers profile facts only, so read `missing_bindings` for the source inputs
+that are still missing.
+
 ## Keep the facts current
 
 Your AEAT census can change - a new activity, a regime change, a baja.
 
-Pull again to catch drift in your identity and address. The pull reports
+Pull again to catch drift in your address. The pull reports
 anything AEAT now holds that your profile does not.
 
 The pull cannot see a regime change, so re-check those fields against your

@@ -1,0 +1,179 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-18",
+        "--amount",
+        "200.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Private transfer",
+        "--classification",
+        "PERSONAL",
+        "--idempotency-key",
+        "correct-exclude"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "9d3bc95f257097f0f6dc037eb822fae76216a9009897919a06e932af6f3fa784"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "200",
+            "attachment_ids": [],
+            "booked_date": "2026-03-18",
+            "business_classification": "PERSONAL",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_country": null,
+            "counterparty_identification_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-18",
+            "description": "Private transfer",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "invoice_id": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "exclude",
+        "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb",
+        "--reason",
+        "private transfer",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ID\t9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb\nDate\t2026-03-18\nAmount\t200\nDescription\tPrivate transfer\nReview status\texcluded\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "excluded",
+          "transaction": {
+            "amount": "200",
+            "attachment_ids": [],
+            "booked_date": "2026-03-18",
+            "business_classification": "REVIEWED_EXCLUDED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_country": null,
+            "counterparty_identification_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-18",
+            "description": "Private transfer",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "invoice_id": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "correct-exclude-transaction"
+}

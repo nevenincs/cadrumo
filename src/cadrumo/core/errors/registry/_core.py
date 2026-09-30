@@ -154,7 +154,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_OPTIONAL_EXTRA_MISSING",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_cadrumo_core",
+            message_key="errors.error.error_optional_extra_missing",
             retryable=False,
             runbook_id=None,
         ),

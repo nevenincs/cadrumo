@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-09-29 21:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -20,8 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-036.md:1
 msgid "Record a Modelo 036 declaration you filed at AEAT"
-msgstr ""
-"Registra una declaración del Modelo 036 que presentaste ante la AEAT"
+msgstr "Registrar una declaración del Modelo 036 que presentaste ante la AEAT"
 
 #: ../../how-to/modelo-036.md:3
 msgid ""
@@ -33,14 +32,14 @@ msgid ""
 "current in your profile, see [maintain Modelo 036 census facts in your "
 "profile](censo-update.md)."
 msgstr ""
-"El Modelo 036 es la declaración censal de la AEAT: el formulario que usas "
-"para darse de alta, modificar o darse de baja en tu situación tributaria. "
-"Lo presentas tú mismo en la Sede Electrónica de la AEAT (la sede), el "
-"portal oficial en línea. Los comandos de esta página solo registran ese "
-"hecho en su rastro de auditoría local a posteriori; nunca presentan nada "
-"ante la AEAT. Para mantener al día en tu perfil los datos censales "
-"registrados, consulta [mantén los datos censales del Modelo 036 en tu "
-"perfil](censo-update.md)."
+"El Modelo 036 es la declaración censal de la AEAT: el formulario que usas"
+" para dar de alta, actualizar o dar de baja tu situación tributaria. Lo "
+"presentas tú mismo en la Sede Electrónica de la AEAT (la sede), el portal"
+" oficial en línea. Los comandos de esta página solo registran ese hecho "
+"después en tu rastro de auditoría local; nunca presentan nada ante la "
+"AEAT. Para mantener al día en tu perfil los datos censales registrados, "
+"consulta [Mantener los datos censales del Modelo 036 en tu perfil](censo-"
+"update.md)."
 
 #: ../../how-to/modelo-036.md:10
 msgid "Before you start"
@@ -48,24 +47,24 @@ msgstr "Antes de empezar"
 
 #: ../../how-to/modelo-036.md:12
 msgid "You need:"
-msgstr "Necesita:"
+msgstr "Necesitas:"
 
 #: ../../how-to/modelo-036.md:14
 msgid ""
 "An active profile - see [set up your taxpayer profile](profile-setup.md)."
-" The commands below refuse without one (`No hay un perfil activo`)."
+" The commands below refuse without one."
 msgstr ""
-"Un perfil activo; consulta [configura tu perfil de contribuyente"
+"Un perfil activo; consulta [Configurar tu perfil de contribuyente"
 "](profile-setup.md). Los comandos siguientes se niegan a continuar sin "
-"uno (`No hay un perfil activo`)."
+"uno."
 
 #: ../../how-to/modelo-036.md:16
 msgid ""
-"Your master-key passphrase. These commands open the encrypted store, so "
-"they prompt for the passphrase."
+"Your passphrase. These commands open the encrypted store, so they prompt "
+"for the passphrase."
 msgstr ""
-"Tu frase de contraseña de la clave maestra. Estos comandos abren el "
-"almacén cifrado, por lo que solicitan la frase de contraseña."
+"Tu frase de contraseña. Estos comandos abren el almacén cifrado, así que "
+"te piden la frase de contraseña."
 
 #: ../../how-to/modelo-036.md:18
 msgid "The date you filed the declaration at the sede."
@@ -80,48 +79,67 @@ msgstr ""
 "tras la presentación."
 
 #: ../../how-to/modelo-036.md:21
-msgid "The runtime emits help, prompts, and messages in Spanish."
+msgid ""
+"`aeat` prints its messages in Spanish unless you choose another language."
+" Add `--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one "
+"command, or store a default for your profile with `aeat config profile "
+"edit --output-language en`. The examples in this documentation are "
+"recorded in English."
 msgstr ""
-"El entorno de ejecución muestra la ayuda, las solicitudes y los mensajes "
-"en español."
+"`aeat` muestra sus mensajes en español salvo que elijas otro idioma. "
+"Añade `--language en` (o `es`, `ca`, `hu`) justo después de `aeat` para "
+"un solo comando, o guarda un valor predeterminado para tu perfil con "
+"`aeat config profile edit --output-language en`. Los ejemplos de esta "
+"documentación están grabados en inglés."
 
-#: ../../how-to/modelo-036.md:23
+#: ../../how-to/modelo-036.md:27
 msgid "Record the declaration"
 msgstr "Registra la declaración"
 
-#: ../../how-to/modelo-036.md:25
+#: ../../how-to/modelo-036.md:29
 msgid "Pick the command that matches what you filed:"
 msgstr "Elige el comando que corresponda a lo que presentaste:"
 
-#: ../../how-to/modelo-036.md:27
-msgid "If you registered an activity, record an alta."
-msgstr "Si dio de alta una actividad, registra un alta."
-
-#: ../../how-to/modelo-036.md:28
-msgid "If you changed registered facts, record a modificacion."
-msgstr "Si modificó datos registrados, registra una modificación."
-
-#: ../../how-to/modelo-036.md:29
-msgid "If you deregistered, record a baja."
-msgstr "Si se dio de baja, registra una baja."
-
 #: ../../how-to/modelo-036.md:31
+msgid "If you registered an activity, record an alta."
+msgstr "Si diste de alta una actividad, registra un alta."
+
+#: ../../how-to/modelo-036.md:32
+msgid "If you changed registered facts, record a modificacion."
+msgstr "Si modificaste datos registrados, registra una modificacion."
+
+#: ../../how-to/modelo-036.md:33
+msgid "If you deregistered, record a baja."
+msgstr "Si te diste de baja, registra una baja."
+
+#: ../../how-to/modelo-036.md:35
+msgid ""
+"Record the declarations in the order you filed them. A modificacion or "
+"baja is refused until the profile has an alta on record. After a baja, no"
+" further declaration is accepted, not even an alta."
+msgstr ""
+"Registra las declaraciones en el orden en que las presentaste. Una "
+"modificacion o una baja se rechaza hasta que el perfil tenga un alta "
+"registrada. Después de una baja no se acepta ninguna otra declaración, ni"
+" siquiera un alta."
+
+#: ../../how-to/modelo-036.md:39
 msgid "Record an alta:"
 msgstr "Registra un alta:"
 
-#: ../../how-to/modelo-036.md:37
+#: ../../how-to/modelo-036.md:45
 msgid ""
-"Record a modificacion (the same record-and-view flow as the alta above, "
-"with a different event kind):"
+"Record a modificacion (the same flow as the alta, with a different event "
+"kind):"
 msgstr ""
-"Registra una modificación (el mismo flujo de registrar y consultar que el"
-" alta anterior, con un tipo de evento distinto):"
+"Registra una modificacion (el mismo flujo que el alta, con un tipo de "
+"evento distinto):"
 
-#: ../../how-to/modelo-036.md:43
+#: ../../how-to/modelo-036.md:50
 msgid "Record a baja:"
 msgstr "Registra una baja:"
 
-#: ../../how-to/modelo-036.md:48
+#: ../../how-to/modelo-036.md:55
 msgid ""
 "`--declared-on` is required - the ISO date (year-month-day) you filed at "
 "the sede. `--sede-justificante` is optional and accepts up to 128 "
@@ -130,56 +148,56 @@ msgid ""
 msgstr ""
 "`--declared-on` es obligatorio: la fecha en formato ISO (año-mes-día) en "
 "que presentaste en la sede. `--sede-justificante` es opcional y admite "
-"hasta 128 caracteres. `--note` añade una nota opcional para tu propio "
-"archivo, de hasta 512 caracteres."
+"hasta 128 caracteres. `--note` añade una nota opcional para tus propios "
+"registros, de hasta 512 caracteres."
 
-#: ../../how-to/modelo-036.md:52
+#: ../../how-to/modelo-036.md:59
 msgid "What success looks like"
 msgstr "Cómo se ve el éxito"
 
-#: ../../how-to/modelo-036.md:54
+#: ../../how-to/modelo-036.md:61
 msgid "The command prints the saved record:"
 msgstr "El comando imprime el registro guardado:"
 
-#: ../../how-to/modelo-036.md:56
+#: ../../how-to/modelo-036.md:63
 msgid "A `declaration_id` - a long reference number for the record."
 msgstr "Un `declaration_id`: un número de referencia largo para el registro."
 
-#: ../../how-to/modelo-036.md:57
+#: ../../how-to/modelo-036.md:64
 msgid "The event kind - alta, modificacion, or baja."
-msgstr "El tipo de evento: alta, modificación o baja."
+msgstr "El tipo de evento: alta, modificacion o baja."
 
-#: ../../how-to/modelo-036.md:58
+#: ../../how-to/modelo-036.md:65
 msgid "The declared-on date."
 msgstr "La fecha de presentación."
 
-#: ../../how-to/modelo-036.md:59
+#: ../../how-to/modelo-036.md:66
 msgid "When the record was saved."
 msgstr "Cuándo se guardó el registro."
 
-#: ../../how-to/modelo-036.md:60
+#: ../../how-to/modelo-036.md:67
 msgid "The justificante, if you gave one."
-msgstr "El justificante, si lo proporcionó."
+msgstr "El justificante, si lo indicaste."
 
-#: ../../how-to/modelo-036.md:62
+#: ../../how-to/modelo-036.md:69
 msgid "That printed output is your confirmation. Save it with your records."
-msgstr "Esa salida impresa es su confirmación. Guárdala con su documentación."
+msgstr "Esa salida impresa es tu confirmación. Guárdala con tus registros."
 
-#: ../../how-to/modelo-036.md:64
+#: ../../how-to/modelo-036.md:71
 msgid "List and view recorded declarations"
 msgstr "Lista y consulta las declaraciones registradas"
 
-#: ../../how-to/modelo-036.md:66
+#: ../../how-to/modelo-036.md:73
 msgid ""
 "List the declarations you have recorded in the active profile, then open "
-"one by its id (the setup step records the same alta shown above so the "
+"one by its id (the example starts with an alta already recorded, so the "
 "list has a row):"
 msgstr ""
-"Lista las declaraciones que has registrado en el perfil activo y abre "
-"después una por su id (el paso de preparación registra la misma alta "
-"mostrada arriba para que la lista tenga una fila):"
+"Enumera las declaraciones que has registrado en el perfil activo y abre "
+"después una por su id (el ejemplo parte de un alta ya registrada, así que"
+" la lista tiene una fila):"
 
-#: ../../how-to/modelo-036.md:73
+#: ../../how-to/modelo-036.md:80
 msgid ""
 "The list shows each declaration's id, event kind, declared-on date, "
 "recorded-at timestamp, and whether you gave a justificante. An empty list"
@@ -188,29 +206,29 @@ msgid ""
 "that matches no recorded declaration is refused."
 msgstr ""
 "La lista muestra, de cada declaración, su id, el tipo de evento, la fecha"
-" de presentación, la marca de tiempo de registro y si proporcionó un "
-"justificante. Una lista vacía significa que aún no ha registrado ninguna "
-"declaración. La consulta muestra el registro completo, incluidos el "
-"justificante y su nota si los proporcionó. Un id que no coincida con "
+" de presentación, la marca de tiempo de registro y si indicaste un "
+"justificante. Una lista vacía significa que aún no has registrado ninguna"
+" declaración. La consulta muestra el registro completo, incluidos el "
+"justificante y tu nota si los indicaste. Un id que no coincida con "
 "ninguna declaración registrada se rechaza."
 
-#: ../../how-to/modelo-036.md:78
+#: ../../how-to/modelo-036.md:85
 msgid "No command edits or deletes a recorded declaration."
 msgstr "Ningún comando edita ni elimina una declaración registrada."
 
-#: ../../how-to/modelo-036.md:80
+#: ../../how-to/modelo-036.md:87
 msgid "If you typed something wrong"
-msgstr "Si escribió algo mal"
+msgstr "Si escribiste algo mal"
 
-#: ../../how-to/modelo-036.md:82
+#: ../../how-to/modelo-036.md:89
 msgid ""
 "Re-running the command with identical values is safe - it records no "
 "additional declaration, and you get the same declaration ID back."
 msgstr ""
 "Volver a ejecutar el comando con valores idénticos es seguro: no registra"
-" ninguna declaración adicional y le devuelve el mismo ID de declaración."
+" ninguna declaración adicional y te devuelve el mismo ID de declaración."
 
-#: ../../how-to/modelo-036.md:85
+#: ../../how-to/modelo-036.md:92
 msgid ""
 "Running the command with a corrected kind, date, or justificante records "
 "an additional declaration. Add a `--note` explaining the correction so "
@@ -223,11 +241,11 @@ msgstr ""
 "solo `--note` no crea un registro nuevo. Ningún comando edita ni elimina "
 "una declaración registrada."
 
-#: ../../how-to/modelo-036.md:90
+#: ../../how-to/modelo-036.md:97
 msgid "What the record does and does not do"
 msgstr "Qué hace y qué no hace el registro"
 
-#: ../../how-to/modelo-036.md:92
+#: ../../how-to/modelo-036.md:99
 msgid ""
 "The record is a local note for your own audit trail. It does not change "
 "your filing calendar, your obligations, or your profile facts."
@@ -236,34 +254,35 @@ msgstr ""
 "cambia tu calendario de presentaciones, sus obligaciones ni los datos de "
 "tu perfil."
 
-#: ../../how-to/modelo-036.md:95
+#: ../../how-to/modelo-036.md:102
 msgid ""
 "After AEAT processes your declaration, update the census facts in your "
 "profile by hand to match what you filed - see [maintain Modelo 036 census"
 " facts in your profile](censo-update.md)."
 msgstr ""
-"Después de que la AEAT procesa tu declaración, actualiza a mano los datos "
-"censales de tu perfil para que coincidan con lo que presentaste; consulta "
-"[mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)."
+"Después de que la AEAT procese tu declaración, actualiza a mano los datos"
+" censales de tu perfil para que coincidan con lo que presentaste; "
+"consulta [Mantener los datos censales del Modelo 036 en tu perfil](censo-"
+"update.md)."
 
-#: ../../how-to/modelo-036.md:99
+#: ../../how-to/modelo-036.md:106
 msgid "Where to get help"
 msgstr "Dónde obtener ayuda"
 
-#: ../../how-to/modelo-036.md:101
+#: ../../how-to/modelo-036.md:108
 msgid "If a command fails, see [troubleshooting](troubleshooting.md)."
 msgstr ""
 "Si un comando falla, consulta [resolución de "
 "problemas](troubleshooting.md)."
 
-#: ../../how-to/modelo-036.md:102
+#: ../../how-to/modelo-036.md:109
 #, python-brace-format
 msgid "For unfamiliar terms, see the {doc}`glossary </_generated/glossary>`."
 msgstr ""
 "Para términos que te resulten desconocidos, consulta el {doc}`glosario "
 "</_generated/glossary>`."
 
-#: ../../how-to/modelo-036.md:103
+#: ../../how-to/modelo-036.md:110
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "NIF, CIF, DNI, NIE, or NII."
@@ -271,23 +290,23 @@ msgstr ""
 "Antes de compartir la salida de un comando con nadie, elimina los "
 "identificadores fiscales como el NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/modelo-036.md:106
+#: ../../how-to/modelo-036.md:113
 msgid "Next steps"
-msgstr "Pasos siguientes"
+msgstr "Próximos pasos"
 
-#: ../../how-to/modelo-036.md:108
+#: ../../how-to/modelo-036.md:115
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr "[Mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)"
+msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/modelo-036.md:109
+#: ../../how-to/modelo-036.md:116
 msgid "[Set up your taxpayer profile](profile-setup.md)"
-msgstr "[Configura tu perfil de contribuyente](profile-setup.md)"
+msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
-#: ../../how-to/modelo-036.md:110
-msgid "[Check your filing calendar](filing-calendar.md)"
-msgstr "[Consulta tu calendario de presentaciones](filing-calendar.md)"
+#: ../../how-to/modelo-036.md:117
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/modelo-036.md:111
+#: ../../how-to/modelo-036.md:118
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

@@ -146,6 +146,18 @@ jobs:
         shell: bash
         run: just test-gate "$GATE_BASE"
 
+      # Its own step because a cache miss executes every documented CLI
+      # sequence, minutes the scoped tests' step budget cannot absorb. The
+      # checkout's `.cache` is wiped on every run, so the verdict records live in
+      # the runner's tool cache instead: an input set that already passed on
+      # this runner reuses its clean verdict rather than executing again.
+      - name: Committed sequence goldens
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        env:
+          CADRUMO_DEV_CACHE_ROOT: ${{ runner.tool_cache }}/cadrumo-dev-cache
+        run: just test-sequence-goldens-gate "$GATE_BASE"
+
   verdict:
     name: "Check: Merge gate (Linux)"
     needs: [lint, gate]
