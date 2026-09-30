@@ -277,6 +277,7 @@ def _reviewed_censal_effects(
     """Verify one approved operand and derive only its explicitly reviewed effects."""
     from .censal_operation import CensalFieldIntent, CensalReviewedOperand
     from .censo_sync import CENSO_SOURCE_TAG, censal_facts_from_read
+    from .projections import record_to_effective_facts
 
     verified = CensalReviewedOperand.model_validate_json(proposal.model_dump_json(), strict=True)
     baseline = verified.baseline
@@ -288,6 +289,7 @@ def _reviewed_censal_effects(
         raise ProfileRecordConflictError("reviewed censal proposal baseline is stale")
 
     observed = {fact.path: fact for fact in censal_facts_from_read(verified.observation)}
+    effective = record_to_effective_facts(record)
     adopted: list[UserProfileFact] = []
     divergences: list[CensoDivergence] = []
     for field_intent in verified.field_intents:
@@ -297,6 +299,9 @@ def _reviewed_censal_effects(
         if field_intent.intent is CensalFieldIntent.ADOPT:
             adopted.append(fact)
         else:
+            current = effective.get(field_intent.path)
+            if current is not None and current.value is not None and current.value.strip() == str(fact.value).strip():
+                continue
             divergences.append(
                 CensoDivergence(
                     axis=field_intent.path,

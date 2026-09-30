@@ -31,15 +31,22 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
     CensalOperationAcquisition,
     CensalOperationExecutor,
+    CensalProfileBaseline,
     CensalReviewedFieldIntent,
+    CensalReviewedOperand,
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
+from cadrumo.application.user_profile.cotejo_apply import (
+    CensoDivergence,
+    apply_cotejo,
+    open_censo_divergences,
+)
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
 
@@ -197,6 +204,45 @@ def _apply_response(operation_id: str, pending):
         baseline_digest=pending.baseline_digest,
         proposed_effect_digest=pending.proposed_effect_digest,
     )
+
+
+def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence(tmp_path: Path) -> None:
+    _profile_create_context_for_test, decode_context = _profile_contexts_for_test()
+    with _subject(tmp_path) as (profile_id, _objects, _session):
+        apply_cotejo(
+            None,
+            adopted=(UserProfileFact(path="contact.postcode", value="28001"),),
+            divergences=(),
+            profile_decode_context=decode_context,
+        )
+        record = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=decode_context
+        ).load(profile_id)
+        html = (FIXTURES_DIR / "aeat-sede" / "censal-datos-mdcacceso.html").read_text(encoding="utf-8")
+        observation = parse_censal_datos(
+            html.replace("Y0000001Z", "12345678Z"),
+            source_url="https://sede.agenciatributaria.gob.es/censo/consulta",
+        )
+        proposal = CensalReviewedOperand(
+            observation=observation,
+            baseline=CensalProfileBaseline.from_record(record),
+            field_intents=tuple(
+                CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.PRESERVE)
+                for path in _PATHS
+            ),
+        )
+
+        apply_cotejo(None, reviewed_proposal=proposal, profile_decode_context=decode_context)
+        updated = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=decode_context
+        ).load(profile_id)
+        divergences = open_censo_divergences(updated)
+
+        assert record_to_path_values(updated)["contact.postcode"] == "28001"
+        assert tuple(row.axis for row in divergences) == (
+            "contact.fiscal_address",
+            "contact.fiscal_address_cadastral_reference",
+        )
 
 
 async def _settle_when_stopped(supervisor, operation_id: str, receipt: OperationTerminalReceipt):
