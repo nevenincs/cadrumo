@@ -1635,6 +1635,18 @@ tui:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
         identity: Factura {number} amb data {date}
+        label_reading:
+          busy_refused: 'Una altra lectura estava fent servir la inferència d''aquest
+            equip, de manera que no s''ha executat el model de lectura. {count} camps
+            que les etiquetes no han llegit queden buits: {fields}. Torneu a llegir
+            el document quan acabi.'
+          headroom_refused: 'No s''ha carregat el model de lectura: aquest equip no
+            ha mostrat marge de memòria per a ell. {count} camps que les etiquetes
+            no han llegit queden buits: {fields}. Allibereu memòria i torneu a llegir
+            el document.'
+          reader_unavailable: 'No s''ha pogut executar el lector local, de manera
+            que {count} camps que les etiquetes no han llegit queden buits: {fields}.
+            Comproveu el lector i torneu a llegir el document.'
         supplier: 'Proveïdor: {name} · NIF {nif}'
         unread: sense llegir
       empty: No hi ha justificants pendents de revisió.

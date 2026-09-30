@@ -1646,6 +1646,17 @@ tui:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Comprobaciones que no cuadran con el documento: {count}'
         identity: Factura {number} con fecha {date}
+        label_reading:
+          busy_refused: 'Otra lectura estaba usando la inferencia de este equipo,
+            así que no se ejecutó el modelo de lectura. {count} campos que las etiquetas
+            no leyeron quedan vacíos: {fields}. Vuelva a leer el documento cuando
+            termine.'
+          headroom_refused: 'No se cargó el modelo de lectura: este equipo no mostró
+            margen de memoria para él. {count} campos que las etiquetas no leyeron
+            quedan vacíos: {fields}. Libere memoria y vuelva a leer el documento.'
+          reader_unavailable: 'No se pudo ejecutar el lector local, así que {count}
+            campos que las etiquetas no leyeron quedan vacíos: {fields}. Compruebe
+            el lector y vuelva a leer el documento.'
         supplier: 'Proveedor: {name} · NIF {nif}'
         unread: sin leer
       empty: No hay justificantes pendientes de revisión.

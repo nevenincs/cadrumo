@@ -50,6 +50,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.classification import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
+from .invoice_draft_records import LabelReadingFallback
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
@@ -145,6 +146,13 @@ class BatchItemResult(BaseModel):
             completed" cannot say whether pacing worked or whether nothing was
             ever paced. Defaults to True, the conservative direction -- a row
             built without stating it is not counted as deterministic progress.
+        label_reading_fallback: Why this item's stored draft stands on its
+            label reading alone, when the model fill it asked for did not run.
+            The row still reports the work as done -- the document was read and
+            its draft stored -- but the draft is thinner than its reader would
+            have made it for a reason outside the document, and without this an
+            item degraded by a refused or unavailable reader reads exactly like
+            a clean one. Present only on a row whose draft exists.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -157,6 +165,7 @@ class BatchItemResult(BaseModel):
     refusal_code: str | None = None
     refusal_verdict: PreconditionVerdict | None = None
     needed_inference: bool = True
+    label_reading_fallback: LabelReadingFallback | None = None
 
     @override
     def model_post_init(self, _context: object) -> None:
@@ -165,6 +174,8 @@ class BatchItemResult(BaseModel):
         A refused row with no code claims a failure it cannot explain, and a
         code under any other status marks an item as failed while reporting it
         as something else. Either way the summary and the rows would disagree.
+        A degraded reading is tied to a stored draft the same way: a refused or
+        paused item has no draft for it to describe.
         """
         refused = self.status == "refused"
         if refused and not self.refusal_code:
@@ -175,6 +186,10 @@ class BatchItemResult(BaseModel):
             raise ValueError(f"refusal_code is only meaningful for a refused item; got status={self.status!r}")
         if not refused and self.refusal_verdict is not None:
             raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={self.status!r}")
+        if self.label_reading_fallback is not None and self.status not in COMPLETED_BATCH_ITEM_STATUSES:
+            raise ValueError(
+                f"label_reading_fallback describes a stored draft; a {self.status!r} item has none",
+            )
 
 
 class UnresolvedBatchSource(BaseModel):
@@ -835,8 +850,11 @@ def _ingest_one_batch_item(
     # completion: a first run that attached the evidence and then failed to read
     # it leaves exactly this state, and calling it done would strand the
     # document forever behind a row that reports no trouble.
-    already_drafted = read_draft(bucket_id=bucket_id, evidence_reference=evidence_id, settings=settings) is not None
-    if not attached.bucket_event_ids and already_drafted:
+    stored = read_draft(bucket_id=bucket_id, evidence_reference=evidence_id, settings=settings)
+    if not attached.bucket_event_ids and stored is not None:
+        # The stored draft is not re-read, so its own record is what says the
+        # reading it holds stood without its model fill; a re-run must not
+        # report that draft as cleaner than the run that wrote it did.
         return BatchItemResult(
             content_address=content_address,
             identity=identity,
@@ -844,6 +862,7 @@ def _ingest_one_batch_item(
             source_name=path.name,
             status="no_op",
             needed_inference=needed_inference,
+            label_reading_fallback=stored.label_reading_fallback,
         )
 
     try:
@@ -889,4 +908,5 @@ def _ingest_one_batch_item(
         source_name=path.name,
         status="pending_review" if held else "ingested",
         needed_inference=needed_inference,
+        label_reading_fallback=draft.label_reading_fallback,
     )

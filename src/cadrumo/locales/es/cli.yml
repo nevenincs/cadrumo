@@ -76,6 +76,12 @@ cli:
         batch_items_refused_message: Se rechazaron algunos documentos. El resto de
           documentos de la ejecución se completaron igualmente; las filas rechazadas
           indican qué se encontró.
+        batch_label_reading_degraded_message: '{count} borradores almacenados se basan
+          solo en la lectura por etiquetas porque no se ejecutó el relleno del modelo;
+          los campos que debía leer están vacíos en esos borradores, no ausentes de
+          los documentos, y cada fila indica el motivo. Al confirmar un documento
+          se vuelve a leer, así que esos campos se rellenan entonces si el motivo
+          ya se ha resuelto, o puede indicarlos usted.'
         batch_pending_review_message: Algunos borradores contienen un hallazgo que
           una persona debe resolver antes de crear una factura. Están retenidos, no
           fallidos.
@@ -223,6 +229,11 @@ cli:
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como decimal
+        label_reading_busy_refused: 'Otra lectura local ya estaba usando la inferencia
+          de este equipo, así que no se ejecutó el modelo de lectura. Los {count}
+          campos que las reglas de etiquetas no leyeron quedan vacíos: {fields}. La
+          lectura por etiquetas se mantiene; vuelva a extraer cuando termine la otra
+          lectura, o indique usted esos campos.'
         label_reading_headroom_refused: 'No se cargó el modelo de lectura local: este
           equipo no mostró margen de memoria medido para él. Los {count} campos que
           las reglas de etiquetas no leyeron quedan vacíos: {fields}. La lectura por
@@ -755,9 +766,11 @@ cli:
           una asignación de retención de una factura recibida, con su prueba de pago
           o de exigibilidad. Una asignación por comando; el scheme es un hecho legal
           sobre la actividad del perceptor y nunca se infiere de la factura.'
-      aggregate_help: Ejecuta el servicio backend de agregación por modelo con observaciones
-        canónicas explicitas. Los valores source_kind aceptados son ledger_transaction,
-        purchase_invoice_evidence, payable_invoice y collectible_invoice.
+      aggregate_help: Ejecuta el servicio de agregación por modelo para un modelo
+        y un periodo. Las observaciones de contraparte y de bienes en el extranjero
+        se pasan como opciones JSON. Los modelos de retenciones leen las filas ya
+        almacenadas para el periodo, después de registrar la única asignación de retención
+        de factura recibida o de pago del libro que puede llevar cada comando.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       audit:
         bundle_id_help: Identificador del paquete de evidencia (SHA-256 completo o

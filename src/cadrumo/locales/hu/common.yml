@@ -1623,6 +1623,18 @@ tui:
         amounts: Alap {base} · IVA {rate}% = {iva} · összesen {total} {currency}
         discrepancies: 'A dokumentummal nem egyező ellenőrzések: {count}'
         identity: '{number} számla, kelte {date}'
+        label_reading:
+          busy_refused: 'Egy másik olvasás már használta a gép következtetési kapacitását,
+            ezért az olvasómodell nem futott. A címkék által olvasatlanul hagyott
+            {count} mező üres marad: {fields}. Olvassa be újra a dokumentumot, ha
+            az befejeződött.'
+          headroom_refused: 'Az olvasómodell nem töltődött be: ezen a gépen nem volt
+            elegendő szabad memória hozzá. A címkék által olvasatlanul hagyott {count}
+            mező üres marad: {fields}. Szabadítson fel memóriát, és olvassa be újra
+            a dokumentumot.'
+          reader_unavailable: 'A helyi olvasó nem futtatható, ezért a címkék által
+            olvasatlanul hagyott {count} mező üres marad: {fields}. Ellenőrizze az
+            olvasót, és olvassa be újra a dokumentumot.'
         supplier: 'Szállító: {name} · NIF {nif}'
         unread: nem olvasható
       empty: Nincs ellenőrzésre váró bizonylat.

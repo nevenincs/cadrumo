@@ -277,7 +277,8 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
     than the reader would have made it, for a reason outside the document, and
     the same extraction run again once the reason is gone reads more. Each
     cause has its own code and message because each asks the operator for a
-    different remedy: a reader to make available, or memory to free.
+    different remedy: a reader to make available, memory to free, or another
+    reading to finish.
 
     Args:
         fallback: The draft's record of why its label reading stood, or ``None``
@@ -303,6 +304,9 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             code = "ledger.evidence.label_reading.headroom_refused"
             message = tr("cli.app.ledger.evidence.label_reading_headroom_refused", count=count, fields=unread)
+        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
+            code = "ledger.evidence.label_reading.busy_refused"
+            message = tr("cli.app.ledger.evidence.label_reading_busy_refused", count=count, fields=unread)
         case unhandled:
             assert_never(unhandled)
     context = {

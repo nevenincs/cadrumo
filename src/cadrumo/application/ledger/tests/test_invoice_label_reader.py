@@ -33,6 +33,7 @@ from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     VisionImage,
@@ -669,6 +670,47 @@ def test_a_refused_model_load_still_refuses_when_the_rules_read_nothing(operatio
         raise InvoiceDraftReaderHeadroomRefusedError(refusal, failed_condition_id=None)
 
     with pytest.raises(_HeadroomRefusalForTestError) as raised:
+        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
+
+    assert raised.value is refusal
+
+
+class _BusyRefusalForTestError(Exception):
+    """Stands in for admission control's occupancy refusal, which this layer only carries and never raises."""
+
+
+def test_a_busy_refused_model_fill_leaves_the_partial_rule_reading_standing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Another read holds the inference slot: the rules' reading stands, and the draft names occupancy, not memory."""
+    refusal = _BusyRefusalForTestError("every on-host inference slot is held")
+
+    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
+        raise InvoiceDraftReaderBusyRefusedError(refusal, failed_condition_id="llm.local_inference.slot_available")
+
+    draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
+
+    assert draft.supplier_name is None
+    assert draft.supplier_tax_id == "B92000082"
+    assert draft.grand_total == Decimal("72.60")
+    assert draft.label_reading_fallback == LabelReadingFallback(
+        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        unread_fields=("supplier_name",),
+        reader_error_type="_BusyRefusalForTestError",
+        failed_condition_id="llm.local_inference.slot_available",
+    )
+
+
+def test_a_busy_refused_model_read_still_refuses_when_the_rules_read_nothing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A required read refused for occupancy is unchanged: admission control's own refusal propagates."""
+    refusal = _BusyRefusalForTestError("every on-host inference slot is held")
+
+    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
+        raise InvoiceDraftReaderBusyRefusedError(refusal, failed_condition_id="llm.local_inference.slot_available")
+
+    with pytest.raises(_BusyRefusalForTestError) as raised:
         _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
 
     assert raised.value is refusal

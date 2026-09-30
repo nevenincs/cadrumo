@@ -810,6 +810,9 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_draft_reader_busy_refused: No se ejecutó el modelo del lector
+      de borradores de facturas porque otra lectura local ya ocupaba la inferencia
+      de este equipo.
     canonical_invoice_draft_reader_headroom_refused: No se cargó el modelo del lector
       de borradores de facturas porque este equipo no mostró margen de memoria medido
       para él.

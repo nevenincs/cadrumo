@@ -69,6 +69,11 @@ cli:
           and a reviewable draft, one typed result row per document.
         batch_items_refused_message: Some documents were refused. Every other document
           in the run still completed; the refused rows name what was seen.
+        batch_label_reading_degraded_message: '{count} stored draft(s) stand on their
+          label reading alone because the model fill did not run; the fields it was
+          to read are empty in those drafts, not missing from the documents, and each
+          row names the reason. Confirming a document reads it again, so those fields
+          are filled then once the reason has cleared, or you can supply them yourself.'
         batch_pending_review_message: Some drafts carry a finding a person must adjudicate
           before an invoice is minted. They are held, not failed.
         batch_progress_message: 'processed %{source}: %{status}'
@@ -205,6 +210,11 @@ cli:
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a decimal
+        label_reading_busy_refused: 'Another on-host reading was already using this
+          machine''s inference slot, so the reading model was not run. The {count}
+          field(s) the label rules left unread stay empty: {fields}. The label reading
+          stands; extract again once the other reading finishes, or supply those fields
+          yourself.'
         label_reading_headroom_refused: 'The on-host reading model was not loaded:
           this machine showed no measured memory headroom for it. The {count} field(s)
           the label rules left unread stay empty: {fields}. The label reading stands;
@@ -694,9 +704,10 @@ cli:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
           fact about the perceptor''s activity and is never inferred from the invoice.'
-      aggregate_help: Run the backend per-modelo aggregation service from explicit
-        canonical observations. Accepted source_kind values are ledger_transaction,
-        purchase_invoice_evidence, payable_invoice, and collectible_invoice.
+      aggregate_help: Run the per-modelo aggregation service for one modelo and period.
+        Counterpart and foreign-asset observations are passed as JSON options. Withholding
+        modelos read the rows already stored for the period, after recording the single
+        received-invoice or ledger-payment withholding allocation a command may carry.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       audit:
         bundle_id_help: Evidence bundle id (full SHA-256 or unambiguous prefix).

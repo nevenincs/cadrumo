@@ -1599,6 +1599,16 @@ tui:
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
         discrepancies: 'Checks that disagree with the document: {count}'
         identity: Invoice {number} dated {date}
+        label_reading:
+          busy_refused: 'Another reading was using this machine''s inference, so the
+            reading model was not run. {count} field(s) the labels left unread stay
+            empty: {fields}. Read the document again once it finishes.'
+          headroom_refused: 'The reading model was not loaded: this machine showed
+            no memory headroom for it. {count} field(s) the labels left unread stay
+            empty: {fields}. Free memory and read the document again.'
+          reader_unavailable: 'The on-host reader could not be run, so {count} field(s)
+            the labels left unread stay empty: {fields}. Check the reader and read
+            the document again.'
         supplier: 'Supplier: {name} · NIF {nif}'
         unread: unread
       empty: No evidence awaits review.

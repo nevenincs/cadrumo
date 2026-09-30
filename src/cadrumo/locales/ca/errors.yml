@@ -819,6 +819,9 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
+    canonical_invoice_draft_reader_busy_refused: No s'ha executat el model del lector
+      d'esborranys de factures perquè una altra lectura local ja ocupava la inferència
+      d'aquest equip.
     canonical_invoice_draft_reader_headroom_refused: No s'ha carregat el model del
       lector d'esborranys de factures perquè aquest equip no ha mostrat marge de memòria
       mesurat per a ell.

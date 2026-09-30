@@ -73,6 +73,12 @@ cli:
         batch_items_refused_message: A rendszer néhány dokumentumot elutasított. A
           futtatás többi dokumentuma ettől függetlenül elkészült; az elutasított sorok
           megnevezik a tapasztaltakat.
+        batch_label_reading_degraded_message: '{count} tárolt piszkozat csak a címkék
+          szerinti olvasaton alapul, mert a modell általi kitöltés nem futott le;
+          az általa olvasandó mezők ezekben a piszkozatokban üresek, nem a dokumentumokból
+          hiányoznak, és minden sor megnevezi az okot. A dokumentum megerősítése újra
+          beolvassa azt, így ezek a mezők akkor kitöltődnek, ha az ok már megszűnt,
+          vagy megadhatja őket saját maga.'
         batch_pending_review_message: Néhány piszkozat olyan megállapítást hordoz,
           amelyet embernek kell rendeznie a számla létrehozása előtt. Ezek visszatartva
           vannak, nem hiúsultak meg.
@@ -219,6 +225,11 @@ cli:
         invoice_number_help: Szállítói számlaszám.
         iva_amount_help: Számla IVA-összege.
         iva_rate_help: Alkalmazott IVA-kulcs tizedes törtként.
+        label_reading_busy_refused: 'Egy másik helyi olvasás már használta a gép következtetési
+          kapacitását, ezért az olvasómodell nem futott. A címkeszabályok által olvasatlanul
+          hagyott {count} mező üres marad: {fields}. A címkék szerinti olvasat érvényben
+          marad; futtassa újra a kinyerést, amikor a másik olvasás befejeződött, vagy
+          adja meg ezeket a mezőket saját maga.'
         label_reading_headroom_refused: 'A helyi olvasómodell nem töltődött be: ezen
           a gépen nem mérhető elegendő szabad memória hozzá. A címkeszabályok által
           olvasatlanul hagyott {count} mező üres marad: {fields}. A címkék szerinti
@@ -745,9 +756,11 @@ cli:
           egy beérkezett számla egy levonás-felosztása, a fizetési vagy esedékességi
           bizonyítékával. Parancsonként egy felosztás; a scheme a perceptor tevékenységére
           vonatkozó jogi tény, amelyet a rendszer sosem következtet ki a számlából.'
-      aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása
-        explicit kanonikus megfigyelésekből. Elfogadott source_kind értékek: ledger_transaction,
-        purchase_invoice_evidence, payable_invoice és collectible_invoice.'
+      aggregate_help: A nyomtatványonkénti aggregálási szolgáltatás futtatása egy
+        nyomtatványra és időszakra. A partner- és külföldieszköz-megfigyeléseket JSON-opciókként
+        kell átadni. A forrásadó-nyomtatványok az időszakra már tárolt sorokat olvassák,
+        miután rögzítették a parancsonként legfeljebb egy befogadott számla vagy főkönyvi
+        kifizetés szerinti levonás-felosztást.
       app_help: Az AEAT adónyomtatványok (modelók) nyilvántartási katalógusának vizsgálata.
       audit:
         bundle_id_help: Bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű

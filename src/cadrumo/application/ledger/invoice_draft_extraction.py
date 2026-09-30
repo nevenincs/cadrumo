@@ -22,10 +22,10 @@ stored MIME type:
   When those rules read every required field no model runs; otherwise the
   fields they could not read come from
   :func:`~llm.extract_invoice_fields_from_text`. An unreachable model, or a
-  model load admission control refuses for lack of headroom, leaves the rule
-  reading standing, and the draft records why so the operator is told. Either
-  way the draft is grounded against that
-  same transcription by
+  fill admission control refuses for lack of headroom or because another read
+  holds every on-host inference slot, leaves the rule reading standing, and the
+  draft records why so the operator is told. Either way the draft is grounded
+  against that same transcription by
   :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`. The
   transcription is produced by a DIFFERENT reader than the one that proposes
   values, which is what makes the anchor check an external check rather than a
@@ -104,6 +104,7 @@ from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
@@ -506,9 +507,9 @@ def _read_transcription_semantically(
         PurchaseInvoiceEvidenceInputError: When the semantic reader cannot be
             run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
             :func:`_refuse_a_text_read_with_no_reader`.
-        Exception: Admission control's own headroom refusal, unchanged, when
-            the model read is the whole read rather than a fill over a partial
-            label reading.
+        Exception: Admission control's own headroom or occupancy refusal,
+            unchanged, when the model read is the whole read rather than a fill
+            over a partial label reading.
     """
     from .grounded_reading import ground_draft_against_transcription
     from .invoice_extraction_authority import resolve_invoice_extraction_authority_values
@@ -548,7 +549,7 @@ def _read_transcription_semantically(
                 reader_error=exc.cause,
                 failed_condition_id=None,
             )
-        except InvoiceDraftReaderHeadroomRefusedError as exc:
+        except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
             if labels is None or not labels.read_fields:
                 # The model read was the whole read, not a fill, so the refusal
                 # stands exactly as admission control raised it.
@@ -559,7 +560,11 @@ def _read_transcription_semantically(
             read = labels.draft
             fallback = _label_reading_fallback(
                 labels,
-                cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
+                cause=(
+                    LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
+                    if isinstance(exc, InvoiceDraftReaderHeadroomRefusedError)
+                    else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
+                ),
                 reader_error=exc.cause,
                 failed_condition_id=exc.failed_condition_id,
             )

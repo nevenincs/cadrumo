@@ -545,6 +545,28 @@ def test_an_unavailable_reader_fill_is_a_warning_naming_the_failure_and_the_unre
     assert "currency, supplier_name" in notice.message
 
 
+def test_a_busy_refused_fill_is_a_warning_naming_the_occupancy_and_the_unread_fields() -> None:
+    fallback = _fallback(
+        LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        failed_condition_id="llm.local_inference.slot_available",
+    )
+
+    (notice,) = label_reading_fallback_notices(fallback)
+
+    assert notice.severity is NoticeSeverity.WARNING
+    assert notice.code == "ledger.evidence.label_reading.busy_refused"
+    assert _context(notice) == {
+        "reason": "inference_slot_busy",
+        "unread_fields": "currency, supplier_name",
+        "unread_field_count": "2",
+        "reader_error_type": "ReaderFailureForTest",
+        "failed_condition_id": "llm.local_inference.slot_available",
+    }
+    assert "currency, supplier_name" in notice.message
+    assert "headroom" not in notice.message
+    assert derive_status([notice]).value == "warning"
+
+
 def test_each_cause_asks_for_its_own_remedy_under_its_own_code() -> None:
     """Two causes sharing a code would send an operator to restart a runtime to free memory."""
     codes = {cause: label_reading_fallback_notices(_fallback(cause))[0].code for cause in LabelReadingFallbackCause}

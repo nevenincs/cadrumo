@@ -413,6 +413,9 @@ class LabelReadingFallbackCause(StrEnum):
     LOAD_HEADROOM_REFUSED = "load_headroom_refused"
     """Admission control refused to load the model: this machine showed no measured headroom for it."""
 
+    INFERENCE_SLOT_BUSY = "inference_slot_busy"
+    """Admission control refused the fill: every on-host inference slot was already held by another read."""
+
 
 class LabelReadingFallback(BaseModel):
     """The label reading stood in for an optional model fill that did not run.
@@ -421,7 +424,12 @@ class LabelReadingFallback(BaseModel):
     read badly: the fields the model would have filled were never read at all.
     Without this record a draft with fewer fields looks exactly like a document
     that prints fewer fields, and the operator could not tell a gap in the page
-    from a gap in the machine.
+    from a gap in the machine. A stored draft keeps it in its own record, so a
+    draft read by a batch run still says why it is thinner than its reader
+    would have made it.
+
+    Holds machine facts only -- a cause, field names, an error class and a
+    precondition id -- and never any text read from the document.
 
     Attributes:
         cause: Why the model fill did not run.
@@ -429,8 +437,9 @@ class LabelReadingFallback(BaseModel):
             the model was to fill, in name order.
         reader_error_type: The class of the failure or refusal the reader raised.
         failed_condition_id: The refusal's failed precondition, when it carried
-            one; a headroom refusal names which admission precondition failed,
-            such as unmeasurable free memory or a measured shortfall.
+            one; an admission refusal names which precondition failed, such as
+            unmeasurable free memory, a measured shortfall or an occupied
+            inference slot.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -672,12 +681,14 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
         """Return why a partial label reading stood without its model fill, when it did."""
         return self._label_reading_fallback
 
-    def with_label_reading_fallback(self, fallback: LabelReadingFallback) -> InvoiceDraft:
-        """Return a copy of this draft recording that its label reading stood without the model fill.
+    def with_label_reading_fallback(self, fallback: LabelReadingFallback | None) -> InvoiceDraft:
+        """Return a copy of this draft recording whether its label reading stood without the model fill.
 
         A reading-path fact rather than a draft field, like the structured
         document class: the operator meets it as a notice, and the reviewable
-        payload keeps describing only what the document says.
+        payload keeps describing only what the document says. ``None`` clears
+        it, which the draft store does when it moves the fact onto the stored
+        record that keeps it.
         """
         copy = self.model_copy()
         copy._label_reading_fallback = fallback

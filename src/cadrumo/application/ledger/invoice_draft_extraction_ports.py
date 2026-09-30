@@ -72,6 +72,27 @@ class InvoiceDraftReaderHeadroomRefusedError(CadrumoError):
         self.failed_condition_id = failed_condition_id
 
 
+class InvoiceDraftReaderBusyRefusedError(CadrumoError):
+    """Admission control refused the read because every on-host inference slot was occupied.
+
+    The occupancy sibling of :class:`InvoiceDraftReaderHeadroomRefusedError`:
+    another read already holds the machine's inference slots, so this one was
+    refused before any request reached the runtime and no model was loaded for
+    it. It ends the way the headroom refusal does -- an optional fill leaves the
+    label reading standing, and a read that cannot stand without the model
+    re-raises ``cause`` exactly as admission control raised it -- but it is a
+    different condition with a different remedy, waiting for the other read
+    rather than freeing memory, so it keeps its own type. ``failed_condition_id``
+    names the precondition it failed.
+    """
+
+    def __init__(self, cause: Exception, *, failed_condition_id: str | None) -> None:
+        """Create a busy-refused error while preserving the refusal as its cause."""
+        super().__init__(str(cause))
+        self.cause = cause
+        self.failed_condition_id = failed_condition_id
+
+
 @dataclass(frozen=True)
 class InvoiceDraftExtractionPorts:
     """Concrete capabilities supplied by an outer composition root."""
@@ -94,6 +115,7 @@ class InvoiceDraftExtractionPorts:
 __all__ = [
     "EvidenceConsentProof",
     "InvoiceDraftExtractionPorts",
+    "InvoiceDraftReaderBusyRefusedError",
     "InvoiceDraftReaderHeadroomRefusedError",
     "InvoiceDraftReaderUnavailableError",
     "StructuredInvoiceReadError",
