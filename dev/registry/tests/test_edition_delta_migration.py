@@ -560,6 +560,75 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
     assert successor.casilla_positions == ({"id": "0003", "position": 1},)
 
 
+def test_a_constraints_override_never_leaves_both_source_reference_forms(tmp_path: Path) -> None:
+    """A stored constraints ``source_refs`` is removed when the override states additions.
+
+    The predecessor has no edition default, so its constraints store their
+    references whole; the successor declares a default and states its
+    constraints as additions to it. The override is computed against the
+    baseline lifted to the successor's default, which already reads as
+    additions, while the loader patches the stored table: without removing the
+    stored ``source_refs`` the patched table states both forms and the loader
+    refuses it, which blocked the edition as a failed transformation.
+    """
+    registry = tmp_path / "registry"
+    modelo_dir = registry / "modelos" / "999"
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Constraints source fixture")
+    legal_ref = "ley-58-2003:art-29"
+
+    def write_revision(revision_id: str, year: int, *, number: str, default: str, constraint_sources: str) -> None:
+        revision_dir = modelo_dir / "revisions" / revision_id
+        (revision_dir / "casillas").mkdir(parents=True)
+        (revision_dir / "revision.toml").write_text(
+            f'[revisions."{revision_id}"]\nid = "{revision_id}"\nvalid_from = {year}-01-01\n'
+            f'valid_to = {year}-12-31\nperiod_selector = {{ years = [{year}], periods = ["0A"] }}\n'
+            f'orden_aplicabilidad = ["{legal_ref}"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n'
+            f"{default}",
+            encoding="utf-8",
+            newline="\n",
+        )
+        # The row cites a reference no other table opens with, so the predecessor
+        # derives no default and stores its constraints references whole.
+        (revision_dir / "casillas" / "c0001.toml").write_text(
+            f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "{number}"\n'
+            f'section = ["liquidacion"]\nsource_refs = ["aeat-procedure"]\n'
+            f'constraints = {{ max_value = "9", {constraint_sources} }}\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+
+    write_revision(
+        "2024", 2024, number="1", default="", constraint_sources='source_refs = ["aeat-manual", "aeat-form"]'
+    )
+    write_revision(
+        "2025",
+        2025,
+        number="11",
+        default='casilla_source_refs = ["aeat-manual"]\n',
+        constraint_sources='additional_source_refs = ["aeat-design"]',
+    )
+    definition = load_modelo_directory(modelo_dir)
+
+    plan = plan_migration(modelo_dir, definition)
+
+    successor = next(item for item in plan.editions if item.revision_id == "2025")
+    assert successor.blocked == (), successor.blocked_detail
+    (override,) = successor.casilla_overrides
+    assert override["fields"] == {"number": "11", "constraints": {"additional_source_refs": ["aeat-design"]}}
+    assert override["removed_fields"] == ["constraints.source_refs"]
+
+    outcome = migrate_modelo(registry_root=registry, modelo_id="999", work_dir=tmp_path / "work")
+
+    assert outcome.source_findings == ()
+    assert outcome.staged_registry is not None
+    staged = _load(outcome.staged_registry, "999").revisions["2025"].casillas[0]
+    loaded = definition.revisions["2025"].casillas[0]
+    assert staged.constraints == loaded.constraints
+    assert loaded.constraints is not None
+    assert tuple(loaded.constraints.source_refs) == ("aeat-manual", "aeat-design")
+
+
 def test_storage_baseline_removes_lineage_members_without_asserting_legal_predecessor(
     tmp_path: Path, registry_copy: Callable[[Path, str], Path]
 ) -> None:

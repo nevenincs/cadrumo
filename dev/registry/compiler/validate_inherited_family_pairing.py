@@ -29,6 +29,7 @@ See Also:
 
 from __future__ import annotations
 
+from cadrumo.domain.calculations.registry.cleared_families import ClearedFamilyCause
 from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -91,11 +92,25 @@ def _broken_pair_failures(scope: str, revision: ModeloRevision, baseline: Modelo
 
     Both sides are read after materialisation, so this compares what the two
     editions mean rather than what either happens to spell on disk.
+
+    One emptying is not a pair coming apart: a scoped family the edition
+    clears as not yet authored for itself. A scoped family is never carried by
+    inheritance -- each edition asserts its own members -- so the clearance
+    says the edition's own members are owed, not that the predecessor's were
+    withdrawn. An export layout is the worked case: a delta edition's layout is
+    a tree generated from its own record design, and the generated candidate
+    must keep the export link to validate at all. Refusing the link here would
+    leave such an edition no state from which its tree can be published. With
+    the pair left intact the edition is judged exactly as a full-copy edition
+    awaiting its tree is, by the per-revision closure rule. A clearance stating
+    that the official structure withdraws the family, and any clearance of a
+    family inheritance does carry, are still refused.
     """
     surfaces = {link.surface for link in revision.application_links}
+    owed = _owed_scoped_families(revision)
     failures: list[str] = []
     for section, surface, _message in APPLICATION_LINK_SURFACE_RULES:
-        if surface not in surfaces:
+        if surface not in surfaces or section in owed:
             continue
         if _member_count(revision, section) or not _member_count(baseline, section):
             continue
@@ -106,6 +121,17 @@ def _broken_pair_failures(scope: str, revision: ModeloRevision, baseline: Modelo
             "edition does not claim a capability nothing backs",
         )
     return tuple(failures)
+
+
+def _owed_scoped_families(revision: ModeloRevision) -> frozenset[str]:
+    """The scoped families this edition clears as not yet authored for itself."""
+    return frozenset(
+        declaration.family
+        for declaration in revision.cleared_families
+        if declaration.cause is ClearedFamilyCause.NOT_AUTHORED_FOR_THIS_EDITION
+        and (spec := family_spec(declaration.family)) is not None
+        and spec.scoped
+    )
 
 
 def _contradicted_disposition_failures(

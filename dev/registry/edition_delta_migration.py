@@ -155,7 +155,11 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
+from cadrumo.domain.calculations.registry.revision_order import (
+    ordered_revisions,
+    revision_windows_intersect,
+    revisions_coexist,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
 from dev.registry.compiler.identifier_lineage import identifier_lineage
@@ -164,6 +168,7 @@ from dev.test_runs.paths import allocate_run_directory
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
+from .edition_family_delta import STATED_WHOLE_SEQUENCES, collapse_keyed_families, restates_stated_whole_sequence
 from .edition_round_trip import (
     EditionExportScenario,
     RoundTripFinding,
@@ -748,6 +753,22 @@ def technical_root(raw: Mapping[str, object]) -> bool:
     return isinstance(cause, str) and cause in {item.value for item in BlockedCause}
 
 
+def _edition_neutral(value: object, revision_id: str | None) -> object:
+    """A casilla reference value with its edition's own key replaced, as inheritance resolves it.
+
+    An inherited row's formula and binding references are resolved to the
+    inheriting edition's declaration of the same lineage, so two editions
+    naming their own declaration of one lineage state the same reference.
+    """
+    if revision_id is None:
+        return value
+    if isinstance(value, str):
+        return identifier_lineage(value, revision_id)
+    if isinstance(value, list | tuple):
+        return [identifier_lineage(item, revision_id) if isinstance(item, str) else item for item in value]
+    return value
+
+
 def _members(
     raw: Mapping[str, object], section: str, *, singleton: bool = False
 ) -> tuple[Mapping[str, object], ...] | None:
@@ -762,7 +783,18 @@ def _members(
 
 
 def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
-    """Measure authored duplication independently of any converter deletion plan."""
+    """Measure authored duplication independently of any converter deletion plan.
+
+    A family stored against a baseline is measured against it. A family with
+    none, including every family of an explicit root whatever its cause, is
+    measured against the edition before it, net of the tokens naming each
+    edition: a casilla's formula and binding references are compared by
+    lineage, because inheritance resolves them to the inheriting edition's own
+    declaration. A root is not measured against a parallel edition in force
+    beside it. A member whose per-edition sequence differs from its baseline's
+    is the edition's own statement and restates nothing, while an override
+    folding that sequence is reported, since the member belongs stated.
+    """
     initial_fingerprints = _file_fingerprints(modelo_dir)
     initial_fingerprint = _source_fingerprint(modelo_dir)
     try:
@@ -881,7 +913,20 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                 else None
             )
             explicit_root = isinstance(declared_predecessor, Mapping)
-            candidate_id = baseline_id or (previous if not explicit_root or technical_root(raw) else None)
+            # A root with or without a cause is measured against the edition
+            # before it: the declaration decides legal continuity, not whether
+            # the payload it states is already stored there. A parallel variant
+            # in force alongside it is not the edition before it, so a root
+            # whose validity window meets its neighbour's is not measured.
+            stated_root = explicit_root and not technical_root(raw)
+            adjacent = (
+                previous
+                if previous is not None
+                and not (stated_root and revision_windows_intersect(definition.revisions[previous], revision))
+                else None
+            )
+            candidate_id = baseline_id or adjacent
+            net_of_edition_tokens = baseline_id is None and spec.section == CASILLAS_FAMILY
             storage_support_missing = previous is not None and baseline_id is None and spec.inherited
             authored = _members(raw, spec.section, singleton=spec.singleton)
             row = Counter[str]()
@@ -1015,20 +1060,30 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         baseline_leaves = _leaf_values(right)
                         typed_current = _model_value(current_by_id.get(identity))
                         current_leaves = _leaf_values(typed_current) if isinstance(typed_current, Mapping) else {}
-                        different = [
-                            ".".join(path)
-                            for path in authored_leaves
-                            if path not in current_leaves
-                            or path not in baseline_leaves
-                            or not _typed_equal(current_leaves[path], baseline_leaves[path])
-                        ]
-                        equal = [
-                            ".".join(path)
+                        same = {
+                            path
                             for path in authored_leaves
                             if path in current_leaves
                             and path in baseline_leaves
-                            and _typed_equal(current_leaves[path], baseline_leaves[path])
-                        ]
+                            and _typed_equal(
+                                _edition_neutral(current_leaves[path], revision_id)
+                                if net_of_edition_tokens and path[0] in _REFERENCE_SECTIONS
+                                else current_leaves[path],
+                                _edition_neutral(baseline_leaves[path], candidate_id)
+                                if net_of_edition_tokens and path[0] in _REFERENCE_SECTIONS
+                                else baseline_leaves[path],
+                            )
+                        }
+                        stated_whole = STATED_WHOLE_SEQUENCES.get(spec.section)
+                        if stated_whole is not None and any(
+                            path[0] == stated_whole and path not in same for path in authored_leaves
+                        ):
+                            # A member whose per-edition sequence differs is the
+                            # edition's own statement: it is stated whole, so
+                            # the leaves it shares are not restatement.
+                            same = set()
+                        different = [".".join(path) for path in authored_leaves if path not in same]
+                        equal = [".".join(path) for path in authored_leaves if path in same]
                         row["genuine_overrides"] += len(different)
                         row["redundant_overrides"] += len(equal)
                         if baseline_id is None:
@@ -1039,7 +1094,12 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                         "family": spec.section,
                                         "member": identity,
                                         "fields": sorted(equal),
-                                        "reason": "technical root prevents supported inheritance",
+                                        "reason": (
+                                            "explicit root restates the edition before it; reusing its storage "
+                                            "would inherit this"
+                                            if stated_root
+                                            else "technical root prevents supported inheritance"
+                                        ),
                                     }
                                 )
                         elif equal:
@@ -1105,6 +1165,16 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     }
                                 )
                                 continue
+                            if restates_stated_whole_sequence(spec.section, override):
+                                unresolved.append(
+                                    {
+                                        "revision": revision_id,
+                                        "family": spec.section,
+                                        "member": member_id,
+                                        "fields": [STATED_WHOLE_SEQUENCES[spec.section]],
+                                        "reason": "per-edition sequence folded into an override; state the member",
+                                    }
+                                )
                             inherited_leaves = _leaf_values(inherited_dump)
                             current_leaves = _leaf_values(current_dump)
                             for path in _leaf_values(fields):
@@ -2267,7 +2337,7 @@ def _choose_existing_drops(
         ).row
         fields, removed_fields = _storage_difference(comparison_baseline, target)
         removed_fields = _existing_storage_removals(baseline, removed_fields)
-        removed_fields = _reconcile_row_source_removals(
+        removed_fields = _reconcile_source_removals(
             fields, removed_fields, storage_rows.get(_row_id(candidate.row), baseline)
         )
         unsupported_nested = tuple(
@@ -2309,21 +2379,35 @@ def _storage_rows(source: _EditionSource) -> Mapping[str, _Row]:
     return rows
 
 
-def _reconcile_row_source_removals(
+def _reconcile_source_removals(
     fields: Mapping[str, object], removed_fields: tuple[str, ...], raw_baseline: Mapping[str, object]
 ) -> tuple[str, ...]:
-    """Keep a row stating exactly one of ``source_refs`` and ``additional_source_refs``.
+    """Keep a patched row, and its constraints table, stating exactly one of ``source_refs`` and additions.
 
-    ``source_refs`` replaces the edition default whole and already displaces any
-    inherited additions, so those are not removed twice. ``additional_source_refs``
-    only extends the default, so a baseline that states ``source_refs`` must have
-    it removed, or the patched row would state both, which the loader refuses.
+    ``source_refs`` replaces the edition default whole, ``additional_source_refs``
+    only extends it, and the loader refuses a table stating both. The patch is
+    computed against the baseline lifted to this edition's default, while the
+    loader patches the baseline as it is stored, so the stored form can hold the
+    other spelling than the one the patch assumes; the reconciliation removes it.
+
+    The two tables differ in one respect. At row level the loader itself drops
+    the stored additions when the override states ``source_refs``, so they are
+    not removed twice. The constraints table is patched as a plain nested
+    table, so there every displaced spelling needs its explicit removal.
     """
+    reconciled: list[str] = list(removed_fields)
     if _ROW_SOURCE in fields:
-        return tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
-    if _ROW_SOURCE_ADDITIONS in fields and _ROW_SOURCE in raw_baseline and _ROW_SOURCE not in removed_fields:
-        return (*removed_fields, _ROW_SOURCE)
-    return removed_fields
+        reconciled = [field for field in reconciled if field != _ROW_SOURCE_ADDITIONS]
+    elif _ROW_SOURCE_ADDITIONS in fields and _ROW_SOURCE in raw_baseline and _ROW_SOURCE not in reconciled:
+        reconciled.append(_ROW_SOURCE)
+    constraint_fields = fields.get(_CONSTRAINTS)
+    stored_constraints = raw_baseline.get(_CONSTRAINTS)
+    if isinstance(constraint_fields, Mapping) and isinstance(stored_constraints, Mapping):
+        for stated, displaced in ((_ROW_SOURCE, _ROW_SOURCE_ADDITIONS), (_ROW_SOURCE_ADDITIONS, _ROW_SOURCE)):
+            removal = f"{_CONSTRAINTS}.{displaced}"
+            if stated in constraint_fields and displaced in stored_constraints and removal not in reconciled:
+                reconciled.append(removal)
+    return tuple(reconciled)
 
 
 def _authored_override_selectors(manifest: Mapping[str, object]) -> frozenset[str]:
@@ -2448,7 +2532,7 @@ def _choose_drops(
             fields, removed_fields = _storage_difference(baseline, target)
             raw_baseline = _without_lineage_claims(candidate.row)
             removed_fields = _existing_storage_removals(raw_baseline, removed_fields)
-            removed_fields = _reconcile_row_source_removals(fields, removed_fields, raw_baseline)
+            removed_fields = _reconcile_source_removals(fields, removed_fields, raw_baseline)
             unsupported_nested = tuple(
                 field
                 for field in removed_fields
@@ -3895,8 +3979,6 @@ def migrate_modelo(
             ),
             work,
         )
-    from .edition_family_delta import collapse_keyed_families
-
     staged_modelo = staged / _MODELOS / modelo_id
     collapse_keyed_families(reference / _MODELOS / modelo_id, staged_modelo)
     _prune_redundant_override_leaves(staged_modelo)
@@ -4090,7 +4172,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 modelo_id=arguments.modelo,
                 work_dir=arguments.work_dir,
                 sections=arguments.family,
-                export_scenarios=edition_export_scenarios(arguments.modelo),
+                export_scenarios=edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root),
                 apply=arguments.apply,
             )
             if arguments.drop_restatement
@@ -4098,7 +4180,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 registry_root=arguments.registry_root,
                 modelo_id=arguments.modelo,
                 work_dir=arguments.work_dir,
-                export_scenarios=edition_export_scenarios(arguments.modelo),
+                export_scenarios=edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root),
                 apply=arguments.apply,
             )
         )
