@@ -1274,138 +1274,148 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
-      art20_reduccion_possible: La casilla %{rnt_id} declara %{rnt_value} EUR de rendimiento
-        neto del trabajo dentro del límite del art. 20 LIRPF, por lo que la casilla
-        %{reduccion_id} puede optar a una reducción que ahora mismo declara en cero.
-      art52_reduccion_individual_sublimit_possible: La casilla %{reduccion_id} declara
-        %{reduccion_value} EUR de reducción por previsión social por encima del sublímite
-        individual de %{sublimit} EUR del art. 52 LIRPF, sin desglose de aportaciones
-        con contribución empresarial; confirme que se aplicó el sublímite individual.
+      art20_reduccion_possible: La casilla %{rnt_id} recoge %{rnt_value} EUR de rendimiento
+        neto del trabajo, dentro del límite del art. 20 LIRPF, así que la casilla
+        %{reduccion_id} puede darte una reducción que aún no aplicas. Comprueba si
+        te corresponde.
+      art52_reduccion_individual_sublimit_possible: La casilla %{reduccion_id} recoge
+        %{reduccion_value} EUR de reducción por previsión social, por encima del sublímite
+        individual de %{sublimit} EUR del art. 52 LIRPF, y no has declarado aportaciones
+        con contribución empresarial. Comprueba que se aplicó el sublímite individual.
       attribution_received_uncaptured: La casilla %{casilla_id} de %{filing_year}
-        contiene %{casilla_value} EUR de renta atribuida sin registrar.
-      attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
-        EUR no se integra en la casilla %{casilla_id}.
-      cross_casilla_invariant_violated: Se incumple el invariante entre casillas %{predicate_id}
-        declarado por el registro en esta revisión.
-      cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
-        %{target_period} necesita una fecha de inicio de actividad declarada.
-      cross_period_dependency_unclean: 'El modelo de origen %{source_modelo} %{source_filing_year}
-        %{source_period} no está limpio para %{origin_ids}: %{blocker_codes}.'
-      cross_period_first_year_fractional_suppression: 'El modelo %{source_modelo}
-        %{source_filing_year} %{source_period} queda fuera de alcance: la actividad
-        comenzó el %{activity_start_date}.'
-      cross_period_m111_no_retenciones: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}
-        %{target_period}.
+        recoge %{casilla_value} EUR de renta atribuida, pero tu perfil no indica de
+        dónde sale. Añádela a tu perfil.
+      attribution_received_unfolded: Tu perfil recoge %{total_base} EUR de renta atribuida
+        en %{filing_year}, pero la casilla %{casilla_id} no la incluye.
+      cross_casilla_invariant_violated: Dos o más casillas de este modelo no concuerdan
+        entre sí como exigen las normas oficiales (comprobación %{predicate_id}).
+      cross_period_activity_start_missing: El modelo %{target_modelo} de %{target_filing_year},
+        periodo %{target_period}, necesita la fecha en que empezó tu actividad.
+      cross_period_dependency_unclean: Esta declaración usa datos del modelo %{source_modelo}
+        de %{source_filing_year}, periodo %{source_period}, y esa declaración aún
+        tiene problemas pendientes (%{blocker_codes}) que afectan a %{origin_ids}.
+        Resuélvelos allí primero.
+      cross_period_first_year_fractional_suppression: El modelo %{source_modelo} de
+        %{source_filing_year}, periodo %{source_period}, no te corresponde porque
+        tu actividad empezó el %{activity_start_date}.
+      cross_period_m111_no_retenciones: El modelo %{source_modelo} de %{source_filing_year},
+        periodo %{source_period}, no declara retenciones que pasar al modelo %{target_modelo}
+        de %{target_filing_year}, periodo %{target_period}.
       cross_period_modelo_not_applicable:
-        message: '%{source_modelo_count} modelo(s) origen no son aplicables a este
-          contribuyente: %{source_modelos}.'
+        message: 'Estos %{source_modelo_count} modelos no se han usado porque no te
+          corresponden: %{source_modelos}.'
       cross_period_non_official_local_chain:
-        message: El modelo %{source_modelo} %{source_filing_year} %{source_period}
-          se apoya en una cadena local (%{origin_code}), no en evidencia oficial de
-          la AEAT.
-      cross_period_operator_declared_suppression: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} se suprime por declaración del contribuyente (%{origin_code}),
-        con fecha de inicio de actividad %{activity_start_date}.
-      cross_period_zero_value_previous_filing: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} aporta un valor cero a %{target_modelo} %{target_filing_year}
-        %{target_period}.
-      cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
-        de IVA %{iva_category_code} no tiene base declarable.
-      dt12a_reduccion_antiquity_possible: La casilla %{reduccion_id} declara %{reduccion_value}
-        EUR de reducción de la DT 12ª; confirme que se cumple la condición de antigüedad
+        message: Los datos del modelo %{source_modelo} de %{source_filing_year}, periodo
+          %{source_period}, salen de una declaración registrada solo en este equipo,
+          no de una confirmada por la AEAT (%{origin_code}).
+      cross_period_operator_declared_suppression: El modelo %{source_modelo} de %{source_filing_year},
+        periodo %{source_period}, no se usa aquí porque indicaste que tu actividad
+        empezó el %{activity_start_date} (%{origin_code}).
+      cross_period_zero_value_previous_filing: El modelo %{source_modelo} de %{source_filing_year},
+        periodo %{source_period}, ha pasado un cero a esta declaración (modelo %{target_modelo}
+        de %{target_filing_year}, periodo %{target_period}). Comprueba que el cero
+        es correcto.
+      cuota_less_ledger_row_base_missing: El apunte %{transaction_id} de tus registros
+        (categoría de IVA %{iva_category_code}) no tiene base imponible que declarar.
+      dt12a_reduccion_antiquity_possible: La casilla %{reduccion_id} recoge %{reduccion_value}
+        EUR de reducción de la DT 12ª. Comprueba que cumples la condición de antigüedad
         que exige.
-      dt12a_reduccion_possible: La casilla %{ingreso_id} declara %{ingreso_value}
-        EUR de rendimientos del trabajo por encima del umbral de la DT 12ª, por lo
-        que la casilla %{reduccion_id} puede optar a una reducción que ahora mismo
-        declara en cero.
-      foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el bien
-        en el extranjero %{position_key} del grupo %{group_code} pasó de %{prior_value_eur}
-        EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
-        encima del umbral de redeclaración de %{redeclaration_increase_threshold_eur}
-        EUR.'
-      iva_compensation_annual_source_evidence_failure: La evidencia de origen anual
-        obligatoria del Modelo 303 para el Modelo 390 sigue sin resolverse (%{source_issue_count}
-        incidencia(s)); la finalización está bloqueada.
-      iva_selected_scope_evidence_failure: 'La evidencia de IVA del ámbito seleccionado
-        está incompleta (%{source_ref_count} referencias de origen; %{unidentified_source_count}
-        sin identificar), por lo que la verificación queda bloqueada. Identificadores
-        de referencias de origen, no valores financieros: %{source_ref_ids}.'
-      iva_wallet_precondition_failed: No se cumple la condición previa %{condition_id}
-        de la cartera de compensación de IVA para esta revisión (escenario %{scenario_id}).
-      ledger_snapshot_drift: 'El modelo %{modelo} %{filing_year} %{period} se ha desviado
-        de su instantánea de libro anclada: %{changed_count} modificadas, %{removed_count}
-        eliminadas.'
+      dt12a_reduccion_possible: La casilla %{ingreso_id} recoge %{ingreso_value} EUR
+        de rendimientos del trabajo, por encima del umbral de la DT 12ª, así que la
+        casilla %{reduccion_id} puede darte una reducción que aún no aplicas. Comprueba
+        si te corresponde.
+      foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el valor
+        de tu bien en el extranjero %{position_key} (grupo %{group_code}) ha pasado
+        de %{prior_value_eur} EUR a %{current_value_eur} EUR. El aumento de %{delta_value_eur}
+        EUR supera los %{redeclaration_increase_threshold_eur} EUR a partir de los
+        cuales debes volver a declararlo.'
+      iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
+        datos de tus modelos 303 del año, y aún hay %{source_issue_count} problema(s)
+        pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_selected_scope_evidence_failure: 'Faltan justificantes en algunos apuntes
+        de IVA de esta declaración (%{source_ref_count} con referencia y %{unidentified_source_count}
+        sin ella), así que la comprobación no puede terminar. Referencias: %{source_ref_ids}.'
+      iva_wallet_precondition_failed: No se cumple una condición para compensar IVA
+        de periodos anteriores (condición %{condition_id}, caso %{scenario_id}).
+      ledger_snapshot_drift: 'Tus registros han cambiado desde que se calculó el modelo
+        %{modelo} de %{filing_year}, periodo %{period}: %{changed_count} apuntes modificados
+        y %{removed_count} eliminados. Vuelve a calcularlo.'
       m193_settled_row_amount_authority_unresolved: El modelo 193 de %{filing_year}
-        incluye %{settled_prior_accrual_rows} registro(s) que pagan rendimientos devengados
-        en un ejercicio anterior, y ninguna fuente oficial determina la base y la
-        retención que declaran; la presentación y la exportación rechazarán esta revisión.
-      m210_agrupacion_renta_invalid: El modelo %{modelo_id} periodo %{period_code}
-        tiene una agrupación de rentas no válida (%{error_type}).
-      m210_convenio_lob_advisory: El país %{country_code} y el tipo de renta %{tipo_renta_code}
-        pueden estar sujetos a una cláusula de limitación de beneficios (%{document_id}).
-      m210_rate_unavailable: No se ha podido resolver el tipo del modelo 210 para
-        el tipo de renta %{tipo_renta_code} del ejercicio %{filing_year} (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: El total intracomunitario del Modelo
-        303 de %{m303_total} EUR y el total del Modelo 349 de %{m349_total} EUR difieren
-        en %{gap} EUR para el periodo %{period_code} %{filing_year}.
-      madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id} con
-        recuento ponderado %{weighted_count} puede optar a la deducción madrileña
-        por nacimiento o adopción.
-      missing_required_casilla: La casilla obligatoria %{casilla_id} no tiene valor.
+        incluye %{settled_prior_accrual_rows} pago(s) de rendimientos devengados en
+        un ejercicio anterior. Las normas oficiales no indican cómo declarar su base
+        y su retención, así que aún no puedes registrar esta declaración como presentada
+        ni exportarla.
+      m210_agrupacion_renta_invalid: 'Modelo %{modelo_id}, periodo %{period_code}:
+        algunas rentas están agrupadas de una forma que el modelo no admite (%{error_type}).'
+      m210_convenio_lob_advisory: Las rentas del tipo %{tipo_renta_code} del país
+        %{country_code} pueden estar sujetas a una cláusula de limitación de beneficios
+        del convenio (documento %{document_id}).
+      m210_rate_unavailable: 'No se ha podido determinar el tipo de gravamen del modelo
+        210 para el tipo de renta %{tipo_renta_code} en %{filing_year} (motivo: %{reason_code}).'
+      m303_m349_intracom_reconciliation_mismatch: En el periodo %{period_code} de
+        %{filing_year}, el total intracomunitario del modelo 303 (%{m303_total} EUR)
+        y el total del modelo 349 (%{m349_total} EUR) difieren en %{gap} EUR.
+      madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id}, con
+        un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
+        de la Comunidad de Madrid por nacimiento o adopción.
+      missing_required_casilla: La casilla obligatoria %{casilla_id} está vacía.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
-        %{profile_field_id} declarado %{declared} supera el umbral %{fact_id} de %{threshold}.'
-      oss_evidence_missing: Esta revisión declara actividad de ventanilla única pero
-        no conserva evidencia de la OSS.
-      oss_source_unrouted: 'Ninguna vinculación de agregación consume estas fuentes
-        de ventanilla única (referencias: %{source_ref_ids}).'
-      pulled_filing_casilla_mismatch: La casilla %{casilla_number} de %{period_code}
-        %{filing_year} calculó %{computed_value} frente a lo declarado %{filed_value}
-        (%{mismatch_kind}).
-      registry_advisory_predicate_fired: Se ha activado el predicado consultivo del
-        registro %{predicate_id} para esta revisión.
-      registry_authority_grade_insufficient: La revisión del registro para el modelo
-        %{modelo} %{filing_year} %{period} declara autoridad %{declared_grade} y la
-        presentación exige autoridad %{requested_grade}.
-      registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
-        para el modelo %{modelo} %{filing_year} %{period}.
-      suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
-        rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
-        soportada (%{predicate_id}). Introduzca el importe del certificado de retenciones
-        e ingresos a cuenta del pagador; el contribuyente nunca presentó el Modelo
-        123 que lo declara, por lo que este valor no puede rellenarse automáticamente.
-      suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
-        del trabajo pero no acredita ninguna retención soportada (%{predicate_id}).
-        Introduzca el importe del certificado de retenciones e ingresos a cuenta del
-        pagador; el contribuyente nunca presentó el Modelo 111 que lo declara, por
-        lo que este valor no puede rellenarse automáticamente.
-      transaction_evidence_missing_deductible: Una transacción deducible no tiene
-        evidencia justificativa (vínculo %{binding_id}, origen %{source_kind_code},
-        motivo %{diagnostic_reason_code}).
-      transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
-        justificativa (vínculo %{binding_id}, origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
-      withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} %{filing_year}
-        no declara ninguna percepción para ningún perceptor, pero el libro registro
-        recoge rentas sometidas a retención satisfechas en ese ejercicio: %{contradicting_invoice_count}
-        factura(s) recibida(s) que declara(n) una retención que el contribuyente debe
-        como retenedor y %{contradicting_ledger_row_count} apunte(s) de pago en una
-        categoría IRPF de retención. El detalle %{source_family} del modelo %{source_modelo}
-        está vacío, por lo que nada las declara. Regístrelas mediante la superficie
-        de agregación del modelo antes de verificar.'
-      withholding_detail_absent_attested: 'El modelo %{modelo} %{filing_year} no declara
-        ninguna percepción para ningún perceptor, y el periodo o periodos %{attested_periods}
-        constan atestiguados mediante el dato de perfil %{attestation_profile_path}
-        como no haber satisfecho ninguna renta sometida a retención. No procede presentar
-        resumen anual en un ejercicio en el que no se satisfizo ninguna de las rentas
-        que declara. Revise el ejercicio si se abonó alguna renta exenta o inferior
-        al umbral de retención: esas se declaran aunque no se haya practicado retención
-        alguna. Esta preparación local no es una presentación ante la AEAT.'
-      withholding_detail_absent_unproven: 'El modelo %{modelo} %{filing_year} no declara
-        ninguna percepción para ningún perceptor y nada prueba esa ausencia: el detalle
-        %{source_family} del modelo %{source_modelo} está vacío y el periodo o periodos
-        %{unattested_periods} no constan declarados sin retenciones. Registre los
-        registros por perceptor mediante la superficie de agregación del modelo, o
-        declare cada periodo mediante el dato de perfil %{attestation_profile_path}.'
+        el valor %{declared} que indicaste en tu perfil (%{profile_field_id}) supera
+        el límite de %{threshold} de la estimación objetiva (módulos) (%{fact_id}).'
+      oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
+        (OSS), pero no hay justificantes guardados de ellas.
+      oss_source_unrouted: 'Algunas operaciones de ventanilla única (OSS) no se cuentan
+        en ninguna casilla de este modelo (referencias: %{source_ref_ids}).'
+      pulled_filing_casilla_mismatch: 'Casilla %{casilla_number} del periodo %{period_code}
+        de %{filing_year}: el cálculo da %{computed_value}, pero la declaración presentada
+        ante la AEAT muestra %{filed_value} (%{mismatch_kind}).'
+      registry_advisory_predicate_fired: Una comprobación integrada ha marcado esta
+        declaración para que la revises (comprobación %{predicate_id}).
+      registry_authority_grade_insufficient: 'Las reglas del modelo %{modelo} de %{filing_year},
+        periodo %{period}, aún no están contrastadas con las fuentes oficiales lo
+        suficiente para presentarlo (nivel alcanzado: %{declared_grade}; nivel necesario:
+        %{requested_grade}).'
+      registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
+        %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
+        la aplicación.
+      suffered_retencion_capital_mobiliario_uncredited: Esta declaración recoge rendimientos
+        del capital mobiliario del ahorro, pero no consta ninguna retención soportada
+        (comprobación %{predicate_id}). Introduce el importe del certificado de retenciones
+        e ingresos a cuenta de tu pagador. El modelo 123 que la declara lo presentó
+        tu pagador, no tú, así que este valor no puede rellenarse automáticamente.
+      suffered_retencion_trabajo_uncredited: Esta declaración recoge rendimientos
+        del trabajo, pero no consta ninguna retención soportada (comprobación %{predicate_id}).
+        Introduce el importe del certificado de retenciones e ingresos a cuenta de
+        tu pagador. El modelo 111 que la declara lo presentó tu pagador, no tú, así
+        que este valor no puede rellenarse automáticamente.
+      transaction_evidence_missing_deductible: Un gasto deducible no tiene factura
+        ni justificante adjunto. Adjúntalo al apunte de tus registros (referencia
+        %{binding_id}, tipo %{source_kind_code}, motivo %{diagnostic_reason_code}).
+      transaction_evidence_missing_output: Una factura emitida con IVA repercutido
+        no tiene justificante. Adjúntalo al apunte de tus registros (referencia %{binding_id},
+        tipo %{source_kind_code}, motivo %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} de %{filing_year}
+        no declara ninguna percepción para ningún perceptor, pero tus registros recogen
+        rentas sometidas a retención pagadas ese año: %{contradicting_invoice_count}
+        factura(s) recibida(s) con una retención que debes ingresar como retenedor
+        y %{contradicting_ledger_row_count} pago(s) en una categoría de retención
+        de IRPF. El detalle de retenciones del modelo %{source_modelo} (%{source_family})
+        está vacío, así que nada las declara. Regístralas en el detalle por perceptor
+        de este modelo antes de comprobarlo.'
+      withholding_detail_absent_attested: 'El modelo %{modelo} de %{filing_year} no
+        declara ninguna percepción para ningún perceptor, y tu perfil (%{attestation_profile_path})
+        indica que en el periodo o periodos %{attested_periods} no pagaste ninguna
+        renta sometida a retención. No hay que presentar resumen anual de un ejercicio
+        en el que no pagaste ninguna de las rentas que declara. Revisa el ejercicio
+        si pagaste alguna renta exenta o inferior al umbral de retención: esas se
+        declaran aunque no se haya practicado retención. Esta preparación es local
+        y no es una presentación ante la AEAT.'
+      withholding_detail_absent_unproven: 'El modelo %{modelo} de %{filing_year} no
+        declara ninguna percepción para ningún perceptor y nada lo confirma: el detalle
+        de retenciones del modelo %{source_modelo} (%{source_family}) está vacío y
+        en el periodo o periodos %{unattested_periods} no has confirmado que no hubo
+        retenciones. Registra las percepciones de cada perceptor en el detalle de
+        este modelo, o confirma cada periodo en tu perfil (%{attestation_profile_path}).'
     help:
       constraint:
         at_least: Como mínimo {minimum}.
