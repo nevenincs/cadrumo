@@ -3,11 +3,11 @@
 Preview and filing share one formula path: the cuota the calculation shows is
 the cuota the fichero carries. The 2015-2022 design places ``Base liquidable del
 ahorro [18]`` at byte 808 and ``Cuota correspondiente a la base liquidable general
-del ahorro [20]`` at byte 842 of record M15108000, so the rendered bytes are read
-back from those offsets rather than from the draft that produced them.
+del ahorro [20]`` at byte 842 of record M15108000. The 2023 design uses those
+offsets on M15110000. The rendered bytes are read back from the official offsets.
 
 The cuota expected here is summed tranche by tranche from the escala of art.
-93.2.e).2.º as worded by Ley 11/2020 for 2021-2022, never copied from the registry.
+93.2.e).2.º for each tested year, never copied from the registry.
 """
 
 from __future__ import annotations
@@ -58,10 +58,10 @@ class _Coordinate:
     top_rate: Decimal
 
 
-#: The 2015-2022 design is the one the ahorro chain moved into; above 200.000 its
-#: 2021-2022 escala charges 26 %. The 2023 design's page-10 tree is unchanged.
+#: The escala above 200.000 charges 26 % in 2022 and 27 % in 2023.
 _COORDINATES = (
     _Coordinate(2022, "m151-page-08", "m151-2015.pagina08.f041", "m151-2015.pagina08.f043", Decimal("0.26")),
+    _Coordinate(2023, "m151-page-10", "m151-2023.pagina10.f041", "m151-2023.pagina10.f043", Decimal("0.27")),
 )
 
 
@@ -116,3 +116,7 @@ def test_boxes_18_and_20_carry_the_computed_ahorro_chain(coordinate: _Coordinate
     assert str(cuota_box.casilla_id) == str(_CUOTA_AHORRO)
     assert Decimal(str(base_box.value)) == _BASE_AHORRO_VALUE
     assert Decimal(str(cuota_box.value)) == expected
+    if coordinate.year == 2023:
+        marker = by_field[("m151-did", "m151-2023.did.f014")]
+        assert marker.raw == "0"
+        assert marker.value == 0
