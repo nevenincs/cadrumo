@@ -50,6 +50,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from .calculation_notes import CALCULATION_NOTES
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
+from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_models import (
     ModeloFormAddressV1,
@@ -119,14 +120,18 @@ def modelo_form_snapshot(
 ) -> RegistrySnapshot:
     """The snapshot a form reads its revision through, at the grade that revision declares.
 
-    Asking every revision for filing grade would refuse an applicability-only
-    one the filer can still open and inspect, so the form asks for what the
-    revision actually claims, as the work review does.
+    The law selects the revision for the filing context; ``revision_id``, the
+    one the declaration was worked under, is only asserted against that
+    selection, never used to choose it. Asking every revision for filing grade
+    would refuse an applicability-only one the filer can still open and
+    inspect, so the form asks for what the revision actually claims, as the
+    work review does.
     """
-    grade = operation.revision(str(modelo), revision_id).effective_authority_grade
-    return operation.snapshot(
-        str(modelo), filing_year=filing_year, period=period.registry_token, revision_id=revision_id, grade=grade
+    selected = law_selected_revision_for_work_target(
+        modelo=str(modelo), filing_year=filing_year, period=period, stored_revision_id=revision_id, operation=operation
     )
+    grade = operation.revision(str(modelo), selected).effective_authority_grade
+    return operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token, grade=grade)
 
 
 def modelo_form_deadline(

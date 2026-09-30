@@ -175,9 +175,9 @@ def _advisory_kinds(output: str) -> set[str]:
 
 
 def _advisory_messages(output: str, *, source_kind: str) -> list[str]:
-    """The rendered ``message`` text of every notice carrying *source_kind*."""
+    """The calculation's own account (``detail``) of every notice carrying *source_kind*."""
     return [
-        str(notice["message"])
+        str(notice.get("context", {}).get("detail", ""))
         for notice in unwrap_envelope_notices(output)
         if notice["code"] == "modelo.work.calculate.source_advisory"
         and notice.get("context", {}).get("source_kind") == source_kind

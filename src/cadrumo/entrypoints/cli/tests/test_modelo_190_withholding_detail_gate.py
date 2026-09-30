@@ -136,7 +136,7 @@ def _calculate(work_unit_id: str) -> str:
     assert values["decl.percepciones-total"] == "0.00", calculated.output
     assert values["decl.retenciones-total"] == "0.00", calculated.output
     assert any(
-        "no per-perceptor-clave observations are persisted" in notice["message"]
+        "no per-perceptor-clave observations are persisted" in notice.get("context", {}).get("detail", "")
         for notice in unwrap_envelope_notices(calculated.output)
     ), calculated.output
     calculation_revision_id = payload["calculation_revision_id"]
@@ -270,10 +270,10 @@ def test_the_refusal_renders_in_every_supported_locale() -> None:
         rendered[language] = verified.output
 
     assert len(set(rendered.values())) == 4
-    assert "modelo aggregate surface before verifying" in rendered["en"]
-    assert "Regístrelas mediante la superficie de agregación" in rendered["es"]
-    assert "Registreu-les mitjançant la superfície d'agregació" in rendered["ca"]
-    assert "Ellenőrzés előtt rögzítse őket" in rendered["hu"]
+    assert "Enter them in this modelo's per-payee detail before you check it." in rendered["en"]
+    assert "Regístralas en el detalle por perceptor de este modelo antes de comprobarlo." in rendered["es"]
+    assert "Registra-les al detall per perceptor d'aquest model abans de comprovar-lo." in rendered["ca"]
+    assert "Ellenőrzés előtt rögzítse őket a nyomtatvány kedvezményezettenkénti részletezésében." in rendered["hu"]
 
 
 def test_a_partially_attested_year_is_still_refused() -> None:

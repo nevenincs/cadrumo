@@ -587,7 +587,7 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
         assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
         assert Decimal(payload["casilla_values"]["05"]) == Decimal("0")
         assert any(
-            "explicit no-relevant-payment attestation" in notice["message"]
+            "explicit no-relevant-payment attestation" in notice.get("context", {}).get("detail", "")
             for notice in unwrap_envelope_notices(calculated.output)
             if notice["code"] == "modelo.work.calculate.source_advisory"
         )
