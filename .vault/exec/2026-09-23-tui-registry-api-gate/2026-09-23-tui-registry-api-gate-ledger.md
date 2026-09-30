@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:69607f016cb0d9fab4129ae0fdae4875b4450af2fd831aff4348787195ff6a48'
+body_hash: 'sha256:f769bbd7cdb2ca53af2fbc4f96bee37b08cdcaf534d4e31d8a1c5d074c1ec0c2'
 related:
   - "[[2026-09-23-tui-registry-api-gate-plan]]"
 ---
@@ -63,3 +63,12 @@ related:
 - `S05` `verify:` `pytest-projection-reader` -> `pass`
 - `S05` `verify:` `pytest-installed-workspace` -> `pass`
 - `S05` `verify:` `pytest-destinations-neighbour-refusal` -> `pass`
+- `S07` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S07` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_work_review.py`
+- `S07` `verify:` `pytest-work-review` -> `pass`
+- `S07` `verify:` `pytest-calculation-replay-and-boolean-channel` -> `pass`
+- `S07` `verify:` `harness-modelo-100-scenario` -> `pass`
+- `S07` `verify:` `ruff` -> `pass`
+- `S07` `verify:` `ty` -> `pass`

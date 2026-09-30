@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:2b8cdacdb98952c96a93bdea3d140dbef051dce517bcbc888514bdc479f5dc6b'
+body_hash: 'sha256:2b90a9b0c33d80f080909cf409d60402365260925167863c363390b5a32307a1'
 ---
 
 # `tui-registry-api-gate` plan
@@ -57,6 +57,7 @@ pages must show the calculated boxes and the review's findings.
 - [x] `S03` - Add the bounded-review workspace port on the current producer contract, beside the calculation and readiness ports already restored; `src/cadrumo/application/modelo/workspace_producers.py`.
 - [x] `S04` - Assemble graded snapshot over all seven contributors so the work-review facet carries the canonical review, with work-review parity and capture-once conformance tests; `src/cadrumo/application/modelo/workspace.py`.
 - [x] `S05` - Prove the launcher reader's graded-first admission carries every refusal to its destination, including the no-calculation refusal, and does not refuse the whole Modelo source; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [x] `S07` - Read a persisted boolean-channel binding override as a truth value in the work review, with the truth tokens defined once beside the stored field the replay writer fills, because acceptance showed the review refusing every Modelo 100 revision; `src/cadrumo/domain/modelos/calculation_revision.py`.
 - [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and re-render the sequence-backed review scenarios as acceptance evidence; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
 - [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor, the bounded review included, and apply it to static admission; `src/cadrumo/application/modelo/workspace.py`.
 

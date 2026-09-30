@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
 )
+from cadrumo.application.modelo.action_errors import StoredCalculationDriftError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
@@ -227,6 +228,87 @@ def test_a_work_review_capture_refuses_as_not_current_after_an_interleaved_write
     with pytest.raises(ProducerCaptureError) as refusal:
         captured.require_current(moved)
     assert refusal.value.translated_message == "errors.refused.producer_capture_not_current"
+
+
+_M100 = ModeloCode("100")
+_M100_BOOLEAN_BINDING = "renta-profile-has-economic-activity"
+"""Declared on the boolean value channel by the Modelo 100 2025 registry revision."""
+
+
+def _persist_m100_revision_with_override(repos: Repos, raw_value: str) -> WorkUnit:
+    """Persist a Modelo 100 revision whose boolean-channel binding override holds ``raw_value``."""
+    work_repo, calculation_repo, _, _, _ = repos
+    unit = _persist_work_unit(repos, modelo=_M100, filing_year=2025, period_code="0A")
+    overrides = {_M100_BOOLEAN_BINDING: raw_value}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides=overrides,
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=unit.modelo,
+            revision_id=unit.revision_id,
+            modelo_year=unit.filing_year,
+            period=unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        binding_overrides=overrides,
+        casilla_values={},
+        created_at=T0,
+        updated_at=T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
+    pointed = unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    work_repo.save(upsert_work_unit(work_repo.load(), pointed))
+    return pointed
+
+
+@pytest.mark.parametrize("truth", ["true", "false"])
+def test_the_review_reads_a_persisted_boolean_binding_as_a_truth_value(repos: Repos, truth: str) -> None:
+    """The replay writer stores a boolean-channel binding as a truth token, not a quantity."""
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, truth)
+
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+    assert review.calculation_revision_id == unit.current_calculation_revision_id
+
+
+def test_a_boolean_binding_holding_no_truth_value_still_refuses_as_stored_drift(repos: Repos) -> None:
+    """Skipping truth tokens must not let an unreadable stored value through."""
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, "maybe")
+
+    with bundled_indexed_authority().operation() as operation, pytest.raises(StoredCalculationDriftError):
+        build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
 
 
 def test_review_projects_resolvable_work_without_a_calculation_from_real_storage(repos: Repos) -> None:

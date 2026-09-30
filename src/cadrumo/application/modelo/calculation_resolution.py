@@ -45,6 +45,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
+from ...domain.modelos.calculation_revision import PERSISTED_BOOLEAN_BINDING_TOKENS
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_mesh import CalculationSourceResolution
@@ -337,7 +338,7 @@ def build_calculation_replay_payloads(
             [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
             + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
-            + [(k.strip(), "true" if v else "false") for k, v in (resolved_boolean_bindings or {}).items()],
+            + [(k.strip(), PERSISTED_BOOLEAN_BINDING_TOKENS[v]) for k, v in (resolved_boolean_bindings or {}).items()],
         ),
     )
     relation_overrides = {
