@@ -15,7 +15,13 @@ from functools import cache
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 
@@ -49,14 +55,16 @@ def _selected(year: int, period: str = "1P") -> ModeloRevision:
     return select_revision(modelo, filing_year=year, period=period, support=catalogues.supported_filing_years)
 
 
-def _references(expression: object) -> set[str]:
-    found = {str(expression.casilla_id)} if getattr(expression, "casilla_id", None) else set()
-    for arg in getattr(expression, "args", ()) or ():
+def _references(expression: FormulaExpression) -> set[str]:
+    found: set[str] = set()
+    if expression.casilla_id is not None:
+        found.add(str(expression.casilla_id))
+    for arg in expression.args:
         found |= _references(arg)
     return found
 
 
-def _formula_for(revision: ModeloRevision, target: str) -> object:
+def _formula_for(revision: ModeloRevision, target: str) -> FormulaDefinition:
     (formula,) = (formula for formula in revision.formulas if str(formula.target_casilla_id) == target)
     return formula
 

@@ -47,6 +47,7 @@ def _edition(year: int) -> ModeloRevision:
         period=_PERIOD,
         support=authority.catalogues.supported_filing_years,
     )
+    assert selected.authority_grade is not None, f"selected edition for {year} has no declared authority grade"
     return authority.snapshot(_MODELO, filing_year=year, period=_PERIOD, grade=selected.authority_grade).revision
 
 

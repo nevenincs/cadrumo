@@ -29,6 +29,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.filing.draft_construction import build_draft
@@ -56,7 +57,6 @@ from .test_modelo_100_m131_pagos_fold_in_live import (
     _non_relation_zero_bindings,
     _seed_m131_quarters,
     bucket_id,
-    secure_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
