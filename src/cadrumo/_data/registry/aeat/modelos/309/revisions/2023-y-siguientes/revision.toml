@@ -1,7 +1,11 @@
 [revisions."2023-y-siguientes"]
 binding_source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 formula_source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
-predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2018-2022': casillas differ from index 35 ('decl.rg-base-25' -> 'decl.rg-base-04'); every other family is byte-identical.", legal_refs = ["orden-hfp-1245-2022:art-unico"], source_refs = ["aeat-dr-309-2023"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-309-2023 reorders the aeat-dr-309-2018 record: its field order differs from index 35 ('decl.rg-base-25' -> 'decl.rg-base-04') and 3 fields are new, so supersede-in-place would not reproduce it and no predecessor is declared. The payload is stored against the 2018-2022 edition through casilla_storage_baseline and family_storage_baseline: what both designs share is inherited, this edition's differences are overrides, positions restate this design's field order, its export layout stays stated per edition, and its parity anchor, verification expectation and completeness manifest are the baseline's, adopted through scoped_families. Storage reuse makes no continuity claim.", legal_refs = ["orden-hfp-1245-2022:art-unico"], source_refs = ["aeat-dr-309-2023"] } }
+# Storage reuse only, not legal continuity: casillas and keyed families are
+# stored as differences from the 2018-2022 edition's effective members.
+casilla_storage_baseline = "2018-2022"
+family_storage_baseline = "2018-2022"
 casilla_source_refs = ["aeat-dr-309-2023"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]
@@ -49,6 +53,7 @@ source_refs = [
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 
@@ -81,3 +86,452 @@ source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
 reason = "Modelo 309's record design declares two fixed pages with no repeated projection record and no field of kind 'projection'. The family has no repeated endpoint to admit; authoring a projection row into the layout is what would make it apply."
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure"]
+
+[[revisions."2023-y-siguientes".casilla_positions]]
+id = "decl.rg-base-25"
+position = 35
+
+[[revisions."2023-y-siguientes".casilla_positions]]
+id = "decl.rg-tipo-26"
+position = 36
+
+[[revisions."2023-y-siguientes".casilla_positions]]
+id = "decl.rg-cuota-27"
+position = 37
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.ejercicio" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 identify the declaration's tax year in its header, separately from the aircraft manufacture year. Ejercicio / Ejercicio devengo continues to identify the same non-periodic IVA return's tax year under Orden HAC/3625/2003 apartado 1.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.tipo-trigger" }
+fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this virtual application concept across 2018-2022 and 2023-y-siguientes: the required text informational row retains id decl.tipo-trigger, semantic_role motivo_declaracion_no_periodica, section declarante, and the same modelo-309-iva-no-periodica construct enrollment; no formula, binding, or consumer contract addresses or changes this row.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.periodo" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 11 'Devengo (2) - Periodo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:44 M30901 campo 11 'Devengo (2) - Periodo'; same semantic_role and data_type. number is wire metadata. The row now cites the duplicate M30900 Periodo (line 12).", continuidad_origin = "grounded", number = "11-12" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.tipo-declaracion" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the declaration type, with note 1 defining I as ingreso. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.nombre" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the declarant's given name, separate from surnames or corporate name. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.transmitente-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.transmitente-apellidos" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the transferor's surnames or corporate name, separate from the given-name field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.transmitente-nombre" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the transferor's given name, separate from the surnames or corporate-name field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.transmitente-pais" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the transferor's two-character country field. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.situacion-tributaria" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxpayer-status selection: agriculture, equivalence surcharge, no deduction, non-business legal person, non-business individual, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.hecho-imponible" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxable-event selection: intra-EU goods, new means of transport, reverse charge, immovable investment goods, administrative/judicial proceedings, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.vehiculo-marca" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.vehiculo-tipo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.vehiculo-modelo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.vehiculo-bastidor" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.vehiculo-clasificacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.embarcacion-fabricante" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.embarcacion-tipo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.embarcacion-identificacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.embarcacion-eslora" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.aeronave-fabricante" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.aeronave-marca" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.aeronave-serie" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.aeronave-ano" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.aeronave-peso" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.complementaria" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 56 'Declaracion complementaria (9)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:102 M30901 campo 59 'Declaracion complementaria (9)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1016" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.justificante-anterior" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 57 'Numero de justificante de la declaracion anterior (9)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:103 M30901 campo 60 'Numero de justificante de la declaracion anterior (9)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1017-1029" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.iban" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 58 'IBAN (10) (exclusivamente en Predeclaracion)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:104 M30901 campo 61 'IBAN (10)'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1030-1063" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.transmitente-nif-iva" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 59 'Transmitente (3)- NIF-IVA' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:105 M30901 campo 62 'Transmitente (3)- NIF-IVA'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1064-1078" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.adjudicatario-nif" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 60 'Adjudicatario (4) - NIF' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:106 M30901 campo 63 'Adjudicatario (4) - NIF'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1079-1087" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.adjudicatario-apellidos" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 61 'Adjudicatario (4) - Apellidos o Denominacion Social' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:107 M30901 campo 64 'Adjudicatario (4) - Apellidos o Denominacion Social'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1088-1147" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.adjudicatario-nombre" }
+fields = { continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 62 'Adjudicatario (4) - Nombre' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:108 M30901 campo 65 'Adjudicatario (4) - Nombre'; same semantic_role and data_type. number is wire metadata.", continuidad_origin = "grounded", number = "1148-1167" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-base-01" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-tipo-02" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-cuota-03" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-base-04" }
+fields = { continuidad_evidence = "Same printed box [04]: 2018-2022 form_number 04 equals 2023-y-siguientes form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 35 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:81 M30901 campo 38. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "731-747" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-tipo-05" }
+fields = { continuidad_evidence = "Same printed box [05]: 2018-2022 form_number 05 equals 2023-y-siguientes form_number 05; same semantic_role and data_type. Designs print [05] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 36 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:82 M30901 campo 39. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "748-752" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-cuota-06" }
+fields = { continuidad_evidence = "Same printed box [06]: 2018-2022 form_number 06 equals 2023-y-siguientes form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:83 M30901 campo 40. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "753-769" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-base-07" }
+fields = { continuidad_evidence = "Same printed box [07]: 2018-2022 form_number 07 equals 2023-y-siguientes form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:84 M30901 campo 41. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "770-786" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-tipo-08" }
+fields = { continuidad_evidence = "Same printed box [08]: 2018-2022 form_number 08 equals 2023-y-siguientes form_number 08; same semantic_role and data_type. Designs print [08] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 39 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:85 M30901 campo 42. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "787-791" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.rg-cuota-09" }
+fields = { continuidad_evidence = "Same printed box [09]: 2018-2022 form_number 09 equals 2023-y-siguientes form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:86 M30901 campo 43. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "792-808" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-base-10" }
+fields = { continuidad_evidence = "Same printed box [10]: 2018-2022 form_number 10 equals 2023-y-siguientes form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:87 M30901 campo 44. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "809-825" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-tipo-11" }
+fields = { continuidad_evidence = "Same printed box [11]: 2018-2022 form_number 11 equals 2023-y-siguientes form_number 11; same semantic_role and data_type. Designs print [11] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 42 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:88 M30901 campo 45. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "826-830" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-cuota-12" }
+fields = { continuidad_evidence = "Same printed box [12]: 2018-2022 form_number 12 equals 2023-y-siguientes form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:89 M30901 campo 46. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "831-847" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-base-13" }
+fields = { continuidad_evidence = "Same printed box [13]: 2018-2022 form_number 13 equals 2023-y-siguientes form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:90 M30901 campo 47. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "848-864" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-tipo-14" }
+fields = { continuidad_evidence = "Same printed box [14]: 2018-2022 form_number 14 equals 2023-y-siguientes form_number 14; same semantic_role and data_type. Designs print [14] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 45 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:91 M30901 campo 48. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "865-869" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-cuota-15" }
+fields = { continuidad_evidence = "Same printed box [15]: 2018-2022 form_number 15 equals 2023-y-siguientes form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:92 M30901 campo 49. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "870-886" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-base-16" }
+fields = { continuidad_evidence = "Same printed box [16]: 2018-2022 form_number 16 equals 2023-y-siguientes form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:93 M30901 campo 50. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "887-903" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-tipo-17" }
+fields = { continuidad_evidence = "Same printed box [17]: 2018-2022 form_number 17 equals 2023-y-siguientes form_number 17; same semantic_role and data_type. Designs print [17] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 48 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:94 M30901 campo 51. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "904-908" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-cuota-18" }
+fields = { continuidad_evidence = "Same printed box [18]: 2018-2022 form_number 18 equals 2023-y-siguientes form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:95 M30901 campo 52. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "909-925" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-base-19" }
+fields = { continuidad_evidence = "Same printed box [19]: 2018-2022 form_number 19 equals 2023-y-siguientes form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:96 M30901 campo 53. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "926-942" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-tipo-20" }
+fields = { continuidad_evidence = "Same printed box [20]: 2018-2022 form_number 20 equals 2023-y-siguientes form_number 20; same semantic_role and data_type. Designs print [20] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 51 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:97 M30901 campo 54. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "943-947" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.re-cuota-21" }
+fields = { continuidad_evidence = "Same printed box [21]: 2018-2022 form_number 21 equals 2023-y-siguientes form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:98 M30901 campo 55. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "948-964" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.cuota-devengada-22" }
+fields = { continuidad_evidence = "Same printed box [22]: 2018-2022 form_number 22 equals 2023-y-siguientes form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:99 M30901 campo 56. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "965-981" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.a-deducir-23" }
+fields = { continuidad_evidence = "Same printed box [23]: 2018-2022 form_number 23 equals 2023-y-siguientes form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:100 M30901 campo 57. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "982-998" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "decl.resultado-24" }
+fields = { continuidad_evidence = "Same printed box [24]: 2018-2022 form_number 24 equals 2023-y-siguientes form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:101 M30901 campo 58. Span moved: [25]-[27] inserted after [03] (lines 78-80).", continuidad_origin = "grounded", number = "999-1015" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "iva.autorepercutido.intracomunitaria" }
+fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the row retains id iva.autorepercutido.intracomunitaria, semantic_role iva_cuota_autorepercutida_intracomunitaria, section iva/no_periodica/inversion_sujeto_pasivo, money/bound shape, and binding modelo-309-iva-autorepercutido-intracomunitaria-cuota; the same modelo-309-iva-no-periodica construct enrollment and calculation consumer surface remain unchanged.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "iva.soportado.recargo-equivalencia" }
+fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the row retains id iva.soportado.recargo-equivalencia, semantic_role iva_cuota_soportada_recargo_equivalencia, section iva/no_periodica/soportado, money/bound shape, and binding modelo-309-iva-soportado-recargo-equivalencia-cuota; the same modelo-309-iva-no-periodica construct enrollment and calculation consumer surface remain unchanged.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2018-2022", id = "iva.cuota-no-periodica-total" }
+fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the internal_only computed row retains id iva.cuota-no-periodica-total, semantic_role iva_cuota_no_periodica_total, section iva/no_periodica/totales, formula modelo-309-iva-cuota-no-periodica-total, and the same two cuota-leaf inputs in the modelo-309-iva-no-periodica construct; no calculation consumer contract changes.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2018-2022", id = "modelo-309-cuota-devengada-total"}
+sequence_additions = {"expression.args" = [{casilla_id = "decl.rg-cuota-27"}], source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {"expression.args" = [0, 7, 1, 2, 3, 4, 5, 6], source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2018-2022", id = "modelo-309-iva-cuota-no-periodica-total"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2018-2022", id = "modelo-309-resultado"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2018-2022", id = "modelo-309-iva-no-periodica"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [3, 0, 1, 2]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2018-2022", id = "modelo-309-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2018-2022", id = "modelo-309-export"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2018-2022", id = "modelo-309-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2018-2022", id = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2018-2022", id = "modelo-309-iva-soportado-recargo-equivalencia-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2018-2022", id = "modelo-309-dr"}
+fields = {fixture_id = "modelo-309-2023-record-design-layout", workbook_source = "aeat-dr-309-2023"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2018-2022", id = "modelo-309-iva-chain-verification"}
+sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2018-2022", id = "aeat-dr-309-2018"}
+replacement_id = "aeat-dr-309-2023"
+sequence_additions = {casillas = [{casilla_id = "decl.rg-cuota-27", number = "714-730"}, {casilla_id = "decl.rg-cuota-06", number = "753-769"}, {casilla_id = "decl.rg-cuota-09", number = "792-808"}, {casilla_id = "decl.re-cuota-12", number = "831-847"}, {casilla_id = "decl.re-cuota-15", number = "870-886"}, {casilla_id = "decl.re-cuota-18", number = "909-925"}, {casilla_id = "decl.re-cuota-21", number = "948-964"}, {casilla_id = "decl.cuota-devengada-22", number = "965-981"}, {casilla_id = "decl.a-deducir-23", number = "982-998"}, {casilla_id = "decl.resultado-24", number = "999-1015"}], source_refs = ["aeat-dr-309-2023"]}
+sequence_removals = {casillas = [3, 4, 5, 6, 7, 8, 9, 10, 11], source_refs = [0]}

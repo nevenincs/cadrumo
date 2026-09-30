@@ -532,6 +532,25 @@ def _model_value(value: object) -> object:
     return dump(mode="python", exclude={"inherited_from"}) if callable(dump) else value
 
 
+def _stated_leaves(value: object) -> dict[tuple[str, ...], object]:
+    """A baseline member's typed leaf values, limited to the leaves its declaration states.
+
+    A value restates its baseline only where the baseline states that value
+    too. An explicit empty sequence, ``false`` or zero over a field the
+    baseline omits reads the same through the typed default, but it is a
+    statement the baseline does not make: the chain proof materialises it, so
+    dropping it as redundant would change the edition's storage. Values keep
+    their full typed form; only the leaves the baseline leaves to a default
+    are withheld from comparison.
+    """
+    full = _leaf_values(_thaw(_model_value(value)))
+    dump = getattr(value, "model_dump", None)
+    if not callable(dump):
+        return full
+    stated = _leaf_values(_thaw(dump(mode="python", exclude={"inherited_from"}, exclude_unset=True)))
+    return {path: item for path, item in full.items() if path in stated}
+
+
 def _file_fingerprints(modelo_dir: Path) -> tuple[Mapping[str, str], ...]:
     return tuple(
         {
@@ -1035,14 +1054,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                             row["additions"] += 1
                             continue
                         left = dict(member)
-                        if hasattr(inherited, "model_dump"):
-                            right = cast(
-                                Mapping[str, object],
-                                _thaw(inherited.model_dump(mode="python", exclude={"inherited_from"})),
-                            )
-                        elif isinstance(inherited, Mapping):
-                            right = dict(inherited)
-                        else:
+                        if not hasattr(inherited, "model_dump") and not isinstance(inherited, Mapping):
                             blocked.append(
                                 {
                                     "revision": revision_id,
@@ -1057,7 +1069,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                             for path, value in _leaf_values(left).items()
                             if path and path[0] not in _STRUCTURAL_FIELDS and path[0] not in _LINEAGE_CLAIMS
                         }
-                        baseline_leaves = _leaf_values(right)
+                        baseline_leaves = _stated_leaves(inherited)
                         typed_current = _model_value(current_by_id.get(identity))
                         current_leaves = _leaf_values(typed_current) if isinstance(typed_current, Mapping) else {}
                         same = {
@@ -1153,7 +1165,8 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                 continue
                             member_id = selector.get("id")
                             current_id = override.get("replacement_id", member_id)
-                            inherited_dump = _model_value(inherited_by_id.get(member_id))
+                            inherited_member = inherited_by_id.get(member_id)
+                            inherited_dump = _model_value(inherited_member)
                             current_dump = _model_value(current_by_id.get(current_id))
                             if not isinstance(inherited_dump, Mapping) or not isinstance(current_dump, Mapping):
                                 blocked.append(
@@ -1175,7 +1188,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                         "reason": "per-edition sequence folded into an override; state the member",
                                     }
                                 )
-                            inherited_leaves = _leaf_values(inherited_dump)
+                            inherited_leaves = _stated_leaves(inherited_member)
                             current_leaves = _leaf_values(current_dump)
                             for path in _leaf_values(fields):
                                 location = ".".join(path)
@@ -1222,11 +1235,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     }
                                 )
                                 continue
-                            baseline_value = cast(
-                                Mapping[str, object],
-                                _thaw(inherited.model_dump(mode="python", exclude={"inherited_from"})),
-                            )
-                            baseline_leaves = _leaf_values(baseline_value)
+                            baseline_leaves = _stated_leaves(inherited)
                             for path, value in _leaf_values(fields).items():
                                 location = ".".join(path)
                                 # A lineage claim is this edition's provenance, restated
