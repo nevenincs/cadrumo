@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f20219894038764381ba19aaba8f6a848228536267f7058372dff8d577666f4a'
+body_hash: 'sha256:131cef1d5cb037e0dab0065f8d5bc8f270dcf74a29277b433ad16574c241d62c'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -76,6 +76,15 @@ related:
 - `S17` `verify:` `pytest test_work_form.py (11, real 130 registry)` -> `pass`
 - `S17` `verify:` `ruff + ty + basedpyright + pyrefly` -> `pass`
 - `S17` `by:` `orchestrator`
+- `S18` `A` `src/cadrumo/application/modelo/casilla_help.py`
+- `S18` `A` `src/cadrumo/application/modelo/tests/test_casilla_help.py`
+- `S18` `M` `src/cadrumo/locales/ca/application.yml`
+- `S18` `M` `src/cadrumo/locales/en/application.yml`
+- `S18` `M` `src/cadrumo/locales/es/application.yml`
+- `S18` `M` `src/cadrumo/locales/hu/application.yml`
+- `S18` `verify:` `pytest test_casilla_help.py (7, real 130 registry)` -> `pass`
+- `S18` `verify:` `ruff + ty + basedpyright + pyrefly` -> `pass`
+- `S18` `by:` `orchestrator`
 
 ## Notes
 

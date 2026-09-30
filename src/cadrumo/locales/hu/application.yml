@@ -1326,6 +1326,38 @@ application:
         időszakra pedig nincs levonásmentességi nyilatkozat. Rögzítse a kedvezményezettenkénti
         tételeket a modell összesítő felületén, vagy nyilatkozzon minden időszakról
         a %{attestation_profile_path} profiladat útján.'
+    help:
+      constraint:
+        at_least: Legalább {minimum}.
+        at_most: Legfeljebb {maximum}.
+        choices: 'Az alábbi értékek egyike: {choices}.'
+        exact_length: Pontosan {length} karakter.
+        format: A hivatalos formátumot kell követnie.
+        length: '{minimum} és {maximum} karakter között.'
+        max_length: Legfeljebb {maximum} karakter.
+        min_length: Legalább {minimum} karakter.
+        non_negative: Nem lehet negatív.
+        none_declared: Ehhez a rovathoz nincs megadott korlát.
+        range: '{minimum} és {maximum} között.'
+      formula:
+        clamp: '{value} {minimum} és {maximum} között'
+        if_then_else: ha {condition}, akkor {then}, egyébként {otherwise}
+        max: max({items})
+        min: min({items})
+        other_modelos: kapcsolódó nyomtatványokból átvett összeg
+        percent_of: '{amount} {rate} %-a'
+        previous_period: '{value} az előző időszakból'
+        rule: a nyomtatvány saját számítási szabálya
+        table: érték a hivatalos táblázatból
+        working_figure: részösszeg
+      source_kind:
+        dictionary: AEAT adatszótár
+        form_spec: AEAT nyomtatványleírás
+        instructions: AEAT kitöltési útmutató
+        manual_pdf: AEAT gyakorlati kézikönyv
+        record_design: AEAT rekordterv
+        suppression_notice: AEAT megszüntetési közlemény
+        xsd: AEAT XML-séma
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás

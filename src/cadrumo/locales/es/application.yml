@@ -1374,6 +1374,38 @@ application:
         %{unattested_periods} no constan declarados sin retenciones. Registre los
         registros por perceptor mediante la superficie de agregación del modelo, o
         declare cada periodo mediante el dato de perfil %{attestation_profile_path}.'
+    help:
+      constraint:
+        at_least: Como mínimo {minimum}.
+        at_most: Como máximo {maximum}.
+        choices: 'Uno de estos valores: {choices}.'
+        exact_length: Exactamente {length} caracteres.
+        format: Debe seguir el formato oficial.
+        length: Entre {minimum} y {maximum} caracteres.
+        max_length: Como máximo {maximum} caracteres.
+        min_length: Como mínimo {minimum} caracteres.
+        non_negative: No puede ser negativo.
+        none_declared: No hay límites declarados para esta casilla.
+        range: Entre {minimum} y {maximum}.
+      formula:
+        clamp: '{value} entre {minimum} y {maximum}'
+        if_then_else: si {condition}, {then}; si no, {otherwise}
+        max: máx({items})
+        min: mín({items})
+        other_modelos: importe trasladado desde modelos relacionados
+        percent_of: '{rate} % de {amount}'
+        previous_period: '{value} del periodo anterior'
+        rule: regla de cálculo propia de este modelo
+        table: valor de la tabla oficial
+        working_figure: cifra intermedia
+      source_kind:
+        dictionary: Diccionario de datos de la AEAT
+        form_spec: Especificación del formulario de la AEAT
+        instructions: Instrucciones del modelo de la AEAT
+        manual_pdf: Manual práctico de la AEAT
+        record_design: Diseño de registro de la AEAT
+        suppression_notice: Aviso de supresión de la AEAT
+        xsd: Esquema XML de la AEAT
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

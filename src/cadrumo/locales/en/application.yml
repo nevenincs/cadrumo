@@ -1252,6 +1252,38 @@ application:
         carry no no-retención attestation. Register the per-perceptor records through
         the modelo aggregate surface, or attest every period through the profile fact
         %{attestation_profile_path}.'
+    help:
+      constraint:
+        at_least: At least {minimum}.
+        at_most: At most {maximum}.
+        choices: 'One of these values: {choices}.'
+        exact_length: Exactly {length} characters.
+        format: Must follow the official format.
+        length: Between {minimum} and {maximum} characters.
+        max_length: At most {maximum} characters.
+        min_length: At least {minimum} characters.
+        non_negative: Cannot be negative.
+        none_declared: No limits are declared for this box.
+        range: Between {minimum} and {maximum}.
+      formula:
+        clamp: '{value} kept between {minimum} and {maximum}'
+        if_then_else: if {condition}, {then}; otherwise {otherwise}
+        max: max({items})
+        min: min({items})
+        other_modelos: amount carried from related modelos
+        percent_of: '{rate} % of {amount}'
+        previous_period: '{value} from the previous period'
+        rule: calculation rule specific to this modelo
+        table: value from the official table
+        working_figure: intermediate figure
+      source_kind:
+        dictionary: AEAT data dictionary
+        form_spec: AEAT form specification
+        instructions: AEAT instructions for the modelo
+        manual_pdf: AEAT practical manual
+        record_design: AEAT record design
+        suppression_notice: AEAT suppression notice
+        xsd: AEAT XML schema
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
