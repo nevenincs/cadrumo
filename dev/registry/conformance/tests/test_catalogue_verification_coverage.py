@@ -13,10 +13,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
@@ -70,6 +72,10 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
     with the early design.  The production selector must therefore resolve by
     period token alone; the canonical period end only verifies the selected
     design source, never chooses the revision.
+
+    An edition that makes no layout claim (:func:`_makes_no_layout_claim`) is
+    not required to cite a design, such as a year whose form is approved in
+    BOE while AEAT's record design is still unpublished.
     """
     modelos, catalogues = registry_tree()
     supported_filing_years = catalogues.supported_filing_years
@@ -116,10 +122,6 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                     )
                     assert selected.id == revision.id
 
-                if not sources:
-                    missing.append(f"modelo {modelo_id}, revision {revision.id}, no record-design source")
-                    continue
-
                 pending_source_ref = _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS.get(exception_key)
                 if pending_source_ref is not None:
                     assert modelo.cadence == "annual"
@@ -130,22 +132,108 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                     resolved_exceptions.add(exception_key)
                     continue
 
-                for period in revision.period_selector.periods_for_year(year):
-                    filing_period = filing_period_from_scope(year, period)
-                    evidence_date = (
-                        filing_period.end_date
-                        if filing_period is not None and filing_period.has_date_span()
-                        else period_end
-                    )
-                    if not _record_design_sources_cover(sources, evidence_date):
-                        missing.append(
-                            f"modelo {modelo_id}, revision {revision.id}, period {period}, "
-                            f"uncovered {evidence_date.isoformat()}",
-                        )
+                missing.extend(_record_design_gaps(modelo_id, revision, sources, year))
 
     assert required_modelos == {modelo_id for modelo_id, _, _ in checked}
     assert resolved_exceptions == set(_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS)
     assert not missing, "supported record-design matrix gaps:\n" + "\n".join(missing)
+
+
+def _makes_no_layout_claim(revision: ModeloRevision) -> bool:
+    """Return whether an edition claims no export layout, read off its own typed fields.
+
+    An edition whose declared grade keeps it off the filing path and whose
+    hydrated edition carries no export layout (cleared or never stated) cannot
+    back a filing export, so it asserts nothing an official record design would
+    have to govern. Either fact alone is not enough: a stated layout needs its
+    design whatever the grade, and a filing-grade edition needs one whether or
+    not its layout has been authored yet.
+    """
+    return revision.effective_authority_grade is not RegistryAuthorityGrade.FILING and not revision.export_layouts
+
+
+def _record_design_gaps(
+    modelo_id: str,
+    revision: ModeloRevision,
+    sources: Sequence[SourceReference],
+    year: int,
+) -> list[str]:
+    """Return the record-design gaps of one revision in one selected filing year.
+
+    Only the demand for a design is lifted from an edition that makes no layout
+    claim. A design such an edition does cite is still evidence it asserts, so
+    it must still apply to every period the edition selects.
+    """
+    if not sources:
+        if _makes_no_layout_claim(revision):
+            return []
+        return [f"modelo {modelo_id}, revision {revision.id}, no record-design source"]
+
+    period_end = min(date(year, 12, 31), revision.valid_to or date.max)
+    gaps: list[str] = []
+    for period in revision.period_selector.periods_for_year(year):
+        filing_period = filing_period_from_scope(year, period)
+        evidence_date = (
+            filing_period.end_date if filing_period is not None and filing_period.has_date_span() else period_end
+        )
+        if not _record_design_sources_cover(sources, evidence_date):
+            gaps.append(
+                f"modelo {modelo_id}, revision {revision.id}, period {period}, uncovered {evidence_date.isoformat()}",
+            )
+    return gaps
+
+
+def test_record_design_demand_is_lifted_only_from_an_edition_that_makes_no_layout_claim() -> None:
+    """The exemption follows the edition's grade and layout, and bites again once either changes.
+
+    The subject is a real filing-grade edition whose cited design covers a
+    supported year, re-graded and stripped as explicit inputs, so the proof does
+    not depend on which editions currently lack a published design.
+    """
+    modelos, catalogues = registry_tree()
+    supported_years = catalogues.supported_filing_years
+    assert supported_years is not None
+    subjects = [
+        (str(modelo.id), revision, sources, year)
+        for modelo in sorted(modelos, key=lambda candidate: str(candidate.id))
+        for _revision_id, revision in sorted(modelo.revisions.items())
+        if revision.effective_authority_grade is RegistryAuthorityGrade.FILING and revision.export_layouts
+        for sources in [
+            [
+                catalogues.sources[source_ref]
+                for source_ref in revision.source_refs
+                if catalogues.sources[source_ref].kind == "record_design"
+            ],
+        ]
+        if sources
+        for year in supported_years.years
+        if revision.period_selector.includes_year(year) and revision.period_selector.periods_for_year(year)
+    ]
+    assert subjects, "no filing-grade edition with a layout and a cited design selects a supported year"
+    modelo_id, revision, sources, year = next(
+        subject for subject in subjects if not _record_design_gaps(subject[0], subject[1], subject[2], subject[3])
+    )
+    no_source = f"modelo {modelo_id}, revision {revision.id}, no record-design source"
+
+    off_filing_without_layout = revision.model_copy(
+        update={"authority_grade": RegistryAuthorityGrade.APPLICABILITY, "export_layouts": ()},
+    )
+    off_filing_with_layout = revision.model_copy(update={"authority_grade": RegistryAuthorityGrade.APPLICABILITY})
+    filing_without_layout = revision.model_copy(update={"export_layouts": ()})
+
+    assert _makes_no_layout_claim(off_filing_without_layout)
+    assert _record_design_gaps(modelo_id, off_filing_without_layout, (), year) == []
+    assert not _makes_no_layout_claim(off_filing_with_layout)
+    assert _record_design_gaps(modelo_id, off_filing_with_layout, (), year) == [no_source]
+    assert not _makes_no_layout_claim(filing_without_layout)
+    assert _record_design_gaps(modelo_id, filing_without_layout, (), year) == [no_source]
+
+    lapsed = [
+        source.model_copy(update={"applies_from": None, "applies_to": date(year - 1, 12, 31)}) for source in sources
+    ]
+    assert _record_design_gaps(modelo_id, off_filing_without_layout, lapsed, year), (
+        "an edition exempt from citing a design must still cite one that applies"
+    )
 
 
 def _record_design_sources_cover(sources: Sequence[SourceReference], evidence_date: date) -> bool:
