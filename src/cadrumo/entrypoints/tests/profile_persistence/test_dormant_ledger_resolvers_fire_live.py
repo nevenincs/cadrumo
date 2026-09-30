@@ -273,10 +273,21 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     assert set(result.revision.source_transaction_ids) >= {tx.transaction_id for tx in transactions}
 
 
-def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_calculate(
+def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_live_calculate(
     m130_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """E2E: net-paid professional invoice fills M130 casilla 06 without caller input."""
+    """E2E: a net-paid receipt leaves casilla 06 empty and names the amount it withheld.
+
+    The receipt arrives 300 short of the invoice gross, so a retención can be
+    reconstructed from the shortfall. A reconstruction is not the recorded figure
+    the credit against the cuota rests on, so casilla 06 stays empty and the
+    excluded amount is reported instead: the operator records the retención on
+    the invoice, or obtains the payer's certificate, and recalculates.
+
+    Both halves are asserted here because either alone would be wrong. A silent
+    zero would under-claim by 300 with nothing said; a filled casilla would claim
+    a figure no document states.
+    """
     wu_repo = WorkUnitCatalogueRepository(objects=m130_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m130_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
@@ -373,7 +384,16 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
         )
 
     assert Decimal(result.revision.casilla_values[_M130_INGRESOS_CASILLA]) == Decimal("2000.00")
-    assert Decimal(result.revision.casilla_values[_M130_RETENCIONES_CASILLA]) == Decimal("300.00")
+    assert Decimal(result.revision.casilla_values[_M130_RETENCIONES_CASILLA]) == Decimal("0")
+
+    excluded = [
+        diagnostic
+        for diagnostic in result.source_diagnostics
+        if diagnostic.reason == "inferred_retencion_excluded_from_credit"
+    ]
+    assert len(excluded) == 1
+    assert "300.00" in excluded[0].message
+    assert tx.transaction_id in excluded[0].message
     assert set(result.revision.source_transaction_ids) >= {tx.transaction_id}
 
 

@@ -1179,6 +1179,13 @@ application:
       m210_official_tipo_renta_selection_mismatch: El codi oficial de tipus de renda
         %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta};
         s'ha rebut %{tipo_renta}.
+      m303_filing_evidence_exonerado_390_missing: 'L''evidència de la instància de
+        declaració del model 303 no ha superat la validació: el període %{period}
+        de l''exercici %{filing_year} és l''últim període de liquidació de l''any
+        i requereix l''atestació d''aplicabilitat del model 390. Executeu `aeat app
+        modelo work attest-m303-exonerado-390 --year %{filing_year} --period %{period}
+        --observed-at MARCA_TEMPORAL` per registrar-la i després torneu a intentar
+        el càlcul.'
       m303_filing_evidence_invalid: L'evidència de la instància de declaració del
         model 303 no ha superat la validació.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}

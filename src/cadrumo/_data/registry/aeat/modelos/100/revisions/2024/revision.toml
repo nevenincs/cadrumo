@@ -2372,7 +2372,7 @@ fields = {  source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-inpu
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0597" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:913 y aeat-dr-100-2024-dictionary:933: RET2, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET2, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", alternate_bindings = ["renta-modelo-193-retenciones-anuales"], legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-101", "rd-439-2007:art-90", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:913 y aeat-dr-100-2024-dictionary:933: RET2, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/RetencionesRes/RET2, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones.", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-101", "rd-439-2007:art-90", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"] }
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0598" }
@@ -8256,18 +8256,6 @@ sequence_order = {target_casillas = [5, 6, 7, 0, 8, 1, 2, 9, 10, 11, 12, 13, 14,
 
 [[revisions."2024".family_overrides]]
 family = "dependency_classifications"
-selector = {revision = "2023", id = "renta-dep-111"}
-sequence_additions = {source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_refs = [0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "dependency_classifications"
-selector = {revision = "2023", id = "renta-dep-123"}
-sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_refs = [0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "dependency_classifications"
 selector = {revision = "2023", id = "renta-dep-130"}
 sequence_additions = {source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {source_refs = [0, 1]}
@@ -8282,9 +8270,9 @@ sequence_order = {legal_refs = [4, 5, 6, 0, 1, 2, 3]}
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "renta-dependent-modelos"}
-sequence_additions = {bindings = ["renta-modelo-131-rendimiento-neto-modulos", "renta-modelo-193-retenciones-anuales"], casilla_ids = ["1481"], dependency_classifications = ["renta-dep-193"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-56-2024:art-1", "orden-eha-3377-2011:art-1"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]}
+sequence_additions = {bindings = ["renta-modelo-131-rendimiento-neto-modulos"], casilla_ids = ["1481"], legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {formulas = [1], source_refs = [0, 1, 2, 3, 4]}
-sequence_order = {legal_refs = [7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 12, 13, 5, 6]}
+sequence_order = {legal_refs = [5, 6, 7, 8, 9, 0, 1, 2, 10, 3, 4]}
 
 [[revisions."2024".family_overrides]]
 family = "constructs"
@@ -8605,19 +8593,6 @@ selector = {revision = "2023", id = "renta-modelo-100-estimacion-directa-es-norm
 sequence_additions = {source_refs = ["aeat-dr-100-2024-dictionary"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "renta-modelo-111-retenciones-periodicas"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Modelo 100", "ejercicio 2024"]}], source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-
-[[revisions."2024".family_overrides]]
-family = "bindings"
-selector = {revision = "2023", id = "renta-modelo-123-retenciones-periodicas"}
-fields = {provider = {source_casilla_id = "09"}}
-sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Modelo 100", "ejercicio 2024"]}], source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2024".family_overrides]]
 family = "bindings"
@@ -9374,13 +9349,8 @@ position = 0
 
 [[revisions."2024".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-193"
-position = 3
-
-[[revisions."2024".family_positions]]
-family = "dependency_classifications"
 id = "renta-dep-131"
-position = 4
+position = 1
 
 [[revisions."2024".family_positions]]
 family = "parameters"
@@ -9464,285 +9434,280 @@ position = 1
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "renta-modelo-193-retenciones-anuales"
-position = 4
-
-[[revisions."2024".family_positions]]
-family = "bindings"
 id = "renta-profile-taxpayer-birth-date"
-position = 5
+position = 2
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-declaration-type"
-position = 6
+position = 3
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-family-minor-children-in-unit"
-position = 7
+position = 4
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-modelo-131-pagos-fraccionados"
-position = 8
+position = 5
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-modelo-131-rendimiento-neto-modulos"
-position = 10
+position = 7
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-descendientes-count"
-position = 11
+position = 8
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-marriage-full-year"
-position = 12
+position = 9
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-marriage-month-start"
-position = 13
+position = 10
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-marriage-month-end"
-position = 14
+position = 11
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-guarderia-gastos-reales"
-position = 15
+position = 12
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-cotizaciones-ss-madre"
-position = 16
+position = 13
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-descendientes-guarderia"
-position = 17
+position = 14
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-base-liquidable-negativa-general-anterior"
-position = 18
+position = 15
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-income-0171"
-position = 19
+position = 16
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0186-deductible"
-position = 20
+position = 17
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0192-deductible"
-position = 21
+position = 18
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0199-deductible"
-position = 22
+position = 19
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0203-deductible"
-position = 23
+position = 20
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-certificado-trabajo-retenciones"
-position = 24
+position = 21
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-tax-id"
-position = 25
+position = 22
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-display-name"
-position = 26
+position = 23
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-taxpayer-sex"
-position = 27
+position = 24
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-marital-status"
-position = 28
+position = 25
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-tax-id"
-position = 29
+position = 26
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-display-name"
-position = 30
+position = 27
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-birth-date"
-position = 31
+position = 28
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-sex"
-position = 32
+position = 29
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-taxpayer-disability-grade"
-position = 33
+position = 30
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-taxpayer-death-date"
-position = 34
+position = 31
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-disability-grade"
-position = 35
+position = 32
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-non-resident-irpf"
-position = 36
+position = 33
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-eu-eea-resident"
-position = 37
+position = 34
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-spouse-eu-eea-country"
-position = 38
+position = 35
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-profile-family-descendants-eu-eea-deduction"
-position = 39
+position = 36
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-descendant-tax-id"
-position = 40
+position = 37
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-rental-reduccion-art-23-2-tier"
-position = 41
+position = 38
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-descendant-display-name"
-position = 42
+position = 39
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-descendant-birth-date"
-position = 43
+position = 40
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-descendant-disability-grade"
-position = 44
+position = 41
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-descendant-death-date"
-position = 45
+position = 42
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-tax-id"
-position = 46
+position = 43
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-display-name"
-position = 47
+position = 44
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-birth-date"
-position = 48
+position = 45
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-disability-grade"
-position = 49
+position = 46
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-cohabiting-descendant-count"
-position = 50
+position = 47
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-family-ascendant-death-date"
-position = 51
+position = 48
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0183-deductible"
-position = 54
+position = 51
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0191-deductible"
-position = 55
+position = 52
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0193-deductible"
-position = 56
+position = 53
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0194-deductible"
-position = 57
+position = 54
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0195-deductible"
-position = 58
+position = 55
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0200-deductible"
-position = 59
+position = 56
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0202-deductible"
-position = 60
+position = 57
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0206-deductible"
-position = 61
+position = 58
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0208-deductible"
-position = 62
+position = 59
 
 [[revisions."2024".family_positions]]
 family = "bindings"
 id = "renta-ledger-expense-0217-deductible"
-position = 63
+position = 60

@@ -50,9 +50,6 @@ def _calculate(
         date_context={"filing_period": _FILING_DATE},
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
@@ -69,9 +66,6 @@ def _calculate(
         },
         enum_binding_values=enum_bindings,
         relation_values={
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },

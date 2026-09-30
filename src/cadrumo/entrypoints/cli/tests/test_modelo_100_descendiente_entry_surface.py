@@ -58,9 +58,6 @@ _ESTATAL_CASILLA_ID = "0513"
 # descendiente facts; overriding it here would make the assertions tautological.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
-    "--binding", "renta-modelo-111-retenciones-periodicas=0",
-    "--binding", "renta-modelo-123-retenciones-periodicas=0",
-    "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
     "--binding", "renta-profile-guarderia-gastos-reales=0",

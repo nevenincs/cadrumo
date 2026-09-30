@@ -105,6 +105,13 @@ def resolve_profile_text_casilla_inputs(
     ``required_when_profile_key`` whose precondition does not hold contributes
     nothing and is not a gap, because the slot does not exist for this filer.
 
+    A text answer made only of digits -- a marital-status or declaration-type
+    code -- is stored by the profile as a number, and is spelled here as the
+    canonical decimal token, the spelling the bound-value channel gives the same
+    casilla. A gap is reported only when the profile declares none of the
+    binding's facts; a declared fact with no text spelling (a date) is not a
+    missing declaration, and the filing validator still reports the casilla.
+
     Args:
         revision: The :class:`ModeloRevision` whose bound casillas are resolved.
         fact_index: The declarant's profile fact index.
@@ -129,13 +136,11 @@ def resolve_profile_text_casilla_inputs(
         )
         if not profile_bindings:
             continue
-        value = next(
-            (text for binding in profile_bindings if (text := _profile_text_value(binding, fact_index)) is not None),
-            None,
-        )
+        declared = tuple(_profile_export_value(binding, fact_index) for binding in profile_bindings)
+        value = next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
         if value is not None:
             values[casilla.id] = value
-        elif casilla.required:
+        elif casilla.required and all(_profile_fact_is_blank(fact) for fact in declared):
             primary = profile_bindings[0]
             gaps.append(
                 ProfileTextCasillaGap(
@@ -147,11 +152,8 @@ def resolve_profile_text_casilla_inputs(
     return ProfileTextCasillaInputs(values=values, gaps=tuple(gaps))
 
 
-def _profile_text_value(
-    binding: BindingDefinition,
-    fact_index: Mapping[str, UserProfileFactValue],
-) -> str | None:
-    """Return one text-channel binding's value as text, or ``None`` when the profile has none.
+def _profile_text_spelling(value: UserProfileFactValue) -> str | None:
+    """Return a text-channel profile fact's spelling, or ``None`` when it has no text form.
 
     A text fact whose characters form a plain decimal, such as the ``"1"`` of an
     individual ``renta_filing.declaration_type``, comes back from the stored
@@ -160,12 +162,16 @@ def _profile_text_value(
     exactly the characters that restore accepted, so the casilla holds what the
     operator declared instead of being reported as unsupplied.
     """
-    value = _profile_export_value(binding, fact_index)
     if isinstance(value, str):
         return value.strip() or None
     if isinstance(value, Decimal) or (isinstance(value, int) and not isinstance(value, bool)):
         return str(value)
     return None
+
+
+def _profile_fact_is_blank(value: UserProfileFactValue) -> bool:
+    """Whether the profile leaves a binding's fact undeclared."""
+    return value is None or (isinstance(value, str) and not value.strip())
 
 
 def _profile_value_fields(binding: BindingDefinition) -> tuple[str, ...]:
@@ -184,14 +190,15 @@ def profile_text_casilla_gap_diagnostics(
     """Advise on each required profile-bound text casilla the profile leaves empty.
 
     The casilla stays absent in the calculation; this is what tells the operator
-    which profile fact would fill it. A casilla the operator supplied as text in
-    this calculation is not a gap, because the operator's value is what the
-    calculation holds for it.
+    which profile fact would fill it. A casilla the calculation holds a value
+    for through any other channel -- the operator's own text, or a bound value
+    -- is not a gap, because that value is what the calculation files for it.
 
     Args:
         revision: The calculated :class:`ModeloRevision`.
         fact_index: The declarant's profile fact index.
-        supplied_casilla_ids: Casillas the operator supplied directly.
+        supplied_casilla_ids: Casillas the calculated revision holds an input
+            value for, whichever channel supplied it.
 
     Returns:
         One ``unresolved_binding`` advisory per empty required casilla, carrying
@@ -217,7 +224,9 @@ def profile_text_casilla_gap_diagnostics(
                     f"{gap.binding_id!r}, and the active profile declares none of {fields}; the casilla "
                     "stays empty rather than holding a placeholder"
                 ),
-                remedy=f"Declare {fields} on the profile with `aeat config profile edit`.",
+                # Non-command prose: the remedy is projected into notice context,
+                # which reserves executable command identity for Notice.action.
+                remedy=f"Declare {fields} on the active profile, then recalculate",
                 legal_refs=tuple(dict.fromkeys((*casilla.legal_refs, *binding.legal_refs))),
                 source_refs=tuple(dict.fromkeys((*casilla.source_refs, *binding.source_refs))),
             ),

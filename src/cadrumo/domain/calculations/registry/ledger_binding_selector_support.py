@@ -25,14 +25,22 @@ class LedgerIncomeFact(StrEnum):
     INGRESOS_INTEGROS_SUM = "ingresos_integros_sum"
     CASH_RECEIVED_SUM = "cash_received_sum"
     TAXABLE_BASE_SUM = "taxable_base_sum"
-    WITHHELD_AMOUNT_SUM = "withheld_amount_sum"
+    DECLARED_WITHHELD_AMOUNT_SUM = "declared_withheld_amount_sum"
+    """Totals only the retención a linked sales invoice itself declares.
+
+    A ledger row never records a retención, so every other figure on that
+    surface is reconstructed from invoice gross minus cash received. A
+    reconstruction is not a recorded fact, and a credit against the cuota rests
+    on one, so this fact reads the declared figure alone. The rows it leaves out
+    stay visible through their derivation marker rather than becoming zeroes.
+    """
 
 
 LedgerIncomeFactValue = Literal[
     LedgerIncomeFact.INGRESOS_INTEGROS_SUM,
     LedgerIncomeFact.CASH_RECEIVED_SUM,
     LedgerIncomeFact.TAXABLE_BASE_SUM,
-    LedgerIncomeFact.WITHHELD_AMOUNT_SUM,
+    LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM,
 ]
 """Every income fact, for a selector that can total any of them."""
 

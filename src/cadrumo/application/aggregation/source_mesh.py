@@ -204,6 +204,23 @@ CalculationSourceDiagnosticReason = Literal[
     # an automated operator routes on the field; the two carry different
     # epistemic weight and must not be collapsed.
     "inferred_retencion_sectoral_rate_unconfirmed",
+    # An ISSUED-side retención the ledger INFERRED, kept OUT of the credit the
+    # declaration claims. Distinct from the two rate reasons above, which judge
+    # whether an inferred figure is plausible: this one reports that a figure was
+    # excluded whatever its rate, because the credit takes only the retención a
+    # linked invoice declares. The operator can convert each row by recording the
+    # retención on its invoice, so the amount is reported alongside the count.
+    "inferred_retencion_excluded_from_credit",
+    # An ISSUED-side retención that is UNKNOWN rather than absent: no substrate
+    # determines one, or the implied rate exceeded the maximum the registry
+    # supports and the figure was refused. Reporting it as a zero would assert a
+    # proven nothing-withheld, so it keeps a reason of its own.
+    "unresolved_retencion_substrate",
+    # The grade the issued-invoice retención credit carries. Which ejercicio
+    # credits a retención when the payment and the accrual fall in different
+    # years is not yet grounded, so the figure is advisory and no consumer may
+    # promote it to a filing-grade claim on its own.
+    "advisory_retencion_credit_grade",
     # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
     # because the record stated no operation type. Correct for an ordinary LIVA
     # art. 25 exempt supply, but a supply following an exempt importation (art.

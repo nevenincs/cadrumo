@@ -1178,6 +1178,12 @@ application:
       m210_official_tipo_renta_selection_mismatch: El código oficial de tipo de renta
         %{official_tipo_renta_code} del Modelo 210 requiere el valor de fórmula %{expected_tipo_renta};
         se recibió %{tipo_renta}.
+      m303_filing_evidence_exonerado_390_missing: 'La evidencia de la instancia de
+        declaración del modelo 303 no superó la validación: el período %{period} del
+        ejercicio %{filing_year} es el último período de liquidación del año y requiere
+        la atestación de aplicabilidad del modelo 390. Ejecute `aeat app modelo work
+        attest-m303-exonerado-390 --year %{filing_year} --period %{period} --observed-at
+        MARCA_DE_TIEMPO` para registrarla y luego reintente el cálculo.'
       m303_filing_evidence_invalid: La evidencia de la instancia de declaración del
         modelo 303 no superó la validación.
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
