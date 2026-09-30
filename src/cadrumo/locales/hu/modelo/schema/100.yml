@@ -18069,6 +18069,9 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg - lásd az [1554] rovatot)
+            trabajo-mar-renta-exenta:
+              label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
+                vagy 19/1994. törvény) [belső]
           construct:
             renta-dependent-modelos:
               field:

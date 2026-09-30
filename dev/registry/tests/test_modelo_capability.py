@@ -133,14 +133,32 @@ def test_a_filing_grade_revision_with_a_tree_is_not_reported(authority: Validate
 def test_a_revision_that_files_without_a_deadline_is_reported(authority: ValidatedRegistryAuthority) -> None:
     """Claiming a filing without saying when it is due is caught.
 
-    Modelo 151's earlier revision reaches filing grade with a layout and declares
-    no deadline window. A filer asks two things of a modelo - what to send and by
-    when - and this revision answers only the first.
+    A filer asks two things of a modelo - what to send and by when - and a
+    revision that reaches filing grade with a layout but declares no deadline
+    window answers only the first. Constructed rather than taken from the
+    corpus: the revision is one that files here and does declare its windows,
+    with those windows withdrawn. A real gap as the example is closed the day
+    its windows are authored, and the condition would then be gated by a screen
+    that no longer meets it.
     """
-    findings = [item for item in screen_authority(authority, ("151",)) if item.kind == "files_here_without_deadline"]
+    kind = "files_here_without_deadline"
+    definition = authority.modelo("303")
+    dated = [row for row in capability_census(authority, ("303",)) if row.files_here and row.deadline_windows]
+    assert dated, "no revision of 303 files here with a deadline window, so there is nothing to withdraw"
+    revision_id = next(key for key in definition.revisions if str(key) == dated[0].revision)
+    before = {item.revision for item in screen_authority(authority, ("303",)) if item.kind == kind}
+    assert str(revision_id) not in before, "the revision is reported before its windows are withdrawn"
 
-    assert [item.revision for item in findings] == ["2015-2022"]
-    assert "when the filing is due" in findings[0].detail
+    stripped = definition.revisions[revision_id].model_copy(update={"deadline_windows": ()})
+    patched = definition.model_copy(update={"revisions": {**definition.revisions, revision_id: stripped}})
+    after = {
+        item.revision: item
+        for item in screen_authority(_SingleModeloAuthority(patched), ("303",))
+        if item.kind == kind
+    }
+
+    assert set(after) == before | {str(revision_id)}
+    assert "when the filing is due" in after[str(revision_id)].detail
 
 
 def test_a_non_filing_revision_without_a_deadline_is_not_reported(authority: ValidatedRegistryAuthority) -> None:

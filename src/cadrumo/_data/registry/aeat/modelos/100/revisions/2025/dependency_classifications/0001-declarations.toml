@@ -1,10 +1,9 @@
 [[revisions."2025".dependency_classifications]]
 id = "renta-dep-184"
 source_modelo = "184"
-treatment = "direct_annual_settlement"
+treatment = "factual_evidence"
 taxpayer_files_source = false
 target_constructs = ["renta-dependent-modelos", "renta-economic-activities"]
-binding_refs = ["renta-modelo-184-atribucion-actividades-economicas"]
 legal_refs = [
     "ley-35-2006:art-86",
     "ley-35-2006:art-87",

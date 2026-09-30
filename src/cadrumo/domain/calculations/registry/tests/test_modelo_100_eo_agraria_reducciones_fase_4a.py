@@ -120,7 +120,6 @@ def _neutral_binding_values() -> dict[str, Decimal]:
         # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),

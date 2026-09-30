@@ -814,7 +814,8 @@ _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, ...], int] 
     ("toma_datos_ampliada", "gp_reinversion"): 1,
     ("toma_datos_ampliada", "inmuebles"): 128,
     ("toma_datos_ampliada", "rdto_capital_mobiliario"): 3,
-    ("toma_datos_ampliada", "rdto_trabajo"): 7,
+    # Seven printed work-income boxes plus the internal maritime-exemption node.
+    ("toma_datos_ampliada", "rdto_trabajo"): 8,
     ("toma_datos_ampliada", "red_base_imponible"): 25,
     ("toma_datos_ampliada", "reg_estima_directa"): 5,
     ("toma_datos_ampliada", "reg_estima_obj"): 39,

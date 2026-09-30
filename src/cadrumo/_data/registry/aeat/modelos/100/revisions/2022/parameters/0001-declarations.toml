@@ -2069,3 +2069,177 @@ required_text = [
 value = "1000"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+# Minimo del contribuyente for the gravamen autonomico of each comunidad that approved its own
+# amounts for 2022 (Ley 22/2009 art. 46.1.a), as its law sets them and the 2022 manual lists them
+# (parte 1, cap. 14, pp. 936-944). Andalucia (Decreto-ley 7/2022, disp. final 2.a), Galicia
+# (Ley 7/2022, disp. final 4.a) and Madrid (Ley 8/2022) give them effect for the whole of 2022.
+# The Comunitat Valenciana adds them from 28 October 2022 (Decreto-ley 14/2022, art. 3 and
+# disp. final 4.a), so they do not reach a taxpayer whose tax period ended before that date.
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-base-andalucia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["andalucia-ley-5-2021:art-23-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["5.790 euros anuales con carácter general"]
+
+[[revisions."2022".parameters.values]]
+value = "5790"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-andalucia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["andalucia-ley-5-2021:art-23-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.200 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1200"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-75-andalucia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["andalucia-ley-5-2021:art-23-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1460"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-base-galicia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["galicia-dl-1-2011:art-4-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["5.789 euros anuales con carácter general"]
+
+[[revisions."2022".parameters.values]]
+value = "5789"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-galicia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["galicia-dl-1-2011:art-4-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.199 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1199"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-75-galicia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["galicia-dl-1-2011:art-4-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1460"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-base-madrid"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["5.777,55 euros anuales con carácter general"]
+
+[[revisions."2022".parameters.values]]
+value = "5777.55"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-madrid"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.197,15 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1197.15"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-75-madrid"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.457,40 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1457.40"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-base-valenciana"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["valenciana-ley-13-1997:art-2-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["6.105 euros anuales con carácter general", "28 de octubre de 2022"]
+
+[[revisions."2022".parameters.values]]
+value = "6105"
+date_axis = "filing_period"
+valid_from = 2022-10-28
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-valenciana"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["valenciana-ley-13-1997:art-2-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.265 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1265"
+date_axis = "filing_period"
+valid_from = 2022-10-28
+[[revisions."2022".parameters]]
+id = "renta-minimo-contribuyente-edad-75-valenciana"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["valenciana-ley-13-1997:art-2-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2022".parameters.values]]
+value = "1540"
+date_axis = "filing_period"
+valid_from = 2022-10-28

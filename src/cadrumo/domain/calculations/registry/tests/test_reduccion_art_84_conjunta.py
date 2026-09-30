@@ -74,7 +74,6 @@ _PRIOR_EDITION_BINDINGS = {
 
 _REVIEWED_EDITION_BINDINGS = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),

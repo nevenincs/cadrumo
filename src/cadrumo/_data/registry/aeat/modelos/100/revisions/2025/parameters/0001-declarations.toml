@@ -275,9 +275,11 @@ value = "60100"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
-# Principado de Asturias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad),
-# que el manual lista por primera vez para 2025. Importe general; los incrementos por
-# edad de la comunidad siguen como parámetros propios.
+# Principado de Asturias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
+# La Ley del Principado 3/2025 añade el art. 2 bis y entra en vigor el 3 de diciembre de
+# 2025 sin efectos anteriores, por lo que alcanza el devengo del 31 de diciembre de 2025;
+# el manual lo lista por primera vez para 2025. Importe general; los incrementos por edad
+# de la comunidad siguen como parámetros propios.
 
 [[revisions."2025".parameters]]
 id = "renta-minimo-contribuyente-base-asturias"
@@ -292,7 +294,7 @@ required_text = ["6.105 euros anuales con carácter general"]
 [[revisions."2025".parameters.values]]
 value = "6105"
 date_axis = "filing_period"
-valid_from = 2025-01-01
+valid_from = 2025-12-03
 [[revisions."2025".parameters]]
 id = "renta-minimo-contribuyente-edad-65-74-asturias"
 data_type = "money"
@@ -306,7 +308,7 @@ required_text = ["1.265 euros anuales por contribuyente mayor de 65 años"]
 [[revisions."2025".parameters.values]]
 value = "1265"
 date_axis = "filing_period"
-valid_from = 2025-01-01
+valid_from = 2025-12-03
 [[revisions."2025".parameters]]
 id = "renta-minimo-contribuyente-edad-75-asturias"
 data_type = "money"
@@ -320,7 +322,7 @@ required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]
 [[revisions."2025".parameters.values]]
 value = "1540"
 date_axis = "filing_period"
-valid_from = 2025-01-01
+valid_from = 2025-12-03
 # 2025 IRPF activity-asset linear-amortization authority. The coefficient and
 # maximum-period tables are parallel exact-key catalogues: an absent regime,
 # method, or class is unsupported and must never fall back to a nearby row.

@@ -1967,7 +1967,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0512" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:738 y aeat-dr-100-2022-dictionary:787: MPERAU, ruta /DatosEconomicos/Resultados/MinimoPerFamRes/MPERAU, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:738 y aeat-dr-100-2022-dictionary:787: MPERAU, ruta /DatosEconomicos/Resultados/MinimoPerFamRes/MPERAU, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", input_kind = "computed", formula = "renta-minimo-contribuyente-autonomico", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"] }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0513" }
@@ -7608,7 +7608,7 @@ sequence_order = {"expression.args" = [0, 1, 3, 2]}
 [[revisions."2022".family_overrides]]
 family = "constructs"
 selector = {revision = "2021", id = "renta-cuota-chain"}
-sequence_additions = {formulas = ["renta-minimo-contribuyente-estatal", "renta-reduccion-art-84-conjunta", "renta-reduccion-prevision-social-total"], legal_refs = ["ley-35-2006:art-57", "ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84", "ley-35-2006:art-52-2022"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
+sequence_additions = {formulas = ["renta-minimo-contribuyente-estatal", "renta-minimo-contribuyente-autonomico", "renta-reduccion-art-84-conjunta", "renta-reduccion-prevision-social-total"], legal_refs = ["ley-35-2006:art-57", "ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84", "ley-35-2006:art-52-2022", "andalucia-ley-5-2021:art-23-bis", "galicia-dl-1-2011:art-4-bis", "valenciana-ley-13-1997:art-2-bis"], source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
 sequence_removals = {source_refs = [0, 1, 2]}
 sequence_order = {source_refs = [1, 2, 3, 0]}
 [[revisions."2022".family_overrides]]
@@ -7618,7 +7618,7 @@ sequence_additions = {formulas = ["renta-inmuebles-ganancia-reducida-no-exenta",
 [[revisions."2022".family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2021", id = "modelo-100-reconcile-when-present"}
-sequence_additions = {reconcile_when_present_casilla_ids = ["1807", "1809", "1811", "1812", "1813", "1814", "1826", "1830", "1831", "1833", "1836", "1840", "1844", "1845", "1846", "0089", "0461", "0468", "0511", "0587", "0595", "0598", "0610"], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_additions = {reconcile_when_present_casilla_ids = ["1807", "1809", "1811", "1812", "1813", "1814", "1826", "1830", "1831", "1833", "1836", "1840", "1844", "1845", "1846", "0089", "0461", "0468", "0511", "0587", "0595", "0598", "0610", "0512", "0245", "0246", "0247"], source_refs = ["aeat-renta-2022-manual-parte1"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 [[revisions."2022".family_positions]]

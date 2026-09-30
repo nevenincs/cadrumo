@@ -50,6 +50,14 @@ def _registry_target_for(observation) -> str:
     return next(iter(targets))
 
 
+def _files_in_no_box(casilla_id: str) -> bool:
+    """Whether the registry keeps *casilla_id* as an internal node no official record addresses."""
+    with bundled_indexed_authority().operation() as operation:
+        casillas = operation.snapshot("100", filing_year=2025, period="0A").revision.casillas
+    (casilla,) = (casilla for casilla in casillas if casilla.id == casilla_id)
+    return casilla.internal_only
+
+
 class TestResolveMaritimeExemptionArt7p:
     """Art. 7.p) pathway through the application service."""
 
@@ -95,6 +103,15 @@ class TestResolveMaritimeExemptionArt7p:
             qualifying_days=100,
         )
         assert result.observations[0].casilla_id == _registry_target_for(result.observations[0])
+
+    def test_plain_exemption_files_in_no_box(self) -> None:
+        """Art. 7.p) is a plain exemption, never the rate-setting exempt income of casilla 0525."""
+        result = resolve_maritime_exemption(
+            facts=self._FACTS,
+            annual_salary=Decimal("36500"),
+            qualifying_days=100,
+        )
+        assert _files_in_no_box(result.observations[0].casilla_id)
 
     def test_cap_applied_at_60100_eur(self) -> None:
         """Registry-authoritative cap: 60,100 EUR per Ley 35/2006 Art. 7.p)."""
@@ -164,6 +181,14 @@ class TestResolveMaritimeExemptionRebeca:
             gross_navigation_income=Decimal("30000"),
         )
         assert result.observations[0].source_refs == _REBECA_SOURCE_REFS
+
+    def test_plain_exemption_files_in_no_box(self) -> None:
+        """The REBECA exemption is plain, never the rate-setting exempt income of casilla 0525."""
+        result = resolve_maritime_exemption(
+            facts=self._FACTS,
+            gross_navigation_income=Decimal("30000"),
+        )
+        assert _files_in_no_box(result.observations[0].casilla_id)
 
     def test_exempt_amount_is_50_percent(self) -> None:
         """Registry-authoritative fraction: 0.50 per Ley 19/1994 Arts. 73-75."""

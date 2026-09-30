@@ -171,6 +171,7 @@ casilla_ids = [
     "0057",
     "0023",
     "0025",
+    "trabajo-mar-renta-exenta",
 ]
 formulas = [
     "renta-trabajo-especie-importe-integro",
@@ -180,7 +181,7 @@ formulas = [
     "renta-trabajo-rendimiento-neto",
     "renta-trabajo-rendimiento-neto-reducido",
     "renta-trabajo-otros-gastos",
-    "renta-maritime-exempt-income-0525",
+    "renta-maritime-exempt-income",
 ]
 bindings = ["renta-modelo-111-retenciones-periodicas", "renta-modelo-190-retenciones-anuales"]
 dependency_classifications = ["renta-dep-111", "renta-dep-190"]
@@ -337,7 +338,6 @@ bindings = [
     "renta-ledger-expense-0203-deductible",
     "renta-modelo-130-pagos-fraccionados",
     "renta-modelo-131-pagos-fraccionados",
-    "renta-modelo-184-atribucion-actividades-economicas",
 ]
 parameters = [
     "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",

@@ -667,6 +667,20 @@ class TargetCurrentnessFact:
     detail: str = ""
 
 
+def at_edition_grade(
+    prepared: PreparedGeneratedTreeInvocation,
+    grade: RegistryAuthorityGrade,
+) -> PreparedGeneratedTreeInvocation:
+    """Validate a prepared target at the authority grade its edition declares.
+
+    Currentness asks whether the committed tree still reproduces and still
+    loads, not whether the edition can back a filing. A calculation-grade
+    edition never selects at filing grade, so proving its tree at the filing
+    default reports drift for a tree that is exactly current.
+    """
+    return replace(prepared, validation=replace(prepared.validation, required_grade=grade))
+
+
 def target_currentness(
     modelo: str,
     revision: str,
@@ -708,7 +722,10 @@ def target_currentness(
         effective_period,
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-generated-export-currentness-") as temporary_name:
-        prepared = prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority)
+        prepared = at_edition_grade(
+            prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority),
+            selected.effective_authority_grade,
+        )
         if not prepared.target_export_root.exists():
             check_prepared_invocation(prepared)
             return TargetCurrentnessFact(
@@ -888,6 +905,7 @@ __all__ = [
     "TargetCurrentnessFact",
     "TargetCurrentnessState",
     "app",
+    "at_edition_grade",
     "stage_isolated_edition",
     "supporting_modelos",
     "target_currentness",

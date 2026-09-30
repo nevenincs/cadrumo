@@ -1254,3 +1254,24 @@ semantic_role_cardinality_reason = "2025-only EO-agraria art. 32.1 irregularidad
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32"], source_refs = ["aeat-renta-2025-manual-parte1"] }
 legal_refs = ["ley-35-2006:art-32"]
 source_refs = ["aeat-renta-2025-manual-parte1"]
+# Exempt employment income of a trabajador del mar: the art. 7.p) LIRPF
+# pathway (work abroad, capped annually) or the REBECA pathway (Ley 19/1994
+# arts. 73 and 75, a fraction of the navigation income). Both are plain
+# exemptions. They are not rentas exentas con progresividad (DA 20ª LIRPF),
+# which is what box 0525 carries: the 2025 input dictionary files 0525 under
+# "Rentas exentas, excepto para determinar el tipo de gravamen"
+# (aeat-dr-100-2025-input-dictionary:1279) and the 2025 manual, cap. 15,
+# defines that class as treaty income that still sets the rate. No AEAT box
+# carries the maritime amount, so it is an internal node and files nowhere.
+[[revisions."2025".casillas]]
+id = "trabajo-mar-renta-exenta"
+number = "trabajo-mar-renta-exenta"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_trabajo_mar_renta_exenta"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only internal carrier of the maritime-worker exemption (art. 7.p LIRPF or REBECA); AEAT's record design has no box for it and no sibling revision models it."
+input_kind = "computed"
+formula = "renta-maritime-exempt-income"
+internal_only = true
+legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]

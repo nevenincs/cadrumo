@@ -120,7 +120,6 @@ _BASE_BINDINGS = {
     # These scenarios are salaried couples (trabajo income only, per the
     # module docstring), not economic-activity filers.
     "renta-profile-has-economic-activity": Decimal("0"),
-    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # declaration_type is intentionally absent — compare_taxation_modes injects it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("1"),  # married full year

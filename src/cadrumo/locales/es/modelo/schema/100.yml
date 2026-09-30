@@ -18199,6 +18199,9 @@ modelo:
                 en este único período impositivo (base sobre la que se aplica la reducción
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
                 por el operador - véase la casilla [1554])
+            trabajo-mar-renta-exenta:
+              label: Rendimientos del trabajo exentos de los trabajadores del mar
+                (art. 7.p) LIRPF o Ley 19/1994) [interno]
           construct:
             renta-dependent-modelos:
               field:

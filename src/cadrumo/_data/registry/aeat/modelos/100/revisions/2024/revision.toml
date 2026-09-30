@@ -2032,7 +2032,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0512" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:799 y aeat-dr-100-2024-dictionary:814: MPERAU, ruta /DatosEconomicos/Resultados/MinimoPerFamRes/MPERAU, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", input_kind = "computed", formula = "renta-minimo-contribuyente-autonomico", source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:799 y aeat-dr-100-2024-dictionary:814: MPERAU, ruta /DatosEconomicos/Resultados/MinimoPerFamRes/MPERAU, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"] }
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0513" }
@@ -8711,9 +8711,9 @@ restate_identity = true
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "renta-cuota-chain"}
-sequence_additions = {formulas = ["renta-minimo-contribuyente-autonomico", "renta-importe-derecho-reduccion-pension-suma"], legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-26", "ley-35-2006:art-66", "ley-35-2006:art-76", "orden-hac-277-2026:art-3", "rd-439-2007:art-109", "andalucia-ley-5-2021:art-23-bis", "canarias-dl-1-2009:art-18-quater", "galicia-dl-1-2011:art-4-bis", "valenciana-ley-13-1997:art-2-bis"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
+sequence_additions = {formulas = ["renta-importe-derecho-reduccion-pension-suma"], legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-26", "ley-35-2006:art-66", "ley-35-2006:art-76", "orden-hac-277-2026:art-3", "rd-439-2007:art-109", "canarias-dl-1-2009:art-18-quater"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {legal_refs = [16, 22], source_refs = [0, 1, 2]}
-sequence_order = {formulas = [32, 35, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 33, 36, 34, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], legal_refs = [0, 29, 30, 31, 1, 32, 33, 2, 34, 3, 4, 5, 6, 7, 8, 9, 28, 25, 26, 27, 10, 24, 11, 12, 13, 14, 15, 35, 16, 17, 18, 19, 20, 36, 21, 22, 37, 38, 23, 39, 40, 41, 42], source_refs = [1, 2, 3, 0]}
+sequence_order = {formulas = [32, 33, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 34, 36, 35, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], legal_refs = [0, 32, 33, 34, 1, 35, 36, 2, 37, 3, 4, 5, 6, 7, 8, 9, 28, 25, 26, 27, 10, 24, 11, 12, 13, 14, 15, 38, 16, 17, 18, 19, 20, 39, 21, 22, 40, 41, 23, 29, 42, 30, 31], source_refs = [1, 2, 3, 0]}
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "renta-mini-model-capital-inmobiliario"}
@@ -8724,9 +8724,9 @@ sequence_order = {formulas = [0, 1, 2, 3, 16, 15, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
 family = "verification_expectations"
 selector = {revision = "2023", id = "modelo-100-reconcile-when-present"}
 fields = {externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0180", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0513", "0514", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]}
-sequence_additions = {legal_refs = ["ley-35-2006:art-66", "ley-35-2006:art-76"], reconcile_when_present_casilla_ids = ["0150", "0245", "0246", "0247", "0512", "0519", "0520", "0532", "0533", "0545", "0546", "0613", "0611"], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_additions = {legal_refs = ["ley-35-2006:art-66", "ley-35-2006:art-76"], reconcile_when_present_casilla_ids = ["0150", "0519", "0520", "0532", "0533", "0545", "0546", "0613"], source_refs = ["aeat-renta-2024-manual-parte1"]}
 sequence_removals = {legal_refs = [2, 7], source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 8, 6], reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 153, 15, 162, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 163, 164, 165, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 154, 69, 155, 70, 156, 166, 71, 72, 167, 168, 73, 74, 75, 76, 77, 169, 170, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 171, 172, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 157, 158, 159, 99, 100, 160, 173, 161, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 174], source_refs = [1, 0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 8, 6], reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 153, 15, 167, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 163, 164, 165, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 154, 69, 155, 70, 156, 162, 71, 72, 168, 169, 73, 74, 75, 76, 77, 170, 171, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 172, 173, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 157, 158, 159, 99, 100, 160, 174, 161, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 166], source_refs = [1, 0]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-cuota-diferencial"}
@@ -9801,3 +9801,82 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 family = "bindings"
 id = "renta-profile-deduccion-maternidad"
 position = 65
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-base-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["5.790 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-65-74-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.200 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-75-andalucia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-base-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["5.789 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-65-74-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.199 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-75-galicia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.460 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-base-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["5.956,65 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-65-74-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.234,26 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-75-madrid"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.502,58 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-base-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["6.105 euros anuales con carácter general"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-65-74-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.265 euros anuales por contribuyente mayor de 65 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-edad-75-valenciana"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2023", id = "renta-minimo-contribuyente-autonomico"}
+sequence_additions = {"expression.args" = [{op = "lookup_parameter_by_entity_type", args = [{literal = "0"}, {binding = "renta-profile-tax-residence-ccaa"}, {dispatch_table_entries = [{key = "andalucia", parameter = "renta-minimo-contribuyente-base-andalucia"}, {key = "aragon", parameter = "renta-minimo-contribuyente-base"}, {key = "asturias", parameter = "renta-minimo-contribuyente-base"}, {key = "baleares", parameter = "renta-minimo-contribuyente-base"}, {key = "canarias", parameter = "renta-minimo-contribuyente-base-canarias"}, {key = "cantabria", parameter = "renta-minimo-contribuyente-base"}, {key = "castilla_la_mancha", parameter = "renta-minimo-contribuyente-base"}, {key = "castilla_y_leon", parameter = "renta-minimo-contribuyente-base"}, {key = "cataluna", parameter = "renta-minimo-contribuyente-base"}, {key = "comunidad_valenciana", parameter = "renta-minimo-contribuyente-base-valenciana"}, {key = "extremadura", parameter = "renta-minimo-contribuyente-base"}, {key = "galicia", parameter = "renta-minimo-contribuyente-base-galicia"}, {key = "la_rioja", parameter = "renta-minimo-contribuyente-base"}, {key = "madrid", parameter = "renta-minimo-contribuyente-base-madrid"}, {key = "murcia", parameter = "renta-minimo-contribuyente-base"}]}]}, {op = "if_then_else", args = [{op = "greater_equal", args = [{op = "age_at_year_end", args = [{date_binding = "renta-profile-taxpayer-birth-date"}]}, {literal = "65"}]}, {op = "sum", args = [{op = "lookup_parameter_by_entity_type", args = [{literal = "0"}, {binding = "renta-profile-tax-residence-ccaa"}, {dispatch_table_entries = [{key = "andalucia", parameter = "renta-minimo-contribuyente-edad-65-74-andalucia"}, {key = "aragon", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "asturias", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "baleares", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "canarias", parameter = "renta-minimo-contribuyente-edad-65-74-canarias"}, {key = "cantabria", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "castilla_la_mancha", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "castilla_y_leon", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "cataluna", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "comunidad_valenciana", parameter = "renta-minimo-contribuyente-edad-65-74-valenciana"}, {key = "extremadura", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "galicia", parameter = "renta-minimo-contribuyente-edad-65-74-galicia"}, {key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-65-74"}, {key = "madrid", parameter = "renta-minimo-contribuyente-edad-65-74-madrid"}, {key = "murcia", parameter = "renta-minimo-contribuyente-edad-65-74"}]}]}, {op = "if_then_else", args = [{op = "greater_equal", args = [{op = "age_at_year_end", args = [{date_binding = "renta-profile-taxpayer-birth-date"}]}, {literal = "75"}]}, {op = "lookup_parameter_by_entity_type", args = [{literal = "0"}, {binding = "renta-profile-tax-residence-ccaa"}, {dispatch_table_entries = [{key = "andalucia", parameter = "renta-minimo-contribuyente-edad-75-andalucia"}, {key = "aragon", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "asturias", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "baleares", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "canarias", parameter = "renta-minimo-contribuyente-edad-75-canarias"}, {key = "cantabria", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "castilla_la_mancha", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "castilla_y_leon", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "cataluna", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "comunidad_valenciana", parameter = "renta-minimo-contribuyente-edad-75-valenciana"}, {key = "extremadura", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "galicia", parameter = "renta-minimo-contribuyente-edad-75-galicia"}, {key = "la_rioja", parameter = "renta-minimo-contribuyente-edad-75"}, {key = "madrid", parameter = "renta-minimo-contribuyente-edad-75-madrid"}, {key = "murcia", parameter = "renta-minimo-contribuyente-edad-75"}]}]}, {literal = "0"}]}]}, {literal = "0"}]}], legal_refs = ["canarias-dl-1-2009:art-18-quater"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Mínimo del contribuyente"]}], source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 7, 4, 5, 6]}
