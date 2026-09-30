@@ -13,17 +13,21 @@ its kind of value cannot be changed here, which its own panel explains.
 
 The dialog covers the header, so it can repeat the header's result line as its
 first line.
+
+The tick reads "[ ]" until the filer ticks it and "[✓]" once they have, so an
+unticked box never looks ticked, in colour or without it.
 """
 
 from __future__ import annotations
 
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from rich.table import Table
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
@@ -41,6 +45,17 @@ from .dialog_width import fit_dialog_width
 
 _LEFT_OUT_SOURCED_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
 _LEFT_OUT_NOT_CHANGEABLE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
+_UNTICKED: Final[str] = "[ ]"
+_TICKED: Final[str] = "[✓]"
+
+
+class TickBox(Checkbox):
+    """A checkbox that reads as ticked only once it is: "[ ]", then "[✓]"."""
+
+    @property
+    @override
+    def _button(self) -> Content:
+        return Content.styled(_TICKED if self.value else _UNTICKED, self.get_visual_style("toggle--button"))
 
 
 def left_out_notes(fields: tuple[ModeloFormField, ...]) -> tuple[str, ...]:
@@ -121,6 +136,12 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         BulkConfirmScreen #bulk-tick {
             margin-top: $cadrumo-stack;
         }
+        BulkConfirmScreen #bulk-tick > .toggle--button {
+            color: $foreground;
+        }
+        BulkConfirmScreen #bulk-tick.-on > .toggle--button {
+            color: $text-success;
+        }
         BulkConfirmScreen #bulk-actions {
             height: auto;
             margin-top: $cadrumo-stack;
@@ -175,7 +196,7 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
                 yield Static(confirmation_table(self._fields, self._language), id="bulk-table")
                 if self._left_out:
                     yield Static("\n".join(self._left_out), id="bulk-left-out", markup=False)
-            yield Checkbox(
+            yield TickBox(
                 tr("tui.modelo.workbench.bulk_confirm.tick"),
                 id="bulk-tick",
                 compact=True,
@@ -212,4 +233,4 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         self.dismiss(None)
 
 
-__all__ = ["BulkConfirmScreen", "confirmation_table", "left_out_notes"]
+__all__ = ["BulkConfirmScreen", "TickBox", "confirmation_table", "left_out_notes"]

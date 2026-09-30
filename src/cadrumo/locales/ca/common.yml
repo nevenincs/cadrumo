@@ -2163,6 +2163,8 @@ tui:
         save_next: Deixar i passar a la següent
         unreadable: No s'ha pogut llegir aquest valor.
       export:
+        confirm_first: 'Confirma els valors suposats abans de generar el fitxer o
+          registrar la presentació (per confirmar: {count}) [n].'
         title: Exporta la declaració
         verify_first: Verifica la declaració abans d'exportar-la [F8].
       filed:
@@ -2473,7 +2475,8 @@ tui:
       rebase:
         changed: 'Caselles que ara mostren un altre valor: {count}.'
         dropped: 'Canvis que ja no s''apliquen i s''han tret: {count}.'
-        moved: La declaració ha canviat des que vas preparar els teus canvis.
+        moved: La declaració ha canviat des que vas escriure canvis que encara no
+          has aplicat.
         still_moving: La declaració continua canviant. Espera un moment i torna a
           revisar els teus canvis [R].
       repeating: 'Files de detall: {count}'
@@ -2499,7 +2502,7 @@ tui:
         and_more: '{shown} i {count} més'
         apply: Aplica i recalcula
         back: Torna a editar
-        before_changed: la casella ha canviat des que vas preparar això
+        before_changed: la casella ha canviat des que vas escriure això
         blocked: Resol el que està marcat amb ▲ abans d'aplicar.
         change_line: '{box}{concept}: {before} passa a {after} ({effect})'
         check_failed: No s'han pogut comprovar els teus canvis. Continuen aquí; torna-ho
@@ -2548,8 +2551,9 @@ tui:
           escriure. En aplicar només es conserven els canvis d'aquesta llista. Qualsevol
           altre valor escrit fora d'aquesta pantalla pren el valor que li donin el
           seu origen o el model, o queda buit.
-        rebased: 'La declaració va canviar després que preparessis aquests canvis.
-          Revisa de nou les línies marcades (canviades: {count}).'
+        rebased: 'La declaració va canviar després que escrivissis aquests canvis,
+          que encara no estan aplicats. Revisa de nou les línies marcades (canviades:
+          {count}).'
         title: 'Canvis per aplicar: {count}'
       search:
         count: 'Caselles trobades: {count}'

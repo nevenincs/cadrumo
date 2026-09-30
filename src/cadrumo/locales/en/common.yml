@@ -2114,6 +2114,8 @@ tui:
         save_next: Keep and go to next
         unreadable: This value could not be read.
       export:
+        confirm_first: 'Confirm the assumed values before creating the file or recording
+          the filing (to confirm: {count}) [n].'
         title: Export the declaration
         verify_first: Verify the declaration before exporting it [F8].
       filed:
@@ -2418,7 +2420,8 @@ tui:
       rebase:
         changed: 'Boxes that now read differently: {count}.'
         dropped: 'Changes that no longer apply and were removed: {count}.'
-        moved: The declaration changed since you staged your changes.
+        moved: The declaration changed since you entered changes that are not applied
+          yet.
         still_moving: The declaration is still changing. Wait a moment and review
           your changes again [R].
       repeating: 'Detail rows: {count}'
@@ -2444,7 +2447,7 @@ tui:
         and_more: '{shown} and {count} more'
         apply: Apply and recalculate
         back: Back to editing
-        before_changed: the box changed since you staged this
+        before_changed: the box changed since you entered this
         blocked: Resolve the items marked ▲ before applying.
         change_line: '{box}{concept}: {before} becomes {after} ({effect})'
         check_failed: Your changes could not be checked. They are still here; try
@@ -2491,8 +2494,8 @@ tui:
           screen, so Cadrumo cannot tell which values you typed. Applying keeps only
           the changes listed here. Any other value typed outside this screen takes
           the value its source or the form gives it, or is left empty.
-        rebased: 'The declaration changed after you staged these changes. Check the
-          marked lines again (changed: {count}).'
+        rebased: 'The declaration changed after you entered these changes, which are
+          not applied yet. Check the marked lines again (changed: {count}).'
         title: 'Changes to apply: {count}'
       search:
         count: 'Boxes found: {count}'

@@ -13,7 +13,8 @@ long the list grows.
 
 What the application found when it checked the changes is listed under them;
 a finding that would make it refuse the changes keeps Apply unavailable until
-the filer resolves it. Two situations ask the filer to acknowledge before
+the filer resolves it, its mark drawn in the error colour as every blocker's
+is. Two situations ask the filer to acknowledge before
 applying: a declaration that does not record which of its values the filer
 typed, where applying recalculates every value not listed without anything
 typed elsewhere, and a declaration that changed after the changes were staged,
@@ -31,6 +32,7 @@ from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Static
 
@@ -38,8 +40,10 @@ from .....application.modelo.source_policy import SourceFamily
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
 from .dialog_width import fit_dialog_width
+from .header import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
+from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
 from .wording import period_words
 
 
@@ -68,7 +72,8 @@ REVIEW_EFFECTS: Final[tuple[str, ...]] = (
     f"replaces_{_NAMED_FILING}",
 )
 """Every effect the review can state for a change; a replaced source is named by its family."""
-_NOTE_MARKS: Final[Mapping[bool, str]] = {True: "▲", False: "◆"}
+_NOTE_MARKS: Final[Mapping[bool, WorkbenchMark]] = {True: BLOCKS_MARK, False: CHECK_MARK}
+"""A finding that refuses the changes blocks; any other is worth checking, marked as every surface marks it."""
 _AT_RISK_SHOWN: Final[int] = 12
 
 
@@ -295,14 +300,14 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
                     disabled=not self._may_apply(acknowledged=False),
                 )
 
-    def _notes_text(self) -> str:
+    def _notes_text(self) -> Content:
         lines = [tr("tui.modelo.workbench.review.findings_heading")]
         for note in self._notes:
             box = f"[{note.box}] " if note.box else ""
-            lines.append(f"{_NOTE_MARKS[note.blocking]} {box}{note.message}")
+            lines.append(f"{_NOTE_MARKS[note.blocking].glyph} {box}{note.message}")
         if self._blocked:
             lines.append(tr("tui.modelo.workbench.review.blocked"))
-        return "\n".join(lines)
+        return blocks_marked("\n".join(lines))
 
     def _may_apply(self, *, acknowledged: bool) -> bool:
         return not self._blocked and (acknowledged or not self._needs_acknowledgement)

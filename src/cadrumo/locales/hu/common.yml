@@ -2146,6 +2146,8 @@ tui:
         save_next: Megtartás és tovább
         unreadable: Ez az érték nem olvasható.
       export:
+        confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítse
+          meg a feltételezett értékeket (megerősítendő: {count}) [n].'
         title: A bevallás exportálása
         verify_first: Exportálás előtt ellenőrizze a bevallást [F8].
       filed:
@@ -2459,7 +2461,8 @@ tui:
       rebase:
         changed: 'Most más értéket mutató rovatok: {count}.'
         dropped: 'Már nem alkalmazható, ezért eltávolított módosítások: {count}.'
-        moved: A bevallás megváltozott, mióta előkészítette a módosításait.
+        moved: A bevallás megváltozott, mióta olyan módosításokat adott meg, amelyeket
+          még nem alkalmazott.
         still_moving: A bevallás még változik. Várjon egy kicsit, és nézze át újra
           a módosításait [R].
       repeating: 'Részletező sorok: {count}'
@@ -2485,7 +2488,7 @@ tui:
         and_more: '{shown} és még {count}'
         apply: Alkalmazás és újraszámítás
         back: Vissza a szerkesztéshez
-        before_changed: a rovat megváltozott, mióta ezt előkészítette
+        before_changed: a rovat megváltozott, mióta ezt megadta
         blocked: Az alkalmazás előtt oldja meg a ▲ jellel jelölteket.
         change_line: '{box}{concept}: {before} helyett {after} ({effect})'
         check_failed: A módosításait nem sikerült ellenőrizni. Megmaradtak; próbálja
@@ -2537,8 +2540,9 @@ tui:
           csak az itt felsorolt módosítások maradnak meg. Minden más, a képernyőn
           kívül beírt érték a forrása vagy a nyomtatvány által adott értéket kapja,
           vagy üresen marad.
-        rebased: 'A bevallás megváltozott, miután előkészítette ezeket a módosításokat.
-          Nézze át újra a megjelölt sorokat (megváltozott: {count}).'
+        rebased: 'A bevallás megváltozott, miután megadta ezeket a módosításokat,
+          amelyeket még nem alkalmaztak. Nézze át újra a megjelölt sorokat (megváltozott:
+          {count}).'
         title: 'Alkalmazandó módosítások: {count}'
       search:
         count: 'Talált rovatok: {count}'
