@@ -114,7 +114,7 @@ async def test_invoice_catalogue_opens_canonical_detail_and_saves_reviewed_notes
             assert isinstance(detail, LedgerInvoiceDetailScreen)
             rendered = str(detail.query_one("#ledger-record-detail", Static).render())
             assert "121.00" in rendered
-            assert "1. Synthetic service · 1 × 100.00 = 100.00 · IVA RATE_21 21.00" in rendered
+            assert "1. Synthetic service · 1 × 100.00 = 100.00 · VAT RATE_21 21.00" in rendered
             detail.query_one("#ledger-invoice-notes", Input).value = "after"
             detail.query_one("#ledger-invoice-edit-review", Button).press()
             await pilot.pause()

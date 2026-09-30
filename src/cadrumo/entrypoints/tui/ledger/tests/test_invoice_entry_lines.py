@@ -193,7 +193,7 @@ async def test_a_line_that_cannot_be_read_is_not_added_and_names_every_field() -
             await pilot.pause()
             refusal = _text(screen, "#ledger-refusal")
             assert "Quantity must be a number" in refusal
-            assert "Line IVA amount is required." in refusal
+            assert "Line VAT amount is required." in refusal
             assert screen.lines == []
             assert "No lines entered" in _text(screen, "#ledger-invoice-lines")
             assert screen.query_one("#ledger-invoice-line-remove", Button).disabled
@@ -252,8 +252,8 @@ async def test_the_real_writer_keeps_every_line_and_the_detail_view_reads_them_b
             await pilot.pause()
             rendered = _text(detail, "#ledger-record-detail")
             refusal = _text(detail, "#ledger-refusal")
-    assert "1. Printer paper · 1 × 10.00 = 10.00 · IVA RATE_21 2.10" in rendered, refusal
-    assert "2. Reference book · 1 × 5.00 = 5.00 · IVA RATE_10 0.50" in rendered
+    assert "1. Printer paper · 1 × 10.00 = 10.00 · VAT RATE_21 2.10" in rendered, refusal
+    assert "2. Reference book · 1 × 5.00 = 5.00 · VAT RATE_10 0.50" in rendered
     assert "operation date 2026-03-14" in rendered
 
 

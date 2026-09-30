@@ -37,16 +37,19 @@ Enter always acts. A finding that names a box on the form, the missing or
 assumed values and each of their sections return the first such box to the
 workbench, and a finding about a table's records returns the value's address,
 which leads to the table; a finding about the whole declaration opens its
-detail in place; a finding whose box is not on the form says so there. Codes,
-facts and legal references never reach the list: ``t`` shows them for the
-selected finding only.
+detail in place; a finding whose box is not on the form says so there. A
+finding whose value comes from another area of the application, such as the
+filer's records or profile, offers ``a`` to open that area, and while assumed
+values wait ``c`` offers to confirm them; either closes the list with that
+choice for the workbench to act on. Codes, facts and legal references never
+reach the list: ``t`` shows them for the selected finding only.
 """
 
 from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from types import MappingProxyType
 from typing import ClassVar, Final, override
@@ -64,6 +67,7 @@ from textual.widgets import Button, Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .....application.modelo.finding_message_text import finding_message_text
+from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCasillaAddressV1,
@@ -86,10 +90,11 @@ from .....domain.modelos.verification_report import (
 from ...components.theme import tokenised
 from .casilla_list import AddressKey
 from .dialog_width import fit_dialog_width
+from .editor import area_words, open_area_target
 from .keys import describe_bindings
 from .navigator import applicable_fields, presented_form
 from .page_items import workbench_pages
-from .sources import BoxNumbers
+from .sources import BoxNumbers, OpenSourceSurface
 from .vocabulary import (
     ATTENTION_ROLES,
     BLOCKS_MARK,
@@ -167,8 +172,13 @@ _ENTER_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     }
 )
 _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
-    {"escape": "tui.modelo.workbench.key.back", "t": "tui.modelo.workbench.issues.technical"}
+    {
+        "escape": "tui.modelo.workbench.key.back",
+        "t": "tui.modelo.workbench.issues.technical",
+        "c": "tui.modelo.workbench.issues.confirm_all",
+    }
 )
+_OPEN_AREA_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.open_area"
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
 #: Past this many missing or assumed boxes the list names the sections that hold them instead of their numbers.
 ASSUMED_BOXES_BEFORE_SECTIONS: Final[int] = 20
@@ -224,11 +234,22 @@ class IssueLine:
     key: AddressKey | None
     #: Whether ``key`` is a value of a table's records, so Enter leads to the table rather than a box.
     in_records: bool = False
+    #: The area of the application that owns the finding's value, when one does and can be opened.
+    area: SourceSurface | None = None
 
     @property
     def blocking(self) -> bool:
         """Whether this finding stops the declaration from being filed."""
         return self.level is IssueLevel.BLOCKS
+
+
+@dataclass(frozen=True, slots=True)
+class ConfirmAssumedValues:
+    """The filer asked, from the findings list, to confirm the values nobody entered."""
+
+
+type IssuesChoice = AddressKey | OpenSourceSurface | ConfirmAssumedValues
+"""Where the findings list leads: a box, the area that owns a value, or confirming the assumed values."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -371,6 +392,9 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
     """
     language = OutputLanguage(output_language())
     shown = {address_key(field.address): field for field in form.fields()}
+    on_pages = frozenset(
+        address_key(field.address) for page in workbench_pages(presented_form(form)) for field in page.fields()
+    )
     records = _record_values(form)
     box_words = _box_words(form, records)
     missing = unentered_boxes(form, IssueLevel.MISSING)
@@ -382,6 +406,7 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
         detail = tr(_DETAIL_LOCALE_KEYS[finding.kind])
         key: AddressKey | None = None
         box = issue.box or "·"
+        field: ModeloFormField | None = None
         if finding.casilla_id is None:
             where = tr(
                 _RECORDS_WHERE_LOCALE_KEY
@@ -397,8 +422,11 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
             if issue_level(issue) is IssueLevel.MISSING and candidate in listed:
                 continue
             field = shown.get(candidate)
-            if field is None:
-                box, where, not_shown = _not_on_form(issue.box, str(finding.casilla_id))
+            if field is None or candidate not in on_pages:
+                # A box the form defines but shows on no page reads as not on the form, with its number when it has one.
+                box, where, not_shown = _not_on_form(
+                    issue.box or (None if field is None else field.box), str(finding.casilla_id)
+                )
                 detail = f"{not_shown} {detail}".strip()
             else:
                 key = candidate
@@ -414,6 +442,7 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
                 detail=detail,
                 technical=technical_text(finding),
                 key=key,
+                area=None if field is None else open_area_target(field),
             )
         )
     order = tuple(IssueLevel)
@@ -550,7 +579,7 @@ class _IssueList(OptionList):
         self.refresh_bindings()
 
 
-class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
+class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | ConfirmAssumedValues | None]):
     """Everything to look at before filing; choosing a box returns it to the workbench."""
 
     SCOPED_CSS: ClassVar[bool] = False
@@ -603,6 +632,8 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
     BINDINGS: ClassVar = [
         Binding("escape", "close", "", show=False),
         Binding("t", "technical", "", show=False),
+        Binding("a", "open_area", "", show=False),
+        Binding("c", "confirm_all", "", show=False),
     ]
 
     def __init__(self, form: ModeloWorkForm, *, status_line: str | None = None) -> None:
@@ -725,6 +756,43 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | None]):
         else:
             choice = "more"
         self.query_one(_IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
+        self._describe_open_area(None if index is None else self._lines[index].area)
+
+    def _describe_open_area(self, area: SourceSurface | None) -> None:
+        """Name the area ``a`` opens for the finding under the cursor, and show the key only when there is one."""
+        table = self._bindings.key_to_bindings
+        entries = table.get("a")
+        if entries:
+            label = "" if area is None else tr(_OPEN_AREA_LOCALE_KEY, area=area_words(area))
+            table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
+        self.refresh_bindings()
+
+    def _confirm_available(self) -> bool:
+        return not self._recorded and IssueLevel.CONFIRM in self._unentered
+
+    def _highlighted_area(self) -> SourceSurface | None:
+        index = self._issue_index(self._highlighted_id())
+        return None if index is None else self._lines[index].area
+
+    @override
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Offer ``a`` only on a finding whose value an area owns, and ``c`` only while assumed values wait."""
+        if action == "open_area":
+            return self._highlighted_area() is not None
+        if action == "confirm_all":
+            return self._confirm_available()
+        return True
+
+    def action_open_area(self) -> None:
+        """Close the list asking the workbench to open the area that owns the selected finding's value."""
+        area = self._highlighted_area()
+        if area is not None:
+            self.dismiss(OpenSourceSurface(area))
+
+    def action_confirm_all(self) -> None:
+        """Close the list asking the workbench to confirm the assumed values."""
+        if self._confirm_available():
+            self.dismiss(ConfirmAssumedValues())
 
     def _redraw(self, index: int) -> None:
         prompt = _issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)
@@ -792,8 +860,10 @@ __all__ = [
     "ASSUMED_BOXES_BEFORE_SECTIONS",
     "LEVEL_MARKS",
     "TO_DO_LEVELS",
+    "ConfirmAssumedValues",
     "IssueLevel",
     "IssueLine",
+    "IssuesChoice",
     "UnenteredBoxes",
     "UnenteredSection",
     "WorkbenchIssuesScreen",

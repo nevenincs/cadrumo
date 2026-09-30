@@ -6,17 +6,20 @@ gitignored as regenerable output. What a reviewer SAYS about those frames is
 the opposite -- nothing regenerates it -- so it lives in its own database
 beside the run tree rather than inside any run.
 
-A note is keyed by the frame's identity (`surface/viewport/theme`), which
-survives a re-render, and anchored to the digest of the PNG the reviewer was
-looking at, which does not. The pair is what lets a reader tell a note about
-the image on screen from a note about an image that has since been replaced.
+Review is per element, not per image: a note or a sign-off is filed under the
+element's key, which survives a re-render, and anchored to the element's
+digest over every frame it held when the reviewer looked, which does not. A
+note may also point at the one frame that was on screen, and a sign-off keeps
+the digest of each frame it covered, so a reader can tell which of an
+element's images moved since and look at those alone.
 """
 
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
@@ -33,9 +36,10 @@ REVIEW_STORE_PATH: Final[Path] = REPO_ROOT / ".tui-review" / "notes.sqlite3"
 The ``.sqlite3`` suffix is also what the worktree clean treats as local state
 it must never remove, wherever the file sits."""
 
-STORE_SCHEMA_VERSION: Final[int] = 1
+STORE_SCHEMA_VERSION: Final[int] = 2
 """Carried in SQLite's ``user_version``. A store written by any other version
-is refused rather than guessed at."""
+is refused rather than guessed at: version 1 filed notes and sign-offs per
+image, and an image's sign-off says nothing about the element it belongs to."""
 
 NOTE_BODY_LIMIT: Final[int] = 10_000
 """Characters one note may hold; a review remark, not a document."""
@@ -44,82 +48,134 @@ _SCHEMA: Final[tuple[str, ...]] = (
     """
     CREATE TABLE note (
         id INTEGER PRIMARY KEY,
-        frame_key TEXT NOT NULL,
+        element_key TEXT NOT NULL,
         run TEXT NOT NULL,
-        png_sha256 TEXT NOT NULL,
+        element_sha256 TEXT NOT NULL,
+        frame_key TEXT,
+        frame_sha256 TEXT,
         body TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        resolved_at TEXT
+        resolved_at TEXT,
+        CHECK ((frame_key IS NULL) = (frame_sha256 IS NULL))
     )
     """,
-    "CREATE INDEX note_frame ON note (frame_key)",
+    "CREATE INDEX note_element ON note (element_key)",
     """
-    CREATE TABLE reviewed (
-        frame_key TEXT PRIMARY KEY,
-        png_sha256 TEXT NOT NULL,
+    CREATE TABLE sign_off (
+        element_key TEXT PRIMARY KEY,
+        run TEXT NOT NULL,
         reviewed_at TEXT NOT NULL
     )
     """,
+    """
+    CREATE TABLE sign_off_frame (
+        element_key TEXT NOT NULL,
+        frame_key TEXT NOT NULL,
+        png_sha256 TEXT NOT NULL,
+        PRIMARY KEY (element_key, frame_key)
+    )
+    """,
 )
 
-_NOTE_FIELDS: Final[tuple[str, ...]] = ("id", "frame_key", "run", "png_sha256", "body", "created_at", "resolved_at")
-
-_SELECT_ALL_NOTES: Final[str] = (
-    "SELECT id, frame_key, run, png_sha256, body, created_at, resolved_at FROM note ORDER BY frame_key, created_at, id"
+_NOTE_FIELDS: Final[tuple[str, ...]] = (
+    "id",
+    "element_key",
+    "run",
+    "element_sha256",
+    "frame_key",
+    "frame_sha256",
+    "body",
+    "created_at",
+    "resolved_at",
 )
-_SELECT_OPEN_NOTES: Final[str] = (
-    "SELECT id, frame_key, run, png_sha256, body, created_at, resolved_at FROM note "
-    "WHERE resolved_at IS NULL ORDER BY frame_key, created_at, id"
+_SELECT_NOTES: Final[str] = (
+    "SELECT id, element_key, run, element_sha256, frame_key, frame_sha256, body, created_at, resolved_at FROM note"
 )
-_SELECT_NOTE: Final[str] = "SELECT id, frame_key, run, png_sha256, body, created_at, resolved_at FROM note WHERE id = ?"
+_SELECT_ALL_NOTES: Final[str] = f"{_SELECT_NOTES} ORDER BY element_key, created_at, id"
+_SELECT_OPEN_NOTES: Final[str] = f"{_SELECT_NOTES} WHERE resolved_at IS NULL ORDER BY element_key, created_at, id"
+_SELECT_NOTE: Final[str] = f"{_SELECT_NOTES} WHERE id = ?"
 
 
 class Note(BaseModel):
-    """One remark a reviewer left on one frame."""
+    """One remark a reviewer left on one element."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     id: int
-    frame_key: str
+    element_key: str
     run: str
     """The run the reviewer was browsing when the note was written."""
-    png_sha256: str
-    """Digest of the image the note was written against."""
+    element_sha256: str
+    """The element's digest over every frame it held when the note was written."""
+    frame_key: str | None = None
+    """The frame on screen when the note was written, if the reviewer pointed at it."""
+    frame_sha256: str | None = None
+    """Digest of that frame's image."""
     body: str
     created_at: str
     resolved_at: str | None = None
 
 
-class ReviewedMark(BaseModel):
-    """A frame the reviewer signed off, at the image they signed off."""
+class SignOff(BaseModel):
+    """An element the reviewer signed off, at the images it held then."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    frame_key: str
-    png_sha256: str
+    element_key: str
+    run: str
+    """The run the reviewer was browsing when they signed off."""
     reviewed_at: str
+    frames: dict[str, str]
+    """Each frame the sign-off covered, to the digest of its image."""
 
 
 class NoteImageState(StrEnum):
-    """How a note relates to the image a run currently holds for its frame."""
+    """How a recorded digest relates to the images a run holds now."""
 
     CURRENT = "current"
-    """The note was written against the image on disk now."""
+    """The run holds exactly the images the record was made against."""
 
     CHANGED = "changed"
-    """The frame has been re-rendered since; the note may no longer apply."""
+    """Something has been re-rendered since; the record may no longer apply."""
 
     ABSENT = "absent"
-    """The run holds no image for the note's frame."""
+    """The run holds no image of what the record names."""
 
 
-def image_state(note: Note, current_digest: str | None) -> NoteImageState:
-    """Say whether ``note`` still describes the image a run holds for its frame."""
-    if current_digest is None:
+def image_state(recorded_sha256: str, current_sha256: str | None) -> NoteImageState:
+    """Say whether a digest recorded with a note or sign-off still describes what a run holds."""
+    if current_sha256 is None:
         return NoteImageState.ABSENT
-    if current_digest == note.png_sha256:
+    if current_sha256 == recorded_sha256:
         return NoteImageState.CURRENT
     return NoteImageState.CHANGED
+
+
+@dataclass(frozen=True)
+class SignOffChanges:
+    """Which of an element's frames differ from the images its sign-off covered."""
+
+    changed: tuple[str, ...]
+    """Frames re-rendered since the sign-off."""
+    added: tuple[str, ...]
+    """Frames the run holds that the sign-off never saw."""
+    removed: tuple[str, ...]
+    """Frames the sign-off covered that the run no longer holds."""
+
+    @property
+    def unchanged(self) -> bool:
+        """Whether the sign-off still covers exactly the images on disk."""
+        return not (self.changed or self.added or self.removed)
+
+
+def sign_off_changes(sign_off: SignOff, current: Mapping[str, str]) -> SignOffChanges:
+    """Compare a sign-off with the frames a run holds now for its element, by frame key."""
+    covered = sign_off.frames
+    return SignOffChanges(
+        changed=tuple(sorted(key for key in covered.keys() & current.keys() if covered[key] != current[key])),
+        added=tuple(sorted(current.keys() - covered.keys())),
+        removed=tuple(sorted(covered.keys() - current.keys())),
+    )
 
 
 class ReviewStoreVersionError(RuntimeError):
@@ -169,23 +225,37 @@ class ReviewStore:
             pass
 
     def notes(self, *, include_resolved: bool = True) -> tuple[Note, ...]:
-        """Every note, grouped by frame and oldest first within a frame."""
+        """Every note, grouped by element and oldest first within an element."""
         query = _SELECT_ALL_NOTES if include_resolved else _SELECT_OPEN_NOTES
         with self._connect() as connection:
             rows = connection.execute(query).fetchall()
         return tuple(_note(row) for row in rows)
 
-    def add_note(self, *, frame_key: str, run: str, png_sha256: str, body: str) -> Note:
-        """Record a note against the image the reviewer was looking at."""
+    def add_note(
+        self,
+        *,
+        element_key: str,
+        run: str,
+        element_sha256: str,
+        body: str,
+        frame: tuple[str, str] | None = None,
+    ) -> Note:
+        """Record a note against the element the reviewer was looking at.
+
+        ``frame`` is the key and image digest of the frame on screen, when the
+        reviewer points the note at it.
+        """
         text = body.strip()
         if not text:
             raise InvalidNoteError("a note needs some text")
         if len(text) > NOTE_BODY_LIMIT:
             raise InvalidNoteError(f"a note holds at most {NOTE_BODY_LIMIT} characters; this one has {len(text)}")
+        frame_key, frame_sha256 = frame if frame is not None else (None, None)
         with self._connect() as connection:
             cursor = connection.execute(
-                "INSERT INTO note (frame_key, run, png_sha256, body, created_at) VALUES (?, ?, ?, ?, ?)",
-                (frame_key, run, png_sha256, text, now()),
+                "INSERT INTO note (element_key, run, element_sha256, frame_key, frame_sha256, body, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (element_key, run, element_sha256, frame_key, frame_sha256, text, now()),
             )
             return _read_note(connection, cursor.lastrowid)
 
@@ -205,28 +275,53 @@ class ReviewStore:
             if cursor.rowcount == 0:
                 raise NoteNotFoundError(f"no note #{note_id}")
 
-    def reviewed(self) -> dict[str, ReviewedMark]:
-        """Every sign-off, by frame key."""
+    def sign_offs(self) -> dict[str, SignOff]:
+        """Every sign-off, by element key."""
         with self._connect() as connection:
-            rows = connection.execute("SELECT frame_key, png_sha256, reviewed_at FROM reviewed").fetchall()
-        return {row[0]: ReviewedMark(frame_key=row[0], png_sha256=row[1], reviewed_at=row[2]) for row in rows}
+            heads = connection.execute("SELECT element_key, run, reviewed_at FROM sign_off").fetchall()
+            covered: dict[str, dict[str, str]] = {}
+            for element, frame, digest in connection.execute(
+                "SELECT element_key, frame_key, png_sha256 FROM sign_off_frame"
+            ):
+                covered.setdefault(element, {})[frame] = digest
+        return {
+            element: SignOff(
+                element_key=element,
+                run=run,
+                reviewed_at=reviewed_at,
+                frames=covered.get(element, {}),
+            )
+            for element, run, reviewed_at in heads
+        }
 
-    def mark_reviewed(self, *, frame_key: str, png_sha256: str) -> ReviewedMark:
-        """Sign a frame off at one image; a later sign-off replaces the earlier one."""
-        mark = ReviewedMark(frame_key=frame_key, png_sha256=png_sha256, reviewed_at=now())
+    def sign_off(self, *, element_key: str, run: str, frames: Mapping[str, str]) -> SignOff:
+        """Sign an element off at the images it holds; a later sign-off replaces the earlier one."""
+        if not frames:
+            raise ValueError(f"element {element_key!r} has no frame to sign off")
+        mark = SignOff(
+            element_key=element_key,
+            run=run,
+            reviewed_at=now(),
+            frames=dict(frames),
+        )
         with self._connect() as connection:
+            connection.execute("DELETE FROM sign_off_frame WHERE element_key = ?", (element_key,))
             connection.execute(
-                "INSERT INTO reviewed (frame_key, png_sha256, reviewed_at) VALUES (?, ?, ?) "
-                "ON CONFLICT (frame_key) DO UPDATE SET png_sha256 = excluded.png_sha256, "
-                "reviewed_at = excluded.reviewed_at",
-                (mark.frame_key, mark.png_sha256, mark.reviewed_at),
+                "INSERT INTO sign_off (element_key, run, reviewed_at) VALUES (?, ?, ?) "
+                "ON CONFLICT (element_key) DO UPDATE SET run = excluded.run, reviewed_at = excluded.reviewed_at",
+                (mark.element_key, mark.run, mark.reviewed_at),
+            )
+            connection.executemany(
+                "INSERT INTO sign_off_frame (element_key, frame_key, png_sha256) VALUES (?, ?, ?)",
+                [(element_key, key, digest) for key, digest in sorted(mark.frames.items())],
             )
         return mark
 
-    def clear_reviewed(self, frame_key: str) -> None:
-        """Withdraw a frame's sign-off; clearing an unsigned frame is a no-op."""
+    def clear_sign_off(self, element_key: str) -> None:
+        """Withdraw an element's sign-off; clearing an unsigned element is a no-op."""
         with self._connect() as connection:
-            connection.execute("DELETE FROM reviewed WHERE frame_key = ?", (frame_key,))
+            connection.execute("DELETE FROM sign_off_frame WHERE element_key = ?", (element_key,))
+            connection.execute("DELETE FROM sign_off WHERE element_key = ?", (element_key,))
 
 
 def _ensure_schema(connection: sqlite3.Connection, path: Path) -> None:
@@ -266,6 +361,8 @@ __all__ = [
     "NoteNotFoundError",
     "ReviewStore",
     "ReviewStoreVersionError",
-    "ReviewedMark",
+    "SignOff",
+    "SignOffChanges",
     "image_state",
+    "sign_off_changes",
 ]

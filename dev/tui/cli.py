@@ -864,9 +864,10 @@ def serve_command(
     """Serve the review runs to a browser, live, with notes kept on this machine.
 
     Frames appear in the page as the render writes them, so a render can be
-    reviewed while it is still running. Notes and sign-offs are written to a
-    database outside the run tree and survive the server stopping, a
-    re-render, and a snapshot being replaced.
+    reviewed while it is still running. The page groups them by the element
+    they show, and notes and sign-offs are kept per element, in a database
+    outside the run tree that survives the server stopping, a re-render, and a
+    snapshot being replaced.
 
     The default bind is the tailnet address and nothing else: the tailnet is
     the only access control this server has. A wildcard address is refused.
@@ -918,11 +919,12 @@ def notes_command(
     as_json: Annotated[bool, typer.Option("--json", help="Print the notes as JSON.")] = False,
     run: Annotated[str, typer.Option("--run", help="Run whose images the notes are compared with.")] = DEFAULT_RUN,
 ) -> None:
-    """Print the review notes left in the browser.
+    """Print the review notes left in the browser, by element.
 
-    Each note is compared with the image the run holds now, so a note left on
-    a frame that has since been re-rendered says so instead of reading as a
-    remark about the current image.
+    Each note is compared with the images the run holds now, so a note left
+    on an element that has since been re-rendered says so instead of reading
+    as a remark about the current images, and a note that pointed at one
+    frame says whether that frame is among them.
     """
     store = ReviewStore()
     if not store.exists():
@@ -937,31 +939,55 @@ def notes_command(
     catalogue = ReviewCatalogue(RUNS_DIR, only=run)
     catalogue.refresh()
     view = catalogue.run(run)
-    digests = {} if view is None else {frame.key: frame.png_sha256 for frame in view.frames}
-    readings = [(note, image_state(note, digests.get(note.frame_key))) for note in notes]
+    elements = {} if view is None else {element.key: element.digest for element in view.elements}
+    frames = {} if view is None else {frame.key: frame.png_sha256 for frame in view.frames}
+    readings = [
+        (
+            note,
+            image_state(note.element_sha256, elements.get(note.element_key)),
+            None
+            if note.frame_key is None or note.frame_sha256 is None
+            else image_state(note.frame_sha256, frames.get(note.frame_key)),
+        )
+        for note in notes
+    ]
 
     if as_json:
-        payload = [{**note.model_dump(mode="json"), "image_state": str(state)} for note, state in readings]
+        payload = [
+            {
+                **note.model_dump(mode="json"),
+                "element_state": str(element_state),
+                "frame_state": None if frame_state is None else str(frame_state),
+            }
+            for note, element_state, frame_state in readings
+        ]
         _echo(json.dumps(payload, indent=2, ensure_ascii=False))
         return
     if not readings:
         _echo("no notes" if include_resolved else "no open notes")
         return
     shown_key: str | None = None
-    for note, state in readings:
-        if note.frame_key != shown_key:
-            shown_key = note.frame_key
+    for note, element_state, frame_state in readings:
+        if note.element_key != shown_key:
+            shown_key = note.element_key
             _echo("")
-            _echo(note.frame_key)
+            _echo(note.element_key)
         flags = []
-        if state is NoteImageState.CHANGED:
-            flags.append("frame re-rendered since")
-        elif state is NoteImageState.ABSENT:
-            flags.append(f"no image in run {run!r}")
+        if element_state is NoteImageState.CHANGED:
+            flags.append("element re-rendered since")
+        elif element_state is NoteImageState.ABSENT:
+            flags.append(f"no frame of it in run {run!r}")
         if note.resolved_at is not None:
             flags.append("resolved")
         suffix = f"  [{', '.join(flags)}]" if flags else ""
         _echo(f"  #{note.id} {note.created_at}{suffix}")
+        if note.frame_key is not None:
+            pointed = ""
+            if frame_state is NoteImageState.CHANGED:
+                pointed = " (re-rendered since)"
+            elif frame_state is NoteImageState.ABSENT:
+                pointed = f" (not in run {run!r})"
+            _echo(f"    on {note.frame_key}{pointed}")
         for line in note.body.splitlines():
             _echo(f"    {line}")
 

@@ -178,6 +178,63 @@ def test_frames_are_ordered_by_surface_then_the_viewport_and_theme_vocabularies(
     assert [frame.stem for frame in view.frames] == expected
 
 
+def test_frames_are_grouped_into_the_elements_they_show_with_each_state_in_order(tmp_path: Path) -> None:
+    catalogue = ReviewCatalogue(tmp_path, clock=_Clock())
+    stems = (
+        "home--stale__small__light",
+        "home--ready__large__dark",
+        "home--ready__small__dark",
+        "seq-modelo-303-first-quarter--workbench__small__dark",
+        "seq-modelo-130-first-quarter--workbench__small__dark",
+        "seq-modelo-130-first-quarter--sources__small__dark",
+        "login__small__dark",
+    )
+    for index, stem in enumerate(stems):
+        _settled_frame(tmp_path, stem, (index, index, index))
+
+    catalogue.refresh()
+    view = catalogue.run("current")
+
+    assert view is not None
+    assert [(element.key, element.states) for element in view.elements] == [
+        ("fixture:home", ("ready", "stale")),
+        ("sequence:sources", ("modelo-130-first-quarter",)),
+        ("sequence:workbench", ("modelo-130-first-quarter", "modelo-303-first-quarter")),
+        ("screen:login", (None,)),
+    ]
+    home = view.element("fixture:home")
+    assert home is not None
+    assert [frame.stem for frame in home.frames] == [
+        "home--ready__small__dark",
+        "home--ready__large__dark",
+        "home--stale__small__light",
+    ]
+    assert view.element("fixture:absent") is None
+
+
+def test_an_element_digest_moves_when_any_one_of_its_frames_is_re_rendered(tmp_path: Path) -> None:
+    catalogue = ReviewCatalogue(tmp_path, clock=_Clock())
+    _settled_frame(tmp_path, "home--ready__small__dark", (1, 1, 1))
+    _settled_frame(tmp_path, "home--empty__small__dark", (2, 2, 2))
+    _settled_frame(tmp_path, "login__small__dark", (3, 3, 3))
+    catalogue.refresh()
+    before = catalogue.run("current")
+    assert before is not None
+
+    rerendered = _frame_path(tmp_path, "home--empty__small__dark")
+    _write_png(rerendered, (9, 9, 9))
+    _modified(rerendered, _NOW - SETTLE_SECONDS - 0.5)
+    catalogue.refresh()
+    after = catalogue.run("current")
+
+    assert after is not None
+    digests = {element.key: element.digest for element in before.elements}
+    assert {element.key: element.digest != digests[element.key] for element in after.elements} == {
+        "fixture:home": True,
+        "screen:login": False,
+    }
+
+
 def _record(stem: str, digest: str, *, findings: tuple[str, ...]) -> RenderedFrame:
     identity = parse_stem(stem)
     assert identity is not None

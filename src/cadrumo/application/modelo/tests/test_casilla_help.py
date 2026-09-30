@@ -80,7 +80,7 @@ def test_a_bound_box_says_where_its_value_comes_from_and_what_uses_it(operation:
     net = _card(operation, "03")
 
     assert income.formula is None
-    assert income.origins == ("from your income records",)
+    assert income.origins == ("from your income entries",)
     assert "[03]" in income.feeds
     assert "[04]" in net.feeds
 

@@ -76,9 +76,9 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         assert tuple(
             cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
         ) == (
-            "View work revisions",
-            "Classify ledger",
-            "Review ledger evidence",
+            "View earlier calculations",
+            "Classify records",
+            "Review supporting documents",
         )
 
 
@@ -103,7 +103,7 @@ async def test_home_keeps_unknown_ledger_and_messages_as_unknown_not_zero() -> N
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         text = "\n".join(str(widget.render()) for widget in screen.query(Static))
-    assert "Ledger readiness\nLocked" in text
+    assert "Records readiness\nLocked" in text
     assert "Messages\nLocked" in text
     assert "Available - 0" not in text
 

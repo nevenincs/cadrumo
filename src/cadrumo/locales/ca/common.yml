@@ -2251,6 +2251,7 @@ tui:
             origen i torna a calcular.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
+        confirm_all: Revisar i confirmar tots els valors suposats
         detail:
           advisory: És un consell. Pots presentar la declaració tal com està.
           blocking_rule: No es compleix una regla d'aquest model. No es pot registrar
@@ -2273,6 +2274,7 @@ tui:
           more: Mostra'n més
         missing: La declaració necessita valors en aquestes caselles i ningú no els
           ha donat.
+        open_area: Obrir {area}
         open_records: Obrir la taula
         open_section: Obrir la secció
         records:

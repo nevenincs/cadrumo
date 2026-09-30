@@ -2257,6 +2257,7 @@ tui:
             y vuelve a calcular.
         assumed: Nadie ha escrito los valores de estas casillas.
         box_not_on_form: La casilla {box} no aparece en las páginas de esta declaración.
+        confirm_all: Revisar y confirmar todos los valores supuestos
         detail:
           advisory: Es un consejo. Puedes presentar la declaración tal como está.
           blocking_rule: No se cumple una regla de este modelo. No se puede registrar
@@ -2278,6 +2279,7 @@ tui:
           more: Ver más
         missing: La declaración necesita valores en estas casillas y nadie los ha
           dado.
+        open_area: Abrir {area}
         open_records: Abrir la tabla
         open_section: Abrir la sección
         records:

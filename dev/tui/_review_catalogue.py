@@ -11,6 +11,10 @@ disk rather than an earlier render of the same frame.
 The rasteriser writes a PNG in place, so a scan can meet a file half written.
 A frame is published only once its file has gone :data:`SETTLE_SECONDS`
 without changing; until then the previous settled version, if any, stands.
+
+Each scan also groups the run's frames into the elements they show, so a
+reader gets one reviewable element with its states, viewports and appearances
+rather than a flat list of images.
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ from __future__ import annotations
 import os
 import threading
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
@@ -32,6 +36,7 @@ from ._artifacts import (
     ThemeName,
     read_manifest,
 )
+from ._review_elements import ElementFamily, SurfaceParts, element_digest, parse_surface, state_order
 from ._viewports import VIEWPORTS, ViewportName
 
 SETTLE_SECONDS: Final[float] = 1.5
@@ -55,8 +60,13 @@ class FrameIdentity:
 
     @property
     def key(self) -> str:
-        """The identity a rendered frame carries in the manifest, and a note is filed under."""
+        """The identity a rendered frame carries in the manifest."""
         return f"{self.surface}/{self.viewport}/{self.theme}"
+
+    @property
+    def parts(self) -> SurfaceParts:
+        """The element this frame shows, and the state it shows it in."""
+        return parse_surface(self.surface)
 
 
 def parse_stem(stem: str) -> FrameIdentity | None:
@@ -95,6 +105,31 @@ class CatalogueFrame:
 
 
 @dataclass(frozen=True)
+class ElementView:
+    """One reviewable element: every settled frame a run holds of it, in every state."""
+
+    key: str
+    family: ElementFamily
+    name: str
+    states: tuple[str | None, ...]
+    """The states the run holds a frame of, ordinary first."""
+    frames: tuple[CatalogueFrame, ...]
+    """By state, then viewport, then theme."""
+    digest: str
+    """Moves whenever any of the element's frames is re-rendered, added or removed."""
+
+    @property
+    def frame_digests(self) -> dict[str, str]:
+        """Each frame's PNG digest, by frame key."""
+        return {frame.key: frame.png_sha256 for frame in self.frames}
+
+    @property
+    def latest_modified_ns(self) -> int:
+        """When the element's most recent frame settled on disk."""
+        return max(frame.modified_ns for frame in self.frames)
+
+
+@dataclass(frozen=True)
 class RunView:
     """Everything one run directory holds at the last scan."""
 
@@ -107,6 +142,8 @@ class RunView:
     """PNG names that do not parse as a frame; reported, never served."""
     manifest: Manifest | None
     manifest_error: str | None
+    elements: tuple[ElementView, ...]
+    """The frames grouped by the element they show, by family then name."""
     by_stem: Mapping[str, CatalogueFrame] = field(repr=False)
     records: Mapping[str, RenderedFrame] = field(repr=False)
     """Manifest records by frame key, kept only where the recorded digest is
@@ -115,6 +152,10 @@ class RunView:
     def frame(self, stem: str) -> CatalogueFrame | None:
         """The settled frame with this file stem, if the run holds one."""
         return self.by_stem.get(stem)
+
+    def element(self, key: str) -> ElementView | None:
+        """The element filed under ``key``, if the run holds any frame of it."""
+        return next((element for element in self.elements if element.key == key), None)
 
     def recorded(self, frame: CatalogueFrame) -> RenderedFrame | None:
         """The manifest's record of this frame, only when it describes these exact pixels."""
@@ -219,6 +260,7 @@ class ReviewCatalogue:
             unrecognised=tuple(sorted(unrecognised)),
             manifest=manifest,
             manifest_error=manifest_error,
+            elements=group_elements(frames),
             by_stem={frame.stem: frame for frame in frames},
             records=records,
         )
@@ -309,6 +351,39 @@ def _frame_order(frame: CatalogueFrame) -> tuple[str, int, int]:
     return identity.surface, _VIEWPORT_ORDER[identity.viewport], _THEME_ORDER[identity.theme]
 
 
+_FAMILY_ORDER: Final[dict[ElementFamily, int]] = {family: index for index, family in enumerate(ElementFamily)}
+
+
+def group_elements(frames: Iterable[CatalogueFrame]) -> tuple[ElementView, ...]:
+    """Gather frames under the element each one shows."""
+    members: dict[str, list[CatalogueFrame]] = {}
+    for frame in frames:
+        members.setdefault(frame.identity.parts.element, []).append(frame)
+    elements: list[ElementView] = []
+    for key, group in members.items():
+        parts = group[0].identity.parts
+        group.sort(
+            key=lambda frame: (
+                state_order(parts.family, frame.identity.parts.state),
+                _VIEWPORT_ORDER[frame.identity.viewport],
+                _THEME_ORDER[frame.identity.theme],
+            )
+        )
+        states = tuple(dict.fromkeys(frame.identity.parts.state for frame in group))
+        elements.append(
+            ElementView(
+                key=key,
+                family=parts.family,
+                name=parts.name,
+                states=states,
+                frames=tuple(group),
+                digest=element_digest({frame.key: frame.png_sha256 for frame in group}),
+            )
+        )
+    elements.sort(key=lambda element: (_FAMILY_ORDER[element.family], element.name))
+    return tuple(elements)
+
+
 def _signature(scans: Mapping[str, _RunScan]) -> tuple[object, ...]:
     return tuple(
         (
@@ -332,9 +407,11 @@ def viewport_grid(viewport: ViewportName) -> tuple[int, int, str]:
 __all__ = [
     "SETTLE_SECONDS",
     "CatalogueFrame",
+    "ElementView",
     "FrameIdentity",
     "ReviewCatalogue",
     "RunView",
+    "group_elements",
     "parse_stem",
     "viewport_grid",
 ]

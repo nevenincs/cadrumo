@@ -2201,6 +2201,7 @@ tui:
             it comes from and calculate again.
         assumed: Nobody has entered the values in these boxes.
         box_not_on_form: Box {box} is not shown on this declaration's pages.
+        confirm_all: Review and confirm all assumed values
         detail:
           advisory: This is advice. You can file the declaration as it is.
           blocking_rule: A rule of this modelo is not met. The filing cannot be recorded
@@ -2221,6 +2222,7 @@ tui:
           more: Show more
         missing: The declaration needs values in these boxes, and nobody has given
           them.
+        open_area: Open {area}
         open_records: Open the table
         open_section: Open section
         records:

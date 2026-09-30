@@ -6,6 +6,10 @@ the render is still going: it serves every run under the review tree, pushes a
 change event whenever a frame settles on disk, and records the reviewer's
 notes and sign-offs in the durable store rather than in the browser.
 
+The page reviews elements, not images: each element arrives with every frame
+the run holds of it, across its states, viewports and appearances, and a note
+or sign-off is written against the element as a whole.
+
 It binds to this machine's tailnet address by default, as the local Tailscale
 client reports it, and never to every interface: the tailnet is the access
 control, so the server has no login of its own and must not be reachable from
@@ -46,13 +50,16 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
 from ._artifacts import DEFAULT_RUN_NAME
-from ._review_catalogue import CatalogueFrame, ReviewCatalogue, RunView, viewport_grid
+from ._review_catalogue import CatalogueFrame, ElementView, ReviewCatalogue, RunView, viewport_grid
+from ._review_elements import ElementFamily, state_order
 from ._review_store import (
     InvalidNoteError,
     NoteNotFoundError,
     ReviewStore,
     ReviewStoreVersionError,
+    SignOff,
     image_state,
+    sign_off_changes,
 )
 
 DEFAULT_REVIEW_PORT: Final[int] = 8740
@@ -255,23 +262,70 @@ def state_payload(state: ReviewState, run_name: str | None) -> dict[str, object]
     runs = state.catalogue.runs()
     view = _choose_run(runs, run_name)
     frames = view.frames if view is not None else ()
-    digests = {frame.key: frame.png_sha256 for frame in frames}
-    notes = state.store.notes()
+    elements = {element.key: element for element in (view.elements if view is not None else ())}
+    frame_digests = {frame.key: frame.png_sha256 for frame in frames}
     latest = max((frame.modified_ns for frame in frames), default=None)
     return {
         "generation": generation,
-        "runs": [{"name": run.name, "frames": len(run.frames)} for run in runs],
+        "runs": [{"name": run.name, "frames": len(run.frames), "elements": len(run.elements)} for run in runs],
         "run": None if view is None else view.name,
         "frames": [] if view is None else [_frame_payload(view, frame) for frame in frames],
+        "elements": [_element_payload(element) for element in elements.values()],
+        "states": _state_listing(tuple(elements.values())),
         "latest_frame_at": None if latest is None else _iso(latest),
         "manifest": None if view is None else _manifest_payload(view),
         "unrecognised": [] if view is None else list(view.unrecognised),
         "notes": [
-            {**note.model_dump(mode="json"), "image_state": str(image_state(note, digests.get(note.frame_key)))}
-            for note in notes
+            {
+                **note.model_dump(mode="json"),
+                "element_state": str(
+                    image_state(note.element_sha256, _digest_of(elements.get(note.element_key))),
+                ),
+                "frame_state": None
+                if note.frame_key is None or note.frame_sha256 is None
+                else str(image_state(note.frame_sha256, frame_digests.get(note.frame_key))),
+            }
+            for note in state.store.notes()
         ],
-        "reviewed": {key: mark.model_dump(mode="json") for key, mark in state.store.reviewed().items()},
+        "sign_offs": {key: _sign_off_payload(mark, elements.get(key)) for key, mark in state.store.sign_offs().items()},
         "store": str(state.store.path),
+    }
+
+
+def _state_listing(elements: tuple[ElementView, ...]) -> list[dict[str, str]]:
+    """Every state some element is shown in, by family and then in each family's own order."""
+    families = list(ElementFamily)
+    seen = {(element.family, state) for element in elements for state in element.states if state is not None}
+    ordered = sorted(seen, key=lambda item: (families.index(item[0]), state_order(item[0], item[1])))
+    return [{"family": str(family), "state": state} for family, state in ordered]
+
+
+def _digest_of(element: ElementView | None) -> str | None:
+    return None if element is None else element.digest
+
+
+def _element_payload(element: ElementView) -> dict[str, object]:
+    return {
+        "key": element.key,
+        "family": str(element.family),
+        "name": element.name,
+        "states": list(element.states),
+        "frames": [frame.stem for frame in element.frames],
+        "digest": element.digest,
+        "modified_at": _iso(element.latest_modified_ns),
+    }
+
+
+def _sign_off_payload(mark: SignOff, element: ElementView | None) -> dict[str, object]:
+    """A sign-off, and which of the element's frames have moved since it was given."""
+    changes = sign_off_changes(mark, {} if element is None else element.frame_digests)
+    return {
+        "run": mark.run,
+        "reviewed_at": mark.reviewed_at,
+        "current": changes.unchanged,
+        "changed": list(changes.changed),
+        "added": list(changes.added),
+        "removed": list(changes.removed),
     }
 
 
@@ -287,10 +341,13 @@ def _choose_run(runs: tuple[RunView, ...], name: str | None) -> RunView | None:
 def _frame_payload(view: RunView, frame: CatalogueFrame) -> dict[str, object]:
     columns, rows, orientation = viewport_grid(frame.identity.viewport)
     record = view.recorded(frame)
+    parts = frame.identity.parts
     return {
         "stem": frame.stem,
         "key": frame.key,
         "surface": frame.identity.surface,
+        "element": parts.element,
+        "state": parts.state,
         "viewport": str(frame.identity.viewport),
         "theme": str(frame.identity.theme),
         "columns": columns,
@@ -357,21 +414,34 @@ def _first(query: Mapping[str, list[str]], name: str) -> str | None:
     return values[0] if values else None
 
 
-class _FrameReference(BaseModel):
-    """A write names the frame by run and stem, and the image the reviewer saw by digest."""
+_DIGEST_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
+
+
+class _ElementReference(BaseModel):
+    """A write names the element by run and key, and the images the reviewer saw by the element's digest."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     run: str
+    element: str
+    element_sha256: str = Field(pattern=_DIGEST_PATTERN)
+
+
+class _PointedFrame(BaseModel):
+    """The frame on screen when a note was written, and the digest of the image shown."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
     stem: str
-    png_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    png_sha256: str = Field(pattern=_DIGEST_PATTERN)
 
 
-class _NoteRequest(_FrameReference):
+class _NoteRequest(_ElementReference):
     body: str
+    frame: _PointedFrame | None = None
 
 
-class _ReviewedRequest(_FrameReference):
+class _ReviewedRequest(_ElementReference):
     reviewed: StrictBool
 
 
@@ -436,7 +506,7 @@ class ReviewRequestHandler(BaseHTTPRequestHandler):
                 self._send_error(HTTPStatus.NOT_FOUND, "no such page")
 
     def do_POST(self) -> None:
-        """Record a note, resolve or reopen one, or sign a frame off."""
+        """Record a note, resolve or reopen one, or sign an element off."""
         parts = [unquote(part) for part in urlsplit(self.path).path.split("/") if part]
         match parts:
             case ["api", "notes"]:
@@ -543,18 +613,30 @@ class ReviewRequestHandler(BaseHTTPRequestHandler):
             )
             raise _RequestRefusedError(HTTPStatus.BAD_REQUEST, problems) from None
 
-    def _frame_of(self, request: _FrameReference) -> CatalogueFrame:
-        _, frame = self._frame(request.run, request.stem)
-        return frame
+    def _element_of(self, request: _ElementReference) -> ElementView:
+        view = self.state.catalogue.run(request.run)
+        element = None if view is None else view.element(request.element)
+        if element is None:
+            message = f"run {request.run!r} holds no frame of element {request.element!r}"
+            raise _RequestRefusedError(HTTPStatus.NOT_FOUND, message)
+        return element
 
     def _create_note(self) -> None:
         request = self._read_body(_NoteRequest)
-        frame = self._frame_of(request)
+        element = self._element_of(request)
+        pointed: tuple[str, str] | None = None
+        if request.frame is not None:
+            frame = next((frame for frame in element.frames if frame.stem == request.frame.stem), None)
+            if frame is None:
+                message = f"element {element.key!r} holds no frame {request.frame.stem!r}"
+                raise _RequestRefusedError(HTTPStatus.NOT_FOUND, message)
+            pointed = (frame.key, request.frame.png_sha256)
         try:
             note = self.state.store.add_note(
-                frame_key=frame.key,
+                element_key=element.key,
                 run=request.run,
-                png_sha256=request.png_sha256,
+                element_sha256=request.element_sha256,
+                frame=pointed,
                 body=request.body,
             )
         except InvalidNoteError as refusal:
@@ -582,16 +664,23 @@ class ReviewRequestHandler(BaseHTTPRequestHandler):
         self._send_json(HTTPStatus.OK, {"deleted": identifier})
 
     def _set_reviewed(self) -> None:
+        """Sign an element off, only at the images the reviewer was shown, or withdraw the sign-off."""
         request = self._read_body(_ReviewedRequest)
-        frame = self._frame_of(request)
-        if request.reviewed:
-            mark = self.state.store.mark_reviewed(frame_key=frame.key, png_sha256=request.png_sha256)
+        element = self._element_of(request)
+        if not request.reviewed:
+            self.state.store.clear_sign_off(element.key)
             self.state.bump()
-            self._send_json(HTTPStatus.OK, mark.model_dump(mode="json"))
+            self._send_json(HTTPStatus.OK, {"element_key": element.key, "cleared": True})
             return
-        self.state.store.clear_reviewed(frame.key)
+        # The sign-off records the frames the run holds now, so they must be
+        # the ones the page showed: a frame that settled since would otherwise
+        # be approved unseen.
+        if request.element_sha256 != element.digest:
+            message = f"element {element.key!r} changed since the page loaded it; look again before signing off"
+            raise _RequestRefusedError(HTTPStatus.CONFLICT, message)
+        mark = self.state.store.sign_off(element_key=element.key, run=request.run, frames=element.frame_digests)
         self.state.bump()
-        self._send_json(HTTPStatus.OK, {"frame_key": frame.key, "cleared": True})
+        self._send_json(HTTPStatus.OK, mark.model_dump(mode="json"))
 
     def _stream_events(self) -> None:
         """Hold the connection open and write one event per announced change."""

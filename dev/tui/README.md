@@ -147,21 +147,47 @@ of every run and pushes a change to the open page as each frame lands. A frame
 appears once its file has stopped changing, never half written. Start `serve`
 first, then `render` in another terminal, and the page fills in over the run.
 
-In the page, filter by what still needs review or has open notes, open a
-frame, and either leave a note or mark it reviewed. `Reviewed, next` does both
-in one tap on a phone. Swipe or use the arrow keys to move between frames.
+The page reviews elements, not images. A render holds each element once per
+state, viewport and appearance, so its thousand-odd frames reduce to a few
+dozen elements, each reviewed once:
+
+- a workbench fixture surface, such as `home` or `ledger-overview`, across
+  its fixture states (`ready`, `empty`, `stale`, `unavailable`, and the
+  failing ones);
+- a Modelo page from the sequence scenarios, such as `workbench` or
+  `sources`, across the documentation sequences whose declarations it shows;
+- a single-state screen, such as `login`.
+
+The grid shows one card per element. Filter by review status (to review,
+changed since sign-off, reviewed, open notes), by kind, by state, or by name;
+the size and theme selectors choose which frame each card previews. Open an
+element to flip its frame by state, size and theme -- arrow keys or a swipe
+for the state, `v` for the size, `t` for the theme -- or pick any frame from
+the sheet of every frame below it. `j` and `k` move between elements, and
+`Reviewed, next` signs one off and opens the next in one tap on a phone.
+
+A note belongs to the element. By default it also points at the frame on
+screen when it was written, so a remark about one state at one size leads
+straight back to that frame.
 
 Notes and sign-offs are stored by the server in
 `.tui-review/notes.sqlite3` (gitignored), outside the run tree, so they
-survive the server stopping, a re-render and `snapshot --replace`. Each one
-records the digest of the image it was made against. When a frame is
-re-rendered, its sign-off lapses and its notes are marked as made on an
-earlier image, so nothing reads as approval of pixels nobody has seen.
+survive the server stopping, a re-render and `snapshot --replace`. A note
+records the element's digest over every frame it held, and the pointed
+frame's image digest; a sign-off records the digest of every frame it
+covered. When any frame of an element is re-rendered, added or removed, its
+sign-off lapses, the element is listed as changed, and the frames that moved
+are outlined so only they need a second look; nothing reads as approval of
+pixels nobody has seen. The server also refuses a sign-off sent from a page
+that had not yet shown the element's latest frames.
 
-`notes` prints the open notes grouped by frame, flagging any whose frame has
-been re-rendered since; `--all` includes resolved ones and `--json` gives a
-form another tool can read. `--run` names the run the notes are compared
-with, `current` by default.
+A store written before notes were kept per element is refused with a message
+naming both schema versions; move it aside to start a new one.
+
+`notes` prints the open notes grouped by element, flagging any whose element
+or pointed frame has been re-rendered since; `--all` includes resolved ones
+and `--json` gives a form another tool can read. `--run` names the run the
+notes are compared with, `current` by default.
 
 ## Coverage
 

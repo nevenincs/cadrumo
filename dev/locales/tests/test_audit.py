@@ -99,6 +99,10 @@ _PROSE_KEYS = {
         "docs.legal.page.intro",
         "mcp.call.timeout",
         "mcp.elicitation.refusal.no_channel",
+        "application.modelo.lifecycle.file_confirm_message",
+        "tui.modelo.export.result.completeness.unverified",
+        "tui.modelo.export.result.warning.completeness_unverified",
+        "tui.root.opening",
     },
     "en": {
         "application.modelo.calculation_summary.filing_recorded",
@@ -140,6 +144,10 @@ _PROSE_KEYS = {
         "docs.legal.page.intro",
         "mcp.call.timeout",
         "mcp.elicitation.refusal.no_channel",
+        "application.modelo.lifecycle.file_confirm_message",
+        "tui.modelo.export.result.completeness.unverified",
+        "tui.modelo.export.result.warning.completeness_unverified",
+        "tui.root.opening",
     },
     "es": {
         "application.modelo.calculation_summary.filing_recorded",
@@ -180,6 +188,10 @@ _PROSE_KEYS = {
         "docs.legal.page.intro",
         "mcp.call.timeout",
         "mcp.elicitation.refusal.no_channel",
+        "application.modelo.lifecycle.file_confirm_message",
+        "tui.modelo.export.result.completeness.unverified",
+        "tui.modelo.export.result.warning.completeness_unverified",
+        "tui.root.opening",
     },
     "hu": {
         "application.modelo.calculation_summary.footer_notice",
@@ -216,6 +228,9 @@ _PROSE_KEYS = {
         "docs.legal.page.intro",
         "mcp.call.timeout",
         "mcp.elicitation.refusal.no_channel",
+        "tui.modelo.export.result.completeness.unverified",
+        "tui.modelo.export.result.warning.completeness_unverified",
+        "tui.root.opening",
     },
 }
 
