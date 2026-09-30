@@ -394,8 +394,12 @@ async def test_an_empty_box_says_so_once_in_its_origin_words_and_keeps_a_held_ze
     assert _line_with(lines, "Emptied amount").endswith(" · □ Cleared by you")
     assert _line_with(lines, "Missing amount").endswith(" · ! Needs your input")
     assert _line_with(lines, "Other amount").endswith(" · - Not applicable")
-    # A zero is a value, not an absence, and is shown as one.
-    assert _line_with(lines, "Zero amount").endswith("0.00" + _EURO + " ○ Optional, empty")
+    # A zero is a value, not an absence: it is shown as one, and its words never call the box empty.
+    zero = _line_with(lines, "Zero amount")
+    assert zero.endswith("0.00" + _EURO + " ○ Optional, left at 0")
+    assert "empty" not in zero
+    # A box holding nothing shows no number beside its words.
+    assert not any(character.isdigit() for character in _line_with(lines, "Optional amount").split("]", 1)[1])
     assert not any("no data" in line or "…" in line for line in lines)
 
 

@@ -2121,8 +2121,11 @@ tui:
           it, start a correction of this declaration.'
       filter:
         all: all boxes
+        amount: only boxes with an amount
         attention: only what needs attention
+        calculated: only calculated values
         mine: only your values
+        records: only values from your records
       go_to:
         missing: There is no box [{box}] on this form.
         prompt: 'Go to box: type its number and press Enter.'
@@ -2354,7 +2357,10 @@ tui:
       origin_filed:
         default_to_confirm: Assumed, nobody entered it
         needs_input: Empty, nobody filled it in
+      origin_held_zero:
+        optional_empty: Optional, left at 0
       origin_source:
+        aeat_imported_on: From AEAT data, imported {date}
         imported:
           aeat_draft: From AEAT data
           earlier_filings: From an earlier declaration
@@ -2508,6 +2514,7 @@ tui:
         count: 'Boxes: {count}'
         group:
           aeat_data: AEAT data
+          aeat_data_imported_on: AEAT data, imported {date}
           assumed: Assumed, please confirm
           blank: Left blank or do not apply
           calculated: Calculated
@@ -2551,7 +2558,6 @@ tui:
         fill: Fill in
         review: Check
       value:
-        fixed_by_design: fixed
         not_applicable: n/a
       was: was {value}
   root:

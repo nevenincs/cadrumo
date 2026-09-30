@@ -2153,8 +2153,11 @@ tui:
           módosításhoz indítsa el a bevallás helyesbítését.'
       filter:
         all: minden rovat
+        amount: csak az összeget tartalmazó rovatok
         attention: csak a teendők
+        calculated: csak a számított értékek
         mine: csak az Ön értékei
+        records: csak az Ön nyilvántartásaiból származó értékek
       go_to:
         missing: Ezen a nyomtatványon nincs [{box}] rovat.
         prompt: 'Ugrás rovatra: írd be a számát, majd nyomj Entert.'
@@ -2392,7 +2395,10 @@ tui:
       origin_filed:
         default_to_confirm: Feltételezett, senki nem adta meg
         needs_input: Üres, senki nem töltötte ki
+      origin_held_zero:
+        optional_empty: Nem kötelező, 0 marad
       origin_source:
+        aeat_imported_on: 'AEAT-adatokból, importálva: {date}'
         imported:
           aeat_draft: AEAT-adatokból
           earlier_filings: Egy korábbi bevallásból
@@ -2555,6 +2561,7 @@ tui:
         count: 'Rovatok: {count}'
         group:
           aeat_data: AEAT-adatok
+          aeat_data_imported_on: 'AEAT-adatok, importálva: {date}'
           assumed: Feltételezett, erősítsd meg
           blank: Üresen hagyott vagy nem alkalmazandó
           calculated: Számított
@@ -2598,7 +2605,6 @@ tui:
         fill: Kitöltés
         review: Ellenőrzés
       value:
-        fixed_by_design: rögzített
         not_applicable: nem alk.
       was: 'korábban: {value}'
   root:

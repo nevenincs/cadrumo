@@ -2170,8 +2170,11 @@ tui:
           Per canviar-la, inicia una correcció d''aquesta declaració.'
       filter:
         all: totes les caselles
+        amount: només les caselles amb import
         attention: només el que està pendent
+        calculated: només els valors calculats
         mine: només els teus valors
+        records: només el que ve dels teus registres
       go_to:
         missing: No hi ha cap casella [{box}] en aquest model.
         prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
@@ -2407,7 +2410,10 @@ tui:
       origin_filed:
         default_to_confirm: Suposada, ningú no la va introduir
         needs_input: Buida, ningú no la va omplir
+      origin_held_zero:
+        optional_empty: Opcional, es queda a 0
       origin_source:
+        aeat_imported_on: De dades de l'AEAT, importades el {date}
         imported:
           aeat_draft: De dades de l'AEAT
           earlier_filings: D'una declaració anterior
@@ -2566,6 +2572,7 @@ tui:
         count: 'Caselles: {count}'
         group:
           aeat_data: Dades de l'AEAT
+          aeat_data_imported_on: Dades de l'AEAT, importades el {date}
           assumed: Suposats, confirma'ls
           blank: En blanc o no s'apliquen
           calculated: Calculats
@@ -2609,7 +2616,6 @@ tui:
         fill: Emplenar
         review: Comprovar
       value:
-        fixed_by_design: fixat
         not_applicable: no s'aplica
       was: 'abans: {value}'
   root:

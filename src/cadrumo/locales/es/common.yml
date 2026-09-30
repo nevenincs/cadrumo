@@ -2179,8 +2179,11 @@ tui:
           Para cambiarla, inicia una corrección de esta declaración.'
       filter:
         all: todas las casillas
+        amount: solo las casillas con importe
         attention: solo lo pendiente
+        calculated: solo los valores calculados
         mine: solo tus valores
+        records: solo lo que viene de tus registros
       go_to:
         missing: No hay ninguna casilla [{box}] en este modelo.
         prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
@@ -2411,7 +2414,10 @@ tui:
       origin_filed:
         default_to_confirm: Supuesta, nadie la introdujo
         needs_input: Vacía, nadie la rellenó
+      origin_held_zero:
+        optional_empty: Opcional, se queda en 0
       origin_source:
+        aeat_imported_on: De datos de la AEAT, importados el {date}
         imported:
           aeat_draft: De datos de la AEAT
           earlier_filings: De una declaración anterior
@@ -2568,6 +2574,7 @@ tui:
         count: 'Casillas: {count}'
         group:
           aeat_data: Datos de la AEAT
+          aeat_data_imported_on: Datos de la AEAT, importados el {date}
           assumed: Supuestos, confírmalos
           blank: En blanco o no aplican
           calculated: Calculados
@@ -2612,7 +2619,6 @@ tui:
         fill: Rellenar
         review: Comprobar
       value:
-        fixed_by_design: fijado
         not_applicable: no aplica
       was: 'antes: {value}'
   root:

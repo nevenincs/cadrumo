@@ -172,7 +172,7 @@ async def test_the_panel_answers_what_it_asks_what_it_holds_whether_it_changes_a
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", ["es", "en"])
 @pytest.mark.parametrize("size", _SIZES)
-async def test_the_new_value_follows_can_you_change_it_with_its_format_right_under_the_input(
+async def test_the_boxes_it_affects_come_between_can_you_change_it_and_the_new_value(
     language: str, size: tuple[int, int]
 ) -> None:
     with override_settings(cadrumo_output_language=language):
@@ -188,11 +188,11 @@ async def test_the_new_value_follows_can_you_change_it_with_its_format_right_und
             money_format = tr("tui.modelo.workbench.editor.format.money")
             affects = editor.query_one("#editor-affects").region
 
-    assert entry.y == can_change.bottom, "'New value' comes straight after 'Can you change it?'"
+    assert affects.y == can_change.bottom, "'Affects' comes straight after 'Can you change it?'"
+    assert entry.y >= affects.bottom, "the new value comes after the boxes it affects"
     assert hint.y == field_input.bottom, "the format is right under the input"
     assert hint.x == field_input.x
     assert hint_text == money_format
-    assert affects.y > hint.y, "the boxes it affects come after the new value"
 
 
 @pytest.mark.asyncio
@@ -674,7 +674,8 @@ async def test_on_a_filed_declaration_the_panel_and_the_row_say_what_a_box_holds
     # The same declaration not yet filed still asks, so the filed words are the filing's doing.
     assert open_now.endswith(asking)
     assert asking in rows[False]
-    assert filed_now.endswith(f" · {filed_words}")
+    # A box holding nothing says so once, in its words; one holding a value states it first.
+    assert filed_now == filed_words if value is None else filed_now.endswith(f" · {filed_words}")
     assert filed_words in rows[True]
     for said in (filed_now, rows[True]):
         assert asking.split(" ", 1)[1] not in said

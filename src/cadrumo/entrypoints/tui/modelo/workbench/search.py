@@ -9,8 +9,10 @@ finds "Retenciones". A query of digits alone is a box number and nothing else:
 what was typed, and a number is never found inside another. The first hit is
 selected as soon as there is one, and the help band explains the hit
 selected. Each hit reads as the list would show it: the box, the label, the
-page, the value and where it comes from. Go to box takes a number
-and lands on it, or says the form has no such box.
+page, the value and where it comes from; a box that holds nothing states no
+value, since where it comes from already says it is empty, while a held zero
+is stated as the figure it is. Go to box takes a number and lands on it, or
+says the form has no such box.
 
 The panel opens under the header in place of the list, so the result and the
 deadline stay in view while the filer searches.
@@ -22,6 +24,7 @@ import re
 import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from typing import ClassVar, Final, override
 
@@ -36,7 +39,7 @@ from textual.widgets.option_list import Option
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.theme import tokenised
-from .casilla_list import AddressKey, CasillaListEntry, description_text, value_text
+from .casilla_list import AddressKey, CasillaListEntry, description_text, stated_value_text
 from .navigator import readable_text
 from .page_items import StagedDisplay, WorkbenchPage, page_items
 from .vocabulary import origin_text
@@ -90,10 +93,13 @@ def search_entries(
     staged: Mapping[AddressKey, StagedDisplay],
     language: OutputLanguage,
     recorded: bool = False,
+    aeat_imported: date | None = None,
 ) -> tuple[SearchEntry, ...]:
     """Every box of every page, in form order, with the value it shows now, staged changes included.
 
-    On a declaration ``recorded`` as filed a box states what it holds without asking for anything.
+    On a declaration ``recorded`` as filed a box states what it holds without
+    asking for anything. ``aeat_imported`` is the day the AEAT tax data the
+    calculation took values from was imported, which a value taken from it names.
     """
     entries: list[SearchEntry] = []
     for page in pages:
@@ -109,8 +115,8 @@ def search_entries(
                     label=readable_text(field.label) or description,
                     description=description,
                     page=page.heading.text,
-                    value=value_text(item, language),
-                    origin=origin_text(field, recorded=recorded),
+                    value=stated_value_text(item, language) or "",
+                    origin=origin_text(field, recorded=recorded, aeat_imported=aeat_imported, language=language),
                 )
             )
     return tuple(entries)

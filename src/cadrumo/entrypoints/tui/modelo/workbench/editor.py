@@ -2,9 +2,9 @@
 
 The panel answers the filer's questions about one box in the same order every
 time: what the box asks, what it holds now and who put it there, where a
-sourced value comes from, and whether it can be changed here and how. The new
-value comes straight after those answers, with the format it takes right under
-the input, and then the boxes it affects.
+sourced value comes from, and whether it can be changed here and how. The boxes
+it affects come next, so the filer knows what a change reaches before typing
+it, and then the new value, with the format it takes right under the input.
 
 Every keystroke is read by the application's parser in the filer's language
 and read back ("will be read as 1.234,56 €"), or refused with a sentence saying
@@ -17,7 +17,11 @@ decision, and the workbench's edit session records it for review.
 
 A box that cannot be changed here still opens the panel, without an input:
 the answers say why, and where the value can be changed instead, and the
-panel offers to open that area of the application.
+panel offers to open that area of the application. A source the filer cannot
+use is not named as where the value comes from: a box no entry of theirs can
+reach here, which holds nothing, says only that it is empty and why. On a
+declaration recorded as filed the answer says how to change it: by starting a
+correction.
 
 The panel is as tall as what it says. When that is more than the terminal
 holds, only the answers scroll, between the title and the input and actions,
@@ -30,6 +34,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 from typing import ClassVar, Final, override
@@ -54,7 +59,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from ...components.theme import tokenised
-from .casilla_list import CasillaListEntry, description_text, value_text
+from .casilla_list import CasillaListEntry, description_text, stated_value_text, value_text
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
@@ -62,8 +67,11 @@ from .vocabulary import (
     SOURCE_WORDED_ORIGINS,
     TYPED_EDITABILITIES,
     editability_text,
+    holds_nothing,
     origin_source_words_key,
     origin_text,
+    origin_words,
+    set_by_form,
 )
 from .wording import period_words
 
@@ -110,6 +118,8 @@ _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingPro
 """The answers to "can you change it?" that need nothing but the box's editability."""
 
 _RECORDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.editor.can_change.recorded"
+#: What a declaration recorded as filed allows, as the workbench's banner says it: look, or start a correction.
+_FILED_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.filed.read_only"
 
 
 def source_surface(field: ModeloFormField) -> SourceSurface:
@@ -172,21 +182,40 @@ def _source_labels(field: ModeloFormField) -> tuple[str, ...]:
     return tuple(dict.fromkeys(tr(key) for key in keys))
 
 
-def where_from_text(field: ModeloFormField) -> str | None:
+def _unreachable_entry(field: ModeloFormField) -> bool:
+    """Whether a box is fed by the filer's own entries, none of which can reach it here, and holds nothing."""
+    source = field.source
+    return (
+        source is not None
+        and source.family is SourceFamily.YOUR_ENTRIES
+        and field.editability not in TYPED_EDITABILITIES
+        and holds_nothing(field.value)
+    )
+
+
+def where_from_text(
+    field: ModeloFormField, *, aeat_imported: date | None = None, language: OutputLanguage | None = None
+) -> str | None:
     """Say where a sourced value comes from, beyond the kind of place its "Now" line already names.
 
     The answer names each source that feeds the box, and the earlier
     declarations a carried value is read from. The kind of place leads only
     when the "Now" line does not already say it, as for an assumed or a typed
     value over a source. A value taken from imported AEAT data names only
-    that, because the sources its binding would otherwise read did not supply
-    it.
+    that, with the day it was imported when ``aeat_imported`` gives it, because
+    the sources its binding would otherwise read did not supply it. A box fed
+    by the filer's entries that none of them can reach here, and that holds
+    nothing, names no source: nothing the filer can use puts a value there.
     """
     source = field.source
-    if source is None:
+    if source is None or _unreachable_entry(field):
         return None
+    if source.family is SourceFamily.AEAT_DRAFT and aeat_imported is not None and language is not None:
+        imported = field.model_copy(update={"origin": ModeloFormOrigin.IMPORTED})
+        return origin_words(imported, aeat_imported=aeat_imported, language=language)
     family_words = tr(origin_source_words_key(ModeloFormOrigin.IMPORTED, source.family))
-    lines: list[str] = [] if field.origin in SOURCE_WORDED_ORIGINS else [family_words]
+    worded = field.origin in SOURCE_WORDED_ORIGINS or set_by_form(field)
+    lines: list[str] = [] if worded else [family_words]
     if source.family is not SourceFamily.AEAT_DRAFT:
         labels = _source_labels(field)
         if labels:
@@ -349,6 +378,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         feeds: tuple[str, ...] = (),
         status_line: str | None = None,
         recorded: bool = False,
+        aeat_imported: date | None = None,
     ) -> None:
         """Bind the field, the parser, which of clear and restore it allows, and the boxes it feeds.
 
@@ -359,10 +389,13 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         is the header's result line, shown first because the panel covers it.
         ``recorded`` is the declaration being recorded as filed, whose "Now"
         line says what a box holds rather than asking the filer for a value.
+        ``aeat_imported`` is the day the AEAT tax data the calculation took
+        values from was imported, which a value taken from it names.
         """
         super().__init__()
         self._field = field
         self._recorded = recorded
+        self._aeat_imported = aeat_imported
         self._parse = parse
         self._language = language
         self._limits = limits
@@ -401,21 +434,27 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
             classes="editor-block",
         )
 
+    def _now_text(self) -> str:
+        """What the box holds and who put it there; a box holding nothing says only that, once, in its origin words."""
+        field = self._field
+        origin = origin_text(field, recorded=self._recorded, aeat_imported=self._aeat_imported, language=self._language)
+        held = stated_value_text(CasillaListEntry(field, recorded=self._recorded), self._language)
+        return origin if held is None else f"{held} · {origin}"
+
     def _answers(self) -> list[Horizontal]:
         field = self._field
         asks = description_text(field) or tr("tui.modelo.workbench.help.no_explanation")
         blocks = [
             self._block("editor-asks", "tui.modelo.workbench.editor.block.asks", asks),
-            self._block(
-                "editor-now",
-                "tui.modelo.workbench.editor.block.now",
-                f"{self._current()} · {origin_text(field, recorded=self._recorded)}",
-            ),
+            self._block("editor-now", "tui.modelo.workbench.editor.block.now", self._now_text()),
         ]
-        where = where_from_text(field)
+        where = where_from_text(field, aeat_imported=self._aeat_imported, language=self._language)
         if where is not None:
             blocks.append(self._block("editor-where", "tui.modelo.workbench.editor.block.where_from", where))
-        can_change = self._read_only_reason or can_change_text(field, self._language)
+        if self._recorded:
+            can_change = tr(_FILED_READ_ONLY_KEY)
+        else:
+            can_change = self._read_only_reason or can_change_text(field, self._language)
         blocks.append(self._block("editor-can-change", "tui.modelo.workbench.editor.block.can_change", can_change))
         return blocks
 
@@ -481,11 +520,11 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
                     yield Static(self._status_line, id="editor-status", markup=False)
                 yield Static(f"{box}{field.label.text}", id="editor-title", markup=False)
             with Vertical(id="editor-foot"):
-                if not self.read_only:
-                    yield from self._entry()
                 affects = affects_text(self._feeds)
                 if affects is not None:
                     yield self._block("editor-affects", "tui.modelo.workbench.editor.block.affects", affects)
+                if not self.read_only:
+                    yield from self._entry()
                 keys = self._keys_text()
                 if keys is not None:
                     yield Static(keys, id="editor-keys", markup=False)

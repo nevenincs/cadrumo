@@ -54,6 +54,8 @@ from ..casilla_list import (
     CasillaListItem,
     grid_cell_title,
     grid_value_text,
+    row_value_text,
+    value_text,
 )
 from ..page_items import StagedDisplay, WorkbenchPage, page_items, workbench_pages
 from ..screen import ModeloWorkbenchScreen
@@ -494,28 +496,29 @@ async def test_section_headings_take_the_colour_of_their_most_severe_level(opera
         assert style.color.triplet.hex.lower() != primary.lower()
 
 
-# ── never "fixed" ────────────────────────────────────────────────────────
+# ── a box the form sets reads as its figure or a dot ─────────────────────
 
 
-def _fixed_words() -> set[str]:
-    words = {
-        lookup_translation("tui.modelo.workbench.value.fixed_by_design", locale=item.value) for item in OutputLanguage
-    }
-    return {word for word in words if word}
-
-
-def test_no_grid_cell_ever_says_its_value_is_fixed(operation: PinnedAuthorityOperation) -> None:
+def test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word(operation: PinnedAuthorityOperation) -> None:
     forms = (_form(operation), _form(operation, "390", 2025, "0A"), _form(operation, "349", 2026, "1T"))
-    fixed = _fixed_words()
     checked = 0
     for language in OutputLanguage:
         with override_settings(cadrumo_output_language=language.value):
             for form in forms:
                 for page in workbench_pages(form):
                     for item in page_items(page, staged={}):
-                        if isinstance(item, CasillaListEntry) and item.row_label is not None:
-                            assert grid_value_text(item, language) not in fixed, item.field.box
-                            checked += 1
+                        if not isinstance(item, CasillaListEntry):
+                            continue
+                        field = item.field
+                        if field.editability is not ModeloFormEditability.DESIGN_CONSTANT or field.value is not None:
+                            continue
+                        shown = (value_text(item, language), row_value_text(item, language))
+                        if item.row_label is not None:
+                            shown = (*shown, grid_value_text(item, language))
+                        for text in shown:
+                            # A figure the form prints, or a dot beside the words saying the form sets it.
+                            assert text == "·" or text[0].isdigit(), (field.box, text)
+                        checked += 1
     assert checked
 
 
@@ -543,7 +546,7 @@ async def test_a_box_the_design_fixes_without_a_figure_reads_as_a_dot_in_a_grid(
 
     row_text = _line_with(lines, "98")
     assert "·" in row_text
-    assert not any(word in line for line in lines for word in _fixed_words())
+    assert not any(character.isalpha() for character in row_text.split("[98]", 1)[1].split("[", 1)[0]), row_text
 
 
 @pytest.mark.asyncio

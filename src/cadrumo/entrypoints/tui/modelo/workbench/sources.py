@@ -13,7 +13,8 @@ the form and decides nothing else.
 
 A group fed by sources names each source and whether it produced anything; a
 value carried from an earlier declaration names that declaration when the form
-does. "None found" means the last calculation read that source and it gave
+does, and the AEAT data by the day it was imported when the form knows it.
+"None found" means the last calculation read that source and it gave
 nothing, which differs from a source not read yet because nothing has been
 calculated, and from a zero the source did give, which the box shows as its
 value. A closed group that asks something of the filer lists its box numbers
@@ -34,6 +35,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
 from typing import ClassVar, Final, override
@@ -62,7 +64,7 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.aggregation import BindingSourceKind
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from ...components.theme import tokenised
 from ...navigation import TuiDestinationIdV1, TuiFocusIdentityV1, TuiNavigationTargetV1
 from .casilla_list import (
@@ -80,12 +82,13 @@ from .vocabulary import (
     CONFIRM_MARK,
     EARLIER_FILING_MARK,
     EXPANDED_MARK,
-    INFO_MARK,
+    FORM_SET_MARK,
     MISSING_MARK,
     ORIGIN_MARKS,
     WorkbenchMark,
+    aeat_imported_on,
 )
-from .wording import modelo_number, period_words
+from .wording import date_text, modelo_number, period_words
 
 
 class SourceGroupKind(StrEnum):
@@ -129,13 +132,13 @@ SOURCE_GROUP_MARKS: Final[Mapping[SourceGroupKind, WorkbenchMark]] = MappingProx
         SourceGroupKind.ASSUMED: CONFIRM_MARK,
         SourceGroupKind.NEEDS_YOU: MISSING_MARK,
         SourceGroupKind.CALCULATED: ORIGIN_MARKS[ModeloFormOrigin.CALCULATED],
-        SourceGroupKind.SET_BY_FORM: ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL],
-        SourceGroupKind.INFORMATION: INFO_MARK,
+        SourceGroupKind.SET_BY_FORM: FORM_SET_MARK,
+        SourceGroupKind.INFORMATION: ORIGIN_MARKS[ModeloFormOrigin.INFORMATIONAL],
         SourceGroupKind.BLANK: ORIGIN_MARKS[ModeloFormOrigin.NOT_APPLICABLE],
         SourceGroupKind.UNNAMED: _IMPORTED_MARK,
     }
 )
-"""The mark in front of each group, taken from the workbench's one vocabulary of marks."""
+"""The mark in front of each group: the one its boxes' rows draw, from the workbench's one vocabulary of marks."""
 
 _GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyType(
     {
@@ -162,6 +165,7 @@ _FILED_GROUP_LOCALE_KEYS: Final[Mapping[SourceGroupKind, str]] = MappingProxyTyp
     }
 )
 """Names for the groups that ask for a value, on a declaration recorded as filed: what they hold, not a request."""
+_AEAT_IMPORTED_ON_KEY: Final[str] = "tui.modelo.workbench.sources.group.aeat_data_imported_on"
 _STATE_LOCALE_KEYS: Final[Mapping[SourceState, str]] = MappingProxyType(
     {
         SourceState.NONE_FOUND: "tui.modelo.workbench.sources.none_found",
@@ -241,6 +245,8 @@ class SourceGroup:
     readings: tuple[SourceReading, ...] = ()
     #: The declaration is recorded as filed, so the group asks nothing of the filer.
     recorded: bool = False
+    #: For the AEAT data group, the day the data was imported, when the form knows it.
+    imported_on: date | None = None
 
     @property
     def keys(self) -> frozenset[AddressKey]:
@@ -357,7 +363,10 @@ def source_groups(form: ModeloWorkForm) -> tuple[SourceGroup, ...]:
             field.origin in _SOURCED_ORIGINS and field.bindings for field in fields
         )
         readings = _readings(fields, calculated=calculated) if sourced else ()
-        groups.append(SourceGroup(kind=kind, fields=fields, readings=readings, recorded=recorded))
+        imported_on = aeat_imported_on(form) if kind is SourceGroupKind.AEAT_DATA else None
+        groups.append(
+            SourceGroup(kind=kind, fields=fields, readings=readings, recorded=recorded, imported_on=imported_on)
+        )
     return tuple(groups)
 
 
@@ -440,14 +449,30 @@ def group_summary(group: SourceGroup) -> str:
     return ""
 
 
-def group_words(kind: SourceGroupKind, *, recorded: bool = False) -> str:
+def group_words(
+    kind: SourceGroupKind,
+    *,
+    recorded: bool = False,
+    imported_on: date | None = None,
+    language: OutputLanguage | None = None,
+) -> str:
     """A group's mark and name; on a declaration ``recorded`` as filed, a group that would ask names what it holds.
 
-    Such a group draws no mark, as its boxes' rows draw none there.
+    Such a group draws no mark, as its boxes' rows draw none there. The AEAT
+    data group names the day ``imported_on`` the data was imported, written
+    for ``language``, the active output language when not given.
     """
     if recorded and kind in _FILED_GROUP_LOCALE_KEYS:
         return f"  {tr(_FILED_GROUP_LOCALE_KEYS[kind])}"
-    return f"{SOURCE_GROUP_MARKS[kind].glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
+    glyph = SOURCE_GROUP_MARKS[kind].glyph
+    if kind is SourceGroupKind.AEAT_DATA and imported_on is not None:
+        written = date_text(imported_on, OutputLanguage(output_language()) if language is None else language)
+        return f"{glyph} {tr(_AEAT_IMPORTED_ON_KEY, date=written)}"
+    return f"{glyph} {tr(_GROUP_LOCALE_KEYS[kind])}"
+
+
+def _group_words(group: SourceGroup) -> str:
+    return group_words(group.kind, recorded=group.recorded, imported_on=group.imported_on)
 
 
 def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:
@@ -458,7 +483,7 @@ def group_prompt(group: SourceGroup, *, expanded: bool) -> RenderableType:
     """
     toggle = EXPANDED_MARK if expanded else COLLAPSED_MARK
     count = tr("tui.modelo.workbench.sources.count", count=len(group.fields))
-    head = Text(f"{toggle.glyph} {group_words(group.kind, recorded=group.recorded)} · {count}", style="bold")
+    head = Text(f"{toggle.glyph} {_group_words(group)} · {count}", style="bold")
     if expanded:
         return head
     summary = group_summary(group)
@@ -482,7 +507,7 @@ def group_items(group: SourceGroup, *, staged: Mapping[AddressKey, StagedDisplay
             recorded=group.recorded,
         )
 
-    items: list[CasillaListItem] = [CasillaListHeading(group_words(group.kind, recorded=group.recorded))]
+    items: list[CasillaListItem] = [CasillaListHeading(_group_words(group))]
     if not group.readings:
         items.extend(entry(field, 0) for field in group.fields)
         return tuple(items)
