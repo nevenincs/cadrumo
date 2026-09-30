@@ -19,9 +19,9 @@ A box that cannot be changed here still opens the panel, without an input:
 the answers say why, and where the value can be changed instead, and the
 panel offers to open that area of the application. A source the filer cannot
 use is not named as where the value comes from: a box no entry of theirs can
-reach here, which holds nothing, says only that it is empty and why. On a
-declaration recorded as filed the answer says how to change it: by starting a
-correction.
+reach here, which holds nothing, says only that it is empty and why, and a
+carry with no earlier declaration names none. On a declaration recorded as
+filed the answer says how to change it: by starting a correction.
 
 The panel is as tall as what it says. When that is more than the terminal
 holds, only the answers scroll, between the title and the input and actions,
@@ -68,6 +68,8 @@ from .vocabulary import (
     TYPED_EDITABILITIES,
     editability_text,
     holds_nothing,
+    no_earlier_filing,
+    origin_explanation,
     origin_source_words_key,
     origin_text,
     origin_words,
@@ -117,9 +119,8 @@ _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingPro
 )
 """The answers to "can you change it?" that need nothing but the box's editability."""
 
+#: What a declaration recorded as filed allows: no change here, and a correction to change it.
 _RECORDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.editor.can_change.recorded"
-#: What a declaration recorded as filed allows, as the workbench's banner says it: look, or start a correction.
-_FILED_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.filed.read_only"
 
 
 def source_surface(field: ModeloFormField) -> SourceSurface:
@@ -205,11 +206,15 @@ def where_from_text(
     that, with the day it was imported when ``aeat_imported`` gives it, because
     the sources its binding would otherwise read did not supply it. A box fed
     by the filer's entries that none of them can reach here, and that holds
-    nothing, names no source: nothing the filer can use puts a value there.
+    nothing, names no source: nothing the filer can use puts a value there. A
+    carry with no earlier declaration to carry from names no filing either: it
+    says why the box holds zero, or nothing when the "Now" line has said it.
     """
     source = field.source
     if source is None or _unreachable_entry(field):
         return None
+    if no_earlier_filing(field):
+        return origin_explanation(field)
     if source.family is SourceFamily.AEAT_DRAFT and aeat_imported is not None and language is not None:
         imported = field.model_copy(update={"origin": ModeloFormOrigin.IMPORTED})
         return origin_words(imported, aeat_imported=aeat_imported, language=language)
@@ -452,7 +457,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         if where is not None:
             blocks.append(self._block("editor-where", "tui.modelo.workbench.editor.block.where_from", where))
         if self._recorded:
-            can_change = tr(_FILED_READ_ONLY_KEY)
+            can_change = tr(_RECORDED_LOCALE_KEY)
         else:
             can_change = self._read_only_reason or can_change_text(field, self._language)
         blocks.append(self._block("editor-can-change", "tui.modelo.workbench.editor.block.can_change", can_change))

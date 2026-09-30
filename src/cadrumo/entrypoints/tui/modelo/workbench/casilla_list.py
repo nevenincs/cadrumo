@@ -392,8 +392,10 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     """Return the text of a field's value cell, with absence spoken in words.
 
     A rate box's own figure reads in its rate unit wherever that is
-    established. A box the design fixes and prints nothing for shows only a
-    dot, since the origin beside it says the form sets it.
+    established; one whose unit nothing establishes shows only a dot, never a
+    bare figure a filer could read a hundredfold wrong. A box the design fixes
+    and prints nothing for shows only a dot, since the origin beside it says
+    the form sets it.
     """
     if entry.staged_text is not None:
         return entry.staged_text
@@ -410,6 +412,8 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     if field.value is None or field.origin in {ModeloFormOrigin.CLEARED, ModeloFormOrigin.NOT_IMPORTED_YET}:
         return absent_value_text(language)
     unit = own_ratio_unit(field)
+    if _bare_rate(field):
+        return _EMPTY_VALUE
     value = field.value
     if unit in _RATE_READINGS and isinstance(value, Decimal):
         # A rate reads as the printed form writes one, "2 %" rather than "2.00 %"; dropping zeros rounds nothing.
@@ -431,6 +435,16 @@ def rate_text(rate: ModeloFormRate | ModeloFormPrintedRate, language: OutputLang
     )
 
 
+def _bare_rate(field: ModeloFormField) -> bool:
+    """Whether a rate box holds a figure that no declared or grounded unit lets be read as a percentage."""
+    return (
+        field.data_type == _RATIO_DATA_TYPE
+        and field.value is not None
+        and not rate_is_value(field)
+        and own_ratio_unit(field) not in _RATE_READINGS
+    )
+
+
 def _ungrounded_rate(entry: CasillaListEntry) -> bool:
     """Whether an entry is a row's rate box that holds no value and shows no rate."""
     field = entry.field
@@ -443,13 +457,14 @@ def rate_note(entry: CasillaListEntry, language: OutputLanguage | None = None) -
     A box whose value is its row's rate needs only to say when the design
     merely prints it, which is not a rate the calculation is shown to apply.
     A rate box that shows its own value says its row's rate here instead. A
-    row's rate box with no rate at all says why none is shown. ``language``
-    formats the rate, the active output language when not given.
+    row's rate box with no rate at all, or a rate box whose own figure cannot
+    be read as a rate, says why none is shown. ``language`` formats the rate,
+    the active output language when not given.
     """
     field = entry.field
     rate = shown_rate(field)
     if rate is None:
-        return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) else None
+        return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) or _bare_rate(field) else None
     printed = field.grounded_rate is None
     if rate_is_value(field):
         return tr(_RATE_PRINTED_KEY) if printed else None

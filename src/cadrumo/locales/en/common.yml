@@ -2077,7 +2077,8 @@ tui:
           here: Yes. Type the new value below.
           not_here: Not here. Change it in {area}, then calculate again.
           not_yet: Not here yet. Change it in {area}.
-          recorded: No. This declaration is recorded as filed.
+          recorded: No. It is recorded as filed. To change it, start a correction
+            of this declaration.
           replace: Yes. Your value will replace the source's {value}, in this declaration
             only. Your records do not change, and you can go back to the source's
             value at any time.
@@ -2177,6 +2178,8 @@ tui:
         no_explanation: There is no written explanation for this box yet.
         official: 'Official text ({source}): “{text}”'
         origin: 'Source: {origin}'
+        origin_no_earlier_declaration: This box holds 0 because there is no earlier
+          declaration this year to carry a value from.
       in_spanish: (in Spanish)
       issues:
         action:
@@ -2366,6 +2369,7 @@ tui:
         imported:
           aeat_draft: From AEAT data
           earlier_filings: From an earlier declaration
+          earlier_filings_none: No earlier declaration this year
           fixed_by_design: Set by the form
           named_filing: From modelo {modelo}, {period}
           profile: From your profile
@@ -2522,6 +2526,7 @@ tui:
           blank: Left blank or do not apply
           calculated: Calculated
           earlier_declarations: Earlier declarations
+          earlier_declarations_none: No earlier declaration this year
           information: Shown for information
           needs_you: Need your value
           profile: Your profile

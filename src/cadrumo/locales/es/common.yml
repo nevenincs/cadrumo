@@ -2137,7 +2137,8 @@ tui:
           here: Sí. Escribe el nuevo valor debajo.
           not_here: Aquí no. Cámbialo en {area} y vuelve a calcular.
           not_yet: Aquí todavía no. Cámbialo en {area}.
-          recorded: No. Esta declaración está registrada como presentada.
+          recorded: No. Está registrada como presentada. Para cambiarla, inicia una
+            corrección de esta declaración.
           replace: Sí. Tu valor sustituirá al del origen ({value}), solo en esta declaración.
             Tus registros no cambian y puedes volver al valor del origen cuando quieras.
           replace_unknown: Sí. Tu valor sustituirá al del origen, solo en esta declaración.
@@ -2235,6 +2236,8 @@ tui:
         no_explanation: Aún no hay una explicación escrita para esta casilla.
         official: 'Texto oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+        origin_no_earlier_declaration: Esta casilla vale 0 porque este año no hay
+          ninguna declaración anterior de la que traer un valor.
       in_spanish: (en español)
       issues:
         action:
@@ -2423,6 +2426,7 @@ tui:
         imported:
           aeat_draft: De datos de la AEAT
           earlier_filings: De una declaración anterior
+          earlier_filings_none: Ninguna declaración anterior este año
           fixed_by_design: Fijado por el modelo
           named_filing: Del modelo {modelo}, {period}
           profile: De tu perfil
@@ -2582,6 +2586,7 @@ tui:
           blank: En blanco o no aplican
           calculated: Calculados
           earlier_declarations: Declaraciones anteriores
+          earlier_declarations_none: Ninguna declaración anterior este año
           information: Solo informativos
           needs_you: Falta tu dato
           profile: Tu perfil

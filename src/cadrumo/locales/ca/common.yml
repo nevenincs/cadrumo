@@ -2126,7 +2126,8 @@ tui:
           here: Sí. Escriu el nou valor a sota.
           not_here: Aquí no. Canvia-ho a {area} i torna a calcular.
           not_yet: Aquí encara no. Canvia-ho a {area}.
-          recorded: No. Aquesta declaració està registrada com a presentada.
+          recorded: No. Està registrada com a presentada. Per canviar-la, inicia una
+            correcció d'aquesta declaració.
           replace: Sí. El teu valor substituirà el de l'origen ({value}), només en
             aquesta declaració. Els teus registres no canvien i pots tornar al valor
             de l'origen quan vulguis.
@@ -2227,6 +2228,8 @@ tui:
         no_explanation: Encara no hi ha cap explicació escrita per a aquesta casella.
         official: 'Text oficial ({source}): «{text}»'
         origin: 'Origen: {origin}'
+        origin_no_earlier_declaration: Aquesta casella val 0 perquè aquest any no
+          hi ha cap declaració anterior d'on portar un valor.
       in_spanish: (en castellà)
       issues:
         action:
@@ -2419,6 +2422,7 @@ tui:
         imported:
           aeat_draft: De dades de l'AEAT
           earlier_filings: D'una declaració anterior
+          earlier_filings_none: Cap declaració anterior aquest any
           fixed_by_design: Fixat pel model
           named_filing: Del model {modelo}, {period}
           profile: Del teu perfil
@@ -2581,6 +2585,7 @@ tui:
           blank: En blanc o no s'apliquen
           calculated: Calculats
           earlier_declarations: Declaracions anteriors
+          earlier_declarations_none: Cap declaració anterior aquest any
           information: Només informatius
           needs_you: Falta la teva dada
           profile: El teu perfil

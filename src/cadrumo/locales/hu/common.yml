@@ -2108,7 +2108,8 @@ tui:
           here: Igen. Írja be lent az új értéket.
           not_here: 'Itt nem. Módosítsa itt: {area}, majd számoljon újra.'
           not_yet: 'Itt még nem. Módosítsa itt: {area}.'
-          recorded: Nem. Ez a bevallás benyújtottként van rögzítve.
+          recorded: Nem. Benyújtottként van rögzítve. A módosításhoz indítson helyesbítést
+            ehhez a bevalláshoz.
           replace: Igen. Az Ön értéke felülírja a forrás értékét ({value}), csak ebben
             a bevallásban. A nyilvántartásai nem változnak, és bármikor visszatérhet
             a forrás értékéhez.
@@ -2209,6 +2210,8 @@ tui:
         no_explanation: Ehhez a rovathoz még nincs írott magyarázat.
         official: 'Hivatalos szöveg ({source}): „{text}”'
         origin: 'Forrás: {origin}'
+        origin_no_earlier_declaration: Ez a rovat 0-t tartalmaz, mert idén nincs korábbi
+          bevallás, amelyből értéket lehetne átvenni.
       in_spanish: (spanyolul)
       issues:
         action:
@@ -2404,6 +2407,7 @@ tui:
         imported:
           aeat_draft: AEAT-adatokból
           earlier_filings: Egy korábbi bevallásból
+          earlier_filings_none: Idén nincs korábbi bevallás
           fixed_by_design: A nyomtatvány rögzíti
           named_filing: A(z) {modelo} nyomtatványból ({period})
           profile: Az Ön profiljából
@@ -2570,6 +2574,7 @@ tui:
           blank: Üresen hagyott vagy nem alkalmazandó
           calculated: Számított
           earlier_declarations: Korábbi bevallások
+          earlier_declarations_none: Idén nincs korábbi bevallás
           information: Csak tájékoztatásul
           needs_you: Hiányzik az adatod
           profile: A profilod

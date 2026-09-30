@@ -156,7 +156,7 @@ _EXPECTED_LEVELS: Final[dict[ModeloFormOrigin, str]] = {
     ModeloFormOrigin.NEEDS_INPUT: "!",
     ModeloFormOrigin.DEFAULT_TO_CONFIRM: "◐",
     ModeloFormOrigin.CALCULATION_FAILED: "×",
-    ModeloFormOrigin.NOT_IMPORTED_YET: "⇣",
+    ModeloFormOrigin.NOT_IMPORTED_YET: "…",
     ModeloFormOrigin.NOT_CALCULATED_YET: "◌",
 }
 """The mark each origin that is not done shows wherever a section, a page or a grid row is marked."""
