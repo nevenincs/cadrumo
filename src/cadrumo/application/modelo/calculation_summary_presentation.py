@@ -25,7 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
@@ -124,7 +123,6 @@ SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS: Final[Mapping[AeatSoftwareIdentityGrade, st
 """The short label each software-identity grade is shown with in the trace section."""
 
 
-_DECIMAL_TOKEN: Final[re.Pattern[str]] = re.compile(r"^(?P<sign>-?)(?P<integer>\d+)(?:\.(?P<fraction>\d+))?$")
 _SECTION_SEPARATOR: Final[str] = " \u203a "
 _REVISION_PREFIX_LENGTH: Final[int] = 16
 
