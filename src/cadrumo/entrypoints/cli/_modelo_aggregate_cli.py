@@ -49,7 +49,6 @@ from ...core.modelo import Modelo
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
-    WithholdingObservation,
     aggregate_withholding_by_clave,
 )
 from ._modelo_behavior_support import resolve_year_period
@@ -386,7 +385,6 @@ def aggregate_modelo(
     period: str,
     counterpart_observation: list[str] | None = None,
     foreign_asset_observation: list[str] | None = None,
-    withholding_observation: list[str] | None = None,
     received_invoice_retencion: list[str] | None = None,
     ledger_payment_withholding: list[str] | None = None,
 ) -> None:
@@ -400,11 +398,6 @@ def aggregate_modelo(
         )
         if modelo == Modelo("123").value and received_invoice_retencion:
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
-        if modelo == Modelo("190").value and withholding_observation:
-            raise typer.BadParameter(
-                "--withholding-observation is not accepted for Modelo 190; "
-                "capture annual detail with invoice evidence on Modelo 111"
-            )
         command = PerModeloAggregationCommand(
             modelo=modelo,
             period=resolve_year_period(year, period, modelo=modelo),
@@ -413,9 +406,6 @@ def aggregate_modelo(
             ),
             foreign_asset_observations=_parse_typed_cli_observations(
                 foreign_asset_observation, model=ForeignAssetIngestObservation, flag="--foreign-asset-observation"
-            ),
-            withholding_observations=_parse_typed_cli_observations(
-                withholding_observation, model=WithholdingObservation, flag="--withholding-observation"
             ),
         )
         ledger_payment_requests = _parse_typed_cli_observations(

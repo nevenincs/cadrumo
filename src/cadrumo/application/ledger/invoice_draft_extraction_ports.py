@@ -54,6 +54,24 @@ class InvoiceDraftReaderUnavailableError(CadrumoError):
         self.cause = cause
 
 
+class InvoiceDraftReaderHeadroomRefusedError(CadrumoError):
+    """Admission control refused to load the selected reader's model for lack of headroom.
+
+    The model was never loaded. Kept apart from
+    :class:`InvoiceDraftReaderUnavailableError` because the two end differently
+    when the read cannot stand without the model: an unavailable reader becomes
+    the extraction's own reader refusal, while this refusal IS the load decision
+    and is re-raised exactly as admission control raised it. ``cause`` keeps that
+    refusal, and ``failed_condition_id`` names the precondition it failed.
+    """
+
+    def __init__(self, cause: Exception, *, failed_condition_id: str | None) -> None:
+        """Create a headroom-refused error while preserving the refusal as its cause."""
+        super().__init__(str(cause))
+        self.cause = cause
+        self.failed_condition_id = failed_condition_id
+
+
 @dataclass(frozen=True)
 class InvoiceDraftExtractionPorts:
     """Concrete capabilities supplied by an outer composition root."""
@@ -76,6 +94,7 @@ class InvoiceDraftExtractionPorts:
 __all__ = [
     "EvidenceConsentProof",
     "InvoiceDraftExtractionPorts",
+    "InvoiceDraftReaderHeadroomRefusedError",
     "InvoiceDraftReaderUnavailableError",
     "StructuredInvoiceReadError",
     "VisionImage",

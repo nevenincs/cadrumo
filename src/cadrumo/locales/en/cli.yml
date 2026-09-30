@@ -205,6 +205,14 @@ cli:
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a decimal
+        label_reading_headroom_refused: 'The on-host reading model was not loaded:
+          this machine showed no measured memory headroom for it. The {count} field(s)
+          the label rules left unread stay empty: {fields}. The label reading stands;
+          free memory and extract again, or supply those fields yourself.'
+        label_reading_reader_unavailable: 'The on-host semantic reader could not be
+          run ({error_type}), so the {count} field(s) the label rules left unread
+          stay empty: {fields}. The label reading stands, and those fields are yours
+          to supply.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         pull_actor_help: Operator label.
@@ -686,8 +694,6 @@ cli:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
           fact about the perceptor''s activity and is never inferred from the invoice.'
-        withholding_observation_help: Per-perceptor-clave withholding observation
-          (JSON) for the Modelo 190 percepciones count; repeatable.
       aggregate_help: Run the backend per-modelo aggregation service from explicit
         canonical observations. Accepted source_kind values are ledger_transaction,
         purchase_invoice_evidence, payable_invoice, and collectible_invoice.

@@ -33,10 +33,17 @@ from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     VisionImage,
 )
-from ..invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import (
+    DraftDiscrepancyFinding,
+    FieldProvenance,
+    InvoiceDraft,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
+)
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..invoice_label_reader import (
     LabelReading,
@@ -606,6 +613,7 @@ def test_a_complete_rule_reading_never_calls_the_model(operation: PinnedAuthorit
     assert calls == []
     assert draft.grand_total == Decimal("1452.00")
     assert draft.discrepancies == ()
+    assert draft.label_reading_fallback is None
 
 
 def test_an_absent_model_leaves_the_partial_rule_reading_standing(operation: PinnedAuthorityOperation) -> None:
@@ -617,6 +625,53 @@ def test_an_absent_model_leaves_the_partial_rule_reading_standing(operation: Pin
     assert draft.supplier_name is None
     assert draft.supplier_tax_id == "B92000082"
     assert draft.grand_total == Decimal("72.60")
+    # The empty field must read as a reading the machine could not finish, not
+    # as a document that prints no supplier name.
+    assert draft.label_reading_fallback == LabelReadingFallback(
+        cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
+        unread_fields=("supplier_name",),
+        reader_error_type="ConnectionError",
+    )
+
+
+class _HeadroomRefusalForTestError(Exception):
+    """Stands in for admission control's refusal, which this layer only carries and never raises."""
+
+
+def test_a_refused_model_load_leaves_the_partial_rule_reading_standing(operation: PinnedAuthorityOperation) -> None:
+    """The optional fill is refused for headroom: the rules' reading stands, and the draft says why."""
+    refusal = _HeadroomRefusalForTestError("no measured headroom for the reading model")
+
+    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
+        raise InvoiceDraftReaderHeadroomRefusedError(
+            refusal,
+            failed_condition_id="provisioning.load_capacity.available",
+        )
+
+    draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
+
+    assert draft.supplier_name is None
+    assert draft.supplier_tax_id == "B92000082"
+    assert draft.grand_total == Decimal("72.60")
+    assert draft.label_reading_fallback == LabelReadingFallback(
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
+        unread_fields=("supplier_name",),
+        reader_error_type="_HeadroomRefusalForTestError",
+        failed_condition_id="provisioning.load_capacity.available",
+    )
+
+
+def test_a_refused_model_load_still_refuses_when_the_rules_read_nothing(operation: PinnedAuthorityOperation) -> None:
+    """With nothing to stand on the model read is not a fill, so admission control's own refusal propagates."""
+    refusal = _HeadroomRefusalForTestError("no measured headroom for the reading model")
+
+    def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
+        raise InvoiceDraftReaderHeadroomRefusedError(refusal, failed_condition_id=None)
+
+    with pytest.raises(_HeadroomRefusalForTestError) as raised:
+        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
+
+    assert raised.value is refusal
 
 
 def test_an_absent_model_still_refuses_when_the_rules_read_nothing(operation: PinnedAuthorityOperation) -> None:
@@ -653,6 +708,7 @@ def test_an_incomplete_rule_reading_asks_the_model_for_the_rest(operation: Pinne
     assert draft.supplier_name == "Estación de Servicio Albufera SL"
     assert envelopes["supplier_name"].grounding is FieldGroundingOutcome.ANCHORED
     assert envelopes["grand_total"].origin is FieldOrigin.TEXT_RULES
+    assert draft.label_reading_fallback is None
 
 
 # --- ahead-of-extraction predicate -------------------------------------------

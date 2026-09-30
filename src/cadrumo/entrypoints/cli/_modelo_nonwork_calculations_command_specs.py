@@ -99,11 +99,6 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.app.modelo.aggregate.foreign_asset_observation_help",
             ),
             _repeatable_text_option(
-                "withholding_observation",
-                ("--withholding-observation",),
-                "cli.app.modelo.aggregate.withholding_observation_help",
-            ),
-            _repeatable_text_option(
                 "received_invoice_retencion",
                 ("--received-invoice-retencion",),
                 "cli.app.modelo.aggregate.received_invoice_retencion_help",

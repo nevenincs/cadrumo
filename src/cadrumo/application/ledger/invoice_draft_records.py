@@ -16,6 +16,7 @@ before the split.
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
@@ -39,6 +40,8 @@ __all__ = [
     "InvoiceDraftIdentityDocumentFields",
     "InvoiceDraftLine",
     "InvoiceDraftRateBreakdown",
+    "LabelReadingFallback",
+    "LabelReadingFallbackCause",
 ]
 
 
@@ -401,6 +404,43 @@ def facturae_invoice_class_findings(
     return tuple(findings)
 
 
+class LabelReadingFallbackCause(StrEnum):
+    """Why the model did not fill the fields a partial label reading left unread."""
+
+    READER_UNAVAILABLE = "reader_unavailable"
+    """The semantic reader, its optional extra or its on-host runtime could not be used."""
+
+    LOAD_HEADROOM_REFUSED = "load_headroom_refused"
+    """Admission control refused to load the model: this machine showed no measured headroom for it."""
+
+
+class LabelReadingFallback(BaseModel):
+    """The label reading stood in for an optional model fill that did not run.
+
+    Carried beside the draft rather than in its provenance, because no field was
+    read badly: the fields the model would have filled were never read at all.
+    Without this record a draft with fewer fields looks exactly like a document
+    that prints fewer fields, and the operator could not tell a gap in the page
+    from a gap in the machine.
+
+    Attributes:
+        cause: Why the model fill did not run.
+        unread_fields: The required draft fields the label rules left unread and
+            the model was to fill, in name order.
+        reader_error_type: The class of the failure or refusal the reader raised.
+        failed_condition_id: The refusal's failed precondition, when it carried
+            one; a headroom refusal names which admission precondition failed,
+            such as unmeasurable free memory or a measured shortfall.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    cause: LabelReadingFallbackCause
+    unread_fields: tuple[str, ...] = Field(min_length=1)
+    reader_error_type: str = Field(min_length=1)
+    failed_condition_id: str | None = None
+
+
 class InvoiceDraftIdentityDocumentFields(BaseModel):
     """Identity and printed-document fields shared by draft projections."""
 
@@ -616,6 +656,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
     discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
     _facturae_invoice_class: StructuredInvoiceClassification | None = PrivateAttr(default=None)
+    _label_reading_fallback: LabelReadingFallback | None = PrivateAttr(default=None)
 
     @property
     def facturae_invoice_class(self) -> StructuredInvoiceClassification | None:
@@ -625,6 +666,22 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
     def set_facturae_invoice_class(self, value: StructuredInvoiceClassification | None) -> None:
         """Attach the structured reader's document-class fact to this draft."""
         self._facturae_invoice_class = value
+
+    @property
+    def label_reading_fallback(self) -> LabelReadingFallback | None:
+        """Return why a partial label reading stood without its model fill, when it did."""
+        return self._label_reading_fallback
+
+    def with_label_reading_fallback(self, fallback: LabelReadingFallback) -> InvoiceDraft:
+        """Return a copy of this draft recording that its label reading stood without the model fill.
+
+        A reading-path fact rather than a draft field, like the structured
+        document class: the operator meets it as a notice, and the reviewable
+        payload keeps describing only what the document says.
+        """
+        copy = self.model_copy()
+        copy._label_reading_fallback = fallback
+        return copy
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

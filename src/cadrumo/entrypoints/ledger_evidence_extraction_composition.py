@@ -10,7 +10,12 @@ from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
-from ..adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from ..adapters.outbound.llm.errors import (
+    LLMConsentError,
+    LLMContentionError,
+    LLMPdfRasterisationError,
+    LLMProviderError,
+)
 from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ..adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
 from ..adapters.outbound.llm.models import MultimodalImageInput
@@ -40,6 +45,7 @@ from ..application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ..application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
     VisionImage,
@@ -146,6 +152,12 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
                 ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
+        except LLMContentionError as exc:
+            verdict = exc.terminal_precondition_verdict
+            raise InvoiceDraftReaderHeadroomRefusedError(
+                exc,
+                failed_condition_id=None if verdict is None else str(verdict.failed_condition_id),
+            ) from exc
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
         try:

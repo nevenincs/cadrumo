@@ -125,7 +125,6 @@ class PerModeloAggregationCommand(BaseModel):
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
-    withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
 
 
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation

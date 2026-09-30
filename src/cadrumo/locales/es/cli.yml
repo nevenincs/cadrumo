@@ -223,6 +223,15 @@ cli:
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como decimal
+        label_reading_headroom_refused: 'No se cargó el modelo de lectura local: este
+          equipo no mostró margen de memoria medido para él. Los {count} campos que
+          las reglas de etiquetas no leyeron quedan vacíos: {fields}. La lectura por
+          etiquetas se mantiene; libere memoria y vuelva a extraer, o indique usted
+          esos campos.'
+        label_reading_reader_unavailable: 'No se pudo ejecutar el lector semántico
+          local ({error_type}), así que los {count} campos que las reglas de etiquetas
+          no leyeron quedan vacíos: {fields}. La lectura por etiquetas se mantiene
+          y esos campos quedan pendientes de que usted los indique.'
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
         pull_actor_help: Etiqueta del operador.
@@ -746,8 +755,6 @@ cli:
           una asignación de retención de una factura recibida, con su prueba de pago
           o de exigibilidad. Una asignación por comando; el scheme es un hecho legal
           sobre la actividad del perceptor y nunca se infiere de la factura.'
-        withholding_observation_help: Observación de retención por perceptor y clave
-          (JSON) para el recuento de percepciones del Modelo 190; repetible.
       aggregate_help: Ejecuta el servicio backend de agregación por modelo con observaciones
         canónicas explicitas. Los valores source_kind aceptados son ledger_transaction,
         purchase_invoice_evidence, payable_invoice y collectible_invoice.

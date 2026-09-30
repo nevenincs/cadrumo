@@ -1023,19 +1023,20 @@ def resolve_withholding_binding_row_values(
 
 
 class WithholdingClaveBreakdown(BaseModel):
-    """One per-clave row of the Modelo 190 retenci�n reconciliation breakdown.
+    """One per-clave row of an annual withholding summary's reconciliation breakdown.
 
-    Groups the per-perceptor-clave withholding detail (the AEAT Dise�o de
-    Registros type-2 records) by ``clave de percepci�n`` and carries that clave's
-    distinct percepci�n count and percibido / retenci�n magnitudes. The figures
+    Groups the per-perceptor-clave rows an annual summary's calculation reads
+    (the type-2 perceptor records of the AEAT Diseño de Registros, as for
+    Modelos 190 and 193) by their ``clave`` and carries that clave's
+    distinct percepción count and percibido / retención magnitudes. The figures
     reuse the scalar withholding-fact arithmetic
     (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
     distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
     ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
     ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same
-    store the percepciones-count resolver reads, so the operator can reconcile
-    the annual Modelo 190 totals against the individual Modelo 111 quarterly
-    filings clave by clave.
+    rows the percepciones resolver materialises for that calculation, so the
+    operator can reconcile the annual totals clave by clave against the periodic
+    filings and captured allocations they were composed from.
     """
 
     model_config = STRICT_FROZEN_CONFIG

@@ -52,6 +52,13 @@ normalised value — a date rewritten to ISO form, a tax id stripped of its
 separators — legitimately fails a verbatim search, and warning on every one of
 those would train an operator to ignore the channel.
 
+One degradation is not about any single field: a partial label reading that
+stands because its model fill did not run. The fields the model would have
+filled were never read, so no envelope describes them, and the draft alone
+cannot say whether the page lacks them or the machine could not read them.
+That reading gets its own warning, one per cause, naming what stopped the fill
+and which fields stay empty.
+
 See Also:
     :class:`~core.field_grounding.FieldGroundingOutcome`
         The closed set of verification outcomes these notices report.
@@ -62,13 +69,18 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import assert_never
 
-from ...application.ledger.invoice_draft_records import FieldProvenance
+from ...application.ledger.invoice_draft_records import (
+    FieldProvenance,
+    LabelReadingFallback,
+    LabelReadingFallbackCause,
+)
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 
-__all__ = ["DEGRADED_GROUNDING_OUTCOMES", "field_degradation_notices"]
+__all__ = ["DEGRADED_GROUNDING_OUTCOMES", "field_degradation_notices", "label_reading_fallback_notices"]
 
 #: The outcomes that mean a field did not come through its check intact.
 #: Derived by excluding the two that did, so a new member added to the
@@ -256,3 +268,49 @@ def field_degradation_notices(provenance: Sequence[FieldProvenance]) -> list[Not
         else:
             notices.append(_no_anchor_notice(envelope))
     return notices
+
+
+def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> list[Notice]:
+    """Return the warning for a label reading that stood without its model fill.
+
+    A warning rather than information: the draft is materially less complete
+    than the reader would have made it, for a reason outside the document, and
+    the same extraction run again once the reason is gone reads more. Each
+    cause has its own code and message because each asks the operator for a
+    different remedy: a reader to make available, or memory to free.
+
+    Args:
+        fallback: The draft's record of why its label reading stood, or ``None``
+            when the model filled every field it was asked for or was never
+            needed.
+
+    Returns:
+        One notice, or none when no fill was left undone.
+    """
+    if fallback is None:
+        return []
+    unread = ", ".join(fallback.unread_fields)
+    count = len(fallback.unread_fields)
+    match fallback.cause:
+        case LabelReadingFallbackCause.READER_UNAVAILABLE:
+            code = "ledger.evidence.label_reading.reader_unavailable"
+            message = tr(
+                "cli.app.ledger.evidence.label_reading_reader_unavailable",
+                count=count,
+                fields=unread,
+                error_type=fallback.reader_error_type,
+            )
+        case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
+            code = "ledger.evidence.label_reading.headroom_refused"
+            message = tr("cli.app.ledger.evidence.label_reading_headroom_refused", count=count, fields=unread)
+        case unhandled:
+            assert_never(unhandled)
+    context = {
+        "reason": fallback.cause.value,
+        "unread_fields": unread,
+        "unread_field_count": str(count),
+        "reader_error_type": fallback.reader_error_type,
+    }
+    if fallback.failed_condition_id is not None:
+        context["failed_condition_id"] = fallback.failed_condition_id
+    return [Notice(severity=NoticeSeverity.WARNING, code=code, message=message, context=context)]
