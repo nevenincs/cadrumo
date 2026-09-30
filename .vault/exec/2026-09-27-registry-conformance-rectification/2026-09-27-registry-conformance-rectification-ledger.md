@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:fedcb421a74f96416cb3883f78be836f8f7d994a605e6d8c49ffda26d1d74950'
+body_hash: 'sha256:0485b0545447548c853afd30356924cbcc6ae3001bc338d79e114539c0dcce11'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -573,6 +573,194 @@ related:
 - `S26` `A` `dev/registry/tests/test_modelo_131_modulos_rows_open_past_horizon.py`
 - `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
 - `S26` `verify:` `hydration: only 289 2026 rows open; isolated and live inspection valid; converter no-op; published f1704f74; 2027 1T computes where it was refused; 131 tests 1221 passed with the remainder in other lanes' modelos` -> `pass`
+- `S20` `M` `dev/registry/mappings/modelo_200/2024/0033-dp200022.toml`
+- `S20` `M` `dev/registry/tests/test_m200_semantic_casilla_candidates.py`
+- `S20` `A` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/constructs/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/formulas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casillas/0001-declarations.toml`
+- `S20` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S20` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S20` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S20` `verify:` `isolated and live inspection 0 findings; converter no-op for 200; 2025 row order proven identical with 196 positions; runtime 392 passed` -> `pass`
+- `S19` `A` `dev/registry/tests/test_modelo_210_inception_statement.py`
+- `S19` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/210/manifest.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/216/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/applicability/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/application_links/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/filing_schedules/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/workbook_parity_refs/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/casillas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/216.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S19` `verify:` `216 2020-2023 applicability edition resolves 2022 and 2023; 210 earliest year corrected; converter no-op` -> `pass`
+- `S19` `M` `dev/acceptance/iva/tests/journey_year_support.py`
+- `S19` `M` `dev/acceptance/iva/tests/test_filing_year.py`
+- `S19` `M` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `S19` `M` `dev/registry/analysis/tests/test_registry_status_export_placement.py`
+- `S19` `M` `dev/registry/compiler/tests/test_export_field_placement.py`
+- `S19` `M` `dev/registry/conformance/tests/test_lifecycle_cli.py`
+- `S19` `M` `dev/registry/edition_export_scenarios.py`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0001-records.toml`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0002-pagina01.toml`
+- `S19` `A` `dev/registry/mappings/modelo_222/2019/0003-pagina02.toml`
+- `S19` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S19` `A` `dev/registry/render_profiles/modelo_222/2019/0001-numeric-representation.toml`
+- `S19` `M` `dev/registry/tests/test_edition_export_scenario_periods.py`
+- `S19` `A` `dev/registry/tests/test_modelo_222_2022_edition.py`
+- `S19` `A` `dev/registry/tests/test_modelo_296_2022_and_2026_editions.py`
+- `S19` `M` `dev/registry/tests/test_modelo_296_edition_design_citations_across_supported_years.py`
+- `S19` `M` `dev/registry/tests/test_modelo_296_registry.py`
+- `S19` `A` `dev/registry/tests/test_modelo_353_january_2026_edition.py`
+- `S19` `A` `dev/registry/tests/test_modelo_390_2026_edition.py`
+- `S19` `M` `dev/registry/tests/test_modelo_390_box_34_47_disclosure_split.py`
+- `S19` `M` `dev/registry/tests/test_render_check.py`
+- `S19` `M` `dev/registry/tests/test_support_matrix.py`
+- `S19` `M` `dev/registry/tests/test_temporal.py`
+- `S19` `M` `dev/registry/tests/test_temporal_site_agreement.py`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/historical_exclusions.json`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx.extracted.md`
+- `S19` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/manifest.json`
+- `S19` `A` `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf`
+- `S19` `M` `src/cadrumo/_data/corpus/normatives/pdf/PROVENANCE.md`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20211204.xml`
+- `S19` `A` `src/cadrumo/_data/corpus/normatives/xml/boe-a-2008-18497-ai-3-redaction-20260624.xml`
+- `S19` `A` `src/cadrumo/_data/manual_corpus_text/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf.corpus_text.json`
+- `S19` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf.corpus_text.json`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/facts/2025/mapping/0096-2025-modelo-296-detail-collection-mapping.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0001-record-m222-page-01.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/0002-record-m222-page-02.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/casillas/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/parameters/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/manifest.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2022/revision.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/projection_endpoints/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2023/verification_expectations/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0001-record-m296-declarante.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0002-record-m296-perceptor.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0003-record-m296-perceptor-intereses.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0004-record-m296-anexo-a-pagos.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/0005-record-m296-anexo-b-certificados.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/projection_endpoints/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-2025/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0000-export-layout.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0001-record-m296-declarante.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0002-record-m296-perceptor.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0003-record-m296-perceptor-intereses.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0004-record-m296-anexo-a-pagos.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0005-record-m296-anexo-b-certificados.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/_generation.provenance.json`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/projection_endpoints/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2026-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2026-y-siguientes/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/applicability/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/application_links/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/bindings/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/completeness_manifest/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/constructs/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/deadline_windows/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/dependency_classifications/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0000-export-layout.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0001-record-m353-declaracion.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0002-record-m353-declaracion.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/_generation.provenance.json`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/filing_schedules/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/formulas/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/live_cross_references/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/revision.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/verification_expectations/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/verification_predicates/0001-declarations.toml`
+- `S19` `D` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/workbook_parity_refs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/applicability/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/application_links/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/bindings/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/completeness_manifest/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/constructs/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/deadline_windows/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/dependency_classifications/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0000-export-layout.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0001-record-m353-declaracion.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/0002-record-m353-declaracion.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/export/_generation.provenance.json`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/filing_schedules/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/formulas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/live_cross_references/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/verification_expectations/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/verification_predicates/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-hasta-2026-01/workbook_parity_refs/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S19` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/revision.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/casillas/0001-declarations.toml`
+- `S19` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2026/revision.toml`
+- `S19` `M` `src/cadrumo/adapters/outbound/llm/tests/test_invoice_field_anchors.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/tests/test_cross_period_clean_state.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S19` `M` `src/cadrumo/application/filing/tests/test_m296_detail_records_repeat.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_compensation_provenance_population.py`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/ca/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/en/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/es/modelo/schema/390.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/222.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/296.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/353.yml`
+- `S19` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S19` `verify:` `222/2022, 296/2022, 296/2026, 353/2026-01 and 390/2026 applied with 0 inspection findings; generated trees reproduce; runtime snapshots at each grade refuse nothing; converter refuses the forward baselines of 222 and 296 (P05.S49)` -> `pass`
+- `S41` `A` `dev/registry/tests/test_modelo_151_165_180_filing_windows_across_supported_years.py`
+- `S41` `A` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/deadline_windows/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `S41` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/application_links/0001-declarations.toml`
+- `S41` `D` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S41` `A` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/deadline_windows/0001-declarations.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/revision.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S41` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/deadline_windows/0001-declarations.toml`
+- `S41` `verify:` `staged and live inspection 0 findings; converter no-op for 151 and 180; published; focused 90 passed with three shared tests depending on the closed gaps (P05.S51)` -> `pass`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html.extracted.json`
+- `S42` `A` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93-2021.html.extracted.md`
+- `S42` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`
+- `S42` `verify:` `catalogue entry ley-35-2006:art-93-ahorro-2021 inspected clean` -> `pass`
 
 ## Notes
 
@@ -602,3 +790,7 @@ related:
 - `S18` the S18 message named the product, which the locale audit reserves for a closed set of keys
 - `S39` landed: 131 relation into 1481 withdrawn, 0512 regional minimo with age increments for 2024 and 2025, art. 32 re-cited with 170 evolutions, constant renamed; confirmed but blocked on code and shared tests: 0525 maritime and 1577 relation (P05.S47); found: 0531 uses 0521 where every dictionary says 0523 (P05.S48); first partial apply broke validity and was reverted with git show, then landed in one validated step
 - `S26` modulos engine for 2022 and 2023 is grounded but blocked by `validate_bracket_table_temporal_coverage` requiring coverage from 2019, below the floor; ruled to clamp it at the support floor in P05.S32, then author the engine in the root
+- `S20` 17 rows moved to 2024 (00082 with a `label_evolved` evolution), 03627-03629 to 2025, 01176/03352/03353 declared in 2024; provenance re-grounded; remaining debt in P05.S50
+- `S19` 714, 721 and 100/2026 need no edit; 036, 038, 182, 189, 200 and 220 back-years and 210 January to May 2022 await captures (P05.S45); the docs readiness golden is regenerated after the Modelo 100 lane lands
+- `S41` 151 payment cutoff left undeclared: Orden HAP/2783/2015 art. 4.2 says 25 June while the 2023 calendar says 27 June
+- `S42` authoring staged, blocked on the below-floor coverage validator (P05.S32) and the 2015 export mapping of boxes 18 and 20
