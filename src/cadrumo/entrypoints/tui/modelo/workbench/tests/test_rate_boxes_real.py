@@ -9,8 +9,10 @@ the 2 % transitional rate.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import override
 
 import pytest
+from textual.app import App, ComposeResult
 
 from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
@@ -34,8 +36,18 @@ from ......domain.calculations.registry.authority import PinnedAuthorityOperatio
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
-from ..casilla_list import CasillaListEntry, CasillaListHeading, rate_note, row_value_text, value_text
+from ....components.theme import install_cadrumo_themes
+from ..casilla_list import (
+    CasillaList,
+    CasillaListEntry,
+    CasillaListHeading,
+    CasillaListItem,
+    rate_note,
+    row_value_text,
+    value_text,
+)
 from ..page_items import WorkbenchFilter, first_attention, page_items, section_nav_text, workbench_pages
+from ..vocabulary import DONE_MARK, origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -179,3 +191,63 @@ def test_a_declaration_recorded_as_filed_marks_nothing_to_do(operation: PinnedAu
         index, found = attention
         field = next(item for item in workbench_pages(filed)[index].fields() if address_key(item.address) == found)
         assert field.origin not in {ModeloFormOrigin.DEFAULT_TO_CONFIRM, ModeloFormOrigin.NEEDS_INPUT}, found
+
+
+class _ListHarness(App[None]):
+    def __init__(self, items: tuple[CasillaListItem, ...]) -> None:
+        super().__init__()
+        self._items = items
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield CasillaList(self._items, language=OutputLanguage.EN)
+
+    def on_mount(self) -> None:
+        install_cadrumo_themes(self, appearance="dark")
+
+
+async def _drawn(items: tuple[CasillaListItem, ...]) -> list[str]:
+    with override_settings(cadrumo_output_language="en"):
+        app = _ListHarness(items)
+        async with app.run_test(size=(160, 400)) as pilot:
+            await pilot.pause()
+            widget = app.query_one(CasillaList)
+            return [widget.render_line(y).text for y in range(widget.size.height)]
+
+
+def _page_with(form: ModeloWorkForm, box: str) -> tuple[CasillaListItem, ...]:
+    for page in workbench_pages(form):
+        items = page_items(page, staged={})
+        if any(isinstance(item, CasillaListEntry) and item.field.box == box for item in items):
+            return items
+    raise AssertionError(box)
+
+
+@pytest.mark.asyncio
+async def test_a_filed_declaration_draws_no_attention_mark_but_keeps_its_origin_words(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    draft = _page_with(_form(operation), "65")
+    filed = _page_with(_form(operation, lifecycle=CalculationRevisionState.PRESENTADO), "65")
+
+    def box(items: tuple[CasillaListItem, ...]) -> CasillaListEntry:
+        return next(item for item in items if isinstance(item, CasillaListEntry) and item.field.box == "65")
+
+    assert box(draft).field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
+    assert box(draft).needs_filer
+    assert box(filed).field.origin is ModeloFormOrigin.NOT_IMPORTED_YET
+    assert not box(filed).needs_filer
+
+    draft_lines = await _drawn(draft)
+    filed_lines = await _drawn(filed)
+    with override_settings(cadrumo_output_language="en"):
+        words = origin_words(box(filed).field)
+    row = next(line for line in filed_lines if "[65]" in line)
+    assert f" {words}" in row
+    headings = [item.text for item in filed if isinstance(item, CasillaListHeading) and item.level == 0]
+    assert headings and all(heading.startswith(DONE_MARK.glyph) for heading in headings)
+    # The same draft still marks what is left to do, so the filed page's silence is the filing's doing.
+    assert any(" ! " in line or " ◐ " in line for line in draft_lines)
+    for line in filed_lines:
+        assert "▲" not in line and "◐" not in line, line
+        assert " ! " not in line, line

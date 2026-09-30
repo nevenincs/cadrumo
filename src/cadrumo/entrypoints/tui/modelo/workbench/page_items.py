@@ -114,16 +114,18 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
 def _to_do(field: ModeloFormField, counts: ModeloFormCounts | None, *, recorded: bool) -> bool:
     """Whether a field still needs the filer.
 
-    A missing or assumed value counts only while its section's counts still
-    tally one: a declaration recorded as filed counts none, whatever origin its
-    boxes keep. A field outside any section has no counts, so it counts unless
-    the declaration is recorded.
+    Nothing on a declaration recorded as filed does, whatever origin its boxes
+    keep. Otherwise a missing or assumed value counts only while its section's
+    counts still tally one; a field outside any section has no counts, so its
+    origin decides.
     """
+    if recorded:
+        return False
     if field.blockers:
         return True
     if field.origin in _COUNTED_TO_DO:
         if counts is None:
-            return not recorded
+            return True
         tally = counts.needs_input if field.origin is ModeloFormOrigin.NEEDS_INPUT else counts.default_to_confirm
         return tally > 0
     return field.origin in NEEDS_ATTENTION
@@ -152,6 +154,7 @@ def _entry(
     indent: int = 0,
     label: str | None = None,
     rate_of_row: bool = False,
+    recorded: bool = False,
 ) -> CasillaListEntry:
     change = staged.get(address_key(field.address))
     return CasillaListEntry(
@@ -161,6 +164,7 @@ def _entry(
         staged_text=None if change is None else change.text,
         previous_text=None if change is None else change.previous_text,
         rate_of_row=rate_of_row,
+        recorded=recorded,
     )
 
 
@@ -170,8 +174,13 @@ def _rate_box(row: ModeloFormGridRow) -> ModeloFormField | None:
     return rates[0] if len(rates) == 1 else None
 
 
-def _pending(section: ModeloFormSection) -> int:
-    """How many of a section's fields still need the filer, taking missing and assumed values from its counts."""
+def _pending(section: ModeloFormSection, *, recorded: bool = False) -> int:
+    """How many of a section's fields still need the filer, taking missing and assumed values from its counts.
+
+    Nothing on a declaration recorded as filed does.
+    """
+    if recorded:
+        return 0
     counts = section.counts
     others = sum(
         1
@@ -181,8 +190,13 @@ def _pending(section: ModeloFormSection) -> int:
     return counts.needs_input + counts.default_to_confirm + others
 
 
-def section_mark(section: ModeloFormSection) -> WorkbenchMark:
-    """The most severe thing a section still holds: a blocker, then a missing value, then an assumed one."""
+def section_mark(section: ModeloFormSection, *, recorded: bool = False) -> WorkbenchMark:
+    """The most severe thing a section still holds: a blocker, then a missing value, then an assumed one.
+
+    A section of a declaration recorded as filed holds nothing left to do.
+    """
+    if recorded:
+        return DONE_MARK
     fields = section_fields(section)
     if any(field.blockers for field in fields):
         return BLOCKS_MARK
@@ -194,44 +208,52 @@ def section_mark(section: ModeloFormSection) -> WorkbenchMark:
     return DONE_MARK
 
 
-def section_heading_text(section: ModeloFormSection) -> str:
+def section_heading_text(section: ModeloFormSection, *, recorded: bool = False) -> str:
     """Say whether a section is complete, or how many of its fields still need the filer."""
-    mark = section_mark(section).glyph
-    pending = _pending(section)
+    mark = section_mark(section, recorded=recorded).glyph
+    pending = _pending(section, recorded=recorded)
     if pending:
         pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=pending)
         return f"{mark} {pending_text}"
     return f"{mark} {section.heading.text}"
 
 
-def section_nav_text(section: ModeloFormSection, width: int) -> str:
+def section_nav_text(section: ModeloFormSection, width: int, *, recorded: bool = False) -> str:
     """Name a section in the navigator: its most severe mark, the heading cut to fit, and what is still to do."""
-    pending = _pending(section)
+    pending = _pending(section, recorded=recorded)
     suffix = f" ({pending})" if pending else ""
     room = max(width - 2 - len(suffix), 4)
     heading = section.heading.text
     if len(heading) > room:
         heading = heading[: room - 1] + "…"
-    return f"{section_mark(section).glyph} {heading}{suffix}"
+    return f"{section_mark(section, recorded=recorded).glyph} {heading}{suffix}"
 
 
 def _section_items(
-    section: ModeloFormSection, staged: Mapping[AddressKey, StagedDisplay], mode: WorkbenchFilter
+    section: ModeloFormSection,
+    staged: Mapping[AddressKey, StagedDisplay],
+    mode: WorkbenchFilter,
+    *,
+    recorded: bool,
 ) -> list[CasillaListItem]:
     items: list[CasillaListItem] = []
     counts = section.counts
     for block in section.blocks:
         if isinstance(block, ModeloFormFieldBlock):
-            if _shown(block.field, staged, mode, counts):
-                items.append(_entry(block.field, staged))
+            if _shown(block.field, staged, mode, counts, recorded=recorded):
+                items.append(_entry(block.field, staged, recorded=recorded))
         elif isinstance(block, ModeloFormBindingInputsBlock):
-            items.extend(_entry(field, staged) for field in block.fields if _shown(field, staged, mode, counts))
+            items.extend(
+                _entry(field, staged, recorded=recorded)
+                for field in block.fields
+                if _shown(field, staged, mode, counts, recorded=recorded)
+            )
         elif isinstance(block, ModeloFormGridBlock):
             for row in block.rows:
                 row_items: list[CasillaListItem] = []
                 rate_box = _rate_box(row)
                 for column, cell in zip(block.columns, row.cells, strict=True):
-                    if cell.field is not None and _shown(cell.field, staged, mode, counts):
+                    if cell.field is not None and _shown(cell.field, staged, mode, counts, recorded=recorded):
                         row_items.append(
                             _entry(
                                 cell.field,
@@ -239,6 +261,7 @@ def _section_items(
                                 indent=2,
                                 label=column.heading.text,
                                 rate_of_row=cell.field is rate_box,
+                                recorded=recorded,
                             )
                         )
                     elif cell.literal is not None and mode is WorkbenchFilter.ALL:
@@ -253,7 +276,7 @@ def _section_items(
                 items.append(CasillaListNote(tr("tui.modelo.workbench.repeating_unknown"), indent=2))
     if not items:
         return []
-    return [CasillaListHeading(section_heading_text(section)), *items]
+    return [CasillaListHeading(section_heading_text(section, recorded=recorded)), *items]
 
 
 def page_items(
@@ -265,8 +288,12 @@ def page_items(
     """Lay one page out as list lines, overlaying the filer's staged changes."""
     items: list[CasillaListItem] = []
     for section in page.sections:
-        items.extend(_section_items(section, staged, mode))
-    details = [_entry(field, staged) for field in page.details if _shown(field, staged, mode, recorded=page.recorded)]
+        items.extend(_section_items(section, staged, mode, recorded=page.recorded))
+    details = [
+        _entry(field, staged, recorded=page.recorded)
+        for field in page.details
+        if _shown(field, staged, mode, recorded=page.recorded)
+    ]
     if details:
         items.append(CasillaListHeading(page.heading.text))
         items.extend(details)

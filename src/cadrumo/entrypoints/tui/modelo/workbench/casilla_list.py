@@ -90,6 +90,10 @@ _LABEL_CAP: Final[int] = 60
 _NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
 _EMPTY_VALUE: Final[str] = "·"
+_TO_DO_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+"""Origins whose glyph asks the filer for a value, which a recorded declaration no longer does."""
 _RATIO_DATA_TYPE: Final[str] = "ratio"
 _ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {
@@ -152,6 +156,8 @@ class CasillaListEntry:
     previous_text: str | None = None
     #: The one rate box of an official row, which prints the rate the row's base is taxed at.
     rate_of_row: bool = False
+    #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
+    recorded: bool = False
 
     @property
     def key(self) -> AddressKey:
@@ -163,9 +169,30 @@ class CasillaListEntry:
         """The mark that draws the eye: a staged change first, then a blocker."""
         if self.staged_text is not None:
             return Attention.STAGED
-        if self.field.blockers:
+        if self.field.blockers and not self.recorded:
             return Attention.BLOCKED
         return None
+
+    @property
+    def needs_filer(self) -> bool:
+        """Whether the field asks the filer to act; nothing on a recorded declaration does."""
+        if self.attention is not None:
+            return True
+        return not self.recorded and self.field.origin in NEEDS_ATTENTION
+
+    @property
+    def origin_mark(self) -> str:
+        """The origin glyph the row draws; a recorded declaration draws no to-do mark, only its words."""
+        if self.recorded and self.field.origin in _TO_DO_ORIGINS:
+            return " "
+        return origin_glyph(self.field)
+
+    @property
+    def origin_role(self) -> ColourRole:
+        """The colour of the origin; a recorded declaration's origins are all plain facts."""
+        if self.recorded and self.field.origin in NEEDS_ATTENTION:
+            return ColourRole.MUTED
+        return ORIGIN_ROLES[self.field.origin]
 
 
 type CasillaListItem = CasillaListHeading | CasillaListNote | CasillaListEntry
@@ -552,7 +579,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             return None
         if entry.previous_text is not None and not columns.detail:
             return tr("tui.modelo.workbench.was", value=entry.previous_text)
-        if entry.field.blockers and not columns.detail:
+        if entry.attention is Attention.BLOCKED and not columns.detail:
             return tr(attention_words_key(Attention.BLOCKED))
         description = description_text(entry.field)
         return description.split(". ")[0] if description else None
@@ -643,11 +670,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text.append(" " + " " * entry.indent)
             text.append(_right(_box_mark(field), columns.box) + " ", style=self._style("box"))
             text.append(_fit(labels[0], label_width))
-            role = ColourRole.STAGED if entry.staged_text is not None else ORIGIN_ROLES[field.origin]
+            role = ColourRole.STAGED if entry.staged_text is not None else entry.origin_role
             text.append(
                 " " + _right(row_value_text(entry, self._language), columns.value), style=self._role_style(role)
             )
-            text.append(" " + origin_glyph(field), style=self._role_style(ORIGIN_ROLES[field.origin]))
+            text.append(" " + entry.origin_mark, style=self._role_style(entry.origin_role))
             if columns.words:
                 text.append(" " + _fit(origin_words(field), columns.words), style=self._style("muted"))
             if columns.detail:
@@ -664,7 +691,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     def _detail(self, entry: CasillaListEntry) -> str:
         if entry.previous_text is not None:
             return tr("tui.modelo.workbench.was", value=entry.previous_text)
-        if entry.field.blockers:
+        if entry.attention is Attention.BLOCKED:
             return tr(attention_words_key(Attention.BLOCKED))
         bindings = entry.field.bindings
         if bindings:
@@ -756,7 +783,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             if following is None:
                 return
             entry = self._entry_at(following)
-            if entry is not None and (entry.attention is not None or entry.field.origin in NEEDS_ATTENTION):
+            if entry is not None and entry.needs_filer:
                 self._move_cursor_to(following)
                 return
             index = following
