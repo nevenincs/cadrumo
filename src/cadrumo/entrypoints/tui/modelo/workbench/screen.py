@@ -194,10 +194,6 @@ _HELP_ONLY_KEYS: Final[tuple[str, ...]] = ("space",)
 """Keys the help and the legend name that the footer never shows."""
 _CHANGE_KEYS: Final[frozenset[str]] = frozenset({"R", "b", "c", "f8", "n"})
 """Footer keys that change a declaration or lead to what is left to do; a declaration recorded as filed shows none."""
-_ASKS_THE_FILER: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
-)
-"""Origins whose words ask the filer to act, which a declaration recorded as filed no longer does."""
 _NONE_TO_CONFIRM_LOCALE_KEYS: Final[Mapping[bool, str]] = {
     True: "tui.modelo.workbench.bulk_confirm.none_in_section",
     False: "tui.modelo.workbench.bulk_confirm.none_on_page",
@@ -1023,7 +1019,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         field = entry.field
         lines = [self._help_title(entry), self._state_line(entry)]
         lines.append(description_text(field) or tr("tui.modelo.workbench.help.no_explanation"))
-        note = rate_note(entry)
+        note = rate_note(entry, self._language)
         if note is not None:
             lines.append(note)
         card = None
@@ -1060,11 +1056,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """Where the box's value stands and what may be done about it, in the words the row uses.
 
         On a declaration recorded as filed the second half is why it cannot be
-        changed, and a state that asks the filer to act is not said at all.
+        changed, and a state that would ask the filer to act says only what the
+        box holds, in the words its row and its panel use.
         """
         field = entry.field
         if self.recorded:
-            parts = [] if field.origin in _ASKS_THE_FILER else [origin_text(field)]
+            parts = [origin_text(field, recorded=True)]
             reason = read_only_reason(field, self._language, recorded=True)
             if reason is not None:
                 parts.append(reason)
@@ -1250,7 +1247,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _open_search(self, mode: SearchMode) -> None:
         if not self._pages:
             return
-        entries = search_entries(self._pages, staged=self._session.display(), language=self._language)
+        entries = search_entries(
+            self._pages, staged=self._session.display(), language=self._language, recorded=self.recorded
+        )
         self.add_class("-searching")
         self.query_one(WorkbenchSearchPanel).open(mode, entries)
 
@@ -1386,6 +1385,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 read_only_reason=read_only_reason(field, self._language, recorded=recorded),
                 feeds=() if card is None else card.feeds,
                 status_line=self._status_line(),
+                recorded=recorded,
             ),
             partial(self._editor_closed, entry),
         )

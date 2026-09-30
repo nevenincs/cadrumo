@@ -128,6 +128,18 @@ def test_a_box_number_typed_alone_is_found_as_a_number_never_inside_another() ->
     assert found("19") == ["19"]
 
 
+def test_on_a_filed_declaration_a_search_hit_says_what_the_box_holds_without_asking() -> None:
+    pages = workbench_pages(synthetic_form(needs_input=True))
+    with override_settings(cadrumo_output_language="en"):
+        open_entries = search_entries(pages, staged={}, language=OutputLanguage.EN)
+        filed_entries = search_entries(pages, staged={}, language=OutputLanguage.EN, recorded=True)
+
+    (open_hit,) = (entry for entry in open_entries if entry.box == "06")
+    (filed_hit,) = (entry for entry in filed_entries if entry.box == "06")
+    assert "Needs your input" in open_hit.origin
+    assert filed_hit.origin == "Empty, nobody filled it in"
+
+
 @pytest.mark.asyncio
 async def test_the_first_hit_is_selected_and_the_help_band_explains_it() -> None:
     with override_settings(cadrumo_output_language="en"):

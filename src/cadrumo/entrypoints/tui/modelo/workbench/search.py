@@ -85,9 +85,16 @@ class SearchEntry:
 
 
 def search_entries(
-    pages: tuple[WorkbenchPage, ...], *, staged: Mapping[AddressKey, StagedDisplay], language: OutputLanguage
+    pages: tuple[WorkbenchPage, ...],
+    *,
+    staged: Mapping[AddressKey, StagedDisplay],
+    language: OutputLanguage,
+    recorded: bool = False,
 ) -> tuple[SearchEntry, ...]:
-    """Every box of every page, in form order, with the value it shows now, staged changes included."""
+    """Every box of every page, in form order, with the value it shows now, staged changes included.
+
+    On a declaration ``recorded`` as filed a box states what it holds without asking for anything.
+    """
     entries: list[SearchEntry] = []
     for page in pages:
         for item in page_items(page, staged=staged):
@@ -103,7 +110,7 @@ def search_entries(
                     description=description,
                     page=page.heading.text,
                     value=value_text(item, language),
-                    origin=origin_text(field),
+                    origin=origin_text(field, recorded=recorded),
                 )
             )
     return tuple(entries)

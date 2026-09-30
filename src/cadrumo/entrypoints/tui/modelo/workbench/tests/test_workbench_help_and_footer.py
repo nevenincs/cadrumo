@@ -150,7 +150,9 @@ async def test_a_filed_declaration_says_so_for_every_box_and_offers_no_change(wi
             keys, _ = _footer(screen)
             app.exit(None)
 
-    assert assumed[1] == _RECORDED_REASON, "an assumed box on a filed declaration asks for nothing"
+    # An assumed box on a filed declaration says what it holds, as its row does, and asks for nothing.
+    assert assumed[1] == f"Assumed, nobody entered it · {_RECORDED_REASON}"
+    assert "confirm" not in " ".join(assumed).lower()
     assert "◐" not in "\n".join(assumed)
     assert sourced[1] == f"↓ From your records · {_RECORDED_REASON}"
     assert chips == ""
