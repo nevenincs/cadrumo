@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.toml import load_toml
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data"
@@ -47,7 +48,11 @@ MODELOS_ROOT = DATA_ROOT / "registry" / "aeat" / "modelos"
 #: decode under it is an error the caller sees.
 _SIDECAR_ENCODING = "utf-8"
 
-_RECORD_HEADING = re.compile(r"^# (?P<record>\S+)")
+#: A record heading names the whole record: ``# DP30301`` and ``# Pág. 2 bis``
+#: alike. Reading only the first word would fold every ``Pág. N`` record of a
+#: design into one key ``Pág.``, so later pages would borrow the first page's
+#: labels at the same offset.
+_RECORD_HEADING = re.compile(r"^# (?P<record>\S.*?)\s*$")
 
 #: The design source families whose sidecars carry a positional field table.
 _RECORD_DESIGN_KIND = "record_design"
@@ -222,6 +227,32 @@ def _sidecar_for(source_id: str, source: Mapping[str, object]) -> Path:
     if not sidecar.is_file():
         raise RecordDesignUnavailableError(f"source {source_id!r}: {corpus_path} has no .extracted.md sidecar")
     return sidecar
+
+
+def record_design_sidecars(
+    source_refs: Sequence[str],
+    sources: Mapping[str, SourceReference],
+) -> tuple[tuple[str, Path], ...]:
+    """Return the extracted sidecar of every ``record_design`` source among ``source_refs``, in citation order.
+
+    ``sources`` is the compiled source catalogue, so a caller already holding an
+    edition's typed citations reads the same provenance chain as
+    :func:`edition_record_designs` without re-reading raw manifests. Each binary
+    is hashed against its declared ``sha256`` before its sidecar is returned.
+
+    Raises:
+        RecordDesignUnavailableError: When a cited design cannot be read or does
+            not hash to the declared value.
+    """
+    sidecars: list[tuple[str, Path]] = []
+    for ref in source_refs:
+        source = sources.get(str(ref))
+        if source is None or str(source.kind) != _RECORD_DESIGN_KIND:
+            continue
+        sidecars.append(
+            (str(ref), _sidecar_for(str(ref), {"corpus_path": source.corpus_path, "sha256": source.sha256}))
+        )
+    return tuple(sidecars)
 
 
 def record_design_source_ref(
