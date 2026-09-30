@@ -152,9 +152,7 @@ def test_a_revision_that_files_without_a_deadline_is_reported(authority: Validat
     stripped = definition.revisions[revision_id].model_copy(update={"deadline_windows": ()})
     patched = definition.model_copy(update={"revisions": {**definition.revisions, revision_id: stripped}})
     after = {
-        item.revision: item
-        for item in screen_authority(_SingleModeloAuthority(patched), ("303",))
-        if item.kind == kind
+        item.revision: item for item in screen_authority(_SingleModeloAuthority(patched), ("303",)) if item.kind == kind
     }
 
     assert set(after) == before | {str(revision_id)}

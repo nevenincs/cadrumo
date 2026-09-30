@@ -110,10 +110,8 @@ def withdrawn_deadline_window_operation(*, modelo_id: str, filing_year: int) -> 
             }
             for metadata in declaring:
                 revision = published.revision(directory.modelo_id, str(metadata.id))
-                replacements[ModeloRevisionComponentQuery(directory.modelo_id, str(metadata.id))] = (
-                    revision.model_copy(
-                        update={"deadline_windows": _without_year(revision.deadline_windows, filing_year)},
-                    )
+                replacements[ModeloRevisionComponentQuery(directory.modelo_id, str(metadata.id))] = revision.model_copy(
+                    update={"deadline_windows": _without_year(revision.deadline_windows, filing_year)},
                 )
             generation = AuthorityGenerationPin(
                 logical_generation=content_hash_hex(
