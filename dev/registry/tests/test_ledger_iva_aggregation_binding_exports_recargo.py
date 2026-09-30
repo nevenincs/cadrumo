@@ -234,15 +234,18 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     # regression on the 2009 revision's existing capability.
     assert values["modelo-303-iva-repercutido-general-cuota"] == Decimal("1365")
     assert values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("63")
-    # The repercutido base binding maps to its numbered box directly. The
-    # soportado base is one of the two components box 28 adds (the other is the
-    # deducible half of a domestic inversión del sujeto pasivo), so the binding
-    # lands on that component and box 28 carries it through its formula.
+    # Each base binding lands on a component its numbered box adds. Box 07 is the
+    # general rate row's whole base: the ledger base plus the promotor's
+    # autoconsumo declared at that rate. Box 28 adds the soportado base and the
+    # deducible half of a domestic inversión del sujeto pasivo. Both boxes carry
+    # the ledger base through their formulas.
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    assert inputs[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
+    assert inputs[validated_casilla_id("iva.repercutido.general.base")] == Decimal("6500")
+    assert _M303_REPERCUTIDO_GENERAL_BASE_CASILLA not in inputs
     assert inputs[validated_casilla_id("iva.soportado.interiores.base")] == Decimal("300")
     assert _M303_SOPORTADO_INTERIORES_BASE_CASILLA not in inputs
     result = _calculate_303_from_observations(filing_year=2022, period="2T", observations=observations)
+    assert result.values[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
     assert result.values[_M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
 
 

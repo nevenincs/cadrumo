@@ -325,8 +325,8 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions.2023.family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "m303-bien-inversion-regularizacion-umbral-puntos"}
-sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "10", date_axis = "filing_period", valid_from = 2022-01-01}]}
-sequence_removals = {source_refs = [0], values = [0]}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
 [[revisions.2023.family_overrides]]
 family = "parameters"

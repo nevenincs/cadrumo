@@ -7979,8 +7979,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-escala-autonomica-base-ahorro"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2023-01-01}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2023-01-01}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2023-01-01}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2023-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.14", valid_from = 2023-01-01}], legal_refs = ["ley-35-2006:art-76-2023"]}
-sequence_removals = {brackets = [0, 1, 2, 3], legal_refs = [0]}
+sequence_additions = {brackets = [{lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2023-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.14", valid_from = 2023-01-01}], legal_refs = ["ley-35-2006:art-76-2023"]}
+sequence_removals = {brackets = [3], legal_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-escala-autonomica-canarias-base-general"}
@@ -8009,8 +8009,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-escala-autonomica-comunidad-valenciana-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12000", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2023-01-01}, {lower_bound = "12000", upper_bound = "22000", fixed_addition = "1080", marginal_rate = "0.12", valid_from = 2023-01-01}, {lower_bound = "22000", upper_bound = "32000", fixed_addition = "2280", marginal_rate = "0.15", valid_from = 2023-01-01}, {lower_bound = "32000", upper_bound = "42000", fixed_addition = "3780", marginal_rate = "0.175", valid_from = 2023-01-01}, {lower_bound = "42000", upper_bound = "52000", fixed_addition = "5530", marginal_rate = "0.2", valid_from = 2023-01-01}, {lower_bound = "52000", upper_bound = "62000", fixed_addition = "7530", marginal_rate = "0.225", valid_from = 2023-01-01}, {lower_bound = "62000", upper_bound = "72000", fixed_addition = "9780", marginal_rate = "0.25", valid_from = 2023-01-01}, {lower_bound = "72000", upper_bound = "100000", fixed_addition = "12280", marginal_rate = "0.265", valid_from = 2023-01-01}, {lower_bound = "100000", upper_bound = "150000", fixed_addition = "19700", marginal_rate = "0.275", valid_from = 2023-01-01}, {lower_bound = "150000", upper_bound = "200000", fixed_addition = "33450", marginal_rate = "0.285", valid_from = 2023-01-01}, {lower_bound = "200000", fixed_addition = "47700", marginal_rate = "0.295", valid_from = 2023-01-01}], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Comunitat Valenciana", "escala autonómica"]}], source_refs = ["aeat-renta-2023-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], source_citations = [0], source_refs = [0]}
+sequence_additions = {brackets = [{lower_bound = "52000", upper_bound = "62000", fixed_addition = "7530", marginal_rate = "0.225", valid_from = 2023-01-01}, {lower_bound = "62000", upper_bound = "72000", fixed_addition = "9780", marginal_rate = "0.25", valid_from = 2023-01-01}, {lower_bound = "72000", upper_bound = "100000", fixed_addition = "12280", marginal_rate = "0.265", valid_from = 2023-01-01}, {lower_bound = "100000", upper_bound = "150000", fixed_addition = "19700", marginal_rate = "0.275", valid_from = 2023-01-01}, {lower_bound = "150000", upper_bound = "200000", fixed_addition = "33450", marginal_rate = "0.285", valid_from = 2023-01-01}, {lower_bound = "200000", fixed_addition = "47700", marginal_rate = "0.295", valid_from = 2023-01-01}], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Comunitat Valenciana", "escala autonómica"]}], source_refs = ["aeat-renta-2023-manual-parte1"]}
+sequence_removals = {brackets = [5, 6, 7, 8, 9, 10], source_citations = [0], source_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-escala-autonomica-extremadura-base-general"}
@@ -8039,8 +8039,8 @@ sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-escala-estatal-base-ahorro"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2023-01-01}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2023-01-01}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2023-01-01}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2023-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.14", valid_from = 2023-01-01}], legal_refs = ["ley-35-2006:art-66-2023"]}
-sequence_removals = {brackets = [0, 1, 2, 3], legal_refs = [0]}
+sequence_additions = {brackets = [{lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2023-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.14", valid_from = 2023-01-01}], legal_refs = ["ley-35-2006:art-66-2023"]}
+sequence_removals = {brackets = [3], legal_refs = [0]}
 [[revisions."2023".family_overrides]]
 family = "parameters"
 selector = {revision = "2022", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"}

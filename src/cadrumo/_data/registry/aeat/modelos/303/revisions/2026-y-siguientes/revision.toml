@@ -187,7 +187,7 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions.2026-y-siguientes.family_overrides]]
 family = "parameters"
 selector = {revision = "2025", id = "m303-modulos-iva-dificil-justificacion-forfait"}
-sequence_additions = {source_citations = [{source_ref = "boe-orden-hac-1425-2025-iva-authority", required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]}], source_refs = ["boe-orden-hac-1425-2025-iva-authority"], values = [{value = "1", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2026-12-31}]}
+sequence_additions = {source_citations = [{source_ref = "boe-orden-hac-1425-2025-iva-authority", required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]}], source_refs = ["boe-orden-hac-1425-2025-iva-authority"], values = [{value = "1", date_axis = "filing_period", valid_from = 2022-01-01, valid_to = 2026-12-31}]}
 sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 [[revisions.2026-y-siguientes.family_overrides]]
 family = "parameters"

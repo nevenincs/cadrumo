@@ -9942,8 +9942,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-escala-autonomica-base-ahorro"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2025-01-01}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2025-01-01}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2025-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01}]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4]}
+sequence_additions = {brackets = [{lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01}]}
+sequence_removals = {brackets = [4]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-escala-autonomica-canarias-base-general"}
@@ -10002,8 +10002,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-escala-estatal-base-ahorro"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "6000", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2025-01-01}, {lower_bound = "6000", upper_bound = "50000", fixed_addition = "570", marginal_rate = "0.105", valid_from = 2025-01-01}, {lower_bound = "50000", upper_bound = "200000", fixed_addition = "5190", marginal_rate = "0.115", valid_from = 2025-01-01}, {lower_bound = "200000", upper_bound = "300000", fixed_addition = "22440", marginal_rate = "0.135", valid_from = 2025-01-01}, {lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01}]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4]}
+sequence_additions = {brackets = [{lower_bound = "300000", fixed_addition = "35940", marginal_rate = "0.15", valid_from = 2025-01-01}]}
+sequence_removals = {brackets = [4]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"}

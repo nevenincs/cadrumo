@@ -1807,11 +1807,6 @@ sequence_removals = {"expression.args" = [0], source_refs = [0]}
 sequence_order = {"expression.args" = [1, 0], source_refs = [2, 0, 1]}
 
 [[revisions.2024-desde-09-y-3t.family_overrides]]
-family = "parameters"
-selector = {revision = "2024-hasta-08-y-2t", id = "m303-modulos-iva-dificil-justificacion-forfait"}
-sequence_additions = {values = [{value = "1", date_axis = "filing_period", valid_from = 2024-01-01}]}
-sequence_removals = {values = [0]}
-[[revisions.2024-desde-09-y-3t.family_overrides]]
 family = "completeness_manifest"
 selector = {revision = "2024-hasta-08-y-2t", id = "aeat-dr-303-2024-early"}
 replacement_id = "aeat-dr-303-2024-late"

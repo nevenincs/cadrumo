@@ -7302,8 +7302,8 @@ sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], source_citations
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-asturias-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.10", valid_from = 2022-01-01}, {lower_bound = "12450.00", upper_bound = "17707.20", fixed_addition = "1245.00", marginal_rate = "0.12", valid_from = 2022-01-01}, {lower_bound = "17707.20", upper_bound = "33007.20", fixed_addition = "1875.86", marginal_rate = "0.14", valid_from = 2022-01-01}, {lower_bound = "33007.20", upper_bound = "53407.20", fixed_addition = "4017.86", marginal_rate = "0.185", valid_from = 2022-01-01}, {lower_bound = "53407.20", upper_bound = "70000.00", fixed_addition = "7791.86", marginal_rate = "0.215", valid_from = 2022-01-01}, {lower_bound = "70000.00", upper_bound = "90000.00", fixed_addition = "11359.32", marginal_rate = "0.225", valid_from = 2022-01-01}, {lower_bound = "90000.00", upper_bound = "175000.00", fixed_addition = "15859.32", marginal_rate = "0.25", valid_from = 2022-01-01}, {lower_bound = "175000.00", fixed_addition = "37109.32", marginal_rate = "0.255", valid_from = 2022-01-01}], source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Principado de Asturias", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7], source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Principado de Asturias", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-baleares-base-general"}
@@ -7317,13 +7317,13 @@ sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], s
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-cantabria-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2022-01-01}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2022-01-01}, {lower_bound = "20200.00", upper_bound = "34000.00", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2022-01-01}, {lower_bound = "34000.00", upper_bound = "46000.00", fixed_addition = "4182.75", marginal_rate = "0.185", valid_from = 2022-01-01}, {lower_bound = "46000.00", upper_bound = "60000.00", fixed_addition = "6402.75", marginal_rate = "0.195", valid_from = 2022-01-01}, {lower_bound = "60000.00", upper_bound = "90000.00", fixed_addition = "9132.75", marginal_rate = "0.245", valid_from = 2022-01-01}, {lower_bound = "90000.00", fixed_addition = "16482.75", marginal_rate = "0.255", valid_from = 2022-01-01}], source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-castilla-la-mancha-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2022-01-01}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1182.75", marginal_rate = "0.12", valid_from = 2022-01-01}, {lower_bound = "20200.00", upper_bound = "35200.00", fixed_addition = "2112.75", marginal_rate = "0.15", valid_from = 2022-01-01}, {lower_bound = "35200.00", upper_bound = "60000.00", fixed_addition = "4362.75", marginal_rate = "0.185", valid_from = 2022-01-01}, {lower_bound = "60000.00", fixed_addition = "8950.75", marginal_rate = "0.225", valid_from = 2022-01-01}], source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4], source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-castilla-y-leon-base-general"}
@@ -7342,8 +7342,8 @@ sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], source_citations
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-extremadura-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.095", valid_from = 2022-01-01}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1182.75", marginal_rate = "0.125", valid_from = 2022-01-01}, {lower_bound = "20200.00", upper_bound = "24200.00", fixed_addition = "2151.50", marginal_rate = "0.155", valid_from = 2022-01-01}, {lower_bound = "24200.00", upper_bound = "35200.00", fixed_addition = "2771.50", marginal_rate = "0.165", valid_from = 2022-01-01}, {lower_bound = "35200.00", upper_bound = "60000.00", fixed_addition = "4586.50", marginal_rate = "0.205", valid_from = 2022-01-01}, {lower_bound = "60000.00", upper_bound = "80200.00", fixed_addition = "9670.50", marginal_rate = "0.235", valid_from = 2022-01-01}, {lower_bound = "80200.00", upper_bound = "99200.00", fixed_addition = "14417.50", marginal_rate = "0.24", valid_from = 2022-01-01}, {lower_bound = "99200.00", upper_bound = "120200.00", fixed_addition = "18977.50", marginal_rate = "0.245", valid_from = 2022-01-01}, {lower_bound = "120200.00", fixed_addition = "24122.50", marginal_rate = "0.25", valid_from = 2022-01-01}], source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8], source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-galicia-base-general"}
@@ -7352,8 +7352,8 @@ sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], s
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-la-rioja-base-general"}
-sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12450.00", fixed_addition = "0", marginal_rate = "0.09", valid_from = 2022-01-01}, {lower_bound = "12450.00", upper_bound = "20200.00", fixed_addition = "1120.50", marginal_rate = "0.116", valid_from = 2022-01-01}, {lower_bound = "20200.00", upper_bound = "35200.00", fixed_addition = "2019.50", marginal_rate = "0.146", valid_from = 2022-01-01}, {lower_bound = "35200.00", upper_bound = "50000.00", fixed_addition = "4209.50", marginal_rate = "0.188", valid_from = 2022-01-01}, {lower_bound = "50000.00", upper_bound = "60000.00", fixed_addition = "6991.90", marginal_rate = "0.195", valid_from = 2022-01-01}, {lower_bound = "60000.00", upper_bound = "120000.00", fixed_addition = "8941.90", marginal_rate = "0.25", valid_from = 2022-01-01}, {lower_bound = "120000.00", fixed_addition = "23941.90", marginal_rate = "0.27", valid_from = 2022-01-01}], source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
-sequence_removals = {brackets = [0, 1, 2, 3, 4, 5, 6], source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]}], source_refs = ["aeat-renta-2022-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2022".family_overrides]]
 family = "parameters"
 selector = {revision = "2021", id = "renta-escala-autonomica-madrid-base-general"}
