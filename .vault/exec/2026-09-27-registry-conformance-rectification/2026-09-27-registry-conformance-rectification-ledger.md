@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:8420994e511f74c00f10abc5f221bedcc3a02d2f2dabd35d0cd6dee844bee28d'
+body_hash: 'sha256:1f43c2bca3b4a061f38e666be719c623ad9707fe0803e48dd4548be57c7edb93'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -354,6 +354,22 @@ related:
 - `S16` `M` `dev/test_runs/tests/test_logging.py`
 - `S16` `M` `dev/test_runs/tests/test_paths.py`
 - `S16` `verify:` `passing run removes scratch and failing run keeps it (live); reaper reclaims kept folders; 218 lane tests passed` -> `pass`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S31` `verify:` `test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support and work report tests 34 passed; pattern introduced by d91cd929a5` -> `pass`
+- `S29` `M` `src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`
+- `S29` `M` `src/cadrumo/application/aggregation/service.py`
+- `S29` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/modelo_aux_payloads.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_annual_withholding_rows.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/tests/test_withholding_evidence_cli.py`
+- `S29` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S29` `M` `src/cadrumo/locales/en/cli.yml`
+- `S29` `M` `src/cadrumo/locales/es/cli.yml`
+- `S29` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S29` `verify:` `report and calculation parity for 180, 190 and 193 on real stores and resolvers; empty store warns, stored zero counts; 1239 aggregation and CLI tests passed` -> `pass`
 
 ## Notes
 
@@ -374,3 +390,4 @@ related:
 - `S11` 296/2024 root reuses 2023 storage (124 to 56 stated); 308 roots already stored by baseline, stale cause tokens dropped as false; 604 root reason corrected, storage reuse deferred to the converter fix; 216 unchanged; all late-authoring candidates genuinely new
 - `S11` 220 T22009001 34 boxes authored at 2024 (identical 2024 and 2025 layout); 490/2023 root reuses 2022-2t-4t storage (386 to 33 casillas stated); 322 and 490 2022 roots already reused storage, reasons corrected and positions pruned; 220 boxes 02796 and 02797 left for P05.S34
 - `S16` a passing -n0 run that opens the authority leaves the frozen sqlite snapshot on Windows until the reader closes; closing it at session end is the remaining S16 work
+- `S29` invoice refusal names 111 and 115, since 123 already refuses invoice evidence; --withholding-observation is equally unpersisted and is removed under ruling 14's precedent (P05.S36)

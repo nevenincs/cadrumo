@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:a19da2d124b10488c7e343fc7541650ac2fe7289449c7308f7f7342819886582'
+body_hash: 'sha256:6868137103a38db36e8585179df3c02dfb5b933e5c3a2fc951475dde970bfe27'
 ---
 
 # `registry-conformance-rectification` plan
@@ -97,17 +97,18 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S22` - Report every invoice withholding defect through the one projection path (ruling 15); `src/cadrumo/application/aggregation/invoice_retencion.py`.
 - [ ] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
 - [x] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
-- [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count records, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
+- [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count the design's type-2 records instead of an unproduced retención window, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
 - [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
 - [ ] `P05.S27` - Ground Modelo 202's 2025 art. 40.2 base on the Modelo 200 box net of retenciones and ingresos a cuenta, which every era's instructions define it as; `src/cadrumo/_data/registry/aeat/modelos/202/`.
 - [ ] `P05.S28` - Make the open-row gate also report an open row a later edition restates unchanged, with a detector case; `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`.
-- [ ] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [x] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 - [x] `P05.S30` - Let the test-run command runner read lines longer than asyncio's default limit, so check-locales completes; `dev/test_runs/command.py`.
-- [ ] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
+- [x] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
 - [ ] `P05.S32` - Fix the delta converter defects the rectification lanes found, each with a detector case: uncaused roots judged minimal, constraints carrying both source-ref forms, greedy positions over declared ones, a casilla baseline forcing a family baseline, export layouts folded into whole overrides, and out-of-period windows inherited by storage; `dev/registry/edition_delta_migration.py`.
 - [ ] `P05.S33` - Complete the Modelo 604 2024 and Modelo 308 2019 construct memberships from their designs, and re-measure 604's storage reuse once the converter keeps its layout per edition; `src/cadrumo/_data/registry/aeat/modelos/604/`.
 - [ ] `P05.S34` - Withdraw the 2025 Modelo 220 jurisdiction assignment of boxes 02796 and 02797, which rests on an identical ambiguous caption, and leave the pair unauthored in both editions until an official source states the foral column; `src/cadrumo/_data/registry/aeat/modelos/220/`.
 - [ ] `P05.S35` - Re-review the Modelo 184 2022, 182 2024 and 220 2024 editions against their new members and restamp them through the conformance stamp command; `src/cadrumo/_data/registry/aeat/modelos/`.
+- [ ] `P05.S36` - Remove the unpersisted --withholding-observation option under ruling 14's precedent, and correct the clave breakdown docstring that still names only Modelo 190; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 
 ## Parallelization
 
