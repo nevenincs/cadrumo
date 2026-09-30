@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f0dc6d6f2cebbd2b14bfbac35b2e40e586a960ef7c08e02976ec3d16c973b758'
+body_hash: 'sha256:06840fae80987a01596f418e50ec437a6a8a9058ce2b165631897faf6fba8eac'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -219,6 +219,69 @@ workbench shows a printed rate only where the literal itself says "%" or its exp
 the scale; the rest show a dot. The labels of [157] ("at 0.5%") and [17] ("at 1.0%") contradict
 their literals ("00175", "00000"). Open, for the registry's owner: declare the export scale of the
 rate literals and correct the contradicting labels.
+
+### type-gate | high | P06 added eight type-checker diagnostics
+
+The P06 phase review found pyrefly rejecting integer bounds on the `Decimal` rates in
+`src/cadrumo/application/modelo/work_form_models.py`, ty reading the harness panel checks in
+`dev/tui/harness/sequences.py` as always true or false, and an untyped set in
+`dev/tui/tests/test_tui_harness_colour.py`. Resolved in e07cb8d33b and ab8385cdeb; the type gate
+is back to the seventeen diagnostics that predate the phase.
+
+### attention-scale | medium | the navigator marks a section done while its list heading marks it missing
+
+A section whose boxes wait on an import or a calculation reads as done in the navigator and as
+needing input in the list, and `n` walks to boxes the filer cannot type into
+(`src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py:253`,
+`src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:274`). Seen on 111, 303, 115, 100
+and a calculated 130. Open: one classification shared by the navigator, the list, the header and
+`n`.
+
+### filed-origin-words | medium | a filed declaration still asks the filer to confirm
+
+On a 303 recorded as filed, an assumed box reads "Assumed, please confirm" on its row and in its
+panel, and the sources map files it under Calculated
+(`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py:1067`,
+`src/cadrumo/entrypoints/tui/modelo/workbench/sources.py:273`). The D4 amendment already has a
+filed declaration ask for nothing, so the wording follows it without a new decision. Open.
+
+### bulk-confirm-dead-end | medium | F8 on the confirm step can open an empty dialog with an untrue note
+
+On a 131 whose only assumed value is a typed manual input, F8 lists no boxes and says boxes filled
+from a source update from it (`src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py:42`,
+`src/cadrumo/application/modelo/work_form.py:491`). Open.
+
+### issues-levels | low | the findings list has no missing level and counts pages that do not apply
+
+Missing boxes the header counts are not listed, and assumed boxes on a page that does not apply
+this period are listed but not counted (`src/cadrumo/entrypoints/tui/modelo/workbench/issues.py:75`).
+Open.
+
+### rate-before-value | low | a rate box shows its grounded rate in place of its own value
+
+For a rate box that is not a design constant, the grounded rate hides the box's value, including
+a typed or failed one (`src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py:340`). The
+preview shows the grid's rate cells inconsistent as well: [154] "0.00" and [169] "0" beside
+"2 %". Open.
+
+### grid-row-labels | low | the 303 grid's rate bands have no row label at full width
+
+At full width the rows below [150] leave the label column empty, while the narrow fallback names
+them ("General regime · 2 %"). Open.
+
+### unnamed-boxes | medium | Modelo 390's first-page boxes show their registry ids as labels
+
+Thirty-two preview frames of 390 show labels such as
+"modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual"; their panel says no explanation
+exists and that dates and years cannot be entered, for what reads as a registration flag. Open:
+find whether the label is missing from the catalogue or dropped by the read model, and route a
+registry gap to its owner.
+
+### blocker-preview | low | no documented sequence produces a blocking finding
+
+Every sequence golden verifies complete, so no preview shows a row, section or findings group
+marked as blocking, and the error colour against the blue brand cannot be judged on a real
+blocker. Open: a documented blocked-verification sequence.
 
 ## Recommendations
 

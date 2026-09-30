@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd50863c598008001e9d5e779b554b87f6152a0d4e20a209aeb2401a3967a487'
+body_hash: 'sha256:d4629e2d066818055a781af0a3560bcac5cc14883bf173186fa43ab8da3bd710'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -701,6 +701,8 @@ related:
 - `S43` `verify:` `pytest src/cadrumo/entrypoints/tui` -> `pass`
 - `S43` `verify:` `python -m dev.docs.sequences refresh` -> `pass`
 - `S43` `by:` `orchestrator`
+- `S32` `verify:` `python -m dev.quality.types (17 diagnostics, all predating P06)` -> `pass`
+- `S38` `verify:` `python -m dev.quality.types (17 diagnostics, all predating P06)` -> `pass`
 
 ## Notes
 
@@ -754,3 +756,5 @@ related:
 - `S42` Commits 0146b2ae61
 - `S42` The in-process journeys pass; the installed-wheel journeys were not run, since they need a wheel built from a settled tree
 - `S43` Commits 9e3a5fee59, 72b7266e91
+- `S32` Reopened by the phase review's type-gate finding and resolved in e07cb8d33b
+- `S38` Reopened by the phase review's type-gate finding and resolved in e07cb8d33b
