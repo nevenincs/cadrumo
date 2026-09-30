@@ -3477,7 +3477,7 @@ cli:
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
         modelo_audit_view: Mostra el manifest d'un paquet d'evidències d'una revisió
           de declaració.
-        modelo_bindings: Gestionar les vinculacions d'un model fiscal.
+        modelo_bindings: Mostrar d'on surt el valor de cada casella d'un model.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
         modelo_m036: Registrar una declaració Modelo 036 presentada a l'AEAT.

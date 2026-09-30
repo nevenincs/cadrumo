@@ -3256,7 +3256,7 @@ cli:
         modelo_audit_check: Check bundled evidence for a filing revision.
         modelo_audit_export: Export the evidence audit for a filing revision.
         modelo_audit_view: Show an evidence bundle's manifest for a filing review.
-        modelo_bindings: Inspect registry binding coverage.
+        modelo_bindings: Show where each box's value comes from for a modelo.
         modelo_describe: Describe one modelo revision.
         modelo_list: List supported modelos.
         modelo_m036: Record a Modelo 036 declaration you filed at AEAT.

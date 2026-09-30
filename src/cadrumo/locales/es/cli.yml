@@ -3508,7 +3508,7 @@ cli:
           declaración.
         modelo_audit_view: Muestra el manifiesto del paquete de evidencias de una
           revisión de declaración.
-        modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
+        modelo_bindings: Mostrar de dónde sale el valor de cada casilla de un modelo.
         modelo_describe: Describir la estructura de un modelo fiscal.
         modelo_list: Listar los modelos fiscales disponibles.
         modelo_m036: Registrar una declaración Modelo 036 presentada en la AEAT.
