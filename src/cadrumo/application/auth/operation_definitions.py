@@ -287,17 +287,28 @@ class AuthConfigureOperationExecutor:
     ) -> str:
         _require_active_profile_subject(request)
         await context.events.phase("auth.configure.preflight")
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase("auth.configure.execute")
-        result = self._configure(
-            request.payload.provider.value,
-            certificate_path=request.payload.certificate_path,
-            operator_scope_ports=self._ports.operator_scope_ports,
-            operation=context.authority_operation,
-        )
-        await context.events.effect(OperationEffect.UPDATED)
-        await context.events.phase("auth.configure.settlement")
-        return await _result_reference(result, context)
+
+        async def publish() -> str:
+            async with context.cancellation.irreversible_section():
+                await context.events.effect(OperationEffect.UNKNOWN)
+                await context.events.phase("auth.configure.execute")
+                result = await asyncio.to_thread(
+                    self._configure,
+                    request.payload.provider.value,
+                    certificate_path=request.payload.certificate_path,
+                    operator_scope_ports=self._ports.operator_scope_ports,
+                    operation=context.authority_operation,
+                )
+                if type(result) is not AuthConfigureResult:
+                    raise ValueError("provider configuration returned an invalid result")
+                result = AuthConfigureResult.model_validate_json(result.model_dump_json(), strict=True)
+                if result.provider != request.payload.provider.value:
+                    raise ValueError("provider configuration returned a different provider")
+                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.phase("auth.configure.settlement")
+                return await _result_reference(result, context)
+
+        return await await_cancellation_complete(publish(), task_name="auth-configure-publication")
 
 
 class AuthSessionAcquireOperationExecutor:
@@ -511,6 +522,7 @@ def build_auth_operation_definitions(
             build=lambda: AuthConfigureOperationExecutor(ports=ports, configure=configure),
             phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
@@ -566,6 +578,12 @@ def build_auth_operation_registrations(
         project_profile_rotation_result,
         resolve_profile_rotation_access,
     )
+    from .provider_configure_operation_access import (
+        AUTH_CONFIGURE_RESULT_SCHEMA_ID,
+        AuthConfigureOperationProjection,
+        project_auth_configure_result,
+        resolve_auth_configure_access,
+    )
     from .teardown_operation_access import resolve_auth_teardown_access
 
     return tuple(
@@ -587,6 +605,22 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_profile_rotation_access,
                 )
                 if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID
+                else OperationPublicDefinitionRegistrationV1.compose(
+                    definition=definition,
+                    request_schema=OperationSchemaBindingV1.bind(
+                        schema_id=f"{definition.definition_id}.request",
+                        schema_version=1,
+                        model_type=AuthConfigureOperationRequest,
+                    ),
+                    result_schema=OperationSchemaBindingV1.bind(
+                        schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID,
+                        schema_version=1,
+                        model_type=AuthConfigureOperationProjection,
+                    ),
+                    result_projector=project_auth_configure_result,
+                    access_resolver=resolve_auth_configure_access,
+                )
+                if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
                 else OperationPublicDefinitionRegistrationV1.compose(
                     definition=definition,
                     request_schema=OperationSchemaBindingV1.bind(

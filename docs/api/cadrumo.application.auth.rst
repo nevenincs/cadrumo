@@ -42,6 +42,7 @@ Submodules
    cadrumo.application.auth.passphrase_operation_access
    cadrumo.application.auth.probes
    cadrumo.application.auth.protocols
+   cadrumo.application.auth.provider_configure_operation_access
    cadrumo.application.auth.providers
    cadrumo.application.auth.read_operation
    cadrumo.application.auth.session_types

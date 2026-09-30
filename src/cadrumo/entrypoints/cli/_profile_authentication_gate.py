@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _RUNTIME_PROFILE_KEYS = frozenset(
     {
+        "config_auth_configure",
         "app_live_iva_wallet_history",
         "app_overview_pipeline",
         "app_overview_status",

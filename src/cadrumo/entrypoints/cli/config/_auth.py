@@ -77,29 +77,11 @@ def auth_configure(
 ) -> None:
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import configure_operator_auth
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import authority_operation, operator_scope_ports
+    from .runtime_auth_configure import run_auth_configure
 
-    try:
-        result = configure_operator_auth(
-            provider,
-            certificate_path=file,
-            operator_scope_ports=operator_scope_ports(ctx),
-            operation=authority_operation(ctx),
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider},
-        ) from exc
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
+    configure_result = run_auth_configure(ctx, provider=provider, certificate_path=file)
     from ..config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
-    configure_result = result
     precondition_action = (
         resolve_cli_precondition_action(configure_result.precondition_verdict)
         if configure_result.precondition_verdict is not None
