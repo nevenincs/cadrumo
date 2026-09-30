@@ -56,8 +56,14 @@ _IDENTITY_HEADING_KEYS = {
 # create-time pair under ``cli.config.profile``. The verb itself ships and its
 # family is MOUNTED, so the prompts are relocated rather than owed; what remains
 # under ``cli.config.passphrase`` is its help pair and one refusal.
+#
+# The documentation site's download link names the product too, but Hungarian
+# declines it (``Cadrumót``), which the bare-name pattern does not match, so that
+# key is an entry for three locales and not for the fourth.
 _PROSE_KEYS = {
     "ca": {
+        "docs.site.footer.note",
+        "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
         "application.modelo.calculation_summary.footer_notice",
         "application.modelo.calculation_summary.signature_meaning",
@@ -87,6 +93,8 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "en": {
+        "docs.site.footer.note",
+        "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
         "application.modelo.calculation_summary.footer_notice",
         "application.modelo.calculation_summary.signature_meaning",
@@ -114,6 +122,8 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "es": {
+        "docs.site.footer.note",
+        "docs.site.link.get_cadrumo",
         "application.modelo.calculation_summary.filing_recorded",
         "application.modelo.calculation_summary.footer_notice",
         "application.modelo.calculation_summary.signature_meaning",
@@ -140,6 +150,7 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
+        "docs.site.footer.note",
         "application.modelo.calculation_summary.footer_notice",
         "application.modelo.calculation_summary.signature_meaning",
         "application.modelo.calculation_report.local_calculation_notice",

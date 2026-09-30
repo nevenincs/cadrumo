@@ -32,6 +32,14 @@ scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
 OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
 PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
 
+# Site chrome (header, broadcast strip, footer, accessible names, and the
+# strings the interaction layer writes into the DOM) is not page content, so
+# gettext never reaches it. It is resolved from the locale catalogues in the
+# language this root is being built for; a key with no authored value raises
+# here rather than rendering English inside a localized site.
+site_chrome = import_module("dev.docs.site_chrome").site_chrome
+site_labels = import_module("dev.docs.site_chrome").site_labels
+
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
 
@@ -61,7 +69,6 @@ _DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMon
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
 _ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
 _RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
-_LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 
 # ── Project metadata ────────────────────────────────────────────────────────
 project = PRODUCT_IDENTITY.display_name
@@ -165,6 +172,8 @@ if language not in _VALID_DOCS_LANGUAGES:
     )
 locale_dirs = ["locales"]
 gettext_compact = False
+_BUILD_LANGUAGE = OutputLanguage(language)
+_SITE_LABELS = site_labels(_BUILD_LANGUAGE)
 
 exclude_patterns = [
     "_build",
@@ -361,19 +370,14 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = f"{PRODUCT_IDENTITY.prose_name} documentation - local Spanish tax preparation"
-html_short_title = f"{PRODUCT_IDENTITY.prose_name} documentation"
+html_title = _SITE_LABELS["meta_title"]
+html_short_title = _SITE_LABELS["meta_short_title"]
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 # The error page is served at whatever path missed, so its links are absolute.
 # They are rooted at this site root's own path; the extension's default is a
 # Read the Docs layout ("/en/latest/") no Cadrumo root lives under.
 notfound_urls_prefix = urlsplit(html_baseurl).path or "/"
-html_meta = {
-    "description": (
-        "Cadrumo helps you prepare, check, and export Spanish tax files locally. "
-        "Cadrumo never files or submits them for you."
-    ),
-}
+html_meta = {"description": _SITE_LABELS["meta_description"]}
 html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
@@ -524,56 +528,56 @@ html_theme_options = {
 html_context = {
     "cadrumo_repository_url": _REPOSITORY_URL,
     "cadrumo_nav": [
-        {"label": "Getting started", "doc": "how-to/index"},
-        {"label": "CLI reference", "doc": "cli/index"},
-        {"label": "How it works", "doc": "explanation/index"},
-        {"label": "API", "doc": "api/index"},
+        {"label": _SITE_LABELS["nav_getting_started"], "doc": "how-to/index"},
+        {"label": _SITE_LABELS["nav_cli_reference"], "doc": "cli/index"},
+        {"label": _SITE_LABELS["nav_how_it_works"], "doc": "explanation/index"},
+        {"label": _SITE_LABELS["nav_api"], "doc": "api/index"},
     ],
     "cadrumo_broadcasts": [
         {
-            "label": "Pre-alpha",
-            "message": (
-                "Breaking changes are expected. Verify Agencia Estatal de Administración "
-                "Tributaria (AEAT) deadlines before filing."
-            ),
+            "label": _SITE_LABELS["broadcast_label"],
+            "message": _SITE_LABELS["broadcast_message"],
             "links": [
-                {"label": "Updates", "doc": "updates"},
-                {"label": "Latest download", "url": _LATEST_RELEASE_URL},
-                {"label": "Report an issue", "url": _ISSUES_URL},
+                {"label": _SITE_LABELS["link_updates"], "doc": "updates"},
+                # The download page lists the live install channels. The GitHub
+                # releases/latest page carries no assets, so it is not where a
+                # reader looking for the software should be sent.
+                {"label": _SITE_LABELS["link_get_cadrumo"], "doc": "download"},
+                {"label": _SITE_LABELS["link_report_issue"], "url": _ISSUES_URL},
             ],
         }
     ],
     "cadrumo_footer_groups": [
         {
-            "title": "Stay current",
+            "title": _SITE_LABELS["footer_stay_current"],
             "links": [
-                {"label": "Critical updates", "doc": "updates", "fragment": "critical-updates"},
-                {"label": "Latest download", "url": _LATEST_RELEASE_URL},
-                {"label": "Release notes", "url": _RELEASES_URL},
+                {"label": _SITE_LABELS["link_critical_updates"], "doc": "updates", "fragment": "critical-updates"},
+                {"label": _SITE_LABELS["link_get_cadrumo"], "doc": "download"},
+                {"label": _SITE_LABELS["link_release_notes"], "url": _RELEASES_URL},
             ],
         },
         {
-            "title": "Get help",
+            "title": _SITE_LABELS["footer_get_help"],
             "links": [
-                {"label": "Report an issue", "url": _ISSUES_URL},
-                {"label": "CLI reference", "doc": "cli/index"},
-                {"label": "How it works", "doc": "explanation/index"},
+                {"label": _SITE_LABELS["link_report_issue"], "url": _ISSUES_URL},
+                {"label": _SITE_LABELS["nav_cli_reference"], "doc": "cli/index"},
+                {"label": _SITE_LABELS["nav_how_it_works"], "doc": "explanation/index"},
             ],
         },
         {
-            "title": "Trust and responsibility",
+            "title": _SITE_LABELS["footer_trust_and_responsibility"],
             "links": [
-                {"label": "Disclaimer", "doc": "disclaimer"},
-                {"label": "Events and deadlines", "doc": "updates", "fragment": "events-and-deadlines"},
-                {"label": "Repository", "url": _REPOSITORY_URL},
+                {"label": _SITE_LABELS["link_disclaimer"], "doc": "disclaimer"},
+                {
+                    "label": _SITE_LABELS["link_events_and_deadlines"],
+                    "doc": "updates",
+                    "fragment": "events-and-deadlines",
+                },
+                {"label": _SITE_LABELS["link_repository"], "url": _REPOSITORY_URL},
             ],
         },
     ],
-    "cadrumo_footer_note": (
-        "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with the "
-        "Agencia Estatal de Administración Tributaria (AEAT), "
-        "and never replaces official AEAT tools or advice from a qualified professional."
-    ),
+    "cadrumo_footer_note": _SITE_LABELS["footer_note"],
 }
 if _USER_SCOPE:
     # The header nav carries an "API" entry pointing at the excluded api/index
@@ -601,8 +605,18 @@ html_context["cadrumo_docs_languages"] = [
     {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
 ]
 
+# ── Site chrome ──────────────────────────────────────────────────────────────
+# Every template-rendered label, accessible name, and interaction-layer string,
+# flat and resolved for this root's language. The templates read it by name and
+# serialise it once per page as the payload docs/_static/cadrumo-docs.js reads,
+# so the server-rendered and browser-written chrome share one authority.
+html_context["cadrumo_chrome"] = site_chrome(
+    _BUILD_LANGUAGE,
+    language_endonym=_DOCS_LANGUAGE_ENDONYMS[_BUILD_LANGUAGE],
+)
+
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"
+ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"

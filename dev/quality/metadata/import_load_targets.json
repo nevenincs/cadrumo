@@ -2503,6 +2503,7 @@
         "dev.docs.sequences.tokeniser",
         "dev.docs.sequences.verdict_cache",
         "dev.docs.serve",
+        "dev.docs.site_chrome",
         "dev.docs.terminology",
         "dev.docs.terminology._miss_rate",
         "dev.docs.terminology._query_aliases",
