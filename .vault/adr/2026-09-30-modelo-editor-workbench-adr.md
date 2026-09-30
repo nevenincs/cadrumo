@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f2e9e71473dc3cd9985fcf8f2067c29540b1bddfeee7a0114a543dbe8bdcc4c'
+body_hash: 'sha256:4f3e5e6ec7f6b0eb3b59a9d269af91413f4d2bfd46fcc059e19f1ec18d6e37ae'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -196,6 +196,17 @@ The step words follow the filer's vocabulary: check, not review, and record fili
 because the workbench submits nothing to the AEAT.
 
 Authorized under the standing advance authorization the plan records.
+
+Refinement 2026-09-30, from the first rendered review. Read literally, the rule above made a
+Modelo 100 filer confirm 1,567 unentered boxes before recording the filing. A demand that large
+trains a blind "confirm all", which works against no-silent-under-declaration rather than for it.
+So a value nobody entered is assumed, holds the fill step and counts as to do only in two cases:
+the box is required for this declaration, by the same rule verification applies, or the box holds a
+non-zero value. An optional box nobody entered that holds zero or nothing reads "Optional, empty"
+and never holds the journey. The warnings before applying or recalculating a declaration
+calculated elsewhere still name every box whose value nobody entered. That is a separate question:
+what applying changes. Bulk confirm works on a page or a section, not on the whole declaration at
+once.
 
 ### D5 Editing interaction
 
