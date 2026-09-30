@@ -2086,7 +2086,6 @@ tui:
           fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
           escriure. En tornar a calcular només es conserven els valors introduïts
           aquí.
-      design_constant: '{column}: {value} · el fixa el disseny oficial'
       details_page: Detalls del càlcul
       disclosure:
         official_spanish: text oficial en castellà
@@ -2172,6 +2171,12 @@ tui:
       go_to:
         missing: No hi ha cap casella [{box}] en aquest model.
         prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
+      grid:
+        column_unnamed: Columna {number}
+        records_read_only: Aquests registres surten de les teves dades. Canvia'ls
+          allà.
+        records_unknown: Cadrumo no sap quants registres hi ha.
+        row_boxes: '{heading} · [{first}] a [{last}]'
       header:
         chip:
           blocks: 'impedeixen presentar: {count}'
@@ -2440,6 +2445,7 @@ tui:
         not_grounded: Cadrumo no fixa cap tipus per a aquesta fila, així que aquí
           no se'n mostra cap. Consulta a les instruccions oficials el tipus que et
           correspon.
+        printed_by_form: El model oficial imprimeix aquest tipus en aquesta fila.
       read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
       rebase:
         changed: 'Caselles que ara mostren un altre valor: {count}.'
@@ -2448,7 +2454,6 @@ tui:
         still_moving: La declaració continua canviant. Espera un moment i torna a
           revisar els teus canvis [R].
       repeating: 'Files de detall: {count}'
-      repeating_unknown: Aquestes files encara no es poden mostrar aquí.
       result_diff:
         close: Tanca
         column:

@@ -2067,7 +2067,6 @@ tui:
         operator_entries_unknown: Ezt a bevallást legutóbb ezen a képernyőn kívül
           számították ki, ezért a Cadrumo nem tudja, mely értékeket írta be Ön. Az
           újraszámítás csak az itt megadott értékeket tartja meg.
-      design_constant: '{column}: {value} · a hivatalos terv rögzíti'
       details_page: A számítás részletei
       disclosure:
         official_spanish: hivatalos spanyol szöveg
@@ -2155,6 +2154,12 @@ tui:
       go_to:
         missing: Ezen a nyomtatványon nincs [{box}] rovat.
         prompt: 'Ugrás rovatra: írd be a számát, majd nyomj Entert.'
+      grid:
+        column_unnamed: '{number}. oszlop'
+        records_read_only: Ezek a tételek az Ön adataiból származnak. Ott módosítsa
+          őket.
+        records_unknown: A Cadrumo nem tudja, hány tétel van.
+        row_boxes: '{heading} · [{first}] és [{last}] között'
       header:
         chip:
           blocks: 'akadályozó: {count}'
@@ -2424,6 +2429,8 @@ tui:
         not_grounded: A Cadrumo ehhez a sorhoz nem rögzít adókulcsot, ezért itt nem
           jelenik meg. Az Önre vonatkozó kulcsot a hivatalos kitöltési útmutatóban
           ellenőrizze.
+        printed_by_form: A hivatalos nyomtatvány ennél a sornál ezt a kulcsot tünteti
+          fel.
       read_failed: A bevallás nem olvasható. Lépjen vissza, és nyissa meg újra.
       rebase:
         changed: 'Most más értéket mutató rovatok: {count}.'
@@ -2432,7 +2439,6 @@ tui:
         still_moving: A bevallás még változik. Várjon egy kicsit, és nézze át újra
           a módosításait [R].
       repeating: 'Részletező sorok: {count}'
-      repeating_unknown: Ezek a sorok itt még nem jeleníthetők meg.
       result_diff:
         close: Bezárás
         column:

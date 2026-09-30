@@ -69,9 +69,15 @@ async def test_official_grids_and_design_constants_read_as_the_printed_row() -> 
             await pilot.pause()
             listing = _list_text(screen)
 
-    assert "Régimen general 21 %" in listing
-    assert "Tipo %: 21,00 · lo fija el diseño oficial" in listing
-    assert "[07] Base imponible" in listing
+    # The grid is drawn as its table: the column headings across, the row down the side.
+    heading = next(line for line in listing.splitlines() if "Base imponible" in line)
+    assert "Tipo %" in heading and "Cuota" in heading
+    row = next(line for line in listing.splitlines() if "[07]" in line)
+    assert row.lstrip().startswith("Régimen general 21 %")
+    assert "[09]" in row
+    # The design's own figure sits in its slot, and the grid never says the design fixes it.
+    assert "21,00" in row
+    assert "lo fija" not in listing
 
 
 @pytest.mark.asyncio

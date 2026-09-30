@@ -3,11 +3,14 @@
 The form is built by the real read model from the published authority, and the
 rows come from the workbench's own page layout. Expected rates are the ones the
 official 303 design prints for these rows: 4 % super-reduced, 10 % reduced and
-the 2 % transitional rate.
+the 2 % transitional rate, grounded on their base bindings. The design's own
+literals ("02100") declare no scale, so a rate box with no grounded rate shows
+none, and a literal is only printed as a rate where it states one outright.
 """
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 from typing import override
 
@@ -18,6 +21,7 @@ from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
+    ModeloFormPrintedRate,
     ModeloWorkForm,
     address_key,
 )
@@ -53,7 +57,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PERCENT = "\u00a0%"
 _GROUNDED = {"02": f"4{_PERCENT}", "05": f"10{_PERCENT}", "166": f"2{_PERCENT}"}
-_UNGROUNDED = ("08", "151", "154", "157", "17", "20", "23")
+# 151 and 17 print zeros, the design's placeholder; 154 and 169 are rate boxes no base binding grounds;
+# 08, 157, 20 and 23 print literals whose scale nothing declares.
+_UNGROUNDED = ("08", "151", "154", "157", "169", "17", "20", "23")
 
 
 def _form(
@@ -125,10 +131,21 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
             assert value_text(entry, OutputLanguage.EN) == rate, box
             assert rate_note(entry) is None, box
         assert row_value_text(entries["05"], OutputLanguage.ES) == f"10{_PERCENT}"
+        # A literal that states its rate outright is printed, and the band says only the form prints it.
+        stated = replace(
+            entries["157"],
+            field=entries["157"].field.model_copy(
+                update={"printed_rate": ModeloFormPrintedRate(ratio=Decimal("0.0175"), literal="1,75 %")}
+            ),
+        )
+        assert row_value_text(stated, OutputLanguage.EN) == f"1.75{_PERCENT}"
+        assert row_value_text(stated, OutputLanguage.ES) == f"1,75{_PERCENT}"
+        assert rate_note(stated) == lookup_translation("tui.modelo.workbench.rate.printed_by_form", locale="en")
         for box in _UNGROUNDED:
             entry = entries[box]
             assert entry.rate_of_row, box
             assert entry.field.grounded_rate is None, box
+            assert entry.field.printed_rate is None, box
             assert row_value_text(entry, OutputLanguage.EN) == "·", box
             assert value_text(entry, OutputLanguage.EN) not in fixed, box
             assert rate_note(entry) == lookup_translation("tui.modelo.workbench.rate.not_grounded", locale="en")

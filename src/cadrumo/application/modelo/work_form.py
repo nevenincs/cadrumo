@@ -20,7 +20,11 @@ Classification is decided once, here, so every frontend shows the same states:
   draft supplied,
 * whether a box needs the filer's value, by the same rule verification checks,
 * the one rate a printed rate box stands for, where its row's base binding
-  declares exactly one,
+  declares exactly one, and the rate a box the design fixes prints, where its
+  literal states a percentage or its export field declares the scale, never
+  from a literal of zeros,
+* for a repeating column the design leaves unnamed, the label of the box it
+  shows,
 * the settlement box and which way it settles, and
 * whether the declaration is recorded as filed, which closes it to editing and
   leaves nothing counted as still to do.
@@ -71,6 +75,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormPageDefinition,
     FormPlacementDefinition,
     FormPlacementKind,
+    FormRepeatingColumn,
     FormRepeatingGroupBlock,
     FormRepeatingRowSource,
     FormSectionDefinition,
@@ -89,6 +94,7 @@ from .edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .required_inputs import filer_required_casilla_ids
 from .source_policy import SourceOverridePolicy, source_policy
 from .work_form_models import (
@@ -116,6 +122,7 @@ from .work_form_models import (
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
     ModeloFormPage,
+    ModeloFormPrintedRate,
     ModeloFormRate,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
@@ -161,6 +168,9 @@ _FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
 """The lifecycle states of a calculation recorded as filed."""
 _TO_DO_TALLIES: Final[tuple[str, ...]] = ("needs_input", "default_to_confirm")
 """The counts of what the filer still has to enter or confirm."""
+_PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*%\s*")
+"""A design literal that states a percentage outright, such as ``21 %`` or ``1,75%``."""
+_DIGIT_LITERAL: Final[re.Pattern[str]] = re.compile(r"[0-9]+")
 
 
 class ModeloWorkFormLayoutError(InternalInvariantError):
@@ -650,6 +660,9 @@ def _with_grounded_rate(cells: tuple[ModeloFormGridCell, ...], context: _FormCon
     if len(rate_indexes) != 1:
         return cells
     (rate_index,) = rate_indexes
+    if _placeholder_literal(cells[rate_index]):
+        # The design prints zeros where this row's rate would stand: it prints no rate, so none is claimed.
+        return cells
     grounded: dict[Decimal, ModeloFormRate] = {}
     for index, cell in enumerate(cells):
         rate = None if index == rate_index or cell.field is None else _grounded_rate(cell.field, context)
@@ -664,6 +677,81 @@ def _with_grounded_rate(cells: tuple[ModeloFormGridCell, ...], context: _FormCon
         rate_cell.model_copy(update={"field": field}) if index == rate_index else cell
         for index, cell in enumerate(cells)
     )
+
+
+def _rate_literal(cell: ModeloFormGridCell) -> str | None:
+    """The literal of a rate box the design fixes, or ``None`` for any other cell."""
+    field = cell.field
+    if cell.kind is not FormCellKind.DESIGN_CONSTANT or field is None or cell.literal is None:
+        return None
+    return cell.literal if field.data_type == CasillaDataType.RATIO.value else None
+
+
+def _placeholder_literal(cell: ModeloFormGridCell) -> bool:
+    """Whether a rate box the design fixes holds only zeros, the design's placeholder where no rate is printed."""
+    literal = _rate_literal(cell)
+    return literal is not None and _DIGIT_LITERAL.fullmatch(literal) is not None and int(literal) == 0
+
+
+def _stated_percent(literal: str) -> Decimal | None:
+    """A literal that states a percentage outright, as a fraction of one."""
+    match = _PERCENT_LITERAL.fullmatch(literal)
+    if match is None:
+        return None
+    return Decimal(match.group(1).replace(",", ".")).scaleb(-2)
+
+
+def _declared_scale_rate(field: ModeloFormField) -> Decimal | None:
+    """A fixed rate box's figure read at the scale its export field declares, as a fraction of one.
+
+    The box holds a figure only when the export field declares its implied
+    decimals; the casilla's declared bounds then say whether that figure is a
+    percentage or a fraction. Without both, the literal's scale is unknown and
+    no rate is read from it.
+    """
+    value = field.value
+    if not isinstance(value, Decimal):
+        return None
+    maximum = None if field.constraints is None else field.constraints.max_value
+    unit = ratio_unit(field.data_type, maximum)
+    if unit is ModeloEditRatioUnit.PERCENT:
+        return value.scaleb(-2)
+    if unit is ModeloEditRatioUnit.FRACTION:
+        return value
+    return None
+
+
+def _printed_rate(cell: ModeloFormGridCell) -> ModeloFormPrintedRate | None:
+    """The rate a fixed rate box prints, where its literal states it or its export field declares the scale.
+
+    Nothing is inferred from other rows: a literal whose scale is not declared
+    prints no rate Cadrumo can state.
+    """
+    literal = _rate_literal(cell)
+    if literal is None or cell.field is None or _placeholder_literal(cell):
+        return None
+    ratio = _stated_percent(literal)
+    if ratio is None:
+        ratio = _declared_scale_rate(cell.field)
+    if ratio is None or not Decimal(0) < ratio <= 1:
+        return None
+    return ModeloFormPrintedRate(ratio=ratio.normalize(), literal=literal)
+
+
+def _with_printed_rates(rows: tuple[ModeloFormGridRow, ...]) -> tuple[ModeloFormGridRow, ...]:
+    """Give each rate box the design fixes the rate its literal prints, where that reading is declared."""
+    updated: list[ModeloFormGridRow] = []
+    for row in rows:
+        cells: list[ModeloFormGridCell] = []
+        for cell in row.cells:
+            printed = _printed_rate(cell)
+            if printed is None or cell.field is None:
+                cells.append(cell)
+                continue
+            field = cell.field.model_copy(update={"printed_rate": printed})
+            cells.append(cell.model_copy(update={"field": field}))
+        updated.append(row.model_copy(update={"cells": tuple(cells)}))
+    return tuple(updated)
 
 
 class _LayoutWalk:
@@ -767,7 +855,7 @@ class _LayoutWalk:
                 )
                 for row in block.rows
             )
-            return ModeloFormGridBlock(id=block.id, columns=columns, rows=rows)
+            return ModeloFormGridBlock(id=block.id, columns=columns, rows=_with_printed_rates(rows))
         if isinstance(block, FormRepeatingGroupBlock):
             return self.repeating(block)
         return ModeloFormBindingInputsBlock(
@@ -788,12 +876,8 @@ class _LayoutWalk:
         return ModeloFormGridCell(kind=kind, literal=literal)
 
     def repeating(self, block: FormRepeatingGroupBlock) -> ModeloFormRepeatingBlock:
-        language = self.context.language
         columns = tuple(
-            ModeloFormGridColumn(
-                key=column.key, heading=_heading(column.heading_key, column.official_heading, column.key, language)
-            )
-            for column in block.columns
+            ModeloFormGridColumn(key=column.key, heading=self.repeating_heading(column)) for column in block.columns
         )
         column_casillas = tuple(
             None if column.casilla_id is None else str(column.casilla_id) for column in block.columns
@@ -819,6 +903,16 @@ class _LayoutWalk:
             rows_known=block.row_source is FormRepeatingRowSource.EXPORT_RECORD and self.context.revision is not None,
             rows=self.repeating_rows(block, column_casillas),
         )
+
+    def repeating_heading(self, column: FormRepeatingColumn) -> ModeloFormText:
+        """A repeating column's heading; one the design does not name reads as the label of the box it shows."""
+        language = self.context.language
+        heading = _heading(column.heading_key, column.official_heading, column.key, language)
+        if heading.disclosure is not ModeloFormTextDisclosure.TECHNICAL or column.casilla_id is None:
+            return heading
+        casilla = self.context.casillas.get(str(column.casilla_id))
+        label = None if casilla is None else _localized(casilla.localization_keys, language)
+        return heading if label is None else label
 
     def repeating_rows(
         self, block: FormRepeatingGroupBlock, column_casillas: tuple[str | None, ...]

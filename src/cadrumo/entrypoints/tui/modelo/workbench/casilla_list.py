@@ -19,6 +19,13 @@ column wraps onto further lines and is never cut; only the one optional line
 under it, the start of the box's description, may be. Every mark comes from
 :mod:`.vocabulary`, so the list never invents a state.
 
+An official grid is drawn as the paper form draws it, its rows down the side
+and its columns across, when the table fits the width; the cursor then moves
+from cell to cell, and the row's left edge carries the most severe mark among
+its cells. A grid too wide for the width is stacked instead, each row under a
+heading that tells it apart from its neighbours. The records of a repeating
+group are a read-only table with an index column.
+
 The list decides nothing. It posts a message naming the address the filer
 acted on -- edit, clear, revert, show the source -- and the screen owning the
 edit session answers it.
@@ -52,8 +59,10 @@ from .....application.modelo.work_form_models import (
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
+    ModeloFormPrintedRate,
     ModeloFormRate,
     ModeloFormRateUnit,
+    ModeloFormScalar,
     ModeloFormTextDisclosure,
     address_key,
 )
@@ -61,15 +70,34 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...components.app_access import TypedAppAccess
 from ...components.theme import tokenised
+from .grid import (
+    GRID_GAP,
+    GRID_LEAD,
+    CasillaListRecords,
+    GridCellText,
+    GridRowPlace,
+    GridShape,
+    TableGeometry,
+    cell_width,
+    measure_records,
+    measure_table,
+    record_summary_columns,
+    wrap_label,
+    wrap_text,
+)
 from .keys import describe_bindings
 from .vocabulary import (
     ATTENTION_GLYPHS,
     ATTENTION_ROLES,
+    BLOCKS_MARK,
+    CONFIRM_MARK,
     HERE_MARK,
+    MISSING_MARK,
     NEEDS_ATTENTION,
     ORIGIN_ROLES,
     Attention,
     ColourRole,
+    WorkbenchMark,
     attention_words_key,
     origin_glyph,
     origin_words,
@@ -90,11 +118,13 @@ _LABEL_CAP: Final[int] = 60
 _NO_BOX: Final[str] = "·"
 _PENDING_VALUE: Final[str] = "…"
 _EMPTY_VALUE: Final[str] = "·"
+_SEPARATOR: Final[str] = " · "
 _TO_DO_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
 )
 """Origins whose glyph asks the filer for a value, which a recorded declaration no longer does."""
 _RATIO_DATA_TYPE: Final[str] = "ratio"
+_MONEY_DATA_TYPE: Final[str] = "money"
 _ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {
         ModeloFormOrigin.NOT_APPLICABLE,
@@ -113,6 +143,8 @@ _NOT_APPLICABLE_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.not_applicab
 _FIXED_BY_DESIGN_VALUE_KEY: Final[str] = "tui.modelo.workbench.value.fixed_by_design"
 _IN_SPANISH_LOCALE_KEY: Final[str] = "tui.modelo.workbench.in_spanish"
 _RATE_NOT_GROUNDED_KEY: Final[str] = "tui.modelo.workbench.rate.not_grounded"
+_RATE_PRINTED_KEY: Final[str] = "tui.modelo.workbench.rate.printed_by_form"
+_ROW_BOXES_KEY: Final[str] = "tui.modelo.workbench.grid.row_boxes"
 _RATE_UNITS: Final[Mapping[ModeloFormRateUnit, ModeloEditRatioUnit]] = MappingProxyType(
     {ModeloFormRateUnit.FRACTION: ModeloEditRatioUnit.FRACTION}
 )
@@ -125,16 +157,23 @@ _BOX_PREFIXES: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"^\d[\w-]*\.\s+mező\s*:\s*"),
 )
 """A description that opens by naming its box, in each language the catalogue writes: the row already shows it."""
-_BREAKABLE_SPACE: Final[re.Pattern[str]] = re.compile(r"[^\S\u00a0]+")
-"""Where a label may break: any space except a no-break space, which holds "art. 71" or "1 000" together."""
 
 
 @dataclass(frozen=True, slots=True)
 class CasillaListHeading:
-    """A section or row heading line; never under the cursor."""
+    """A section or row heading line; never under the cursor.
+
+    A row heading of an official grid carries its place in the grid, so the
+    list can draw the row as a line of the grid's table. A section heading
+    carries the most severe thing its section still holds, and takes that
+    level's colour: a blocker reads as an error, a missing or assumed value as
+    a warning, and a section with nothing to do in the plain text colour.
+    """
 
     text: str
     level: int = 0
+    row: GridRowPlace | None = None
+    mark: WorkbenchMark | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +197,9 @@ class CasillaListEntry:
     rate_of_row: bool = False
     #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
     recorded: bool = False
+    #: In an official grid, the heading of the row the box sits in, and of its column.
+    row_label: str | None = None
+    column_label: str | None = None
 
     @property
     def key(self) -> AddressKey:
@@ -195,7 +237,7 @@ class CasillaListEntry:
         return ORIGIN_ROLES[self.field.origin]
 
 
-type CasillaListItem = CasillaListHeading | CasillaListNote | CasillaListEntry
+type CasillaListItem = CasillaListHeading | CasillaListNote | CasillaListEntry | CasillaListRecords
 type Density = Literal["comfortable", "compact"]
 
 
@@ -220,6 +262,29 @@ class _Columns:
     detail: bool
 
 
+@dataclass(frozen=True, slots=True)
+class _TableRow:
+    """One grid row drawn as a line of its table: where its cells are and what its label reads."""
+
+    geometry: TableGeometry
+    #: The item index of the field in each column, or ``None`` for an empty slot.
+    cells: tuple[int | None, ...]
+    literals: tuple[str | None, ...]
+    labels: tuple[str, ...]
+    #: Whether the column headings are drawn above this row: the first row of its grid on screen.
+    header: bool
+    level: WorkbenchMark | None
+
+    @property
+    def header_height(self) -> int:
+        """The lines the column headings take above this row."""
+        return self.geometry.header_height if self.header else 0
+
+    def focusable(self) -> tuple[int, ...]:
+        """The columns whose cell holds a field the cursor can rest on."""
+        return tuple(column for column, index in enumerate(self.cells) if index is not None)
+
+
 def _fit(text: str, width: int) -> str:
     """Pad or cut ``text`` to exactly ``width`` cells, marking a cut with an ellipsis."""
     if width <= 0:
@@ -235,30 +300,6 @@ def _fit(text: str, width: int) -> str:
 def _right(text: str, width: int) -> str:
     fitted = _fit(text, width).rstrip()
     return " " * (width - cell_len(fitted)) + fitted
-
-
-def _wrap(text: str, width: int) -> tuple[str, ...]:
-    """Break ``text`` into lines of at most ``width`` cells, at spaces where it can; nothing is dropped."""
-    width = max(width, 1)
-    lines: list[str] = []
-    line = ""
-    for word in _BREAKABLE_SPACE.split(text.strip()):
-        candidate = f"{line} {word}" if line else word
-        if cell_len(candidate) <= width:
-            line = candidate
-            continue
-        if line:
-            lines.append(line)
-        line = word
-        while cell_len(line) > width:
-            cut = len(line)
-            while cut > 1 and cell_len(line[:cut]) > width:
-                cut -= 1
-            lines.append(line[:cut])
-            line = line[cut:]
-    if line or not lines:
-        lines.append(line)
-    return tuple(lines)
 
 
 def description_text(field: ModeloFormField) -> str | None:
@@ -282,6 +323,13 @@ def _box_mark(field: ModeloFormField) -> str:
     return f"[{field.box}]" if field.box else _NO_BOX
 
 
+def shown_rate(field: ModeloFormField) -> ModeloFormRate | ModeloFormPrintedRate | None:
+    """The rate a rate box shows: the one its row is grounded on, else the one the design prints; ``None`` else."""
+    if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
+        return None
+    return field.grounded_rate or field.printed_rate
+
+
 def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     """Return the text of a field's value cell, with absence spoken in words."""
     if entry.staged_text is not None:
@@ -289,8 +337,9 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     field = entry.field
     if field.origin is ModeloFormOrigin.NOT_APPLICABLE:
         return tr(_NOT_APPLICABLE_VALUE_KEY)
-    if field.grounded_rate is not None:
-        return rate_text(field.grounded_rate, language)
+    rate = shown_rate(field)
+    if rate is not None:
+        return rate_text(rate, language)
     if field.editability is ModeloFormEditability.DESIGN_CONSTANT and field.value is None:
         # A rate the form leaves to the filer's own operations is not fixed,
         # so only a box that is not a rate says the design fixes it.
@@ -307,22 +356,40 @@ def value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
     )
 
 
-def rate_text(rate: ModeloFormRate, language: OutputLanguage) -> str:
-    """Return a grounded rate as the printed form states it, a percentage in the filer's language."""
+def rate_text(rate: ModeloFormRate | ModeloFormPrintedRate, language: OutputLanguage) -> str:
+    """Return a rate as the printed form states it, a percentage in the filer's language."""
     return format_casilla_value(
         rate.ratio, data_type=_RATIO_DATA_TYPE, language=language, ratio_unit=_RATE_UNITS[rate.unit]
     )
 
 
 def _ungrounded_rate(entry: CasillaListEntry) -> bool:
-    """Whether an entry is a row's rate box that holds no value and has no rate Cadrumo grounded."""
+    """Whether an entry is a row's rate box that holds no value and shows no rate."""
     field = entry.field
-    return entry.rate_of_row and field.grounded_rate is None and field.value is None
+    return entry.rate_of_row and shown_rate(field) is None and field.value is None
 
 
 def rate_note(entry: CasillaListEntry) -> str | None:
-    """Say why a row's rate box shows no rate, or ``None`` for any other box."""
+    """Say where a rate box's rate comes from when that needs saying, or ``None``.
+
+    A rate the design prints is only what the form prints, not a rate the
+    calculation is shown to apply; a row's rate box with no rate says why none
+    is shown. A grounded rate and any other box need no note.
+    """
+    field = entry.field
+    if field.grounded_rate is None and shown_rate(field) is not None:
+        return tr(_RATE_PRINTED_KEY)
     return tr(_RATE_NOT_GROUNDED_KEY) if _ungrounded_rate(entry) else None
+
+
+def grid_cell_title(entry: CasillaListEntry) -> str | None:
+    """Name a grid cell as the paper form places it: its row, its column, then its own precise label.
+
+    ``None`` for a box that is not in an official grid.
+    """
+    if entry.row_label is None or entry.column_label is None:
+        return None
+    return _SEPARATOR.join((entry.row_label, entry.column_label, entry.field.label.text))
 
 
 def _origin_says_absence(field: ModeloFormField) -> bool:
@@ -337,18 +404,59 @@ def row_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
 
     The row's origin column says the absence in words, so the value column
     does not say it a second time. A row's rate box shows the rate its base is
-    grounded on, or only a dot when there is none, since claiming a rate the
-    row does not ground would be a fact nobody established. Every other
-    surface, which shows the value without the origin words beside it, uses
-    :func:`value_text`.
+    grounded on, or the rate the design prints, or only a dot when there is
+    neither, since claiming a rate the row does not establish would be a fact
+    nobody established. Every other surface, which shows the value without the
+    origin words beside it, uses :func:`value_text`.
     """
     field = entry.field
-    showing_rate = field.grounded_rate is not None and field.origin is not ModeloFormOrigin.NOT_APPLICABLE
-    if entry.staged_text is not None or showing_rate:
+    if entry.staged_text is not None or shown_rate(field) is not None:
         return value_text(entry, language)
     if _ungrounded_rate(entry) or _origin_says_absence(field):
         return _EMPTY_VALUE
     return value_text(entry, language)
+
+
+def grid_value_text(entry: CasillaListEntry, language: OutputLanguage) -> str:
+    """Return a grid cell's value: a row's value, with a box the design fixes and prints nothing for as a dot.
+
+    A grid never says a value is fixed: its rate column prints a rate or
+    nothing, and the help band says what the design does with the box.
+    """
+    field = entry.field
+    if (
+        entry.staged_text is None
+        and field.editability is ModeloFormEditability.DESIGN_CONSTANT
+        and field.value is None
+        and shown_rate(field) is None
+    ):
+        return _EMPTY_VALUE
+    return row_value_text(entry, language)
+
+
+def _row_level(entries: list[CasillaListEntry]) -> WorkbenchMark | None:
+    """The most severe thing a grid row's cells hold: a blocker, then a missing value, then an assumed one."""
+    if any(entry.attention is Attention.BLOCKED for entry in entries):
+        return BLOCKS_MARK
+    waiting = [entry.field.origin for entry in entries if not entry.recorded and entry.field.origin in NEEDS_ATTENTION]
+    if any(origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM for origin in waiting):
+        return MISSING_MARK
+    return CONFIRM_MARK if waiting else None
+
+
+_LEVEL_ROLES: Final[Mapping[str, ColourRole]] = MappingProxyType(
+    {BLOCKS_MARK.glyph: ColourRole.ERROR, MISSING_MARK.glyph: ColourRole.ERROR, CONFIRM_MARK.glyph: ColourRole.WARNING}
+)
+_SECTION_ROLES: Final[Mapping[str, str]] = MappingProxyType(
+    {BLOCKS_MARK.glyph: "heading-error", MISSING_MARK.glyph: "heading-warning", CONFIRM_MARK.glyph: "heading-warning"}
+)
+"""The style of a section heading by the most severe thing its section holds; any other reads plainly."""
+
+
+def _heading_role(heading: CasillaListHeading) -> str:
+    if heading.level:
+        return "subheading"
+    return "heading" if heading.mark is None else _SECTION_ROLES.get(heading.mark.glyph, "heading")
 
 
 class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
@@ -357,6 +465,8 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     COMPONENT_CLASSES: ClassVar[set[str]] = {
         "casilla-list--cursor",
         "casilla-list--heading",
+        "casilla-list--heading-warning",
+        "casilla-list--heading-error",
         "casilla-list--subheading",
         "casilla-list--box",
         "casilla-list--muted",
@@ -383,6 +493,14 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         }
         CasillaList > .casilla-list--heading {
             color: $foreground;
+            text-style: bold underline;
+        }
+        CasillaList > .casilla-list--heading-warning {
+            color: $warning;
+            text-style: bold underline;
+        }
+        CasillaList > .casilla-list--heading-error {
+            color: $error;
             text-style: bold underline;
         }
         CasillaList > .casilla-list--subheading {
@@ -422,6 +540,9 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         Binding("pagedown", "page(1)", "", show=False),
         Binding("home", "ends(-1)", "", show=False),
         Binding("end", "ends(1)", "", show=False),
+        # Only while the cursor is on a table's row; elsewhere these keys fall through to the screen.
+        Binding("left,h", "cell(-1)", "", show=False),
+        Binding("right,l", "cell(1)", "", show=False),
         Binding("enter", "edit", "", show=False),
         Binding("x,delete", "clear", "", show=False),
         Binding("u", "revert", "", show=False),
@@ -470,10 +591,17 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._language = language
         self._density: Density = density
         self._cursor: AddressKey | None = None
+        #: The grid column the cursor keeps while it moves up and down through a table.
+        self._column: int | None = None
         self._starts: list[int] = []
         self._heights: list[int] = []
+        self._owner: list[int] = []
+        self._tables: dict[int, _TableRow] = {}
+        self._cell_of: dict[int, tuple[int, int]] = {}
+        self._stacked: frozenset[int] = frozenset()
+        self._records: dict[int, tuple[tuple[str, str], ...]] = {}
         self._laid_out_width = -1
-        self._measures = self._measure()
+        self._measures = self._measure(frozenset())
         self._select_first_entry()
 
     # ── public surface ───────────────────────────────────────────────────
@@ -490,6 +618,13 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         return None if index is None else self._entry_at(index)
 
     @property
+    def on_grid_row(self) -> bool:
+        """Whether the cursor rests on a cell of a grid drawn as a table, where the side arrows move between cells."""
+        self._layout()
+        index = self._cursor_index()
+        return index is not None and index in self._cell_of
+
+    @property
     def density(self) -> Density:
         """Whether fields take one line or two."""
         return self._density
@@ -499,7 +634,6 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._items = items
         if language is not None:
             self._language = language
-        self._measures = self._measure()
         if self._cursor_index() is None:
             self._select_first_entry()
         self._laid_out_width = -1
@@ -534,21 +668,38 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
                 return True
         return False
 
+    @override
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Take the side arrows only on a table's row, so elsewhere they reach the screen's own keys."""
+        if action == "cell":
+            return self.on_grid_row
+        return True
+
     # ── layout ───────────────────────────────────────────────────────────
 
     def _content_width(self) -> int:
         return max(self.scrollable_content_region.width, 20)
 
-    def _measure(self) -> _Measures:
-        entries = [item for item in self._items if isinstance(item, CasillaListEntry)]
+    def _measure(self, drawn_in_tables: frozenset[int]) -> _Measures:
+        entries = [
+            item
+            for index, item in enumerate(self._items)
+            if isinstance(item, CasillaListEntry) and index not in drawn_in_tables
+        ]
         if not entries:
             return _Measures()
         return _Measures(
             box=max(cell_len(_box_mark(entry.field)) for entry in entries),
             label=min(max(entry.indent + cell_len(self._label(entry)) for entry in entries), _LABEL_CAP),
-            value=min(max(cell_len(row_value_text(entry, self._language)) for entry in entries), _VALUE_CAP),
+            value=min(max(cell_len(self._value(entry)) for entry in entries), _VALUE_CAP),
             words=max(cell_len(origin_words(entry.field)) for entry in entries),
         )
+
+    def _value(self, entry: CasillaListEntry) -> str:
+        """The value a line shows: a grid cell never says the design fixes it."""
+        if entry.row_label is not None:
+            return grid_value_text(entry, self._language)
+        return row_value_text(entry, self._language)
 
     def _columns(self, width: int) -> _Columns:
         """Share one width out: the box whole, then the value, the label, and the origin words where they fit."""
@@ -571,36 +722,204 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         )
 
     def _label_lines(self, entry: CasillaListEntry, columns: _Columns) -> tuple[str, ...]:
-        return _wrap(self._label(entry), _label_width(entry, columns))
+        return wrap_text(self._label(entry), _label_width(entry, columns))
 
-    def _note(self, entry: CasillaListEntry, columns: _Columns) -> str | None:
-        """The optional line under a field: what a change replaces, a blocker, or where the description starts."""
+    def _note(self, index: int, entry: CasillaListEntry, columns: _Columns) -> str | None:
+        """The optional line under a field: what a change replaces, a blocker, or where the description starts.
+
+        A box of a stacked grid shows no description; the help band carries it.
+        """
         if self._density == "compact":
             return None
         if entry.previous_text is not None and not columns.detail:
             return tr("tui.modelo.workbench.was", value=entry.previous_text)
         if entry.attention is Attention.BLOCKED and not columns.detail:
             return tr(attention_words_key(Attention.BLOCKED))
+        if index in self._stacked:
+            return None
         description = description_text(entry.field)
         return description.split(". ")[0] if description else None
 
-    def _height(self, item: CasillaListItem, width: int) -> int:
+    def _stacked_label(self, place: GridRowPlace) -> str:
+        """A stacked row's heading, told apart from its neighbours by its rate or by the boxes it holds."""
+        if place.rate is not None:
+            return _SEPARATOR.join((place.heading, rate_text(place.rate, self._language)))
+        if len(place.boxes) > 1:
+            return tr(_ROW_BOXES_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
+        return place.heading
+
+    def _height(self, index: int, item: CasillaListItem, width: int) -> int:
+        if index in self._tables:
+            row = self._tables[index]
+            return row.header_height + len(row.labels)
+        if self._owner[index] != index:
+            return 0
+        if isinstance(item, CasillaListHeading):
+            if item.row is not None:
+                return len(wrap_text(self._stacked_label(item.row), width - _LEAD))
+            return 1
+        if isinstance(item, CasillaListRecords):
+            return len(self._records.get(index, ()))
         if not isinstance(item, CasillaListEntry):
             return 1
         columns = self._columns(width)
-        return len(self._label_lines(item, columns)) + (1 if self._note(item, columns) else 0)
+        return len(self._label_lines(item, columns)) + (1 if self._note(index, item, columns) else 0)
+
+    def _grid_rows(self) -> dict[GridShape, list[int]]:
+        """The index of every grid row heading, grouped by the grid it belongs to, in list order."""
+        grids: dict[GridShape, list[int]] = {}
+        for index, item in enumerate(self._items):
+            if isinstance(item, CasillaListHeading) and item.row is not None:
+                grids.setdefault(item.row.grid, []).append(index)
+        return grids
+
+    def _owned(self, heading: int) -> range:
+        """The items a grid row heading owns: its boxes and any literal the design prints without one."""
+        item = self._items[heading]
+        span = item.row.span if isinstance(item, CasillaListHeading) and item.row is not None else 0
+        return range(heading + 1, min(heading + 1 + span, len(self._items)))
+
+    def _row_cells(self, heading: int) -> tuple[int | None, ...]:
+        item = self._items[heading]
+        if not isinstance(item, CasillaListHeading) or item.row is None:
+            return ()
+        owned = {
+            entry.key: index
+            for index in self._owned(heading)
+            if isinstance(entry := self._items[index], CasillaListEntry)
+        }
+        return tuple(None if slot.key is None else owned.get(slot.key) for slot in item.row.slots)
+
+    def _lay_out_grids(self, width: int) -> None:
+        """Decide for each grid whether it is drawn as a table at ``width``, and place its rows and cells."""
+        self._tables = {}
+        self._cell_of = {}
+        stacked: set[int] = set()
+        self._owner = list(range(len(self._items)))
+        for grid, headings in self._grid_rows().items():
+            rows = [self._row_cells(heading) for heading in headings]
+            places = [item.row for heading in headings if isinstance(item := self._items[heading], CasillaListHeading)]
+            texts = tuple(
+                tuple(self._cell_text(index) for row in rows if (index := row[column]) is not None)
+                for column in range(len(grid.headings))
+            )
+            literals = tuple(
+                tuple(literal for place in places if place is not None and (literal := place.slots[column].literal))
+                for column in range(len(grid.headings))
+            )
+            labels = self._shown_labels(places)
+            geometry = measure_table(grid.headings, texts, literals, labels, width)
+            if geometry is None:
+                for heading in headings:
+                    stacked.update(self._owned(heading))
+                continue
+            for position, (heading, cells, place) in enumerate(zip(headings, rows, places, strict=True)):
+                for index in self._owned(heading):
+                    self._owner[index] = heading
+                for column, index in enumerate(cells):
+                    if index is not None:
+                        self._cell_of[index] = (heading, column)
+                entries = [
+                    entry
+                    for index in cells
+                    if index is not None and isinstance(entry := self._items[index], CasillaListEntry)
+                ]
+                self._tables[heading] = _TableRow(
+                    geometry=geometry,
+                    cells=cells,
+                    literals=() if place is None else tuple(slot.literal for slot in place.slots),
+                    labels=wrap_label(labels[position], geometry.label) if labels[position] else ("",),
+                    header=position == 0,
+                    level=_row_level(entries),
+                )
+        self._stacked = frozenset(stacked)
+
+    def _shown_labels(self, places: list[GridRowPlace | None]) -> tuple[str, ...]:
+        """Each row's label as the paper form prints it: a heading repeated on the next row is shown once."""
+        labels: list[str] = []
+        previous: str | None = None
+        for place in places:
+            heading = "" if place is None else place.heading
+            labels.append("" if heading == previous else heading)
+            previous = heading
+        return tuple(labels)
+
+    def _cell_text(self, index: int) -> GridCellText:
+        item = self._items[index]
+        if not isinstance(item, CasillaListEntry):
+            return GridCellText(box="", value="")
+        return GridCellText(
+            box=_box_mark(item.field),
+            value=grid_value_text(item, self._language),
+            rate=item.field.data_type == _RATIO_DATA_TYPE,
+        )
+
+    def _record_value(self, value: ModeloFormScalar, data_type: str) -> str:
+        if value is None:
+            return _EMPTY_VALUE
+        return format_casilla_value(
+            value, data_type=data_type, language=self._language, ratio_unit=ratio_unit(data_type, None)
+        )
+
+    def _record_lines(self, item: CasillaListRecords, width: int) -> tuple[tuple[str, str], ...]:
+        """A repeating group's records as lines: a table with an index column, or one line per record."""
+        indexes = tuple(str(row.index) for row in item.rows)
+        values = tuple(
+            tuple(
+                self._record_value(value, data_type)
+                for value, data_type in zip(row.values, item.data_types, strict=True)
+            )
+            for row in item.rows
+        )
+        geometry = measure_records(item.headings, indexes, values, width)
+        lines: list[tuple[str, str]] = []
+        if not geometry.table:
+            shown = record_summary_columns(item.data_types)
+            for index, row in zip(indexes, values, strict=True):
+                summary = (" " * GRID_GAP).join(row[column] for column in shown)
+                lines.append((_fit(" " * GRID_LEAD + _right(index, geometry.index) + "  " + summary, width), "value"))
+            return tuple(lines)
+        height = geometry.header_height
+        for line in range(height):
+            parts = [" " * (GRID_LEAD + geometry.index)]
+            for column, heading in enumerate(geometry.header):
+                offset = height - len(heading)
+                text = heading[line - offset] if line >= offset else ""
+                parts.append(" " * GRID_GAP + self._record_cell(text, geometry.widths[column], item, column))
+            lines.append(("".join(parts), "subheading"))
+        for index, row in zip(indexes, values, strict=True):
+            parts = [" " * GRID_LEAD + _right(index, geometry.index)]
+            parts.extend(
+                " " * GRID_GAP + self._record_cell(text, geometry.widths[column], item, column)
+                for column, text in enumerate(row)
+            )
+            lines.append(("".join(parts), "value"))
+        return tuple(lines)
+
+    def _record_cell(self, text: str, width: int, item: CasillaListRecords, column: int) -> str:
+        """An amount is right-aligned under its heading, anything else left-aligned."""
+        if item.data_types[column] == _MONEY_DATA_TYPE:
+            return _right(text, width)
+        return _fit(text, width)
 
     def _layout(self) -> None:
         width = self._content_width()
         if width == self._laid_out_width and len(self._starts) == len(self._items):
             return
         self._laid_out_width = width
+        self._lay_out_grids(width)
+        self._records = {
+            index: self._record_lines(item, width)
+            for index, item in enumerate(self._items)
+            if isinstance(item, CasillaListRecords)
+        }
+        self._measures = self._measure(frozenset(self._cell_of))
         starts: list[int] = []
         heights: list[int] = []
         line = 0
-        for item in self._items:
+        for index, item in enumerate(self._items):
             starts.append(line)
-            height = self._height(item, width)
+            height = self._height(index, item, width)
             heights.append(height)
             line += height
         self._starts = starts
@@ -620,30 +939,102 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     def _role_style(self, role: ColourRole) -> Style:
         return self._style(role.value)
 
+    def _item_at_line(self, line: int) -> int | None:
+        index = bisect_right(self._starts, line) - 1
+        if index < 0 or index >= len(self._items) or line >= self._starts[index] + self._heights[index]:
+            return None
+        return index
+
     @override
     def render_line(self, y: int) -> Strip:
         self._layout()
         width = self._content_width()
         line = y + int(self.scroll_offset.y)
-        index = bisect_right(self._starts, line) - 1
-        if index < 0 or index >= len(self._items) or line >= self._starts[index] + self._heights[index]:
+        index = self._item_at_line(line)
+        if index is None:
             return Strip.blank(width, self.rich_style)
-        item = self._items[index]
         sub_line = line - self._starts[index]
-        focused = index == self._cursor_index()
-        text = self._item_text(item, sub_line, width, focused=focused)
+        focused = index == self._cursor_index() and index not in self._cell_of
+        text = self._item_text(index, sub_line, width, focused=focused)
         base = self.rich_style + (self._style("cursor") if focused else Style())
         return Strip(list(text.render(self.app.console))).adjust_cell_length(width, base).apply_style(base)
 
-    def _item_text(self, item: CasillaListItem, sub_line: int, width: int, *, focused: bool) -> Text:
+    def _item_text(self, index: int, sub_line: int, width: int, *, focused: bool) -> Text:
         # A span-less Text drops its own style when rendered to segments, so
         # single-style lines are appended as one styled span.
+        item = self._items[index]
+        if index in self._tables:
+            return self._table_line(index, sub_line)
         if isinstance(item, CasillaListHeading):
-            role = "heading" if item.level == 0 else "subheading"
+            role = _heading_role(item)
+            if item.row is not None:
+                lines = wrap_text(self._stacked_label(item.row), width - _LEAD)
+                return Text().append(_fit(" " * _LEAD + lines[sub_line], width), style=self._style(role))
             return Text().append(_fit(" " * (1 + 2 * item.level) + item.text, width), style=self._style(role))
         if isinstance(item, CasillaListNote):
             return Text().append(_fit(" " * (3 + item.indent) + item.text, width), style=self._style("muted"))
-        return self._entry_line(item, sub_line, width, focused=focused)
+        if isinstance(item, CasillaListRecords):
+            text, role = self._records[index][sub_line]
+            return Text().append(_fit(text, width), style=self._style(role))
+        return self._entry_line(index, item, sub_line, width, focused=focused)
+
+    def _table_line(self, index: int, sub_line: int) -> Text:
+        """One line of a grid row drawn as its table: the column headings, or the row's label and cells."""
+        row = self._tables[index]
+        geometry = row.geometry
+        text = Text()
+        if sub_line < row.header_height:
+            text.append(" " * (GRID_LEAD + geometry.label + 1))
+            for column, heading in enumerate(geometry.header):
+                offset = row.header_height - len(heading)
+                words = heading[sub_line - offset] if sub_line >= offset else ""
+                text.append((" " * GRID_GAP if column else "") + _right(words, geometry.widths[column]))
+            text.stylize(self._style("subheading"))
+            return text
+        line = sub_line - row.header_height
+        cursor = self._cursor_index()
+        here = cursor is not None and cursor in row.cells
+        text.append(HERE_MARK.glyph if here and line == 0 else " ", style=self._style("staged") if here else Style())
+        level = row.level if line == 0 else None
+        text.append(
+            " " if level is None else level.glyph,
+            style=Style() if level is None else self._role_style(_LEVEL_ROLES[level.glyph]),
+        )
+        text.append(" ")
+        label = row.labels[line] if line < len(row.labels) else ""
+        text.append(_fit(label, geometry.label), style=self._style("subheading"))
+        if line:
+            return text
+        text.append(" ")
+        for column, cell in enumerate(row.cells):
+            if column:
+                text.append(" " * GRID_GAP)
+            self._append_cell(text, row, column, cell, focused=here and cell == cursor)
+        return text
+
+    def _append_cell(self, text: Text, row: _TableRow, column: int, cell: int | None, *, focused: bool) -> None:
+        geometry = row.geometry
+        width = geometry.widths[column]
+        entry = None if cell is None else self._entry_at(cell)
+        if entry is None:
+            literal = row.literals[column] if column < len(row.literals) else None
+            if literal is None:
+                text.append(" " * width)
+            else:
+                text.append(_right(literal + "  ", width), style=self._style("muted"))
+            return
+        cursor = self._style("cursor") if focused else Style()
+        text.append(" " * (width - cell_width(geometry.boxes[column], geometry.values[column])), style=cursor)
+        attention = entry.attention
+        text.append(
+            ATTENTION_GLYPHS[attention] if attention is not None else " ",
+            style=(self._role_style(ATTENTION_ROLES[attention]) if attention is not None else Style()) + cursor,
+        )
+        text.append(_right(_box_mark(entry.field), geometry.boxes[column]) + " ", style=self._style("box") + cursor)
+        role = ColourRole.STAGED if entry.staged_text is not None else entry.origin_role
+        value = _right(grid_value_text(entry, self._language), geometry.values[column])
+        text.append(value, style=self._role_style(role) + cursor)
+        text.append(" " + entry.origin_mark, style=self._role_style(entry.origin_role) + cursor)
 
     def _label(self, entry: CasillaListEntry) -> str:
         field = entry.field
@@ -652,7 +1043,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             return f"{label} {tr(_IN_SPANISH_LOCALE_KEY)}"
         return label
 
-    def _entry_line(self, entry: CasillaListEntry, sub_line: int, width: int, *, focused: bool) -> Text:
+    def _entry_line(self, index: int, entry: CasillaListEntry, sub_line: int, width: int, *, focused: bool) -> Text:
         field = entry.field
         columns = self._columns(width)
         labels = self._label_lines(entry, columns)
@@ -671,9 +1062,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text.append(_right(_box_mark(field), columns.box) + " ", style=self._style("box"))
             text.append(_fit(labels[0], label_width))
             role = ColourRole.STAGED if entry.staged_text is not None else entry.origin_role
-            text.append(
-                " " + _right(row_value_text(entry, self._language), columns.value), style=self._role_style(role)
-            )
+            text.append(" " + _right(self._value(entry), columns.value), style=self._role_style(role))
             text.append(" " + entry.origin_mark, style=self._role_style(entry.origin_role))
             if columns.words:
                 text.append(" " + _fit(origin_words(field), columns.words), style=self._style("muted"))
@@ -684,7 +1073,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         if sub_line < len(labels):
             text.append(_fit(labels[sub_line], label_width))
             return text
-        note = self._note(entry, columns) or ""
+        note = self._note(index, entry, columns) or ""
         text.append(_fit(note, width - cell_len(text.plain)), style=self._style("muted"))
         return text
 
@@ -716,21 +1105,29 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         first = next((item for item in self._items if isinstance(item, CasillaListEntry)), None)
         self._cursor = None if first is None else first.key
 
-    def _move_cursor_to(self, index: int) -> None:
+    def _move_cursor_to(self, index: int, *, column: int | None = None) -> None:
+        """Rest the cursor on the field at ``index``; in a table, ``column`` is the column to keep moving in."""
         entry = self._entry_at(index)
         if entry is None:
             return
         self._cursor = entry.key
+        self._layout()
+        cell = self._cell_of.get(index)
+        self._column = None if cell is None else (cell[1] if column is None else column)
         self._scroll_to_cursor()
         self.refresh()
         self.post_message(self.Highlighted(entry))
+
+    def _owner_of(self, index: int) -> int:
+        return self._owner[index] if 0 <= index < len(self._owner) else index
 
     def _scroll_to_cursor(self) -> None:
         index = self._cursor_index()
         if index is None or not self._starts or index >= len(self._starts):
             return
-        top = self._starts[index]
-        bottom = top + self._heights[index]
+        owner = self._owner_of(index)
+        top = self._starts[owner]
+        bottom = top + self._heights[owner]
         view_top = int(self.scroll_offset.y)
         view_height = max(self.scrollable_content_region.height, 1)
         if top < view_top:
@@ -746,36 +1143,103 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             index += delta
         return None
 
-    def action_move(self, delta: int) -> None:
-        """Move the cursor to the next or previous field."""
+    def _stops(self) -> list[int]:
+        """Where the cursor can rest moving up and down, in line order: each field, and each table row with a box."""
+        stops: list[int] = []
+        for index, item in enumerate(self._items):
+            if index in self._tables:
+                if self._tables[index].focusable():
+                    stops.append(index)
+            elif isinstance(item, CasillaListEntry) and index not in self._cell_of:
+                stops.append(index)
+        return stops
+
+    def _land(self, stop: int, column: int | None) -> int:
+        """The field to rest on at a stop: a table row's cell nearest ``column``, skipping empty slots."""
+        row = self._tables.get(stop)
+        if row is None:
+            return stop
+        focusable = row.focusable()
+        wanted = focusable[0] if column is None else column
+        nearest = min(focusable, key=lambda candidate: (abs(candidate - wanted), candidate))
+        cell = row.cells[nearest]
+        return stop if cell is None else cell
+
+    def _go_to_stop(self, stop: int, column: int | None) -> None:
+        target = self._land(stop, column)
+        self._move_cursor_to(target, column=column if stop in self._tables else None)
+
+    def _current_stop(self) -> tuple[list[int], int | None, int | None]:
+        """The stops, the position of the cursor's among them, and the column the cursor keeps."""
+        self._layout()
+        stops = self._stops()
         current = self._cursor_index()
-        target = self._step(-1 if current is None else current, delta)
-        if target is not None:
-            self._move_cursor_to(target)
+        if current is None:
+            return stops, None, None
+        stop = self._owner_of(current)
+        column = self._column
+        if column is None and current in self._cell_of:
+            column = self._cell_of[current][1]
+        return stops, (stops.index(stop) if stop in stops else None), column
+
+    def action_move(self, delta: int) -> None:
+        """Move the cursor to the field above or below; in a table, to the same column of the next row."""
+        stops, position, column = self._current_stop()
+        if not stops:
+            return
+        target = (0 if delta > 0 else len(stops) - 1) if position is None else position + delta
+        if 0 <= target < len(stops):
+            self._go_to_stop(stops[target], column)
+
+    def action_cell(self, delta: int) -> None:
+        """Move to the previous or next cell of a table's row, stopping at its edge."""
+        self._layout()
+        current = self._cursor_index()
+        if current is None or current not in self._cell_of:
+            return
+        heading, column = self._cell_of[current]
+        row = self._tables[heading]
+        following = [candidate for candidate in row.focusable() if (candidate - column) * delta > 0]
+        if not following:
+            return
+        target = min(following, key=lambda candidate: abs(candidate - column))
+        cell = row.cells[target]
+        if cell is not None:
+            self._move_cursor_to(cell, column=target)
 
     def action_page(self, direction: int) -> None:
         """Move the cursor about one screen of lines."""
-        current = self._cursor_index()
-        if current is None:
+        stops, position, column = self._current_stop()
+        if position is None:
             return
         remaining = max(self.scrollable_content_region.height - 2, 1)
-        target = current
-        while remaining > 0:
-            following = self._step(target, direction)
-            if following is None:
-                break
-            remaining -= self._heights[following] if following < len(self._heights) else 1
-            target = following
-        self._move_cursor_to(target)
+        target = position
+        while remaining > 0 and 0 <= target + direction < len(stops):
+            target += direction
+            remaining -= max(self._heights[stops[target]], 1)
+        self._go_to_stop(stops[target], column)
 
     def action_ends(self, direction: int) -> None:
-        """Move the cursor to the first or last field."""
+        """Move the cursor to the first or last field; in a table's row, to its first or last cell."""
+        self._layout()
+        current = self._cursor_index()
+        if current is not None and current in self._cell_of:
+            row = self._tables[self._cell_of[current][0]]
+            focusable = row.focusable()
+            column = focusable[0] if direction < 0 else focusable[-1]
+            cell = row.cells[column]
+            if cell is not None:
+                self._move_cursor_to(cell, column=column)
+            return
         target = self._step(-1, 1) if direction < 0 else self._step(len(self._items), -1)
         if target is not None:
             self._move_cursor_to(target)
 
     def action_attention(self, direction: int) -> None:
-        """Move to the next or previous field that needs the filer, a staged change or a blocker."""
+        """Move to the next or previous field that needs the filer, a staged change or a blocker.
+
+        A table's cells are visited row by row, left to right.
+        """
         current = self._cursor_index()
         index = -1 if current is None else current
         while True:
@@ -810,13 +1274,19 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._post_for_highlighted(self.SourceRequested)
 
     def on_click(self, event: events.Click) -> None:
-        """Put the cursor on the clicked field; a double click edits it."""
+        """Put the cursor on the clicked field or table cell; a double click edits it."""
         self._layout()
-        line = event.y + int(self.scroll_offset.y)
-        index = bisect_right(self._starts, line) - 1
-        if self._entry_at(index) is None:
+        index = self._item_at_line(event.y + int(self.scroll_offset.y))
+        if index is None:
             return
-        self._move_cursor_to(index)
+        row = self._tables.get(index)
+        if row is not None:
+            column = row.geometry.column_at(event.x)
+            self._go_to_stop(index, 0 if column is None else column)
+        elif self._entry_at(index) is not None:
+            self._move_cursor_to(index)
+        else:
+            return
         if event.chain >= 2:
             self.action_edit()
 
@@ -830,8 +1300,11 @@ __all__ = [
     "CasillaListNote",
     "Density",
     "description_text",
+    "grid_cell_title",
+    "grid_value_text",
     "rate_note",
     "rate_text",
     "row_value_text",
+    "shown_rate",
     "value_text",
 ]

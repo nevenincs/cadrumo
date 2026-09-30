@@ -263,6 +263,26 @@ class ModeloFormRate(_FormModel):
         return self.ratio * 100
 
 
+class ModeloFormPrintedRate(_FormModel):
+    """The rate the official design prints in a rate box it fixes, read from the design's own literal.
+
+    A literal is read only where its scale is declared: it states a percentage
+    outright ("21 %"), or the export field that writes it declares its implied
+    decimals and the casilla's bounds say whether the figure is a percentage or
+    a fraction. Nothing is inferred from other rows. A literal of zeros is the
+    design's placeholder, never a rate. It says what the form prints, not that
+    the calculation applies it.
+    """
+
+    ratio: Decimal = Field(gt=0, le=1)
+    unit: ModeloFormRateUnit = ModeloFormRateUnit.FRACTION
+    literal: str = Field(min_length=1)
+
+    def percent(self) -> Decimal:
+        """The rate in per cent, as the printed form states it."""
+        return self.ratio * 100
+
+
 class ModeloFormField(_FormModel):
     """One box or binding input, classified for an editor."""
 
@@ -284,6 +304,9 @@ class ModeloFormField(_FormModel):
     #: On a rate box, the one rate its row's base binding declares; ``None`` on every other field
     #: and on a rate box whose base declares no rate, several rates, or has no binding.
     grounded_rate: ModeloFormRate | None = None
+    #: On a rate box the official design fixes, the rate its literal prints where the literal's scale
+    #: is declared; ``None`` on every other field, on a placeholder literal and on an undeclared scale.
+    printed_rate: ModeloFormPrintedRate | None = None
     role: CalculationReportRowRole | None = None
     #: The bindings that feed the field; on a bound casilla the first is the one an override replaces.
     bindings: tuple[ModeloFormBinding, ...] = ()
@@ -902,6 +925,7 @@ __all__ = [
     "ModeloFormLayoutProvenance",
     "ModeloFormOrigin",
     "ModeloFormPage",
+    "ModeloFormPrintedRate",
     "ModeloFormRate",
     "ModeloFormRateUnit",
     "ModeloFormRepeatingBlock",

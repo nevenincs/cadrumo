@@ -2097,7 +2097,6 @@ tui:
         operator_entries_unknown: Esta declaración se calculó por última vez fuera
           de esta pantalla, así que Cadrumo no puede saber qué valores escribiste.
           Al volver a calcular solo se conservan los valores introducidos aquí.
-      design_constant: '{column}: {value} · lo fija el diseño oficial'
       details_page: Detalles del cálculo
       disclosure:
         official_spanish: texto oficial
@@ -2181,6 +2180,11 @@ tui:
       go_to:
         missing: No hay ninguna casilla [{box}] en este modelo.
         prompt: 'Ir a la casilla: escribe su número y pulsa Intro.'
+      grid:
+        column_unnamed: Columna {number}
+        records_read_only: Estos registros salen de tus datos. Cámbialos allí.
+        records_unknown: Cadrumo no sabe cuántos registros hay.
+        row_boxes: '{heading} · [{first}] a [{last}]'
       header:
         chip:
           blocks: 'impiden presentar: {count}'
@@ -2444,6 +2448,7 @@ tui:
       rate:
         not_grounded: Cadrumo no fija un tipo para esta fila, así que aquí no se muestra
           ninguno. Consulta en las instrucciones oficiales el tipo que te corresponde.
+        printed_by_form: El modelo oficial imprime este tipo en esta fila.
       read_failed: No se pudo leer la declaración. Vuelve atrás y ábrela de nuevo.
       rebase:
         changed: 'Casillas que ahora muestran otro valor: {count}.'
@@ -2452,7 +2457,6 @@ tui:
         still_moving: La declaración sigue cambiando. Espera un momento y vuelve a
           revisar tus cambios [R].
       repeating: 'Filas de detalle: {count}'
-      repeating_unknown: Estas filas no se pueden mostrar aquí todavía.
       result_diff:
         close: Cerrar
         column:

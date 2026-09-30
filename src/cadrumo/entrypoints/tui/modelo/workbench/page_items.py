@@ -1,11 +1,12 @@
 """Turn one page of the editor form into the lines of the casilla list.
 
 A section becomes a heading that says whether anything in it still needs the
-filer; an official grid becomes its printed rows, each row's cells listed under
-the row heading with the column heading as their label; a value the official
-design fixes becomes an informational line, never an editable field. The
-working figures and the unplaced casillas are one more page, so nothing the
-form holds is out of the filer's reach.
+filer; an official grid becomes its printed rows, each row heading followed by
+its boxes in column order, labelled by their column, and carrying the row's
+place in its grid so the list can draw the paper form's table; the records of
+a repeating group become a read-only table. A value the official design fixes
+is never an editable field. The working figures and the unplaced casillas are
+one more page, so nothing the form holds is out of the filer's reach.
 
 Filters narrow a page without changing it: showing only what needs attention,
 or only the filer's own values, keeps the headings of the sections that still
@@ -25,9 +26,11 @@ from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
+    ModeloFormGridColumn,
     ModeloFormGridRow,
     ModeloFormOrigin,
     ModeloFormPage,
+    ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloFormText,
     ModeloFormTextDisclosure,
@@ -42,7 +45,9 @@ from .casilla_list import (
     CasillaListHeading,
     CasillaListItem,
     CasillaListNote,
+    shown_rate,
 )
+from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
 from .vocabulary import BLOCKS_MARK, CONFIRM_MARK, DONE_MARK, MISSING_MARK, NEEDS_ATTENTION, WorkbenchMark
 
 DETAILS_PAGE_ID: Final[str] = "details"
@@ -51,7 +56,10 @@ _COUNTED_TO_DO: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
 )
 """Origins a section's counts tally as still to do; the counts, not the bare origins, say how many."""
-_DESIGN_CONSTANT_KEY: Final[str] = "tui.modelo.workbench.design_constant"
+_COLUMN_UNNAMED_KEY: Final[str] = "tui.modelo.workbench.grid.column_unnamed"
+_RECORDS_KEY: Final[str] = "tui.modelo.workbench.repeating"
+_RECORDS_UNKNOWN_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
+_RECORDS_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
 
 
 class WorkbenchFilter(StrEnum):
@@ -153,6 +161,7 @@ def _entry(
     *,
     indent: int = 0,
     label: str | None = None,
+    row_label: str | None = None,
     rate_of_row: bool = False,
     recorded: bool = False,
 ) -> CasillaListEntry:
@@ -165,6 +174,8 @@ def _entry(
         previous_text=None if change is None else change.previous_text,
         rate_of_row=rate_of_row,
         recorded=recorded,
+        row_label=row_label,
+        column_label=None if row_label is None else label,
     )
 
 
@@ -172,6 +183,92 @@ def _rate_box(row: ModeloFormGridRow) -> ModeloFormField | None:
     """The one rate box an official row prints, or ``None`` when it prints none or several."""
     rates = [cell.field for cell in row.cells if cell.field is not None and cell.field.data_type == _RATIO_DATA_TYPE]
     return rates[0] if len(rates) == 1 else None
+
+
+def _column_headings(columns: tuple[ModeloFormGridColumn, ...], rows: tuple[ModeloFormGridRow, ...]) -> tuple[str, ...]:
+    """Each column's heading: the official words, else the label of its first box, never a technical key."""
+    headings: list[str] = []
+    for index, column in enumerate(columns):
+        if column.heading.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
+            headings.append(column.heading.text)
+            continue
+        labels = (
+            cell.field.label
+            for row in rows
+            for cell in row.cells[index : index + 1]
+            if cell.field is not None and cell.field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL
+        )
+        label = next(labels, None)
+        headings.append(label.text if label is not None else tr(_COLUMN_UNNAMED_KEY, number=index + 1))
+    return tuple(headings)
+
+
+def _grid_items(
+    block: ModeloFormGridBlock,
+    staged: Mapping[AddressKey, StagedDisplay],
+    mode: WorkbenchFilter,
+    counts: ModeloFormCounts,
+    *,
+    recorded: bool,
+) -> list[CasillaListItem]:
+    """An official grid as its printed rows: each row's heading, then its boxes in column order.
+
+    The heading carries the row's place in its grid, so the list can draw the
+    grid as a table, with an empty slot wherever the paper form has no box or
+    the filter hides one, or stack it when the table does not fit.
+    """
+    headings = _column_headings(block.columns, block.rows)
+    shape = GridShape(id=block.id, headings=headings)
+    items: list[CasillaListItem] = []
+    for row in block.rows:
+        row_items: list[CasillaListItem] = []
+        slots: list[GridSlot] = []
+        rate_box = _rate_box(row)
+        for heading, cell in zip(headings, row.cells, strict=True):
+            field = cell.field
+            if field is not None and _shown(field, staged, mode, counts, recorded=recorded):
+                row_items.append(
+                    _entry(
+                        field,
+                        staged,
+                        indent=2,
+                        label=heading,
+                        row_label=row.heading.text,
+                        rate_of_row=field is rate_box,
+                        recorded=recorded,
+                    )
+                )
+                slots.append(GridSlot(key=address_key(field.address)))
+            elif field is None and cell.literal is not None and mode is WorkbenchFilter.ALL:
+                row_items.append(CasillaListNote(f"{heading}: {cell.literal}", indent=2))
+                slots.append(GridSlot(literal=cell.literal))
+            else:
+                slots.append(GridSlot())
+        if not row_items:
+            continue
+        place = GridRowPlace(
+            grid=shape,
+            heading=row.heading.text,
+            slots=tuple(slots),
+            span=len(row_items),
+            rate=None if rate_box is None else shown_rate(rate_box),
+            boxes=tuple(cell.field.box for cell in row.cells if cell.field is not None and cell.field.box),
+        )
+        items.append(CasillaListHeading(row.heading.text, level=1, row=place))
+        items.extend(row_items)
+    return items
+
+
+def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
+    """A repeating group's records, read-only, or a plain statement that their number is not known."""
+    if not block.rows_known:
+        return [CasillaListNote(tr(_RECORDS_UNKNOWN_KEY), indent=2)]
+    items: list[CasillaListItem] = [CasillaListHeading(tr(_RECORDS_KEY, count=len(block.rows)), level=1)]
+    if block.rows:
+        headings = _column_headings(block.columns, ())
+        items.append(CasillaListRecords(headings=headings, data_types=block.column_data_types, rows=block.rows))
+        items.append(CasillaListNote(tr(_RECORDS_READ_ONLY_KEY), indent=2))
+    return items
 
 
 def _pending(section: ModeloFormSection, *, recorded: bool = False) -> int:
@@ -249,34 +346,15 @@ def _section_items(
                 if _shown(field, staged, mode, counts, recorded=recorded)
             )
         elif isinstance(block, ModeloFormGridBlock):
-            for row in block.rows:
-                row_items: list[CasillaListItem] = []
-                rate_box = _rate_box(row)
-                for column, cell in zip(block.columns, row.cells, strict=True):
-                    if cell.field is not None and _shown(cell.field, staged, mode, counts, recorded=recorded):
-                        row_items.append(
-                            _entry(
-                                cell.field,
-                                staged,
-                                indent=2,
-                                label=column.heading.text,
-                                rate_of_row=cell.field is rate_box,
-                                recorded=recorded,
-                            )
-                        )
-                    elif cell.literal is not None and mode is WorkbenchFilter.ALL:
-                        fixed = tr(_DESIGN_CONSTANT_KEY, column=column.heading.text, value=cell.literal)
-                        row_items.append(CasillaListNote(fixed, indent=2))
-                if row_items:
-                    items.append(CasillaListHeading(row.heading.text, level=1))
-                    items.extend(row_items)
+            items.extend(_grid_items(block, staged, mode, counts, recorded=recorded))
         elif mode is WorkbenchFilter.ALL:
-            items.append(CasillaListHeading(tr("tui.modelo.workbench.repeating", count=len(block.rows)), level=1))
-            if not block.rows_known:
-                items.append(CasillaListNote(tr("tui.modelo.workbench.repeating_unknown"), indent=2))
+            items.extend(_record_items(block))
     if not items:
         return []
-    return [CasillaListHeading(section_heading_text(section, recorded=recorded)), *items]
+    heading = CasillaListHeading(
+        section_heading_text(section, recorded=recorded), mark=section_mark(section, recorded=recorded)
+    )
+    return [heading, *items]
 
 
 def page_items(
