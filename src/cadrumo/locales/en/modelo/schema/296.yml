@@ -15,6 +15,11 @@ modelo:
               "clave" 3 to 25, and those with "clave" 1 or 2 where "pago" is 1. May
               be lower than box 03.'
             label: Withholdings and payments on account actually paid in
+      construct:
+        modelo-296-calculation-construct:
+          field:
+            title: Modelo 296 annual information return on IRNR withholding and payments
+              on account without a permanent establishment
       field:
         official_name: Modelo 296. Non-Resident Income Tax. Non-residents without
           a permanent establishment. Annual return of withholdings and payments on
@@ -25,11 +30,6 @@ modelo:
           field:
             label: Modelo 296, tax year 2022
         '2023':
-          construct:
-            modelo-296-calculation-construct:
-              field:
-                title: Modelo 296 annual information return on IRNR withholding and
-                  payments on account without a permanent establishment
           field:
             label: Modelo 296, tax year 2023
         2024-2025:

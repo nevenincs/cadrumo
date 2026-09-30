@@ -105,18 +105,6 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 family = "formulas"
 selector = {revision = "2024", id = "modelo-222-base-a-tipo-2-b2"}
 
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-222-2024-1p"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-222-2024-2p"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-222-2024-3p"}
-
 [[revisions."2025-y-siguientes".family_positions]]
 family = "formulas"
 id = "modelo-222-importe-pago-fraccionado-b2-tipo-3"

@@ -46,6 +46,11 @@ period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
 orden_aplicabilidad = ["orden-eha-3290-2008:art-6"]
 legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2023"]
+# Storage reuse only, not legal continuity: this edition's payload is stored as
+# its differences from the 2022 edition, the modelo's storage baseline.
+casilla_storage_baseline = "2022"
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2023".family_dispositions.parameters]
 reason = """
@@ -105,3 +110,24 @@ source_refs = [
     "aeat-modelo-296-procedure",
     "aeat-dr-216-2020-2023",
 ]
+
+[[revisions."2023".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2022", id = "modelo-296-anual"}
+sequence_additions = {source_refs = ["aeat-dr-296-2023"]}
+sequence_removals = {source_refs = [2]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-296-2022-0a"}
+replacement_id = "modelo-296-2023-0a"
+fields = {closes_on = 2024-01-31, filing_year = 2023, opens_on = 2024-01-01, period = "2023 0A"}
+
+[[revisions."2023".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2022", id = "boe-modelo-296-2021-2022-layout"}
+replacement_id = "aeat-dr-296-2023"
+sequence_additions = {source_refs = ["aeat-dr-296-2023"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [1, 0]}

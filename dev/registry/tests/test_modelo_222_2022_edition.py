@@ -3,7 +3,8 @@
 AEAT publishes the 2019-2022 diseno de registro and instructions separately from
 the 2023-2024 ones. Against the later design, 2022 lacks the page-1 flag the 2023
 design adds and boxes [59] and [60], which 2023 folds into [10]; everything else is
-the same concept, so the 2022 edition stores only those differences.
+the same concept, so the 2022 edition is the storage baseline and 2023 stores only
+those differences against it.
 """
 
 from __future__ import annotations

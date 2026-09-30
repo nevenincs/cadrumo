@@ -14,6 +14,11 @@ modelo:
               amb clau 3 a 25, i els de clau 1 o 2 amb pagament 1. Pot ser inferior
               a la casella 03.'
             label: Retencions i ingressos a compte ingressats
+      construct:
+        modelo-296-calculation-construct:
+          field:
+            title: Model 296 declaració informativa anual de retencions i ingressos
+              a compte de l'IRNR sense establiment permanent
       field:
         official_name: Modelo 296. Impost sobre la Renda de no Residents. No residents
           sense establiment permanent. Declaració anual de retencions i ingressos
@@ -24,11 +29,6 @@ modelo:
           field:
             label: Model 296, exercici 2022
         '2023':
-          construct:
-            modelo-296-calculation-construct:
-              field:
-                title: Model 296 declaració informativa anual de retencions i ingressos
-                  a compte de l'IRNR sense establiment permanent
           field:
             label: Model 296, exercici 2023
         2024-2025:

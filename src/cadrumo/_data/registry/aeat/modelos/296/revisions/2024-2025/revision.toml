@@ -85,10 +85,6 @@ family = "constructs"
 selector = {revision = "2023", id = "modelo-296-calculation-construct"}
 sequence_additions = {dependency_classifications = ["modelo-296-dep-216"]}
 
-[[revisions."2024-2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-296-2023-0a"}
-
 [[revisions."2024-2025".family_overrides]]
 family = "completeness_manifest"
 selector = {revision = "2023", id = "aeat-dr-296-2023"}

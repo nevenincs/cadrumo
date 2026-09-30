@@ -708,15 +708,3 @@ family = "constructs"
 selector = {revision = "2023", id = "modelo-222-declaration-construct"}
 sequence_additions = {deadline_windows = ["modelo-222-2024-1p", "modelo-222-2024-2p", "modelo-222-2024-3p"]}
 sequence_removals = {deadline_windows = [0, 1, 2]}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-222-2023-1p"}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-222-2023-2p"}
-
-[[revisions."2024".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-222-2023-3p"}

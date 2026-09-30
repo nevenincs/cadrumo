@@ -1,8 +1,9 @@
 [revisions."2022"]
 casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
-# Applicability-grade edition for ejercicio 2022, stored as the differences from
-# the 2023 edition (storage baselines select payload only; no legal succession is
-# claimed).
+# Applicability-grade edition for ejercicio 2022, and the modelo's storage
+# baseline: it sits at the support floor, so its payload is stated here in full
+# and the 2023 edition stores only its differences against it (storage
+# baselines select payload only; they claim no legal succession).
 #
 # THE 2022 RECORD LAYOUT. AEAT publishes no separate modelo 296 diseno for 2022.
 # The layout in force is Anexo III of Orden EHA/3290/2008 as Orden HFP/1351/2021
@@ -14,10 +15,10 @@ casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
 # DE ORDEN at 77-84), and there is no Anexo de desglose (tipo de hoja F).
 #
 # WHY APPLICABILITY. The layout text is complete, but the export generator renders
-# only AEAT record designs, and none exists for 2022, so no export layout is
-# generated and no filing grade is claimed. The 2023 edition's generated layout,
-# its projection endpoints and its design-keyed completeness manifest carry the
-# 2023 record set and are therefore not adopted.
+# only AEAT record designs, and none exists for 2022, so no export layout, no
+# export link and no projection endpoints are declared here, and no filing grade
+# is claimed. The completeness manifest lists the same closure as 2023's but is
+# keyed to this year's layout, which the filing schedule cites too.
 authority_grade = "applicability"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
@@ -28,19 +29,6 @@ source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "boe-m
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-30
-casilla_storage_baseline = "2023"
-family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
-
-[[revisions."2022".cleared_families]]
-family = "export_layouts"
-cause = "not_authored_for_this_edition"
-reason = "No generated export layout exists for this edition: AEAT publishes no 2022 diseno de registro, and the generator renders only AEAT designs. The predecessor's layout renders a different record set and is not adopted."
-
-[[revisions."2022".cleared_families]]
-family = "projection_endpoints"
-cause = "not_authored_for_this_edition"
-reason = "Projection endpoints admit the fields a generated export record repeats. This edition carries no generated export, so the predecessor's endpoints, which cite its own design, are not adopted."
 
 [revisions."2022".family_dispositions.parameters]
 reason = """
@@ -65,28 +53,3 @@ reason = """
 The hoja-resumen approved as ANEXO II of Orden EHA/3290/2008 prints four boxes and computes none of them: each is an aggregation the declarante performs over its own tipo-2 perceptor records, none an arithmetic relation between the boxes. Box 04 counts only some of the perceptores box 03 counts, so no formula may relate the two."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
-
-[[revisions."2022".family_overrides]]
-family = "deadline_windows"
-selector = {revision = "2023", id = "modelo-296-2023-0a"}
-replacement_id = "modelo-296-2022-0a"
-fields = {closes_on = 2023-01-31, filing_year = 2022, opens_on = 2023-01-01, period = "2022 0A"}
-
-[[revisions."2022".family_overrides]]
-family = "filing_schedules"
-selector = {revision = "2023", id = "modelo-296-anual"}
-sequence_additions = {source_refs = ["boe-modelo-296-2021-2022-layout"]}
-sequence_removals = {source_refs = [0]}
-
-# The calculation closure is unchanged; the manifest is keyed to this year's layout.
-[[revisions."2022".family_overrides]]
-family = "completeness_manifest"
-selector = {revision = "2023", id = "aeat-dr-296-2023"}
-replacement_id = "boe-modelo-296-2021-2022-layout"
-sequence_additions = {source_refs = ["boe-modelo-296-2021-2022-layout"]}
-sequence_removals = {source_refs = [0]}
-
-# The export surface is retired with the layout that would back it.
-[[revisions."2022".family_removals]]
-family = "application_links"
-selector = {revision = "2023", id = "modelo-296-export"}

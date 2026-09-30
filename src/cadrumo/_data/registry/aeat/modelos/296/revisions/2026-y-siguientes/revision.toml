@@ -28,7 +28,7 @@ reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-30
 casilla_storage_baseline = "2024-2025"
 family_storage_baseline = "2024-2025"
-scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "export_layouts"]
 
 [[revisions."2026-y-siguientes".cleared_families]]
 family = "export_layouts"
@@ -65,13 +65,8 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
 
 [[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-296-2024-0a"}
-
-[[revisions."2026-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-2025", id = "modelo-296-2025-0a"}
-
+family = "application_links"
+selector = {revision = "2024-2025", id = "modelo-296-export"}
 [[revisions."2026-y-siguientes".family_overrides]]
 family = "filing_schedules"
 selector = {revision = "2024-2025", id = "modelo-296-anual"}
@@ -87,6 +82,3 @@ sequence_additions = {source_refs = ["boe-modelo-296-2026-layout"]}
 sequence_removals = {source_refs = [0]}
 
 # The export surface is retired with the layout that would back it.
-[[revisions."2026-y-siguientes".family_removals]]
-family = "application_links"
-selector = {revision = "2024-2025", id = "modelo-296-export"}

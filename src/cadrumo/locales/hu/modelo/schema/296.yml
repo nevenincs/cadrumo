@@ -14,6 +14,11 @@ modelo:
               valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke 1. Alacsonyabb
               lehet, mint a 03. rovat.'
             label: Ténylegesen befizetett levonások és előlegfizetések
+      construct:
+        modelo-296-calculation-construct:
+          field:
+            title: '296-os nyomtatvány: éves tájékoztató bevallás az állandó telephely
+              nélküli IRNR forrásadóról és előlegekről'
       field:
         official_name: Modelo 296. A külföldi illetőségűek jövedelemadója. Állandó
           telephellyel nem rendelkező külföldi illetőségűek. Az adóelőleg-levonások
@@ -24,11 +29,6 @@ modelo:
           field:
             label: 296-os modelo, 2022. adóév
         '2023':
-          construct:
-            modelo-296-calculation-construct:
-              field:
-                title: '296-os nyomtatvány: éves tájékoztató bevallás az állandó telephely
-                  nélküli IRNR forrásadóról és előlegekről'
           field:
             label: 296-os modelo, 2023. adóév
         2024-2025:

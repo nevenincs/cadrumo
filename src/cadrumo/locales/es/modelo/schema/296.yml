@@ -16,6 +16,11 @@ modelo:
               con clave 3 a 25, y los de clave 1 o 2 con pago 1. Puede ser inferior
               a la casilla 03.'
             label: Retenciones e ingresos a cuenta ingresados
+      construct:
+        modelo-296-calculation-construct:
+          field:
+            title: Modelo 296 declaración informativa anual de retenciones e ingresos
+              a cuenta del IRNR sin establecimiento permanente
       field:
         official_name: Modelo 296. Impuesto sobre la Renta de no Residentes. No residentes
           sin establecimiento permanente. Declaración anual de retenciones e ingresos
@@ -26,11 +31,6 @@ modelo:
           field:
             label: Modelo 296, ejercicio 2022
         '2023':
-          construct:
-            modelo-296-calculation-construct:
-              field:
-                title: Modelo 296 declaración informativa anual de retenciones e ingresos
-                  a cuenta del IRNR sin establecimiento permanente
           field:
             label: Modelo 296, ejercicio 2023
         2024-2025:
