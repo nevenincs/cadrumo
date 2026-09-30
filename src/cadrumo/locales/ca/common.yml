@@ -1696,11 +1696,47 @@ tui:
       confirming: S'està registrant la factura a partir del document…
       detail: 'Mida: {size} bytes · capturat {captured}'
       draft:
+        adjustments: 'Recàrrec: {recargo} · percentatge de retenció: {retention_rate}
+          · retenció: {retention} · bestretes per compte del client: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. tipus: {rate} · base: {base} · IVA: {iva} · tipus de
+          recàrrec: {recargo_rate} · recàrrec: {recargo}'
+        breakdown_empty: No hi ha desglossament per tipus
+        breakdown_heading: Desglossament
+        candidate: 'Valor proposat: {field} = {value} · referència: {anchor} · nota:
+          {note}'
+        customer_role: Client
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
+        document: 'Document {number} · sèrie: {series} · data: {date} · rectifica:
+          {rectifies} · naturalesa del subministrament: {supply_nature} · categoria
+          d’IVA: {iva_category} · tipus suggerit: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · esperat: {expected} · observat: {observed}'
+        findings_empty: No hi ha observacions
+        findings_heading: Resultats de la revisió
         identity: Factura {number} amb data {date}
+        line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
+          · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
+          · recàrrec: {recargo}'
+        lines_empty: No hi ha línies
+        lines_heading: Línies
+        'no': 'No'
+        party: '{role}: {name} · identificador fiscal: {tax_id} · codi postal: {postal_code}
+          · país: {country} · codi de país: {country_code} · codi de país declarat:
+          {stated_country_code}'
+        provenance: 'Camp: {field} · origen: {origin} · fonament: {grounding} · referència:
+          {anchor} · referència rebutjada: {refused_anchor} · declaració pròpia: {self_reported}
+          · derivat de: {derived_from} · prova del rol: {role_evidence} · no verificat:
+          {unverified} · nota: {note}'
+        provenance_empty: No hi ha dades de procedència
+        provenance_heading: Procedència de les dades
+        regime: 'Règim: {value}'
+        source_metadata: 'Metadades de la font · SHA-256 de la transcripció: {transcription_sha256}
+          · longitud del text original: {raw_text_length}'
+        structured_class: 'Classificació del document: {kind} · codi d’origen: {source_code}'
         supplier: 'Proveïdor: {name} · NIF {nif}'
+        supplier_role: Proveïdor
         unread: sense llegir
+        'yes': Sí
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
@@ -1727,7 +1763,8 @@ tui:
       records_empty: Encara no hi ha documents de factura registrats.
       records_heading: Documents de factura en aquest equip
       reviewed: Revisat
-      safe_metadata: Només metadades segures; el contingut del document continua protegit.
+      safe_metadata: El document d’origen continua protegit i xifrat; els camps recuperats
+        es mostren per revisar-los.
       title: Revisió de justificants
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta

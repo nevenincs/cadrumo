@@ -14,25 +14,26 @@ of the classifier under test.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import date
+import json
+import sys
+from collections.abc import Callable, Iterator
+from pathlib import Path
 
 import pytest
+from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    set_active_test_profile_facts,
-)
-
-from ....domain.user_profile.values import UserProfileFact
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ._modelo_empty_profile_fixture import _isolated_backend
+from ._runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_backend"]
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 _M130_MODELO = "130"
 _M130_YEAR = 2024
@@ -47,6 +48,45 @@ _M390_YEAR = 2025
 _M390_PERIOD = "0A"
 
 
+@pytest.fixture
+def invoke_requires(tmp_path: Path) -> Iterator[Callable[[list[str]], Result]]:
+    """Serve the real registered inventory reader for a partial taxpayer profile."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="native-requires",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Example",
+                "activities.description": "design",
+                "censo.activity_start_date": "2024-01-01",
+                "contact.postcode": "28013",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "tax_residence.ccaa": "cataluna",
+                "renta_filing.declaration_type": "1",
+                "renta_taxpayer.birth_date": "1980-03-15",
+                "renta_family.minor_children_in_unit": "false",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+
+        def invoke(args: list[str]) -> Result:
+            assert profile.label is not None
+            close_active_bucket_session()
+            return invoke_cached_cli(
+                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+                input=json.dumps({"profile_passphrase": profile.passphrase}),
+            )
+
+        yield invoke
+
+
 def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, set[str]]:
     return {
         section: {row["number"] for row in result[section]}
@@ -54,14 +94,15 @@ def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, se
     }
 
 
-def test_requires_classifies_real_m130_sources_without_an_active_profile() -> None:
+def test_requires_classifies_real_m130_sources_with_bound_profile(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
     """``requires`` exposes committed manual, ledger, and prior-filing rows.
 
-    No active profile is set: the operator has not created a taxpayer profile
-    yet, but the checklist must still tell them what data is needed from the
-    registry alone (required/optional manual casillas, ledger-derivable casillas).
+    The registered read uses the exact selected profile while retaining the
+    registry's required, optional, ledger, and prior-filing classification.
     """
-    invocation = invoke_cached_cli(
+    invocation = invoke_requires(
         [
             "--format",
             "json",
@@ -93,18 +134,14 @@ def test_requires_classifies_real_m130_sources_without_an_active_profile() -> No
         ("05", "previous_filing"),
     }
 
-    # No active profile: the checklist cannot check profile coefficients and
-    # must say so via a non-blocking advisory notice, not silently.
-    assert result["profile_checked"] is False
-    assert result["unresolved_profile_bindings"] == []
-    notices = unwrap_envelope_notices(invocation.output)
-    no_profile_notice = next(notice for notice in notices if notice["code"] == "modelo.requires.no_active_profile")
-    assert no_profile_notice["action"] is None
+    assert result["profile_checked"] is True
 
 
-def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_sources() -> None:
+def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_sources(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
     """Real M100 alternates remain visible instead of collapsing to the primary."""
-    invocation = invoke_cached_cli(
+    invocation = invoke_requires(
         [
             "--format",
             "json",
@@ -136,9 +173,11 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     assert "renta-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
 
 
-def test_requires_buckets_local_register_resolvers_as_live_observations() -> None:
+def test_requires_buckets_local_register_resolvers_as_live_observations(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
     """M390 exposes its committed local-state resolver bindings without claiming a remote read."""
-    invocation = invoke_cached_cli(
+    invocation = invoke_requires(
         [
             "--format",
             "json",
@@ -163,28 +202,7 @@ def test_requires_buckets_local_register_resolvers_as_live_observations() -> Non
     } <= live_pairs
 
 
-@pytest.fixture
-def _partial_m100_profile() -> Iterator[None]:
-    """Seed a real active profile satisfying a proper subset of M100 profile bindings.
-
-    Mirrors ``test_bindings_list_missing_filter.py``'s partial-profile
-    pattern: real facts persisted through the workflow state repository, not
-    a mock or a placeholder.
-    """
-    with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
-        register_minimal_profile(profile_id="22222222-2222-4222-8222-222222222222")
-        set_active_test_profile_facts(
-            (
-                UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            ),
-        )
-        yield
-
-
-def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_profile: None) -> None:
+def test_requires_warns_about_unresolved_profile_coefficients(invoke_requires: Callable[[list[str]], Result]) -> None:
     """With an active but incomplete profile, unresolved coefficients surface as a warning.
 
     Modelo 100 declares dozens of ``source = "profile"`` bindings (marital
@@ -199,7 +217,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
         "renta-profile-declaration-type",
         "renta-profile-taxpayer-birth-date",
     }
-    invocation = invoke_cached_cli(
+    invocation = invoke_requires(
         [
             "--format",
             "json",

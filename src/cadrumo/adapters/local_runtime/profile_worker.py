@@ -76,6 +76,7 @@ from .worker_lease_transfer import write_worker_lease
 
 _WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
 _WORKER_STARTUP_ACCEPT_POLL_SECONDS = 0.1
+_WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS = 30.0
 
 
 def worker_operation_namespace(worker_id: UUID) -> UUID:
@@ -307,11 +308,12 @@ class ProfileWorkerProcess:
             self._require_process_alive()
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
-        """Consume verified material only after native containment and mutual readiness."""
+        """Consume verified material and finish first-use graph preparation before admission."""
         self._exchange(
             ProfileWorkerRequest(ProfileWorkerLeaseRequest(action="install", request_id=uuid4(), lease=lease)),
             ProfileWorkerStatus,
             dek,
+            deadline=time.monotonic() + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
         )
 
     def refresh(self, lease: AccessSession) -> None:
@@ -707,6 +709,7 @@ class ProfileWorkerProcess:
                     )
                 ),
                 ProfileWorkerHumanBound,
+                deadline=time.monotonic() + _WORKER_ADMISSION_PREPARE_TIMEOUT_SECONDS,
             )
             if result.session_id != lease.session_id:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

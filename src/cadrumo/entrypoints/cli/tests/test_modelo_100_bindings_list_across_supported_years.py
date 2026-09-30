@@ -9,15 +9,17 @@ that year's edition declares the casilla it fills.
 from __future__ import annotations
 
 from functools import cache
+from uuid import uuid4
 
 import pytest
 
+from ....application.modelo.query_read_operation import ModeloBindingsListRequest, _read_bindings_list
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
 )
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -52,19 +54,15 @@ def _supported_years() -> tuple[int, ...]:
     return PublishedGovernedFactSource().supported_filing_years().years
 
 
-def _listed_binding_ids(output: str) -> set[str]:
-    return {
-        columns[3] for line in output.splitlines() if len(columns := line.split("\t")) > 4 and columns[0] == _MODELO
-    }
-
-
 @pytest.mark.parametrize("filing_year", _supported_years())
 def test_bindings_list_carries_the_identity_and_ledger_surface(filing_year: int) -> None:
-    result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(filing_year), "--period", _PERIOD]
-    )
-    assert result.exit_code == 0, result.output
-    listed = _listed_binding_ids(result.output)
+    """The registered application query lists every binding in each edition."""
+    with bundled_indexed_authority().operation() as operation:
+        result = _read_bindings_list(
+            ModeloBindingsListRequest(profile_id=uuid4(), modelo=_MODELO, year=filing_year, period_code=_PERIOD),
+            operation=operation,
+        )
+    listed = {row.binding_id for row in result.bindings}
 
     assert listed >= _EVERY_EDITION, sorted(_EVERY_EDITION - listed)
     snapshot = published_snapshot(

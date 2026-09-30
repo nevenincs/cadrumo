@@ -330,6 +330,7 @@ async def _serve(
                     if request.action == "install":
                         with read_secret(channel, deadline=time.monotonic() + 5) as secret:
                             custody.install(request.lease, secret)
+                        operations.prepare()
                     elif request.action == "refresh":
                         custody.refresh(request.lease)
                     else:
@@ -339,6 +340,7 @@ async def _serve(
                     uploads.expire(live_sessions=custody.live_sessions())
                 elif isinstance(request, ProfileWorkerHumanBindingRequest):
                     receipt = human.bind(request.candidate_id, request.lease, persist_receipt=request.persist_receipt)
+                    operations.prepare()
                     write_document(
                         channel,
                         ProfileWorkerHumanBound(

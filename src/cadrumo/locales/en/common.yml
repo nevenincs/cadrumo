@@ -1657,11 +1657,46 @@ tui:
       confirming: Recording the invoice from the document…
       detail: 'Size: {size} bytes · captured {captured}'
       draft:
+        adjustments: 'Surcharge: {recargo} · withholding rate: {retention_rate} ·
+          withholding: {retention} · pass-through expenses: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. rate: {rate} · base: {base} · IVA: {iva} · surcharge
+          rate: {recargo_rate} · surcharge: {recargo}'
+        breakdown_empty: No rate breakdown
+        breakdown_heading: Breakdown
+        candidate: 'Proposed value: {field} = {value} · source anchor: {anchor} ·
+          note: {note}'
+        customer_role: Customer
         discrepancies: 'Checks that disagree with the document: {count}'
+        document: 'Document {number} · series: {series} · date: {date} · rectifies:
+          {rectifies} · supply nature: {supply_nature} · IVA category: {iva_category}
+          · suggested kind: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · expected: {expected} · observed: {observed}'
+        findings_empty: No findings
+        findings_heading: Findings
         identity: Invoice {number} dated {date}
+        line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
+          · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
+          · surcharge: {recargo}'
+        lines_empty: No lines
+        lines_heading: Lines
+        'no': 'No'
+        party: '{role}: {name} · Tax ID: {tax_id} · postal code: {postal_code} · country:
+          {country} · country code: {country_code} · stated country code: {stated_country_code}'
+        provenance: 'Field: {field} · origin: {origin} · grounding: {grounding} ·
+          source anchor: {anchor} · refused anchor: {refused_anchor} · self-reported:
+          {self_reported} · derived from: {derived_from} · role evidence: {role_evidence}
+          · unverified: {unverified} · note: {note}'
+        provenance_empty: No provenance data
+        provenance_heading: Data provenance
+        regime: 'Regime: {value}'
+        source_metadata: 'Source metadata · transcription SHA-256: {transcription_sha256}
+          · raw text length: {raw_text_length}'
+        structured_class: 'Document classification: {kind} · source code: {source_code}'
         supplier: 'Supplier: {name} · NIF {nif}'
+        supplier_role: Supplier
         unread: unread
+        'yes': 'Yes'
       empty: No evidence awaits review.
       extract: Read document
       loading: Reading the documents…
@@ -1688,7 +1723,8 @@ tui:
       records_empty: No invoice documents are registered yet.
       records_heading: Invoice documents on this machine
       reviewed: Reviewed
-      safe_metadata: Safe metadata only; document contents stay protected.
+      safe_metadata: The source document remains protected and encrypted; fields recovered
+        from it are shown for review.
       title: Evidence review
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this

@@ -624,8 +624,8 @@ def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts
     )
 
 
-def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
-    """Compose the persisted authorities required by draft review."""
+def build_draft_review_ports(*, bucket_id: str, operation: PinnedAuthorityOperation | None = None) -> DraftReviewPorts:
+    """Compose draft review using the caller's authority pin when supplied."""
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -639,8 +639,11 @@ def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
-    with bundled_indexed_authority().operation() as operation:
+    if operation is not None:
         profile_decode_context = operation.profile_decode_context()
+    else:
+        with bundled_indexed_authority().operation() as selected_operation:
+            profile_decode_context = selected_operation.profile_decode_context()
 
     class ProfileActivityReader:
         """Translate the session-bound profile record into an application map."""

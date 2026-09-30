@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
 from .. import invoice_confirmation as confirmation
@@ -66,6 +67,12 @@ def test_stale_review_refuses_before_candidate_or_persistence(monkeypatch: pytes
         "expected_source_sha256": expected_source,
         "expected_draft_review_sha256": expected_draft,
     }
-    with pytest.raises(InvoiceValidationError, match="changed since review"):
+    with pytest.raises(confirmation.InvoiceEvidenceReviewChangedError, match="changed since review") as refusal:
         confirmation.prepare_invoice_confirmation_from_evidence(**kwargs)
+    assert isinstance(refusal.value, InvoiceValidationError)
+    assert refusal.value.part == stale_part
+    registered = get_registered_error_code(refusal.value)
+    assert registered is not None
+    assert registered.code == "REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED"
+    assert registered.category is ErrorCategory.REFUSED
     assert candidate_calls == []

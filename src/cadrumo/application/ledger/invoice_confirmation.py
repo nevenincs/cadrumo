@@ -54,7 +54,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
@@ -117,12 +117,26 @@ if TYPE_CHECKING:
 
 __all__ = [
     "InvoiceConfirmationResult",
+    "InvoiceEvidenceReviewChangedError",
     "PreparedInvoiceConfirmation",
     "confirm_invoice_draft_from_evidence",
     "invoice_draft_review_sha256",
     "persist_prepared_invoice_confirmation",
     "prepare_invoice_confirmation_from_evidence",
 ]
+
+
+class InvoiceEvidenceReviewChangedError(InvoiceValidationError):
+    """The raw source or complete draft differs from the operator's review."""
+
+    def __init__(self, part: Literal["source", "draft"]) -> None:
+        """Retain the changed part while directing a fresh extract and review."""
+        self.part = part
+        super().__init__(
+            "The evidence bytes changed since review; extract and review the current document before confirming"
+            if part == "source"
+            else "The invoice reading changed since review; extract and review the current draft before confirming"
+        )
 
 
 class InvoiceConfirmationResult(BaseModel):
@@ -960,16 +974,12 @@ def prepare_invoice_confirmation_from_evidence(
         legends=legends,
     )
     if expected_source_sha256 is not None and preparation.attachment_id != expected_source_sha256:
-        raise InvoiceValidationError(
-            "The evidence bytes changed since review; extract and review the current document before confirming"
-        )
+        raise InvoiceEvidenceReviewChangedError("source")
     if (
         expected_draft_review_sha256 is not None
         and invoice_draft_review_sha256(preparation.draft) != expected_draft_review_sha256
     ):
-        raise InvoiceValidationError(
-            "The invoice reading changed since review; review the current draft before confirming"
-        )
+        raise InvoiceEvidenceReviewChangedError("draft")
     if invoice_class_token is not None:
         if invoice_class is not None:
             raise InvoiceValidationError("invoice class was supplied through two inputs")

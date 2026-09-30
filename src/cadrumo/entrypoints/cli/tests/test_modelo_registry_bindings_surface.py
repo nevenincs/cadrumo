@@ -2,19 +2,83 @@
 
 from __future__ import annotations
 
-import pytest
+import json
+import sys
+from collections.abc import Iterator, Sequence
+from contextvars import ContextVar
+from pathlib import Path
 
+import pytest
+from click.testing import Result
+
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....core.directory_scan import scan_directory
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .cli_runner import invoke_cached_cli
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+_active_native_profile: ContextVar[NativeCliProfileFixture | None] = ContextVar(
+    "bindings_surface_native_profile",
+    default=None,
+)
 
 
-def _invoke_in_english(args, **kwargs):
+@pytest.fixture(autouse=True)
+def _native_bindings_scope(tmp_path: Path) -> Iterator[None]:
+    """Hold one real worker for each legacy binding-surface assertion."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        token = _active_native_profile.set(profile)
+        try:
+            yield
+        finally:
+            _active_native_profile.reset(token)
+
+
+def invoke_cached_cli(args: Sequence[str]) -> Result:
+    """Run the old presentation assertions through the registered profile door."""
+    profile = _active_native_profile.get()
+    if profile is None:
+        raise AssertionError("native bindings profile fixture is missing")
+    if profile.label is None:
+        profile.register(
+            label="native-bindings-surface",
+            facts={
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Example",
+                "activities.description": "design",
+                "censo.activity_start_date": "2025-01-01",
+                "contact.postcode": "28013",
+                "tax_residence.jurisdiction_scope": "common_regime",
+                "iva.regime": "GENERAL",
+                "iva.m303_regime_composition": "general",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            },
+        )
+    assert profile.label is not None
+    close_active_bucket_session()
+    return _invoke_cached_cli(
+        ("--profile", profile.label, "--profile-secrets-stdin", *args),
+        input=json.dumps({"profile_passphrase": profile.passphrase}),
+    )
+
+
+def _invoke_in_english(args: Sequence[str]) -> Result:
     """Invoke the CLI with the output language pinned to English.
 
     Several columns rendered by this surface are catalogue text, so asserting an
@@ -23,7 +87,7 @@ def _invoke_in_english(args, **kwargs):
     from ....core.config import override_settings
 
     with override_settings(cadrumo_output_language="en"):
-        return invoke_cached_cli(args, **kwargs)
+        return invoke_cached_cli(args)
 
 
 def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
@@ -464,8 +528,6 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     ``_modelo.py``. Any other module that re-implements a Typer
     named ``bindings`` competes with the canonical surface and must
     be removed."""
-
-    from pathlib import Path
 
     from ....tests.inventory import REPO_ROOT
 

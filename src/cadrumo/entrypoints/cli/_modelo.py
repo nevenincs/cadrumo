@@ -29,7 +29,7 @@ from ...application.modelo.operation_definitions import (
 )
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...core.bucket_pointer import require_active_bucket_id, resolve_active_bucket_id
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
@@ -64,7 +64,6 @@ from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_modelo_taxation_comparison import compare_modelo_taxation
 from .runtime_modelo_work_history import read_modelo_work_history
 from .runtime_profile_binding import require_profile_client
-from .state_projection_support import authority_operation, modelo_history_ports_factory
 
 
 def work_compare_taxation(
@@ -428,18 +427,11 @@ def modelo_history(
     period: str | None = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...application.modelo.history import assemble_modelo_lifecycle_history
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .common import emit_envelope
+    from .runtime_modelo_history import read_modelo_history
 
-    matches = assemble_modelo_lifecycle_history(
-        modelo,
-        filing_year=year,
-        period=period,
-        ports=modelo_history_ports_factory(ctx)(
-            bucket_id=require_active_bucket_id(), operation=authority_operation(ctx)
-        ),
-    ).events
+    matches = tuple(row.to_event() for row in read_modelo_history(ctx, modelo=modelo, year=year, period=period).events)
 
     history_result = ModeloHistoryResult(
         modelo=modelo,

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b5d959343afc93d9d37d621b0f572636bcb860e440d0ac5d9a24ebee259a40b'
+body_hash: 'sha256:6f85eeb34b92b53c8c4cc147d5329838d023d07bca1e2662db1edadce0bdbd7f'
 related: []
 ---
 # mcp-purpose-authentication reference: current authentication and process boundaries
@@ -431,7 +431,7 @@ Historical observation before runtime route migration. The later runtime-boundar
 Counts in this observation: {'not-applicable': 51, 'resume-fallback': 258, 'self-authenticating': 4}. Counts are observations only; repeat the graph walk for subsequent enrollment work.
 
 
-Current parsed-command graph census on 2026-09-30 after certificate, ratios, recovery-status, report, inventory and activity-asset admission enrollment: 397 nodes, including 325 leaves and 329 executable nodes. Derived RESUME_FALLBACK posture applies to 269 executable nodes (266 leaves and three executable groups); 102 remain outside the runtime-profile key set (101 leaves and one executable group). Remaining cohorts include app.ledger (34), app.modelo (33), config.google (9), app.diagnostics (6), config.auth (5), app.live (4), config.profile (4), config.collab (3), app.review (2), app.quickfile (1) and config.check (1). These source-routing counts do not establish executor, TUI or installed acceptance; the ledger records verification.
+Current parsed-command graph census on 2026-09-30 after the query, evidence follow-up, recipient and attachment route enrollment: 397 nodes, including 325 leaves. Derived RESUME_FALLBACK posture applies to 269 executable nodes; 75 remain outside the runtime-profile route predicate. Remaining cohorts are app.modelo (28), app.ledger (15), config.google (9), app.diagnostics (6), config.auth (5), app.live (4), config.profile (4), app.review (2), app.quickfile (1) and config.check (1). The observation walks the live CommandSpecGraph and includes conditional censo-import apply admission. These routing counts do not establish executor, TUI or installed acceptance; the ledger records verification.
 
 
 ## Lifecycle follow-up and automation custody, 2026-09-26
@@ -684,4 +684,84 @@ Invoice correction now has an application-owned `ledger.invoice.update` definiti
 
 `application/modelo/invoice_withholding_capture_public.py` defines closed command and evidence DTOs for the received-invoice withholding operation, including every annual-recipient field and optional M180/M193 evidence. Decimal and period wrappers preserve canonical meaning; opaque JSON request strings are removed. Caller-authored observation collections are refused because this operation derives its observations from the exact encrypted invoice. `invoice_withholding_capture_operation.py` rehydrates registry-governed evidence and builds the canonical capture under the retained operation pin. Its catalogue lookup requires all-period authority, consistent with the existing invoice readers; the requested filing period still governs capture and aggregation.
 
-`entrypoints/tui/ledger/runtime_invoice_add.py` binds the installed invoice-entry form to `ledger.invoice.add` through the workbench's retained runtime client. It carries every form field and line, checks the originating profile/session before submission and after result release, and correlates canonical invoice facts with the terminal receipt. Validation and session-loss errors retain operation receipt context; `ledger/invoice_entry.py` discards entered values, lines and reviewed summary on session loss. The evidence door remains uninjected: extraction and confirmation need registered equivalents that preserve their source provenance and confirmation audit writes.
+`entrypoints/tui/ledger/runtime_invoice_add.py` binds the installed invoice-entry form to `ledger.invoice.add` through the workbench's retained runtime client. It carries every form field and line, checks the originating profile/session before submission and after result release, and correlates canonical invoice facts with the terminal receipt. Validation and session-loss errors retain operation receipt context; `ledger/invoice_entry.py` discards entered values, lines and reviewed summary on session loss. The evidence door is now injected through `entrypoints/tui/ledger/runtime_evidence.py`, using the same retained profile/session and registered evidence list/add, reader readiness, extraction and confirmation. Reader readiness is informational. Confirmation binds both the raw source digest and the full reviewed draft digest. The form retains the complete typed reading only for its current review and clears it on record change, extraction, confirmation or session expiry. Evidence rows truthfully remain unmeasured because canonical evidence has no persisted review status.
+
+## Prorrata and invoice evidence worker enrollment, 2026-09-30
+
+`application/prorrata_register/registered_operations.py` enrolls list, sector declaration,
+special/general election, special revocation, whole-entity seed, sector seed and sector
+settlement. The CLI uses receipt-correlated registered projections through
+`runtime_ledger_prorrata_register.py`; displaced direct service execution is removed.
+Whole-entity seed has no sector field and its CLI rejects the old sector option before
+submission. Seed and settlement preserve the canonical register, stamped calculation
+source and existing compare-and-swap algorithm. A refusal reports the actual standing
+provenance from the latest canonical candidate.
+
+`application/ledger/invoice_evidence_operation.py` enrolls reader readiness, invoice
+evidence extraction and reviewed confirmation. `entrypoints/invoice_evidence_operation_composition.py`
+constructs exact-profile canonical ports under the operation's retained authority
+generation. Extraction defaults to local reading; a remote read requires named provider,
+per-invocation acknowledgement and a source-bound consent capability. The canonical
+consent append alone enters a commit section: failed publication retains UNKNOWN,
+accepted publication retains UPDATED even if reading later refuses. No commit section
+spans remote inference, and interrupted operations never replay standing consent.
+
+Confirmation re-reads canonical source and the complete draft before constructing a
+candidate, then persists invoice, evidence link and confirmation audit inside the
+guarded section. Both review digests are mandatory. Source or draft mismatch has the
+typed REFUSED_INVOICE_EVIDENCE_REVIEW_CHANGED refusal before writes. Canonical audit
+actor is operation identity. Successful repeated confirmation still reports UPDATED
+because it writes an audit. CLI extraction and confirmation use the retained runtime
+client, preserve complete structured values and provenance, and expose both digests.
+The TUI renders the same full draft, provenance candidates and structured classification
+through its injected evidence door. These definitions advertise CLI/TUI eligibility;
+this enrollment does not establish installed MCP acceptance.
+
+The current authority reader requires SQLite schema v4. The owning full
+`dev.registry.pipeline publish-authority` command rebuilt the generated publication after
+the old v3 artifact refused admission. Compiler changes require full publication because
+source-only staleness checks cannot detect that format change. No registry source was
+altered for this generated-artifact repair. Focused acceptance outcomes and failed
+attempts are recorded in the execution ledger; S08, remaining parity and platform
+acceptance remain open.
+
+## Query, evidence follow-up and recipient worker enrollment, 2026-09-30
+
+`application/modelo/query_read_operation.py` defines bindings list/resolve, required
+data inventory and readiness. Each request fixes the profile and registry scope;
+readiness opens state-projection capabilities only after authority resolution. Full
+binding provenance, unsaved override preview, inventory classification and readiness
+axes survive the public result. Binding availability is represented by a canonical
+locale key and rendered by the frontend. Required-data and readiness requests carry
+the selected output language into the worker. Catalogue suggestions are a separate
+authenticated read after validation refusal, so a valid resolve requires only its
+own operation permission. No query enters a commit section.
+
+`application/ledger/evidence_followup_operation.py` defines attachment queue/view,
+consent inventory and extraction-review queue/view. Exact-profile composition uses
+canonical encrypted attachment, draft and consent repositories. Closed public
+snapshots preserve full consent and advisory facts without domain-only schema hooks.
+The consent worker result retains profile correlation; the existing CLI dispatch row
+omits that internal field by its established representation contract. Review view
+returns the complete invoice draft, blockers, party attribution and country warnings.
+The conformance expectation consumes the canonical encrypted draft round trip.
+
+`application/modelo/review_package_recipient_operations.py` enrolls recipient
+add/list/remove. The request validates exact lowercase public-key syntax; existing
+CLI normalization remains at the frontend. Registry and audit publication share the
+guarded commit section; encrypted operation-result publication follows it. An
+uncertain registry publication retains UNKNOWN and a confirmed registry publication
+with failed audit retains PARTIAL. Duplicate and missing-recipient refusals retain
+NONE and their canonical codes. Interrupted operations do not replay mutations.
+
+`application/ledger/attachment_mutation_operation.py` and the retained CLI handlers
+enroll attach/detach with whole-profile read and commit authority. They preserve the
+canonical transaction, event history, evidence linkage and finalized-revision
+warnings. Their source and registry enrollment are present; native journey and full
+supervisor acceptance remain in progress.
+
+The native worker currently composes the operation graph lazily. A measured cold
+registry construction exceeded the ordinary worker exchange budget and caused a
+first-contract refusal before operation submission. S07 is reopened for worker
+readiness correction; S08 and subsequent parity/platform acceptance remain open.
+Actual failures and focused passing receipts are retained in the execution ledger.

@@ -128,6 +128,9 @@ from ...application.ledger.actions_manual import create_manual_transaction
 from ...application.ledger.actions_split_merge import split_transaction
 from ...application.ledger.add_operation import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
+from ...application.ledger.attachment_mutation_operation import (
+    LedgerAttachmentOperationResult,
+)
 from ...application.ledger.check_operation import LedgerCheckProjection, LedgerCheckRequest
 from ...application.ledger.classify_operation import (
     LedgerClassifyOperationResult,
@@ -239,6 +242,7 @@ from ...application.modelo.review_package_operation import (
     ModeloReviewPackageBuildPublicResultV1,
     ModeloReviewPackageBuildRequest,
 )
+from ...application.modelo.review_package_recipient_operations import ReviewPackageRecipientAddProjection
 from ...application.modelo.revision_inventory_operation import (
     ModeloWorkRevisionsProjection,
     ModeloWorkRevisionsRequest,
@@ -439,6 +443,7 @@ from .activity_asset_operation_test_support import (
 )
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .censal_review_test_support import review_censal_with_services
+from .evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
 from .invoice_evidence_operation_test_support import (
     assert_invoice_evidence_confirmation_persisted,
     prepare_invoice_evidence_conformance_case,
@@ -449,6 +454,11 @@ from .invoice_withholding_operation_test_support import (
     read_invoice_withholding_conformance_case,
     seed_invoice_withholding_conformance_case,
 )
+from .ledger_attachment_operation_test_support import (
+    assert_ledger_attachment_operation_conformance_result,
+    prepare_ledger_attachment_operation_conformance_case,
+)
+from .modelo_query_operation_test_support import prepare_modelo_query_conformance_case
 from .profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -461,6 +471,10 @@ from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
     read_prorrata_operation_conformance_register,
+)
+from .recipient_operation_test_support import (
+    assert_recipient_operation_conformance_result,
+    prepare_recipient_operation_case,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -504,6 +518,34 @@ def _registered_definition_ids() -> tuple[str, ...]:
 _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
     case.definition_id: case
     for case in (
+        *(
+            _RegisteredExecutorConformanceCase(
+                definition_id,
+                OperationTerminalCondition.SUCCEEDED,
+                OperationEffect.NONE,
+                (definition_id,),
+            )
+            for definition_id in (
+                "modelo.bindings.list",
+                "modelo.bindings.resolve",
+                "modelo.requires",
+                "modelo.readiness",
+                "ledger.evidence.attachment_queue",
+                "ledger.evidence.attachment_view",
+                "ledger.evidence.consent.list",
+                "ledger.evidence.review.list",
+                "ledger.evidence.review.view",
+            )
+        ),
+        *(
+            _RegisteredExecutorConformanceCase(
+                f"config.collab.recipient.{action}",
+                OperationTerminalCondition.SUCCEEDED,
+                OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
+                (f"config.collab.recipient.{action}",),
+            )
+            for action in ("add", "list", "remove")
+        ),
         *(
             _RegisteredExecutorConformanceCase(
                 definition.definition_id,
@@ -1035,6 +1077,12 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
         ),
         _RegisteredExecutorConformanceCase(
             "ledger.update", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.update",)
+        ),
+        _RegisteredExecutorConformanceCase(
+            "ledger.attach", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.attach",)
+        ),
+        _RegisteredExecutorConformanceCase(
+            "ledger.detach", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.detach",)
         ),
         _RegisteredExecutorConformanceCase(
             "ledger.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.reset",)
@@ -3439,6 +3487,21 @@ def test_every_registered_definition_has_a_conformance_scenario() -> None:
     )
 
 
+def _assert_ledger_review_projection(payload: BaseModel, review: BaseModel, *, profile_id: UUID) -> None:
+    assert isinstance(payload, LedgerReviewRequest)
+    assert isinstance(review, LedgerReviewProjection)
+    assert review.profile_id == profile_id
+    assert review.transaction_prefix == payload.transaction_prefix
+    assert len(review.rows) == 1
+    row = review.rows[0]
+    assert row.description == "conformance review seed"
+    assert row.status is LedgerReviewStatus.PENDING
+    assert row.transaction is not None
+    assert row.transaction.description == row.description
+    assert payload.transaction_prefix is not None
+    assert row.transaction.transaction_id.startswith(payload.transaction_prefix)
+
+
 @pytest.mark.parametrize("definition_id", _registered_definition_ids())
 @pytest.mark.timeout(90)
 def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
@@ -3451,6 +3514,7 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             f"{definition_id} is composed into the production registry but declares no conformance "
             "scenario, so nothing proves its executor settles, cleans up, or refuses truthfully"
         )
+    assert case is not None
     cleanup = _CloseWitness()
     with (
         _closed_model_runtime()
@@ -3466,6 +3530,34 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
+        query_case = (
+            prepare_modelo_query_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id
+            in {"modelo.bindings.list", "modelo.bindings.resolve", "modelo.requires", "modelo.readiness"}
+            else None
+        )
+        followup_case = (
+            prepare_evidence_followup_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
+            if case.definition_id
+            in {
+                "ledger.evidence.attachment_queue",
+                "ledger.evidence.attachment_view",
+                "ledger.evidence.consent.list",
+                "ledger.evidence.review.list",
+                "ledger.evidence.review.view",
+            }
+            else None
+        )
+        recipient_case = (
+            prepare_recipient_operation_case(case.definition_id, profile_id)
+            if case.definition_id.startswith("config.collab.recipient.")
+            else None
+        )
+        attachment_case = (
+            prepare_ledger_attachment_operation_conformance_case(case.definition_id, profile_id, operation=operation)
+            if case.definition_id in {"ledger.attach", "ledger.detach"}
+            else None
+        )
         prorrata_case = (
             _prorrata_case(case.definition_id, profile_id=profile_id, operation=operation)
             if case.definition_id.startswith("ledger.prorrata.")
@@ -3477,7 +3569,15 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
             else None
         )
-        if evidence_case is not None:
+        if query_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), query_case.request, None
+        elif followup_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), followup_case.request, None
+        elif recipient_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), recipient_case.request, None
+        elif attachment_case is not None:
+            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), attachment_case.request, None
+        elif evidence_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
         elif prorrata_case is None:
             subject_ref, payload, secret = _payload(
@@ -3588,6 +3688,57 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
         assert observed.projection.effect is case.expected_effect, case.definition_id
         assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
+        for expected_read in (
+            query_case.expected_projection if query_case is not None else None,
+            followup_case.expected_read if followup_case is not None else None,
+        ):
+            if expected_read is not None:
+                actual_read = _resolve_result_projection(
+                    driver,
+                    registry,
+                    definition_id=case.definition_id,
+                    operation_id=submitted.receipt.operation_id,
+                    terminal_revision=observed.projection.revision,
+                    projection_type=type(expected_read),
+                )
+                actual_fields = actual_read.model_dump(mode="json")
+                expected_fields = expected_read.model_dump(mode="json")
+                assert actual_read == expected_read, {
+                    key: (actual_fields[key], expected_fields[key])
+                    for key in actual_fields
+                    if actual_fields[key] != expected_fields[key]
+                }
+        if attachment_case is not None:
+            attachment_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerAttachmentOperationResult,
+            )
+            assert isinstance(attachment_result, LedgerAttachmentOperationResult)
+            assert attachment_result.outcome == "updated"
+            assert attachment_result.result is not None
+            assert_ledger_attachment_operation_conformance_result(
+                attachment_case, attachment_result.result, operation_run_id=submitted.receipt.operation_id
+            )
+        if recipient_case is not None:
+            recipient_result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=(
+                    type(recipient_case.expected_projection)
+                    if recipient_case.expected_projection is not None
+                    else ReviewPackageRecipientAddProjection
+                ),
+            )
+            assert_recipient_operation_conformance_result(
+                recipient_case, recipient_result, profile_id=profile_id, operation_id=submitted.receipt.operation_id
+            )
         if evidence_case is not None:
             result_type = (
                 type(evidence_case.expected_read)
@@ -5047,25 +5198,15 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert len(index.participations) == 1
             assert index.participations[0].revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
         if case.definition_id == "ledger.review":
-            assert isinstance(payload, LedgerReviewRequest)
             review = _resolve_result_projection(
                 driver,
                 registry,
-                definition_id=case.definition_id,
+                definition_id=definition_id,
                 operation_id=submitted.receipt.operation_id,
                 terminal_revision=observed.projection.revision,
                 projection_type=LedgerReviewProjection,
             )
-            assert isinstance(review, LedgerReviewProjection)
-            assert review.profile_id == profile_id
-            assert review.transaction_prefix == payload.transaction_prefix
-            assert len(review.rows) == 1
-            row = review.rows[0]
-            assert row.description == "conformance review seed"
-            assert row.status is LedgerReviewStatus.PENDING
-            assert row.transaction is not None
-            assert row.transaction.description == row.description
-            assert row.transaction.transaction_id.startswith(cast(str, payload.transaction_prefix))
+            _assert_ledger_review_projection(payload, review, profile_id=profile_id)
         assert isinstance(observed.projection.pending_interaction, OperationNoPendingInteractionV1)
         asyncio.run(
             driver.review_not_pending(

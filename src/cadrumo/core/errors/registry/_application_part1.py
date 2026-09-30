@@ -388,6 +388,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.review.errors.UnknownReviewKindError",
+        ErrorCode(
+            code="REFUSED_REVIEW_UNKNOWN_KIND",
+            category=ErrorCategory.REFUSED,
+            message_key="review.operator.errors.unknown_kind",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.review.errors.ReviewItemNotFoundError",
+        ErrorCode(
+            code="REFUSED_REVIEW_ITEM_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="review.operator.errors.item_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.review.errors.FilterParseError",
         ErrorCode(
             code="REFUSED_REVIEW_FILTER_PARSE",

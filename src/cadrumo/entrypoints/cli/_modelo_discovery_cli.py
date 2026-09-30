@@ -5,14 +5,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+from uuid import UUID
 
 import typer
 
-from ...application.modelo.data_inventory import data_inventory_checklist
+from ...application.modelo.query_read_operation import (
+    ModeloBindingOverride,
+    ModeloBindingsListRequest,
+    ModeloBindingsResolveRequest,
+    ModeloRequiresRequest,
+)
 from ...application.modelo.registry_discovery import (
-    registry_bindings,
-    registry_bindings_for_scope,
-    registry_bindings_for_year,
     registry_casilla,
     registry_casilla_for_registry_scope,
     registry_casillas,
@@ -22,28 +25,28 @@ from ...application.modelo.registry_discovery import (
     registry_formulas,
     registry_formulas_for_registry_scope,
     registry_list_modelos,
-    registry_modelo_codes,
     registry_support_matrix,
 )
 from ...application.modelo.work_create_policy import (
     ceded_autonomic_modelo_locale_key,
 )
+from ...application.operations.public_period import PublicPeriod
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
-from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.i18n.render import tr
+from ...core.aggregation import BindingSourceKind
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language, tr
 from ...core.period import Period
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.query_reports import (
-    ModeloBindingsReport,
-    ModeloCasillasReport,
-)
+from ...domain.calculations.registry.query_reports import ModeloCasillasReport
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from . import _modelo_discovery_rendering as discovery_rendering
 from ._date_parsing import _parse_iso_date
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
 from ._modelo_bindings_payloads import (
+    BindingEncodedOptionPayload,
+    BindingListRowPayload,
     BindingPreviewRowPayload,
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
@@ -56,10 +59,17 @@ from ._modelo_payloads import (
     ModeloCasillasResult,
     ModeloRequiresResult,
 )
-from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
+from ._modelo_rendering import binding_encoded_option_lines
 from ._modelo_support_matrix_payloads import ModeloSupportMatrixResult
-from .common import emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .errors import CliRefusedBoundaryError
 from .modelo_aux_payloads import ModeloDescribeResult, ModeloListResult
+from .runtime_modelo_query_read import (
+    read_modelo_bindings_list,
+    read_modelo_bindings_resolve,
+    read_modelo_requires,
+    to_data_inventory_checklist,
+)
 from .state_projection_support import authority_operation
 
 
@@ -138,32 +148,6 @@ def _resolve_discovery_year_period(
         return None
     resolved = deps.resolve_year_period(year, required_period, modelo=modelo)
     return _RegistryDiscoveryScope(filing_year=resolved.filing_year, period=resolved.registry_token)
-
-
-def _bindings_report_for_target(
-    target: str,
-    *,
-    year: int | None,
-    period: str | None,
-    as_of: date | None,
-    deps: _DiscoveryDeps,
-    operation: PinnedAuthorityOperation,
-):
-    if year is not None and period is not None:
-        typed_period = deps.resolve_year_period(year, period, modelo=target)
-        return _run_query(
-            lambda: registry_bindings_for_scope(target, period=typed_period, as_of=as_of, operation=operation),
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-    if year is not None:
-        return _run_query(
-            lambda: registry_bindings_for_year(target, filing_year=year, as_of=as_of, operation=operation),
-            bad_parameter_from_error=deps.bad_parameter_from_error,
-        )
-    return _run_query(
-        lambda: registry_bindings(target, period=period, as_of=as_of, operation=operation),
-        bad_parameter_from_error=deps.bad_parameter_from_error,
-    )
 
 
 def _required_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> tuple[str, int, str]:
@@ -407,17 +391,16 @@ def casilla(
 def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     guard_ceded_autonomic_modelo(modelo)
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
-
-    def _query():
-        return data_inventory_checklist(
+    projection = read_modelo_requires(
+        ctx,
+        ModeloRequiresRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
             modelo=modelo,
-            filing_year=typed_period.filing_year,
-            period=typed_period,
-            bucket_id=resolve_active_bucket_id(),
-            operation=authority_operation(ctx),
-        )
-
-    checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
+            period=PublicPeriod.from_period(typed_period),
+            language=OutputLanguage(output_language()),
+        ),
+    )
+    checklist = to_data_inventory_checklist(projection)
     result = ModeloRequiresResult(
         modelo=checklist.modelo,
         revision=checklist.revision_id,
@@ -494,35 +477,6 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
-def _binding_reports_for_list(
-    *,
-    modelo: str | None,
-    known_codes: tuple[str, ...],
-    year: int | None,
-    period: str | None,
-    as_of: date | None,
-    operation: PinnedAuthorityOperation,
-) -> list[ModeloBindingsReport]:
-    targets = known_codes if modelo is None else (modelo,)
-    reports: list[ModeloBindingsReport] = []
-    for target in targets:
-        try:
-            report = _bindings_report_for_target(
-                target,
-                year=year,
-                period=period,
-                as_of=as_of,
-                deps=deps,
-                operation=operation,
-            )
-        except Exception:
-            if modelo is not None:
-                raise
-            continue
-        reports.append(report)
-    return reports
-
-
 def bindings_list(
     ctx: typer.Context,
     modelo: str | None = None,
@@ -533,30 +487,68 @@ def bindings_list(
 ) -> None:
     """List bindings across modelos. All filters are optional refinements."""
     resolved_as_of = _as_of(as_of)
-    operation = authority_operation(ctx)
-    known_codes = registry_modelo_codes(operation=operation)
-    if modelo is not None and modelo not in known_codes:
-        # The accepted set is registry-derived, so it cannot be a static Choice on
-        # the option. A late refusal is allowed for exactly that reason, but it
-        # has to NAME the accepted codes: "not present in the calculation
-        # registry" alone leaves the operator guessing which codes exist.
-        raise typer.BadParameter(
-            f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(known_codes)}."
-        )
-    per_modelo_reports = _binding_reports_for_list(
+    profile_id = UUID(active_bucket_id_or_refuse())
+    request = ModeloBindingsListRequest(
+        profile_id=profile_id,
         modelo=modelo,
-        known_codes=known_codes,
         year=year,
-        period=period,
-        as_of=resolved_as_of,
-        operation=operation,
-    )
-    merged_rows, text_rows = discovery_rendering.binding_rows_for_reports(
-        per_modelo_reports,
+        period_code=period,
         missing=missing,
         as_of=resolved_as_of,
-        operation=operation,
     )
+    try:
+        projection = read_modelo_bindings_list(ctx, request)
+    except CliRefusedBoundaryError as error:
+        if (
+            modelo is None
+            or error.context is None
+            or error.context.get("reason") != "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
+        ):
+            raise
+        try:
+            catalogue = read_modelo_bindings_list(
+                ctx, ModeloBindingsListRequest(profile_id=profile_id, catalogue_only=True)
+            )
+        except CliRefusedBoundaryError:
+            raise error from None
+        if modelo not in catalogue.known_modelos:
+            raise typer.BadParameter(
+                f"modelo {modelo!r} is not in the calculation registry. Accepted: {', '.join(catalogue.known_modelos)}."
+            ) from error
+        raise
+    merged_rows: list[BindingListRowPayload] = []
+    text_rows: list[str] = []
+    for row in projection.bindings:
+        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
+        encoded_options = tuple(
+            BindingEncodedOptionPayload.model_validate(item.model_dump()) for item in row.encoded_options
+        )
+        merged_rows.append(
+            BindingListRowPayload(
+                modelo=row.modelo,
+                revision=row.revision,
+                filing_year=row.filing_year,
+                period=row.period,
+                binding_id=row.binding_id,
+                source=row.source,
+                readiness=readiness,
+                typed_enum=row.typed_enum,
+                input_channel=row.input_channel,
+                borrador_capable=row.borrador_capable,
+                legal_refs=row.legal_refs,
+                source_refs=row.source_refs,
+                relation_inputs=row.relation_inputs,
+                encoded_options=encoded_options,
+            )
+        )
+        text_rows.append(
+            f"{row.modelo}\t{row.revision}\t{row.period or '-'}\t{row.binding_id}\t"
+            f"{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
+            f"{row.borrador_capable}"
+        )
+        text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
+    if missing:
+        text_rows.extend(discovery_rendering.binding_relation_guidance_lines(projection.bindings))
     result = ModeloBindingsListResult(
         modelo_filter=modelo,
         year_filter=year,
@@ -592,70 +584,107 @@ def bindings_resolve(
     modelo, year, period = _required_binding_scope(modelo=modelo, year=year, period=period)
     overrides = dict(deps.parse_binding_override(spec) for spec in binding or ())
     typed_period = deps.resolve_year_period(year, period, modelo=modelo)
-    report = _run_query(
-        lambda: registry_bindings_for_scope(
-            modelo, period=typed_period, as_of=_as_of(as_of), operation=authority_operation(ctx)
-        ),
-        bad_parameter_from_error=deps.bad_parameter_from_error,
+    profile_id = UUID(active_bucket_id_or_refuse())
+    resolved_as_of = _as_of(as_of)
+    request = ModeloBindingsResolveRequest(
+        profile_id=profile_id,
+        modelo=modelo,
+        period=PublicPeriod.from_period(typed_period),
+        as_of=resolved_as_of,
+        overrides=tuple(ModeloBindingOverride(binding_id=key, value=value) for key, value in overrides.items()),
     )
-    known_ids = {row.binding_id for row in report.rows}
-    unknown_keys = sorted(set(overrides) - known_ids)
-    if unknown_keys:
-        suggestion = ", ".join(sorted(known_ids))
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.bindings.unknown_keys",
-                keys=unknown_keys,
-                code=report.code,
-                revision=report.revision,
-                period=report.period,
-                suggestion=suggestion,
+    try:
+        report = read_modelo_bindings_resolve(ctx, request)
+    except CliRefusedBoundaryError as error:
+        if (
+            not overrides
+            or error.context is None
+            or error.context.get("reason") != "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
+        ):
+            raise
+        try:
+            listing = read_modelo_bindings_list(
+                ctx,
+                ModeloBindingsListRequest(
+                    profile_id=profile_id,
+                    modelo=modelo,
+                    year=year,
+                    period_code=period,
+                    as_of=resolved_as_of,
+                ),
             )
-        )
+        except CliRefusedBoundaryError:
+            raise error from None
+        known_ids = {row.binding_id for row in listing.bindings}
+        unknown_keys = sorted(set(overrides) - known_ids)
+        if unknown_keys:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.bindings.unknown_keys",
+                    keys=unknown_keys,
+                    code=modelo,
+                    revision=listing.bindings[0].revision if listing.bindings else "",
+                    period=period,
+                    suggestion=", ".join(sorted(known_ids)),
+                )
+            ) from error
+        raise
     result = ModeloBindingsPreviewResult(
-        modelo=report.code,
+        modelo=report.modelo,
         revision=report.revision,
         filing_year=report.filing_year,
         period=report.period,
-        override_count=len(overrides),
-        binding_count=len(report.rows),
+        override_count=report.override_count,
+        binding_count=report.binding_count,
         bindings=[
             BindingPreviewRowPayload(
                 binding_id=row.binding_id,
-                source=row.provider.kind,
-                readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind]),
+                source=row.source,
+                readiness=tr(
+                    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)]
+                ),
                 typed_enum=row.typed_enum,
-                override=overrides.get(row.binding_id),
+                override=row.override,
                 legal_refs=row.legal_refs,
                 source_refs=row.source_refs,
                 relation_inputs=row.relation_inputs,
-                encoded_options=binding_encoded_option_payloads(row.encoded_options),
+                encoded_options=tuple(
+                    BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
+                ),
             )
-            for row in report.rows
+            for row in report.bindings
         ],
     )
     lines = [
         "operation\tregistry.modelo.bindings.resolve",
-        f"modelo\t{report.code}",
+        f"modelo\t{report.modelo}",
         f"revision\t{report.revision}",
         f"filing_year\t{report.filing_year}",
         f"period\t{report.period}",
-        f"override_count\t{len(overrides)}",
-        f"binding_count\t{len(report.rows)}",
+        f"override_count\t{report.override_count}",
+        f"binding_count\t{report.binding_count}",
         "binding_id\tsource\treadiness\toverride",
     ]
-    for row in report.rows:
+    for row in report.bindings:
+        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
         lines.append(
             "\t".join(
                 (
                     row.binding_id,
-                    row.provider.kind,
-                    tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind]),
-                    overrides.get(row.binding_id) or "-",
+                    row.source,
+                    readiness,
+                    row.override or "-",
                 )
             )
         )
-        lines.extend(binding_encoded_option_lines(row.binding_id, binding_encoded_option_payloads(row.encoded_options)))
+        lines.extend(
+            binding_encoded_option_lines(
+                row.binding_id,
+                tuple(
+                    BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
+                ),
+            )
+        )
     emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 

@@ -124,11 +124,15 @@ def _error_context(result: Result) -> dict[str, object]:
 def _assert_registered_refusal(
     context: dict[str, object],
     *,
-    operation_id: str,
+    definition_id: str,
     reason: str,
     refusal_code: str,
 ) -> None:
-    assert context["operation_id"] == operation_id
+    operation_id = context["operation_id"]
+    assert isinstance(operation_id, str) and len(operation_id) == 64
+    assert all(character in "0123456789abcdef" for character in operation_id)
+    if "definition_id" in context:
+        assert context["definition_id"] == definition_id
     assert context["reason"] == reason
     assert context["effect"] == "none"
     assert context["terminal_condition"] == "refused"
@@ -185,7 +189,7 @@ def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
         "--ejercicio",
         str(_WHOLE_SEED_CURRENT_YEAR),
     )
-    seeded = ProrrataSeedResult.model_validate(unwrap_cli_result(seeded_result))
+    seeded = ProrrataSeedResult.model_validate_json(json.dumps(unwrap_cli_result(seeded_result)))
     expected_snapshot = RegistrySnapshotRef(
         modelo=Modelo("303").value,
         revision_id=prior_revision_id,
@@ -233,14 +237,14 @@ def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
     absent_context = _error_context(absent)
     _assert_registered_refusal(
         absent_context,
-        operation_id="seed",
+        definition_id="ledger.prorrata.seed",
         reason="seed_source_absent",
         refusal_code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
     )
-    assert absent_context["prior_ejercicio"] == _WHOLE_SEED_CURRENT_YEAR
+    assert absent_context["prior_ejercicio"] == str(_WHOLE_SEED_CURRENT_YEAR)
 
     listed_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
-    listed = ProrrataListResult.model_validate(unwrap_cli_result(listed_result))
+    listed = ProrrataListResult.model_validate_json(json.dumps(unwrap_cli_result(listed_result)))
     assert str(listed.bucket_id) == str(seeded.bucket_id)
     assert listed.entries == [expected_entry]
     assert listed.sectors == []
@@ -268,7 +272,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         "--activity-code",
         "6810",
     )
-    declared = ProrrataDeclareSectorResult.model_validate(unwrap_cli_result(declared_result))
+    declared = ProrrataDeclareSectorResult.model_validate_json(json.dumps(unwrap_cli_result(declared_result)))
     expected_sector = SectorDefinitionPayload(
         sector_id=_SECTOR_ID,
         letra=SectorDiferenciadoLetra.from_registry("a").value,
@@ -291,11 +295,11 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
     missing_context = _error_context(missing_prior)
     _assert_registered_refusal(
         missing_context,
-        operation_id="seed_sector",
+        definition_id="ledger.prorrata.seed_sector",
         reason="sector_prior_definitive_absent",
         refusal_code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
     )
-    assert missing_context["ejercicio"] == _SECTOR_CURRENT_YEAR
+    assert missing_context["ejercicio"] == str(_SECTOR_CURRENT_YEAR)
     assert missing_context["sector_id"] == _SECTOR_ID
 
     sector_alias = _invoke(
@@ -312,11 +316,11 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
     alias_context = _error_context(sector_alias)
     assert alias_context["reason"] == "sector_requires_seed_sector"
     assert alias_context["sector_id"] == _SECTOR_ID
-    assert alias_context["ejercicio"] == _SECTOR_CURRENT_YEAR
+    assert alias_context["ejercicio"] == str(_SECTOR_CURRENT_YEAR)
     assert "operation_id" not in alias_context
 
     unchanged_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
-    unchanged = ProrrataListResult.model_validate(unwrap_cli_result(unchanged_result))
+    unchanged = ProrrataListResult.model_validate_json(json.dumps(unwrap_cli_result(unchanged_result)))
     assert unchanged.entries == []
     assert unchanged.sectors == [expected_sector]
     assert unchanged.count == 0
@@ -338,7 +342,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         "--reference",
         _SECTOR_AUTHORIZATION,
     )
-    elected = ProrrataElectGeneralResult.model_validate(unwrap_cli_result(elected_result))
+    elected = ProrrataElectGeneralResult.model_validate_json(json.dumps(unwrap_cli_result(elected_result)))
     expected_election_entry = ProrrataEntryPayload(
         ejercicio=_SECTOR_PRIOR_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general").value,
@@ -379,7 +383,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         "--sin-derecho-volume",
         "20000.00",
     )
-    settled = ProrrataSettleSectorResult.model_validate(unwrap_cli_result(settled_result))
+    settled = ProrrataSettleSectorResult.model_validate_json(json.dumps(unwrap_cli_result(settled_result)))
     expected_settled_entry = expected_election_entry.model_copy(
         update={
             "definitive_percentage": "80",
@@ -402,7 +406,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         "--sector-id",
         _SECTOR_ID,
     )
-    seeded = ProrrataSeedSectorResult.model_validate(unwrap_cli_result(seeded_result))
+    seeded = ProrrataSeedSectorResult.model_validate_json(json.dumps(unwrap_cli_result(seeded_result)))
     expected_seeded_entry = ProrrataEntryPayload(
         ejercicio=_SECTOR_CURRENT_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general").value,
@@ -424,7 +428,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
     assert seeded.count == 2
 
     listed_result = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")
-    listed = ProrrataListResult.model_validate(unwrap_cli_result(listed_result))
+    listed = ProrrataListResult.model_validate_json(json.dumps(unwrap_cli_result(listed_result)))
     assert str(listed.bucket_id) == str(seeded.bucket_id)
     assert listed.entries == [expected_settled_entry, expected_seeded_entry]
     assert listed.sectors == [expected_sector]

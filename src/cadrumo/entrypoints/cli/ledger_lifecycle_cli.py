@@ -24,7 +24,6 @@ from ...application.ledger.actions_lifecycle import (
 from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.models import SplitChildCommand
-from ...application.ledger.notices import stale_finalized_revision_notices
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.external_constants import PDF_MIME_TYPE
@@ -59,30 +58,21 @@ def ledger_detach(
     actor: str | None = None,
 ) -> None:
     """Detach supplementary attachments from one ledger transaction."""
-    from ...application.ledger.actions_manual import detach_manual_transaction_attachments
+    from .runtime_ledger_attachment import emit_ledger_attachment_result, run_ledger_detach
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = detach_manual_transaction_attachments(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
+    result = run_ledger_detach(
+        ctx,
+        transaction_id=transaction_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger detach",
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerDetachResult
 
-    emit_update_result(
+    emit_ledger_attachment_result(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        result,
         command="ledger.detach",
-        result_cls=LedgerDetachResult,
-        notices=stale_finalized_revision_notices(result),
+        result_schema=LedgerDetachResult,
     )
 
 
@@ -94,31 +84,22 @@ def ledger_attach(
     actor: str | None = None,
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
-    from ...application.ledger.actions_manual import attach_manual_transaction_evidence
+    from .runtime_ledger_attachment import emit_ledger_attachment_result, run_ledger_attach
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
-    result = attach_manual_transaction_evidence(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
+    result = run_ledger_attach(
+        ctx,
+        transaction_id=transaction_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger attach",
-        ports=ports,
+        actor=actor,
     )
     from ._ledger_payloads import LedgerAttachResult
 
-    emit_update_result(
+    emit_ledger_attachment_result(
         ctx,
-        result.transaction,
-        result.ref.bucket_id,
-        result.bucket_event_ids,
+        result,
         command="ledger.attach",
-        result_cls=LedgerAttachResult,
-        notices=stale_finalized_revision_notices(result),
+        result_schema=LedgerAttachResult,
     )
 
 

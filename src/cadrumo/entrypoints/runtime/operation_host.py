@@ -117,6 +117,15 @@ class ProfileWorkerOperationHost:
                 )
         return self._services
 
+    def prepare(self) -> None:
+        """Finish cold registry composition before any admitted lease is published.
+
+        The first contract and submission retain their ordinary short worker
+        exchange deadlines. Admission owns this one-time compilation cost while
+        the profile is already pinned and before a client can start an operation.
+        """
+        self._composed()
+
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""
         profile_id = str(self.custody.identity.binding.profile_id)

@@ -118,11 +118,7 @@ def _entry_payload(entry: ProrrataEntryProjection) -> ProrrataEntryPayload:
 
 
 def _sector_payload(definition: ProrrataSectorDefinitionProjection) -> SectorDefinitionPayload:
-    return SectorDefinitionPayload(
-        sector_id=definition.sector_id,
-        letra=definition.letra,
-        member_activity_codes=tuple(definition.member_activity_codes),
-    )
+    return SectorDefinitionPayload.model_validate_json(definition.model_dump_json())
 
 
 def _refuse(
@@ -461,7 +457,7 @@ def prorrata_declare_sector(
         profile_id=profile_id,
         sector_id=sector_id,
         letra=letra.value,
-        member_activity_codes=activity_code,
+        member_activity_codes=tuple(activity_code),
     )
     completed, projection = _run_mutation(
         ctx,

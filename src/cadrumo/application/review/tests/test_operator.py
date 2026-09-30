@@ -8,10 +8,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import Settings, override_settings
-from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..enums import ReviewSeverity, ReviewState
-from ..errors import ReviewError
+from ..errors import ReviewItemNotFoundError, UnknownReviewKindError
 from ..models import FindingReviewItem
 from ..operator import (
     ACCEPTED_KINDS,
@@ -31,10 +32,11 @@ _BUCKET_ID = "70707070-7070-4070-8070-707070707070"
 def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
     sensitive_kind = "client-tax-id-12345678Z-private-note"
 
-    with pytest.raises(ReviewError) as exc_info:
+    with pytest.raises(UnknownReviewKindError) as exc_info:
         _resolve_internal_kinds([sensitive_kind])
 
     assert exc_info.value.translated_message == "review.operator.errors.unknown_kind"
+    assert get_registered_error_code(exc_info.value).code == "REFUSED_REVIEW_UNKNOWN_KIND"
     assert sensitive_kind not in str(exc_info.value)
     assert sensitive_kind not in repr(exc_info.value.context)
     assert exc_info.value.context is not None
@@ -73,14 +75,23 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
         )
 
 
-def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
+def test_project_review_item_not_found_error_omits_raw_item_id(
+    operation: PinnedAuthorityOperation,
+) -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
     bucket_id = "23232323-2323-4232-8232-232323232323"
-    with override_settings(cadrumo_active_profile=bucket_id), pytest.raises(ReviewError) as exc_info:
-        project_review_item(sensitive_item_id, settings=Settings(), ports=draft_review_ports())
+    with override_settings(cadrumo_active_profile=bucket_id), pytest.raises(ReviewItemNotFoundError) as exc_info:
+        project_review_item(
+            sensitive_item_id,
+            bucket_id=bucket_id,
+            operation=operation,
+            settings=Settings(),
+            ports=draft_review_ports(),
+        )
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"
+    assert get_registered_error_code(exc_info.value).code == "REFUSED_REVIEW_ITEM_NOT_FOUND"
     assert exc_info.value.context is None
     assert sensitive_item_id not in str(exc_info.value)
 

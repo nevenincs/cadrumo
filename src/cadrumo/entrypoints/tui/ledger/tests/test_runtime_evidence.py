@@ -28,13 +28,24 @@ from cadrumo.application.ledger.invoice_evidence_operation import (
     LedgerEvidenceExtractRequest,
 )
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
+    DraftDiscrepancyProjectionV1,
+    FieldAmbiguityCandidateProjectionV1,
+    FieldProvenanceProjectionV1,
     InvoiceConfirmationProjectionV1,
+    InvoiceDraftLineProjectionV1,
     InvoiceDraftProjectionV1,
+    InvoiceDraftRateBreakdownProjectionV1,
+    StructuredInvoiceClassProjectionV1,
 )
+from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.config import override_settings
+from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.core.field_grounding import FieldGroundingOutcome
+from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -42,12 +53,14 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
+from cadrumo.entrypoints.tui.ledger.evidence import draft_lines
 from cadrumo.entrypoints.tui.ledger.models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordStatus
 from cadrumo.entrypoints.tui.ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
@@ -115,14 +128,83 @@ def _draft_projection() -> InvoiceDraftProjectionV1:
     return InvoiceDraftProjectionV1(
         supplier_tax_id="B12345678",
         supplier_name="Proveedor Example SL",
+        customer_tax_id="12345678Z",
+        customer_name="Cliente Example SL",
+        customer_country_code="ES",
         invoice_number="INV-01",
+        invoice_series="SERIE-X",
+        rectifies_invoice_number="INV-00",
         invoice_date="2026-03-16",
+        proposed_supply_nature=SupplyNature.GOODS,
         taxable_base=PublicDecimal(decimal="100.00"),
         iva_rate=PublicDecimal(decimal="21"),
         iva_amount=PublicDecimal(decimal="21.00"),
         grand_total=PublicDecimal(decimal="121.00"),
         currency="EUR",
+        regime_legend="REDEME special regime",
+        recargo_amount=PublicDecimal(decimal="5.00"),
+        retencion_rate=PublicDecimal(decimal="0.15"),
+        retencion_amount=PublicDecimal(decimal="15.00"),
+        suplidos_amount=PublicDecimal(decimal="3.00"),
+        lines=(
+            InvoiceDraftLineProjectionV1(
+                description="Monitor display",
+                quantity=PublicDecimal(decimal="2"),
+                unit_price=PublicDecimal(decimal="50"),
+                taxable_base=PublicDecimal(decimal="100.00"),
+                iva_rate=PublicDecimal(decimal="21"),
+                iva_amount=PublicDecimal(decimal="21.00"),
+                recargo_rate=PublicDecimal(decimal="5.2"),
+                recargo_amount=PublicDecimal(decimal="5.20"),
+            ),
+        ),
+        iva_breakdown=(
+            InvoiceDraftRateBreakdownProjectionV1(
+                iva_rate=PublicDecimal(decimal="21"),
+                taxable_base=PublicDecimal(decimal="100.00"),
+                iva_amount=PublicDecimal(decimal="21.00"),
+                recargo_rate=PublicDecimal(decimal="5.2"),
+                recargo_amount=PublicDecimal(decimal="5.20"),
+            ),
+        ),
+        iva_category="domestic_general",
         suggested_kind=InvoiceKind.RECEIVED,
+        transcription_sha256="c" * 64,
+        provenance=(
+            FieldProvenanceProjectionV1(
+                field="supplier_name",
+                origin=FieldOrigin.VISION,
+                grounding=FieldGroundingOutcome.AMBIGUOUS,
+                anchor="SELLER",
+                refused_anchor="CUSTOMER",
+                candidates=(
+                    FieldAmbiguityCandidateProjectionV1(
+                        value="Proveedor Example SL",
+                        anchor="SELLER: Proveedor Example SL",
+                        note="labelled seller",
+                    ),
+                ),
+                anchor_self_reported=True,
+                derived_from=("invoice_number",),
+                role_evidence="supplier tax identifier",
+                attribution_unverified=True,
+                note="check party attribution",
+            ),
+        ),
+        discrepancies=(
+            DraftDiscrepancyProjectionV1(
+                kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
+                field="grand_total",
+                detail="printed total needs review",
+                expected=PublicDecimal(decimal="121.00"),
+                observed=PublicDecimal(decimal="120.00"),
+            ),
+        ),
+        raw_text_length=842,
+        facturae_invoice_class=StructuredInvoiceClassProjectionV1(
+            source_code="F1",
+            kind=StructuredInvoiceClassificationKind.CORRECTIVE,
+        ),
     )
 
 
@@ -227,6 +309,23 @@ async def test_runtime_evidence_extract_and_confirm_bind_the_exact_reviewed_dige
     assert draft.evidence_id == "f" * 16
     assert draft.supplier_name == "Proveedor Example SL"
     assert draft.grand_total == "121.00"
+    assert draft.full_projection == _draft_projection()
+    with override_settings(cadrumo_output_language="en"):
+        review_text = "\n".join(draft_lines(draft))
+    for fact in (
+        "SERIE-X",
+        "INV-00",
+        "REDEME special regime",
+        "0.15",
+        "Monitor display",
+        "5.20",
+        "printed total needs review",
+        "SELLER: Proveedor Example SL",
+        "supplier tax identifier",
+        "F1",
+        "842",
+    ):
+        assert fact in review_text
     extract_request = cast(LedgerEvidenceExtractRequest, submissions[0]["payload"])
     assert extract_request == LedgerEvidenceExtractRequest(profile_id=_PROFILE_ID, evidence_id="f" * 16)
     assert submissions[0]["definition_id"] == LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID

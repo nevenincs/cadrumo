@@ -111,15 +111,11 @@ cli:
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
-        confirm_expected_source_sha256_help: SHA-256 del justificante devuelto por extract; verifica que los bytes no han cambiado.
-        confirm_expected_draft_review_sha256_help: Huella de revisión del borrador exacto que ha revisado, devuelta por extract.
-        confirm_iva_amount_help: Sobrescribe el importe de IVA extraído; omita la opción para conservarlo.
-        confirm_iva_category_help: Identificador de la categoría de IVA que se registrará para esta factura.
-        confirm_operation_date_help: Fecha de la operación gravada (ISO AAAA-MM-DD).
-        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
-        confirm_retention_amount_help: Importe de retención de IRPF de la factura.
-        confirm_recargo_amount_help: Importe del recargo de equivalencia de la factura.
         confirm_currency_help: Código de moneda ISO-4217.
+        confirm_expected_draft_review_sha256_help: Huella de revisión del borrador
+          exacto que ha revisado, devuelta por extract.
+        confirm_expected_source_sha256_help: SHA-256 del justificante devuelto por
+          extract; verifica que los bytes no han cambiado.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
         confirm_invoice_class_help: Indique la clase de factura cuando el documento
@@ -128,10 +124,15 @@ cli:
           los documentos que no lo hacen.
         confirm_invoice_date_help: Sobrescribe la fecha de factura extraída (AAAA-MM-DD).
         confirm_invoice_number_help: Sobrescribe el número de factura extraído.
+        confirm_iva_amount_help: Sobrescribe el importe de IVA extraído; omita la
+          opción para conservarlo.
+        confirm_iva_category_help: Identificador de la categoría de IVA que se registrará
+          para esta factura.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraído (omitir para conservar
           el valor extraído).
         confirm_link_hint_message: La factura se registró sin un movimiento coincidente
           del libro.
+        confirm_operation_date_help: Fecha de la operación gravada (ISO AAAA-MM-DD).
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
           Obligatoria cuando el documento declara una entrega intracomunitaria: la
           categoría no permite saber si siguió a una importación exenta.'
@@ -140,12 +141,15 @@ cli:
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
           de equivalencia, o que se ha leído mal alguna cifra. Revise el documento.
+        confirm_recargo_amount_help: Importe del recargo de equivalencia de la factura.
         confirm_rectifies_help: Número de la factura que rectifica esta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
           del documento cuando este lo indica.
         confirm_resolve_help: 'Responda a un hallazgo bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
           Para choose, indique la lectura por su valor o por el resumen que mostró
           review. Repita una vez por hallazgo; no hay opción masiva.'
+        confirm_retention_amount_help: Importe de retención de IRPF de la factura.
+        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
@@ -463,8 +467,6 @@ cli:
         seed_help: Arrastra al ejercicio la prorrata provisional a partir del porcentaje
           definitivo del año anterior (LIVA art. 105.Uno), leído de la observación
           sellada de la liquidación del Modelo 303 anterior.
-        seed_sector_requires_route: No se puede pasar un sector al arrastre de toda
-          la actividad; usa seed-sector para un sector diferenciado.
         seed_local_authority: El porcentaje provisional se ha arrastrado localmente
           desde tu observación almacenada de la liquidación {modelo} {filing_year}
           {period} (LIVA art. 105.Uno). No es un porcentaje emitido por la AEAT para
@@ -480,6 +482,8 @@ cli:
           definitivo liquidado para {prior_ejercicio}, por lo que no se puede arrastrar
           al ejercicio {ejercicio}. El definitivo anterior falta, no es cero: liquida
           antes {prior_ejercicio} para este sector.'
+        seed_sector_requires_route: No se puede pasar un sector al arrastre de toda
+          la actividad; usa seed-sector para un sector diferenciado.
         seed_source_absent: 'Ninguna observación sellada de la liquidación del Modelo
           303 de {prior_ejercicio} contiene un porcentaje de prorrata definitivo,
           por lo que no se puede arrastrar al ejercicio {ejercicio}. El definitivo
@@ -965,7 +969,8 @@ cli:
           declaration_kind_undetermined: 'Modelo {modelo} {period} {filing_year}:
             la AEAT registra una presentación posterior sin indicar si es una corrección.'
           filing_instance_evidence_unavailable: 'Modelo {modelo} {period} {filing_year}:
-            la entrada de la AEAT carece de la evidencia de presentación necesaria para registrar su contenido.'
+            la entrada de la AEAT carece de la evidencia de presentación necesaria
+            para registrar su contenido.'
           receipt_totals_mismatch: 'Modelo {modelo} {period} {filing_year}: el importe
             del justificante difiere de la presentación local pendiente, pero sin
             valores de casillas no se pudo registrar el contenido de la AEAT.'

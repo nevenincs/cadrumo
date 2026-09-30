@@ -832,6 +832,9 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
+    canonical_invoice_evidence_review_changed: El justificant o l'esborrany de la
+      factura ha canviat des de la revisió. Torni a llegir i revisar el document actual
+      abans de confirmar-lo.
     canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
       la retenció.
     canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet

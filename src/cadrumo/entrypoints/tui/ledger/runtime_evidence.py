@@ -401,6 +401,7 @@ class RuntimeEvidenceTuiDoorV1:
             currency=draft.currency,
             suggested_kind=draft.suggested_kind,
             discrepancies=len(draft.discrepancies),
+            full_projection=draft,
         )
 
 

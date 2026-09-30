@@ -19,13 +19,13 @@ from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import LegalRefId
 from ..filing.draft_review import describe_stale_reason
 from ..filing.draft_review_ports import DraftReviewPorts
 from ._aggregator import ReviewQueue
 from .enums import ReviewItemKind, ReviewSeverity, ReviewState
-from .errors import ReviewError
+from .errors import ReviewItemNotFoundError, UnknownReviewKindError
 from .models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
 
@@ -105,6 +105,8 @@ ACCEPTED_KINDS: tuple[str, ...] = tuple(str(kind) for kind, internal in _ACCEPTE
 
 def project_review_queue(
     *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     kinds: Iterable[str] = (),
     source_kinds: Iterable[str] = (),
@@ -124,20 +126,18 @@ def project_review_queue(
     filter is active.
     """
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
-    bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
 
-    with bundled_indexed_authority().operation() as operation:
-        items = ReviewQueue.collect(
-            settings or _load_settings(),
-            bucket_id=bucket_id,
-            ports=ports,
-            operation=operation,
-            kinds=selected,
-            state=state,
-            modelo=modelo,
-            confidence_below=confidence_below,
-        )
+    items = ReviewQueue.collect(
+        settings or _load_settings(),
+        bucket_id=bucket_id,
+        ports=ports,
+        operation=operation,
+        kinds=selected,
+        state=state,
+        modelo=modelo,
+        confidence_below=confidence_below,
+    )
     accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
     accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())
     rows = tuple(
@@ -152,6 +152,8 @@ def project_review_queue(
 def project_review_item(
     item_id: str,
     *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     ports: DraftReviewPorts,
 ) -> ReviewQueueRow:
@@ -160,6 +162,8 @@ def project_review_item(
     Returns a :class:`ReviewQueueRow` matching ``item_id``.
     """
     report = project_review_queue(
+        bucket_id=bucket_id,
+        operation=operation,
         settings=settings,
         state=ReviewState.ALL,
         ports=ports,
@@ -167,10 +171,7 @@ def project_review_item(
     for row in report.rows:
         if row.item_id == item_id:
             return row
-    raise ReviewError(
-        message="review item not found",
-        translated_message="review.operator.errors.item_not_found",
-    )
+    raise ReviewItemNotFoundError()
 
 
 def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
@@ -181,15 +182,13 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
     for kind in accepted:
         mapped = _ACCEPTED_KIND_TO_INTERNAL.get(kind)
         if mapped is None:
-            raise ReviewError(
-                message="unknown review kind",
-                translated_message="review.operator.errors.unknown_kind",
+            raise UnknownReviewKindError(
                 # Surface the accepted set in the refusal (CLI-instructive-gate
                 # mandate) without echoing the raw selector, which may carry
                 # operator-private text. ``accepted_kinds`` is a pre-joined
                 # string because the i18n interpolation renders the value with
                 # ``str(...)`` and a bare tuple would print as a Python repr.
-                context={"accepted_kinds": ", ".join(ACCEPTED_KINDS)},
+                accepted_kinds=", ".join(ACCEPTED_KINDS),
             )
         internal.update(mapped)
     return frozenset(internal)
@@ -299,12 +298,6 @@ def _explained_reason(item: FindingReviewItem) -> str:
 def _render_summary(value: str) -> str:
     rendered = tr(value)
     return rendered or value
-
-
-def _active_bucket_id() -> str:
-    from ...core.bucket_pointer import require_active_bucket_id
-
-    return require_active_bucket_id()
 
 
 def _year_period(value: str) -> str:

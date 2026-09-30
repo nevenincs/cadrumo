@@ -45,6 +45,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     OperationAccessPolicy,
     OperationAccessRequest,
+    ProfileAccessStatus,
     SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -115,11 +116,14 @@ class AdmissionOwner:
         self.guard = subject.owner.guard
         self.active: set[UUID] = set()
         self.activated: list[UUID] = []
+        self.activation_attempt: UUID | None = None
         self.retired: list[UUID] = []
         self.login_calls = 0
         self.fail_activation = False
         self.human_bound: set[UUID] = set()
         self.human_released = False
+        self.fail_human_bind = False
+        self.human_bind_attempt: UUID | None = None
         self.human_login_id = "test-login"
         self.failed_retirements: set[UUID] = set()
         self.fail_human_release = False
@@ -144,6 +148,7 @@ class AdmissionOwner:
     def activate(self, session: AccessSession, dek: bytearray) -> None:
         assert len(dek) == 32 and any(dek)
         assert session.binding == self.current.profile.binding
+        self.activation_attempt = session.session_id
         if self.fail_activation:
             raise RuntimeError("synthetic activation failure")
         self.active.add(session.session_id)
@@ -160,6 +165,9 @@ class AdmissionOwner:
         self.refreshed.append(session)
 
     def bind_human(self, session: AccessSession) -> None:
+        self.human_bind_attempt = session.session_id
+        if self.fail_human_bind:
+            raise RuntimeError("synthetic worker preparation failure")
         self.human_bound.add(session.session_id)
         self.active.add(session.session_id)
 
@@ -363,6 +371,18 @@ def test_revalidation_and_failed_activation_wipe_borrowed_material(subject: Subj
         subject.owner.fail_activation = True
         with pytest.raises(RuntimeError, match="synthetic activation failure"):
             subject.admit()
+        attempted = subject.owner.activation_attempt
+        assert attempted is not None
+        status = subject.authority.status(
+            connection_id=subject.connection,
+            session_id=attempted,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NEEDS_USER,
+        )
+        assert isinstance(status, ProfileAccessStatus)
+        assert not status.credential_authenticated
+        assert status.profile_id is None and status.session_id is None
+        assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
     else:
         assert isinstance(subject.admit(), AccessDenied)
     assert subject.store.borrowed == bytearray(32)
@@ -565,6 +585,25 @@ def test_failed_human_binding_releases_candidate_custody(subject: Subject) -> No
     result = subject.authority.admit_human(connection_id=subject.connection)
     assert isinstance(result, AccessDenied) and result.code is AccessDenialCode.OS_SESSION_UNAVAILABLE
     assert not subject.owner.active and subject.owner.human_released
+
+
+def test_failed_worker_preparation_does_not_publish_human_session(subject: Subject) -> None:
+    subject.owner.fail_human_bind = True
+    with pytest.raises(RuntimeError, match="synthetic worker preparation failure"):
+        subject.authority.admit_human(connection_id=subject.connection)
+    attempted = subject.owner.human_bind_attempt
+    assert attempted is not None
+    assert not subject.owner.active and subject.owner.human_released
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NEEDS_USER,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated
+    assert status.profile_id is None and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
 
 
 @pytest.mark.asyncio
@@ -935,7 +974,9 @@ def test_operation_guard_orders_revocation_and_never_enters_after_denial(subject
         finally:
             release.set()
         operation.result(timeout=10)
-        assert denial.result(timeout=10).access_denied
+        denial_receipt = denial.result(timeout=10)
+        assert isinstance(denial_receipt, AutomationDenialReceipt)
+        assert denial_receipt.access_denied
     with (
         pytest.raises(ProfileAccessRefusedError),
         subject.authority.operation_guard(

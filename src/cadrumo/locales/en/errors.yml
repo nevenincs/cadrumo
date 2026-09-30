@@ -759,6 +759,9 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
+    canonical_invoice_evidence_review_changed: The evidence source or invoice draft
+      has changed since review. Read and review the current document before confirming
+      it.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
     canonical_ledger_payment_withholding_evidence: The ledger payment cannot support

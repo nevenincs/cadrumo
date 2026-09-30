@@ -23,12 +23,14 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
 from ..adapters.persistence.profile.catalogue_creation import (
     build_catalogue_creation_ports,
     build_catalogue_lifecycle_ports,
 )
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ..adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ..adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.profile.taxation_comparison import build_taxation_comparison_ports
@@ -82,6 +84,7 @@ from ..application.bienes_inversion.registered_operation import (
     build_bienes_inversion_list_definition,
     build_bienes_inversion_list_registration,
 )
+from ..application.bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ..application.exchange_rate_provider import exchange_rate_provider
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
@@ -126,6 +129,12 @@ from ..application.invoices.inspection_read_ports import InvoiceInspectionReadPo
 from ..application.ledger.action_ports import LedgerActionPortsFactory
 from ..application.ledger.add_operation import build_ledger_add_definition, build_ledger_add_registration
 from ..application.ledger.allocate_operation import build_ledger_allocate_definition, build_ledger_allocate_registration
+from ..application.ledger.attachment_mutation_operation import (
+    build_ledger_attach_definition,
+    build_ledger_attach_registration,
+    build_ledger_detach_definition,
+    build_ledger_detach_registration,
+)
 from ..application.ledger.check_operation import build_ledger_check_definition, build_ledger_check_registration
 from ..application.ledger.classify_operation import build_ledger_classify_definition, build_ledger_classify_registration
 from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
@@ -136,6 +145,11 @@ from ..application.ledger.counterparty_operation import (
 from ..application.ledger.evidence_add_operation import (
     build_ledger_evidence_add_definition,
     build_ledger_evidence_add_registration,
+)
+from ..application.ledger.evidence_followup_operation import (
+    LedgerEvidenceFollowupOperationPorts,
+    build_ledger_evidence_followup_definitions,
+    build_ledger_evidence_followup_registrations,
 )
 from ..application.ledger.evidence_mutation_operation import (
     build_ledger_evidence_remove_definition,
@@ -394,6 +408,17 @@ from ..application.modelo.operation_definitions import (
     resolve_active_workflow_profile,
 )
 from ..application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
+from ..application.modelo.query_read_operation import (
+    ModeloQueryReadPortsFactory,
+    build_modelo_bindings_list_definition,
+    build_modelo_bindings_list_registration,
+    build_modelo_bindings_resolve_definition,
+    build_modelo_bindings_resolve_registration,
+    build_modelo_readiness_definition,
+    build_modelo_readiness_registration,
+    build_modelo_requires_definition,
+    build_modelo_requires_registration,
+)
 from ..application.modelo.reconciliation_import_operation import (
     build_modelo_reconciliation_import_definition,
     build_modelo_reconciliation_import_registration,
@@ -410,6 +435,15 @@ from ..application.modelo.review_package_operation import (
     build_modelo_review_package_build_definition,
     build_modelo_review_package_build_registration,
 )
+from ..application.modelo.review_package_recipient_operations import (
+    build_review_package_recipient_add_definition,
+    build_review_package_recipient_add_registration,
+    build_review_package_recipient_list_definition,
+    build_review_package_recipient_list_registration,
+    build_review_package_recipient_remove_definition,
+    build_review_package_recipient_remove_registration,
+)
+from ..application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPortsFactory
 from ..application.modelo.revision_inventory_operation import (
     build_modelo_work_revisions_definition,
     build_modelo_work_revisions_registration,
@@ -564,6 +598,7 @@ from .adapter_composition import (
     build_withholding_observation_service,
 )
 from .auth_read_composition import compose_auth_read_ports
+from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 from .invoice_inspection_composition import build_invoice_inspection_read_ports
 from .justificante_composition import (
@@ -581,6 +616,7 @@ from .live_state_composition import (
     pull_filed_history_with_shared_composition,
 )
 from .modelo_dependency_composition import build_dependency_read_ports
+from .modelo_query_read_operation_composition import build_modelo_query_read_ports
 from .overview_pipeline_composition import build_pipeline_read_ports
 from .overview_read_composition import build_overview_read_ports
 from .workflow_run_composition import build_workflow_run_read_ports
@@ -701,6 +737,12 @@ def build_production_operation_registry(
     verify_nif_iva_definition: OperationDefinition | None = None,
     verify_tgvi_definition: OperationDefinition | None = None,
     google_export_definition: OperationDefinition | None = None,
+    evidence_followup_ports: LedgerEvidenceFollowupOperationPorts | None = None,
+    modelo_query_read_ports_factory: ModeloQueryReadPortsFactory = build_modelo_query_read_ports,
+    recipient_registry_ports_factory: RecipientFingerprintRegistryPortsFactory = (
+        build_recipient_fingerprint_registry_ports
+    ),
+    recipient_event_repository_factory: BucketEventHistoryRepositoryFactory = build_bucket_event_history_repository,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
@@ -740,6 +782,20 @@ def build_production_operation_registry(
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
+    evidence_followup_definitions = build_ledger_evidence_followup_definitions(
+        evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)
+    )
+    modelo_bindings_list_definition = build_modelo_bindings_list_definition()
+    modelo_bindings_resolve_definition = build_modelo_bindings_resolve_definition()
+    modelo_requires_definition = build_modelo_requires_definition()
+    modelo_readiness_definition = build_modelo_readiness_definition(modelo_query_read_ports_factory)
+    recipient_add_definition = build_review_package_recipient_add_definition(
+        recipient_registry_ports_factory, recipient_event_repository_factory
+    )
+    recipient_list_definition = build_review_package_recipient_list_definition(recipient_registry_ports_factory)
+    recipient_remove_definition = build_review_package_recipient_remove_definition(
+        recipient_registry_ports_factory, recipient_event_repository_factory
+    )
     resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     resolved_auth_ports = build_auth_operation_ports(resolved_operator_scope_ports)
     resolved_auth_definitions = (
@@ -1069,6 +1125,8 @@ def build_production_operation_registry(
     ledger_split_definition = build_ledger_split_definition(ledger_action_ports_factory)
     ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
     ledger_update_definition = build_ledger_update_definition(ledger_action_ports_factory)
+    ledger_attach_definition = build_ledger_attach_definition(ledger_action_ports_factory)
+    ledger_detach_definition = build_ledger_detach_definition(ledger_action_ports_factory)
     ledger_remove_definition = build_ledger_remove_definition(ledger_action_ports_factory)
     ledger_reset_definition = build_ledger_reset_definition(ledger_action_ports_factory)
     if counterparty_repository_factory is None:
@@ -1127,6 +1185,14 @@ def build_production_operation_registry(
         sorted(
             (
                 *resolved_auth_definitions,
+                *evidence_followup_definitions,
+                modelo_bindings_list_definition,
+                modelo_bindings_resolve_definition,
+                modelo_requires_definition,
+                modelo_readiness_definition,
+                recipient_add_definition,
+                recipient_list_definition,
+                recipient_remove_definition,
                 *certificate_secret_definitions,
                 certificate_source_register_definition,
                 certificate_source_list_definition,
@@ -1237,6 +1303,8 @@ def build_production_operation_registry(
                 ledger_split_definition,
                 ledger_merge_definition,
                 ledger_update_definition,
+                ledger_attach_definition,
+                ledger_detach_definition,
                 ledger_remove_definition,
                 ledger_reset_definition,
                 ledger_counterparty_definition,
@@ -1272,6 +1340,14 @@ def build_production_operation_registry(
         sorted(
             (
                 *build_auth_operation_registrations(resolved_auth_definitions),
+                *build_ledger_evidence_followup_registrations(evidence_followup_definitions),
+                build_modelo_bindings_list_registration(modelo_bindings_list_definition),
+                build_modelo_bindings_resolve_registration(modelo_bindings_resolve_definition),
+                build_modelo_requires_registration(modelo_requires_definition),
+                build_modelo_readiness_registration(modelo_readiness_definition),
+                build_review_package_recipient_add_registration(recipient_add_definition),
+                build_review_package_recipient_list_registration(recipient_list_definition),
+                build_review_package_recipient_remove_registration(recipient_remove_definition),
                 *build_certificate_secret_operation_registrations(certificate_secret_definitions),
                 build_certificate_source_register_registration(certificate_source_register_definition),
                 build_certificate_source_list_registration(certificate_source_list_definition),
@@ -1386,6 +1462,8 @@ def build_production_operation_registry(
                 build_ledger_split_registration(ledger_split_definition),
                 build_ledger_merge_registration(ledger_merge_definition),
                 build_ledger_update_registration(ledger_update_definition),
+                build_ledger_attach_registration(ledger_attach_definition),
+                build_ledger_detach_registration(ledger_detach_definition),
                 build_ledger_remove_registration(ledger_remove_definition),
                 build_ledger_reset_registration(ledger_reset_definition),
                 build_ledger_counterparty_registration(ledger_counterparty_definition),
@@ -1447,6 +1525,12 @@ def compose_operation_dependencies(
     *,
     authority_operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
+    evidence_followup_ports: LedgerEvidenceFollowupOperationPorts | None = None,
+    modelo_query_read_ports_factory: ModeloQueryReadPortsFactory = build_modelo_query_read_ports,
+    recipient_registry_ports_factory: RecipientFingerprintRegistryPortsFactory = (
+        build_recipient_fingerprint_registry_ports
+    ),
+    recipient_event_repository_factory: BucketEventHistoryRepositoryFactory = build_bucket_event_history_repository,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
@@ -1495,6 +1579,10 @@ def compose_operation_dependencies(
     registry = build_production_operation_registry(
         modelo_profile_resolver=modelo_profile_resolver,
         settings=resolved_settings,
+        evidence_followup_ports=evidence_followup_ports,
+        modelo_query_read_ports_factory=modelo_query_read_ports_factory,
+        recipient_registry_ports_factory=recipient_registry_ports_factory,
+        recipient_event_repository_factory=recipient_event_repository_factory,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
         attachment_store_factory=attachment_store_factory,

@@ -18,28 +18,18 @@ from decimal import Decimal
 
 import typer
 
-from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.projection import (
-    ModeloCompareDeltaRow,
-    ModeloCompareNeedTwoYearsError,
-    ModeloCompareNoRevisionsError,
-    ModeloCompareNoUsableRevisionsError,
-    ModeloCompareNoWorkUnitsError,
-    ModeloCompareServiceResult,
-    ModeloProjectInvalidDecimalOverrideError,
-    ModeloProjectNoM130RevisionsError,
-    ModeloProjectNoM130UnitsError,
-    compare_modelo_years,
-    project_modelo_100_from_m130,
+from ...application.modelo.projection_operation import (
+    CompareDeltaRowProjection,
+    ModeloCompareOperationProjection,
+    ModeloCompareOperationRequest,
+    ModeloProjectOperationRequest,
+    ProjectionOverride,
 )
-from ...core.bucket_pointer import require_active_bucket_id
+from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ._modelo_behavior_support import require_active_profile
+from .common import active_bucket_id_or_refuse
 from ._modelo_cli_support import (
-    bad_parameter_from_error,
     bad_parameter_from_localized_context,
     parse_binding_override,
     parse_casilla_override,
@@ -54,10 +44,11 @@ from ._modelo_payloads import (
     ModeloProjectResult,
 )
 from .common import emit_envelope
-from .state_projection_support import authority_operation, calculation_action_ports_factory
+from .runtime_modelo_projection import run_modelo_compare, run_modelo_project
+from uuid import UUID
 
 
-def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
+def _delta_row_payload(row: CompareDeltaRowProjection) -> DeltaRowPayload:
     """Convert one :class:`ModeloCompareDeltaRow` into :class:`DeltaRowPayload`.
 
     The adapter preserves :class:`CasillaId` identity and registry provenance so
@@ -67,10 +58,10 @@ def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
         casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
-        year_a_value=_decimal_wire(row.year_a_value),
-        year_b_value=_decimal_wire(row.year_b_value),
-        delta=_decimal_wire(row.delta),
-        pct_change=_decimal_wire(row.pct_change) if row.pct_change is not None else None,
+        year_a_value=_decimal_wire(Decimal(row.year_a_value)),
+        year_b_value=_decimal_wire(Decimal(row.year_b_value)),
+        delta=_decimal_wire(Decimal(row.delta)),
+        pct_change=_decimal_wire(Decimal(row.pct_change)) if row.pct_change is not None else None,
         formula_id=row.formula_id,
         legal_refs=tuple(row.legal_refs),
         source_refs=tuple(row.source_refs),
@@ -85,7 +76,7 @@ def _decimal_wire(value: Decimal) -> str:
     return rendered
 
 
-__all__ = ["modelo_compare", "modelo_project", "require_active_profile"]
+__all__ = ["modelo_compare", "modelo_project"]
 
 
 def modelo_project(
@@ -98,31 +89,19 @@ def modelo_project(
     ``formula_id``, ``legal_refs``, and ``source_refs`` remain attached
     before :func:`emit_envelope` renders JSON or table output.
     """
-    require_active_profile()
+    profile_id = UUID(active_bucket_id_or_refuse())
     casilla_pairs = dict(parse_casilla_override(spec) for spec in casilla or ())
     binding_pairs = dict(parse_binding_override(spec) for spec in binding or ())
-    try:
-        service_result = project_modelo_100_from_m130(
+    service_result = run_modelo_project(
+        ctx,
+        ModeloProjectOperationRequest(
+            profile_id=profile_id,
             year=year,
             ccaa=ccaa,
-            ports=calculation_action_ports_factory(ctx)(
-                bucket_id=require_active_bucket_id(),
-                operation=authority_operation(ctx),
-            ),
-            casilla_overrides=casilla_pairs,
-            binding_overrides=binding_pairs,
-            operation=authority_operation(ctx),
-        )
-    except (
-        ModeloProjectNoM130UnitsError,
-        ModeloProjectNoM130RevisionsError,
-        ModeloProjectInvalidDecimalOverrideError,
-    ) as exc:
-        raise bad_parameter_from_localized_context(exc) from exc
-    except RegistrySnapshotError as exc:
-        raise bad_parameter_from_error(exc) from exc
-    except RegistryValidationError as exc:
-        raise bad_parameter_from_error(exc) from exc
+            casilla_overrides=tuple(ProjectionOverride(key=key, value=value) for key, value in casilla_pairs.items()),
+            binding_overrides=tuple(ProjectionOverride(key=key, value=value) for key, value in binding_pairs.items()),
+        ),
+    )
     project_result = ModeloProjectResult(
         year=service_result.year,
         ccaa=service_result.ccaa,
@@ -130,15 +109,15 @@ def modelo_project(
         quarters_available=list(service_result.quarters_available),
         is_extrapolated=service_result.is_extrapolated,
         m130_accumulated=M130AccumulatedPayload(
-            ingresos=_decimal_wire(service_result.m130_accumulated.ingresos),
-            gastos=_decimal_wire(service_result.m130_accumulated.gastos),
-            rendimiento_neto=_decimal_wire(service_result.m130_accumulated.rendimiento_neto),
-            pagos_fraccionados=_decimal_wire(service_result.m130_accumulated.pagos_fraccionados),
+            ingresos=_decimal_wire(Decimal(service_result.m130_accumulated.ingresos)),
+            gastos=_decimal_wire(Decimal(service_result.m130_accumulated.gastos)),
+            rendimiento_neto=_decimal_wire(Decimal(service_result.m130_accumulated.rendimiento_neto)),
+            pagos_fraccionados=_decimal_wire(Decimal(service_result.m130_accumulated.pagos_fraccionados)),
         ),
         casilla_observations=[
             CasillaObservationPayload(
                 casilla_id=entry.casilla_id,
-                value=_decimal_wire(entry.value),
+                value=_decimal_wire(Decimal(entry.value)),
                 formula_id=entry.formula_id,
                 legal_refs=tuple(entry.legal_refs),
                 source_refs=tuple(entry.source_refs),
@@ -146,13 +125,13 @@ def modelo_project(
             for entry in service_result.casilla_observations
         ],
         m100_projection=M100ProjectionPayload(
-            base_liquidable_general_0505=_decimal_wire(service_result.m100_projection.base_liquidable_general_0505),
-            pagos_fraccionados_0604=_decimal_wire(service_result.m100_projection.pagos_fraccionados_0604),
-            cuota_integra_estatal_0545=_decimal_wire(service_result.m100_projection.cuota_integra_estatal_0545),
-            cuota_integra_autonomica_0546=_decimal_wire(service_result.m100_projection.cuota_integra_autonomica_0546),
-            cuota_liquida_estatal_0595=_decimal_wire(service_result.m100_projection.cuota_liquida_estatal_0595),
-            cuota_liquida_autonomica_0596=_decimal_wire(service_result.m100_projection.cuota_liquida_autonomica_0596),
-            cuota_resultante_0597=_decimal_wire(service_result.m100_projection.cuota_resultante_0597),
+            base_liquidable_general_0505=_decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general_0505)),
+            pagos_fraccionados_0604=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados_0604)),
+            cuota_integra_estatal_0545=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal_0545)),
+            cuota_integra_autonomica_0546=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica_0546)),
+            cuota_liquida_estatal_0595=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal_0595)),
+            cuota_liquida_autonomica_0596=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica_0596)),
+            cuota_resultante_0597=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante_0597)),
         ),
     )
     extrapolation_note = (
@@ -178,28 +157,7 @@ def modelo_project(
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
-def _load_compare_service_result(
-    *,
-    modelo: str,
-    years: list[int],
-    ports: CalculationActionPorts,
-    operation: PinnedAuthorityOperation,
-) -> ModeloCompareServiceResult:
-    """Read the backend comparison result and translate its typed refusals."""
-    try:
-        return compare_modelo_years(modelo=modelo, years=years, ports=ports, operation=operation)
-    except (
-        ModeloCompareNeedTwoYearsError,
-        ModeloCompareNoWorkUnitsError,
-        ModeloCompareNoRevisionsError,
-        ModeloCompareNoUsableRevisionsError,
-    ) as exc:
-        raise bad_parameter_from_localized_context(exc) from exc
-    except RegistrySnapshotError as exc:
-        raise bad_parameter_from_error(exc) from exc
-
-
-def _compare_result_payload(service_result: ModeloCompareServiceResult) -> ModeloCompareResult:
+def _compare_result_payload(service_result: ModeloCompareOperationProjection) -> ModeloCompareResult:
     """Project typed backend rows and sections into the CLI result contract."""
     typed_delta_rows = [_delta_row_payload(row) for row in service_result.delta_rows]
     typed_sections = [
@@ -219,7 +177,7 @@ def _compare_result_payload(service_result: ModeloCompareServiceResult) -> Model
     )
 
 
-def _compare_lines(service_result: ModeloCompareServiceResult) -> list[str]:
+def _compare_lines(service_result: ModeloCompareOperationProjection) -> list[str]:
     """Render the comparison table while retaining the existing zero-row omission."""
     draft_note_a = " (BORRADOR)" if service_result.year_a_is_draft else ""
     draft_note_b = " (BORRADOR)" if service_result.year_b_is_draft else ""
@@ -232,7 +190,7 @@ def _compare_lines(service_result: ModeloCompareServiceResult) -> list[str]:
         "casilla_id\tlabel\tsection\tyear_a\tyear_b\tdelta\tpct_change",
     ]
     for row in service_result.delta_rows:
-        if row.delta == Decimal("0") and row.year_a_value == Decimal("0") and (row.year_b_value == Decimal("0")):
+        if Decimal(row.delta) == Decimal("0") and Decimal(row.year_a_value) == Decimal("0") and Decimal(row.year_b_value) == Decimal("0"):
             continue
         pct = row.pct_change if row.pct_change is not None else "n/a"
         lines.append(
@@ -248,15 +206,18 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
     schema preserves ``formula_id``, ``legal_refs``, and ``source_refs`` for
     every compared :class:`CasillaId`.
     """
-    require_active_profile()
-    service_result = _load_compare_service_result(
-        modelo=modelo,
-        years=list(year or ()),
-        ports=calculation_action_ports_factory(ctx)(
-            bucket_id=require_active_bucket_id(),
-            operation=authority_operation(ctx),
+    years = tuple(year or ())
+    if len(years) != 2:
+        raise bad_parameter_from_localized_context(
+            ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
+        )
+    service_result = run_modelo_compare(
+        ctx,
+        ModeloCompareOperationRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            modelo=modelo,
+            years=years,
         ),
-        operation=authority_operation(ctx),
     )
     compare_result = _compare_result_payload(service_result)
     lines = _compare_lines(service_result)

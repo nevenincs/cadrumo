@@ -14,47 +14,51 @@ whole value of the gate is the per-document attention it forces.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Final
 
 import typer
 
-from ...application.ledger.confirmation_gate import ConfirmationBlocker, FindingResolution, confirmation_blockers
-from ...application.ledger.country_vocabulary_advisory import CountryVocabularyAdvisory, country_vocabulary_advisory
-from ...application.ledger.extraction_draft_store import (
-    ExtractionDraftDocument,
-    StoredExtractionDraft,
-    load_extraction_drafts,
+from ...application.ledger.confirmation_gate import FindingResolution
+from ...application.ledger.evidence_followup_operation import (
+    CountryVocabularyAdvisoryProjection,
+    LedgerEvidenceReviewViewProjection,
+    PartyAttributionAdvisoryProjection,
 )
-from ...application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
-from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from ...application.ledger.party_attribution import PartyAttributionAdvisory, party_attribution_advisory
-from ...application.ledger.review_advisories import review_advisory_kinds
+from ...application.ledger.invoice_draft_payloads import EvidenceDraftDiscrepancyPayload
+from ...application.ledger.invoice_evidence_operation_dtos import (
+    ConfirmationBlockerProjectionV1,
+    FieldProvenanceProjectionV1,
+    InvoiceDraftProjectionV1,
+)
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.operator_actions.models import ActionReference
-from ...core.config import load_settings
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
-from ...domain.iva.regime_legend import resolve_regime_legends
-from .common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
+from .common import bad, emit_envelope, resolve_notice_action
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,
-    EvidenceReviewListResult,
     EvidenceReviewRowPayload,
     EvidenceReviewViewResult,
 )
-from .state_projection_support import authority_operation
+from .runtime_ledger_evidence_followup import (
+    run_ledger_evidence_review_list,
+    run_ledger_evidence_review_view,
+)
 
 
 def _printed(value: object | None) -> str | None:
     """Return a draft value as the review surface prints it, or ``None``."""
     if value is None:
         return None
-    if hasattr(value, "as_tuple"):
+    if isinstance(value, Decimal):
         return format(value, "f")
+    if isinstance(value, PublicDecimal):
+        return format(Decimal(value.decimal), "f")
     return str(getattr(value, "value", value))
 
 
@@ -63,7 +67,7 @@ def _candidate_payloads(blocker_or_envelope: object) -> list[dict[str, object]]:
     return [candidate.model_dump(mode="json") for candidate in candidates]
 
 
-def _blocker_payload(blocker: ConfirmationBlocker) -> EvidenceReviewBlockerPayload:
+def _blocker_payload(blocker: ConfirmationBlockerProjectionV1) -> EvidenceReviewBlockerPayload:
     return EvidenceReviewBlockerPayload.model_validate(
         {
             "blocker_id": blocker.blocker_id,
@@ -75,7 +79,7 @@ def _blocker_payload(blocker: ConfirmationBlocker) -> EvidenceReviewBlockerPaylo
     )
 
 
-def _field_envelope_payload(envelope: FieldProvenance | None) -> dict[str, object]:
+def _field_envelope_payload(envelope: FieldProvenanceProjectionV1 | None) -> dict[str, object]:
     """Project one field's provenance envelope onto its review-row columns.
 
     A field the reader recovered nothing for still emits every column, so an
@@ -107,7 +111,7 @@ def _field_envelope_payload(envelope: FieldProvenance | None) -> dict[str, objec
     }
 
 
-def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
+def _field_payloads(draft: InvoiceDraftProjectionV1) -> list[EvidenceReviewFieldPayload]:
     """Return one review row per scalar draft field, envelope attached when present.
 
     Every scalar field is emitted, not only the ones an envelope exists for. A
@@ -118,7 +122,14 @@ def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
     envelopes = {envelope.field: envelope for envelope in draft.provenance}
     rows: list[EvidenceReviewFieldPayload] = []
     for field in type(draft).model_fields:
-        if field in {"provenance", "discrepancies", "lines", "iva_breakdown", "raw_text_length"}:
+        if field in {
+            "provenance",
+            "discrepancies",
+            "lines",
+            "iva_breakdown",
+            "raw_text_length",
+            "facturae_invoice_class",
+        }:
             continue
         rows.append(
             EvidenceReviewFieldPayload.model_validate(
@@ -132,7 +143,7 @@ def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
     return rows
 
 
-def _suggested_kind_basis(draft: InvoiceDraft) -> str:
+def _suggested_kind_basis(draft: InvoiceDraftProjectionV1) -> str:
     """Return what the reading path read the direction suggestion FROM.
 
     The suggestion is never the decision --- direction is chosen by the operator
@@ -145,7 +156,7 @@ def _suggested_kind_basis(draft: InvoiceDraft) -> str:
     return ""
 
 
-def _party_attribution_notice(advisory: PartyAttributionAdvisory) -> Notice:
+def _party_attribution_notice(advisory: PartyAttributionAdvisoryProjection) -> Notice:
     """Project the attribution advisory into the envelope's one diagnostic channel.
 
     A Notice rather than a field on the review payload, and the distinction is
@@ -163,7 +174,7 @@ def _party_attribution_notice(advisory: PartyAttributionAdvisory) -> Notice:
     for party in advisory.parties:
         context[f"{party.role}_fields"] = ",".join(party.fields)
         context[f"{party.role}_territory_if_attributed"] = (
-            party.scope_if_attributed.value if party.scope_if_attributed is not None else "undetermined"
+            party.scope_if_attributed if party.scope_if_attributed is not None else "undetermined"
         )
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -220,7 +231,7 @@ def _country_notice_message(status: StatedCountryCodeStatus) -> str:
     return tr("cli.app.ledger.evidence.review.country_code_uncatalogued_message")
 
 
-def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Notice]:
+def _country_vocabulary_notices(advisory: CountryVocabularyAdvisoryProjection) -> list[Notice]:
     """Project the country-vocabulary advisory into one notice per kind.
 
     Non-blocking on purpose. The bundled vocabulary carries a bounded subset of
@@ -266,109 +277,6 @@ def _country_vocabulary_lines(notice: Notice) -> list[str]:
         if key.endswith("_country_code")
     )
     return lines
-
-
-def _review_queue_rows(
-    document: ExtractionDraftDocument,
-    *,
-    reason: ConfirmationBlockReason | None,
-    finding: DraftDiscrepancyKind | None,
-    advisory: ReviewAdvisoryKind | None,
-    blocking_only: bool,
-    operation: PinnedAuthorityOperation,
-) -> list[EvidenceReviewRowPayload]:
-    """Project the pending drafts the operator's filters keep, in reference order.
-
-    Every filter narrows the same queue; a draft must satisfy all of the ones
-    the operator supplied to survive.
-    """
-    rows: list[EvidenceReviewRowPayload] = []
-    for stored in sorted(document.drafts, key=lambda row: row.evidence_reference):
-        row = _review_queue_row(
-            stored,
-            reason=reason,
-            finding=finding,
-            advisory=advisory,
-            blocking_only=blocking_only,
-            operation=operation,
-        )
-        if row is not None:
-            rows.append(row)
-    return rows
-
-
-def _review_queue_row(
-    stored: StoredExtractionDraft,
-    *,
-    reason: ConfirmationBlockReason | None,
-    finding: DraftDiscrepancyKind | None,
-    advisory: ReviewAdvisoryKind | None,
-    blocking_only: bool,
-    operation: PinnedAuthorityOperation,
-) -> EvidenceReviewRowPayload | None:
-    """Project one draft when it satisfies every supplied queue filter."""
-    blockers = confirmation_blockers(stored.draft)
-    reasons = sorted({blocker.reason.value for blocker in blockers})
-    # Read through the one projection the show surface's notices use; the queue
-    # must not independently classify a document it sends the operator to review.
-    advisories = review_advisory_kinds(stored.draft, operation=operation)
-    if not _review_queue_matches(
-        stored,
-        reason=reason,
-        finding=finding,
-        advisory=advisory,
-        blocking_only=blocking_only,
-        reasons=reasons,
-        advisories=advisories,
-        blockers=blockers,
-    ):
-        return None
-    return _review_queue_payload(
-        stored,
-        blockers=blockers,
-        reasons=reasons,
-        advisories=advisories,
-    )
-
-
-def _review_queue_matches(
-    stored: StoredExtractionDraft,
-    *,
-    reason: ConfirmationBlockReason | None,
-    finding: DraftDiscrepancyKind | None,
-    advisory: ReviewAdvisoryKind | None,
-    blocking_only: bool,
-    reasons: list[str],
-    advisories: tuple[ReviewAdvisoryKind, ...],
-    blockers: tuple[ConfirmationBlocker, ...],
-) -> bool:
-    if reason is not None and reason.value not in reasons:
-        return False
-    if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
-        return False
-    if advisory is not None and advisory not in advisories:
-        return False
-    return not blocking_only or bool(blockers)
-
-
-def _review_queue_payload(
-    stored: StoredExtractionDraft,
-    *,
-    blockers: tuple[ConfirmationBlocker, ...],
-    reasons: list[str],
-    advisories: tuple[ReviewAdvisoryKind, ...],
-) -> EvidenceReviewRowPayload:
-    return EvidenceReviewRowPayload.model_validate(
-        {
-            "evidence_reference": stored.evidence_reference,
-            "extractor": stored.extractor,
-            "drafted_at": stored.drafted_at.isoformat(),
-            "blocking_count": len(blockers),
-            "reasons": reasons,
-            "advisory_count": len(advisories),
-            "advisories": [kind.value for kind in advisories],
-        },
-    )
 
 
 def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
@@ -424,27 +332,15 @@ def review_list(
     blocking_only: bool = False,
 ) -> None:
     """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
-    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
-    document = load_extraction_drafts(bucket_id, load_settings())
-    operation = authority_operation(ctx)
-    filters: list[str] = []
-    if reason is not None:
-        filters.append(f"reason={reason.value}")
-    if finding is not None:
-        filters.append(f"finding={finding.value}")
-    if advisory is not None:
-        filters.append(f"advisory={advisory.value}")
-    if blocking_only:
-        filters.append("blocking=true")
-    rows = _review_queue_rows(
-        document,
+    result = run_ledger_evidence_review_list(
+        ctx,
         reason=reason,
         finding=finding,
         advisory=advisory,
         blocking_only=blocking_only,
-        operation=operation,
     )
-    lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
+    rows = result.rows
+    lines = [f"bucket_id\t{result.bucket_id}", f"pending\t{len(rows)}"]
     lines.extend(
         f"{row.evidence_reference}\t{row.blocking_count}\t"
         f"{','.join(row.reasons) or '-'}\t{row.extractor}\t"
@@ -455,29 +351,15 @@ def review_list(
     emit_envelope(
         ctx,
         command="ledger.evidence.review.list",
-        result=EvidenceReviewListResult.model_validate(
-            {"bucket_id": bucket_id, "filters": filters, "rows": [row.model_dump(mode="json") for row in rows]}
-        ),
+        result=result,
         lines=lines,
         notices=notices,
     )
 
 
-def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: str) -> StoredExtractionDraft:
-    """Resolve one pending draft by reference, naming the known set when it misses."""
-    for row in document.drafts:
-        if row.evidence_reference == reference:
-            return row
-    known = ", ".join(sorted(row.evidence_reference for row in document.drafts)) or "none"
-    raise bad(
-        tr("cli.app.ledger.evidence.review.unknown_reference") + f" ({known})",
-    )
-
-
 def _review_view_advisories(
-    draft: InvoiceDraft,
-    *,
-    operation: PinnedAuthorityOperation,
+    party_advisory: PartyAttributionAdvisoryProjection | None,
+    country_advisory: CountryVocabularyAdvisoryProjection | None,
 ) -> tuple[list[Notice], list[str]]:
     """Return the non-blocking advisories for one draft, as notices and their text lines.
 
@@ -486,19 +368,10 @@ def _review_view_advisories(
     """
     notices: list[Notice] = []
     lines: list[str] = []
-    advisory = party_attribution_advisory(
-        draft,
-        legends=resolve_regime_legends(
-            operation=operation,
-            effective_date=default_invoice_extraction_period().end_date,
-        ),
-        operation=operation,
-    )
-    if advisory is not None:
-        attribution_notice = _party_attribution_notice(advisory)
+    if party_advisory is not None:
+        attribution_notice = _party_attribution_notice(party_advisory)
         notices.append(attribution_notice)
         lines.extend(_party_attribution_lines(attribution_notice))
-    country_advisory = country_vocabulary_advisory(draft, operation=operation)
     if country_advisory is not None:
         for country_notice in _country_vocabulary_notices(country_advisory):
             notices.append(country_notice)
@@ -508,39 +381,50 @@ def _review_view_advisories(
 
 def _review_view_payload(
     bucket_id: str,
-    stored: StoredExtractionDraft,
-    draft: InvoiceDraft,
+    projection: LedgerEvidenceReviewViewProjection,
     fields: list[EvidenceReviewFieldPayload],
-    blockers: tuple[ConfirmationBlocker, ...],
+    blockers: tuple[ConfirmationBlockerProjectionV1, ...],
 ) -> dict[str, object]:
     """Project one stored draft into the review view's JSON result shape."""
+    draft = projection.draft
     return {
         "bucket_id": bucket_id,
-        "evidence_reference": stored.evidence_reference,
-        "extractor": stored.extractor,
-        "drafted_at": stored.drafted_at.isoformat(),
+        "evidence_reference": projection.evidence_reference,
+        "extractor": projection.extractor,
+        "drafted_at": projection.drafted_at.isoformat(),
         "transcription_sha256": draft.transcription_sha256,
         "suggested_kind": draft.suggested_kind.value if draft.suggested_kind is not None else None,
         "suggested_kind_basis": _suggested_kind_basis(draft),
         "fields": [row.model_dump(mode="json") for row in fields],
-        "discrepancies": [finding.model_dump(mode="json") for finding in draft.discrepancies],
+        "discrepancies": [
+            EvidenceDraftDiscrepancyPayload.model_validate(
+                {
+                    "kind": finding.kind.value,
+                    "field": finding.field,
+                    "detail": finding.detail,
+                    "expected": None if finding.expected is None else finding.expected.decimal,
+                    "observed": None if finding.observed is None else finding.observed.decimal,
+                }
+            ).model_dump(mode="json")
+            for finding in draft.discrepancies
+        ],
         "blockers": [_blocker_payload(blocker).model_dump(mode="json") for blocker in blockers],
     }
 
 
 def _review_view_lines(
     bucket_id: str,
-    stored: StoredExtractionDraft,
-    draft: InvoiceDraft,
+    projection: LedgerEvidenceReviewViewProjection,
     fields: list[EvidenceReviewFieldPayload],
-    blockers: tuple[ConfirmationBlocker, ...],
+    blockers: tuple[ConfirmationBlockerProjectionV1, ...],
 ) -> list[str]:
     """Render the review view's tab-separated text rows in contract order."""
+    draft = projection.draft
     lines = [
         f"bucket_id\t{bucket_id}",
-        f"evidence_reference\t{stored.evidence_reference}",
-        f"extractor\t{stored.extractor}",
-        f"drafted_at\t{stored.drafted_at.isoformat()}",
+        f"evidence_reference\t{projection.evidence_reference}",
+        f"extractor\t{projection.extractor}",
+        f"drafted_at\t{projection.drafted_at.isoformat()}",
         f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
         f"suggested_kind\t{(draft.suggested_kind.value if draft.suggested_kind is not None else '-')}",
     ]
@@ -555,13 +439,14 @@ def _review_view_lines(
 
 
 def _review_view_notices(
-    draft: InvoiceDraft,
-    blockers: tuple[ConfirmationBlocker, ...],
-    *,
-    operation: PinnedAuthorityOperation,
+    projection: LedgerEvidenceReviewViewProjection,
+    blockers: tuple[ConfirmationBlockerProjectionV1, ...],
 ) -> tuple[list[Notice], list[str]]:
     """Return advisory notices/lines followed by the blocking notice, if any."""
-    notices, lines = _review_view_advisories(draft, operation=operation)
+    notices, lines = _review_view_advisories(
+        projection.party_attribution_advisory,
+        projection.country_vocabulary_advisory,
+    )
     if blockers:
         notices.append(
             Notice(
@@ -576,20 +461,18 @@ def _review_view_notices(
 
 def review_view(ctx: typer.Context, reference: str) -> None:
     """Show every reviewable field of one pending draft, with its blocking findings."""
-    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
-    document = load_extraction_drafts(bucket_id, load_settings())
-    operation = authority_operation(ctx)
-    stored = _stored_draft_for_reference(document, reference)
-    draft = stored.draft
-    blockers = confirmation_blockers(draft)
+    projection = run_ledger_evidence_review_view(ctx, evidence_reference=reference)
+    bucket_id = str(projection.profile_id)
+    blockers = projection.blockers
+    draft = projection.draft
     fields = _field_payloads(draft)
-    payload = _review_view_payload(bucket_id, stored, draft, fields, blockers)
-    lines = _review_view_lines(bucket_id, stored, draft, fields, blockers)
-    notices, advisory_lines = _review_view_notices(draft, blockers, operation=operation)
+    payload = _review_view_payload(bucket_id, projection, fields, blockers)
+    lines = _review_view_lines(bucket_id, projection, fields, blockers)
+    notices, advisory_lines = _review_view_notices(projection, blockers)
     lines.extend(advisory_lines)
     emit_envelope(
         ctx,
-        command="ledger.evidence.review.show",
+        command="ledger.evidence.review.view",
         result=EvidenceReviewViewResult.model_validate(payload),
         lines=lines,
         notices=notices,

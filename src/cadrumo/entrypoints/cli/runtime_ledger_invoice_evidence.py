@@ -46,9 +46,9 @@ def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[Pr
     )
 
 
-def _submit[RequestT: BaseModel, ProjectionT: BaseModel](
+def _submit[ProjectionT: BaseModel](
     ctx: typer.Context,
-    request: RequestT,
+    request: BaseModel,
     *,
     definition_id: str,
     result_type: type[ProjectionT],

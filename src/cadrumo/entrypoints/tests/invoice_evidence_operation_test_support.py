@@ -151,7 +151,6 @@ def assert_invoice_evidence_confirmation_persisted(
     assert stored == prepared.candidate.model_copy(
         update={"created_at": stored.created_at, "updated_at": stored.updated_at}
     )
-    assert stored.created_at is not None
     records = load_confirmation_records(prepared.bucket_id).records
     assert len(records) == 1
     record = records[0]

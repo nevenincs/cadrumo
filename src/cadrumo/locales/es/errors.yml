@@ -823,6 +823,9 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_evidence_review_changed: El justificante o el borrador de la
+      factura ha cambiado desde la revisión. Vuelva a leer y revisar el documento
+      actual antes de confirmarlo.
     canonical_invoice_withholding_evidence: La evidencia de la factura no permite
       registrar la retención.
     canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar

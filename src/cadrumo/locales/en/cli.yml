@@ -101,15 +101,11 @@ cli:
         confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
           yet; normally required).
         confirm_counterparty_nif_help: Override the extracted supplier tax id.
-        confirm_expected_source_sha256_help: SHA-256 of the evidence source returned by extract; verifies that the bytes are unchanged.
-        confirm_expected_draft_review_sha256_help: Review digest of the exact draft you inspected, returned by extract.
-        confirm_iva_amount_help: Override the extracted IVA amount; omit to keep it.
-        confirm_iva_category_help: IVA category token to record for this invoice.
-        confirm_operation_date_help: Date of the taxable operation (ISO YYYY-MM-DD).
-        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
-        confirm_retention_amount_help: Income-tax withholding amount from the invoice.
-        confirm_recargo_amount_help: Equivalence surcharge amount from the invoice.
         confirm_currency_help: ISO-4217 currency code.
+        confirm_expected_draft_review_sha256_help: Review digest of the exact draft
+          you inspected, returned by extract.
+        confirm_expected_source_sha256_help: SHA-256 of the evidence source returned
+          by extract; verifies that the bytes are unchanged.
         confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
           Invoice.
         confirm_invoice_class_help: Declare the invoice class when the document does
@@ -117,10 +113,13 @@ cli:
           the invoice it corrects, so this is the override for documents that do not.
         confirm_invoice_date_help: Override the extracted invoice date (YYYY-MM-DD).
         confirm_invoice_number_help: Override the extracted invoice number.
+        confirm_iva_amount_help: Override the extracted IVA amount; omit to keep it.
+        confirm_iva_category_help: IVA category token to record for this invoice.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
           value).
         confirm_link_hint_message: The invoice was recorded without a matching ledger
           transaction.
+        confirm_operation_date_help: Date of the taxable operation (ISO YYYY-MM-DD).
         confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
           Required when the document states an intra-community supply: the category
           cannot say whether it followed an exempt importation.'
@@ -129,12 +128,15 @@ cli:
           taxable base and the IVA rate, so a difference means the document carries
           an amount this record does not, such as a recargo de equivalencia, or a
           figure was misread. Check the document.
+        confirm_recargo_amount_help: Equivalence surcharge amount from the invoice.
         confirm_rectifies_help: Number of the invoice this rectificativa corrects.
           Required by RD 1619/2012 art. 6.1.a.2 alongside its own series, and read
           from the document where one is named.
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per finding; there is no bulk flag.'
+        confirm_retention_amount_help: Income-tax withholding amount from the invoice.
+        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
         confirm_review_contradicted_regime_message: This document contradicts itself
           about how it is taxed. The detail below names what disagreed with what.
         confirm_review_undetermined_establishment_message: Where a party to this invoice
@@ -431,8 +433,6 @@ cli:
         seed_help: Seed the ejercicio's provisional prorrata from the prior year's
           definitive percentage (LIVA art. 105.Uno), read from the stamped prior Modelo
           303 settlement observation.
-        seed_sector_requires_route: A sector cannot be passed to whole-entity seed;
-          use seed-sector for a differentiated sector.
         seed_local_authority: The provisional percentage was carried locally from
           your stored {modelo} {filing_year} {period} settlement observation (LIVA
           art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.
@@ -446,6 +446,8 @@ cli:
           definitive percentage for {prior_ejercicio}, so ejercicio {ejercicio} cannot
           be seeded. The prior definitive is missing, not zero: settle {prior_ejercicio}
           for this sector first.'
+        seed_sector_requires_route: A sector cannot be passed to whole-entity seed;
+          use seed-sector for a differentiated sector.
         seed_source_absent: 'No stamped Modelo 303 settlement observation for {prior_ejercicio}
           carries a definitive prorrata percentage, so ejercicio {ejercicio} cannot
           be seeded. The prior definitive is missing, not zero: capture the prior

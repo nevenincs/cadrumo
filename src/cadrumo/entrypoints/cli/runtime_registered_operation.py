@@ -244,6 +244,7 @@ def _run_registered_operation[ResultT: BaseModel](
                 or (condition.value if condition is not None else "unknown"),
                 terminal_condition=condition,
                 effect=effect,
+                refusal_code=refusal_code,
             )
         document = client.read_result_document(
             OperationResultProjectionRequestV1(

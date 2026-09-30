@@ -1686,11 +1686,46 @@ tui:
       confirming: A számla rögzítése a dokumentum alapján…
       detail: 'Méret: {size} bájt · rögzítve: {captured}'
       draft:
+        adjustments: 'Áfapótlék: {recargo} · forrásadó kulcsa: {retention_rate} ·
+          forrásadó-levonás: {retention} · ügyfél nevében kifizetett költségek: {suplidos}'
         amounts: Alap {base} · IVA {rate}% = {iva} · összesen {total} {currency}
+        breakdown: '{index}. adókulcs: {rate} · adóalap: {base} · áfa: {iva} · áfapótlék
+          kulcsa: {recargo_rate} · áfapótlék: {recargo}'
+        breakdown_empty: Nincs adókulcsonkénti bontás
+        breakdown_heading: Adókulcsonkénti bontás
+        candidate: 'Lehetséges adat: {field} = {value} · forráshely: {anchor} · megjegyzés:
+          {note}'
+        customer_role: Vevő
         discrepancies: 'A dokumentummal nem egyező ellenőrzések: {count}'
+        document: 'Bizonylat {number} · sorozat: {series} · kelte: {date} · helyesbítő
+          bizonylat: {rectifies} · teljesítés jellege: {supply_nature} · áfakategória:
+          {iva_category} · javasolt számlatípus: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · elvárt: {expected} · észlelt: {observed}'
+        findings_empty: Nincsenek megállapítások
+        findings_heading: Ellenőrzési megállapítások
         identity: '{number} számla, kelte {date}'
+        line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
+          · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
+          · áfapótlék: {recargo}'
+        lines_empty: Nincsenek tételek
+        lines_heading: Tételek
+        'no': Nem
+        party: '{role}: {name} · adóazonosító: {tax_id} · irányítószám: {postal_code}
+          · ország: {country} · országkód: {country_code} · megadott országkód: {stated_country_code}'
+        provenance: 'Mező: {field} · eredet: {origin} · alátámasztás: {grounding}
+          · forráshely: {anchor} · elutasított forráshely: {refused_anchor} · saját
+          közlés: {self_reported} · ebből származik: {derived_from} · szerepet igazoló
+          adat: {role_evidence} · nem ellenőrzött: {unverified} · megjegyzés: {note}'
+        provenance_empty: Nincsenek származási adatok
+        provenance_heading: Származási adatok
+        regime: 'Adózási rendszer: {value}'
+        source_metadata: 'A forrás adatai · átirat SHA-256 lenyomata: {transcription_sha256}
+          · nyers szöveg hossza: {raw_text_length}'
+        structured_class: 'Dokumentumbesorolás: {kind} · forráskód: {source_code}'
         supplier: 'Szállító: {name} · NIF {nif}'
+        supplier_role: Szállító
         unread: nem olvasható
+        'yes': Igen
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       loading: A dokumentumok beolvasása…
@@ -1718,7 +1753,8 @@ tui:
       records_empty: Még nincs rögzített számladokumentum.
       records_heading: Számladokumentumok ezen a gépen
       reviewed: Ellenőrizve
-      safe_metadata: Csak biztonságos metaadatok; a dokumentum tartalma védett marad.
+      safe_metadata: A forrásdokumentum továbbra is védett és titkosított; a belőle
+        kinyert mezők ellenőrzésre jelennek meg.
       title: Bizonylatok ellenőrzése
     flow:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet

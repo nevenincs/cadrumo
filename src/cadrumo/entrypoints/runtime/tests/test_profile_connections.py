@@ -139,7 +139,9 @@ def login(client: VerifiedRuntimeConnection, profile: UUID, method: str, raw: by
             "frontend": OperationFrontendProjection.MCP if method == "api_key" else OperationFrontendProjection.CLI,
         }
     )
-    result = client.login(request, buffer, deadline=time.monotonic() + 20)
+    # Admission now completes the worker's one-time public registry graph
+    # before releasing a usable session; the real frontend reserves 75s.
+    result = client.login(request, buffer, deadline=time.monotonic() + 75)
     assert buffer == bytes(len(raw))
     return result
 
@@ -188,6 +190,23 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
                 assert isinstance(human_result, RuntimeProfileStatus), human_result
                 human_id = human_result.status.session_id
                 assert human_id is not None
+                for admitted_client, admitted_session in ((api, api_id), (human, human_id)):
+                    # Both lease installation and human binding finish the
+                    # worker graph before advertising the admitted session.
+                    described = admitted_client.operation(
+                        RuntimeOperationContract(
+                            request_id=uuid4(),
+                            profile_id=profile,
+                            session_id=admitted_session,
+                            definition_id="user-profile.field-mutation",
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(described, RuntimeOperationContractReply), described
+                    assert (
+                        content_hash_hex(described.request_json_schema)
+                        == described.contract.request_schema.schema_fingerprint
+                    )
                 stolen = other.session(
                     RuntimeSessionRequest(
                         action="session_status", request_id=uuid4(), profile_id=profile, session_id=api_id

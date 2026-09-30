@@ -247,7 +247,10 @@ class LedgerWorkspaceController:
                 and (self.classify_action is None or self.classification_submitter is None)
             )
             or (area is LedgerWorkspaceArea.IMPORT and self.import_door is None)
-            or (area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None))
+            or (
+                area is LedgerWorkspaceArea.EVIDENCE
+                and (self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))
+            )
         )
 
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:

@@ -106,15 +106,11 @@ cli:
         confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
           segítő heurisztika; általában kötelező).
         confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
-        confirm_expected_source_sha256_help: A bizonylatkinyerés során visszaadott SHA-256 lenyomat; ellenőrzi, hogy a bájtok változatlanok.
-        confirm_expected_draft_review_sha256_help: Az áttekintett pontos tervezet ellenőrzési lenyomata, amelyet a kinyerés adott vissza.
-        confirm_iva_amount_help: Felülírja a kinyert áfaösszeget; elhagyásával megőrzi azt.
-        confirm_iva_category_help: A számlához rögzítendő áfakategória azonosítója.
-        confirm_operation_date_help: Az adóköteles ügylet dátuma (ISO ÉÉÉÉ-HH-NN).
-        confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
-        confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
-        confirm_recargo_amount_help: A számlán szereplő egyenértékűségi pótdíj összege.
         confirm_currency_help: ISO-4217 pénznemkód.
+        confirm_expected_draft_review_sha256_help: Az áttekintett pontos tervezet
+          ellenőrzési lenyomata, amelyet a kinyerés adott vissza.
+        confirm_expected_source_sha256_help: A bizonylatkinyerés során visszaadott
+          SHA-256 lenyomat; ellenőrzi, hogy a bájtok változatlanok.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
         confirm_invoice_class_help: Adja meg a számla osztályát, ha a dokumentum nem
           jelöli. A helyesbítő számlát a dokumentumból olvassuk ki, ha megnevezi a
@@ -122,10 +118,14 @@ cli:
           nem teszik.
         confirm_invoice_date_help: Felülírja a kinyert számla dátumát (ÉÉÉÉ-HH-NN).
         confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
+        confirm_iva_amount_help: Felülírja a kinyert áfaösszeget; elhagyásával megőrzi
+          azt.
+        confirm_iva_category_help: A számlához rögzítendő áfakategória azonosítója.
         confirm_iva_rate_help: Felülírja a kinyert ÁFA-kulcsot (hagyja ki a kinyert
           érték megtartásához).
         confirm_link_hint_message: A számla megfelelő főkönyvi tranzakció nélkül került
           rögzítésre.
+        confirm_operation_date_help: Az adóköteles ügylet dátuma (ISO ÉÉÉÉ-HH-NN).
         confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen belüli termekertekesiteshez.
           Kötelező, ha a dokumentum kozossegen belüli ertekesitest jelöl: a kategória
           nem mondja meg, hogy adómentes behozatalt követett-e.'
@@ -135,12 +135,15 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizze a dokumentumot.
+        confirm_recargo_amount_help: A számlán szereplő egyenértékűségi pótdíj összege.
         confirm_rectifies_help: Annak a számlának a száma, amelyet ez a helyesbítő
           számla javít. Az RD 1619/2012 6.1.a.2 cikke a saját sorozattal együtt megköveteli,
           és a dokumentumból olvassuk ki, ha megadja.
         confirm_resolve_help: 'Válaszoljon egy blokkoló észrevételre: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
           A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
           nevezze meg. Észrevételenként egyszer ismételje; nincs tömeges kapcsoló.'
+        confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
+        confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
           abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
         confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
@@ -174,8 +177,7 @@ cli:
           adatokat ki kell nyerni (a --evidence-id alternatívája).
         extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
           az adatokat ki kell nyerni.
-        extract_help: A számla PDF-mezőinek helyi kinyerése áttekinthető
-          piszkozatba.
+        extract_help: A számla PDF-mezőinek helyi kinyerése áttekinthető piszkozatba.
         extract_off_host_needs_content_address: Ennek a bizonylatnak nincs tartalmi
           lenyomata, ezért a gépen kívüli beolvasás nem rögzíthető az elküldendő bájtokhoz
           kötve.
@@ -460,8 +462,6 @@ cli:
         seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
           év végleges százalékából (LIVA 105.Uno cikk), a lepecsételt előző 303-as
           modell elszámolási megfigyeléséből olvasva.
-        seed_sector_requires_route: Ágazat nem adható meg a teljes tevékenység átvezetéséhez;
-          elkülönített ágazathoz használd a seed-sector parancsot.
         seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {filing_year}
           {period} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno cikk).
           Ez nem az AEAT által erre az adóévre kiadott százalék.
@@ -476,6 +476,8 @@ cli:
           végleges százaléka a(z) {prior_ejercicio} évre, ezért a(z) {ejercicio} adóév
           nem vezethető át. Az előző végleges érték hiányzik, nem nulla: előbb számold
           el a(z) {prior_ejercicio} évet erre az ágazatra.'
+        seed_sector_requires_route: Ágazat nem adható meg a teljes tevékenység átvezetéséhez;
+          elkülönített ágazathoz használd a seed-sector parancsot.
         seed_source_absent: 'A(z) {prior_ejercicio} évre egyetlen lepecsételt 303-as
           modell elszámolási megfigyelés sem tartalmaz végleges arányosítási százalékot,
           ezért a(z) {ejercicio} adóév nem vezethető át. Az előző végleges érték hiányzik,
@@ -951,7 +953,8 @@ cli:
           declaration_kind_undetermined: '{modelo} modell, {period} {filing_year}:
             az AEAT egy későbbi benyújtást rögzít anélkül, hogy jelezné, helyesbítés-e.'
           filing_instance_evidence_unavailable: '{modelo} modell, {period} {filing_year}:
-            az AEAT-bejegyzésből hiányzik a tartalom rögzítéséhez szükséges benyújtási bizonyíték.'
+            az AEAT-bejegyzésből hiányzik a tartalom rögzítéséhez szükséges benyújtási
+            bizonyíték.'
           receipt_totals_mismatch: '{modelo} modell, {period} {filing_year}: az igazolás
             végösszege eltér a függő helyi benyújtástól, de mezőértékek nélkül az
             AEAT tartalma nem rögzíthető.'

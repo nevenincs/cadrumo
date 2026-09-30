@@ -1708,11 +1708,48 @@ tui:
       confirming: Registrando la factura a partir del documento…
       detail: 'Tamaño: {size} bytes · capturado {captured}'
       draft:
+        adjustments: 'Recargo: {recargo} · tipo de retención: {retention_rate} · retención:
+          {retention} · suplidos: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. tipo: {rate} · base: {base} · IVA: {iva} · tipo de recargo:
+          {recargo_rate} · recargo: {recargo}'
+        breakdown_empty: No hay desglose por tipo
+        breakdown_heading: Desglose
+        candidate: 'Valor propuesto: {field} = {value} · referencia: {anchor} · nota:
+          {note}'
+        customer_role: Cliente
         discrepancies: 'Comprobaciones que no cuadran con el documento: {count}'
+        document: 'Documento {number} · serie: {series} · fecha: {date} · rectifica:
+          {rectifies} · naturaleza del suministro: {supply_nature} · categoría de
+          IVA: {iva_category} · tipo sugerido: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · esperado: {expected} · observado: {observed}'
+        findings_empty: No hay observaciones
+        findings_heading: Observaciones
         identity: Factura {number} con fecha {date}
+        line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
+          · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
+          · recargo: {recargo}'
+        lines_empty: No hay líneas
+        lines_heading: Líneas
+        'no': 'No'
+        party: '{role}: {name} · identificador fiscal: {tax_id} · código postal: {postal_code}
+          · país: {country} · código de país: {country_code} · código de país declarado:
+          {stated_country_code}'
+        provenance: 'Campo: {field} · origen: {origin} · fundamento: {grounding} ·
+          referencia: {anchor} · referencia rechazada: {refused_anchor} · declaración
+          propia: {self_reported} · derivado de: {derived_from} · prueba del rol:
+          {role_evidence} · no verificado: {unverified} · nota: {note}'
+        provenance_empty: No hay datos de procedencia
+        provenance_heading: Procedencia de los datos
+        regime: 'Régimen: {value}'
+        source_metadata: 'Metadatos de la fuente · SHA-256 de la transcripción: {transcription_sha256}
+          · longitud del texto original: {raw_text_length}'
+        structured_class: 'Clasificación del documento: {kind} · código de origen:
+          {source_code}'
         supplier: 'Proveedor: {name} · NIF {nif}'
+        supplier_role: Proveedor
         unread: sin leer
+        'yes': Sí
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       loading: Leyendo los documentos…
@@ -1739,8 +1776,8 @@ tui:
       records_empty: Aún no hay documentos de factura registrados.
       records_heading: Documentos de factura en este equipo
       reviewed: Revisado
-      safe_metadata: Solo metadatos seguros; el contenido del documento permanece
-        protegido.
+      safe_metadata: El documento de origen permanece protegido y cifrado; los campos
+        obtenidos de él se muestran para su revisión.
       title: Revisión de justificantes
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de

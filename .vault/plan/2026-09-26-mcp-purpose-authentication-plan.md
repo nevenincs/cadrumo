@@ -13,9 +13,9 @@ related:
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: body-v2
-body_hash: 'sha256:f0d92f68fefee895bb5cb915d45217ef96078abdfa552f02a7a50f65ed775f82'
+body_hash: 'sha256:5fd1f93ee26cb1c6cc6f3680814987f7f667322a927cbb1faf55f5b9ac4a48e2'
 ---
 
 # `mcp-purpose-authentication` plan
@@ -76,7 +76,7 @@ Deliver atomic enrollment, bounded admission and revocation through the existing
 
 Provide authenticated local transport, isolated profile execution and supervised process management without creating a second operation platform.
 
-- [x] `P03.S07` - Create the runtime entrypoint and authenticated local client/server transport, single-owner startup and readiness/version handshake; prove concurrent launch convergence and refusal of foreign, stale or substituted endpoints; `create src/cadrumo/entrypoints/runtime/, complete existing src/cadrumo/adapters/local_runtime/ transport and launch adapters, compose src/cadrumo/application/runtime/ contracts, pyproject.toml installed entrypoint and owned import-load targets`.
+- [ ] `P03.S07` - Create the runtime entrypoint and authenticated local client/server transport, single-owner startup and readiness/version handshake; prove concurrent launch convergence and refusal of foreign, stale or substituted endpoints; `create src/cadrumo/entrypoints/runtime/, complete existing src/cadrumo/adapters/local_runtime/ transport and launch adapters, compose src/cadrumo/application/runtime/ contracts, pyproject.toml installed entrypoint and owned import-load targets`.
 - [ ] `P03.S08` - Host existing application operations behind immutable profile-bound worker custody; route the censused private CLI/TUI entrypoint admission through that authority and prevent ambient active-profile bypass; prove simultaneous A/B use, same-profile revision conflicts and human profile switching without agent retargeting; `runtime composition, src/cadrumo/adapters/persistence/storage/master_key/active_session.py, src/cadrumo/application/user_profile/session_admission.py and the P01 live exposure census`.
 - [ ] `P03.S09` - Integrate access checks with operation submit/start/resume, private observation/result release and domain commit guards; reuse durable operation/workflow stores and authoritative effect receipts; prove revoke-versus-commit ordering, detached resume, idempotent retries and honest unknown effects; `src/cadrumo/application/operations/composition.py, supervisor.py, registered executors, src/cadrumo/application/workflow/ and src/cadrumo/adapters/persistence/operations/ only where authentication integration requires changes`.
 - [ ] `P03.S10` - Implement Windows user-session service management, owned Job Object containment, stop/drain and abrupt-death recovery; expose typed health/background controls and prove originating-login/last-eligible-logout behavior, separate manager/autostart/authorization capabilities, native automation-store replacement/deletion, and containment through launch races, independent descendant groups, guardian failure, inheritance and actual browsers using real Windows processes and isolated synthetic custody; `new Windows modules under local-runtime adapters and runtime entrypoint, reuse relevant primitives from src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py, runtime-owned tests`.
