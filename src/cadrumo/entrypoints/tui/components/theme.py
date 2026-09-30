@@ -198,6 +198,12 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # heading above them takes the same indent and the group shares one
         # left edge.
         "cadrumo-cell-padding": "1",
+        # The term column of a label-beside-answer list, such as the box
+        # editor's "What it asks", "Where it comes from" and "Can you change
+        # it?" blocks: one width for every term, so the answers share a left
+        # edge. Wide enough for the longest such term in any shipped language
+        # (19 cells today) with a gap before its answer.
+        "cadrumo-term-width": "22",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
         # The field-help panel docked under a page: tall enough for a short

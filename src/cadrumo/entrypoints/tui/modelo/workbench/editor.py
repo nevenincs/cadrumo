@@ -213,7 +213,7 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
             height: auto;
         }
         CasillaEditorScreen .editor-block-label {
-            width: 22;
+            width: $cadrumo-term-width;
             color: $secondary;
         }
         CasillaEditorScreen .editor-block-text {
@@ -221,7 +221,7 @@ class CasillaEditorScreen(ModalScreen[EditorDecision | None]):
             height: auto;
         }
         CasillaEditorScreen #editor-entry .editor-block-label {
-            padding-top: 1;
+            padding-top: $cadrumo-gutter-y;
         }
         CasillaEditorScreen #editor-field {
             width: 1fr;
