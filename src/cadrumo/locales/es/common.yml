@@ -2175,6 +2175,8 @@ tui:
       export:
         confirm_first: 'Confirma los valores supuestos antes de generar el fichero
           o registrar la presentación (por confirmar: {count}) [n].'
+        resolve_first: 'Resuelve lo que impide presentar antes de generar el fichero
+          o registrar la presentación (impiden presentar: {count}) [i].'
         title: Exportar la declaración
         verify_first: Verifica la declaración antes de exportarla [F8].
       filed:
@@ -2185,6 +2187,9 @@ tui:
         amount: solo las casillas con importe
         attention: solo lo pendiente
         calculated: solo los valores calculados
+        empty: No hay nada en esta página con este filtro.
+        empty_next: 'No hay nada en esta página con este filtro. Siguiente página
+          con algo: {page}'
         mine: solo tus valores
         records: solo lo que viene de tus registros
       go_to:

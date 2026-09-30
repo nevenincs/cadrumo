@@ -1,9 +1,10 @@
 """Nothing assumed reaches the AEAT, and what blocks filing reads the same everywhere it is counted and drawn.
 
 Driven through the real workbench screen over the synthetic declaration. The
-same verified declaration with one assumed value refuses the file for the AEAT
-and recording the filing, says why and offers the value to confirm; with that
-value entered instead, both proceed. The count beside "resolve what blocks
+same verified declaration with one assumed value, or with one issue that blocks
+filing, refuses the file for the AEAT and recording the filing, says which
+reason holds it and opens what resolves it; with neither, F8 creates the file,
+and recording comes next once it exists. The count beside "resolve what blocks
 filing" is the header chip's, whatever else the check found. Every blocker
 mark the header, the stepper and the review draw is in the theme's error
 colour, in both appearances. With no result to show, the chips start where
@@ -29,12 +30,13 @@ from ......application.modelo.work_form_models import (
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ....components.dialogs import ConfirmScreen
+from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
 from ..header import attention_chips, blocking_count
+from ..issues import WorkbenchIssuesScreen
 from ..progress import NextAction, next_action_text, workbench_progress
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen
@@ -73,12 +75,27 @@ def _declaration(*, assumed: bool) -> ModeloWorkForm:
     return form.model_copy(update={"counts": counts})
 
 
+def _checked_with_a_blocker(form: ModeloWorkForm) -> ModeloWorkForm:
+    """The form checked complete, yet with one blocking issue standing, as a calculation diagnostic stands."""
+    blocked = with_findings(form, blocking=(_WITHHOLDING,))
+    return blocked.model_copy(update={"verification": VerificationCompletenessStatus.COMPLETE})
+
+
+def _cause(name: str) -> ModeloWorkForm:
+    """The same verified declaration, withheld by one assumed value, by one blocking issue, or by nothing."""
+    if name == "one-assumed":
+        return _declaration(assumed=True)
+    if name == "one-blocking":
+        return _checked_with_a_blocker(_declaration(assumed=False))
+    return _declaration(assumed=False)
+
+
 @pytest.mark.asyncio
-@pytest.mark.parametrize("assumed", [True, False], ids=["one-assumed", "none-assumed"])
-async def test_an_assumed_value_withholds_the_file_and_the_recording_until_confirmed(assumed: bool) -> None:
+@pytest.mark.parametrize("cause", ["one-assumed", "one-blocking", "nothing-withholds"])
+async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_which(cause: str) -> None:
     actions = FakeActions()
     with override_settings(cadrumo_output_language="en"):
-        screen = ModeloWorkbenchScreen(FakeReader(form=_declaration(assumed=assumed), verified=True), actions=actions)
+        screen = ModeloWorkbenchScreen(FakeReader(form=_cause(cause), verified=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
             await _settle(pilot)
@@ -89,37 +106,40 @@ async def test_an_assumed_value_withholds_the_file_and_the_recording_until_confi
             offered = after_export.fields if isinstance(after_export, BulkConfirmScreen) else ()
             await pilot.press("escape")
             await _settle(pilot)
-            # Recording the filing is F8 on a declaration that is ready for it, and only then.
+            # F8 runs the one action the next-action line names, and never passes what withholds the filing.
             await pilot.press("f8")
             await _settle(pilot)
             after_f8 = app.screen
-            if isinstance(after_f8, ConfirmScreen):
-                await pilot.click("#btn-confirm-accept")
-                await _settle(pilot, 6)
             app.exit(None)
 
-    withheld = tr("tui.modelo.workbench.export.confirm_first", locale="en", count=1)
-    if assumed:
+    assert actions.exports == []
+    assert "file" not in actions.requested
+    if cause == "one-assumed":
         assert isinstance(after_export, BulkConfirmScreen), "the confirm step is offered in place of the export"
         assert [field.address for field in offered] == [ModeloFormCasillaAddressV1(casilla_id=_WITHHOLDING)]
-        assert export_notice == withheld
-        assert isinstance(after_f8, BulkConfirmScreen), "F8 goes to the confirm step, not to recording"
-        assert actions.exports == []
-        assert "file" not in actions.requested
+        assert export_notice == tr("tui.modelo.workbench.export.confirm_first", locale="en", count=1)
+        assert isinstance(after_f8, BulkConfirmScreen), "F8 goes to the confirm step"
+    elif cause == "one-blocking":
+        assert isinstance(after_export, WorkbenchIssuesScreen), "what blocks filing is shown in place of the export"
+        assert export_notice == tr("tui.modelo.workbench.export.resolve_first", locale="en", count=1)
+        assert isinstance(after_f8, WorkbenchIssuesScreen), "F8 goes to what blocks filing"
     else:
         assert isinstance(after_export, WorkbenchExportScreen)
-        assert export_notice != withheld
-        assert isinstance(after_f8, ConfirmScreen), "F8 asks before recording the filing"
-        assert actions.requested == ["file"]
+        assert isinstance(after_f8, WorkbenchExportScreen), "F8 creates the file, the one action the line names"
 
 
-def test_the_withheld_count_is_the_assumed_values_on_pages_that_apply() -> None:
-    held = workbench_progress(_declaration(assumed=True), staged=0, verified=True, filed=False)
-    clear = workbench_progress(_declaration(assumed=False), staged=0, verified=True, filed=False)
-    filed = workbench_progress(_declaration(assumed=True), staged=0, verified=True, filed=True)
+def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None:
+    clear = _cause("nothing-withholds")
+    file_first = workbench_progress(clear, staged=0, verified=True, filed=False)
+    record_next = workbench_progress(clear, staged=0, verified=True, filed=False, exported=True)
+    assumed = workbench_progress(_cause("one-assumed"), staged=0, verified=True, filed=False, exported=True)
+    blocking = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=False, exported=True)
+    filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
-    assert held.filing_withheld and held.assumed == 1
-    assert not clear.filing_withheld and clear.next_action is NextAction.EXPORT
+    assert file_first.next_action is NextAction.EXPORT and not file_first.filing_withheld
+    assert record_next.next_action is NextAction.RECORD and not record_next.filing_withheld
+    assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is NextAction.CONFIRM
+    assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is NextAction.RESOLVE
     assert not filed.filing_withheld
 
 

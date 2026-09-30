@@ -2149,6 +2149,8 @@ tui:
       export:
         confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítse
           meg a feltételezett értékeket (megerősítendő: {count}) [n].'
+        resolve_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt oldja
+          meg, ami akadályozza a benyújtást (akadályozó: {count}) [i].'
         title: A bevallás exportálása
         verify_first: Exportálás előtt ellenőrizze a bevallást [F8].
       filed:
@@ -2159,6 +2161,9 @@ tui:
         amount: csak az összeget tartalmazó rovatok
         attention: csak a teendők
         calculated: csak a számított értékek
+        empty: Ezen az oldalon nincs semmi ehhez a szűrőhöz.
+        empty_next: 'Ezen az oldalon nincs semmi ehhez a szűrőhöz. A következő oldal,
+          ahol van: {page}'
         mine: csak az Ön értékei
         records: csak az Ön nyilvántartásaiból származó értékek
       go_to:

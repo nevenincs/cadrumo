@@ -2117,6 +2117,8 @@ tui:
       export:
         confirm_first: 'Confirm the assumed values before creating the file or recording
           the filing (to confirm: {count}) [n].'
+        resolve_first: 'Resolve what blocks filing before creating the file or recording
+          the filing (blocking: {count}) [i].'
         title: Export the declaration
         verify_first: Verify the declaration before exporting it [F8].
       filed:
@@ -2127,6 +2129,9 @@ tui:
         amount: only boxes with an amount
         attention: only what needs attention
         calculated: only calculated values
+        empty: Nothing on this page for this filter.
+        empty_next: 'Nothing on this page for this filter. Next page with something:
+          {page}'
         mine: only your values
         records: only values from your records
       go_to:

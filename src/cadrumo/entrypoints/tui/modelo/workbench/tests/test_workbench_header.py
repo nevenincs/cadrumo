@@ -24,6 +24,7 @@ from textual.widgets import Static
 from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import tr
 from ......core.result_disposition import ResultDisposition
 from ....components.host import ScreenHostApp
 from ..header import (
@@ -77,10 +78,11 @@ def test_a_known_direction_reads_as_its_word_and_the_magnitude(
     assert help_lines[0] == _OWN
     signed = [line for line in help_lines if "without its sign" in line]
     if value < 0:
-        assert signed == [
-            f"Box [19] shows −{expected.split('  ')[1]} on the form. "
-            "The header shows the amount without its sign and says the direction in words."
-        ]
+        with override_settings(cadrumo_output_language="en"):
+            sign_help = tr(
+                "tui.modelo.workbench.header.result.sign_help", box="19", value=f"−{expected.split('  ')[1]}"
+            )
+        assert signed == [sign_help]
     else:
         assert not signed
 

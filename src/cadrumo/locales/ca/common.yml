@@ -2166,6 +2166,8 @@ tui:
       export:
         confirm_first: 'Confirma els valors suposats abans de generar el fitxer o
           registrar la presentació (per confirmar: {count}) [n].'
+        resolve_first: 'Resol el que impedeix presentar abans de generar el fitxer
+          o registrar la presentació (impedeixen presentar: {count}) [i].'
         title: Exporta la declaració
         verify_first: Verifica la declaració abans d'exportar-la [F8].
       filed:
@@ -2176,6 +2178,9 @@ tui:
         amount: només les caselles amb import
         attention: només el que està pendent
         calculated: només els valors calculats
+        empty: No hi ha res en aquesta pàgina amb aquest filtre.
+        empty_next: 'No hi ha res en aquesta pàgina amb aquest filtre. Pàgina següent
+          amb alguna cosa: {page}'
         mine: només els teus valors
         records: només el que ve dels teus registres
       go_to:

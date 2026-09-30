@@ -24,7 +24,6 @@ from ..progress import (
     WorkbenchProgress,
     WorkbenchStep,
     next_action_text,
-    record_filing_text,
     stepper_marks,
     stepper_text,
     workbench_progress,
@@ -56,11 +55,13 @@ def test_a_filed_declaration_is_done_whatever_its_form_still_marks_and_says_when
     assert line == "Recorded as filed on 15/04/2026"
 
 
-def test_a_verified_declaration_offers_the_file_first_and_recording_after() -> None:
-    progress = workbench_progress(synthetic_form(needs_input=True), staged=0, verified=True, filed=False)
+def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at_a_time() -> None:
+    form = synthetic_form(needs_input=True)
+    progress = workbench_progress(form, staged=0, verified=True, filed=False)
+    exported = workbench_progress(form, staged=0, verified=True, filed=False, exported=True)
     with override_settings(cadrumo_output_language="en"):
         line = next_action_text(progress, OutputLanguage.EN)
-        record = record_filing_text()
+        record = next_action_text(exported, OutputLanguage.EN)
 
     statuses = _statuses(progress)
     assert statuses[WorkbenchStep.FILL] is StepStatus.DONE
@@ -68,7 +69,8 @@ def test_a_verified_declaration_offers_the_file_first_and_recording_after() -> N
     assert statuses[WorkbenchStep.FILE] is StepStatus.CURRENT
     assert progress.next_action is NextAction.EXPORT
     assert line == "Create the file to file with AEAT"
-    assert record == "Once you have filed it with AEAT, record the filing here [F8]"
+    assert exported.next_action is NextAction.RECORD
+    assert record == "Once you have filed it with AEAT, record the filing here"
 
 
 def test_an_assumed_value_keeps_filling_in_open_and_withholds_recording() -> None:
