@@ -144,6 +144,7 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
                     allowed_intents=(
                         ModeloEditScalarIntentKind.SET_TYPED_VALUE,
                         ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
+                        ModeloEditScalarIntentKind.RESTORE_SOURCE_VALUE,
                     ),
                 )
             )

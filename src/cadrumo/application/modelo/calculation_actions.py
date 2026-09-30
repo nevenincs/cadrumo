@@ -148,6 +148,7 @@ from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .action_errors import (
     CalculationRevisionNotFoundError,
     ModeloAggregationBindingError,
+    ModeloClearedCasillaSourceFedError,
 )
 from .calculation_action_ports import (
     CalculationActionPorts,
@@ -542,6 +543,10 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     resolved_inputs = channel_inputs.casilla_inputs
 
     resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
+    _reject_clears_of_source_fed_casillas(
+        cleared_casilla_ids,
+        resolved_casilla_ids=(*resolved_inputs, *resolved_text_inputs),
+    )
     # The row-field template outputs are dropped after the engine runs, so a
     # scalar input for one would be persisted with no observation to ground it.
     reject_row_field_template_scalar_inputs(snapshot.revision, (*resolved_inputs, *resolved_text_inputs))
@@ -648,6 +653,26 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
+
+
+def _reject_clears_of_source_fed_casillas(
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    *,
+    resolved_casilla_ids: tuple[CasillaId, ...],
+) -> None:
+    """Refuse an explicit clear that a source would immediately refill.
+
+    A caller never supplies a value for a casilla it clears, so a cleared
+    casilla that still reaches the resolved inputs was fed by a source tier.
+    Persisting the clear would record "cleared" beside the source's value for
+    the same casilla -- two contradictory facts about one box.
+    """
+    fed = sorted(set(cleared_casilla_ids).intersection(resolved_casilla_ids))
+    if fed:
+        raise ModeloClearedCasillaSourceFedError(
+            translated_message="errors.error.error_modelo_cleared_casilla_source_fed",
+            context={"casilla_ids": ",".join(fed)},
+        )
 
 
 def _calculate_prepared_registry_snapshot(

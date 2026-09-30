@@ -337,6 +337,15 @@ class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloClearedCasillaSourceFedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised before persistence when an explicitly cleared casilla still receives a source value.
+
+    Recording the clear would leave the revision saying "cleared" and carrying
+    the source's value for the same casilla. Withdrawing a source value is not
+    a clear; the operator restores the source instead.
+    """
+
+
 class ModeloRequiredBindingsMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
@@ -536,6 +545,7 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloChargeAccountMissingError",
+    "ModeloClearedCasillaSourceFedError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloEditBaselineStaleError",
     "ModeloEditContractIncompatibleError",

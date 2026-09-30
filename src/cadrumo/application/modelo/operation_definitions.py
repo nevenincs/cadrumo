@@ -2374,7 +2374,10 @@ class ModeloEditApplyExecutor:
             submission=submission,
         )
         operation = context.authority_operation
-        outcome = apply_modelo_edit(
+        # The edit recalculates the whole declaration and writes encrypted
+        # storage; run it off the event loop exactly as calculation does.
+        outcome = await asyncio.to_thread(
+            apply_modelo_edit,
             apply_request,
             ports=self._calculation_action_ports_factory(
                 bucket_id=baseline.bucket_id,

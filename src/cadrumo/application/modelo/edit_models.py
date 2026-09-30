@@ -68,16 +68,20 @@ type _BoundedRefList = Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX
 
 
 class ModeloEditScalarIntentKind(StrEnum):
-    """The two distinct scalar edit intents; address absence means UNCHANGED.
+    """The three distinct scalar edit intents; address absence means UNCHANGED.
 
-    ``REMOVE_OVERRIDE`` is deliberately NOT a member: it addresses the
-    ``CalculationRevision.binding_overrides`` store, which is keyed by
-    ``BindingId``, never ``CasillaId`` -- no casilla-addressed scalar intent
-    can reach it. See :class:`ModeloEditBindingIntentKind`.
+    Each acts on the casilla's entry in the revision's operator layer:
+    ``SET_TYPED_VALUE`` replaces the operator's value (and withdraws an earlier
+    clear), ``CLEAR_DECLARED_VALUE`` removes it and records an explicit clear
+    when no source feeds the casilla, and ``RESTORE_SOURCE_VALUE`` removes it
+    without recording a clear, so the source tiers win again. Withdrawing a
+    binding override is binding-addressed -- see
+    :class:`ModeloEditBindingIntentKind`.
     """
 
     SET_TYPED_VALUE = "set_typed_value"
     CLEAR_DECLARED_VALUE = "clear_declared_value"
+    RESTORE_SOURCE_VALUE = "restore_source_value"
 
 
 class ModeloEditRowIntentKind(StrEnum):
@@ -127,10 +131,9 @@ class ModeloEditDetailRowIntentKind(StrEnum):
 class ModeloEditBindingIntentKind(StrEnum):
     """The two distinct binding-override edit intents; address absence means UNCHANGED.
 
-    Mirrors ``SET_TYPED_VALUE``/``CLEAR_DECLARED_VALUE`` in shape, but these
-    apply to the ``BindingId``-keyed ``binding_overrides`` store rather than a
-    casilla's declared value -- the operator-facing ``--binding KEY=VALUE``
-    CLI override and its withdrawal.
+    Both act on the ``BindingId``-keyed binding overrides of the revision's
+    operator layer: ``SET_OVERRIDE_VALUE`` replaces the operator's override and
+    ``REMOVE_OVERRIDE`` withdraws it, so the binding's source tiers win again.
     """
 
     SET_OVERRIDE_VALUE = "set_override_value"
@@ -595,8 +598,6 @@ class ModeloEditUnsupportedIntentReason(StrEnum):
     Step Record that implements each reason, never the reverse.
     """
 
-    SET_OVERRIDE_VALUE_NOT_YET_WIRED = "set_override_value_not_yet_wired"
-    REMOVE_OVERRIDE_NOT_YET_WIRED = "remove_override_not_yet_wired"
     ADD_ROW_NOT_YET_WIRED = "add_row_not_yet_wired"
     UPDATE_ROW_NOT_YET_WIRED = "update_row_not_yet_wired"
     DELETE_ROW_NOT_YET_WIRED = "delete_row_not_yet_wired"

@@ -276,6 +276,9 @@ errors:
       es compatible con el estado actual de la revisión de cálculo.
     error_modelo_casilla_provenance_missing: Una casilla del resultado del motor no
       tiene definición en el registro.
+    error_modelo_cleared_casilla_source_fed: La casilla {casilla_ids} no se puede
+      vaciar porque una de sus fuentes sigue aportando un valor. Restaure el valor
+      de la fuente en lugar de vaciarla.
     error_modelo_external_filing_import: No se pudo guardar la declaración externa
       importada. Comprueba los valores de las casillas y la referencia de evidencia.
     error_modelo_filing_record_not_found: No se encontró la declaración registrada
