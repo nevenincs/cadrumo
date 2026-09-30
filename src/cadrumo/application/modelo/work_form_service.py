@@ -7,6 +7,11 @@ caller's pinned authority and repositories, takes the admission the caller
 already holds, and hands everything to the form builder. It decides nothing the
 builder does not.
 
+The loader also reads the two facts the builder cannot: the last day of the
+filing window, through the canonical deadline-window resolver and the
+business-day shift the calendar applies, and when the AEAT tax data the
+current calculation replays was imported, from that snapshot's own record.
+
 Whether a value was entered by the filer is only ever claimed from the recorded
 operator layer. A head calculated before operator layers existed, or a head the
 calculation catalogue no longer resolves, gives an unknown layer -- never an
@@ -20,6 +25,7 @@ the declaration.
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
@@ -28,6 +34,10 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...core.time.clock import today_madrid
+from ...domain.deadlines.errors import DeadlineValidationError
+from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage, shift_deadline
+from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
@@ -40,6 +50,7 @@ from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .work_form import build_modelo_work_form
 from .work_form_models import (
     ModeloFormAddressV1,
+    ModeloFormDeadline,
     ModeloFormOrigin,
     ModeloFormScalar,
     ModeloFormText,
@@ -51,6 +62,7 @@ from .work_review import build_modelo_work_review
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ..live.borrador_100 import Borrador100SnapshotRepository
 
 _VERIFIED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
     {
@@ -113,6 +125,57 @@ def modelo_form_snapshot(
     )
 
 
+def modelo_form_deadline(
+    operation: PinnedAuthorityOperation,
+    modelo: ModeloCode,
+    period: Period,
+    *,
+    holiday_territory: CalendarCCAA | None,
+    reference_on: date,
+) -> ModeloFormDeadline | None:
+    """The last day of the declaration's voluntary filing window, or ``None`` when none is declared.
+
+    The window comes from the canonical resolver the calendar and the
+    extemporaneity notice use; it stores the nominal statutory date, which the
+    business-day shift moves past weekends and holidays at read time. Without
+    the filer's territory only national holidays are checked, and a holiday
+    calendar that cannot be read leaves the nominal date standing; the
+    coverage says which, so neither is shown as a final date.
+
+    Raises:
+        RegistryError: The registry could not be read, so the deadline is
+            unknown rather than absent.
+        DeadlineValidationError: More than one window matches the declaration.
+    """
+    window = resolve_filing_window(str(modelo), period.filing_year, period, authority=operation)
+    if window is None:
+        return None
+    nominal = window.closes_on
+    try:
+        shift = shift_deadline(nominal, modelo=str(modelo), ccaa_code=holiday_territory, operation=operation)
+    except DeadlineValidationError:
+        closes_on, coverage = nominal, DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    else:
+        closes_on, coverage = shift.adjusted_close_date, shift.coverage
+    return ModeloFormDeadline(
+        closes_on=closes_on,
+        nominal_closes_on=nominal,
+        holiday_coverage=coverage,
+        reference_on=reference_on,
+        days_remaining=(closes_on - reference_on).days if reference_on <= closes_on else None,
+        days_overdue=(reference_on - closes_on).days if reference_on > closes_on else None,
+    )
+
+
+def _aeat_data_imported_at(
+    snapshot_id: str | None, borrador_snapshots: Borrador100SnapshotRepository | None
+) -> datetime | None:
+    """When the AEAT tax data the calculation replays was imported, if its record can be read here."""
+    if snapshot_id is None or borrador_snapshots is None or not borrador_snapshots.exists(snapshot_id):
+        return None
+    return borrador_snapshots.load(snapshot_id).captured_at
+
+
 def load_modelo_work_form(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -125,12 +188,22 @@ def load_modelo_work_form(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     admission: ModeloEditAdmissionResultV1 | None,
     language: OutputLanguage,
+    borrador_snapshots: Borrador100SnapshotRepository | None = None,
+    holiday_territory: CalendarCCAA | None = None,
+    reference_on: date | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
     ``admission`` is the edit admission the caller holds for this declaration,
     or ``None`` when none was sought; a refused admission, or one for another
     work unit, offers nothing for editing.
+
+    ``borrador_snapshots`` is the profile's AEAT draft store, read only for
+    when the replayed draft was imported; without it the form still says the
+    draft feeds the declaration, with no import time. ``holiday_territory`` is
+    the filer's autonomous community for the deadline's holiday shift, and
+    ``reference_on`` the day the days left are counted from, today in Madrid by
+    default.
     """
     review = build_modelo_work_review(
         bucket_id,
@@ -145,7 +218,8 @@ def load_modelo_work_form(
     snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
     layout = operation.form_layout(str(modelo), review.registry_revision_id)
     resolved, head = _head(review.calculation_revision_id, calculation_repository)
-    layer = caller_context_of(head).operator_layer if resolved else None
+    context = caller_context_of(head)
+    layer = context.operator_layer if resolved else None
     surface = (
         admission.baseline.permitted_surface
         if isinstance(admission, ModeloEditAdmittedV1)
@@ -161,6 +235,14 @@ def load_modelo_work_form(
         entered_casilla_ids=None if layer is None else frozenset(layer.casilla_ids()),
         overridden_binding_ids=None if layer is None else frozenset(layer.binding_overrides),
         language=language,
+        deadline=modelo_form_deadline(
+            operation,
+            modelo,
+            period,
+            holiday_territory=holiday_territory,
+            reference_on=reference_on if reference_on is not None else today_madrid(),
+        ),
+        aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
     )
     state = review.lifecycle_state
     return ModeloWorkFormLoadV1(form=form, verified=state in _VERIFIED_STATES, filed=state in _FILED_STATES)
@@ -210,6 +292,7 @@ __all__ = [
     "ModeloFormValueChangeV1",
     "ModeloWorkFormLoadV1",
     "load_modelo_work_form",
+    "modelo_form_deadline",
     "modelo_form_snapshot",
     "modelo_work_form_changes",
 ]

@@ -3,8 +3,9 @@
 :func:`build_modelo_work_form` is a pure join. It reads the canonical work
 review for values and origins, the revision's declared form layout for pages,
 sections, grids and placements, the registry snapshot for localized labels,
-help, completeness and bindings, the current calculation revision for what the
-filer explicitly cleared and for detail rows, and the edit admission's permitted
+help, required inputs and bindings, the current calculation revision for what
+the filer explicitly cleared, for detail rows, for the AEAT draft it replays and
+for its filing state, and the edit admission's permitted
 surface for what may be written. It derives no layout: a revision without a
 usable declared layout becomes an inspection-only form that says why.
 
@@ -13,7 +14,13 @@ Classification is decided once, here, so every frontend shows the same states:
 * the origin of each value -- entered, imported, calculated, needed, not
   applicable, cleared, or held without proof anyone entered it -- and
 * the editability of each address -- typed, overridden with a reason, fixed at
-  its source, corrected in the profile, calculated, or fixed by the design.
+  its source, corrected in the profile, calculated, or fixed by the design,
+* where each bound value comes from, named by its primary binding's family,
+  with the earlier declaration a carry reads and the AEAT tax data an imported
+  draft supplied,
+* whether a box needs the filer's value, by the same rule verification checks,
+* the settlement box and which way it settles, and
+* whether the declaration is recorded as filed, which closes it to editing.
 
 "Entered by the filer" is only ever claimed from the operator's own recorded
 entries. A revision that predates them has an unknown operator record, and a
@@ -28,6 +35,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Final
 
@@ -61,9 +69,10 @@ from ...domain.calculations.registry.schema_form_layouts import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.filing.schema import ModeloValueKind
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
+from .caller_context import caller_context_of
 from .edit_models import (
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     ModeloEditNonWritableScalarSurfaceEntryV1,
@@ -71,9 +80,11 @@ from .edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .required_inputs import filer_required_casilla_ids
 from .source_policy import SourceOverridePolicy, source_policy
 from .work_form_models import (
     ABSENT_FROM_ADMISSION,
+    ModeloFormAeatData,
     ModeloFormBinding,
     ModeloFormBindingAddressV1,
     ModeloFormBindingInputsBlock,
@@ -81,9 +92,12 @@ from .work_form_models import (
     ModeloFormBlocker,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
+    ModeloFormDeadline,
     ModeloFormEditability,
+    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormFieldBlock,
+    ModeloFormFiling,
     ModeloFormGridBlock,
     ModeloFormGridCell,
     ModeloFormGridColumn,
@@ -95,6 +109,7 @@ from .work_form_models import (
     ModeloFormPage,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
+    ModeloFormResult,
     ModeloFormScalar,
     ModeloFormSection,
     ModeloFormText,
@@ -103,6 +118,8 @@ from .work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
+from .work_form_result import settlement_result
+from .work_form_sources import FIXED_BY_THE_FORM, bound_value_source
 from .work_review import ModeloWorkOriginAnomaly, ModeloWorkReview, ModeloWorkReviewCasilla
 
 _SPANISH: Final[str] = OutputLanguage.ES.value
@@ -128,6 +145,10 @@ _BINDING_DATA_TYPE: Final[Mapping[str, str]] = {
 
 _BOOLEAN_TOKENS: Final[Mapping[str, bool]] = {"true": True, "1": True, "false": False, "0": False}
 """The spellings a yes-or-no binding value is stored under."""
+_FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
+    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+)
+"""The lifecycle states of a calculation recorded as filed."""
 
 
 class ModeloWorkFormLayoutError(InternalInvariantError):
@@ -168,12 +189,17 @@ class _FormContext:
         self.bindings: dict[str, BindingDefinition] = {str(item.id): item for item in snapshot.revision.bindings}
         self.snapshot = snapshot
         self._export_decimals: dict[str, int] | None = None
-        manifest = snapshot.revision.completeness_manifest
-        self.manifest: frozenset[str] = (
-            frozenset() if manifest is None else frozenset(str(item.casilla_id) for item in manifest.casillas)
-        )
+        self.required: frozenset[str] = frozenset(str(item) for item in filer_required_casilla_ids(snapshot.revision))
+        self.filed = review.lifecycle_state in _FILED_STATES
         self.surface: dict[tuple[str, str], ModeloEditPermittedSurfaceEntryV1] | None = (
-            None if permitted_surface is None else {_surface_key(entry): entry for entry in permitted_surface}
+            None
+            if permitted_surface is None or self.filed
+            else {_surface_key(entry): entry for entry in permitted_surface}
+        )
+        self.aeat_data_bindings: frozenset[str] = frozenset(
+            ()
+            if revision is None or caller_context_of(revision).borrador_snapshot_id is None
+            else (str(item) for item in revision.bindings_sourced_from_borrador)
         )
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
@@ -362,7 +388,7 @@ def _casilla_field(
     label = _localized(casilla.localization_keys, context.language) or ModeloFormText(
         text=casilla_id, disclosure=ModeloFormTextDisclosure.TECHNICAL
     )
-    required = casilla_id in context.manifest or casilla.required
+    required = casilla_id in context.required
     editability, reason = _casilla_editability(row, context)
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
@@ -377,6 +403,12 @@ def _casilla_field(
         required=required,
         role=_role(row),
         bindings=_bindings(row),
+        source=bound_value_source(
+            tuple(origin.binding_id for origin in row.concrete_bindings),
+            bindings=context.bindings,
+            aeat_data_binding_ids=context.aeat_data_bindings,
+            target=context.review.period,
+        ),
         formula_id=row.formula_id,
         formula_operands=() if row.concrete_formula is None else row.concrete_formula.operand_refs,
         blockers=tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by),
@@ -433,6 +465,12 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
         not_writable_reason=reason,
         required=False,
         bindings=(ModeloFormBinding(binding_id=binding.id, policy=policy, resolved=raw is not None),),
+        source=bound_value_source(
+            (binding.id,),
+            bindings=context.bindings,
+            aeat_data_binding_ids=context.aeat_data_bindings,
+            target=context.review.period,
+        ),
         legal_refs=tuple(binding.legal_refs),
     )
 
@@ -569,6 +607,7 @@ class _LayoutWalk:
                 "not_writable_reason": None,
                 "origin": ModeloFormOrigin.INFORMATIONAL,
                 "value": fixed,
+                "source": FIXED_BY_THE_FORM,
             }
         )
 
@@ -706,6 +745,8 @@ def build_modelo_work_form(
     entered_casilla_ids: frozenset[CasillaId] | None,
     overridden_binding_ids: frozenset[BindingId] | None,
     language: OutputLanguage,
+    deadline: ModeloFormDeadline | None = None,
+    aeat_data_imported_at: datetime | None = None,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -713,7 +754,13 @@ def build_modelo_work_form(
     recorded entries on the current revision; ``None`` means the revision does
     not record them, which is different from recording none. ``permitted_surface``
     is the current edit admission's surface, or ``None`` when no admission is
-    available, in which case nothing is offered for editing.
+    available, in which case nothing is offered for editing. A declaration
+    recorded as filed offers nothing for editing whatever the admission says,
+    because changing it starts a correction.
+
+    ``deadline`` is the resolved filing deadline, and ``aeat_data_imported_at``
+    when the AEAT tax data the revision replays was imported; the caller reads
+    both, since neither is a fact of the review or the layout.
 
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
@@ -734,7 +781,9 @@ def build_modelo_work_form(
             if layout is None
             else ModeloFormInspectionReason.LAYOUT_FOR_ANOTHER_REVISION
         )
-        return _inspection_form(context, snapshot, reason)
+        return _inspection_form(
+            context, snapshot, reason, deadline=deadline, aeat_data_imported_at=aeat_data_imported_at
+        )
     walk = _LayoutWalk(layout, context)
     pages = tuple(walk.page(page) for page in layout.pages)
     working: list[ModeloFormField] = []
@@ -768,6 +817,7 @@ def build_modelo_work_form(
         else ModeloFormLayoutProvenance.GENERATED
     )
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
+    every_field = [*form_fields, *working, *(item.field for item in unplaced)]
     return ModeloWorkForm(
         modelo=review.modelo,
         filing_year=review.filing_year,
@@ -782,12 +832,17 @@ def build_modelo_work_form(
         working_figures=tuple(working),
         unplaced=tuple(unplaced),
         result_addresses=_results(context),
-        counts=_counts([*form_fields, *working, *(item.field for item in unplaced)]),
+        counts=_counts(every_field),
         progress=review.progress,
         operator_entries_known=entered_casilla_ids is not None,
-        edit_admitted=permitted_surface is not None,
+        edit_admitted=context.surface is not None,
         verification=review.verification_outcome,
-        issues=_issues(review, [*form_fields, *working, *(item.field for item in unplaced)]),
+        issues=_issues(review, every_field),
+        result=_result(context, every_field),
+        deadline=deadline,
+        aeat_data=_aeat_data(context, aeat_data_imported_at),
+        filing=_filing(context),
+        edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
     )
 
 
@@ -818,6 +873,40 @@ def _results(context: _FormContext) -> tuple[CasillaId, ...]:
     return tuple(row.casilla_id for row in context.review.casillas if _role(row) is CalculationReportRowRole.RESULT)
 
 
+def _result(context: _FormContext, fields: Iterable[ModeloFormField]) -> ModeloFormResult | None:
+    """The settlement box, printed where the form shows it."""
+    result = settlement_result(str(context.review.modelo), context.snapshot.revision, context.rows)
+    if result is None:
+        return None
+    box = next(
+        (
+            field.box
+            for field in fields
+            if isinstance(field.address, ModeloFormCasillaAddressV1) and field.address.casilla_id == result.casilla_id
+        ),
+        None,
+    )
+    return result.model_copy(update={"box": box})
+
+
+def _aeat_data(context: _FormContext, imported_at: datetime | None) -> ModeloFormAeatData | None:
+    """The AEAT tax data the current calculation replays, when it replays any."""
+    revision = context.revision
+    snapshot_id = None if revision is None else caller_context_of(revision).borrador_snapshot_id
+    if revision is None or snapshot_id is None:
+        return None
+    return ModeloFormAeatData(
+        snapshot_id=snapshot_id, imported_at=imported_at, binding_ids=tuple(revision.bindings_sourced_from_borrador)
+    )
+
+
+def _filing(context: _FormContext) -> ModeloFormFiling | None:
+    """The recorded filing, when the current calculation is recorded as filed."""
+    if not context.filed:
+        return None
+    return ModeloFormFiling(recorded_at=None if context.revision is None else context.revision.filed_at)
+
+
 def _box_order(field: ModeloFormField) -> tuple[int, int, str]:
     box = field.box
     label = field.label.text
@@ -825,7 +914,12 @@ def _box_order(field: ModeloFormField) -> tuple[int, int, str]:
 
 
 def _inspection_form(
-    context: _FormContext, snapshot: RegistrySnapshot, reason: ModeloFormInspectionReason
+    context: _FormContext,
+    snapshot: RegistrySnapshot,
+    reason: ModeloFormInspectionReason,
+    *,
+    deadline: ModeloFormDeadline | None,
+    aeat_data_imported_at: datetime | None,
 ) -> ModeloWorkForm:
     """Show every casilla read-only in official box order when no usable layout exists."""
     fields = sorted(
@@ -870,6 +964,11 @@ def _inspection_form(
         edit_admitted=False,
         verification=review.verification_outcome,
         issues=_issues(review, fields),
+        result=_result(context, fields),
+        deadline=deadline,
+        aeat_data=_aeat_data(context, aeat_data_imported_at),
+        filing=_filing(context),
+        edit_closure=ModeloFormEditClosure.RECORDED_AS_FILED if context.filed else None,
     )
 
 

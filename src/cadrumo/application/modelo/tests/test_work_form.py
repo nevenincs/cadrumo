@@ -265,8 +265,10 @@ def test_before_any_calculation_each_input_kind_reads_its_own_origin(
 
     assert fields["03"].origin is ModeloFormOrigin.NOT_CALCULATED_YET
     assert fields["01"].origin is ModeloFormOrigin.NOT_IMPORTED_YET
-    assert fields["06"].origin is ModeloFormOrigin.NEEDS_INPUT
-    assert fields["06"].required
+    # Box 06 is typed by the filer but the registry does not require it, so
+    # verification never asks for it and neither does the form.
+    assert fields["06"].origin is ModeloFormOrigin.OPTIONAL_EMPTY
+    assert not fields["06"].required
 
 
 def test_a_held_manual_value_is_entered_only_when_the_operator_recorded_it(
@@ -362,4 +364,3 @@ def test_counts_roll_up_from_sections_to_the_form(
     assert page.counts.total == sum(section.counts.total for section in page.sections)
     assert form.counts.total == len(snapshot.revision.casillas)
     assert form.counts.needs_input == sum(1 for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT)
-    assert form.counts.needs_input > 0

@@ -21,22 +21,32 @@ The two classifications are closed application vocabulary:
 Every text a person reads carries its :class:`ModeloFormTextDisclosure`, so a
 Spanish fallback, a verbatim official heading or a technical name is never
 passed off as a translation.
+
+Beside the fields, the form states the facts a filer asks about the whole
+declaration: where each bound value comes from (:class:`ModeloFormValueSource`),
+whether the calculation replayed AEAT tax data (:class:`ModeloFormAeatData`),
+the last day to file (:class:`ModeloFormDeadline`), the settled result and its
+direction (:class:`ModeloFormResult`), and whether the declaration is recorded
+as filed (:class:`ModeloFormFiling`). Each is classified here from declared
+facts, so a frontend only renders it.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, Any, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -45,10 +55,16 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormUnplacedReason,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationCompletenessStatus
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+)
 from .calculation_report import CalculationReportRowRole
-from .source_policy import SourcePolicyV1
+from .source_policy import SourceFamily, SourcePolicyV1
 from .work_review import ModeloWorkProgress
 
 type ModeloFormScalar = Decimal | int | str | bool | date | None
@@ -194,6 +210,33 @@ class ModeloFormBlocker(_FormModel):
     code: str = Field(min_length=1)
 
 
+class ModeloFormEarlierFiling(_FormModel):
+    """One earlier declaration a carried value is read from."""
+
+    modelo: str = Field(min_length=1)
+    #: The earlier declaration's filing year and period.
+    period: Period
+
+
+class ModeloFormValueSource(_FormModel):
+    """Where a field's value comes from, named from its primary binding.
+
+    ``family`` is the kind of place a filer thinks of: their records, a register
+    they keep, their profile, an earlier filing, the AEAT tax data, a value they
+    type, or a value the official form fixes. A value the calculation took from
+    an imported AEAT draft reads as AEAT data, whatever its binding would
+    otherwise fetch. ``earlier_filings`` names the declarations a carried value
+    is read from when the binding identifies them, and is empty otherwise; it
+    never guesses one. ``binding_id`` and ``source_kind`` are ``None`` only for a
+    value the declared layout fixes without any binding.
+    """
+
+    family: SourceFamily
+    binding_id: BindingId | None = None
+    source_kind: BindingSourceKind | None = None
+    earlier_filings: tuple[ModeloFormEarlierFiling, ...] = ()
+
+
 class ModeloFormField(_FormModel):
     """One box or binding input, classified for an editor."""
 
@@ -206,10 +249,13 @@ class ModeloFormField(_FormModel):
     origin: ModeloFormOrigin
     editability: ModeloFormEditability
     not_writable_reason: str | None = None
+    #: Whether the declaration needs this value from the filer, by the rule verification checks.
     required: bool
     role: CalculationReportRowRole | None = None
     #: The bindings that feed the field; on a bound casilla the first is the one an override replaces.
     bindings: tuple[ModeloFormBinding, ...] = ()
+    #: Where the value comes from; ``None`` for a field no binding or declared constant feeds.
+    source: ModeloFormValueSource | None = None
     formula_id: FormulaId | None = None
     formula_operands: tuple[str, ...] = ()
     blockers: tuple[ModeloFormBlocker, ...] = ()
@@ -368,16 +414,178 @@ class ModeloFormUnplacedField(_FormModel):
     reason: FormUnplacedReason | None
 
 
+class ModeloFormAttention(StrEnum):
+    """How much a finding asks of the filer."""
+
+    #: It must be resolved before the declaration can be recorded as filed.
+    BLOCKS = "blocks"
+    #: A warning worth checking; it does not stop the filing.
+    CHECK = "check"
+    #: An explanation of what the calculation did; nothing to act on.
+    INFO = "info"
+
+
+EXPLANATORY_FINDING_MESSAGE_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        # A dependency on an earlier period scoped out because the filer
+        # declared a later activity start: it says why a filing is not needed.
+        "application.modelo.findings.cross_period_operator_declared_suppression",
+        # A first-year Modelo 202 instalment scoped out by the activity start.
+        "application.modelo.findings.cross_period_first_year_fractional_suppression",
+        # An earlier filing admitted because it carries zero into this one.
+        "application.modelo.findings.cross_period_zero_value_previous_filing",
+        # An earlier Modelo 111 admitted because it declares no withholdings.
+        "application.modelo.findings.cross_period_m111_no_retenciones",
+        # Source modelos this taxpayer does not file.
+        "application.modelo.findings.cross_period_modelo_not_applicable.message",
+    }
+)
+"""The advisory findings that explain a decision the verification already made.
+
+Each is produced by the cross-period clean-state verification when a
+dependency is admitted or scoped out on explicit evidence: the finding tells
+the filer why, and asks nothing of them. Advisories outside this set, such as
+a possibly missed reduction or a total resting on a non-official local chain,
+remain worth checking. The set is closed and keyed on the producers' catalogue
+keys; a key it names that no catalogue carries fails its guard test.
+"""
+
+
+def finding_attention(finding: ModeloVerificationFinding) -> ModeloFormAttention:
+    """Classify one verification finding on the filer's attention scale.
+
+    A blocking finding blocks. A warning is worth checking, unless it is an
+    advisory the verification emits to explain an admitted or scoped-out
+    dependency, which is for information only.
+    """
+    if finding.severity is ModeloVerificationFindingSeverity.BLOCKING:
+        return ModeloFormAttention.BLOCKS
+    if (
+        finding.kind is ModeloVerificationFindingKind.ADVISORY
+        and finding.message_locale_key in EXPLANATORY_FINDING_MESSAGE_KEYS
+    ):
+        return ModeloFormAttention.INFO
+    return ModeloFormAttention.CHECK
+
+
+def _issue_attention(data: dict[str, Any]) -> ModeloFormAttention:
+    finding = data.get("finding")
+    if not isinstance(finding, ModeloVerificationFinding):
+        raise ValueError("an issue's attention is derived from its finding")
+    return finding_attention(finding)
+
+
 class ModeloFormIssue(_FormModel):
     """One finding of the current calculation's latest verification, with the box it concerns.
 
     The finding keeps its catalogue key and typed facts, so the frontend renders
     it in the filer's language; ``box`` is the official box number when the
-    finding names a casilla the form shows.
+    finding names a casilla the form shows. ``attention`` places the finding on
+    the filer's scale and is derived from the finding when not given.
     """
 
     finding: ModeloVerificationFinding
     box: str | None = None
+    attention: ModeloFormAttention = Field(default_factory=_issue_attention)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _attention_matches_the_finding(self) -> ModeloFormIssue:
+        if self.attention is not finding_attention(self.finding):
+            raise ValueError("an issue's attention must be the one its finding classifies to")
+        return self
+
+
+class ModeloFormAeatData(_FormModel):
+    """The AEAT tax data (borrador) the current calculation took values from.
+
+    Recalculating replays the imported snapshot, so its values keep feeding the
+    declaration until it is replaced. ``imported_at`` is when the data was
+    imported, or ``None`` when this read could not open the snapshot's record;
+    ``binding_ids`` are the bindings whose values the snapshot supplied.
+    """
+
+    snapshot_id: str = Field(min_length=1)
+    imported_at: datetime | None = None
+    binding_ids: tuple[BindingId, ...] = ()
+
+
+class ModeloFormDeadline(_FormModel):
+    """The last day of the voluntary filing window for this declaration.
+
+    ``nominal_closes_on`` is the date the registry declares; ``closes_on`` is
+    the date after the business-day shift, and ``holiday_coverage`` says which
+    holidays that shift accounted for, so a date computed without the filer's
+    regional holidays is never passed off as final. Exactly one of
+    ``days_remaining`` and ``days_overdue`` is set, counted from
+    ``reference_on``.
+    """
+
+    closes_on: date
+    nominal_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
+    reference_on: date
+    days_remaining: int | None = Field(default=None, ge=0)
+    days_overdue: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_posture(self) -> ModeloFormDeadline:
+        if (self.days_remaining is None) == (self.days_overdue is None):
+            raise ValueError("a deadline is either still open or passed, never both or neither")
+        return self
+
+
+class ModeloFormResultDirection(StrEnum):
+    """Which way the declaration's result settles, as its official design declares it."""
+
+    TO_PAY = "to_pay"
+    TO_REFUND = "to_refund"
+    TO_CARRY_FORWARD = "to_carry_forward"
+    NIL = "nil"
+    #: Nothing declares how this result settles, or it has no value yet.
+    UNKNOWN = "unknown"
+
+
+class ModeloFormResult(_FormModel):
+    """The box that settles the declaration, its value and its direction.
+
+    ``disposition`` is the official "tipo de declaración" code the result
+    implies before any election the filer makes when filing; the direction is
+    read from it and from nothing else, never from the sign alone. When the
+    registry names the settlement box but declares no such rule, the direction
+    is unknown. ``election_may_change`` says the filer's refund election can
+    still turn a carried credit into a refund.
+    """
+
+    casilla_id: CasillaId
+    box: str | None
+    value: Decimal | None
+    direction: ModeloFormResultDirection
+    disposition: ResultDisposition | None = None
+    election_may_change: bool = False
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _direction_needs_a_value(self) -> ModeloFormResult:
+        if self.value is None and self.direction is not ModeloFormResultDirection.UNKNOWN:
+            raise ValueError("a result without a value has no direction")
+        return self
+
+
+class ModeloFormFiling(_FormModel):
+    """The declaration is recorded in Cadrumo as filed; nothing was sent to AEAT from here."""
+
+    #: When the filing was recorded, or ``None`` when the revision does not say.
+    recorded_at: datetime | None = None
+
+
+class ModeloFormEditClosure(StrEnum):
+    """Why nothing on the form may be edited, whatever the edit admission says."""
+
+    #: The declaration is recorded as filed; changing it starts a correction
+    #: (a complementaria or a rectificativa), never an edit in place.
+    RECORDED_AS_FILED = "recorded_as_filed"
 
 
 class ModeloWorkForm(_FormModel):
@@ -405,6 +613,16 @@ class ModeloWorkForm(_FormModel):
     verification: VerificationCompletenessStatus | None = None
     #: That verification's findings, blocking first, whether or not they name a casilla.
     issues: tuple[ModeloFormIssue, ...] = ()
+    #: The settlement box and its direction; ``None`` when the registry names no settlement box.
+    result: ModeloFormResult | None = None
+    #: The last day to file; ``None`` when the registry declares no window for this declaration.
+    deadline: ModeloFormDeadline | None = None
+    #: The AEAT tax data the current calculation replayed; ``None`` when it replayed none.
+    aeat_data: ModeloFormAeatData | None = None
+    #: Set when the declaration is recorded as filed.
+    filing: ModeloFormFiling | None = None
+    #: Why nothing may be edited, when something other than the admission closes the form.
+    edit_closure: ModeloFormEditClosure | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -412,6 +630,8 @@ class ModeloWorkForm(_FormModel):
         inspecting = self.layout_provenance is ModeloFormLayoutProvenance.INSPECTION_ONLY
         if inspecting != (self.inspection_reason is not None):
             raise ValueError("an inspection reason belongs to, and only to, an inspection-only form")
+        if self.edit_closure is not None and self.edit_admitted:
+            raise ValueError("a form closed to editing admits no edit")
         return self
 
     def fields(self) -> tuple[ModeloFormField, ...]:
@@ -440,7 +660,10 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 __all__ = [
     "ABSENT_FROM_ADMISSION",
+    "EXPLANATORY_FINDING_MESSAGE_KEYS",
     "ModeloFormAddressV1",
+    "ModeloFormAeatData",
+    "ModeloFormAttention",
     "ModeloFormBinding",
     "ModeloFormBindingAddressV1",
     "ModeloFormBindingInputsBlock",
@@ -448,9 +671,13 @@ __all__ = [
     "ModeloFormBlocker",
     "ModeloFormCasillaAddressV1",
     "ModeloFormCounts",
+    "ModeloFormDeadline",
+    "ModeloFormEarlierFiling",
+    "ModeloFormEditClosure",
     "ModeloFormEditability",
     "ModeloFormField",
     "ModeloFormFieldBlock",
+    "ModeloFormFiling",
     "ModeloFormGridBlock",
     "ModeloFormGridCell",
     "ModeloFormGridColumn",
@@ -462,13 +689,17 @@ __all__ = [
     "ModeloFormPage",
     "ModeloFormRepeatingBlock",
     "ModeloFormRepeatingRow",
+    "ModeloFormResult",
+    "ModeloFormResultDirection",
     "ModeloFormScalar",
     "ModeloFormSection",
     "ModeloFormText",
     "ModeloFormTextDisclosure",
     "ModeloFormUnplacedField",
+    "ModeloFormValueSource",
     "ModeloWorkForm",
     "address_key",
     "edit_address",
+    "finding_attention",
     "section_fields",
 ]
