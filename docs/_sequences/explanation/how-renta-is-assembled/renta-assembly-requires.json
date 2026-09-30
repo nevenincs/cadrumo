@@ -727,6 +727,7 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0516","label":"Regional portion: Minimum for ascendants. Amount","legal_refs":["ley-35-2006:art-56","orden-hac-277-2026:art-3"],"number":"0516","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0517","label":"State portion: Minimum for disability. Amount","legal_refs":["ley-35-2006:art-56","orden-hac-277-2026:art-3"],"number":"0517","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0518","label":"Regional portion: Minimum for disability. Amount","legal_refs":["ley-35-2006:art-56","orden-hac-277-2026:art-3"],"number":"0518","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
+            {"binding_id":null,"binding_source":null,"casilla_id":"0525","label":"Corresponding to the general net taxable base","legal_refs":["ley-35-2006:art-7","orden-hac-277-2026:art-3"],"number":"0525","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0526","label":"Corresponding to the savings net taxable base","legal_refs":["ley-35-2006:art-7","orden-hac-277-2026:art-3"],"number":"0526","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0544","label":"For habitual and effective residence on the island of La Palma (amounts from these boxes of Annex A.6): State portion","legal_refs":["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"0544","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0549","label":"Deduction for investment in newly or recently created businesses (amount from this box of Annex A.1): State portion","legal_refs":["ley-35-2006:art-68.1","orden-hac-277-2026:art-3"],"number":"0549","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -771,7 +772,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0606","label":"Withholdings under article 11 of Directive 2003/48/EC accrued before 2019","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0606","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0607","label":"For the purchase of plug-in electric and fuel-cell vehicles (amount from this box of Annex A.2): State portion","legal_refs":["ley-35-2006:da-58","orden-hac-277-2026:art-3"],"number":"0607","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0608","label":"For the installation of charging points (amount from this box of Annex A.2): State portion","legal_refs":["ley-35-2006:da-58","orden-hac-277-2026:art-3"],"number":"0608","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0611","label":"Maternity deduction. Deduction amount","legal_refs":["ley-35-2006:art-81","orden-hac-277-2026:art-3"],"number":"0611","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0612","label":"Maternity deduction. Advance payment","legal_refs":["ley-35-2006:art-81","orden-hac-277-2026:art-3"],"number":"0612","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0613","label":"Increase for childcare (nursery) expenses","legal_refs":["ley-35-2006:art-81","orden-hac-277-2026:art-3"],"number":"0613","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0614","label":"Tax ID (NIF) of the dependent descendant","legal_refs":["ley-35-2006:art-64","ley-35-2006:art-75","ley-35-2006:art-81-bis","orden-hac-277-2026:art-3"],"number":"0614","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -2359,30 +2359,7 @@
             {"binding_id":"renta-profile-tax-residence-ccaa","binding_source":"profile","casilla_id":"ZCCAD","label":"Autonomous Community of the return","legal_refs":["orden-hac-277-2026:art-3"],"number":"*70","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"]},
             {"binding_id":"renta-profile-spouse-eu-eea-country","binding_source":"profile","casilla_id":"ZRUE2","label":"Spouse's country of residence, EU or EEA","legal_refs":["orden-hac-277-2026:art-3"],"number":"*43","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"]}
           ],
-          "relation_prefill": [
-            {
-              "binding_id": "renta-modelo-184-atribucion-actividades-economicas",
-              "binding_source": "relation_prefill",
-              "casilla_id": "1577",
-              "label": "Net return from economic activity attributed by entities under the income attribution regime",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32",
-                "ley-35-2006:art-86",
-                "ley-35-2006:art-89",
-                "orden-hap-2250-2015:art-3"
-              ],
-              "number": "1577",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-dr-100-2025-xsd",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            }
-          ],
+          "relation_prefill": [],
           "required_manual": [],
           "revision": "2025",
           "unbucketed_sources": [

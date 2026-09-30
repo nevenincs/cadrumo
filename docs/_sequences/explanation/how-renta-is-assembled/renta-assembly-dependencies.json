@@ -217,24 +217,6 @@
                 },
                 "source_modelo": "131",
                 "unexpected_member_nifs": []
-              },
-              {
-                "blockers": [],
-                "calculation_revision_id": null,
-                "clean": true,
-                "expected_member_nifs": [],
-                "external_evidence_kind": null,
-                "filing_record_id": null,
-                "filing_year": 2025,
-                "missing_member_nifs": [],
-                "observation_source_kind": null,
-                "observed_member_nifs": [],
-                "period": {
-                  "code": "0A",
-                  "filing_year": 2025
-                },
-                "source_modelo": "184",
-                "unexpected_member_nifs": []
               }
             ],
             "requires_clean_state": true,
@@ -493,44 +475,13 @@
                     "aeat-renta-2025-manual-parte1",
                     "boe-modelo-100-2025-form"
                   ]
-                },
-                {
-                  "filing_year": 2025,
-                  "legal_refs": [
-                    "ley-35-2006:art-86",
-                    "ley-35-2006:art-87",
-                    "ley-35-2006:art-88",
-                    "ley-35-2006:art-89",
-                    "orden-hap-2250-2015:art-1",
-                    "orden-hap-2250-2015:art-3"
-                  ],
-                  "origin": "registry_relation",
-                  "origin_ids": [
-                    "renta-modelo-184-atribucion-actividades-economicas"
-                  ],
-                  "period": {
-                    "code": "0A",
-                    "filing_year": 2025
-                  },
-                  "required_source_casilla_ids": null,
-                  "requires_member_fan_in": false,
-                  "source_casilla_ids": [
-                    "tipo2.renta-atribuible-importe"
-                  ],
-                  "source_modelo": "184",
-                  "source_presence_groups": [],
-                  "source_refs": [
-                    "aeat-dr-184-2025",
-                    "aeat-renta-2025-manual-parte1"
-                  ]
                 }
               ],
-              "dependency_count": 10,
+              "dependency_count": 9,
               "source_modelos": [
                 "100",
                 "130",
-                "131",
-                "184"
+                "131"
               ],
               "target_filing_year": 2025,
               "target_modelo": "100",
@@ -547,8 +498,7 @@
           "source_modelos": [
             "100",
             "130",
-            "131",
-            "184"
+            "131"
           ],
           "target_count": 1,
           "target_modelos": [
