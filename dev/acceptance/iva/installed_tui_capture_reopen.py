@@ -48,7 +48,6 @@ _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
     ("cadrumo.entrypoints.tui.ledger.classification", "src/cadrumo/entrypoints/tui/ledger/classification.py"),
     ("cadrumo.entrypoints.tui.ledger.entries", "src/cadrumo/entrypoints/tui/ledger/entries.py"),
     ("cadrumo.entrypoints.tui.ledger.import_flow", "src/cadrumo/entrypoints/tui/ledger/import_flow.py"),
-    ("cadrumo.entrypoints.tui.ledger_doors", "src/cadrumo/entrypoints/tui/ledger_doors.py"),
 )
 _CLASSIFICATION_FIELDS: Final[tuple[str, ...]] = (
     "taxable_base",

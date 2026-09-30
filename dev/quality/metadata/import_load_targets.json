@@ -2465,7 +2465,6 @@
         "cadrumo.entrypoints.tui.ledger.routes",
         "cadrumo.entrypoints.tui.ledger.workspace_injection",
         "cadrumo.entrypoints.tui.ledger.workspace_presentation",
-        "cadrumo.entrypoints.tui.ledger_doors",
         "cadrumo.entrypoints.tui.modelo",
         "cadrumo.entrypoints.tui.modelo.export_result",
         "cadrumo.entrypoints.tui.modelo.installed_workspace",
