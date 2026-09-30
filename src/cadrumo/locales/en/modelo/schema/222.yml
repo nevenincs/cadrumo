@@ -350,8 +350,8 @@ modelo:
               LIS).
             label: Method under art. 40.3 LIS - TOTAL - Decreases
           tipo-declaracion-resultado:
-            label: Instalment payment method (art. 40.2 gross tax liability / art.
-              40.3 taxable base)
+            label: 'Return type: result code (I payment, U direct debit, G payment
+              through the tax current account, N nil return)'
       construct:
         modelo-222-declaration-construct:
           field:

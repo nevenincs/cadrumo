@@ -33,6 +33,11 @@ semantic_role = "dr303_26"
 continuidad_id = "dr303-26"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints box [27] as "Total cuota devengada ( [03] +
+# [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] + [26]) [27]"
+# (aeat-dr-303-2022, campo 51), the same total every later design prints with
+# only the rungs added in its own year, so the box projects the devengado total
+# from this revision on.
 [[revisions.2022.casillas]]
 id = "27"
 number = "27"
@@ -387,6 +392,12 @@ binding = "modelo-303-casilla-60-exportaciones-base"
 # so the repercusión/deducción articles 88/92 do not apply — base-only box.
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box at position 46, length 17, as
+# "Operaciones no sujetas por reglas de localizacion (excepto las incluidas en la
+# casilla 123) [120]" (aeat-dr-303-2022) -- the same position, width and concept
+# every later design prints, which only prefixes its apartado name. The ledger
+# already classifies the acquisitions it reports, so the box is derived here
+# rather than left as a figure the operator restates.
 [[revisions.2022.casillas]]
 id = "120"
 number = "120"
@@ -397,6 +408,9 @@ input_kind = "bound"
 binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
 legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box at position 63, length 17, as
+# "Operaciones sujetas con inversion del sujeto pasivo [122]"
+# (aeat-dr-303-2022), unchanged in every later design.
 [[revisions.2022.casillas]]
 id = "122"
 number = "122"
@@ -471,6 +485,11 @@ semantic_role = "dr303_76"
 continuidad_id = "dr303-76"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints "Suma de resultados ( [46] + [58] + [76] )
+# [64]", "% Atribuible a la Administracion del Estado [65]" and "Atribuible a la
+# Administracion del Estado [66]" (aeat-dr-303-2022, resultado campos 16-18)
+# exactly as every later design does, so the three boxes are computed and bound
+# from this revision on rather than left to operator input.
 [[revisions.2022.casillas]]
 id = "64"
 continuidad_id = "dr303-64"
@@ -479,8 +498,8 @@ section = ["iva", "resultado"]
 semantic_role = "dr303_64"
 input_kind = "computed"
 formula = "modelo-303-iva-suma-resultados"
-additional_source_refs = ["aeat-modelo-303-procedure"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "65"
@@ -501,8 +520,8 @@ section = ["iva", "resultado"]
 semantic_role = "dr303_66"
 input_kind = "computed"
 formula = "modelo-303-iva-atribuible-estado"
-additional_source_refs = ["aeat-modelo-303-procedure"]
 legal_refs = ["rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "77"
@@ -2077,8 +2096,6 @@ number = "03"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_03"
 continuidad_id = "dr303-03"
-input_kind = "computed"
-formula = "modelo-303-dr303-03-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2106,8 +2123,6 @@ number = "06"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_06"
 continuidad_id = "dr303-06"
-input_kind = "computed"
-formula = "modelo-303-dr303-06-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2135,8 +2150,6 @@ number = "09"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_09"
 continuidad_id = "dr303-09"
-input_kind = "computed"
-formula = "modelo-303-dr303-09-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2149,6 +2162,12 @@ input_kind = "computed"
 formula = "modelo-303-dr303-10-projection"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box as "Adquisiciones
+# intracomunitarias de bienes y servicios - Cuota [11]" (aeat-dr-303-2022), the
+# same row every later design prints, and the block carries no rate field of its
+# own for the box to depend on. The annual cuota it states is already resolved
+# from the ledger on this revision, so the box projects that carrier here rather
+# than asking the operator to retype a figure the revision has.
 [[revisions.2022.casillas]]
 id = "11"
 number = "11"
@@ -2167,6 +2186,13 @@ semantic_role = "dr303_12"
 continuidad_id = "dr303-12"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box as "Otras operaciones con
+# inversion del sujeto pasivo (excepto. adq. intracom) - Cuota [13]"
+# (aeat-dr-303-2022), the same row every later design prints, and the block
+# carries no rate field of its own. Its carrier is already the summand this
+# revision's own total cuota devengada adds for the domestic reverse charge, so
+# leaving the box to operator input let the record and the total state different
+# figures for one concept.
 [[revisions.2022.casillas]]
 id = "13"
 number = "13"

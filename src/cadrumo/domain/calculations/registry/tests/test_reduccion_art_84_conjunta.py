@@ -46,18 +46,12 @@ _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_RE
 _ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
 
 _ZERO_RELATIONS = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 _PRIOR_EDITION_BINDINGS = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
     "renta-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-profile-incremento-guarderia": Decimal("0"),

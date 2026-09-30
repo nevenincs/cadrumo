@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import revisio
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
 from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
@@ -506,6 +507,104 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     assert out.stat().st_size > 0
 
 
+def test_export_refuses_output_path_with_missing_parent_directory(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A relative-shaped ``--output`` whose parent directory is missing carries a typed reason.
+
+    The refusal must not be laundered into a bare, contextless CLI usage
+    error: the operator needs the stable reason and the exact path that was
+    refused, machine-readably.
+    """
+    _set_emilio_legal_entity_export_profile()
+    _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
+        current_index=0,
+        filing_year=2024,
+        period="1T",
+        operation=operation,
+    )
+    out = tmp_path / "missing-parent" / "modelo-111-2024-1T.boe"
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
+            "--by",
+            "Emilio",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["output_path"] == str(out)
+    assert context["reason"] == "parent directory does not exist"
+    assert not out.exists()
+
+
+def test_export_refuses_an_existing_output_path_without_replace(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A pre-existing ``--output`` file without ``--replace`` carries a typed reason too."""
+    _set_emilio_legal_entity_export_profile()
+    _seed_modelo_111_revisions(
+        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
+        current_index=0,
+        filing_year=2024,
+        period="1T",
+        operation=operation,
+    )
+    out = tmp_path / "modelo-111-2024-1T.boe"
+    out.write_bytes(b"already here")
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            "--modelo",
+            "111",
+            "--year",
+            "2024",
+            "--period",
+            "1T",
+            "--output",
+            str(out),
+            "--by",
+            "Emilio",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["output_path"] == str(out)
+    assert context["reason"] == "path is an existing file"
+    assert out.read_bytes() == b"already here"
+
+
 def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomplete_producer_facts(
     tmp_path: Path,
     *,
@@ -545,6 +644,8 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
     error = json.loads(result.output)["error"]
     assert error["context"]["calculation_revision_id"] == calculation_revision_id
     assert error["context"]["cause_type"] == "FilingProducerSnapshotError"
+    assert error["context"]["reason"] == "m202_producer_facts_unsupported"
+    assert error["context"]["missing_fact_ids"] == ", ".join(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS)
     assert not out.exists()
 
 

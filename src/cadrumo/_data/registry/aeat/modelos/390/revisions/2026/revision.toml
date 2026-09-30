@@ -141,7 +141,7 @@ from_revision = "2025"
 to_revision = "2026"
 origin = "grounded"
 evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [665] at the 0,62 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-390-2026-form"]
 
 [[revisions."2026".lineage_attestations]]
@@ -151,7 +151,7 @@ from_revision = "2025"
 to_revision = "2026"
 origin = "grounded"
 evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [663] at the 0 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-390-2026-form"]
 
 [[revisions."2026".lineage_attestations]]
@@ -161,7 +161,7 @@ from_revision = "2025"
 to_revision = "2026"
 origin = "grounded"
 evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [664] at the 0 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-390-2026-form"]
 
 [[revisions."2026".lineage_attestations]]

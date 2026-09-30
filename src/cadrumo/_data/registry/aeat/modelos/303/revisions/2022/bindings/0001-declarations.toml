@@ -656,6 +656,10 @@ required_text = ["Modelo 303. IVA. Autoliquidación."]
 [revisions.2022.bindings.aggregation]
 op = "copy"
 
+# Box [65], the percentage of the result attributable to the Administracion del
+# Estado, is the taxpayer's own state attribution ratio. The concierto and
+# convenio apportionment it records is not year-specific: the 2022 diseno de
+# registro prints the box as every later design does.
 [[revisions.2022.bindings]]
 id = "modelo-303-profile-state-attribution-ratio"
 provider = { kind = "profile", profile_key = "tax_residence.state_attribution_ratio" }
@@ -685,6 +689,10 @@ required_text = ["modelo 303"]
 [revisions.2022.bindings.aggregation]
 op = "sum"
 
+# Casillas 120 and 122 are informational base-only boxes of the apartado the
+# 2022 diseno de registro prints at positions 46 and 63. Both carry the same
+# number, width, type and concept in every later design, so they are declared
+# once here and inherited.
 # Casilla 122, "Operaciones sujetas con inversión del sujeto pasivo": the
 # SUPPLIER's side of a domestic reverse charge, declared as base only.
 #

@@ -122,8 +122,8 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     result = unwrap_schema_envelope(invocation.output)
     relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
     assert {
-        ("renta-modelo-111-retenciones-periodicas", "relation_prefill"),
-        ("renta-modelo-190-retenciones-anuales", "relation_prefill"),
+        ("renta-modelo-130-pagos-fraccionados", "relation_prefill"),
+        ("renta-modelo-131-pagos-fraccionados", "relation_prefill"),
     } <= relation_pairs
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
     assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs

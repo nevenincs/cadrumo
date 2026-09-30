@@ -511,6 +511,13 @@ def test_modelo_100_constructs_declare_their_revision_members() -> None:
 
 
 def test_modelo_100_renta_section_constructs_classify_registered_relation_sources() -> None:
+    """Only the declarant's own instalment and attribution filings feed a section.
+
+    A withholding-agent return (111, 115, 123, 180, 190, 193) reports tax the
+    declarant withheld from other people, so no Renta section construct may
+    classify one as a relation source. Work income and movable capital take
+    their credit from perceptor-side evidence instead, which is not a relation.
+    """
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
@@ -530,9 +537,9 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
     }
 
     assert source_modelos_by_construct == {
-        "renta-work-income": {"111", "190"},
+        "renta-work-income": set(),
         "renta-real-estate-capital": set(),
-        "renta-movable-capital": {"123", "193"},
+        "renta-movable-capital": set(),
         # A filed Modelo 184 carries the entity's type-2 totals, not the member's
         # share casilla 1577 declares, so no economic-activity fold reads it.
         "renta-economic-activities": {"130", "131"},
@@ -862,10 +869,10 @@ def test_validator_rejects_unclassified_relation_source() -> None:
 
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
     modelo, revision = _modelo_100_revision_2025()
-    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
-    # A foreign binding in place of the modelo 111 one leaves the 111 relation uncovered.
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    # A foreign binding in place of the modelo 130 one leaves the 130 relation uncovered.
     mutated_classification = classification.model_copy(
-        update={"binding_refs": ("renta-modelo-123-retenciones-periodicas",)},
+        update={"binding_refs": ("renta-modelo-131-pagos-fraccionados",)},
     )
     mutated_revision = revision.model_copy(
         update={
@@ -927,8 +934,8 @@ def test_validator_rejects_duplicate_dependency_classification_source() -> None:
 
 def test_validator_rejects_dependency_classification_target_construct_drift() -> None:
     modelo, revision = _modelo_100_revision_2025()
-    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "190")
-    construct = next(item for item in revision.constructs if item.id == "renta-work-income")
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    construct = next(item for item in revision.constructs if item.id == "renta-payments-retentions")
     mutated_construct = construct.model_copy(
         update={
             "dependency_classifications": tuple(

@@ -277,7 +277,7 @@ def work_report_verify(
 ) -> None:
     """Verify a calculation summary PDF, and trace it to the active profile's store."""
     activate_subcommand_output_language(ctx, output_language)
-    trusted_public_key_hex = None if trusted_key is None else validate_trusted_public_key(trusted_key)
+    trusted_public_key_hex = validate_trusted_public_key(trusted_key)
     if not path.is_file():
         raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.file_not_found", path=str(path)))
     from ...adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf

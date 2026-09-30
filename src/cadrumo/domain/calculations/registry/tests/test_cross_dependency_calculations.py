@@ -740,12 +740,8 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     )
 
     assert set(relation_values) == {
-        "renta-modelo-111-retenciones-periodicas",
-        "renta-modelo-123-retenciones-periodicas",
         "renta-modelo-130-pagos-fraccionados",
         "renta-modelo-131-pagos-fraccionados",
-        "renta-modelo-190-retenciones-anuales",
-        "renta-modelo-193-retenciones-anuales",
     }
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs == (
@@ -932,10 +928,6 @@ _OBSERVED_RENTA_RELATIONS = frozenset(
     {
         "renta-modelo-131-pagos-fraccionados",
         "renta-modelo-130-pagos-fraccionados",
-        "renta-modelo-131-rendimiento-neto-modulos",
-        "renta-modelo-111-retenciones-periodicas",
-        "renta-modelo-123-retenciones-periodicas",
-        "renta-modelo-193-retenciones-anuales",
     }
 )
 _RELATION_SET_EDITIONS = tuple(
@@ -1163,22 +1155,10 @@ def _revision_edge_years(revision: ModeloRevision, *, floor: int) -> tuple[int, 
 
 def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
     relation_id = requirement.target_bindings[0]
-    if relation_id == "renta-modelo-111-retenciones-periodicas":
-        return (Decimal("1"), Decimal("2"), Decimal("3"), Decimal("4"))[period_index]
-    if relation_id == "renta-modelo-111-retenciones-periodicas":
-        return Decimal(period_index + 1)
-    if relation_id == "renta-modelo-123-retenciones-periodicas":
-        return Decimal("20")
     if relation_id == "renta-modelo-130-pagos-fraccionados":
         return (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))[period_index]
     if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("5")
-    if relation_id == "renta-modelo-190-retenciones-anuales":
-        # Each annual summary restates its quarterly withholdings (111 -> 190,
-        # 123 -> 193); the registry holds each pair as equivalent sources.
-        return Decimal("10")
-    if relation_id == "renta-modelo-193-retenciones-anuales":
-        return Decimal("80")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
@@ -1194,12 +1174,6 @@ def _renta_quarterly_relation_observed_value(
         return m131_quarterly_amounts[period_index]
     if relation_id == "renta-modelo-130-pagos-fraccionados":
         return m130_quarterly_amounts[period_index]
-    if relation_id in {
-        "renta-modelo-111-retenciones-periodicas",
-        "renta-modelo-123-retenciones-periodicas",
-        "renta-modelo-193-retenciones-anuales",
-    }:
-        return Decimal("0")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 

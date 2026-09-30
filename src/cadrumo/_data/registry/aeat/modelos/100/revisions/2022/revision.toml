@@ -2279,7 +2279,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0596" }
-fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], alternate_bindings = ["renta-certificado-trabajo-retenciones"]}
+fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-certificado-trabajo-retenciones"}
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0597" }
@@ -7224,18 +7224,6 @@ sequence_removals = {source_refs = [0, 1]}
 
 [[revisions."2022".family_overrides]]
 family = "dependency_classifications"
-selector = {revision = "2021", id = "renta-dep-111"}
-sequence_additions = {source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
-sequence_removals = {source_refs = [0, 1]}
-
-[[revisions."2022".family_overrides]]
-family = "dependency_classifications"
-selector = {revision = "2021", id = "renta-dep-123"}
-sequence_additions = {source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
-sequence_removals = {source_refs = [0, 1]}
-
-[[revisions."2022".family_overrides]]
-family = "dependency_classifications"
 selector = {revision = "2021", id = "renta-dep-130"}
 sequence_additions = {source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
 sequence_removals = {source_refs = [0, 1]}
@@ -7521,18 +7509,6 @@ selector = {revision = "2021", id = "renta-modelo-100-estimacion-directa-es-norm
 sequence_additions = {source_refs = ["aeat-dr-100-2022-dictionary"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
-
-[[revisions."2022".family_overrides]]
-family = "bindings"
-selector = {revision = "2021", id = "renta-modelo-111-retenciones-periodicas"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2022"]}], source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-
-[[revisions."2022".family_overrides]]
-family = "bindings"
-selector = {revision = "2021", id = "renta-modelo-123-retenciones-periodicas"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2022-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2022"]}], source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2022".family_overrides]]
 family = "bindings"

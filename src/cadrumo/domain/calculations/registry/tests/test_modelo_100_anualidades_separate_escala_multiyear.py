@@ -136,8 +136,6 @@ def _run(
         inputs[_anualidades_casilla(year)] = anualidades
     binding_values = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-profile-anualidades-sin-minimo-descendientes": flag,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

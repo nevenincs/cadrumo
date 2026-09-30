@@ -56,6 +56,10 @@ Where it stops
 - One quarterly period per edition. A period whose facts would change which
   records emit (a fourth quarter's final-period prorrata coverage, a monthly
   filer) is not rendered.
+- Only supported periods render. A period a table declares below the support
+  floor is moved to the earliest supported period its edition serves, and an
+  edition serving no supported period has no scenario, because nothing below
+  the floor selects and so nothing there can render.
 - Modelo 347 has no scenario: its layout declares a required repeated record,
   so an empty draft leaves a required occurrence unemitted and the export path
   refuses it. Supplying that occurrence needs source-shaped arrivals this module
@@ -73,6 +77,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from functools import cache, partial
+from pathlib import Path
 from typing import Final
 
 from cadrumo.application.aggregation.iva_ledger import (
@@ -127,6 +132,7 @@ from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
 )
 from cadrumo.core.refund_election import RefundElection
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
@@ -135,6 +141,7 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -145,7 +152,12 @@ from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     prorrata_sector_letters,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistrySnapshot,
+    SupportedFilingYearsCatalogue,
+)
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -171,6 +183,7 @@ from cadrumo.domain.prorrata_register.register import (
 )
 
 from .compiler.authority import compiled_bundled_authority
+from .compiler.loader import load_modelo_directory, load_shared_catalogues
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
@@ -215,6 +228,7 @@ __all__ = [
     "m308_export_scenario",
     "m322_export_scenario",
     "m390_export_scenario",
+    "supported_scenario_periods",
 ]
 
 #: The quarter each Modelo 303 edition is rendered for; each selects exactly that edition.
@@ -463,13 +477,86 @@ def _m303_differentiated_sectors() -> tuple[SectorDefinition, ...]:
 _M303_NON_AGRICULTURAL: Final = "no_agricola"
 
 
-def edition_export_scenarios(modelo_id: str) -> Mapping[str, EditionExportScenario]:
-    """Every declared export scenario for ``modelo_id``, keyed by the edition it selects; empty when none is."""
+def edition_export_scenarios(
+    modelo_id: str,
+    *,
+    registry_root: Path | None = None,
+) -> Mapping[str, EditionExportScenario]:
+    """Every declared export scenario for ``modelo_id``, keyed by the edition it selects; empty when none is.
+
+    Each edition renders at the period its table declares when the support
+    envelope admits it, and otherwise at the earliest supported period it
+    serves, as :func:`supported_scenario_periods` decides against
+    ``registry_root`` (the bundled registry when omitted).
+    """
     declared = _DECLARED_SCENARIOS.get(modelo_id)
     if declared is None:
         return dict[str, EditionExportScenario]()
     builder, periods = declared
-    return {revision_id: builder(period) for revision_id, period in periods.items()}
+    rendered = supported_scenario_periods(
+        modelo_id,
+        periods,
+        registry_root=bundled_path("registry", "aeat") if registry_root is None else registry_root,
+    )
+    return {revision_id: builder(period) for revision_id, period in rendered.items()}
+
+
+def supported_scenario_periods(
+    modelo_id: str,
+    periods: Mapping[str, Period],
+    *,
+    registry_root: Path,
+) -> dict[str, Period]:
+    """Return the period each edition renders at: its declared one, or the earliest supported one it serves.
+
+    Nothing selects below the support floor, so a scenario declared there is
+    refused before a byte renders and proves nothing about the edition. An
+    edition whose span straddles the floor still files the supported years it
+    covers, so it renders at the first of them, keeping its declared period
+    code where that year serves it. The year and period are confirmed by the
+    canonical revision selection rather than read off the edition's name. An
+    edition that serves no supported year has no renderable export and gets no
+    scenario.
+    """
+    support = load_shared_catalogues(registry_root).require_supported_filing_years()
+    rendered: dict[str, Period] = {}
+    modelo: ModeloDefinition | None = None
+    for revision_id, period in periods.items():
+        if support.admits_filing_year(period.filing_year):
+            rendered[revision_id] = period
+            continue
+        if modelo is None:
+            modelo = load_modelo_directory(registry_root / "modelos" / modelo_id)
+        supported = _earliest_supported_period(modelo, revision_id, period, support)
+        if supported is not None:
+            rendered[revision_id] = supported
+    return rendered
+
+
+def _earliest_supported_period(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    declared: Period,
+    support: SupportedFilingYearsCatalogue,
+) -> Period | None:
+    """The first supported ``(year, period)`` that canonically selects ``revision_id``, or ``None``."""
+    revision = modelo.revisions.get(revision_id)
+    if revision is None:
+        return None
+    for year in support.years:
+        if year < declared.filing_year or not revision.period_selector.includes_year(year):
+            continue
+        served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
+        preferred = declared.registry_token
+        for token in dict.fromkeys((*(item for item in served if item == preferred), *served)):
+            try:
+                selected = select_revision(modelo, filing_year=year, period=token, support=support)
+                candidate = Period.from_year_and_code(year, token)
+            except (RegistryError, ValueError):
+                continue
+            if str(selected.id) == revision_id:
+                return candidate
+    return None
 
 
 # ── modelo 303 ──────────────────────────────────────────────────────────────

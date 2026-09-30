@@ -42,8 +42,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class InterruptingOutput:
-        async def read(self, size: int) -> bytes:
-            del size
+        async def read(self, size: int = -1) -> bytes:
             run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
@@ -87,13 +86,24 @@ def test_command_run_finalizes_metadata_when_interrupted(
     assert "FINISH " in transcript
 
 
-_PAST_THE_DEFAULT_STREAM_LIMIT = 4 * 64 * 1024 + 17
+_DEFAULT_STREAM_LIMIT = 64 * 1024
+"""asyncio's default ``StreamReader`` limit, which is also the runner's read chunk size."""
+
+_PAST_THE_DEFAULT_STREAM_LIMIT = 4 * _DEFAULT_STREAM_LIMIT + 17
 """A line length four times asyncio's default 64 KiB stream limit, off any chunk boundary."""
 
 
-def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(tmp_path: Path) -> None:
-    long_line = "x" * _PAST_THE_DEFAULT_STREAM_LIMIT
-    script = f"import sys; sys.stdout.write('before\\n' + 'x' * {_PAST_THE_DEFAULT_STREAM_LIMIT} + '\\nafter\\ntail')"
+@pytest.mark.parametrize(
+    "line_length",
+    [4 * _DEFAULT_STREAM_LIMIT, _PAST_THE_DEFAULT_STREAM_LIMIT],
+    ids=["on-a-chunk-boundary", "off-a-chunk-boundary"],
+)
+def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(
+    tmp_path: Path,
+    line_length: int,
+) -> None:
+    long_line = "x" * line_length
+    script = f"import sys; sys.stdout.write('before\\n' + 'x' * {line_length} + '\\nafter\\ntail')"
 
     status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
 
@@ -138,6 +148,7 @@ def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
 
     assert status == 0
     finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["event"] == "run_finished"
     assert finished["classification"] == "blocking_findings"
     assert finished["translation_backlog"]["cells_to_translate"] == 4_000
     run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))

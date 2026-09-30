@@ -2406,7 +2406,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0596" }
-fields = { section = ["retenciones_ingresos_cuenta_pagos_fraccionados"], alternate_bindings = ["renta-modelo-190-retenciones-anuales", "renta-certificado-trabajo-retenciones"], legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hac-277-2026:art-3", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"] }
+fields = { section = ["retenciones_ingresos_cuenta_pagos_fraccionados"], legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hac-277-2026:art-3", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0597" }
@@ -9766,19 +9766,6 @@ sequence_removals = {source_refs = [0, 1, 2]}
 
 [[revisions."2025".family_overrides]]
 family = "dependency_classifications"
-selector = {revision = "2024", id = "renta-dep-111"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-work-income"]}
-sequence_removals = {source_refs = [0, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "dependency_classifications"
-selector = {revision = "2024", id = "renta-dep-123"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-movable-capital"]}
-sequence_removals = {source_refs = [0, 1]}
-sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
-
-[[revisions."2025".family_overrides]]
-family = "dependency_classifications"
 selector = {revision = "2024", id = "renta-dep-130"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-economic-activities"]}
 sequence_removals = {legal_refs = [0, 2], source_refs = [0, 1]}
@@ -9790,11 +9777,6 @@ selector = {revision = "2024", id = "renta-dep-131"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"], target_constructs = ["renta-payments-retentions", "renta-economic-activities"]}
 sequence_removals = {legal_refs = [0, 1, 2, 3, 5], source_refs = [0, 1, 2, 3]}
 sequence_order = {legal_refs = [0, 2, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "dependency_classifications"
-selector = {revision = "2024", id = "renta-dep-193"}
-sequence_additions = {target_constructs = ["renta-payments-retentions", "renta-movable-capital"]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
@@ -9815,9 +9797,9 @@ sequence_order = {formulas = [11, 10, 17, 12, 13, 14, 36, 15, 16, 29, 28, 18, 19
 family = "constructs"
 selector = {revision = "2024", id = "renta-dependent-modelos"}
 removed_fields = ["casilla_ids", "formulas"]
-sequence_additions = {bindings = ["renta-modelo-190-retenciones-anuales", "renta-base-liquidable-negativa-general-anterior"], dependency_classifications = ["renta-dep-100", "renta-dep-184", "renta-dep-190", "renta-dep-303", "renta-dep-390", "renta-dep-347", "renta-dep-349", "renta-dep-369", "renta-dep-840", "renta-dep-036", "renta-dep-202", "renta-dep-200", "renta-dep-232", "renta-dep-720"], legal_refs = ["ley-35-2006:art-50", "ley-27-2014:art-18", "ley-27-2014:art-40", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "orden-hac-277-2026:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-232-procedure", "aeat-dr-184-2025"]}
-sequence_removals = {legal_refs = [2, 3, 4, 8], source_refs = [0, 1, 2, 3, 4]}
-sequence_order = {bindings = [0, 1, 2, 3, 5, 4, 6], dependency_classifications = [0, 1, 2, 3, 5, 6, 7, 4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], legal_refs = [0, 1, 10, 2, 11, 12, 3, 4, 13, 7, 14, 15, 8, 9, 5, 6, 16, 17, 18, 19, 20, 21], source_refs = [2, 3, 4, 5, 6, 0, 1, 7, 8, 9]}
+sequence_additions = {bindings = ["renta-base-liquidable-negativa-general-anterior"], dependency_classifications = ["renta-dep-100", "renta-dep-184", "renta-dep-303", "renta-dep-390", "renta-dep-347", "renta-dep-349", "renta-dep-369", "renta-dep-840", "renta-dep-036", "renta-dep-202", "renta-dep-200", "renta-dep-232", "renta-dep-720"], legal_refs = ["ley-35-2006:art-50", "ley-27-2014:art-18", "ley-27-2014:art-40", "orden-hac-277-2026:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-modelo-202-instructions", "aeat-modelo-232-procedure", "aeat-dr-184-2025"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 7, 8], source_refs = [0, 1, 2, 3, 4]}
+sequence_order = {legal_refs = [0, 1, 5, 6, 7, 2, 8, 3, 4, 9, 10, 11, 12, 13, 14]}
 
 [[revisions."2025".family_overrides]]
 family = "constructs"
@@ -10487,19 +10469,6 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "bindings"
-selector = {revision = "2024", id = "renta-modelo-111-retenciones-periodicas"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-
-[[revisions."2025".family_overrides]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-modelo-123-retenciones-periodicas"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1]}
-sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
-
-[[revisions."2025".family_overrides]]
-family = "bindings"
 selector = {revision = "2024", id = "renta-modelo-130-pagos-fraccionados"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {legal_refs = [0, 2], source_citations = [0], source_refs = [0, 1]}
@@ -11076,93 +11045,73 @@ position = 0
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-111"
+id = "renta-dep-130"
 position = 0
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-123"
+id = "renta-dep-131"
 position = 1
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-130"
+id = "renta-dep-184"
 position = 2
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-131"
+id = "renta-dep-303"
 position = 3
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-184"
+id = "renta-dep-390"
 position = 4
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-190"
+id = "renta-dep-347"
 position = 5
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-193"
+id = "renta-dep-349"
 position = 6
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-303"
+id = "renta-dep-369"
 position = 7
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-390"
+id = "renta-dep-840"
 position = 8
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-347"
+id = "renta-dep-036"
 position = 9
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-349"
+id = "renta-dep-202"
 position = 10
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-369"
+id = "renta-dep-200"
 position = 11
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-840"
+id = "renta-dep-232"
 position = 12
 
 [[revisions."2025".family_positions]]
 family = "dependency_classifications"
-id = "renta-dep-036"
-position = 13
-
-[[revisions."2025".family_positions]]
-family = "dependency_classifications"
-id = "renta-dep-202"
-position = 14
-
-[[revisions."2025".family_positions]]
-family = "dependency_classifications"
-id = "renta-dep-200"
-position = 15
-
-[[revisions."2025".family_positions]]
-family = "dependency_classifications"
-id = "renta-dep-232"
-position = 16
-
-[[revisions."2025".family_positions]]
-family = "dependency_classifications"
 id = "renta-dep-720"
-position = 17
+position = 13
 
 [[revisions."2025".family_positions]]
 family = "constructs"
@@ -11456,11 +11405,6 @@ position = 11
 
 [[revisions."2025".family_positions]]
 family = "bindings"
-id = "renta-profile-taxpayer-birth-date"
-position = 12
-
-[[revisions."2025".family_positions]]
-family = "bindings"
 id = "renta-profile-spouse-tax-id"
 position = 13
 
@@ -11513,11 +11457,6 @@ position = 22
 family = "bindings"
 id = "renta-profile-family-descendants-eu-eea-deduction"
 position = 23
-
-[[revisions."2025".family_positions]]
-family = "bindings"
-id = "renta-profile-family-minor-children-in-unit"
-position = 24
 
 [[revisions."2025".family_positions]]
 family = "bindings"
@@ -11577,27 +11516,17 @@ position = 35
 [[revisions."2025".family_positions]]
 family = "bindings"
 id = "renta-modelo-130-pagos-fraccionados"
-position = 38
-
-[[revisions."2025".family_positions]]
-family = "bindings"
-id = "renta-modelo-131-pagos-fraccionados"
-position = 39
-
-[[revisions."2025".family_positions]]
-family = "bindings"
-id = "renta-modelo-190-retenciones-anuales"
-position = 40
+position = 36
 
 [[revisions."2025".family_positions]]
 family = "bindings"
 id = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
-position = 47
+position = 43
 
 [[revisions."2025".family_positions]]
 family = "bindings"
 id = "renta-profile-unidad-familiar-otros-miembros-base"
-position = 48
+position = 44
 
 [[revisions."2025".family_overrides]]
 family = "bindings"

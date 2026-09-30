@@ -69,13 +69,6 @@ casilla_ids = [
     "iva.cuota-devengada-total",
     "iva.cuota-deducible-total",
     "iva.resultado-regimen-general",
-    "58",
-    "76",
-    "64",
-    "65",
-    "66",
-    "77",
-    "68",
     "iva.compensacion-pendiente-periodos-anteriores",
     "iva.compensacion-aplicada-periodo",
     "iva.compensacion-pendiente-periodos-posteriores",
@@ -94,8 +87,18 @@ casilla_ids = [
     "24",
     "decl.ejercicio",
     "decl.periodo",
+    "28",
+    "58",
+    "76",
+    "64",
+    "65",
+    "66",
+    "77",
+    "68",
+    "70",
+    "71",
 ]
-formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-autoconsumo-promotor-cuota", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-iva-suma-resultados", "modelo-303-iva-atribuible-estado", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje", "modelo-303-dr303-09-projection", "modelo-303-dr303-06-projection", "modelo-303-dr303-03-projection", "modelo-303-dr303-10-projection", "modelo-303-dr303-11-projection", "modelo-303-dr303-13-projection", "modelo-303-dr303-27-projection", "modelo-303-iva-resultado-final", "modelo-303-iva-deducible-interiores-corrientes-base", "modelo-303-dr303-29-projection", "modelo-303-iva-deducible-interiores-bienes-inversion-base", "modelo-303-iva-deducible-interiores-bienes-inversion-cuota", "modelo-303-dr303-33-projection", "modelo-303-dr303-37-projection", "modelo-303-iva-rectificacion-deducciones-base", "modelo-303-iva-rectificacion-deducciones-cuota", "modelo-303-dr303-45-projection"]
+formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-autoconsumo-promotor-cuota", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje", "modelo-303-dr303-10-projection", "modelo-303-dr303-11-projection", "modelo-303-dr303-13-projection", "modelo-303-iva-resultado-final", "modelo-303-iva-deducible-interiores-corrientes-base", "modelo-303-dr303-29-projection", "modelo-303-iva-deducible-interiores-bienes-inversion-base", "modelo-303-iva-deducible-interiores-bienes-inversion-cuota", "modelo-303-dr303-33-projection", "modelo-303-dr303-37-projection", "modelo-303-iva-rectificacion-deducciones-base", "modelo-303-iva-rectificacion-deducciones-cuota", "modelo-303-dr303-45-projection", "modelo-303-dr303-27-projection", "modelo-303-iva-suma-resultados", "modelo-303-iva-atribuible-estado"]
 bindings = [
     "modelo-303-iva-repercutido-general-cuota",
     "modelo-303-iva-repercutido-reducido-cuota",

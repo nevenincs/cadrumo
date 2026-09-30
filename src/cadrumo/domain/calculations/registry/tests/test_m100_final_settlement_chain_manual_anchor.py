@@ -78,13 +78,11 @@ _RESULTADO_DECLARACION: CasillaId = validated_casilla_id("0670", surface="0670")
 
 _BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0102", surface="0102")
 _BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="0429")
+_RETENCION_TRABAJO: CasillaId = validated_casilla_id("0596", surface="0596")
 
 
-def _bindings(*, retencion: str) -> dict[str, Decimal]:
+def _bindings() -> dict[str, Decimal]:
     return {
-        "renta-modelo-111-retenciones-periodicas": Decimal(retencion),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         "renta-profile-guarderia-gastos-reales": Decimal("0"),
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
@@ -106,10 +104,6 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
 
 
 _RELATION_VALUES: dict[str, Decimal] = {
-    # m111/m123/m193 are exercised through the binding channel above (see
-    # _bindings()); duplicating them here would conflict with a non-zero
-    # retencion on the binding channel and confuse two channels asserting one
-    # value.
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -125,8 +119,15 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
         inputs={
             _BASE_LIQUIDABLE_GENERAL_LEAF: Decimal("23900.00"),
             _BASE_LIQUIDABLE_AHORRO_LEAF: Decimal("2800.00"),
+            _RETENCION_TRABAJO: Decimal(retencion),
         },
-        binding_values=_bindings(retencion=retencion),
+        hand_typed_bound_casillas={
+            _RETENCION_TRABAJO: (
+                "the salary certificate is an operator-keyed source: its binding names this casilla "
+                "as the value it fills, so the scenario keys the certified amount directly"
+            ),
+        },
+        binding_values=_bindings(),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "aragon"},
         relation_values=_RELATION_VALUES,
         date_context={"filing_period": date(_MANUAL_EJERCICIO, 12, 31)},
@@ -204,8 +205,8 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
 def test_final_settlement_pagos_a_cuenta_subtraction_is_wired() -> None:
     """A retencion (pago a cuenta) must reduce cuota diferencial and resultado by its amount.
 
-    Anti-tautology / wiring proof: feeding a 1.000 euro retencion periodica
-    (Modelo 111) must raise total pagos a cuenta 0609 to 1.000 and lower cuota
+    Anti-tautology / wiring proof: feeding a 1.000 euro certified salary
+    retencion must raise total pagos a cuenta 0609 to 1.000 and lower cuota
     diferencial 0610 and resultado 0670 by exactly that amount relative to the
     no-pagos scenario, proving the pagos-a-cuenta subtraction is evaluated and
     not a passthrough constant.

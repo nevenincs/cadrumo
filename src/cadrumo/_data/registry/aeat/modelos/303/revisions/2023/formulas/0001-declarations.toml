@@ -1,5 +1,51 @@
+# Cuota projections for the régimen general rate rows [09], [06] and [03]. They
+# start with the 2023 design, the first to pin each row's Tipo % field to a
+# constant; the 2022 design leaves it free, so the 2022 baseline cannot say
+# which rate a row carries.
+[[revisions.2023.formulas]]
+id = "modelo-303-dr303-09-projection"
+target_casilla_id = "09"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2023.formulas.expression]
+casilla_id = "iva.repercutido.general"
+
+[[revisions.2023.formulas]]
+id = "modelo-303-dr303-06-projection"
+target_casilla_id = "06"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2023.formulas.expression]
+casilla_id = "iva.repercutido.reducido"
+
+[[revisions.2023.formulas]]
+id = "modelo-303-dr303-03-projection"
+target_casilla_id = "03"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2023.formulas.expression]
+casilla_id = "iva.repercutido.super-reducido"
+
 # Cuota projections for the two RD-ley 4/2024 transitional rungs. Same shape as
-# the ordinary-tier projections inherited from 2022: the official box carries whatever its
+# the ordinary-tier projections above: the official box carries whatever its
 # semantic cuota carrier resolved to, so the rung's cuota is the sum of the rows
 # actually charged at that rung's mandated rate rather than a re-derivation.
 [[revisions.2023.formulas]]

@@ -487,12 +487,19 @@ def _modelo_130_revision() -> ModeloRevision:
 
 
 def test_the_filed_figures_close_the_invoice_identity() -> None:
-    """Income and retenciones, as filed, reconcile with the IVA cuota to one invoice.
+    """Income and retenciones, as projected, reconcile with the IVA cuota to one invoice.
 
     The whole point of the campaign, stated at the layer that matters: the
     numbers on the declaration are three views of one document, and adding the
     cuota to the filed income must reproduce the invoice total the taxpayer
     issued.
+
+    The retención comes from the projected observation, not from the resolved
+    credit. This receipt carries no linked invoice declaring its retención, so
+    the figure is reconstructed from the cash shortfall and the credit leaves it
+    out; the identity being closed here is the DOCUMENT's, which the
+    reconstruction still has to satisfy. The credit's own exclusion is asserted
+    where the credit is the subject.
     """
     revision = _modelo_130_revision()
     catalogue = _catalogue(_invoice_transaction(with_substrate=True))
@@ -513,7 +520,7 @@ def test_the_filed_figures_close_the_invoice_identity() -> None:
         _reconciliation_violations(
             income_base=resolved[_M130_INGRESOS_BINDING],
             income_cash=_CASH,
-            withheld=resolved[_M130_RETENCIONES_BINDING],
+            withheld=income.observations[0].withheld_amount,
             iva_base=iva.observations[0].base_amount,
             iva_cuota=iva.observations[0].iva_amount,
         )

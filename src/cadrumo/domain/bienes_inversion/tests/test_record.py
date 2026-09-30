@@ -419,15 +419,23 @@ def test_investment_asset_reciprocity_accepts_one_real_matching_observation() ->
 
 
 @pytest.mark.parametrize(
-    ("build_observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message"),
+    ("build_observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message", "expected_context"),
     (
-        (partial(_investment_observation, ledger_id="ledger-wrong"), "profile-a", "profile-a", 2024, "not reciprocal"),
+        (
+            partial(_investment_observation, ledger_id="ledger-wrong"),
+            "profile-a",
+            "profile-a",
+            2024,
+            "not reciprocal",
+            {"ledger_transaction_id": "ledger-wrong", "investment_asset_id": "asset-machine"},
+        ),
         (
             partial(_investment_observation, transaction_date=date(2025, 1, 8)),
             "profile-a",
             "profile-a",
             2024,
             "share the filing year",
+            {"ledger_transaction_id": "ledger-asset-machine", "investment_asset_id": "asset-machine"},
         ),
         (
             partial(_investment_observation, prorrata_sector_id="sector-rentals"),
@@ -435,8 +443,9 @@ def test_investment_asset_reciprocity_accepts_one_real_matching_observation() ->
             "profile-a",
             2024,
             "share the prorrata sector",
+            {"ledger_transaction_id": "ledger-asset-machine", "investment_asset_id": "asset-machine"},
         ),
-        (_investment_observation, "profile-a", "profile-b", 2024, "share a secure profile"),
+        (_investment_observation, "profile-a", "profile-b", 2024, "share a secure profile", None),
     ),
 )
 def test_investment_asset_reciprocity_refuses_mismatched_edges(
@@ -445,8 +454,14 @@ def test_investment_asset_reciprocity_refuses_mismatched_edges(
     asset_profile_id: str,
     filing_year: int,
     message: str,
+    expected_context: dict[str, str] | None,
 ) -> None:
-    """Every stored cross-boundary edge is exact; no identifier is inferred."""
+    """Every stored cross-boundary edge is exact; no identifier is inferred.
+
+    The offending ledger transaction and investment asset ids ride on the
+    refusal's context wherever a specific edge -- not merely a whole-register
+    profile mismatch -- was compared.
+    """
     observation = build_observation()
     register = BienesInversionIvaRegister(
         records=(
@@ -459,7 +474,7 @@ def test_investment_asset_reciprocity_refuses_mismatched_edges(
         )
     )
 
-    with pytest.raises(BienInversionValidationError, match=message):
+    with pytest.raises(BienInversionValidationError, match=message) as exc_info:
         validate_investment_asset_reciprocity(
             observations=(observation,),
             register=register,
@@ -467,3 +482,4 @@ def test_investment_asset_reciprocity_refuses_mismatched_edges(
             asset_profile_id=asset_profile_id,
             filing_year=filing_year,
         )
+    assert exc_info.value.context == expected_context

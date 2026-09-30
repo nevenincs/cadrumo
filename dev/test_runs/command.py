@@ -1280,26 +1280,21 @@ async def _stop_interrupted_process(process: asyncio.subprocess.Process) -> None
 
 
 async def _stream_lines(stream: asyncio.StreamReader) -> AsyncIterator[bytes]:
-    """Yield every line of ``stream`` whole, however long it is.
+    """Yield each newline-terminated line of ``stream`` whatever its length.
 
-    ``StreamReader.readline`` refuses a line longer than the reader's limit --
-    64 KiB unless the process was created with another -- and discards what it
-    had buffered, so the run died on the first long line. The locale audit
-    prints its entire report as one JSON line well past that. Reading bounded
-    chunks and splitting on newlines here keeps each line intact without a
-    ceiling that the next larger report would cross.
+    ``StreamReader.readline`` refuses a line longer than the reader's buffer
+    limit, and a child's machine-readable payload is one JSON line of unbounded
+    size. The final line is yielded even without a trailing newline.
     """
     pending = bytearray()
     while chunk := await stream.read(_STREAM_CHUNK_BYTES):
-        # Only the bytes just appended can hold a newline not yet seen, so a
-        # line spanning many chunks is scanned once rather than once per chunk.
-        search_from = len(pending)
-        pending += chunk
-        line_start = 0
-        while (newline := pending.find(b"\n", search_from)) != -1:
-            yield bytes(pending[line_start : newline + 1])
-            line_start = search_from = newline + 1
-        del pending[:line_start]
+        scanned = len(pending)
+        pending.extend(chunk)
+        start = 0
+        while (end := pending.find(b"\n", max(start, scanned))) != -1:
+            yield bytes(pending[start : end + 1])
+            start = end + 1
+        del pending[:start]
     if pending:
         yield bytes(pending)
 

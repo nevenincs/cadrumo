@@ -115,6 +115,16 @@ def validate_work_unit_selector(value: str) -> str:
     return validate_work_unit_id(stripped)
 
 
+def validate_trusted_public_key(value: str | None) -> str | None:
+    """Normalise an optional trusted signing key to 64 lowercase hex characters, or refuse it."""
+    if value is None:
+        return None
+    normalised = value.strip().lower()
+    if not re.fullmatch(HEX_PATTERN_64, normalised):
+        raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.trusted_key_invalid"))
+    return normalised
+
+
 def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
     """Validate that *value* is a 64-character lowercase hex string."""
     stripped = value.strip()
@@ -126,18 +136,6 @@ def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
             ),
         )
     return stripped
-
-
-def validate_trusted_public_key(value: str) -> str:
-    """Return *value* as the lowercase 64-character hex of a raw Ed25519 public key.
-
-    Case is folded before the check because an operator may paste the key in
-    upper case; any other shape is refused rather than compared as a key.
-    """
-    normalized = value.strip().lower()
-    if not re.fullmatch(HEX_PATTERN_64, normalized):
-        raise typer.BadParameter(tr("cli.app.modelo.work.report_verify.errors.trusted_key_invalid"))
-    return normalized
 
 
 def load_modelo_calculation_revision(
