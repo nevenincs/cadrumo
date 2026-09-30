@@ -17,8 +17,10 @@ that must be surfaced before filing, and the file is what reaches the AEAT.
 Anything that blocks filing, whether the check or the calculation found it,
 withholds both in the same way. Recording a filing only records it in Cadrumo,
 so a verified declaration is offered the file to take to the AEAT first, and
-recording the filing once that file exists: the next-action line carries one
-action at a time.
+recording the filing once a file made from the current calculation exists: the
+next-action line carries one action at a time. A file made from an earlier
+calculation no longer matches the declaration, so it is to be created again,
+never recorded.
 
 Nothing here is inferred beyond those facts. In particular a step is never
 shown done because its signal is missing: an unverified calculation is simply
@@ -53,7 +55,7 @@ from .header import blocking_count, confirm_count, missing_findings
 from .issues import blocks_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, DONE_MARK, HERE_MARK, WorkbenchMark
-from .wording import date_text
+from .wording import date_text, day_text
 
 
 class WorkbenchStep(StrEnum):
@@ -85,7 +87,8 @@ class NextAction(StrEnum):
     RESOLVE = "resolve"
     VERIFY = "verify"
     EXPORT = "export"
-    RECORD = "record"
+    EXPORT_AGAIN = "export_again"
+    RECORD_AFTER_FILE = "record_after_file"
     RECORDED = "recorded"
 
 
@@ -103,6 +106,8 @@ _STATUS_MARKS: Final[dict[StepStatus, WorkbenchMark | None]] = {
 }
 _PENDING_STYLE: Final[str] = "dim"
 _NEXT_LINE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.next_line"
+_DATED_ACTIONS: Final[frozenset[NextAction]] = frozenset({NextAction.EXPORT_AGAIN, NextAction.RECORD_AFTER_FILE})
+"""Next actions that name the day the latest file was created."""
 _ELLIPSIS: Final[str] = "…"
 
 
@@ -130,6 +135,8 @@ class WorkbenchProgress:
     recorded_at: datetime | None = None
     assumed: int = 0
     blocking: int = 0
+    #: When the latest file for the AEAT was created, once one was; the next-action line names that day.
+    file_created_at: datetime | None = None
 
     @property
     def filing_withheld(self) -> bool:
@@ -137,13 +144,13 @@ class WorkbenchProgress:
         return self.assumed > 0 or self.blocking > 0
 
 
-def workbench_progress(
-    form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool, exported: bool = False
-) -> WorkbenchProgress:
+def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, filed: bool) -> WorkbenchProgress:
     """Place a declaration on the filing journey from its form and lifecycle facts.
 
-    ``exported`` says the file for the AEAT was created, so recording the
-    filing is what comes next.
+    Once nothing withholds it, a verified declaration is offered the file for
+    the AEAT, then recording the filing once a file made from the current
+    calculation exists, and the file again when the only one is from an
+    earlier calculation.
 
     A declaration recorded as filed is done whatever its form still marks. A
     verified one is not sent back to filing in the boxes verification already
@@ -190,7 +197,6 @@ def workbench_progress(
         blocking=blocking,
         verified=verified,
         filed=filed,
-        exported=exported,
     )
     recorded_at = form.filing.recorded_at if action is NextAction.RECORDED and form.filing is not None else None
     return WorkbenchProgress(
@@ -200,6 +206,7 @@ def workbench_progress(
         recorded_at=recorded_at,
         assumed=0 if filed else assumed,
         blocking=0 if filed else blocking,
+        file_created_at=None if form.last_export is None else form.last_export.exported_at,
     )
 
 
@@ -214,7 +221,6 @@ def _next(
     blocking: int,
     verified: bool,
     filed: bool,
-    exported: bool,
 ) -> tuple[NextAction, int]:
     if staged:
         return NextAction.APPLY, staged
@@ -228,7 +234,10 @@ def _next(
         # The count is the header's: the assumed boxes and the notes waiting on the filer alike.
         return NextAction.CONFIRM, confirm_count(form)
     if verified and not blocking:
-        return (NextAction.RECORD if exported else NextAction.EXPORT), 0
+        export = form.last_export
+        if export is None:
+            return NextAction.EXPORT, 0
+        return (NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN), 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
     if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
@@ -271,6 +280,8 @@ def next_action_text(progress: WorkbenchProgress, language: OutputLanguage) -> s
         if progress.recorded_at is None:
             return f"{DONE_MARK.glyph} {_step_name(WorkbenchStep.FILE)}"
         return tr("tui.modelo.workbench.next.recorded", date=date_text(progress.recorded_at.date(), language))
+    if action in _DATED_ACTIONS and progress.file_created_at is not None:
+        return tr(f"tui.modelo.workbench.next.{action.value}", date=day_text(progress.file_created_at, language))
     return tr(f"tui.modelo.workbench.next.{action.value}", count=progress.count)
 
 

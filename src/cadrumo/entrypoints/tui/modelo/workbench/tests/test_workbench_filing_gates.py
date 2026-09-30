@@ -14,6 +14,7 @@ the filer ticks it. The help band draws the blocker it names in the same colour.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -26,6 +27,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
+    ModeloFormExport,
     ModeloFormOrigin,
     ModeloWorkForm,
 )
@@ -138,16 +140,25 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
         assert isinstance(after_f8, WorkbenchExportScreen), "F8 creates the file, the one action the line names"
 
 
+def _with_current_file(form: ModeloWorkForm) -> ModeloWorkForm:
+    revision = form.calculation_revision_id
+    assert revision is not None
+    export = ModeloFormExport(
+        exported_at=datetime(2026, 4, 2, tzinfo=UTC), calculation_revision_id=revision, current=True
+    )
+    return form.model_copy(update={"last_export": export})
+
+
 def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None:
     clear = _cause("nothing-withholds")
     file_first = workbench_progress(clear, staged=0, verified=True, filed=False)
-    record_next = workbench_progress(clear, staged=0, verified=True, filed=False, exported=True)
-    assumed = workbench_progress(_cause("one-assumed"), staged=0, verified=True, filed=False, exported=True)
-    blocking = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=False, exported=True)
+    record_next = workbench_progress(_with_current_file(clear), staged=0, verified=True, filed=False)
+    assumed = workbench_progress(_with_current_file(_cause("one-assumed")), staged=0, verified=True, filed=False)
+    blocking = workbench_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
     filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
     assert file_first.next_action is NextAction.EXPORT and not file_first.filing_withheld
-    assert record_next.next_action is NextAction.RECORD and not record_next.filing_withheld
+    assert record_next.next_action is NextAction.RECORD_AFTER_FILE and not record_next.filing_withheld
     assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is NextAction.CONFIRM
     assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is NextAction.RESOLVE
     assert not filed.filing_withheld

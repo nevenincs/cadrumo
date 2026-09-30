@@ -15,9 +15,10 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ......application.modelo.work_form_models import ModeloFormFiling, ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloFormExport, ModeloFormFiling, ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import tr
 from ..progress import (
     NextAction,
     StepStatus,
@@ -29,6 +30,7 @@ from ..progress import (
     workbench_progress,
 )
 from ..vocabulary import DONE_MARK, HERE_MARK
+from ..wording import day_text
 from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -57,11 +59,20 @@ def test_a_filed_declaration_is_done_whatever_its_form_still_marks_and_says_when
 
 def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at_a_time() -> None:
     form = synthetic_form(needs_input=True)
+    revision = form.calculation_revision_id
+    assert revision is not None
+    filed_file = ModeloFormExport(
+        exported_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC), calculation_revision_id=revision, current=True
+    )
     progress = workbench_progress(form, staged=0, verified=True, filed=False)
-    exported = workbench_progress(form, staged=0, verified=True, filed=False, exported=True)
+    exported = workbench_progress(
+        form.model_copy(update={"last_export": filed_file}), staged=0, verified=True, filed=False
+    )
     with override_settings(cadrumo_output_language="en"):
         line = next_action_text(progress, OutputLanguage.EN)
         record = next_action_text(exported, OutputLanguage.EN)
+        day = day_text(filed_file.exported_at, OutputLanguage.EN)
+        expected_record = tr("tui.modelo.workbench.next.record_after_file", date=day)
 
     statuses = _statuses(progress)
     assert statuses[WorkbenchStep.FILL] is StepStatus.DONE
@@ -69,8 +80,9 @@ def test_a_verified_declaration_offers_the_file_first_and_recording_after_one_at
     assert statuses[WorkbenchStep.FILE] is StepStatus.CURRENT
     assert progress.next_action is NextAction.EXPORT
     assert line == "Create the file to file with AEAT"
-    assert exported.next_action is NextAction.RECORD
-    assert record == "Once you have filed it with AEAT, record the filing here"
+    assert exported.next_action is NextAction.RECORD_AFTER_FILE
+    assert record == expected_record
+    assert day in record
 
 
 def test_an_assumed_value_keeps_filling_in_open_and_withholds_recording() -> None:

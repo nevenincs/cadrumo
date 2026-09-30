@@ -2190,6 +2190,8 @@ tui:
         deadline_shifted_help: The usual deadline is {nominal}. It moves to {date}
           because of a weekend or holiday.
         deadline_today: Deadline today, {date}
+        file_created: File created on {date}
+        file_out_of_date: The file from {date} is out of date. Create it again [{key}]
         no_deadline: No deadline on record for this period
         own_calculation: Cadrumo's calculation. AEAT has not seen it.
         result:
@@ -2374,9 +2376,12 @@ tui:
         calculate: Calculate the declaration
         confirm: 'Confirm the assumed values (to confirm: {count})'
         export: Create the file to file with AEAT
+        export_again: 'Create the file again: the declaration changed after {date}'
         fill: 'Complete the marked boxes (to do: {count})'
         recalculate: 'Calculate again: your records changed'
         record: Once you have filed it with AEAT, record the filing here
+        record_after_file: File created on {date}. Once you have filed it with AEAT,
+          record the filing here
         recorded: Recorded as filed on {date}
         resolve: 'Resolve what blocks filing (to do: {count})'
         verify: Check the declaration
@@ -2486,6 +2491,9 @@ tui:
           yet.
         still_moving: The declaration is still changing. Wait a moment and review
           your changes again [R].
+      record:
+        refused_file_out_of_date: The file from {date} is out of date. Create it again.
+          If you already filed that older file with AEAT, start a correction instead.
       repeating: 'Detail rows: {count}'
       result_diff:
         close: Close

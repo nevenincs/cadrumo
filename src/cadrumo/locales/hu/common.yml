@@ -2231,6 +2231,8 @@ tui:
         deadline_shifted_help: A szokásos határidő {nominal}. Hétvége vagy ünnepnap
           miatt {date} lett.
         deadline_today: 'A határidő ma jár le: {date}'
+        file_created: 'A fájl létrehozva: {date}'
+        file_out_of_date: A(z) {date} napi fájl elavult. Hozza létre újra [{key}]
         no_deadline: Ehhez az időszakhoz nincs nyilvántartott határidő
         own_calculation: A Cadrumo számítása; az AEAT még nem látta.
         result:
@@ -2423,9 +2425,12 @@ tui:
         calculate: Számítsa ki a bevallást
         confirm: 'Erősítse meg a feltételezett értékeket (megerősítendő: {count})'
         export: Hozza létre a fájlt az AEAT-nál történő benyújtáshoz
+        export_again: 'Hozza létre újra a fájlt: a bevallás {date} után módosult'
         fill: 'Töltse ki a megjelölt rovatokat (teendő: {count})'
         recalculate: 'Számolja újra: a nyilvántartása megváltozott'
         record: Miután benyújtotta az AEAT-nál, rögzítse itt a benyújtást
+        record_after_file: 'A fájl létrehozva: {date}. Miután benyújtotta az AEAT-nál,
+          rögzítse itt a benyújtást'
         recorded: 'Benyújtottként rögzítve: {date}'
         resolve: 'Oldja meg, ami akadályozza a benyújtást (teendő: {count})'
         verify: Ellenőrizze a bevallást
@@ -2538,6 +2543,9 @@ tui:
           még nem alkalmazott.
         still_moving: A bevallás még változik. Várjon egy kicsit, és nézze át újra
           a módosításait [R].
+      record:
+        refused_file_out_of_date: A(z) {date} napi fájl elavult. Hozza létre újra.
+          Ha a régebbi fájlt már benyújtotta az AEAT-nál, indítsa el a helyesbítést.
       repeating: 'Részletező sorok: {count}'
       result_diff:
         close: Bezárás

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from datetime import date
+from datetime import date, datetime
 from types import MappingProxyType
 from typing import Final
 
@@ -105,9 +105,16 @@ def date_text(value: date, language: OutputLanguage) -> str:
     return format_casilla_value(value, data_type="date", language=language)
 
 
+def day_text(moment: datetime, language: OutputLanguage) -> str:
+    """The day of a moment, in the filer's own time zone, written as :func:`date_text` writes a date."""
+    local = moment.astimezone() if moment.tzinfo is not None else moment
+    return date_text(local.date(), language)
+
+
 __all__ = [
     "PERIOD_WORD_NAMES",
     "date_text",
+    "day_text",
     "does_not_apply_text",
     "modelo_number",
     "modelo_title",

@@ -1029,6 +1029,7 @@ def _modelo_workbench_repositories(bucket_id: str, operation: PinnedAuthorityOpe
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
         borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
         holiday_territory=partial(_profile_holiday_territory, bucket_id, operation),
+        bucket_events=ports.bucket_event_repository,
     )
 
 

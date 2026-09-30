@@ -77,6 +77,7 @@ from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.identity.bucket import BucketId
+from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from .....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -148,7 +149,9 @@ class WorkbenchRepositories:
     ``borrador_snapshots`` is the profile's AEAT draft store, read to say when
     replayed AEAT data was imported; ``holiday_territory`` reads the profile's
     holiday territory afresh on each read, so a deadline shifts for the
-    filer's own regional holidays and not the national ones only.
+    filer's own regional holidays and not the national ones only;
+    ``bucket_events`` is the profile's event history, read to say when the
+    latest file for the AEAT was created and whether it still matches.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -156,6 +159,7 @@ class WorkbenchRepositories:
     verifications: VerificationReportCatalogueRepositoryProtocol
     borrador_snapshots: Borrador100SnapshotRepository | None = None
     holiday_territory: Callable[[], CalendarCCAA | None] | None = None
+    bucket_events: BucketEventHistoryRepositoryProtocol | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,6 +224,7 @@ class InstalledModeloWorkbench:
             language=language,
             borrador_snapshots=self._repositories.borrador_snapshots,
             holiday_territory=None if territory is None else territory(),
+            bucket_events=self._repositories.bucket_events,
         )
         form = loaded.form
         head_id = form.calculation_revision_id

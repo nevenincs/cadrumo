@@ -59,7 +59,7 @@ from .casilla_list import CasillaListEntry, value_text
 from .issues import IssueLevel, blocks_marked, issue_lines
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
-from .wording import date_text, modelo_number, modelo_title, period_words
+from .wording import date_text, day_text, modelo_number, modelo_title, period_words
 
 _MONEY: Final[str] = "money"
 _PART_GAP: Final[str] = "   "
@@ -91,6 +91,9 @@ _NOT_CALCULATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.not
 _FAILED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.result.failed"
 _STALE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.changes"
 _RECALCULATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.stale.recalculate"
+_FILE_CREATED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.file_created"
+_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.header.file_out_of_date"
+_EXPORT_KEY: Final[str] = "e"
 
 
 class ChipLevel(StrEnum):
@@ -160,6 +163,30 @@ class ResultView:
     def marks(self) -> tuple[WorkbenchMark, ...]:
         """The marks the result part draws."""
         return (STALE_MARK,) if self.stale is not None else ()
+
+
+@dataclass(frozen=True, slots=True)
+class FileView:
+    """The latest file for the AEAT in words, and whether it no longer matches the declaration."""
+
+    text: str
+    out_of_date: bool
+
+
+def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> FileView | None:
+    """Say when the latest file for the AEAT was created, or that it is out of date; ``None`` when there is none.
+
+    A file made from an earlier calculation reads as out of date, with the key
+    that creates it again. Nothing is said once the declaration is recorded as
+    filed.
+    """
+    export = form.last_export
+    if export is None or recorded:
+        return None
+    day = day_text(export.exported_at, language)
+    if export.current:
+        return FileView(tr(_FILE_CREATED_LOCALE_KEY, date=day), out_of_date=False)
+    return FileView(tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day, key=_EXPORT_KEY), out_of_date=True)
 
 
 @dataclass(frozen=True, slots=True)
@@ -436,10 +463,13 @@ class ResultLine:
     stale: str | None
     chips: tuple[AttentionChip, ...]
     stacked: bool = False
+    #: The latest file for the AEAT in words, kept whatever the width, as the stale mark is.
+    file: str | None = None
 
     def marks_text(self) -> str:
-        """The stale mark and the chips as one string, as the second line of a stacked result shows them."""
-        return _PART_GAP.join(part for part in (self.stale, *(chip.text for chip in self.chips)) if part)
+        """The stale mark, the file and the chips as one string, as the second line of a stacked result shows them."""
+        parts = (self.stale, self.file, *(chip.text for chip in self.chips))
+        return _PART_GAP.join(part for part in parts if part)
 
     def chips_content(self) -> Content:
         """The chips kept, as drawn side by side: a blocker's in the error colour."""
@@ -461,33 +491,36 @@ def _cut(text: str, width: int) -> str:
     return kept.rstrip() + _ELLIPSIS
 
 
-def fit_result_line(view: ResultView, chips: tuple[AttentionChip, ...], width: int) -> ResultLine:
-    """Keep what fits in ``width``, never running past it; the result always stays.
+def fit_result_line(
+    view: ResultView, chips: tuple[AttentionChip, ...], width: int, *, file: str | None = None
+) -> ResultLine:
+    """Keep what fits in ``width``, never running past it; the result, the stale mark and the file always stay.
 
     On one line the box goes first, then the least urgent chips. When the
-    result does not fit one line beside even its stale mark, it takes a line of
-    its own in the fullest words that fit, and the stale mark and the chips
-    share the line below, the least urgent chips going first there.
+    result does not fit one line beside even its stale mark and the file, it
+    takes a line of its own in the fullest words that fit, and the stale mark,
+    the file and the chips share the line below, the least urgent chips going
+    first there.
     """
-    line = ResultLine(view.text, view.stale, chips)
+    line = ResultLine(view.text, view.stale, chips, file=file)
     if cell_len(line.text()) <= width:
         return line
-    line = ResultLine(view.short_text, view.stale, chips)
+    line = ResultLine(view.short_text, view.stale, chips, file=file)
     kept = list(chips)
     while kept and cell_len(line.text()) > width:
         kept.pop()
-        line = ResultLine(view.short_text, view.stale, tuple(kept))
+        line = ResultLine(view.short_text, view.stale, tuple(kept), file=file)
     if cell_len(line.text()) <= width:
         return line
     result = next(
         (text for text in (view.text, view.short_text, view.briefest) if cell_len(text) <= width),
         _cut(view.briefest, width),
     )
-    below = ResultLine(result, view.stale, chips, stacked=True)
+    below = ResultLine(result, view.stale, chips, stacked=True, file=file)
     kept = list(chips)
     while kept and cell_len(below.marks_text()) > width:
         kept.pop()
-        below = ResultLine(result, view.stale, tuple(kept), stacked=True)
+        below = ResultLine(result, view.stale, tuple(kept), stacked=True, file=file)
     return below
 
 
@@ -504,9 +537,9 @@ def result_line_text(form: ModeloWorkForm, language: OutputLanguage, *, staged: 
     """The header's result line as one string, for a dialog that covers the header to repeat."""
     view = result_view(form, language, staged=staged, recorded=recorded)
     chips = attention_chips(form, recorded=recorded)
-    if view is None:
-        return _PART_GAP.join(chip.text for chip in chips)
-    return ResultLine(view.text, view.stale, chips).text()
+    file = file_view(form, language, recorded=recorded)
+    line = ResultLine("" if view is None else view.text, None if view is None else view.stale, chips)
+    return (line if file is None else ResultLine(line.result, line.stale, chips, file=file.text)).text()
 
 
 __all__ = [
@@ -514,6 +547,7 @@ __all__ = [
     "ChipLevel",
     "DeadlineTone",
     "DeadlineView",
+    "FileView",
     "ResultLine",
     "ResultView",
     "attention_chips",
@@ -521,6 +555,7 @@ __all__ = [
     "confirm_count",
     "deadline_help",
     "deadline_view",
+    "file_view",
     "fit_identity",
     "fit_result_line",
     "identity_text",

@@ -2247,6 +2247,9 @@ tui:
         deadline_shifted_help: El plazo habitual es el {nominal}. Pasa al {date} por
           un fin de semana o festivo.
         deadline_today: El plazo termina hoy, {date}
+        file_created: Fichero generado el {date}
+        file_out_of_date: El fichero del {date} está desactualizado. Vuelve a generarlo
+          [{key}]
         no_deadline: No consta ningún plazo para este periodo
         own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
         result:
@@ -2430,9 +2433,13 @@ tui:
         calculate: Calcula la declaración
         confirm: 'Confirma los valores supuestos (por confirmar: {count})'
         export: Genera el fichero para presentarlo en la AEAT
+        export_again: 'Vuelve a generar el fichero: la declaración cambió después
+          del {date}'
         fill: 'Completa las casillas marcadas (pendientes: {count})'
         recalculate: 'Vuelve a calcular: tus registros han cambiado'
         record: Cuando la hayas presentado en la AEAT, registra aquí la presentación
+        record_after_file: Fichero generado el {date}. Cuando lo hayas presentado
+          en la AEAT, registra aquí la presentación
         recorded: Registrada como presentada el {date}
         resolve: 'Resuelve lo que impide presentar (pendientes: {count})'
         verify: Comprueba la declaración
@@ -2541,6 +2548,10 @@ tui:
         moved: La declaración cambió desde que escribiste cambios que aún no has aplicado.
         still_moving: La declaración sigue cambiando. Espera un momento y vuelve a
           revisar tus cambios [R].
+      record:
+        refused_file_out_of_date: El fichero del {date} está desactualizado. Vuelve
+          a generarlo. Si ya presentaste ese fichero anterior en la AEAT, inicia una
+          corrección.
       repeating: 'Filas de detalle: {count}'
       result_diff:
         close: Cerrar

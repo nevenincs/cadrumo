@@ -2238,6 +2238,9 @@ tui:
         deadline_shifted_help: El termini habitual és el {nominal}. Passa al {date}
           per un cap de setmana o festiu.
         deadline_today: El termini acaba avui, {date}
+        file_created: Fitxer generat el {date}
+        file_out_of_date: El fitxer del {date} està desactualitzat. Torna a generar-lo
+          [{key}]
         no_deadline: No consta cap termini per a aquest període
         own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
         result:
@@ -2425,9 +2428,13 @@ tui:
         calculate: Calcula la declaració
         confirm: 'Confirma els valors suposats (per confirmar: {count})'
         export: Genera el fitxer per presentar-lo a l'AEAT
+        export_again: 'Torna a generar el fitxer: la declaració ha canviat després
+          del {date}'
         fill: 'Completa les caselles marcades (pendents: {count})'
         recalculate: 'Torna a calcular: els teus registres han canviat'
         record: Quan l'hagis presentada a l'AEAT, registra'n aquí la presentació
+        record_after_file: Fitxer generat el {date}. Quan l'hagis presentat a l'AEAT,
+          registra'n aquí la presentació
         recorded: Registrada com a presentada el {date}
         resolve: 'Resol el que impedeix presentar (pendents: {count})'
         verify: Comprova la declaració
@@ -2540,6 +2547,10 @@ tui:
           has aplicat.
         still_moving: La declaració continua canviant. Espera un moment i torna a
           revisar els teus canvis [R].
+      record:
+        refused_file_out_of_date: El fitxer del {date} està desactualitzat. Torna
+          a generar-lo. Si ja has presentat aquell fitxer anterior a l'AEAT, inicia
+          una correcció.
       repeating: 'Files de detall: {count}'
       result_diff:
         close: Tanca

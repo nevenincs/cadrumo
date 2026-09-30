@@ -100,6 +100,7 @@ from .header import (
     attention_chips,
     deadline_help,
     deadline_view,
+    file_view,
     fit_identity,
     fit_result_line,
     is_result_field,
@@ -160,7 +161,7 @@ from .vocabulary import (
     origin_explanation,
     origin_text,
 )
-from .wording import does_not_apply_text, wrap_words
+from .wording import day_text, does_not_apply_text, wrap_words
 
 if TYPE_CHECKING:
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
@@ -232,7 +233,8 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.RECALCULATE: "c",
     NextAction.VERIFY: "F8",
     NextAction.EXPORT: "e",
-    NextAction.RECORD: "F8",
+    NextAction.EXPORT_AGAIN: "e",
+    NextAction.RECORD_AFTER_FILE: "F8",
     NextAction.RECORDED: "",
 }
 _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
@@ -272,6 +274,8 @@ _CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
 _EMPTY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty"
 _EMPTY_NEXT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty_next"
 _CRUMB_SEPARATOR: Final[str] = " · "
+_FILE_OUT_OF_DATE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.record.refused_file_out_of_date"
+"""Why recording the filing is refused while the latest file was made from an earlier calculation."""
 _WITHHELD_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.confirm_first"
 """Why neither the file for the AEAT nor recording the filing is offered while an assumed value remains."""
 _BLOCKED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.export.resolve_first"
@@ -361,6 +365,14 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section;
             color: $warning;
         }
+        ModeloWorkbenchScreen #wb-file {
+            width: auto;
+            margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section;
+            color: $foreground;
+        }
+        ModeloWorkbenchScreen #wb-file.-out-of-date {
+            color: $warning;
+        }
         ModeloWorkbenchScreen #wb-chips {
             width: 1fr;
             margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-section;
@@ -372,7 +384,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen.-outcome-stacked #wb-outcome {
             layout: vertical;
         }
-        ModeloWorkbenchScreen #wb-stale.-leading, ModeloWorkbenchScreen #wb-chips.-leading {
+        ModeloWorkbenchScreen #wb-stale.-leading,
+        ModeloWorkbenchScreen #wb-file.-leading,
+        ModeloWorkbenchScreen #wb-chips.-leading {
             /* First on its line, it starts where the lines above and below start. */
             margin: $cadrumo-space-0;
         }
@@ -542,7 +556,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._cards: dict[tuple[str, OutputLanguage], ModeloCasillaHelpCardV1] = {}
         self._language = OutputLanguage(output_language())
         self._session = WorkbenchEditSession(self._language)
-        self._exported = False
 
     # ── composition ─────────────────────────────────────────────────────
 
@@ -556,6 +569,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 yield Static(id="wb-result", markup=False)
                 with Horizontal(id="wb-marks", classes="wb-line"):
                     yield Static(id="wb-stale", markup=False)
+                    yield Static(id="wb-file", markup=False)
                     yield Static(id="wb-chips", markup=False)
             with Horizontal(id="wb-steps", classes="wb-line"):
                 yield Static(id="wb-stepper", markup=False)
@@ -816,7 +830,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             deadline_widget.set_class(deadline is not None and deadline.tone is tone, css_class)
         view = result_view(form, self._language, staged=len(self._session.changes), recorded=recorded)
         chips = attention_chips(form, recorded=recorded)
-        line = ResultLine("", None, chips) if view is None else fit_result_line(view, chips, width)
+        file = file_view(form, self._language, recorded=recorded)
+        file_text = None if file is None else file.text
+        line = (
+            ResultLine("", None, chips, file=file_text)
+            if view is None
+            else fit_result_line(view, chips, width, file=file_text)
+        )
         result = self.query_one("#wb-result", Static)
         result.update(line.result)
         result.display = bool(line.result)
@@ -828,12 +848,18 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         stale = self.query_one("#wb-stale", Static)
         stale.update(line.stale or "")
         stale.display = line.stale is not None
+        file_widget = self.query_one("#wb-file", Static)
+        file_widget.update(line.file or "")
+        file_widget.display = line.file is not None
+        # A file made from an earlier calculation must not be uploaded: it reads as a warning.
+        file_widget.set_class(file is not None and file.out_of_date, "-out-of-date")
         chips_widget = self.query_one("#wb-chips", Static)
         chips_widget.update(line.chips_content())
-        # With no result beside them, or stacked below it, the marks start the line.
+        # With no result beside them, or stacked below it, the first of the marks starts the line.
         marks_lead = line.stacked or not line.result
         stale.set_class(marks_lead, "-leading")
-        chips_widget.set_class(marks_lead and line.stale is None, "-leading")
+        file_widget.set_class(marks_lead and line.stale is None, "-leading")
+        chips_widget.set_class(marks_lead and line.stale is None and line.file is None, "-leading")
         # Too narrow for one line: the result on its own, the stale mark and the chips on the next.
         self.set_class(line.stacked, "-outcome-stacked")
         stale_marks = () if view is None or line.stale is None else view.marks
@@ -1762,8 +1788,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._calculate(actions)
         elif action is NextAction.VERIFY:
             self._run_operation(actions.verify)
-        elif action is NextAction.EXPORT:
-            self.action_export()
+        elif action in {NextAction.EXPORT, NextAction.EXPORT_AGAIN}:
+            if not self._file_out_of_date():
+                self.action_export()
         else:
             self._confirm_file(actions.file)
 
@@ -1849,14 +1876,24 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.app.push_screen(WorkbenchIssuesScreen(form, status_line=self._status_line()), closed)
 
     def _progress(self, load: ModeloWorkFormLoadV1) -> WorkbenchProgress:
-        """Where the declaration stands now, with the changes staged here and any file created here."""
+        """Where the declaration stands now, with the changes staged here."""
         return workbench_progress(
-            load.form,
-            staged=len(self._session.changes),
-            verified=load.verified,
-            filed=self.recorded,
-            exported=self._exported,
+            load.form, staged=len(self._session.changes), verified=load.verified, filed=self.recorded
         )
+
+    def _file_out_of_date(self) -> bool:
+        """Refuse to record the filing while the latest file was made from an earlier calculation, and say so.
+
+        That file no longer matches the declaration, so it must be created
+        again; there is no way past this but a new file, or a correction when
+        the older file was already filed.
+        """
+        form = self.form
+        export = None if form is None else form.last_export
+        if export is None or export.current:
+            return False
+        self._notice(tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day_text(export.exported_at, self._language)))
+        return True
 
     def _filing_withheld(self) -> bool:
         """Refuse the file for the AEAT and recording the filing while anything withholds them, and say why.
@@ -1901,7 +1938,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self.app.push_screen(WorkbenchExportScreen(actions.export_offer()), asked)
 
     def _confirm_file(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
-        if self._filing_withheld():
+        if self._filing_withheld() or self._file_out_of_date():
             return
 
         def closed(confirmed: bool | None) -> None:
@@ -1987,11 +2024,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and actions is not None:
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
         changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
-        # A file created here makes recording the filing the next step, until the values change under it.
-        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID:
-            self._exported = True
-        elif changes_values:
-            self._exported = False
         before = self._load if changes_values else None
         self.run_worker(
             partial(self._read_after, before, yours, definition if reports_itself else None),
