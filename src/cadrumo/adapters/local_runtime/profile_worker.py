@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from importlib.metadata import version
 from pathlib import Path
@@ -75,6 +75,7 @@ from .worker_authorization import WorkerAuthorizationServer
 from .worker_lease_transfer import write_worker_lease
 
 _WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
+_WORKER_STARTUP_ACCEPT_POLL_SECONDS = 0.1
 
 
 def worker_operation_namespace(worker_id: UUID) -> UUID:
@@ -157,7 +158,7 @@ class ProfileWorkerProcess:
             # A cold isolated worker imports the registered operation catalogue
             # before opening its first pipe. Keep that bounded startup budget
             # separate from the short handshakes after the pipe is connected.
-            channel = endpoint.accept(timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
+            channel = self._accept_startup_channel(endpoint, timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
             self._channel = channel
             worker_process_id = _verified_worker_pid(channel, self._scope, identity.binding.os_owner_id)
             deadline = time.monotonic() + 10
@@ -182,7 +183,7 @@ class ProfileWorkerProcess:
                 contain=self._scope.terminate,
                 owner=authorization,
             )
-            operation_channel = operation_endpoint.accept(timeout=10)
+            operation_channel = self._accept_startup_channel(operation_endpoint, timeout=10)
             self._operation_channel = operation_channel
             if operation_channel.peer != channel.peer:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
@@ -205,6 +206,42 @@ class ProfileWorkerProcess:
         finally:
             endpoint.close()
             operation_endpoint.close()
+
+    def _require_process_alive(self) -> None:
+        try:
+            self._process.wait(timeout=0)
+        except RuntimeRefusalError as error:
+            if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                return
+            raise
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    def _accept_startup_channel(
+        self,
+        endpoint: WindowsRuntimeEndpoint,
+        *,
+        timeout: float,
+        monotonic: Callable[[], float] = time.monotonic,
+    ) -> WindowsRuntimeChannel:
+        deadline = monotonic() + timeout
+        while True:
+            self._require_process_alive()
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            try:
+                channel = endpoint.accept(timeout=min(_WORKER_STARTUP_ACCEPT_POLL_SECONDS, remaining))
+            except RuntimeRefusalError as error:
+                if error.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    raise
+                self._require_process_alive()
+                continue
+            try:
+                self._require_process_alive()
+            except BaseException:
+                channel.close()
+                raise
+            return channel
 
     def _exchange[Result: BaseModel](
         self,
@@ -267,13 +304,7 @@ class ProfileWorkerProcess:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
             if self._authorization is not None:
                 self._authorization.require_healthy()
-            try:
-                self._process.wait(timeout=0)
-            except RuntimeRefusalError as error:
-                if error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED:
-                    return
-                raise
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            self._require_process_alive()
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
         """Consume verified material only after native containment and mutual readiness."""

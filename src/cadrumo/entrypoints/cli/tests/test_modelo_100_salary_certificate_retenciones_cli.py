@@ -191,7 +191,7 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             "--revision",
             str(_REVIEWED_EDITION),
         )
-        assert created.exit_code == 0, created.output
+        assert created.exit_code == 0, f"{created.output}\n{session.runtime_failure_observations!r}"
         work_unit_id = _payload(created.output)["work_unit_id"]
         assert isinstance(work_unit_id, str) and work_unit_id, created.output
         result = session.invoke_password(
