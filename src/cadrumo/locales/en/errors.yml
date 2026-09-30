@@ -271,6 +271,9 @@ errors:
     error_modelos: A tax-modelo error occurred.
     error_modelos_validation: A modelo code violates its shape invariants.
     error_observation_key: An observation key component failed its repository contract.
+    error_optional_extra_missing: This installation does not have the optional “{extra}”
+      extra, which {feature} needs. Install it with pip install cadrumo[{extra}] and
+      run the command again.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
     error_outbound_storage_path_too_long: The resolved storage path exceeds the Windows

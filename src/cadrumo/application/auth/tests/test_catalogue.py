@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....core.i18n.render import tr as render
 from ....core.i18n.translatable import Translatable as tr
 from ..catalogue import (
     AUTH_PROVIDER_CATALOGUE,
@@ -15,7 +16,7 @@ from ..catalogue import (
 )
 from ..operator import list_operator_auth_providers
 from ..operator_results import AuthProvidersReport
-from ..output import AuthProvidersResult
+from ..output import AuthProviderRow, AuthProvidersResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,22 +91,54 @@ def test_every_entry_carries_strings() -> None:
         assert entry.description.strip(), f"{entry.id}: missing description"
 
 
+def _rendered_rows() -> list[AuthProviderRow]:
+    """Project the live catalogue the way the CLI boundary does."""
+    return [
+        AuthProviderRow(
+            id=entry.id,
+            label=render(str(entry.label)),
+            description=render(str(entry.description)),
+        )
+        for entry in list_operator_auth_providers().providers
+    ]
+
+
 class TestCliEnvelopeParity:
     """The typed auth result carries the catalogue's own contract.
 
     ``AuthProvidersResult.providers`` was redeclared as
     ``list[dict[str, object]]``, so the result accepted shapes the report it
     wraps rejects outright — an empty row, an empty label, a non-boolean
-    an unknown provider id. Nesting the canonical
-    :class:`AuthProviderListing` makes the two contracts one declaration.
+    an unknown provider id. Sharing the canonical
+    :data:`AuthProviderId` and demanding non-empty text keeps the two
+    contracts one declaration.
     """
 
     def test_the_real_catalogue_projects_cleanly(self) -> None:
         report = list_operator_auth_providers()
 
-        result = AuthProvidersResult(providers=list(report.providers))
+        result = AuthProvidersResult(providers=_rendered_rows())
 
         assert [row.id for row in result.providers] == [row.id for row in report.providers]
+
+    def test_the_envelope_carries_translated_text_not_translation_keys(self) -> None:
+        """The envelope showed raw dotted keys where the text lines showed words.
+
+        The catalogue's ``label``/``description`` are translation keys, so a
+        row built straight off the record puts ``auth.catalogue.certificate_label``
+        in the operator's JSON. Every rendered value must differ from the key
+        it came from and carry no ``auth.catalogue.`` path.
+        """
+        report = list_operator_auth_providers()
+
+        rows = _rendered_rows()
+
+        assert len(rows) == len(report.providers)
+        for row, entry in zip(rows, report.providers, strict=True):
+            assert row.label != str(entry.label), f"{row.id}: label is still its own key"
+            assert row.description != str(entry.description), f"{row.id}: description is still its own key"
+            assert "auth.catalogue." not in row.label
+            assert "auth.catalogue." not in row.description
 
     @pytest.mark.parametrize(
         "row",
@@ -124,6 +157,6 @@ class TestCliEnvelopeParity:
 
     def test_envelope_survives_a_json_round_trip(self) -> None:
         """The wire form must rebuild into the same typed rows."""
-        result = AuthProvidersResult(providers=list(list_operator_auth_providers().providers))
+        result = AuthProvidersResult(providers=_rendered_rows())
 
         assert type(result).model_validate_json(result.model_dump_json()) == result

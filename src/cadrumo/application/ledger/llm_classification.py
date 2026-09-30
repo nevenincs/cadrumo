@@ -253,13 +253,14 @@ def resolve_llm_evidence(
     return ResolvedEvidence(reference=reference, text=None, images=images)
 
 
-# Raised when a transaction must be read by a cloud subprocess provider (text-layer
-# evidence, or no readable image evidence) but no ``--llm`` provider was supplied.
-# The on-host vision path needs no provider, so this names that distinction.
-_TEXT_PATH_NEEDS_PROVIDER = (
-    "classifying this transaction needs a cloud provider: pass --llm with claude, antigravity, or codex. "
-    "(--read-evidence reads a scanned or image invoice on-host with no provider, but this transaction has "
-    "no readable image evidence to route there.)"
+# Raised when a split proposal has no reader to route to. The on-host vision
+# model is the only split proposer the composition wires, and it reads images
+# only, so a text-layer or evidence-less transaction reaches no proposer at
+# all. The remedy is image or scan evidence, or the manual split flags -- not a
+# provider, because none is selectable.
+_SPLIT_NEEDS_IMAGE_EVIDENCE = (
+    "proposing a split needs scanned or image evidence for the on-host reader; "
+    "this transaction has no readable image evidence to route there"
 )
 
 
@@ -278,13 +279,11 @@ def classify_with_evidence(
 
     Returns ``(response, provenance)``. Image evidence is read by the local vision
     model (``llm:local-vision:<model>`` provenance) and needs no ``text_classifier``;
-    text or no evidence runs the cloud subprocess ``text_classifier``
-    (``llm:<provider>:<model>`` provenance), which must be present. ``vision_model``
-    overrides the settings default vision model for this read.
+    text or no evidence runs the local text reader, so an absent
+    ``text_classifier`` is resolved from ``ports`` rather than refused.
+    ``vision_model`` overrides the settings default vision model for this read.
 
     Raises:
-        TransactionValidationError: When the text path is taken but no
-            ``text_classifier`` was resolved (no ``--llm`` provider supplied).
         PurchaseInvoiceEvidenceInputError: When the on-host reader is unavailable;
             the error carries the provisioning probe's exact precondition verdict.
         LLMClassifierError: When the reader call fails after its preconditions are
@@ -361,8 +360,8 @@ def _split_with_evidence(
     ``vision_model`` overrides the settings default vision model for this read.
 
     Raises:
-        TransactionValidationError: When the text path is taken but no ``proposer``
-            was resolved (no ``--llm`` provider supplied).
+        TransactionValidationError: When the evidence is not images and no
+            ``proposer`` was injected, so no reader can propose a split.
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
@@ -378,7 +377,8 @@ def _split_with_evidence(
         return response, vision.decided_by
     if proposer is None:
         raise TransactionValidationError(
-            _TEXT_PATH_NEEDS_PROVIDER,
+            _SPLIT_NEEDS_IMAGE_EVIDENCE,
+            translated_message="application.ledger.errors.split_requires_image_evidence",
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None

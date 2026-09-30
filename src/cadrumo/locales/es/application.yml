@@ -171,6 +171,14 @@ application:
           con la identidad fiscal del perfil activo; borra las sesiones de autenticación
           y autentica el perfil que coincida antes de las lecturas AEAT en directo.
   calculations:
+    bienes_inversion_regularizacion:
+      register_advisory: '%{count} bien(es) de inversión en periodo de regularización
+        (LIVA arts. 107-110) para %{year}: %{computed} computado(s), %{pending} pendiente(s)
+        de prorrata definitiva. Regularización propuesta para casilla %{casilla}:
+        %{value}. Confirme el valor antes de presentar.'
+      transmision_advisory: '%{count} bien(es) de inversión transmitido(s) en %{year}
+        requieren la regularización única de entregas (LIVA art. 110). Regularización
+        propuesta para casilla %{casilla}: %{value}. Confirme el valor antes de presentar.'
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
@@ -330,6 +338,15 @@ application:
           ejercicio {filing_year}, periodo {period}.
         taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
           forma la clave de decisión de la cartera de IVA.
+    prorrata_regularizacion:
+      advisory: 'Regularización de prorrata por porcentaje definitivo (LIVA arts.
+        104-105) para %{year}: prorrata provisional %{provisional}% → definitiva %{definitiva}%
+        (%{sentido}). Regularización propuesta para %{target}: %{value}. Confirme
+        el valor antes de presentar.'
+      sentido_deduccion: deducción complementaria
+      sentido_ingreso: ingreso
+      target_casilla: casilla %{number}
+      target_declared: la casilla de regularización declarada
     row_set:
       errors:
         grouping_dispatch_fell_through: 'La agrupación de conjunto de filas {grouping}
@@ -574,8 +591,9 @@ application:
         invoice_id_required: Se requiere un identificador de factura.
         invoice_not_found: 'Factura del catálogo no encontrada: %{invoice_id}.'
         remove_linked_invoice: 'No se puede eliminar la factura %{invoice_id} mientras
-          siga vinculada a transacciones: %{linked_transaction_ids}. Desvincúlelas
-          primero.'
+          siga vinculada a transacciones: %{linked_transaction_ids}. No existe un
+          comando de desvinculación: elimine esas transacciones con `aeat app ledger
+          remove`, lo que libera el vínculo, y elimine después la factura.'
     linking:
       errors:
         linked_invoice_not_found: No se encontró la factura %{invoice_id} después
@@ -641,6 +659,11 @@ application:
       purchase_evidence_already_set: La evidencia de factura de compra es inmutable
         una vez adjuntada. Elimine la transacción del libro y vuelva a añadirla con
         la evidencia correcta.
+      split_requires_image_evidence: El lector on-host solo puede proponer una división
+        para la transacción %{transaction_id} a partir de evidencia escaneada o en
+        imagen, y esta transacción no tiene ninguna que pueda leer. Adjunte una factura
+        escaneada o en imagen y vuelva a ejecutar con --read-evidence, o indique usted
+        mismo la división con --child-amount y --child-description.
       transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
         coincide con %{count} transacciones: %{matches}'
       transaction_id_prefix_empty: el prefijo de id de transacción está vacío
@@ -1210,7 +1233,7 @@ application:
         válido para el modelo %{modelo}. Indica --year %{year} por separado y usa
         uno de: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
-        %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
+        %{year} por separado y usa un token de periodo como 0A, 1T o 01.
       work_unit_already_discarded: La unidad de trabajo ya está descartada.
       work_unit_create_discarded: Este objetivo de declaración fue descartado. Volver
         a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se

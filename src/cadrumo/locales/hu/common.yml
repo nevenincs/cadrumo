@@ -612,6 +612,43 @@ entries:
     label: AEAT Elektronikus Iroda
     purpose: Az AEAT Elektronikus Irodájának kezdőlapja.
 filing:
+  applicability:
+    impatriado_m100_suppressed: 'A Modelo 100 nem alkalmazandó: az adózó a spanyol
+      területre kiküldött munkavállalókra, szakemberekre, vállalkozókra és befektetőkre
+      vonatkozó különös adózási rend (LIRPF 93. cikk) hatálya alatt áll a hatéves
+      időszakon belül. Ezen időszak alatt az IRNR szabályai szerint adózik, miközben
+      megtartja IRPF-adózói jogállását, és a vonatkozó éves bevallás a Modelo 151,
+      nem a Modelo 100.'
+    impatriado_m151_applicable: 'A Modelo 151 alkalmazandó: az adózó a LIRPF 93. cikke
+      szerinti impatriado-rend hatálya alatt áll a választás évének és az azt követő
+      öt évnek a hatéves időszakán belül; e rend éves bevallását a Modelo 151 űrlapon
+      kell benyújtani.'
+    impatriado_m151_not_applicable: 'A Modelo 151 nem alkalmazandó: a profil nem áll
+      a LIRPF 93. cikke szerinti impatriado-rend hatálya alatt a hatéves időszakon
+      belül. Ezen időszakon kívül, vagy a rend választása nélkül a belföldi illetőségű
+      természetes személy visszatér a rendes IRPF-útra, és adott esetben a Modelo
+      100-hoz.'
+    incomplete_no_rule: 'Ennek a modellnek az alkalmazhatósága nem határozható meg:
+      még nem készült rá alkalmazhatósági szabály. A szabályok lefedettsége szándékosan
+      szűk (a természetes személyek kezdeti köre), a szervezet és adózási rend szerinti
+      bővítés még hátravan. Ez nem az Ön profiljáról szóló megállapítás: az adózói
+      típusa akár helyesen is lehet bejelentve.'
+    incomplete_undeclared_taxpayer: 'Az alkalmazhatóság nem határozható meg: az adózó
+      típusa nincs bejelentve. Hiányzik a szervezeti típus, és adott esetben az IRPF
+      jövedelemkategóriái is.'
+    incomplete_undetermined_fact: 'Ennek a modellnek az alkalmazhatósága a bejelentett
+      adózói modellből nem határozható meg: olyan tényen múlik, amelyet a profil nem
+      fejez ki egyértelműen. A modell csak akkor minősül alkalmazhatónak, ha ezt a
+      tényt kifejezetten bejelentik; egyébként nem vélelmezünk kötelezettséget.'
+    incomplete_undetermined_fact_required: 'Ehhez a modellhez szükséges tény: %{fact}.'
+    incomplete_undetermined_periods_missing: 'Be nem jelentett időszakok: %{periods}.'
+    payer_fact:
+      iva_group_dominant_entity: IVA-csoport domináns tagjaként van bejegyezve
+      iva_group_member: IVA-csoport tagjaként van bejegyezve
+      oss_enrolled: be van jelentkezve az IVA egyablakos rendszerébe (OSS/IOSS)
+      pays_rent_with_retencion: adóelőleg-levonás alá eső bérleti díjat fizet
+      pays_withheld_income: adóelőleg-levonás alá eső jövedelmet fizet
+      trades_intracommunity: Közösségen belüli ügyleteket végez
   validation:
     deadline_missed: A benyújtási határidő lejárt.
     formula_divergence: Eltérés a képletszámításban.

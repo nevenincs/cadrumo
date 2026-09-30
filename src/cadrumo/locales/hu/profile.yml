@@ -1,10 +1,11 @@
 profile:
   errors:
     foral_regime: '{tax_region} lakosai az illetékes Hacienda Foralnál kötelesek adóbevallást
-      benyújtani a Gazdasági Megállapodás (Ley 12/2002) alapján, nem az AEAT-nél.
-      Ez a CLI nem kezeli a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya),
-      gipuzkoa.eus/ogasuna (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es
-      (Navarra) az Ön területének megfelelően.'
+      benyújtani, nem az AEAT-nél: a baszk területek a Concierto Económico (Ley 12/2002),
+      Navarra pedig a Convenio Económico (Ley 28/1990) alapján. Ez a CLI nem kezeli
+      a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya), gipuzkoa.eus/ogasuna
+      (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es (Navarra) az
+      Ön területének megfelelően.'
     not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
       a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
       beállításához.
