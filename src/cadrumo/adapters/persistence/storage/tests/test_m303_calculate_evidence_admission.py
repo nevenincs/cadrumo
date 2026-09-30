@@ -298,6 +298,18 @@ def _conflicting_assertion(
     return evidence
 
 
+def _require_empty_caller_context(replayed: dict[str, object]) -> None:
+    """A never-calculated unit replays an empty, known caller context into the writer.
+
+    The workspace Calculate action replays the current head's operator values,
+    clears, detail rows and Modelo 210 selections; these units have no head, so
+    every replayed channel is empty and the known (empty) operator layer is
+    recorded.
+    """
+    assert replayed.pop("record_operator_layer") is True
+    assert all(value in (None, (), {}) for value in replayed.values()), replayed
+
+
 _EvidenceBuilder = Callable[
     [AttachmentStore, ProfileRecordRepository, PinnedAuthorityOperation],
     definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
@@ -327,7 +339,9 @@ def test_calculate_executor_authors_explicit_false_m303_evidence_before_delegati
         ports: object,
         actor: str,
         filing_instance_evidence: object,
+        **replayed_caller_context: object,
     ) -> object:
+        _require_empty_caller_context(replayed_caller_context)
         captured.update(
             work_unit_id=work_unit_id,
             ports=ports,
@@ -486,8 +500,16 @@ def test_calculate_executor_leaves_other_modelo_calculation_without_m303_evidenc
     work_unit = _m303_work_unit(operation, modelo="131")
     captured: dict[str, object] = {}
 
-    def calculate(work_unit_id: str, *, ports: object, actor: str, filing_instance_evidence: object) -> object:
+    def calculate(
+        work_unit_id: str,
+        *,
+        ports: object,
+        actor: str,
+        filing_instance_evidence: object,
+        **replayed_caller_context: object,
+    ) -> object:
         del ports
+        _require_empty_caller_context(replayed_caller_context)
         captured.update(work_unit_id=work_unit_id, actor=actor, filing_instance_evidence=filing_instance_evidence)
         return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="f" * 64))
 
@@ -584,8 +606,16 @@ def test_calculate_executor_authors_a_period_before_the_last_from_the_joint_retu
     work_unit = _m303_work_unit(operation, period=first_quarter)
     captured: dict[str, object] = {}
 
-    def calculate(work_unit_id: str, *, ports: object, actor: str, filing_instance_evidence: object) -> object:
+    def calculate(
+        work_unit_id: str,
+        *,
+        ports: object,
+        actor: str,
+        filing_instance_evidence: object,
+        **replayed_caller_context: object,
+    ) -> object:
         del work_unit_id, ports, actor
+        _require_empty_caller_context(replayed_caller_context)
         captured["filing_instance_evidence"] = filing_instance_evidence
         return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="d" * 64))
 

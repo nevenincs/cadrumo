@@ -383,7 +383,19 @@ class ModeloWorkCalculatePublicResultV1(BaseModel):
 
 
 class ModeloWorkCalculateExecutor:
-    """Run the canonical ledger-backed calculation under the operation journal."""
+    """Recalculate a declaration from its ledger while keeping the operator's work.
+
+    This is the workspace's Calculate action. It replays the caller context of
+    the current calculation head -- the operator's own values and overrides,
+    explicit clears, detail rows, Modelo 303 filing evidence, Modelo 210
+    selections and borrador snapshot -- so new ledger data reaches the
+    declaration without discarding what the operator entered. A head stored
+    before operator layers existed replays no values (they are unknown, not
+    empty), and its recalculation records no layer either, so that
+    uncertainty is carried rather than silently resolved. The CLI
+    ``modelo work calculate`` command does not use this operation and keeps its
+    explicit full-specification semantics.
+    """
 
     def __init__(
         self,
@@ -400,9 +412,11 @@ class ModeloWorkCalculateExecutor:
         request: OperationRequest[ModeloWorkCalculateRequest],
         context: OperationExecutorContext,
     ) -> str | None:
-        """Delegate calculation without reinterpreting ledger or tax inputs."""
+        """Replay the head's caller context through the canonical calculation boundary."""
+        from ...core.authority_grade import RegistryAuthorityGrade
         from ...core.bucket_pointer import require_active_bucket_id
         from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+        from .caller_context import caller_context_calculation_inputs, caller_context_of
         from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
         await context.events.phase("modelo.work.calculate.ledger")
@@ -416,10 +430,26 @@ class ModeloWorkCalculateExecutor:
             repository_bucket_id=ports.work_unit_repository.bucket_id,
             use=ActiveWorkUnitUse.CALCULATE,
         )
+        head = (
+            ports.calculation_repository.load().get(work_unit.current_calculation_revision_id)
+            if work_unit.current_calculation_revision_id is not None
+            else None
+        )
+        caller_context = caller_context_of(head)
         filing_instance_evidence = self._ordinary_m303_filing_instance_evidence(
             payload=payload,
             work_unit=work_unit,
             operation=context.authority_operation,
+            replayed=caller_context.filing_instance_evidence,
+        )
+        replay = caller_context_calculation_inputs(
+            caller_context,
+            revision=context.authority_operation.snapshot(
+                str(work_unit.modelo),
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+                grade=RegistryAuthorityGrade.CALCULATION,
+            ).revision,
         )
         # Everything above only reads, so a refusal there truthfully changed
         # nothing; the outcome is open only once the persisting call begins.
@@ -429,7 +459,17 @@ class ModeloWorkCalculateExecutor:
             payload.work_unit_id,
             ports=ports,
             actor=payload.actor,
+            casilla_inputs=replay.casilla_inputs,
+            text_casilla_inputs=replay.text_casilla_inputs,
+            cleared_casilla_ids=replay.cleared_casilla_ids,
+            record_operator_layer=caller_context.operator_layer_known,
+            binding_values=replay.binding_values,
+            enum_binding_values=replay.enum_binding_values,
+            detail_rows=replay.detail_rows,
             filing_instance_evidence=filing_instance_evidence,
+            m210_official_tipo_renta_code=replay.m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=replay.m210_gross_income_source_mode,
+            borrador_snapshot_id=replay.borrador_snapshot_id,
         )
         await context.events.effect(OperationEffect.UPDATED)
         return str(result.revision.calculation_revision_id)
@@ -440,8 +480,15 @@ class ModeloWorkCalculateExecutor:
         payload: ModeloWorkCalculateRequest,
         work_unit: WorkUnit,
         operation: PinnedAuthorityOperation,
+        replayed: FilingInstanceEvidence | None,
     ) -> FilingInstanceEvidence | None:
-        """Author the one supported M303 envelope before calculation can persist it."""
+        """Author the one supported M303 envelope, or replay the head's, before calculation.
+
+        Newly supplied facts are authored and win: the operator answered the
+        questions again. Absent a new answer, the head's recorded evidence is
+        replayed, because those are the operator's standing filing facts for
+        this declaration. Only when neither exists is the evidence missing.
+        """
         from ...core.modelo import Modelo
 
         supplied = payload.ordinary_m303_filing_evidence
@@ -454,6 +501,8 @@ class ModeloWorkCalculateExecutor:
                     {"modelo": str(work_unit.modelo), "evidence_present": True},
                 )
             )
+        if supplied is None and replayed is not None:
+            return replayed
         if supplied is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(

@@ -44,9 +44,12 @@ from ...application.modelo.edit_models import (
 from ...application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from ...application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     ModeloEditApplyExecutor,
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
+    ModeloWorkCalculateExecutor,
+    ModeloWorkCalculateRequest,
 )
 from ...application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ...application.modelo.work_lifecycle import create_work_unit
@@ -63,6 +66,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEv
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ..adapter_composition import (
+    build_attachment_store,
     build_calculation_action_ports,
     build_modelo_edit_receipt_repository,
     build_work_lifecycle_ports,
@@ -200,6 +204,29 @@ class SeededOperatorWork:
         return AppliedEdit(
             calculation_revision_id=head.calculation_revision_id, refusal=None, effects=tuple(events.effects)
         )
+
+    def recalculate(self) -> CalculationRevision:
+        """Run the workspace Calculate operation's production executor, with no new answers."""
+        executor = ModeloWorkCalculateExecutor(
+            calculation_action_ports_factory=lambda **_: self.ports,
+            attachment_store_factory=build_attachment_store,
+        )
+        context = _ExecutorContext(
+            identity=OperationIdentity(
+                operation_id=content_hash_hex({"recalculate": self.work_unit_id, "at": datetime.now(UTC).isoformat()}),
+                definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+                subject_ref=self.work_unit_id,
+            ),
+            authority_operation=self.operation,
+            events=_RecordedEvents(),
+        )
+        request = OperationRequest(
+            definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            subject_ref=self.work_unit_id,
+            payload=ModeloWorkCalculateRequest(work_unit_id=self.work_unit_id, actor="operator:test"),
+        )
+        asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+        return self.require_head()
 
     def m303_filing_evidence(self) -> FilingInstanceEvidence:
         """The operator's first-calculation filing evidence for a Modelo 303 unit."""
