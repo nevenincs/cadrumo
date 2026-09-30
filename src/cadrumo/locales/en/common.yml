@@ -2189,6 +2189,8 @@ tui:
           fill: Open each box and type its value. If the right value is zero, enter
             0.
           fill_by_section: Open each section and type the values it needs.
+          records_at_source: Open the table, then add or correct the record where
+            it comes from and calculate again.
         assumed: Nobody has entered the values in these boxes.
         box_not_on_form: Box {box} is not shown on this declaration's pages.
         detail:
@@ -2208,7 +2210,11 @@ tui:
           more: Show more
         missing: The declaration needs values in these boxes, and nobody has given
           them.
+        open_records: Open the table
         open_section: Open section
+        records:
+          field_missing: A record in this table does not have this value.
+          none: This table has no records yet, and every record needs this value.
         technical: Technical details
         title: Issues to look at
         verdict:
@@ -2221,6 +2227,7 @@ tui:
         where:
           declaration: Whole declaration
           not_on_form: A box not shown on this declaration's pages
+          record_value: A value every record in a table needs
           unnumbered: 'Values without a box number: {count}'
       key:
         back: Back

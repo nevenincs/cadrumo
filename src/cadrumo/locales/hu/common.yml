@@ -2223,6 +2223,8 @@ tui:
             érték nulla, írj be 0-t.
           fill_by_section: Nyisd meg a szakaszokat egyenként, és írd be a szükséges
             értékeket.
+          records_at_source: Nyissa meg a táblázatot, vegye fel vagy javítsa a tételt
+            a forrásánál, majd számoljon újra.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
         detail:
@@ -2243,7 +2245,12 @@ tui:
           more: Továbbiak
         missing: A bevalláshoz ezekben a rovatokban érték kell, de senki sem adta
           meg.
+        open_records: Táblázat megnyitása
         open_section: Szakasz megnyitása
+        records:
+          field_missing: A táblázat egyik tételéből hiányzik ez az adat.
+          none: Ebben a táblázatban még nincs tétel, pedig minden tételhez meg kell
+            adni ezt az adatot.
         technical: Technikai részletek
         title: Átnézendő problémák
         verdict:
@@ -2256,6 +2263,7 @@ tui:
         where:
           declaration: A teljes bevallás
           not_on_form: Egy rovat, amely nem szerepel a bevallás oldalain
+          record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
           unnumbered: 'Rovatszám nélküli értékek: {count}'
       key:
         back: Vissza

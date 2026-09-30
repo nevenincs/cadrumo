@@ -1224,6 +1224,34 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+    finding_fact:
+      box_unnumbered: számozatlan
+      date_unknown: nem rögzített
+      modelo_unknown: ismeretlen
+      period:
+        annual: éves
+        instalment_1: 1. részletfizetési
+        instalment_2: 2. részletfizetési
+        instalment_3: 3. részletfizetési
+        instalment_4: 4. részletfizetési
+        month_01: januári
+        month_02: februári
+        month_03: márciusi
+        month_04: áprilisi
+        month_05: májusi
+        month_06: júniusi
+        month_07: júliusi
+        month_08: augusztusi
+        month_09: szeptemberi
+        month_10: októberi
+        month_11: novemberi
+        month_12: decemberi
+        other: rendkívüli
+        quarter_1: I. negyedévi
+        quarter_2: II. negyedévi
+        quarter_3: III. negyedévi
+        quarter_4: IV. negyedévi
+      value_absent: üres érték
     findings:
       art20_reduccion_possible: A(z) %{rnt_id} rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
@@ -1453,6 +1481,7 @@ application:
       stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
     work_form:
+      additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
       finding_action:
         add_activity_start: Add meg a profilodban, mikor kezdted a tevékenységedet,
           majd számolj újra.

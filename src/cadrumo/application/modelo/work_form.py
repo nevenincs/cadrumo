@@ -24,7 +24,8 @@ Classification is decided once, here, so every frontend shows the same states:
   literal states a percentage or its export field declares the scale, never
   from a literal of zeros,
 * for a repeating column the design leaves unnamed, the label of the box it
-  shows,
+  shows, and for an input no box owns that feeds exactly one numbered box, the
+  words "additional data for" that box,
 * the settlement box and which way it settles, and
 * whether the declaration is recorded as filed, which closes it to editing and
   leaves nothing counted as still to do.
@@ -54,7 +55,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import lookup_translation
+from ...core.i18n.render import lookup_translation, tr
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,
@@ -144,6 +145,8 @@ _INSPECTION_PAGE_ID: Final[str] = "inspection"
 _INSPECTION_HEADING_LOCALE_KEY: Final[str] = "application.modelo.work_form.inspection_heading"
 _UNNAMED_LOCALE_KEY: Final[str] = "application.modelo.work_form.unnamed_box"
 """The label of a box the form gives no name, in the filer's words."""
+_FEEDS_BOX_LOCALE_KEY: Final[str] = "application.modelo.work_form.additional_data_for_box"
+"""The label of an input no box owns that feeds exactly one numbered box, named after that box."""
 _BOX_LOCATOR_HELP: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"^Casilla [\d-]+ del modelo \d+, ejercicios? [\d-]+( y siguientes)?\.$"),
     re.compile(r"^Box [\d-]+ of [Mm]odelo \d+, tax years? [\d-]+( onwards)?\.$"),
@@ -237,6 +240,15 @@ class _FormContext:
             for binding_id in (casilla.binding, *casilla.alternate_bindings):
                 if binding_id is not None:
                     self.casilla_by_binding.setdefault(str(binding_id), str(casilla.id))
+        self.fed_casillas: dict[str, set[str]] = {}
+        for row in review.casillas:
+            refs = (
+                *(str(origin.binding_id) for origin in row.concrete_bindings),
+                *(() if row.concrete_formula is None else (str(ref) for ref in row.concrete_formula.operand_refs)),
+            )
+            for ref in refs:
+                self.fed_casillas.setdefault(ref, set()).add(str(row.casilla_id))
+        self.placed_boxes: dict[str, str] = {}
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
@@ -290,6 +302,24 @@ def _unnamed(language: OutputLanguage) -> ModeloFormText:
     if not text:
         raise InternalInvariantError(f"the catalogue has no text for {_UNNAMED_LOCALE_KEY!r}")
     return ModeloFormText(text=text, disclosure=ModeloFormTextDisclosure.UNNAMED)
+
+
+def _fed_box_label(binding_id: str, context: _FormContext) -> ModeloFormText | None:
+    """Name an input no box owns after the one numbered box it feeds, or ``None`` when it feeds none or several."""
+    fed = context.fed_casillas.get(binding_id, set())
+    if len(fed) != 1:
+        return None
+    (casilla_id,) = fed
+    box = context.placed_boxes.get(casilla_id) or _box(context.casillas.get(casilla_id), None)
+    if box is None:
+        return None
+    for locale, disclosure in (
+        (context.language.value, ModeloFormTextDisclosure.LOCALIZED),
+        (_SPANISH, ModeloFormTextDisclosure.SPANISH_FALLBACK),
+    ):
+        if lookup_translation(_FEEDS_BOX_LOCALE_KEY, locale=locale):
+            return ModeloFormText(text=tr(_FEEDS_BOX_LOCALE_KEY, locale=locale, box=box), disclosure=disclosure)
+    raise InternalInvariantError(f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}")
 
 
 def _help(casilla: CasillaDefinition, label: str, language: OutputLanguage) -> str | None:
@@ -494,8 +524,10 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
     owner = context.casilla_by_binding.get(binding_id)
     owner_casilla = None if owner is None else context.casillas.get(owner)
     label = (
-        None if owner_casilla is None else _localized(owner_casilla.localization_keys, context.language)
-    ) or _unnamed(context.language)
+        (None if owner_casilla is None else _localized(owner_casilla.localization_keys, context.language))
+        or _fed_box_label(binding_id, context)
+        or _unnamed(context.language)
+    )
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
     data_type = _BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
     policy = source_policy(binding.source)
@@ -1003,6 +1035,11 @@ def build_modelo_work_form(
         return _inspection_form(
             context, snapshot, reason, deadline=deadline, aeat_data_imported_at=aeat_data_imported_at
         )
+    context.placed_boxes = {
+        str(placement.casilla_id): placement.box_number
+        for placement in layout.placements
+        if placement.box_number is not None
+    }
     walk = _LayoutWalk(layout, context)
     pages = tuple(walk.page(page) for page in layout.pages)
     working: list[ModeloFormField] = []

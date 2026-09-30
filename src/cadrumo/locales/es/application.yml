@@ -1273,6 +1273,34 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+    finding_fact:
+      box_unnumbered: sin número
+      date_unknown: una fecha no registrada
+      modelo_unknown: desconocido
+      period:
+        annual: anual
+        instalment_1: 1.er pago fraccionado
+        instalment_2: 2.º pago fraccionado
+        instalment_3: 3.er pago fraccionado
+        instalment_4: 4.º pago fraccionado
+        month_01: enero
+        month_02: febrero
+        month_03: marzo
+        month_04: abril
+        month_05: mayo
+        month_06: junio
+        month_07: julio
+        month_08: agosto
+        month_09: septiembre
+        month_10: octubre
+        month_11: noviembre
+        month_12: diciembre
+        other: fuera del calendario habitual
+        quarter_1: 1.er trimestre
+        quarter_2: 2.º trimestre
+        quarter_3: 3.er trimestre
+        quarter_4: 4.º trimestre
+      value_absent: un valor vacío
     findings:
       art20_reduccion_possible: La casilla %{rnt_id} recoge %{rnt_value} EUR de rendimiento
         neto del trabajo, dentro del límite del art. 20 LIRPF, así que la casilla
@@ -1494,6 +1522,7 @@ application:
       stage_refused: 'Quickfile se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
     work_form:
+      additional_data_for_box: Dato adicional de la casilla {box}
       finding_action:
         add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
           y vuelve a calcular.

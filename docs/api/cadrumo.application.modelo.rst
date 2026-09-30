@@ -102,6 +102,7 @@ Submodules
    cadrumo.application.modelo.filing_actions
    cadrumo.application.modelo.filing_chain_reconciliation
    cadrumo.application.modelo.filing_repository
+   cadrumo.application.modelo.finding_message_text
    cadrumo.application.modelo.history
    cadrumo.application.modelo.history_ports
    cadrumo.application.modelo.iva_wallet_gate

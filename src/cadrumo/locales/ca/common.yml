@@ -2239,6 +2239,8 @@ tui:
           fill: Obre cada casella i escriu-ne el valor. Si el valor correcte és zero,
             escriu 0.
           fill_by_section: Obre cada secció i escriu-hi els valors que necessita.
+          records_at_source: Obre la taula, afegeix o corregeix el registre al seu
+            origen i torna a calcular.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
         detail:
@@ -2260,7 +2262,12 @@ tui:
           more: Mostra'n més
         missing: La declaració necessita valors en aquestes caselles i ningú no els
           ha donat.
+        open_records: Obrir la taula
         open_section: Obrir la secció
+        records:
+          field_missing: Un registre d'aquesta taula no té aquesta dada.
+          none: Aquesta taula encara no té registres, i cada registre necessita aquesta
+            dada.
         technical: Detalls tècnics
         title: Incidències per revisar
         verdict:
@@ -2273,6 +2280,7 @@ tui:
         where:
           declaration: Tota la declaració
           not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
+          record_value: Una dada que necessita cada registre d'una taula
           unnumbered: 'Valors sense número de casella: {count}'
       key:
         back: Tornar

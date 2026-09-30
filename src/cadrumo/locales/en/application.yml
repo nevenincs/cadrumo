@@ -1158,6 +1158,34 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+    finding_fact:
+      box_unnumbered: without a number
+      date_unknown: a date not recorded
+      modelo_unknown: not known
+      period:
+        annual: annual
+        instalment_1: 1st instalment
+        instalment_2: 2nd instalment
+        instalment_3: 3rd instalment
+        instalment_4: 4th instalment
+        month_01: January
+        month_02: February
+        month_03: March
+        month_04: April
+        month_05: May
+        month_06: June
+        month_07: July
+        month_08: August
+        month_09: September
+        month_10: October
+        month_11: November
+        month_12: December
+        other: outside the usual calendar
+        quarter_1: 1st quarter
+        quarter_2: 2nd quarter
+        quarter_3: 3rd quarter
+        quarter_4: 4th quarter
+      value_absent: an empty value
     findings:
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
@@ -1376,6 +1404,7 @@ application:
       stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
     work_form:
+      additional_data_for_box: Additional data for box {box}
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.
