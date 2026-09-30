@@ -81,3 +81,27 @@ source_refs = [
     "boe-modelo-296-form-layout",
     "aeat-dr-296-2023",
 ]
+
+[revisions."2023".family_dispositions.bindings]
+reason = """
+The only bindings modelo 296 declares are the two annual_summary relations that fill boxes 02 and 03 from the year's modelo 216 casillas [10] and [13]. Those casillas are printed by aeat-dr-216-2024 alone: the modelo 216 design for ejercicios 2020 to 2023 prints its liquidacion as seven unnumbered partidas, so no 2023 modelo 216 filing carries a casilla either relation could read. The relations therefore start with the 2024-2025 edition, and boxes 02 and 03 stay operator input here, as box 04 is."""
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "orden-eha-3290-2008:art-6",
+]
+source_refs = [
+    "aeat-modelo-296-procedure",
+    "aeat-dr-216-2020-2023",
+]
+
+[revisions."2023".family_dispositions.dependency_classifications]
+reason = """
+Modelo 296 depends on modelo 216 only through the two annual_summary relations the bindings disposition of this edition explains, and a dependency classification without the relations that carry its values is a claim with no content. With the modelo 216 design of ejercicios 2020 to 2023 printing no casilla those relations could read, the classification starts with the 2024-2025 edition alongside them."""
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "orden-eha-3290-2008:art-6",
+]
+source_refs = [
+    "aeat-modelo-296-procedure",
+    "aeat-dr-216-2020-2023",
+]

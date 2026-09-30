@@ -9,7 +9,7 @@
 # requires the mechanism that carries the values, and "it depends on 216" without
 # one is a claim with no content. Both relations now exist and are named here.
 
-[[revisions."2023".dependency_classifications]]
+[[revisions."2024-2025".dependency_classifications]]
 id = "modelo-296-dep-216"
 source_modelo = "216"
 treatment = "direct_annual_settlement"

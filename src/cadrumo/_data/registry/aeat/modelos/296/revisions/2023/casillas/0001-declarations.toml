@@ -4,8 +4,6 @@ continuidad_id = "irnr-resumen-base"
 number = "02"
 section = ["resumen"]
 semantic_role = "irnr_resumen_base"
-input_kind = "bound"
-binding = "modelo-296-prev-216-base-retenciones"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
 [[revisions."2023".casillas]]
@@ -14,8 +12,6 @@ continuidad_id = "irnr-resumen-retenciones"
 number = "03"
 section = ["resumen"]
 semantic_role = "irnr_resumen_retenciones"
-input_kind = "bound"
-binding = "modelo-296-prev-216-retenciones-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
 [[revisions."2023".casillas]]

@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from cadrumo.domain.calculations.registry.temporal import select_revision_for_year
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .profile_schema_support import committed_registry_validator
@@ -71,3 +73,43 @@ def test_modelo_296_casilla_set_is_the_printed_box_set() -> None:
     assert by_id["03"].input_kind.value == "bound"
     assert by_id["04"].input_kind.value == "manual"
     assert by_id["04"].binding is None
+
+
+def test_every_modelo_216_relation_reads_a_casilla_the_source_edition_prints() -> None:
+    """Each 296 edition reads from modelo 216 only the casillas the 216 edition of that year prints.
+
+    The modelo 216 design for ejercicios 2020 to 2023 prints unnumbered partidas,
+    and only the 2024 redesign numbers casillas [10] and [13]. A relation that
+    names them for an earlier year can never resolve, so those years leave boxes
+    02 and 03 as operator input.
+    """
+    modelo, _ = _load_modelo_296()
+    source, _ = _committed_modelo("216")
+    checked = 0
+    for revision in modelo.revisions.values():
+        selector = revision.period_selector
+        years = range(selector.year_from, (selector.year_to or selector.year_from) + 1)
+        for binding, provider in relation_prefill_bindings_for_period(revision):
+            if provider.source_modelo != "216":
+                continue
+            wanted = {provider.source_casilla_id, *provider.source_casilla_ids} - {None}
+            for year in years:
+                printed = {casilla.id for casilla in select_revision_for_year(source, filing_year=year).casillas}
+                assert wanted <= printed, (
+                    f"296/{revision.id} binding {binding.id} reads 216 casilla(s) "
+                    f"{sorted(map(str, wanted - printed))} that the {year} edition does not print"
+                )
+                checked += 1
+    assert checked, "no modelo 296 edition declares a modelo 216 relation"
+
+
+@pytest.mark.parametrize("revision_id", ["2022", "2023"])
+def test_modelo_296_boxes_02_and_03_are_operator_input_before_the_2024_216_design(revision_id: str) -> None:
+    modelo, _ = _load_modelo_296()
+    revision = modelo.revisions[revision_id]
+    by_id = {str(casilla.id): casilla for casilla in revision.casillas}
+
+    assert relation_prefill_bindings_for_period(revision) == ()
+    for casilla_id in ("02", "03"):
+        assert by_id[casilla_id].input_kind.value == "manual"
+        assert by_id[casilla_id].binding is None
