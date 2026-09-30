@@ -173,11 +173,11 @@ modelo:
           liquidacion-complementaria-devolucion-anterior-estado:
             label: Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones
               acordadas procedentes de autoliquidaciones anteriores correspondientes
-              al período impositivo 2025. Estado
+              al período impositivo 2024. Estado
           liquidacion-complementaria-devolucion-anterior-forales:
             label: Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones
               acordadas procedentes de autoliquidaciones anteriores correspondientes
-              al período impositivo 2025. D. Forales / Navarra (totales)
+              al período impositivo 2024. D. Forales / Navarra (totales)
           liquidacion-complementaria-devolucion-compensada-anterior-estado:
             label: 'Liquidación. Conversión de activos por impuesto diferido en crédito
               exigible frente a la Administración tributaria (art. 130 LIS). Líquido
@@ -217,11 +217,11 @@ modelo:
           liquidacion-complementaria-resultado-anterior-estado:
             label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
               Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes
-              al período impositivo 2025. Estado'
+              al período impositivo 2024. Estado'
           liquidacion-complementaria-resultado-anterior-forales:
             label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
               Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes
-              al período impositivo 2025. D. Forales/Navarra (totales).'
+              al período impositivo 2024. D. Forales/Navarra (totales).'
           liquidacion-complementaria-resultado-estado:
             label: Liquidación. Líquido a ingresar o a devolver. Estado
           liquidacion-complementaria-resultado-forales:
@@ -230,12 +230,12 @@ modelo:
             label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
               la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
               procedente de autoliquidaciones anteriores correspondientes al período
-              impositivo 2025. Estado'
+              impositivo 2024. Estado'
           liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
             label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
               la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
               procedente de autoliquidaciones anteriores correspondientes al período
-              impositivo 2025. D. Forales / Navarra (totales)'
+              impositivo 2024. D. Forales / Navarra (totales)'
           liquidacion-complementaria-resultado-fraccionamiento-estado:
             label: Liquidación. Opción de fraccionamiento en supuestos de cambios
               de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido
@@ -6980,5 +6980,33 @@ modelo:
           field:
             label: Orden HAC/657/2025 (modelo 220), ejercicio 2024
         '2025':
+          casilla:
+            x-agp34c1g74o30c9q60p3ad1g:
+              label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
+                Resultados a ingresar procedentes de autoliquidaciones anteriores
+                correspondientes al período impositivo 2025. Estado'
+            x-agp34c1g74o30c9q60p3ad1h:
+              label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
+                Resultados a ingresar procedentes de autoliquidaciones anteriores
+                correspondientes al período impositivo 2025. D. Forales/Navarra (totales).'
+            x-agp34c1g74o30c9q60p3ee1o:
+              label: Liquidación. Líquido a ingresar o a devolver. Complementaria.
+                Devoluciones acordadas procedentes de autoliquidaciones anteriores
+                correspondientes al período impositivo 2025. Estado
+            x-agp34c1g74o30c9q60p3ee1p:
+              label: Liquidación. Líquido a ingresar o a devolver. Complementaria.
+                Devoluciones acordadas procedentes de autoliquidaciones anteriores
+                correspondientes al período impositivo 2025. D. Forales / Navarra
+                (totales)
+            x-agp34c1g74o30c9q60p3ee9o:
+              label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
+                la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
+                procedente de autoliquidaciones anteriores correspondientes al período
+                impositivo 2025. Estado'
+            x-agp34c1g74o30c9q60p3ee9p:
+              label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
+                la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
+                procedente de autoliquidaciones anteriores correspondientes al período
+                impositivo 2025. D. Forales / Navarra (totales)'
           field:
             label: Orden HAC/529/2026 (modelo 220), ejercicio 2025

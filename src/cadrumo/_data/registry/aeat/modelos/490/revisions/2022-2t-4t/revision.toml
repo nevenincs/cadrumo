@@ -1,6 +1,6 @@
 [revisions."2022-2t-4t"]
 casilla_storage_baseline = "2022-1t"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced on the converter's predecessor-row-without-lineage diagnostic against '2022-1t', a materialisation limit and not an official-structure claim. The 2022 second-to-fourth-quarter record design (aeat-dr-490-2022-2t) renumbers the liquidation and regularisation boxes, inserts the territorial attribution and declared-base rows and moves regularisation tables three and four to a third page. The payload is stored against the '2022-1t' edition through casilla_storage_baseline and family_storage_baseline: the 153 inherited rows are kept through overrides, 124 of them under renumbered ids, the 200 boxes new on this design are stated with positions for the design order, and overrides, removals and the restated export records carry the remaining differences. Storage reuse makes no continuity claim; naming '2022-1t' as legal predecessor is a separate continuity decision.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure", "aeat-dr-490-2022-2t"] } }
 casilla_source_refs = ["aeat-dr-490-2022-2t"]
 authority_grade = "applicability"
 # Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
@@ -1015,832 +1015,396 @@ id = "reg-base-declarada-90"
 position = 44
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "decl.ejercicio"
-position = 63
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "decl.periodo"
-position = 64
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-331"
-position = 65
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-352"
-position = 66
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-290"
-position = 67
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-311"
-position = 68
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-332"
-position = 69
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-353"
-position = 70
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-291"
-position = 71
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-312"
-position = 72
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-333"
-position = 73
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-354"
-position = 74
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-292"
-position = 75
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-313"
-position = 76
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-334"
-position = 77
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-355"
-position = 78
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-293"
-position = 79
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-314"
-position = 80
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-335"
-position = 81
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-356"
-position = 82
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-294"
-position = 83
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-315"
-position = 84
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-336"
-position = 85
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-357"
-position = 86
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-295"
-position = 87
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-316"
-position = 88
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-337"
-position = 89
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-358"
-position = 90
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-298"
-position = 91
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-319"
-position = 92
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-340"
-position = 93
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-361"
-position = 94
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-299"
-position = 95
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-320"
-position = 96
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-341"
-position = 97
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-362"
-position = 98
-
-[[revisions."2022-2t-4t".casilla_positions]]
 id = "reg-total-cuota-363"
-position = 99
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-total-cuota-estado-364"
-position = 100
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-negativa-113"
-position = 101
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-negativa-134"
-position = 102
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-negativa-155"
-position = 103
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-negativa-176"
-position = 104
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-total-114"
-position = 105
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-total-135"
-position = 106
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-total-156"
-position = 107
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-total-177"
-position = 108
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-tipo-115"
-position = 109
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-tipo-136"
-position = 110
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-tipo-157"
-position = 111
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-tipo-178"
-position = 112
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-positiva-116"
-position = 113
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-positiva-137"
-position = 114
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-positiva-158"
-position = 115
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-positiva-179"
-position = 116
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-negativa-117"
-position = 117
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-negativa-138"
-position = 118
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-negativa-159"
-position = 119
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-negativa-180"
-position = 120
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-total-118"
-position = 121
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-total-139"
-position = 122
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-total-160"
-position = 123
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-total-181"
-position = 124
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-119"
-position = 125
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-140"
-position = 126
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-161"
-position = 127
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-182"
-position = 128
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-120"
-position = 129
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-141"
-position = 130
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-162"
-position = 131
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-183"
-position = 132
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-121"
-position = 133
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-142"
-position = 134
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-163"
-position = 135
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-184"
-position = 136
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-122"
-position = 137
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-143"
-position = 138
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-164"
-position = 139
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-185"
-position = 140
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-123"
-position = 141
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-144"
-position = 142
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-165"
-position = 143
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-186"
-position = 144
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-124"
-position = 145
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-145"
-position = 146
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-166"
-position = 147
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-187"
-position = 148
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-125"
-position = 149
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-146"
-position = 150
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-167"
-position = 151
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-188"
-position = 152
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-126"
-position = 153
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-147"
-position = 154
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-168"
-position = 155
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-189"
-position = 156
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-127"
-position = 157
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-148"
-position = 158
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-169"
-position = 159
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-190"
-position = 160
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-130"
-position = 161
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-151"
-position = 162
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-172"
-position = 163
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-35"
-position = 174
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-56"
-position = 175
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-77"
-position = 176
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-98"
-position = 177
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-36"
-position = 178
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-57"
-position = 179
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-78"
-position = 180
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-99"
-position = 181
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-37"
-position = 182
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-58"
-position = 183
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-79"
-position = 184
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-100"
-position = 185
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-38"
-position = 186
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-59"
-position = 187
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-80"
-position = 188
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-101"
-position = 189
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-39"
-position = 190
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-60"
-position = 191
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-81"
-position = 192
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-102"
-position = 193
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-40"
-position = 194
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-61"
-position = 195
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-82"
 position = 196
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-103"
+id = "reg-base-negativa-113"
 position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-41"
-position = 198
+id = "reg-base-negativa-134"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-62"
-position = 199
+id = "reg-base-negativa-155"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-83"
-position = 200
+id = "reg-base-negativa-176"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-104"
-position = 201
+id = "reg-base-total-114"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-42"
-position = 202
+id = "reg-base-total-135"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-63"
-position = 203
+id = "reg-base-total-156"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-84"
-position = 204
+id = "reg-base-total-177"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-105"
-position = 205
+id = "reg-tipo-115"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-43"
-position = 206
+id = "reg-tipo-136"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-64"
-position = 207
+id = "reg-tipo-157"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-85"
-position = 208
+id = "reg-tipo-178"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-106"
-position = 209
+id = "reg-cuota-positiva-116"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-46"
-position = 210
+id = "reg-cuota-positiva-137"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-67"
-position = 211
+id = "reg-cuota-positiva-158"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-88"
-position = 212
+id = "reg-cuota-positiva-179"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-109"
-position = 213
+id = "reg-cuota-negativa-117"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-47"
-position = 214
+id = "reg-cuota-negativa-138"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-68"
-position = 215
+id = "reg-cuota-negativa-159"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-89"
-position = 216
+id = "reg-cuota-negativa-180"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-110"
-position = 217
+id = "reg-cuota-total-118"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-111"
-position = 219
+id = "reg-cuota-total-139"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-132"
-position = 220
+id = "reg-cuota-total-160"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-153"
-position = 221
+id = "reg-cuota-total-181"
+position = 197
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-174"
-position = 222
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-193"
-position = 227
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-131"
-position = 228
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-152"
-position = 229
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-173"
-position = 230
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-194"
-position = 231
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "490-03-indicador-pagina-complementaria-12"
-position = 232
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-195"
-position = 234
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-216"
-position = 235
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-237"
+id = "reg-cuota-positiva-74"
 position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-258"
-position = 237
+id = "reg-cuota-positiva-95"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-203"
-position = 266
+id = "reg-cuota-negativa-33"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-224"
-position = 267
+id = "reg-cuota-negativa-54"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-245"
-position = 268
+id = "reg-cuota-negativa-75"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-cuota-estado-266"
-position = 269
+id = "reg-cuota-negativa-96"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-204"
-position = 270
+id = "reg-cuota-total-34"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-225"
-position = 271
+id = "reg-cuota-total-55"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-246"
-position = 272
+id = "reg-cuota-total-76"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-distribucion-267"
-position = 273
+id = "reg-cuota-total-97"
+position = 236
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-205"
-position = 274
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-226"
-position = 275
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-247"
-position = 276
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-ajuste-total-estado-268"
-position = 277
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-206"
-position = 278
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-227"
-position = 279
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-248"
+id = "490-02-regularizacion-ejercicio-909"
 position = 280
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-per-269"
-position = 281
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-207"
-position = 282
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-228"
-position = 283
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-249"
+id = "reg-base-positiva-112"
 position = 284
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-alava-con-reg-270"
-position = 285
+id = "reg-base-positiva-133"
+position = 284
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-208"
-position = 286
+id = "reg-base-positiva-154"
+position = 284
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-229"
-position = 287
+id = "reg-base-positiva-175"
+position = 284
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-250"
-position = 288
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-per-271"
-position = 289
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-209"
+id = "490-03-regularizacion-ejercicio-13"
 position = 290
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-230"
-position = 291
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-251"
-position = 292
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-guipuzcoa-con-reg-272"
-position = 293
-
-[[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-210"
+id = "reg-base-positiva-196"
 position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-231"
-position = 295
+id = "reg-base-positiva-217"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-252"
-position = 296
+id = "reg-base-positiva-238"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-per-273"
-position = 297
+id = "reg-base-positiva-259"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-211"
-position = 298
+id = "reg-base-negativa-197"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-232"
-position = 299
+id = "reg-base-negativa-218"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-253"
-position = 300
+id = "reg-base-negativa-239"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-vizcaya-con-reg-274"
-position = 301
+id = "reg-base-negativa-260"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-214"
-position = 302
+id = "reg-base-total-198"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-235"
-position = 303
+id = "reg-base-total-219"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-256"
-position = 304
+id = "reg-base-total-240"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-per-277"
-position = 305
+id = "reg-base-total-261"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-215"
-position = 306
+id = "reg-tipo-199"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-236"
-position = 307
+id = "reg-tipo-220"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-257"
-position = 308
+id = "reg-tipo-241"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "terr-comun-con-reg-278"
-position = 309
+id = "reg-tipo-262"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-279"
-position = 311
+id = "reg-cuota-positiva-200"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-300"
-position = 312
+id = "reg-cuota-positiva-221"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-321"
-position = 313
+id = "reg-cuota-positiva-242"
+position = 294
 
 [[revisions."2022-2t-4t".casilla_positions]]
-id = "reg-base-declarada-342"
-position = 314
+id = "reg-cuota-positiva-263"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-201"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-222"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-243"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-264"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-202"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-223"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-244"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-265"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "490-03-regularizacion-ejercicio-909"
+position = 338
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-280"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-301"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-322"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-343"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-281"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-302"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-323"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-344"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-282"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-303"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-324"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-345"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-283"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-304"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-325"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-346"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-284"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-305"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-326"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-347"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-285"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-306"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-327"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-348"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-286"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-307"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-328"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-349"
+position = 342
 
 [[revisions."2022-2t-4t".family_overrides]]
 family = "constructs"

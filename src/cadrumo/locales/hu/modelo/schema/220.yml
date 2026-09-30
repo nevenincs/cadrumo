@@ -165,11 +165,11 @@ modelo:
               eredménye rendezés után. Beszámítás. Összesen (Állam + Külön jogállású
               tartományi tanácsok és Navarra)'
           liquidacion-complementaria-devolucion-anterior-estado:
-            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2024.
               adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
               Állam
           liquidacion-complementaria-devolucion-anterior-forales:
-            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2024.
               adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
               Külön jogállású tartományi tanácsok és Navarra (Összesen)
           liquidacion-complementaria-devolucion-compensada-anterior-estado:
@@ -207,10 +207,10 @@ modelo:
               eredménye rendezés után. Fizetendő összeg. Összesen (Állam + Külön jogállású
               tartományi tanácsok és Navarra)'
           liquidacion-complementaria-resultado-anterior-estado:
-            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2024.
               adózási időszak korábbi önadózásaiból fizetendő összegek. Állam'
           liquidacion-complementaria-resultado-anterior-forales:
-            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2024.
               adózási időszak korábbi önadózásaiból fizetendő összegek. Külön jogállású
               tartományi tanácsok és Navarra (Összesen).'
           liquidacion-complementaria-resultado-estado:
@@ -220,11 +220,11 @@ modelo:
               tartományi tanácsok és Navarra
           liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
             label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás eredménye
-              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2025. adózási
+              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2024. adózási
               időszak korábbi önadózásaiból. Állam'
           liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
             label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás eredménye
-              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2025. adózási
+              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2024. adózási
               időszak korábbi önadózásaiból. Külön jogállású tartományi tanácsok és
               Navarra (Összesen)'
           liquidacion-complementaria-resultado-fraccionamiento-estado:
@@ -6810,5 +6810,30 @@ modelo:
           field:
             label: Orden HAC/657/2025 (220-as modelo), 2024-es adóév
         '2025':
+          casilla:
+            x-agp34c1g74o30c9q60p3ad1g:
+              label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+                adózási időszak korábbi önadózásaiból fizetendő összegek. Állam'
+            x-agp34c1g74o30c9q60p3ad1h:
+              label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+                adózási időszak korábbi önadózásaiból fizetendő összegek. Külön jogállású
+                tartományi tanácsok és Navarra (Összesen).'
+            x-agp34c1g74o30c9q60p3ee1o:
+              label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+                adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+                Állam
+            x-agp34c1g74o30c9q60p3ee1p:
+              label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+                adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+                Külön jogállású tartományi tanácsok és Navarra (Összesen)
+            x-agp34c1g74o30c9q60p3ee9o:
+              label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás
+                eredménye a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt,
+                a 2025. adózási időszak korábbi önadózásaiból. Állam'
+            x-agp34c1g74o30c9q60p3ee9p:
+              label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás
+                eredménye a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt,
+                a 2025. adózási időszak korábbi önadózásaiból. Külön jogállású tartományi
+                tanácsok és Navarra (Összesen)'
           field:
             label: Orden HAC/529/2026 (220-as modelo), 2025-től kezdődő adóévek

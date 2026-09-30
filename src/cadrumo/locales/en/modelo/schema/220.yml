@@ -150,10 +150,10 @@ modelo:
               and Navarre)'
           liquidacion-complementaria-devolucion-anterior-estado:
             label: Settlement. Net amount payable or refundable. Supplementary. Refunds
-              granted from earlier self-assessments for tax period 2025. State
+              granted from earlier self-assessments for tax period 2024. State
           liquidacion-complementaria-devolucion-anterior-forales:
             label: Settlement. Net amount payable or refundable. Supplementary. Refunds
-              granted from earlier self-assessments for tax period 2025. Chartered
+              granted from earlier self-assessments for tax period 2024. Chartered
               provincial councils and Navarre (totals)
           liquidacion-complementaria-devolucion-compensada-anterior-estado:
             label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
@@ -190,10 +190,10 @@ modelo:
               councils and Navarre)'
           liquidacion-complementaria-resultado-anterior-estado:
             label: 'Settlement. Net amount payable or refundable. Supplementary: amounts
-              payable from earlier self-assessments for tax period 2025. State'
+              payable from earlier self-assessments for tax period 2024. State'
           liquidacion-complementaria-resultado-anterior-forales:
             label: 'Settlement. Net amount payable or refundable. Supplementary: amounts
-              payable from earlier self-assessments for tax period 2025. Chartered
+              payable from earlier self-assessments for tax period 2024. Chartered
               provincial councils and Navarre (totals).'
           liquidacion-complementaria-resultado-estado:
             label: Settlement. Net amount payable or refundable. State
@@ -203,11 +203,11 @@ modelo:
           liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
             label: 'Settlement. Net amount payable: Supplementary: Self-assessment
               result including the first instalment under art. 19,1 LIS from earlier
-              self-assessments for tax period 2025. State'
+              self-assessments for tax period 2024. State'
           liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
             label: 'Settlement. Net amount payable: Supplementary: Self-assessment
               result including the first instalment under art. 19,1 LIS from earlier
-              self-assessments for tax period 2025. Chartered provincial councils
+              self-assessments for tax period 2024. Chartered provincial councils
               and Navarre (totals)'
           liquidacion-complementaria-resultado-fraccionamiento-estado:
             label: Settlement. Instalment option in cases of change of residence (art.
@@ -6936,5 +6936,31 @@ modelo:
           field:
             label: Orden HAC/657/2025 (modelo 220), tax year 2024
         '2025':
+          casilla:
+            x-agp34c1g74o30c9q60p3ad1g:
+              label: 'Settlement. Net amount payable or refundable. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2025.
+                State'
+            x-agp34c1g74o30c9q60p3ad1h:
+              label: 'Settlement. Net amount payable or refundable. Supplementary:
+                amounts payable from earlier self-assessments for tax period 2025.
+                Chartered provincial councils and Navarre (totals).'
+            x-agp34c1g74o30c9q60p3ee1o:
+              label: Settlement. Net amount payable or refundable. Supplementary.
+                Refunds granted from earlier self-assessments for tax period 2025.
+                State
+            x-agp34c1g74o30c9q60p3ee1p:
+              label: Settlement. Net amount payable or refundable. Supplementary.
+                Refunds granted from earlier self-assessments for tax period 2025.
+                Chartered provincial councils and Navarre (totals)
+            x-agp34c1g74o30c9q60p3ee9o:
+              label: 'Settlement. Net amount payable: Supplementary: Self-assessment
+                result including the first instalment under art. 19,1 LIS from earlier
+                self-assessments for tax period 2025. State'
+            x-agp34c1g74o30c9q60p3ee9p:
+              label: 'Settlement. Net amount payable: Supplementary: Self-assessment
+                result including the first instalment under art. 19,1 LIS from earlier
+                self-assessments for tax period 2025. Chartered provincial councils
+                and Navarre (totals)'
           field:
             label: Orden HAC/529/2026 (modelo 220), tax years 2025 onwards

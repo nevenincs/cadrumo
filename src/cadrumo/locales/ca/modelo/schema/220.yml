@@ -151,11 +151,11 @@ modelo:
           liquidacion-complementaria-devolucion-anterior-estado:
             label: Liquidació. Líquid a ingressar o a retornar. Complementària. Devolucions
               acordades procedents d'autoliquidacions anteriors corresponents al període
-              impositiu 2025. Estat
+              impositiu 2024. Estat
           liquidacion-complementaria-devolucion-anterior-forales:
             label: Liquidació. Líquid a ingressar o a retornar. Complementària. Devolucions
               acordades procedents d'autoliquidacions anteriors corresponents al període
-              impositiu 2025. Diputacions Forals i Navarra (totals)
+              impositiu 2024. Diputacions Forals i Navarra (totals)
           liquidacion-complementaria-devolucion-compensada-anterior-estado:
             label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
               Líquid a ingressar o a retornar: Complementària: Devolució acordada
@@ -190,11 +190,11 @@ modelo:
           liquidacion-complementaria-resultado-anterior-estado:
             label: 'Liquidació. Líquid a ingressar o a retornar. Complementària: resultats
               a ingressar procedents d''autoliquidacions anteriors corresponents al
-              període impositiu 2025. Estat'
+              període impositiu 2024. Estat'
           liquidacion-complementaria-resultado-anterior-forales:
             label: 'Liquidació. Líquid a ingressar o a retornar. Complementària: resultats
               a ingressar procedents d''autoliquidacions anteriors corresponents al
-              període impositiu 2025. Diputacions Forals i Navarra (totals).'
+              període impositiu 2024. Diputacions Forals i Navarra (totals).'
           liquidacion-complementaria-resultado-estado:
             label: Liquidació. Líquid a ingressar o a retornar. Estat
           liquidacion-complementaria-resultado-forales:
@@ -203,11 +203,11 @@ modelo:
           liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
             label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de l''autoliquidació
               inclòs el 1r fraccionament de l''art. 19,1 LIS procedent d''autoliquidacions
-              anteriors corresponents al període impositiu 2025. Estat'
+              anteriors corresponents al període impositiu 2024. Estat'
           liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
             label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de l''autoliquidació
               inclòs el 1r fraccionament de l''art. 19,1 LIS procedent d''autoliquidacions
-              anteriors corresponents al període impositiu 2025. Diputacions Forals
+              anteriors corresponents al període impositiu 2024. Diputacions Forals
               i Navarra (totals)'
           liquidacion-complementaria-resultado-fraccionamiento-estado:
             label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
@@ -6782,5 +6782,32 @@ modelo:
           field:
             label: Orden HAC/657/2025 (modelo 220), exercici 2024
         '2025':
+          casilla:
+            x-agp34c1g74o30c9q60p3ad1g:
+              label: 'Liquidació. Líquid a ingressar o a retornar. Complementària:
+                resultats a ingressar procedents d''autoliquidacions anteriors corresponents
+                al període impositiu 2025. Estat'
+            x-agp34c1g74o30c9q60p3ad1h:
+              label: 'Liquidació. Líquid a ingressar o a retornar. Complementària:
+                resultats a ingressar procedents d''autoliquidacions anteriors corresponents
+                al període impositiu 2025. Diputacions Forals i Navarra (totals).'
+            x-agp34c1g74o30c9q60p3ee1o:
+              label: Liquidació. Líquid a ingressar o a retornar. Complementària.
+                Devolucions acordades procedents d'autoliquidacions anteriors corresponents
+                al període impositiu 2025. Estat
+            x-agp34c1g74o30c9q60p3ee1p:
+              label: Liquidació. Líquid a ingressar o a retornar. Complementària.
+                Devolucions acordades procedents d'autoliquidacions anteriors corresponents
+                al període impositiu 2025. Diputacions Forals i Navarra (totals)
+            x-agp34c1g74o30c9q60p3ee9o:
+              label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de
+                l''autoliquidació inclòs el 1r fraccionament de l''art. 19,1 LIS procedent
+                d''autoliquidacions anteriors corresponents al període impositiu 2025.
+                Estat'
+            x-agp34c1g74o30c9q60p3ee9p:
+              label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de
+                l''autoliquidació inclòs el 1r fraccionament de l''art. 19,1 LIS procedent
+                d''autoliquidacions anteriors corresponents al període impositiu 2025.
+                Diputacions Forals i Navarra (totals)'
           field:
             label: Orden HAC/529/2026 (modelo 220), exercicis 2025 i següents

@@ -7837,15 +7837,16 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # removed. Deriving the remainder cannot mis-match; hand-written fragments taken from
 # truncated output have twice produced silent key collisions on this modelo.
 #
-# ITS SIBLING RECORD T22009001 IS NOT SHIPPED YET, and the reason is recorded here
-# because it is a finding rather than a scheduling note. That record contains casillas
+# ITS SIBLING RECORD T22009001 FOLLOWS THIS ONE WITHOUT TWO OF ITS BOXES, and the reason
+# is recorded here because it is a finding rather than a scheduling note. It contains casillas
 # 02796 and 02797, whose descriptions are BYTE-IDENTICAL -- both ending "Estado." -- at
 # adjacent offsets. The pair immediately above them, 02794 and 02795, is the same concept
 # split "Estado" and "D. Forales / Navarra (totales)", so the pattern says one of
 # 02796/02797 should be the foral column and AEAT has repeated the wrong suffix. Which
 # one is not something the design states, and guessing would put a jurisdiction on a
-# filed box on the strength of a neighbouring row's shape. That record waits for a
-# resolution rather than shipping a guess.
+# filed box on the strength of a neighbouring row's shape. Those two boxes wait for a
+# resolution rather than shipping a guess; the record's other 34 numbered fields are
+# authored after this record.
 #
 # AEAT ALSO BREAKS THE "fi" LIGATURE ACROSS A SPACE in several places on this family --
 # "Bonifi caciones", "Transparencia fi scal", "especifi cas". Transcribed as printed in
@@ -8429,6 +8430,327 @@ id = "T22009000:02539"
 continuidad_id = "t22009000-02539"
 number = "02539"
 segmento = "T22009000"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# Modelo 220 RECORD T22009001 -- liquidacion (III): the complementaria results, the art. 19.1
+# LIS fraccionamiento and the art. 130 LIS conversion of activos por impuesto diferido.
+#
+# 34 of the record's 36 numbered fields, each read from aeat-dr-220-2024 at
+# src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:8226-8261.
+# The 2025 design prints the same 36 fields at the same offsets, lengths and types with the
+# same descriptions but for the periodo impositivo it names, so these rows are authored here
+# once and 2025 keys only its continuity claim and orden references.
+#
+# NOT AUTHORED: [02796] and [02797]. Both designs print the identical description, ending
+# "Estado.", at offsets 220 and 237, so which is the foral column is not stated; see the
+# T22009000 note above.
+#
+# NOT CLAIMED: these casillas DECLARE the liquidacion; none of them computes it.
+
+# @16+17 N. Liquidación. Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Estado [02540]
+[[revisions."2024".casillas]]
+id = "T22009001:02540"
+continuidad_id = "liquidacion-complementaria-resultado-anterior-estado"
+number = "02540"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @33+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. D. Forales/Navarra (totales). [02541]
+[[revisions."2024".casillas]]
+id = "T22009001:02541"
+continuidad_id = "liquidacion-complementaria-resultado-anterior-forales"
+number = "02541"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @50+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Estado [02788]
+[[revisions."2024".casillas]]
+id = "T22009001:02788"
+continuidad_id = "liquidacion-complementaria-devolucion-anterior-estado"
+number = "02788"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @67+17 Num. Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. D. Forales / Navarra (totales) [02789]
+[[revisions."2024".casillas]]
+id = "T22009001:02789"
+continuidad_id = "liquidacion-complementaria-devolucion-anterior-forales"
+number = "02789"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @84+17 N. Liquidación. Líquido a ingresar o a devolver. Estado [00621]
+[[revisions."2024".casillas]]
+id = "T22009001:00621"
+continuidad_id = "liquidacion-complementaria-resultado-estado"
+number = "00621"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @101+17 N. Liquidación. Líquido a ingresar o a devolver. D. Forales / Navarra [00622]
+[[revisions."2024".casillas]]
+id = "T22009001:00622"
+continuidad_id = "liquidacion-complementaria-resultado-forales"
+number = "00622"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @118+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Importe integrado en la base imponible. Estado [02790]
+[[revisions."2024".casillas]]
+id = "T22009001:02790"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-base-estado"
+number = "02790"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @135+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Importe integrado en la base imponible. D. Forales / Navarra (totales) [02791]
+[[revisions."2024".casillas]]
+id = "T22009001:02791"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-base-forales"
+number = "02791"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @152+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1 LIS. Estado [02792]
+[[revisions."2024".casillas]]
+id = "T22009001:02792"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-deuda-estado"
+number = "02792"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @169+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1 LIS. D. Forales / Navarra (totales) [02793]
+[[revisions."2024".casillas]]
+id = "T22009001:02793"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-deuda-forales"
+number = "02793"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @186+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). 1º fraccionamiento. Estado [02794]
+[[revisions."2024".casillas]]
+id = "T22009001:02794"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado"
+number = "02794"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @203+17 Num. Liquidación. Opción de fraccionamiento en supuestos de cambios de residencia (art. 19,1 LIS). 1º fraccionamiento. D. Forales / Navarra (totales) [02795]
+[[revisions."2024".casillas]]
+id = "T22009001:02795"
+continuidad_id = "liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales"
+number = "02795"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @254+17 N. Liquidación. Líquido a ingresar: Complementaria: Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Estado [02798]
+[[revisions."2024".casillas]]
+id = "T22009001:02798"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-anterior-estado"
+number = "02798"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @271+17 N. Liquidación. Líquido a ingresar: Complementaria: Resultado de la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. D. Forales / Navarra (totales) [02799]
+[[revisions."2024".casillas]]
+id = "T22009001:02799"
+continuidad_id = "liquidacion-complementaria-resultado-fraccionamiento-anterior-forales"
+number = "02799"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @288+17 N. Liquidación. Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento del art. 19.1 LIS. Estado [02800]
+[[revisions."2024".casillas]]
+id = "T22009001:02800"
+continuidad_id = "liquidacion-complementaria-ingreso-fraccionamiento-estado"
+number = "02800"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @305+17 N. Liquidación. Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento del art. 19.1 LIS. D. Forales / Navarra (totales) [02801]
+[[revisions."2024".casillas]]
+id = "T22009001:02801"
+continuidad_id = "liquidacion-complementaria-ingreso-fraccionamiento-forales"
+number = "02801"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @322+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado + D Forales / Navarra) [01953]
+[[revisions."2024".casillas]]
+id = "T22009001:01953"
+continuidad_id = "liquidacion-complementaria-abono-conversion-total"
+number = "01953"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @339+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL Estado [03361]
+[[revisions."2024".casillas]]
+id = "T22009001:03361"
+continuidad_id = "liquidacion-complementaria-abono-conversion-estado"
+number = "03361"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @356+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Abono por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL  D Forales / Navarra [03362]
+[[revisions."2024".casillas]]
+id = "T22009001:03362"
+continuidad_id = "liquidacion-complementaria-abono-conversion-forales"
+number = "03362"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @373+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado + D. Forales/Navarra) [01954]
+[[revisions."2024".casillas]]
+id = "T22009001:01954"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-total"
+number = "01954"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @390+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL Estado [03363]
+[[revisions."2024".casillas]]
+id = "T22009001:03363"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-estado"
+number = "03363"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @407+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS). TOTAL  D. Forales/Navarra [03364]
+[[revisions."2024".casillas]]
+id = "T22009001:03364"
+continuidad_id = "liquidacion-complementaria-compensacion-conversion-forales"
+number = "03364"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @424+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. Total (Estado + D. Forales / Navarra) [02802]
+[[revisions."2024".casillas]]
+id = "T22009001:02802"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-total"
+number = "02802"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @441+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. Estado [02803]
+[[revisions."2024".casillas]]
+id = "T22009001:02803"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-estado"
+number = "02803"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @458+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Complementaria: Devolución acordada / compensada. D. Forales / Navarra [02804]
+[[revisions."2024".casillas]]
+id = "T22009001:02804"
+continuidad_id = "liquidacion-complementaria-devolucion-compensada-anterior-forales"
+number = "02804"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @475+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono. Total (Estado + D. Forales / Navarra) [02805]
+[[revisions."2024".casillas]]
+id = "T22009001:02805"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-total"
+number = "02805"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @492+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono. Estado [02806]
+[[revisions."2024".casillas]]
+id = "T22009001:02806"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-estado"
+number = "02806"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @509+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Abono.  D. Forales / Navarra [02807]
+[[revisions."2024".casillas]]
+id = "T22009001:02807"
+continuidad_id = "liquidacion-complementaria-abono-regularizacion-forales"
+number = "02807"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @526+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación. Total (Estado + D. Forales / Navarra) [02808]
+[[revisions."2024".casillas]]
+id = "T22009001:02808"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-total"
+number = "02808"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @543+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación. Estado  [02809]
+[[revisions."2024".casillas]]
+id = "T22009001:02809"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-estado"
+number = "02809"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @560+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. Compensación.  D. Forales / Navarra [02810]
+[[revisions."2024".casillas]]
+id = "T22009001:02810"
+continuidad_id = "liquidacion-complementaria-compensacion-regularizacion-forales"
+number = "02810"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @577+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. Total (Estado + D. Forales / Navarra) [02811]
+[[revisions."2024".casillas]]
+id = "T22009001:02811"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-total"
+number = "02811"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @594+17 Num. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. Estado [02812]
+[[revisions."2024".casillas]]
+id = "T22009001:02812"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-estado"
+number = "02812"
+segmento = "T22009001"
+section = ["liquidacion", "liquidacion_del_grupo"]
+legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
+
+# @611+17 N. Liquidación. Conversión de activos por impuesto diferido en  crédito exigible frente a la Administración tributaria (art. 130 LIS). Líquido a ingresar o a devolver: Resultado de conversión de AID tras regularización. A ingresar. D. Forales / Navarra [02813]
+[[revisions."2024".casillas]]
+id = "T22009001:02813"
+continuidad_id = "liquidacion-complementaria-ingreso-regularizacion-forales"
+number = "02813"
+segmento = "T22009001"
 section = ["liquidacion", "liquidacion_del_grupo"]
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # Modelo 220 RECORD T22010000 -- a PER-ENTITY DETAIL record: transparencia fiscal internacional y doble imposicion interna
@@ -17582,7 +17904,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 #
 # THIS RECORD ECHOES BOXES DECLARED ELSEWHERE. Box 00562 (cuota integra del grupo) is
 # already declared as T22009000:00562, and the design prints it in SEVEN records in all;
-# 00621, 02800, 02806, 02809 and 02812 belong to T22009001, which is not yet authored.
+# 00621, 02800, 02806, 02809 and 02812 are declared again in T22009001.
 # The (segmento, number) convention gives each record its own casilla, so ONE AEAT box
 # becomes several casillas across the modelo. A layout must bind these to the SAME value
 # rather than collect them twice, and nothing here enforces that yet.

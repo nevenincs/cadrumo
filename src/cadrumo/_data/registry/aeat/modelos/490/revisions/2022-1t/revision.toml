@@ -1,6 +1,6 @@
 [revisions."2022-1t"]
 casilla_storage_baseline = "2021"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced on the converter's predecessor-row-without-lineage diagnostic against '2021', a materialisation limit and not an official-structure claim: the first quarter of 2022 is filed on the same record design as 2021 (aeat-dr-490-2021). The payload is stored against the '2021' edition through casilla_storage_baseline and family_storage_baseline, so this edition states only its differences: the 2022 first-quarter deadline window and its deadline application link, each row's continuity claim, and the two export records whose field identifiers carry this edition. Storage reuse makes no continuity claim; naming '2021' as legal predecessor is a separate continuity decision.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure", "aeat-dr-490-2021"] } }
 casilla_source_refs = ["aeat-dr-490-2021"]
 authority_grade = "applicability"
 # Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
