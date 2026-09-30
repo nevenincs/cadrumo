@@ -40,8 +40,9 @@ which leads to the table; a finding about the whole declaration opens its
 detail in place; a finding whose box is not on the form says so there. A
 finding whose value comes from another area of the application, such as the
 filer's records or profile, offers ``a`` to open that area, and while assumed
-values wait ``c`` offers to confirm them; either closes the list with that
-choice for the workbench to act on. Codes, facts and legal references never
+values wait ``b`` offers to confirm those of the selected row's section, or
+page, as the workbench's own bulk confirm does; either closes the list with
+that choice for the workbench to act on. Codes, facts and legal references never
 reach the list: ``t`` shows them for the selected finding only.
 """
 
@@ -175,7 +176,7 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "escape": "tui.modelo.workbench.key.back",
         "t": "tui.modelo.workbench.issues.technical",
-        "c": "tui.modelo.workbench.issues.confirm_all",
+        "b": "tui.modelo.workbench.issues.confirm_all",
     }
 )
 _OPEN_AREA_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.open_area"
@@ -245,7 +246,14 @@ class IssueLine:
 
 @dataclass(frozen=True, slots=True)
 class ConfirmAssumedValues:
-    """The filer asked, from the findings list, to confirm the values nobody entered."""
+    """The filer asked, from the findings list, to confirm the assumed values of one part of the form.
+
+    ``at`` is a box in that part: the workbench puts its cursor there and
+    offers the assumed values of the box's section, or of its page when the
+    page has no sections, exactly as its own bulk confirm does.
+    """
+
+    at: AddressKey
 
 
 type IssuesChoice = AddressKey | OpenSourceSurface | ConfirmAssumedValues
@@ -633,7 +641,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         Binding("escape", "close", "", show=False),
         Binding("t", "technical", "", show=False),
         Binding("a", "open_area", "", show=False),
-        Binding("c", "confirm_all", "", show=False),
+        Binding("b", "confirm_scope", "", show=False),
     ]
 
     def __init__(self, form: ModeloWorkForm, *, status_line: str | None = None) -> None:
@@ -767,8 +775,27 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
             table["a"] = [replace(binding, description=label, show=area is not None) for binding in entries]
         self.refresh_bindings()
 
-    def _confirm_available(self) -> bool:
-        return not self._recorded and IssueLevel.CONFIRM in self._unentered
+    def _confirm_target(self) -> AddressKey | None:
+        """A box in the part of the form whose assumed values ``b`` confirms, or ``None`` when none wait.
+
+        The part is the selected row's: its box, the first box a listed entry
+        or a section line names; a row with no box leads to the first assumed
+        value's part.
+        """
+        assumed = None if self._recorded else self._unentered.get(IssueLevel.CONFIRM)
+        if assumed is None:
+            return None
+        option_id = self._highlighted_id()
+        listed = self._listed(option_id)
+        section = self._section(option_id)
+        index = self._issue_index(option_id)
+        if listed is not None:
+            return listed.keys[0]
+        if section is not None:
+            return section.keys[0]
+        if index is not None and self._lines[index].key is not None and not self._lines[index].in_records:
+            return self._lines[index].key
+        return assumed.keys[0]
 
     def _highlighted_area(self) -> SourceSurface | None:
         index = self._issue_index(self._highlighted_id())
@@ -776,11 +803,11 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
 
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        """Offer ``a`` only on a finding whose value an area owns, and ``c`` only while assumed values wait."""
+        """Offer ``a`` only on a finding whose value an area owns, and ``b`` only while assumed values wait."""
         if action == "open_area":
             return self._highlighted_area() is not None
-        if action == "confirm_all":
-            return self._confirm_available()
+        if action == "confirm_scope":
+            return self._confirm_target() is not None
         return True
 
     def action_open_area(self) -> None:
@@ -789,10 +816,11 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         if area is not None:
             self.dismiss(OpenSourceSurface(area))
 
-    def action_confirm_all(self) -> None:
-        """Close the list asking the workbench to confirm the assumed values."""
-        if self._confirm_available():
-            self.dismiss(ConfirmAssumedValues())
+    def action_confirm_scope(self) -> None:
+        """Close the list asking the workbench to confirm the assumed values of the selected row's part of the form."""
+        target = self._confirm_target()
+        if target is not None:
+            self.dismiss(ConfirmAssumedValues(at=target))
 
     def _redraw(self, index: int) -> None:
         prompt = _issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)

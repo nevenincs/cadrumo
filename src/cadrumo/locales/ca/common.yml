@@ -2287,7 +2287,7 @@ tui:
             origen i torna a calcular.
         assumed: Ningú no ha escrit els valors d'aquestes caselles.
         box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
-        confirm_all: Revisar i confirmar tots els valors suposats
+        confirm_all: Confirmar valors suposats d'aquesta secció
         detail:
           advisory: És un consell. Pots presentar la declaració tal com està.
           blocking_rule: No es compleix una regla d'aquest model. No es pot registrar

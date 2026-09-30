@@ -2276,7 +2276,7 @@ tui:
             a forrásánál, majd számoljon újra.
         assumed: Ezeknek a rovatoknak az értékét senki sem adta meg.
         box_not_on_form: A(z) {box} rovat nem szerepel a bevallás oldalain.
-        confirm_all: Az összes feltételezett érték áttekintése és megerősítése
+        confirm_all: Feltételezett értékek megerősítése ebben a szakaszban
         detail:
           advisory: Ez tanács. A bevallást a jelenlegi formájában is benyújthatja.
           blocking_rule: A Modelo egyik szabálya nem teljesül. A benyújtás addig nem

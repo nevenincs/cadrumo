@@ -3,9 +3,9 @@
 Driven on the list itself over the synthetic form, with real catalogue
 messages. A finding about box 01, whose value comes from the filer's records,
 offers ``a`` and closes asking to open those records; a finding about a box
-the filer typed offers no area. While assumed values wait, ``c`` closes asking to
-confirm them; on a declaration recorded as filed, where nothing is asked, it
-does nothing.
+the filer typed offers no area. While assumed values wait, ``b`` closes asking
+to confirm those of the selected row's part of the form, named by a box in it;
+on a declaration recorded as filed, where nothing is asked, it does nothing.
 """
 
 from __future__ import annotations
@@ -94,11 +94,17 @@ async def test_a_does_nothing_on_a_finding_no_area_owns() -> None:
 
 
 @pytest.mark.asyncio
-async def test_c_asks_to_confirm_the_assumed_values_while_any_wait() -> None:
-    assert await _choose(_form(assumed=True), "c") == ConfirmAssumedValues()
-    assert await _choose(_form(), "c") == _STILL_OPEN
+async def test_b_on_the_assumed_values_asks_to_confirm_those_of_their_part_of_the_form() -> None:
+    # The list opens on its first entry, the assumed values of box 07.
+    assert await _choose(_form(assumed=True), "b") == ConfirmAssumedValues(at=("casilla", "07"))
+    assert await _choose(_form(), "b") == _STILL_OPEN
 
 
 @pytest.mark.asyncio
-async def test_c_asks_nothing_on_a_declaration_recorded_as_filed() -> None:
-    assert await _choose(recorded_as_filed(_form(assumed=True)), "c") == _STILL_OPEN
+async def test_b_on_a_finding_asks_to_confirm_the_assumed_values_of_the_findings_part() -> None:
+    assert await _choose(_form(_warning("01"), assumed=True), "end", "b") == ConfirmAssumedValues(at=("casilla", "01"))
+
+
+@pytest.mark.asyncio
+async def test_b_asks_nothing_on_a_declaration_recorded_as_filed() -> None:
+    assert await _choose(recorded_as_filed(_form(assumed=True)), "b") == _STILL_OPEN

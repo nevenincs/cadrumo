@@ -2296,7 +2296,7 @@ tui:
             y vuelve a calcular.
         assumed: Nadie ha escrito los valores de estas casillas.
         box_not_on_form: La casilla {box} no aparece en las páginas de esta declaración.
-        confirm_all: Revisar y confirmar todos los valores supuestos
+        confirm_all: Confirmar valores supuestos de esta sección
         detail:
           advisory: Es un consejo. Puedes presentar la declaración tal como está.
           blocking_rule: No se cumple una regla de este modelo. No se puede registrar
