@@ -151,6 +151,7 @@ from .action_errors import (
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
+from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
@@ -1382,6 +1383,9 @@ def _prepare_modelo_export_schema(
         revision=revision,
         action="export",
         operation=operation,
+    )
+    require_work_unit_calculation_unblocked(
+        work_unit=work_unit, revision=revision, action="export", operation=operation
     )
     return period, schema_provider
 

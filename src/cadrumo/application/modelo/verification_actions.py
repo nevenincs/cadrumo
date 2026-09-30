@@ -172,6 +172,7 @@ from .action_errors import (
 )
 from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
+from .calculation_note_gate import require_work_unit_calculation_unblocked
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
@@ -982,6 +983,7 @@ def verify_modelo_revision_with_preconditions(
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="verify", operation=operation
     )
+    require_work_unit_calculation_unblocked(work_unit=work_unit, revision=target, action="verify", operation=operation)
 
     findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
         _collect_verification_gate_findings(
