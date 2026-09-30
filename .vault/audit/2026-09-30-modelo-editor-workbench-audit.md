@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:60db05f74c2968b7d0e1a03aa33aff4a8f97c15d42854942fb294f301ec5dc05'
+body_hash: 'sha256:9c2e4d227e390091dabab427d319bb383e8679bdf8fe6bd8113e4a186c68ed51'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -171,6 +171,17 @@ detail-row templates, which their rows answer for; verification also checks thos
 their rows (`src/cadrumo/application/modelo/verification_actions.py:1733`). Replacing
 verification's loop with the form's set would drop that check and under-declare, so it stays.
 Resolved as intended; a test proves the form and a real verification agree on the scalar set.
+
+### informative-totals | low | informative modelos have no headline totals for the header
+
+Modelos with no settlement box (349, 347, 190) could show a record count and total on the result
+line, but the form carries neither, so the header shows nothing there. Open: a read-model
+descriptor of the headline totals, grounded in each modelo's summary record.
+
+### window-opens | low | the form does not say when the filing window opens
+
+The form carries the last day to file but not the first, which matters for Renta before its
+campaign opens. Open: expose the window start from the same calendar resolver the deadline uses.
 
 ## Recommendations
 
