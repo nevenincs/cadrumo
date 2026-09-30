@@ -1,8 +1,9 @@
 # Modelo 151 (régimen impatriados) — cuota chain formulas.
 
 # Cuota íntegra general: aplica la escala plana del art. 93.2.e.1º (24% hasta
-# 600.000 €, 47% sobre el exceso) a la base liquidable general, vía lookup_bracket
-# sobre la tabla modelo-151.escala-cuota-integra-general.
+# 600.000 €; sobre el exceso, 47% en 2015, 45% de 2016 a 2020 y 47% desde 2021)
+# a la base liquidable general, vía lookup_bracket sobre la tabla
+# modelo-151.escala-cuota-integra-general.
 [[revisions."2015-2022".formulas]]
 id = "modelo-151-cuota-integra-general"
 target_casilla_id = "impatriado.cuota-integra-general"
