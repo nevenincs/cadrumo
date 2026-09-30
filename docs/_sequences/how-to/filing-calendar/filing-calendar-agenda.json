@@ -3,6 +3,28 @@
     {
       "argv": [
         "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01",
+        "--irpf-income-categories",
+        "actividad_economica"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "app",
         "overview",
         "agenda",
@@ -14,7 +36,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "as_of\t2026-04-01\nhorizon_days\t14\nnext_due\t(none)\ndue_today\t0\ndue_soon\t0\noverdue\t0\ncoverage_advised\t49\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 130\nnext_action\taeat app overview explain 131\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 303\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 360\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 714\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\n"
+      "text": "as_of\t2026-04-01\nhorizon_days\t14\nnext_due\t130\t2026 1T\tcloses=2026-04-20\ndue_today\t0\ndue_soon\t0\noverdue\t0\nwarning\tart109_activity_income_withholding_ge_70pct\tArt109 activity income withholding ge 70pct unset\nwarning\tdoes_intracomunitario\tIntracomunitario unset\nwarning\thas_employees\tHas employees unset\nwarning\tirpf.estimation_regime\tEstimacion objetiva unset\nwarning\tpays_capital_income_with_retencion\tRetencion capital unset\nwarning\tpays_professionals_with_retencion\tRetencion profesionales unset\nwarning\tpays_rent_with_retencion\tRetencion arrendamientos unset\nwarning\tthird_party_transactions_above_347_threshold\tTerceros threshold unset\ncoverage_advised\t45\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\tart109_activity_income_withholding_ge_70pct\tArt109 activity income withholding ge 70pct unset\nnotice\tdoes_intracomunitario\tIntracomunitario unset\nnotice\thas_employees\tHas employees unset\nnotice\tirpf.estimation_regime\tEstimacion objetiva unset\nnotice\tpays_capital_income_with_retencion\tRetencion capital unset\nnotice\tpays_professionals_with_retencion\tRetencion profesionales unset\nnotice\tpays_rent_with_retencion\tRetencion arrendamientos unset\nnotice\tthird_party_transactions_above_347_threshold\tTerceros threshold unset\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 714\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\n"
     },
     {
       "argv": [
@@ -32,7 +54,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "as_of\t2026-04-15\nhorizon_days\t14\nnext_due\t(none)\ndue_today\t0\ndue_soon\t0\noverdue\t0\ncoverage_advised\t49\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 130\nnext_action\taeat app overview explain 131\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 303\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 360\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 714\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\n"
+      "text": "as_of\t2026-04-15\nhorizon_days\t14\nnext_due\t130\t2026 1T\tcloses=2026-04-20\ndue_today\t0\ndue_soon\t2\n  130\t2026 1T\t2026-04-20\n  303\t2026 1T\t2026-04-20\noverdue\t0\nwarning\tart109_activity_income_withholding_ge_70pct\tArt109 activity income withholding ge 70pct unset\nwarning\tdoes_intracomunitario\tIntracomunitario unset\nwarning\thas_employees\tHas employees unset\nwarning\tirpf.estimation_regime\tEstimacion objetiva unset\nwarning\tpays_capital_income_with_retencion\tRetencion capital unset\nwarning\tpays_professionals_with_retencion\tRetencion profesionales unset\nwarning\tpays_rent_with_retencion\tRetencion arrendamientos unset\nwarning\tthird_party_transactions_above_347_threshold\tTerceros threshold unset\ncoverage_advised\t45\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t45\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\tart109_activity_income_withholding_ge_70pct\tArt109 activity income withholding ge 70pct unset\nnotice\tdoes_intracomunitario\tIntracomunitario unset\nnotice\thas_employees\tHas employees unset\nnotice\tirpf.estimation_regime\tEstimacion objetiva unset\nnotice\tpays_capital_income_with_retencion\tRetencion capital unset\nnotice\tpays_professionals_with_retencion\tRetencion profesionales unset\nnotice\tpays_rent_with_retencion\tRetencion arrendamientos unset\nnotice\tthird_party_transactions_above_347_threshold\tTerceros threshold unset\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat config profile edit\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 714\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\n"
     },
     {
       "argv": [
@@ -53,1685 +75,135 @@
         "active_profile": "docs-sequence-sandbox",
         "command": "overview.agenda",
         "notices": [
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "038"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "038",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "100"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "100",
-              "reason": "applicable_window_missing"
-            },
-            "message": "The filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "111"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "111",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "115"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "115",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "117"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "117",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "122"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "122",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "123"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "123",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "126"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "126",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "128"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "128",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "130"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "130",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "131"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "131",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "136"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "136",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "156"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "156",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "165"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "165",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "180"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "180",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "181"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "181",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "182"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "182",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "185"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "185",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "187"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "187",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "188"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "188",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "189"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "189",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "190"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "190",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "193"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "193",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "194"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "194",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "216"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "216",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "220"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "220",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "222"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "222",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "270"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "270",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "280"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "280",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "296"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "296",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "303"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "303",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "308"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "308",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "309"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "309",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "322"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "322",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "341"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "341",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "345"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "345",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "347"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "347",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "349"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "349",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "353"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "353",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "360"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "360",
-              "reason": "applicable_window_missing"
-            },
-            "message": "The filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "369"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "369",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "390"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "390",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "490"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "490",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "576"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "576",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "604"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "604",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "714"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "714",
-              "reason": "applicable_window_missing"
-            },
-            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "720"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "720",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "721"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "721",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "763"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "763",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          }
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"art109_activity_income_withholding_ge_70pct","context":{"affected_modelos":"130"},"message":"Art109 activity income withholding ge 70pct unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"does_intracomunitario","context":{"affected_modelos":"349"},"message":"Intracomunitario unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"has_employees","context":{"affected_modelos":"111,190,216,296"},"message":"Has employees unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"irpf.estimation_regime","context":{"affected_modelos":"131"},"message":"Estimacion objetiva unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"pays_capital_income_with_retencion","context":{"affected_modelos":"117,123,126,128,187,188,193,194"},"message":"Retencion capital unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"pays_professionals_with_retencion","context":{"affected_modelos":"111,190,216,296"},"message":"Retencion profesionales unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"pays_rent_with_retencion","context":{"affected_modelos":"115,180"},"message":"Retencion arrendamientos unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.profile.edit","cli_path":["config","profile","edit"],"target_command_key":"config.profile.edit"},"argument_bindings":[]},"code":"third_party_transactions_above_347_threshold","context":{"affected_modelos":"347"},"message":"Terceros threshold unset","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"038"}]},"code":"overview.coverage.incomplete","context":{"modelo":"038","reason":"applicability_undetermined"},"message":"The filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"100"}]},"code":"overview.coverage.incomplete","context":{"modelo":"100","reason":"applicable_window_missing"},"message":"The filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"111"}]},"code":"overview.coverage.incomplete","context":{"modelo":"111","reason":"applicability_undetermined"},"message":"The filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"115"}]},"code":"overview.coverage.incomplete","context":{"modelo":"115","reason":"applicability_undetermined"},"message":"The filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"117"}]},"code":"overview.coverage.incomplete","context":{"modelo":"117","reason":"applicability_undetermined"},"message":"The filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"122"}]},"code":"overview.coverage.incomplete","context":{"modelo":"122","reason":"applicability_undetermined"},"message":"The filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"123"}]},"code":"overview.coverage.incomplete","context":{"modelo":"123","reason":"applicability_undetermined"},"message":"The filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"126"}]},"code":"overview.coverage.incomplete","context":{"modelo":"126","reason":"applicability_undetermined"},"message":"The filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"128"}]},"code":"overview.coverage.incomplete","context":{"modelo":"128","reason":"applicability_undetermined"},"message":"The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"136"}]},"code":"overview.coverage.incomplete","context":{"modelo":"136","reason":"applicability_undetermined"},"message":"The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"156"}]},"code":"overview.coverage.incomplete","context":{"modelo":"156","reason":"applicability_undetermined"},"message":"The filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"165"}]},"code":"overview.coverage.incomplete","context":{"modelo":"165","reason":"applicability_undetermined"},"message":"The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"180"}]},"code":"overview.coverage.incomplete","context":{"modelo":"180","reason":"applicability_undetermined"},"message":"The filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"181"}]},"code":"overview.coverage.incomplete","context":{"modelo":"181","reason":"applicability_undetermined"},"message":"The filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"182"}]},"code":"overview.coverage.incomplete","context":{"modelo":"182","reason":"applicability_undetermined"},"message":"The filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"185"}]},"code":"overview.coverage.incomplete","context":{"modelo":"185","reason":"applicability_undetermined"},"message":"The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"187"}]},"code":"overview.coverage.incomplete","context":{"modelo":"187","reason":"applicability_undetermined"},"message":"The filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"188"}]},"code":"overview.coverage.incomplete","context":{"modelo":"188","reason":"applicability_undetermined"},"message":"The filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"189"}]},"code":"overview.coverage.incomplete","context":{"modelo":"189","reason":"applicability_undetermined"},"message":"The filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"190"}]},"code":"overview.coverage.incomplete","context":{"modelo":"190","reason":"applicability_undetermined"},"message":"The filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"193"}]},"code":"overview.coverage.incomplete","context":{"modelo":"193","reason":"applicability_undetermined"},"message":"The filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"194"}]},"code":"overview.coverage.incomplete","context":{"modelo":"194","reason":"applicability_undetermined"},"message":"The filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"216"}]},"code":"overview.coverage.incomplete","context":{"modelo":"216","reason":"applicability_undetermined"},"message":"The filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"220"}]},"code":"overview.coverage.incomplete","context":{"modelo":"220","reason":"applicability_undetermined"},"message":"The filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"222"}]},"code":"overview.coverage.incomplete","context":{"modelo":"222","reason":"applicability_undetermined"},"message":"The filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"270"}]},"code":"overview.coverage.incomplete","context":{"modelo":"270","reason":"applicability_undetermined"},"message":"The filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"280"}]},"code":"overview.coverage.incomplete","context":{"modelo":"280","reason":"applicability_undetermined"},"message":"The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"296"}]},"code":"overview.coverage.incomplete","context":{"modelo":"296","reason":"applicability_undetermined"},"message":"The filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"308"}]},"code":"overview.coverage.incomplete","context":{"modelo":"308","reason":"applicability_undetermined"},"message":"The filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"309"}]},"code":"overview.coverage.incomplete","context":{"modelo":"309","reason":"applicability_undetermined"},"message":"The filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"322"}]},"code":"overview.coverage.incomplete","context":{"modelo":"322","reason":"applicability_undetermined"},"message":"The filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"341"}]},"code":"overview.coverage.incomplete","context":{"modelo":"341","reason":"applicability_undetermined"},"message":"The filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"345"}]},"code":"overview.coverage.incomplete","context":{"modelo":"345","reason":"applicability_undetermined"},"message":"The filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"347"}]},"code":"overview.coverage.incomplete","context":{"modelo":"347","reason":"applicability_undetermined"},"message":"The filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"349"}]},"code":"overview.coverage.incomplete","context":{"modelo":"349","reason":"applicability_undetermined"},"message":"The filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"353"}]},"code":"overview.coverage.incomplete","context":{"modelo":"353","reason":"applicability_undetermined"},"message":"The filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"369"}]},"code":"overview.coverage.incomplete","context":{"modelo":"369","reason":"applicability_undetermined"},"message":"The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"390"}]},"code":"overview.coverage.incomplete","context":{"modelo":"390","reason":"applicable_window_missing"},"message":"The filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"490"}]},"code":"overview.coverage.incomplete","context":{"modelo":"490","reason":"applicability_undetermined"},"message":"The filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"576"}]},"code":"overview.coverage.incomplete","context":{"modelo":"576","reason":"applicability_undetermined"},"message":"The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"604"}]},"code":"overview.coverage.incomplete","context":{"modelo":"604","reason":"applicability_undetermined"},"message":"The filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"714"}]},"code":"overview.coverage.incomplete","context":{"modelo":"714","reason":"applicable_window_missing"},"message":"The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"720"}]},"code":"overview.coverage.incomplete","context":{"modelo":"720","reason":"applicability_undetermined"},"message":"The filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"721"}]},"code":"overview.coverage.incomplete","context":{"modelo":"721","reason":"applicability_undetermined"},"message":"The filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"},
+          {"action":{"action":{"action_id":"operator.overview.explain","cli_path":["app","overview","explain"],"target_command_key":"overview.explain"},"argument_bindings":[{"argument_name":"modelo","source":"operator_action.verdict_context","source_evidence_id":null,"source_key":"modelo","status":"resolved","value":"763"}]},"code":"overview.coverage.incomplete","context":{"modelo":"763","reason":"applicability_undetermined"},"message":"The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.","severity":"warning"}
         ],
         "result": {
           "as_of": "2026-04-15",
           "completeness": {
-            "computable_modelos": [],
-            "defaulted_keys": [],
-            "defaulted_modelos": [],
-            "explicitly_set_keys": []
+            "computable_modelos": [
+              "130",
+              "303",
+              "360"
+            ],
+            "defaulted_keys": [
+              "art109_activity_income_withholding_ge_70pct",
+              "does_intracomunitario",
+              "has_employees",
+              "irpf.estimation_regime",
+              "pays_capital_income_with_retencion",
+              "pays_professionals_with_retencion",
+              "pays_rent_with_retencion",
+              "third_party_transactions_above_347_threshold"
+            ],
+            "defaulted_modelos": [
+              "130"
+            ],
+            "explicitly_set_keys": [
+              "iva.regime"
+            ]
           },
           "coverage": {
             "advised": [
-              {
-                "modelo": "038",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "100",
-                "reason": "applicable_window_missing"
-              },
-              {
-                "modelo": "111",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "115",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "117",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "122",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "123",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "126",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "128",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "130",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "131",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "136",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "156",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "165",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "180",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "181",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "182",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "185",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "187",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "188",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "189",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "190",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "193",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "194",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "216",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "220",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "222",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "270",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "280",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "296",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "303",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "308",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "309",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "322",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "341",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "345",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "347",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "349",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "353",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "360",
-                "reason": "applicable_window_missing"
-              },
-              {
-                "modelo": "369",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "390",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "490",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "576",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "604",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "714",
-                "reason": "applicable_window_missing"
-              },
-              {
-                "modelo": "720",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "721",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "763",
-                "reason": "applicability_undetermined"
-              }
+              {"modelo":"038","reason":"applicability_undetermined"},
+              {"modelo":"100","reason":"applicable_window_missing"},
+              {"modelo":"111","reason":"applicability_undetermined"},
+              {"modelo":"115","reason":"applicability_undetermined"},
+              {"modelo":"117","reason":"applicability_undetermined"},
+              {"modelo":"122","reason":"applicability_undetermined"},
+              {"modelo":"123","reason":"applicability_undetermined"},
+              {"modelo":"126","reason":"applicability_undetermined"},
+              {"modelo":"128","reason":"applicability_undetermined"},
+              {"modelo":"136","reason":"applicability_undetermined"},
+              {"modelo":"156","reason":"applicability_undetermined"},
+              {"modelo":"165","reason":"applicability_undetermined"},
+              {"modelo":"180","reason":"applicability_undetermined"},
+              {"modelo":"181","reason":"applicability_undetermined"},
+              {"modelo":"182","reason":"applicability_undetermined"},
+              {"modelo":"185","reason":"applicability_undetermined"},
+              {"modelo":"187","reason":"applicability_undetermined"},
+              {"modelo":"188","reason":"applicability_undetermined"},
+              {"modelo":"189","reason":"applicability_undetermined"},
+              {"modelo":"190","reason":"applicability_undetermined"},
+              {"modelo":"193","reason":"applicability_undetermined"},
+              {"modelo":"194","reason":"applicability_undetermined"},
+              {"modelo":"216","reason":"applicability_undetermined"},
+              {"modelo":"220","reason":"applicability_undetermined"},
+              {"modelo":"222","reason":"applicability_undetermined"},
+              {"modelo":"270","reason":"applicability_undetermined"},
+              {"modelo":"280","reason":"applicability_undetermined"},
+              {"modelo":"296","reason":"applicability_undetermined"},
+              {"modelo":"308","reason":"applicability_undetermined"},
+              {"modelo":"309","reason":"applicability_undetermined"},
+              {"modelo":"322","reason":"applicability_undetermined"},
+              {"modelo":"341","reason":"applicability_undetermined"},
+              {"modelo":"345","reason":"applicability_undetermined"},
+              {"modelo":"347","reason":"applicability_undetermined"},
+              {"modelo":"349","reason":"applicability_undetermined"},
+              {"modelo":"353","reason":"applicability_undetermined"},
+              {"modelo":"369","reason":"applicability_undetermined"},
+              {"modelo":"390","reason":"applicable_window_missing"},
+              {"modelo":"490","reason":"applicability_undetermined"},
+              {"modelo":"576","reason":"applicability_undetermined"},
+              {"modelo":"604","reason":"applicability_undetermined"},
+              {"modelo":"714","reason":"applicable_window_missing"},
+              {"modelo":"720","reason":"applicability_undetermined"},
+              {"modelo":"721","reason":"applicability_undetermined"},
+              {"modelo":"763","reason":"applicability_undetermined"}
             ],
             "confidently_excluded": [
+              "131",
               "151",
               "184",
               "200",
@@ -1833,17 +305,221 @@
               "848",
               "993"
             ],
-            "surfaced": []
+            "surfaced": [
+              "130",
+              "303",
+              "360"
+            ]
           },
-          "due_soon": [],
+          "due_soon": [
+            {
+              "adjusted_closes_on": "2026-04-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
+              "evaluated_on": "2026-04-15",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2026,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "130",
+                "period": "2026 1T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2026,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "130",
+              "opens_on": "2026-04-01",
+              "payment_cutoff_on": "2026-04-15",
+              "period": "2026 1T",
+              "recovery": null,
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "DUE_SOON",
+              "user_state": "due"
+            },
+            {
+              "adjusted_closes_on": "2026-04-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
+              "evaluated_on": "2026-04-15",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2026,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2026 1T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2026,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2026-04-01",
+              "payment_cutoff_on": null,
+              "period": "2026 1T",
+              "recovery": null,
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "DUE_SOON",
+              "user_state": "due"
+            }
+          ],
           "due_today": [],
           "generated_at": "2026-04-01T09:00:00Z",
           "horizon_days": 30,
-          "incomplete_reason": "The active profile does not declare this taxpayer model; update the profile or rerun with the incomplete-profile override.",
-          "next_due": null,
+          "incomplete_reason": null,
+          "next_due": {
+            "adjusted_closes_on": "2026-04-20",
+            "censo_enrolment_state": "not_checked",
+            "closes_on": "2026-04-20",
+            "days_overdue": null,
+            "evaluated_on": "2026-04-15",
+            "filing_evidence": {
+              "aeat_evidence_conflict_reference_ids": [],
+              "aeat_evidence_kind": null,
+              "aeat_reference_id": null,
+              "aeat_snapshot_id": null,
+              "aeat_submission_state": "not_observed",
+              "aeat_submitted_at": null,
+              "evidence_source": null,
+              "filing_year": 2026,
+              "justificante_required": true,
+              "justificante_verified": false,
+              "local_calculation_revision_id": null,
+              "local_filed_at": null,
+              "local_filing_record_id": null,
+              "local_filing_state": "not_ready_to_file",
+              "modelo": "130",
+              "period": "2026 1T",
+              "verified_justificante_csv": null
+            },
+            "filing_year": 2026,
+            "holiday_coverage": "national_only",
+            "holiday_refs": [],
+            "holiday_territory": null,
+            "jurisdictions": [],
+            "local_work_unit_id": null,
+            "local_work_unit_name": null,
+            "local_work_unit_revision_id": null,
+            "modelo": "130",
+            "opens_on": "2026-04-01",
+            "payment_cutoff_on": "2026-04-15",
+            "period": "2026 1T",
+            "recovery": null,
+            "shift_reason": "business_day",
+            "source": "registry_deadline",
+            "status": "DUE_SOON",
+            "user_state": "due"
+          },
           "overdue": [],
-          "taxpayer_model_declared": false,
-          "warnings": []
+          "taxpayer_model_declared": true,
+          "warnings": [
+            {
+              "affected_modelos": [
+                "130"
+              ],
+              "code": "art109_activity_income_withholding_ge_70pct",
+              "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
+            },
+            {
+              "affected_modelos": [
+                "349"
+              ],
+              "code": "does_intracomunitario",
+              "message": "cli.overview.warning.intracomunitario_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190",
+                "216",
+                "296"
+              ],
+              "code": "has_employees",
+              "message": "cli.overview.warning.has_employees_unset"
+            },
+            {
+              "affected_modelos": [
+                "131"
+              ],
+              "code": "irpf.estimation_regime",
+              "message": "cli.overview.warning.estimacion_objetiva_unset"
+            },
+            {
+              "affected_modelos": [
+                "117",
+                "123",
+                "126",
+                "128",
+                "187",
+                "188",
+                "193",
+                "194"
+              ],
+              "code": "pays_capital_income_with_retencion",
+              "message": "cli.overview.warning.retencion_capital_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190",
+                "216",
+                "296"
+              ],
+              "code": "pays_professionals_with_retencion",
+              "message": "cli.overview.warning.retencion_profesionales_unset"
+            },
+            {
+              "affected_modelos": [
+                "115",
+                "180"
+              ],
+              "code": "pays_rent_with_retencion",
+              "message": "cli.overview.warning.retencion_arrendamientos_unset"
+            },
+            {
+              "affected_modelos": [
+                "347"
+              ],
+              "code": "third_party_transactions_above_347_threshold",
+              "message": "cli.overview.warning.terceros_threshold_unset"
+            }
+          ]
         },
         "schema_version": "2",
         "status": "warning"

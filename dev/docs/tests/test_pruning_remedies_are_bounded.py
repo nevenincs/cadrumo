@@ -1,33 +1,25 @@
 """A remedy that deletes the population its gate measures must be bounded.
 
-Two gates under ``dev/docs/`` compare a live population against a committed
-artefact and prescribe a remedy that DELETES the artefact rather than repairing
-the cause:
+:mod:`dev.docs.tests.test_docs_catalogue_drift` compares a live population
+against a committed artefact and prescribes a remedy that DELETES the artefact
+rather than repairing the cause: the documented fix, ``python -m dev.docs.i18n``,
+ends in :func:`dev.docs.i18n.prune_orphan_catalogues`, which unlinks catalogues.
 
-- :func:`dev.docs.apidocs.manager.ApiStubManager.check` reports orphan stubs;
-  the documented fix, ``python -m dev.docs.apidocs scaffold``, unlinks them.
-- :mod:`dev.docs.tests.test_docs_catalogue_drift` reports catalogue drift; the
-  documented fix, ``python -m dev.docs.i18n``, ends in
-  :func:`dev.docs.i18n.prune_orphan_catalogues`, which unlinks catalogues.
-
-In both, the population is derived from an eligibility filter, and a defect
-that narrows the filter turns published pages into orphans. The gate then fires
-exactly ONCE: the remedy removes the pages, and every later run is green over a
-smaller world with no record that the pages existed. That is a ratchet running
+The population is derived from an eligibility filter, and a defect that narrows
+the filter turns published pages into orphans. The gate then fires exactly
+ONCE: the remedy removes the pages, and every later run is green over a smaller
+world with no record that the pages existed. That is a ratchet running
 backwards — not debt that may only shrink, but evidence that may only shrink.
+``docs/locales/*/LC_MESSAGES/*.po`` is unambiguously evidence: the msgstr values
+are hand-written translations, and no regeneration restores them.
 
-The artefacts are not equivalent, and the adjudication matters:
-
-- ``docs/api/*.rst`` LOOKS derived (a generator writes every byte) and ACTS as
-  evidence: the committed tree is the only statement of which modules the
-  published API reference covers, and a narrowed filter regenerates a smaller
-  tree that is internally consistent and silently missing pages.
-- ``docs/locales/*/LC_MESSAGES/*.po`` is unambiguously evidence: the msgstr
-  values are hand-written translations, and no regeneration restores them.
-
-By contrast :func:`dev.docs.build.remove_orphan_pages` prunes the BUILT HTML
-tree, which is genuinely derived — ``docs/`` is the authority and a rebuild
-restores it — so it is correctly unbounded and is not gated here.
+By contrast two prunes act on genuinely derived trees and are correctly
+unbounded, so they are not gated here: :func:`dev.docs.build.remove_orphan_pages`
+prunes the BUILT HTML tree, and :meth:`dev.docs.apidocs.manager.ApiStubManager.scaffold`
+prunes the ``docs/api/*.rst`` stubs a full build regenerates from the module
+tree. The stubs are not committed, so no stub tree records coverage; the
+module population a narrowed filter would drop is re-derived independently in
+:mod:`dev.docs.tests.test_api_stubs` instead.
 
 Run via::
 
@@ -37,17 +29,11 @@ Run via::
 from __future__ import annotations
 
 from pathlib import Path
-from typing import override
 
 import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..apidocs.manager import (
-    MAX_STUB_REMOVALS_PER_RUN,
-    ApiStubManager,
-    StubRemovalRefusedError,
-)
 from ..i18n import (
     MAX_CATALOGUE_REMOVALS_PER_RUN,
     TARGET_LANGUAGES,
@@ -58,147 +44,7 @@ from ..i18n import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
 _DOCS = REPO_ROOT / "docs"
-
-
-class _NarrowedManager(ApiStubManager):
-    """A manager whose eligibility rule excludes one extra top-level segment.
-
-    This is how the defect actually arrives: a segment is added to the exclusion
-    set and every module beneath it stops being admitted. Subclassing the real
-    generator exercises the real discovery, expansion, and scaffold path; no
-    production module is patched, and the narrowing lives on the instance.
-    """
-
-    def __init__(self, src_cadrumo: Path, docs_api: Path, excluded_segment: str) -> None:
-        super().__init__(src_cadrumo=src_cadrumo, docs_api=docs_api)
-        self._excluded_segment = excluded_segment
-
-    @override
-    def excludes_source(self, path: Path) -> bool:
-        if self._excluded_segment in path.relative_to(self.src_cadrumo).parts:
-            return True
-        return super().excludes_source(path)
-
-
-def _build_source_tree(root: Path, package_sizes: dict[str, int]) -> Path:
-    """Materialise a ``src/cadrumo``-shaped tree with the given per-package sizes."""
-    src_cadrumo = root / "src" / "cadrumo"
-    src_cadrumo.mkdir(parents=True)
-    (src_cadrumo / "__init__.py").write_text('"""Root."""\n', encoding="utf-8", newline="\n")
-    for package, size in package_sizes.items():
-        package_dir = src_cadrumo / package
-        package_dir.mkdir()
-        (package_dir / "__init__.py").write_text(f'"""{package}."""\n', encoding="utf-8", newline="\n")
-        for index in range(size):
-            (package_dir / f"module_{index:03d}.py").write_text(
-                f'"""{package} module {index}."""\n', encoding="utf-8", newline="\n"
-            )
-    return src_cadrumo
-
-
-# ── The stub tree ────────────────────────────────────────────────────────────
-
-
-def test_a_narrowed_eligibility_rule_is_refused_and_deletes_nothing(tmp_path: Path) -> None:
-    """The self-erasing path is refused, and the refusal is atomic.
-
-    Without the bound this run is the whole failure mode in one call: the tree
-    is scaffolded clean, the filter narrows, and the very next scaffold reports
-    success while deleting every page for the excluded subtree — after which the
-    drift gate is permanently green and nothing records the loss.
-    """
-    src_cadrumo = _build_source_tree(tmp_path, {"kept": 4, "widened": MAX_STUB_REMOVALS_PER_RUN + 5})
-    docs_api = tmp_path / "docs" / "api"
-
-    ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api).scaffold()
-    before = sorted(path.name for path in docs_api.glob("*.rst"))
-    assert len(before) > MAX_STUB_REMOVALS_PER_RUN, (
-        f"the fixture scaffolded only {len(before)} stubs, so the refusal below could not be reached"
-    )
-
-    narrowed = _NarrowedManager(src_cadrumo, docs_api, excluded_segment="widened")
-    doomed = narrowed.check().orphan_stubs
-    assert len(doomed) > MAX_STUB_REMOVALS_PER_RUN, (
-        f"the narrowing orphaned only {len(doomed)} stub(s); it must exceed the bound to prove the refusal"
-    )
-
-    with pytest.raises(StubRemovalRefusedError) as raised:
-        narrowed.scaffold()
-
-    assert str(len(doomed)) in str(raised.value), "the refusal must name how many pages it declined to delete"
-    assert sorted(path.name for path in docs_api.glob("*.rst")) == before, (
-        "the refused run still mutated the stub tree; a refusal must leave it byte-for-byte as it was"
-    )
-
-
-def test_an_ordinary_module_retirement_still_prunes(tmp_path: Path) -> None:
-    """The bound must not block real churn, or it will be raised until it does not bind."""
-    src_cadrumo = _build_source_tree(tmp_path, {"kept": 6})
-    docs_api = tmp_path / "docs" / "api"
-    manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
-    manager.scaffold()
-
-    retired = src_cadrumo / "kept" / "module_000.py"
-    assert retired.is_file()
-    retired.unlink()
-
-    result = manager.scaffold()
-
-    assert result.removed == 1, f"a single retired module must prune its single stub, got {result.removed}"
-    assert result.removed_names == ["cadrumo.kept.module_000.rst"]
-    assert not (docs_api / "cadrumo.kept.module_000.rst").exists()
-
-
-def test_an_explicit_allowance_authorises_a_bulk_retirement(tmp_path: Path) -> None:
-    """A deliberate bulk removal is possible, but only as a stated number."""
-    src_cadrumo = _build_source_tree(tmp_path, {"kept": 2, "widened": MAX_STUB_REMOVALS_PER_RUN + 5})
-    docs_api = tmp_path / "docs" / "api"
-    ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api).scaffold()
-
-    narrowed = _NarrowedManager(src_cadrumo, docs_api, excluded_segment="widened")
-    doomed = len(narrowed.check().orphan_stubs)
-
-    result = narrowed.scaffold(removal_allowance=doomed)
-
-    assert result.removed == doomed, f"the authorised run removed {result.removed}, not the {doomed} it declared"
-    assert narrowed.check().is_conformant
-
-
-def test_the_declared_bound_separates_churn_from_every_measured_collapse() -> None:
-    """The bound is re-derived against the live tree, so the number cannot rot.
-
-    ``MAX_STUB_REMOVALS_PER_RUN`` is only meaningful if it sits below the
-    smallest collapse a single narrowing can cause. That figure is a property of
-    the current source layout, so it is measured here rather than restated: if a
-    future refactor produces a top-level package small enough that excluding it
-    falls under the bound, this fails and the bound must come down with it.
-    """
-    docs_api = REPO_ROOT / "docs" / "api"
-    committed = list(docs_api.glob("*.rst"))
-    assert len(committed) > 1000, f"only {len(committed)} committed stubs found; this gate measured nothing"
-
-    segments = sorted(
-        entry.name
-        for entry in _SRC_CADRUMO.iterdir()
-        if entry.is_dir() and (entry / "__init__.py").is_file() and not entry.name.startswith("_")
-    )
-    baseline = len(ApiStubManager(src_cadrumo=_SRC_CADRUMO, docs_api=docs_api).check().orphan_stubs)
-
-    collapses: dict[str, int] = {}
-    for segment in segments:
-        narrowed = _NarrowedManager(_SRC_CADRUMO, docs_api, excluded_segment=segment)
-        collapses[segment] = len(narrowed.check().orphan_stubs) - baseline
-    documented = {segment: size for segment, size in collapses.items() if size > 0}
-    assert documented, f"excluding any of {segments} orphaned nothing; the widening no longer bites"
-
-    smallest = min(documented.values())
-    assert smallest > MAX_STUB_REMOVALS_PER_RUN, (
-        f"the declared bound {MAX_STUB_REMOVALS_PER_RUN} no longer sits below the smallest single-segment "
-        f"collapse ({smallest}, from excluding {min(documented, key=lambda key: documented[key])!r}). "
-        f"Per-segment collapse sizes today: {dict(sorted(documented.items(), key=lambda item: item[1]))}"
-    )
 
 
 # ── The translation catalogues ───────────────────────────────────────────────

@@ -1,6 +1,6 @@
 # How Cadrumo turns your records into a tax file
 
-This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday taxpayer in Spain: anyone with a NIF, CIF, DNI, or NIE who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
+This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday taxpayer in Spain: anyone with a NIF (*Número de Identificación Fiscal*, for a Spanish citizen the DNI number plus letter) or NIE (*Número de Identidad de Extranjero*) who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
 Read this to understand how the pieces fit together. To actually perform a task, start from the [Getting started page](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the IVA year](../how-to/iva-lifecycle.md).
 
@@ -8,13 +8,13 @@ Read this to understand how the pieces fit together. To actually perform a task,
 
 ## The one promise
 
-The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you upload it yourself through the agency's portal. [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
+The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you file it yourself through the agency's portal. [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
 
 ---
 
 ## The journey at a glance
 
-Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into a file you can upload, and finally get recorded once you've filed it yourself.
+Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into an export file, and finally get recorded once you've filed it yourself.
 
 ```mermaid
 graph TD
@@ -22,7 +22,7 @@ graph TD
     B --> C["Readiness check"]
     C --> D["The numbered boxes of a form"]
     D --> E["Edited and double-checked"]
-    E --> F["The file you upload"]
+    E --> F["The export file"]
     F --> G["Recorded after you file"]
 ```
 
@@ -38,7 +38,7 @@ Your bank movements start as plain amounts and dates with no tax meaning. Before
 
 ## Editing and double-checking a calculation
 
-A first draft is rarely the last word. You can adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
+A first draft is rarely the last word. Adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. If you find a mistake after filing, an amendment corrects it. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
 
 ---
 
@@ -50,15 +50,15 @@ For the annual Renta declaration specifically - the largest form and the one tha
 
 ---
 
-## Reviewing your numbers and producing the upload file
+## Reviewing your numbers and producing the export file
 
-Before you commit to a form, you can review every figure and trace it back to the input that produced it. Once you're satisfied, the tool produces the official upload file - the exact layout the agency's portal accepts. See [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
+Before you commit to a form, review every figure and trace it back to the input that produced it. Once you're satisfied, the tool produces the export file in the agency's official layout. For some modelos, such as 303 and 390, the agency won't accept the file, so you key the figures into the portal form instead. See [Reviewing your numbers and producing the export file](reviewing-and-exporting.md).
 
 ---
 
 ## Recording a filing, after you upload it yourself
 
-The tool stops at the file. You upload it through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+The tool stops at the file. You file through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 

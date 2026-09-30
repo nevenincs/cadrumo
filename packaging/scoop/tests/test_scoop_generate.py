@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import configparser
 import json
 import re
 import shutil
@@ -82,6 +83,21 @@ def _wheel_requirements(wheel: Path) -> tuple[str, ...]:
     if not all(isinstance(requirement, str) for requirement in requirements):
         raise AssertionError("wheel metadata contains a non-string Requires-Dist value")
     return tuple(requirements)
+
+
+def _declared_console_scripts(wheel: Path) -> tuple[str, ...]:
+    """Return the console scripts a built wheel declares, in declared order.
+
+    Read from the artifact rather than restated, so the manifest is compared
+    against what the distribution actually installs.
+    """
+    with zipfile.ZipFile(wheel) as archive:
+        names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/entry_points.txt"))
+        assert len(names) == 1
+        parser = configparser.ConfigParser()
+        parser.read_string(archive.read(names[0]).decode("utf-8"))
+    assert parser.has_section("console_scripts")
+    return tuple(parser["console_scripts"])
 
 
 def _conditional_companion_pin_wheel(
@@ -213,12 +229,17 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     assert f"'cadrumo=={built_cohort.version}'" in install
     assert "releases/download" not in json.dumps(manifest)
     assert manifest["depends"] == ["python", "uv"]
-    # The manifest exposes only the product CLI.
-    assert manifest["bin"] == [["aeat.cmd", "aeat"]]
+    # Every console script the command distribution declares gets a shim: the
+    # manifest is what puts them on PATH, so one left out is installed and
+    # unreachable.
+    scripts = _declared_console_scripts(built_cohort.root)
+    assert "aeat" in scripts
+    assert "cadrumo-mcp" in scripts
+    assert manifest["bin"] == [[f"{script}.cmd", script] for script in scripts]
     assert manifest["persist"] == ["state"]
 
     hooks = manifest["pre_install"]
-    assert len(hooks) == 6
+    assert len(hooks) == 5 + len(scripts)
     assert "Join-Path $dir 'state'" in hooks[0]
     assert "uv venv" in hooks[1]
     # The transitive dependency closure is pinned from the tested uv.lock: a
@@ -248,12 +269,13 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
         assert f"{companion}=={built_cohort.version}" in requirements
     assert "uv pip check" in hooks[4]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
-    hook = hooks[5]
-    assert 'if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"' in hook
-    assert "venv\\Scripts\\aeat.exe" in hook
-    assert "%*" in hook
-    assert "Join-Path $dir 'aeat.cmd'" in hook
-    assert "-NoNewline -Encoding ascii" in hook
+    for offset, script in enumerate(scripts):
+        hook = hooks[5 + offset]
+        assert 'if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"' in hook
+        assert f"venv\\Scripts\\{script}.exe" in hook
+        assert "%*" in hook
+        assert f"Join-Path $dir '{script}.cmd'" in hook
+        assert "-NoNewline -Encoding ascii" in hook
 
 
 def test_manifest_pins_transitive_closure_from_lock(

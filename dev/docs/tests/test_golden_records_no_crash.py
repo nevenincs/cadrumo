@@ -36,6 +36,7 @@ from dev.quality.unread_inputs import report_unread
 
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.golden_store import read_golden
+from ..sequences.json_layout import format_sequence_json
 from ..sequences.schema import FrameKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -115,27 +116,33 @@ def _captured_lengths(document: dict[str, object]) -> dict[str, int]:
     return lengths
 
 
-#: A frame's own string carrier as the canonical golden writer lays it out: two-space
-#: indent puts a frame's keys at six spaces, one value per line, so nested envelope
-#: keys that happen to share a name sit deeper and never match.
-_RAW_STRING_CARRIER = re.compile(r'^ {6}"(text|stderr_text)": (".*"),?$', re.MULTILINE)
-
-#: A frame's envelope block, from its key to the closing brace back at frame depth.
-_RAW_ENVELOPE_CARRIER = re.compile(r'^ {6}"envelope": (\{\}|\{\n.*?^ {6}\}),?$', re.MULTILINE | re.DOTALL)
+#: Keys every recorded frame carries together; an envelope's own objects do not.
+_FRAME_KEYS: frozenset[str] = frozenset({"argv", "captures", "exit_code", "kind"})
 
 
-def _raw_carrier_lengths(raw: str) -> dict[str, int]:
-    """Measure each carrier from the file's text layout, independently of the reader.
+def _decoded_carrier_lengths(raw: str) -> dict[str, int]:
+    """Measure each carrier by a second traversal, independent of the reader.
 
-    The reader walks the parsed document; this slices the raw bytes by the writer's
-    fixed layout. Two derivations that agree on every golden prove the reader saw
-    every frame of every carrier, which no corpus-size floor can.
+    The reader walks ``document["frames"]``. Here the JSON decoder reports every
+    object carrying a frame's keys as it is parsed, wherever it sits and however
+    the file is laid out. Two derivations that agree on every golden prove the
+    reader saw every frame of every carrier, which no corpus-size floor can.
     """
     lengths = {"text": 0, "stderr_text": 0, "envelope": 0}
-    for match in _RAW_STRING_CARRIER.finditer(raw):
-        lengths[match.group(1)] += len(json.loads(match.group(2)))
-    for match in _RAW_ENVELOPE_CARRIER.finditer(raw):
-        lengths["envelope"] += len(json.dumps(json.loads(match.group(1)), ensure_ascii=False))
+
+    def _measure_frame(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        node = dict(pairs)
+        if node.keys() >= _FRAME_KEYS:
+            for key in ("text", "stderr_text"):
+                value = node.get(key)
+                if isinstance(value, str):
+                    lengths[key] += len(value)
+            envelope = node.get("envelope")
+            if envelope is not None:
+                lengths["envelope"] += len(json.dumps(envelope, ensure_ascii=False))
+        return node
+
+    json.loads(raw, object_pairs_hook=_measure_frame)
     return lengths
 
 
@@ -158,11 +165,11 @@ def _read_corpus() -> list[tuple[Path, str]]:
     return corpus
 
 
-def test_raw_layout_measurement_catches_a_reader_that_skips_frames() -> None:
+def test_decoded_measurement_catches_a_reader_that_skips_frames() -> None:
     """The independent measurement disagrees with a reader that drops later frames.
 
-    Built in the writer's canonical layout, with an envelope that nests its own
-    ``text`` key, so the raw slicing is shown to count frame-level carriers only.
+    Written in the golden writer's layout, with an envelope that nests its own
+    ``text`` key, so only frame-level carriers are shown to count.
     """
     frame = {
         "argv": ["aeat", "--format", "json", "app", "overview", "status"],
@@ -176,11 +183,11 @@ def test_raw_layout_measurement_catches_a_reader_that_skips_frames() -> None:
     }
     text_frame = {**frame, "envelope": None, "envelope_source": None, "text": 'plain "quoted" output\n'}
     document: dict[str, object] = {"frames": [frame, text_frame], "golden_schema_version": 2, "sequence_id": "teeth"}
-    raw = json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    raw = format_sequence_json(document) + "\n"
 
-    assert _raw_carrier_lengths(raw) == _captured_lengths(document)
+    assert _decoded_carrier_lengths(raw) == _captured_lengths(document)
     first_frame_only: dict[str, object] = {**document, "frames": [frame]}
-    assert _captured_lengths(first_frame_only) != _raw_carrier_lengths(raw)
+    assert _captured_lengths(first_frame_only) != _decoded_carrier_lengths(raw)
 
 
 def test_golden_scan_actually_reads_captured_output() -> None:
@@ -204,9 +211,9 @@ def test_golden_scan_actually_reads_captured_output() -> None:
     for path, _text in corpus:
         raw = path.read_text(encoding="utf-8")
         read = _captured_lengths(json.loads(raw))
-        measured = _raw_carrier_lengths(raw)
+        measured = _decoded_carrier_lengths(raw)
         if read != measured:
-            disagreements.append(f"{path.name}: reader {read}, raw layout {measured}")
+            disagreements.append(f"{path.name}: reader {read}, decoder {measured}")
         for key, value in read.items():
             carriers[key] += value
     assert disagreements == [], "the reader missed recorded output:\n  " + "\n  ".join(disagreements)

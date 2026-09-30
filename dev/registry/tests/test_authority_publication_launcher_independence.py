@@ -1,7 +1,8 @@
-"""Every publishing path records the same logical generation for the same sources.
+"""Every publishing path records the legal identity of the sources it published.
 
-The candidate compiles in one canonical child interpreter, so modules a heavier
-launcher has already imported cannot enter the recorded compiler closure. Both
+The build hook and the ``publish-authority`` command each compile the bundled
+registry in the canonical child interpreter. Whatever either launcher had
+imported, both record the one identity the legal sources derive. Both
 publications compile and validate the bundled registry for real, which is why
 this is an integration test.
 """
@@ -18,10 +19,11 @@ from types import ModuleType
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.domain.calculations.registry.authority_compiler_closure import AuthorityCompilerClosure
-from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 from dev._paths import REPO_ROOT
 
+from ..pipeline.authority_publication import authority_source_identity
 from ..pipeline.cli import app as pipeline_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(3600)]
@@ -42,26 +44,9 @@ def _hook_module() -> ModuleType:
     return module
 
 
-def _published(destination: Path) -> tuple[AuthorityDescriptor, AuthorityCompilerClosure]:
-    descriptor_path = destination / "authority.current.json"
-    reader = SQLiteAuthorityReader(descriptor_path)
-    try:
-        closure = reader.compiler_closure()
-    finally:
-        reader.close()
-    return AuthorityDescriptor.read(descriptor_path), closure
-
-
-def _portable_source(module_name: str) -> str:
-    location = sys.modules[module_name].__file__
-    assert location is not None
-    path = Path(location).resolve()
-    source_root = REPO_ROOT / "src"
-    anchor = source_root if path.is_relative_to(source_root) else REPO_ROOT
-    return path.relative_to(anchor).as_posix()
-
-
-def test_the_cli_and_the_build_hook_publish_one_generation_whatever_the_launcher_imported(tmp_path: Path) -> None:
+def test_the_cli_and_the_build_hook_publish_the_legal_identity_whatever_the_launcher_imported(
+    tmp_path: Path,
+) -> None:
     hook_destination = tmp_path / "hook"
     cli_destination = tmp_path / "cli"
 
@@ -71,9 +56,6 @@ def test_the_cli_and_the_build_hook_publish_one_generation_whatever_the_launcher
 
     for module_name in _LAUNCHER_ONLY_MODULES:
         importlib.import_module(module_name)
-    # Present whether this test or the suite's collection loaded them: the
-    # launcher now holds compiler-root modules the canonical compile never
-    # needs, and the closure assertion below would record them if it read them.
     assert all(module_name in sys.modules for module_name in _LAUNCHER_ONLY_MODULES), (
         "the heavier launcher must hold the launcher-only modules"
     )
@@ -84,10 +66,11 @@ def test_the_cli_and_the_build_hook_publish_one_generation_whatever_the_launcher
     assert result.exit_code == 0, result.output
     print(f"publication wall time: hook {hook_seconds:.0f}s, cli {cli_seconds:.0f}s")
 
-    hook_descriptor, hook_closure = _published(hook_destination)
-    cli_descriptor, cli_closure = _published(cli_destination)
-    assert cli_descriptor.logical_generation == hook_descriptor.logical_generation
-    assert cli_closure == hook_closure
-    recorded = {path for path, _digest in cli_closure.sources}
-    assert "dev/registry/pipeline/compile_authority_candidate.py" in recorded
-    assert not {_portable_source(name) for name in _LAUNCHER_ONLY_MODULES} & recorded
+    legal_identity = authority_source_identity(
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+    )
+    hook_descriptor = AuthorityDescriptor.read(hook_destination / "authority.current.json")
+    cli_descriptor = AuthorityDescriptor.read(cli_destination / "authority.current.json")
+    assert hook_descriptor.logical_generation == legal_identity
+    assert cli_descriptor.logical_generation == legal_identity

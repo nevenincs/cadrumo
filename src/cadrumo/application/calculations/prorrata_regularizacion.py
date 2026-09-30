@@ -48,6 +48,7 @@ from pydantic import BaseModel
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -352,7 +353,9 @@ def _modelo_303_regularizacion_target(revision: ModeloRevision) -> CasillaId | N
 def _regularizacion_target_label(revision: ModeloRevision, casilla_id: CasillaId | None) -> str:
     """Name the registry-declared target casilla by its printed number for operator messages."""
     number = next((casilla.number for casilla in revision.casillas if casilla.id == casilla_id), None)
-    return f"casilla {number}" if number else "la casilla de regularización declarada"
+    if number:
+        return tr("application.calculations.prorrata_regularizacion.target_casilla", number=number)
+    return tr("application.calculations.prorrata_regularizacion.target_declared")
 
 
 def project_prorrata_regularizacion_feed(
@@ -1152,14 +1155,20 @@ def buildprorrata_regularizacion_advisory(
     if projection.proposed_value is None:
         return result, None
 
-    sentido = "deducción complementaria" if result.direccion is RegularizacionProrrataDireccion.DEDUCCION else "ingreso"
+    sentido = tr(
+        "application.calculations.prorrata_regularizacion.sentido_deduccion"
+        if result.direccion is RegularizacionProrrataDireccion.DEDUCCION
+        else "application.calculations.prorrata_regularizacion.sentido_ingreso",
+    )
     target = _modelo_303_regularizacion_target(revision)
-    message = (
-        f"Regularización de prorrata por porcentaje definitivo (LIVA arts. 104-105) "
-        f"para {regularizacion_year}: prorrata provisional {prorrata_provisional_pct}% "
-        f"→ definitiva {prorrata_definitiva_pct}% ({sentido}). "
-        f"Regularización propuesta para {_regularizacion_target_label(revision, target)}: "
-        f"{projection.proposed_value}. Confirme el valor antes de presentar."
+    message = tr(
+        "application.calculations.prorrata_regularizacion.advisory",
+        year=regularizacion_year,
+        provisional=prorrata_provisional_pct,
+        definitiva=prorrata_definitiva_pct,
+        sentido=sentido,
+        target=_regularizacion_target_label(revision, target),
+        value=projection.proposed_value,
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",

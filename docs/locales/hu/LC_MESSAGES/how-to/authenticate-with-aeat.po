@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-29 18:28+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -30,12 +30,12 @@ msgid ""
 "only access only. It never files a declaration, makes a payment, "
 "acknowledges a notification, or performs representative-write actions."
 msgstr ""
-"Hitelesítse a Cadrumót a spanyol Adóhivatalnál, az Agencia Estatal de "
+"Hitelesítsd a Cadrumót a spanyol Adóhivatalnál, az Agencia Estatal de "
 "Administración Tributariánál (AEAT), hogy a Cadrumo `aeat` parancsa "
 "kiolvashassa azokat az adatokat, amelyekre az AEAT-nál használt "
-"azonosítója jogosítja. A hitelesítés kizárólag csak olvasható hozzáférést"
-" ad. Soha nem nyújt be bevallást, nem teljesít fizetést, nem vesz át "
-"értesítést, és nem hajt végre képviselői írási műveleteket."
+"azonosítód jogosít. A hitelesítés kizárólag olvasási hozzáférést ad. Soha"
+" nem nyújt be bevallást, nem teljesít fizetést, nem vesz át értesítést, "
+"és nem hajt végre képviselői írási műveleteket."
 
 #: ../../how-to/authenticate-with-aeat.md:9
 msgid ""
@@ -44,25 +44,22 @@ msgid ""
 "guide](troubleshooting.md). If that does not restore the command, report "
 "the failure with the Cadrumo version and redacted output."
 msgstr ""
-"Futtassa az `aeat --help` parancsot, mielőtt továbblép. Ha az hibázik, "
-"álljon meg a hitelesítés beállítása előtt, és kövesse a [CLI "
-"hibaelhárítási útmutatót](troubleshooting.md). Ha ez sem állítja helyre a"
-" parancsot, jelentse a hibát a Cadrumo verziószámával és a szerkesztett "
-"kimenettel."
+"Futtasd az `aeat --help` parancsot, mielőtt továbblépnél. Ha az hibázik, "
+"állj meg a hitelesítés beállítása előtt, és kövesd a [CLI hibaelhárítási "
+"útmutatót](troubleshooting.md). Ha ez sem állítja helyre a parancsot, "
+"jelentsd a hibát a Cadrumo verziószámával és a kitakart kimenettel."
 
 #: ../../how-to/authenticate-with-aeat.md:14
 msgid ""
 "When available to your identity, the command-line interface (CLI) can "
 "read filed declarations, expedientes, notifications, and filed "
-"justificantes. For Modelo 036/Censo profile facts, use the [profile/Censo"
-" facts guide](censo-update.md). Cadrumo no longer retrieves these facts "
-"live."
+"justificantes. To pull your census address into your profile, use the "
+"[census facts guide](censo-update.md)."
 msgstr ""
-"Ha az Ön azonosítója számára elérhető, a parancssori felület (CLI) "
+"Ha az azonosítód számára elérhető, a parancssori felület (CLI) "
 "beolvashatja a benyújtott bevallásokat, az expedientéket, az "
-"értesítéseket és a benyújtott justificantéket. A Modelo 036/censo "
-"profiladatokhoz használja a [profil/censo adatok útmutatót](censo-"
-"update.md). A Cadrumo ezeket az adatokat már nem éri el élőben."
+"értesítéseket és a benyújtott justificantéket. A censo-címedet a [censo-"
+"adatok útmutatója](censo-update.md) segítségével viheted be a profilodba."
 
 #: ../../how-to/authenticate-with-aeat.md:19
 msgid "Before you start"
@@ -70,137 +67,175 @@ msgstr "Mielőtt hozzákezd"
 
 #: ../../how-to/authenticate-with-aeat.md:21
 msgid "You need:"
-msgstr "Szüksége lesz a következőkre:"
+msgstr "Szükséged lesz a következőkre:"
 
 #: ../../how-to/authenticate-with-aeat.md:23
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
-"`aeat config auth configure` refuses with `No hay un perfil activo` until"
-" you create one. Start the interactive wizard (a NIF, CIF, DNI, or NIE is"
-" a Spanish tax identifier); it prompts for the profile passphrase and "
-"offers an optional recovery code once the profile exists:"
+"`aeat config auth configure` refuses with `No active profile.` until you "
+"create one. Start the interactive wizard (it asks for your NIF or NIE; "
+"for a Spanish citizen, the NIF is the DNI number plus letter). It prompts"
+" for the profile passphrase and offers an optional recovery code once the"
+" profile exists:"
 msgstr ""
 "egy [aktív profil](profile-setup.md#what-the-active-profile-means). Az "
-"`aeat config auth configure` a `No hay un perfil activo` üzenettel "
-"elutasít, amíg nem hoz létre egyet. Indítsa el az interaktív varázslót (a"
-" NIF, CIF, DNI vagy NIE spanyol adóazonosító); bekéri a profil "
-"jelmondatát, és a profil létrejötte után felajánl egy opcionális "
-"helyreállítási kódot:"
+"`aeat config auth configure` a `No active profile.` üzenettel elutasít, "
+"amíg nem hozol létre egyet. Indítsd el az interaktív varázslót (bekéri a "
+"NIF- vagy NIE-számodat; spanyol állampolgárnál a NIF a DNI száma plusz a "
+"betűjel). Bekéri a profil jelmondatát, és a profil létrejötte után "
+"felajánl egy opcionális helyreállítási kódot:"
 
-#: ../../how-to/authenticate-with-aeat.md:33
+#: ../../how-to/authenticate-with-aeat.md:34
+msgid "the passphrase that protects your local store; the tool prompts for it."
+msgstr "a jelmondat, amely a helyi tárolódat védi; az eszköz bekéri tőled."
+
+#: ../../how-to/authenticate-with-aeat.md:35
 msgid ""
-"the master-key passphrase that protects your local store; the tool "
-"prompts for it."
+"the `browser` extra, because `aeat config auth login` and every live read"
+" drive a browser. Install it with `pip install \"cadrumo[browser]\"`, or "
+"follow [Install Cadrumo](../workstation-setup.md)."
 msgstr ""
-"a mesterkulcs-jelmondat, amely a helyi tárolóját védi; az eszköz bekéri "
-"Öntől."
+"a `browser` extra, mert az `aeat config auth login` és minden élő olvasás"
+" böngészőt vezérel. Telepítsd a `pip install \"cadrumo[browser]\"` "
+"paranccsal, vagy nézd meg a telepítési útmutatót: [Cadrumo telepítése"
+"](../workstation-setup.md)."
 
-#: ../../how-to/authenticate-with-aeat.md:36
+#: ../../how-to/authenticate-with-aeat.md:39
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"A dokumentációban szereplő példák angol nyelven készültek. Az `aeat` az "
+"üzeneteit spanyolul írja ki, hacsak nem [választasz másik nyelvet"
+"](profile-setup.md#choose-the-output-language)."
+
+#: ../../how-to/authenticate-with-aeat.md:43
 msgid "See supported providers"
 msgstr "A támogatott szolgáltatók megtekintése"
 
-#: ../../how-to/authenticate-with-aeat.md:38
+#: ../../how-to/authenticate-with-aeat.md:45
 msgid "List providers:"
 msgstr "Szolgáltatók listázása:"
 
-#: ../../how-to/authenticate-with-aeat.md:44
-msgid ""
-"The list marks each provider as `disponible` (available now) or "
-"`reservado (no disponible aún)` (reserved, not available yet). Three are "
-"available:"
-msgstr ""
-"A lista minden szolgáltatót `disponible` (most elérhető) vagy `reservado "
-"(no disponible aún)` (fenntartott, még nem elérhető) jelöléssel lát el. "
-"Három érhető el:"
+#: ../../how-to/authenticate-with-aeat.md:51
+msgid "Cadrumo supports three providers:"
+msgstr "A Cadrumo három szolgáltatót támogat:"
 
-#: ../../how-to/authenticate-with-aeat.md:47
+#: ../../how-to/authenticate-with-aeat.md:53
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: az Ön digitális tanúsítványfájlja (certificado digital)."
+msgstr "`certificate`: a digitális tanúsítványfájlod (certificado digital)."
 
-#: ../../how-to/authenticate-with-aeat.md:48
+#: ../../how-to/authenticate-with-aeat.md:54
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
-msgstr "`clave_movil`: mobilalapú Cl@ve, amelyet a telefonján hagy jóvá."
+msgstr "`clave_movil`: mobilalapú Cl@ve, amelyet a telefonodon hagysz jóvá."
 
-#: ../../how-to/authenticate-with-aeat.md:49
+#: ../../how-to/authenticate-with-aeat.md:55
 msgid "`clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login."
 msgstr "`clave_permanente`: Cl@ve Permanente, DNI/NIE és jelszavas bejelentkezés."
 
-#: ../../how-to/authenticate-with-aeat.md:51
-msgid "Two more are listed but reserved, so you cannot configure them yet:"
+#: ../../how-to/authenticate-with-aeat.md:57
+msgid ""
+"Pass the identifier to `--provider`. Cl@ve PIN and the electronic "
+"national ID card (DNI electrónico) are not supported."
 msgstr ""
-"Két további szerepel a listán, de fenntartott, ezért ezeket még nem tudja"
-" beállítani:"
+"Az azonosítót add át a `--provider` kapcsolónak. A Cl@ve PIN és az "
+"elektronikus személyi igazolvány (DNI electrónico) nem támogatott."
 
-#: ../../how-to/authenticate-with-aeat.md:53
-msgid "`clave_pin`: Cl@ve PIN, a one-time code system from AEAT. Reserved."
-msgstr ""
-"`clave_pin`: Cl@ve PIN, az AEAT egyszeri kódot használó rendszere. "
-"Fenntartott."
-
-#: ../../how-to/authenticate-with-aeat.md:54
-msgid "`dnie_pkcs`: the national ID card (DNI electrónico). Reserved."
-msgstr "`dnie_pkcs`: a nemzeti személyi igazolvány (DNI electrónico). Fenntartott."
-
-#: ../../how-to/authenticate-with-aeat.md:56
-msgid "Configure one of the available providers."
-msgstr "Állítsa be az egyik elérhető szolgáltatót."
-
-#: ../../how-to/authenticate-with-aeat.md:58
+#: ../../how-to/authenticate-with-aeat.md:60
 msgid "Configure a provider"
 msgstr "Szolgáltató beállítása"
 
-#: ../../how-to/authenticate-with-aeat.md:60
+#: ../../how-to/authenticate-with-aeat.md:62
 msgid "Configure the provider you use:"
-msgstr "Állítsa be az Ön által használt szolgáltatót:"
+msgstr "Állítsd be a használt szolgáltatót:"
 
-#: ../../how-to/authenticate-with-aeat.md:65
+#: ../../how-to/authenticate-with-aeat.md:67
 msgid ""
 "Use `--file` for providers that need a file, such as your digital "
 "certificate. Keep credential files private and do not share them."
 msgstr ""
-"Használja a `--file` kapcsolót azoknál a szolgáltatóknál, amelyek fájlt "
-"igényelnek, például a digitális tanúsítványánál. A hitelesítő adatokat "
-"tartalmazó fájlokat kezelje bizalmasan, és ne ossza meg őket."
+"A `--file` kapcsolót azoknál a szolgáltatóknál használd, amelyek fájlt "
+"igényelnek, például a digitális tanúsítványnál. A hitelesítő adatokat "
+"tartalmazó fájlokat kezeld bizalmasan, és ne oszd meg őket."
 
-#: ../../how-to/authenticate-with-aeat.md:68
+#: ../../how-to/authenticate-with-aeat.md:70
+msgid ""
+"The command stores the provider choice and the certificate path, never a "
+"secret. Supply the secrets separately:"
+msgstr ""
+"A parancs a szolgáltató választását és a tanúsítvány elérési útját "
+"tárolja, titkot soha. A titkokat külön add meg:"
+
+#: ../../how-to/authenticate-with-aeat.md:73
+msgid ""
+"`certificate`: bind the passphrase to a registered certificate source "
+"with `aeat config auth certificate secret set`, or set the "
+"`CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable."
+msgstr ""
+"`certificate`: a jelmondatot az `aeat config auth certificate secret set`"
+" paranccsal köss egy regisztrált tanúsítványforráshoz, vagy állítsd be a "
+"`CADRUMO_CERTIFICATE_PASSWORD_SECRET` környezeti változót."
+
+#: ../../how-to/authenticate-with-aeat.md:76
+msgid ""
+"`clave_permanente`: set `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` and "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD`."
+msgstr ""
+"`clave_permanente`: állítsd be a `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` és a "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD` változót."
+
+#: ../../how-to/authenticate-with-aeat.md:78
+msgid "`clave_movil`: set `CADRUMO_CLAVE_MOVIL_DNI_NIE`."
+msgstr "`clave_movil`: állítsd be a `CADRUMO_CLAVE_MOVIL_DNI_NIE` változót."
+
+#: ../../how-to/authenticate-with-aeat.md:80
+msgid ""
+"The [environment overrides reference](../reference/environment-"
+"overrides.md) describes these variables."
+msgstr ""
+"Ezeket a változókat a [környezeti felülbírálások "
+"referenciája](../reference/environment-overrides.md) írja le."
+
+#: ../../how-to/authenticate-with-aeat.md:83
 msgid "Check local readiness"
 msgstr "A helyi felkészültség ellenőrzése"
 
-#: ../../how-to/authenticate-with-aeat.md:70
+#: ../../how-to/authenticate-with-aeat.md:85
 msgid "Check what is configured:"
-msgstr "Ellenőrizze, mi van beállítva:"
+msgstr "Ellenőrizd, mi van beállítva:"
 
-#: ../../how-to/authenticate-with-aeat.md:76
+#: ../../how-to/authenticate-with-aeat.md:91
 msgid ""
 "If you want to inspect a specific provider, use `--provider` with either "
 "command."
 msgstr ""
-"Ha egy adott szolgáltatót szeretne megvizsgálni, használja a `--provider`"
+"Ha egy adott szolgáltatót szeretnél megvizsgálni, használd a `--provider`"
 " kapcsolót bármelyik paranccsal."
 
-#: ../../how-to/authenticate-with-aeat.md:80
+#: ../../how-to/authenticate-with-aeat.md:95
 msgid "Renew your certificate before it expires"
-msgstr "Újítsa meg a tanúsítványát, mielőtt lejár"
+msgstr "Újítsd meg a tanúsítványodat, mielőtt lejár"
 
-#: ../../how-to/authenticate-with-aeat.md:82
+#: ../../how-to/authenticate-with-aeat.md:97
 msgid ""
 "A digital certificate has an expiry date. The tool reads that date from "
 "the certificate file and warns you as it approaches. This helps you avoid"
 " a failed live read caused by an expired certificate."
 msgstr ""
 "A digitális tanúsítványnak lejárati dátuma van. Az eszköz ezt a dátumot a"
-" tanúsítványfájlból olvassa ki, és figyelmezteti Önt, ahogy közeledik. Ez"
-" segít elkerülni a lejárt tanúsítvány miatt meghiúsuló élő olvasást."
+" tanúsítványfájlból olvassa ki, és figyelmeztet, ahogy közeledik. Ez "
+"segít elkerülni a lejárt tanúsítvány miatt meghiúsuló élő olvasást."
 
-#: ../../how-to/authenticate-with-aeat.md:86
+#: ../../how-to/authenticate-with-aeat.md:101
 msgid "Check the remaining validity:"
-msgstr "Ellenőrizze a hátralévő érvényességet:"
+msgstr "Ellenőrizd a hátralévő érvényességet:"
 
-#: ../../how-to/authenticate-with-aeat.md:92
+#: ../../how-to/authenticate-with-aeat.md:107
 msgid "The report tells you how the certificate stands:"
 msgstr "A jelentés megmutatja a tanúsítvány állapotát:"
 
-#: ../../how-to/authenticate-with-aeat.md:94
+#: ../../how-to/authenticate-with-aeat.md:109
 msgid ""
 "More than 60 days left: the certificate is valid and reports the days "
 "remaining."
@@ -208,114 +243,123 @@ msgstr ""
 "Több mint 60 nap van hátra: a tanúsítvány érvényes, és jelenti a "
 "hátralévő napok számát."
 
-#: ../../how-to/authenticate-with-aeat.md:96
+#: ../../how-to/authenticate-with-aeat.md:111
 msgid ""
 "60 days or fewer left: a warning appears: `The certificate expires in N "
 "days. Plan the renewal.` Start the renewal now."
 msgstr ""
 "60 nap vagy kevesebb van hátra: figyelmeztetés jelenik meg: `The "
-"certificate expires in N days. Plan the renewal.` Kezdje el most a "
+"certificate expires in N days. Plan the renewal.` Kezdd el most a "
 "megújítást."
 
-#: ../../how-to/authenticate-with-aeat.md:98
+#: ../../how-to/authenticate-with-aeat.md:113
 msgid ""
 "14 days or fewer left: the warning is critical. Renew before your next "
 "live read."
 msgstr ""
-"14 nap vagy kevesebb van hátra: a figyelmeztetés kritikus. Újítsa meg a "
+"14 nap vagy kevesebb van hátra: a figyelmeztetés kritikus. Újítsd meg a "
 "következő élő olvasás előtt."
 
-#: ../../how-to/authenticate-with-aeat.md:100
+#: ../../how-to/authenticate-with-aeat.md:115
 msgid ""
 "Already expired: `The certificate expired N days ago. Renew it before "
 "authenticating.` A live read is refused until you replace it."
 msgstr ""
 "Már lejárt: `The certificate expired N days ago. Renew it before "
-"authenticating.` Az élő olvasás elutasításra kerül, amíg le nem cseréli."
+"authenticating.` Az élő olvasás elutasításra kerül, amíg le nem cseréled."
 
-#: ../../how-to/authenticate-with-aeat.md:103
+#: ../../how-to/authenticate-with-aeat.md:118
 msgid ""
 "Renew the certificate with the body that issued it, such as the Fábrica "
 "Nacional de Moneda y Timbre (FNMT) or AEAT. This happens outside the "
 "tool. Download the renewed certificate file (`.p12` or `.pfx`) to your "
 "machine."
 msgstr ""
-"Újítsa meg a tanúsítványt annál a szervezetnél, amely kiállította, "
+"Újítsd meg a tanúsítványt annál a szervezetnél, amely kiállította, "
 "például a Fábrica Nacional de Moneda y Timbrénél (FNMT) vagy az AEAT-nál."
-" Ez az eszközön kívül történik. Töltse le a megújított tanúsítványfájlt "
-"(`.p12` vagy `.pfx`) a gépére."
+" Ez az eszközön kívül történik. Töltsd le a megújított tanúsítványfájlt "
+"(`.p12` vagy `.pfx`) a gépedre."
 
-#: ../../how-to/authenticate-with-aeat.md:107
+#: ../../how-to/authenticate-with-aeat.md:122
 msgid "Point the tool at the renewed file:"
-msgstr "Irányítsa az eszközt a megújított fájlra:"
+msgstr "Irányítsd az eszközt a megújított fájlra:"
 
-#: ../../how-to/authenticate-with-aeat.md:112
+#: ../../how-to/authenticate-with-aeat.md:127
+#, python-brace-format
 msgid ""
-"If the renewed certificate uses a new password, rotate the stored "
-"passphrase for its source:"
+"If the renewed file uses a new password, register it as a [named "
+"certificate source](#manage-several-certificates) if it is not one yet, "
+"then rotate the stored passphrase for that source. `secret set` refuses a"
+" name that is not registered. It prompts without echo, or reads "
+"`{\"certificate_passphrase\": \"...\"}` from `--secrets-stdin` or "
+"`--secrets-fd`:"
 msgstr ""
-"Ha a megújított tanúsítvány új jelszót használ, cserélje le a forrásához "
-"tárolt jelmondatot:"
+"Ha a megújított fájl új jelszót használ, regisztráld [elnevezett "
+"tanúsítványforrásként](#manage-several-certificates), ha még nem az, majd"
+" cseréld le a tárolt jelmondatot ehhez a forráshoz. A `secret set` "
+"elutasít egy nem regisztrált nevet. Visszhang nélkül kéri be, vagy a "
+"`{\"certificate_passphrase\": \"...\"}` értéket olvassa a `--secrets-"
+"stdin` vagy a `--secrets-fd` csatornáról:"
 
-#: ../../how-to/authenticate-with-aeat.md:118
+#: ../../how-to/authenticate-with-aeat.md:137
 msgid "Confirm the new expiry:"
-msgstr "Erősítse meg az új lejáratot:"
+msgstr "Erősítsd meg az új lejáratot:"
 
-#: ../../how-to/authenticate-with-aeat.md:124
+#: ../../how-to/authenticate-with-aeat.md:143
 msgid "The report now shows the renewed certificate's later expiry date."
 msgstr "A jelentés most a megújított tanúsítvány későbbi lejárati dátumát mutatja."
 
-#: ../../how-to/authenticate-with-aeat.md:126
+#: ../../how-to/authenticate-with-aeat.md:145
 msgid "Manage several certificates"
 msgstr "Több tanúsítvány kezelése"
 
-#: ../../how-to/authenticate-with-aeat.md:128
+#: ../../how-to/authenticate-with-aeat.md:147
 msgid ""
 "If you act for several entities, register one certificate per entity. Do "
 "not reconfigure `aeat config auth configure --file` every time you "
 "switch."
 msgstr ""
-"Ha több szervezet nevében jár el, regisztráljon szervezetenként egy "
-"tanúsítványt. Ne állítsa be újra az `aeat config auth configure --file` "
+"Ha több szervezet nevében jársz el, regisztrálj szervezetenként egy "
+"tanúsítványt. Ne állítsd be újra az `aeat config auth configure --file` "
 "parancsot minden váltáskor."
 
-#: ../../how-to/authenticate-with-aeat.md:131
+#: ../../how-to/authenticate-with-aeat.md:150
 msgid "Register each certificate under a name:"
-msgstr "Regisztrálja mindegyik tanúsítványt egy név alatt:"
+msgstr "Regisztrálj minden tanúsítványt egy név alatt:"
 
-#: ../../how-to/authenticate-with-aeat.md:136
+#: ../../how-to/authenticate-with-aeat.md:155
 msgid "List every registered certificate:"
-msgstr "Listázza az összes regisztrált tanúsítványt:"
+msgstr "Listázd az összes regisztrált tanúsítványt:"
 
-#: ../../how-to/authenticate-with-aeat.md:142
+#: ../../how-to/authenticate-with-aeat.md:161
 msgid "Select the one you want active:"
-msgstr "Válassza ki azt, amelyiket aktívvá szeretné tenni:"
+msgstr "Válaszd ki azt, amelyiket aktívvá szeretnéd tenni:"
 
-#: ../../how-to/authenticate-with-aeat.md:147
+#: ../../how-to/authenticate-with-aeat.md:166
 msgid "Remove a registered certificate you no longer need:"
-msgstr "Távolítson el egy regisztrált tanúsítványt, amelyre már nincs szüksége:"
+msgstr "Távolíts el egy regisztrált tanúsítványt, amelyre már nincs szükséged:"
 
-#: ../../how-to/authenticate-with-aeat.md:153
+#: ../../how-to/authenticate-with-aeat.md:172
 msgid "Check every registered certificate's expiry"
 msgstr "Minden regisztrált tanúsítvány lejáratának ellenőrzése"
 
-#: ../../how-to/authenticate-with-aeat.md:155
+#: ../../how-to/authenticate-with-aeat.md:174
 msgid ""
 "Each registered certificate has its own expiry date. Check all registered"
 " certificates in one pass, not only the active one:"
 msgstr ""
-"Minden regisztrált tanúsítványnak saját lejárati dátuma van. Ellenőrizze "
+"Minden regisztrált tanúsítványnak saját lejárati dátuma van. Ellenőrizd "
 "az összes regisztrált tanúsítványt egy menetben, ne csak az aktívat:"
 
-#: ../../how-to/authenticate-with-aeat.md:162
+#: ../../how-to/authenticate-with-aeat.md:181
 msgid "The report lists each registered certificate with its status:"
 msgstr "A jelentés minden regisztrált tanúsítványt felsorol az állapotával:"
 
-#: ../../how-to/authenticate-with-aeat.md:164
+#: ../../how-to/authenticate-with-aeat.md:183
 msgid "`ok`: valid, with the days remaining."
 msgstr "`ok`: érvényes, a hátralévő napok számával."
 
-#: ../../how-to/authenticate-with-aeat.md:165
+#: ../../how-to/authenticate-with-aeat.md:184
 msgid ""
 "`expiring`: within the renewal window (60 days or fewer by default, or 14"
 " days or fewer for the critical window). A warning names the certificate."
@@ -324,56 +368,64 @@ msgstr ""
 "kevesebb, illetve a kritikus időszakhoz 14 nap vagy kevesebb). A "
 "figyelmeztetés megnevezi a tanúsítványt."
 
-#: ../../how-to/authenticate-with-aeat.md:167
+#: ../../how-to/authenticate-with-aeat.md:186
 msgid "`expired`: already expired. A warning names the certificate."
 msgstr "`expired`: már lejárt. A figyelmeztetés megnevezi a tanúsítványt."
 
-#: ../../how-to/authenticate-with-aeat.md:169
+#: ../../how-to/authenticate-with-aeat.md:187
+msgid ""
+"`file_missing`, `unreadable`, or `corrupt`: Cadrumo cannot read the file,"
+" or cannot open it with the stored passphrase."
+msgstr ""
+"`file_missing`, `unreadable` vagy `corrupt`: a Cadrumo nem tudja "
+"beolvasni a fájlt, vagy nem tudja megnyitni a tárolt jelmondattal."
+
+#: ../../how-to/authenticate-with-aeat.md:190
 msgid ""
 "Renew an expiring or expired certificate with the body that issued it, "
 "then re-register it under its existing name:"
 msgstr ""
-"Újítsa meg a lejáró vagy lejárt tanúsítványt annál a szervezetnél, amely "
-"kiállította, majd regisztrálja újra a meglévő neve alatt:"
+"Újíts meg egy lejáró vagy lejárt tanúsítványt annál a szervezetnél, amely"
+" kiállította, majd regisztráld újra a meglévő neve alatt:"
 
-#: ../../how-to/authenticate-with-aeat.md:175
+#: ../../how-to/authenticate-with-aeat.md:196
 msgid ""
 "Re-run `aeat config auth certificate check` to confirm the new expiry "
 "date."
 msgstr ""
-"Futtassa újra az `aeat config auth certificate check` parancsot az új "
+"Futtasd újra az `aeat config auth certificate check` parancsot az új "
 "lejárati dátum megerősítéséhez."
 
-#: ../../how-to/authenticate-with-aeat.md:177
+#: ../../how-to/authenticate-with-aeat.md:198
 msgid "Acquire or verify a live session"
 msgstr "Élő munkamenet megszerzése vagy ellenőrzése"
 
-#: ../../how-to/authenticate-with-aeat.md:179
+#: ../../how-to/authenticate-with-aeat.md:200
 msgid "When you are ready to use a live-read command:"
-msgstr "Amikor készen áll egy élő olvasási parancs használatára:"
+msgstr "Amikor készen állsz egy élő olvasási parancs használatára:"
 
-#: ../../how-to/authenticate-with-aeat.md:184
+#: ../../how-to/authenticate-with-aeat.md:205
 msgid "If you need to intentionally reauthenticate, force a fresh authentication:"
 msgstr ""
-"Ha szándékosan újra kell hitelesítenie, kényszerítsen ki egy friss "
+"Ha szándékosan újra kell hitelesítened, kényszeríts ki egy friss "
 "hitelesítést:"
 
-#: ../../how-to/authenticate-with-aeat.md:189
+#: ../../how-to/authenticate-with-aeat.md:210
 msgid ""
 "If a previous login was interrupted and left the authentication step "
 "stuck, use `--reset-lock`. Run it when `login` reports another login is "
 "in progress but it is not."
 msgstr ""
 "Ha egy korábbi bejelentkezés megszakadt, és a hitelesítési lépés elakadt,"
-" használja a `--reset-lock` kapcsolót. Akkor futtassa, amikor a `login` "
-"egy másik, folyamatban lévő bejelentkezést jelez, pedig valójában nincs "
+" használd a `--reset-lock` kapcsolót. Akkor futtasd, amikor a `login` egy"
+" másik, folyamatban lévő bejelentkezést jelez, pedig valójában nincs "
 "ilyen."
 
-#: ../../how-to/authenticate-with-aeat.md:193
+#: ../../how-to/authenticate-with-aeat.md:214
 msgid "End sessions or reset authentication"
 msgstr "Munkamenetek befejezése vagy a hitelesítés visszaállítása"
 
-#: ../../how-to/authenticate-with-aeat.md:195
+#: ../../how-to/authenticate-with-aeat.md:216
 msgid ""
 "To end the local certificate-provider session without removing its "
 "configuration:"
@@ -381,7 +433,7 @@ msgstr ""
 "A helyi tanúsítványszolgáltató munkamenetének befejezéséhez a "
 "konfigurációja eltávolítása nélkül:"
 
-#: ../../how-to/authenticate-with-aeat.md:202
+#: ../../how-to/authenticate-with-aeat.md:223
 msgid ""
 "To remove one provider's local configuration, sessions, acquisition lock,"
 " registered certificates, and stored certificate secrets:"
@@ -390,29 +442,28 @@ msgstr ""
 "megszerzési zárjának, regisztrált tanúsítványainak és tárolt tanúsítvány-"
 "titkainak eltávolításához:"
 
-#: ../../how-to/authenticate-with-aeat.md:209
+#: ../../how-to/authenticate-with-aeat.md:230
 msgid "To remove local authentication state for every configured provider:"
 msgstr ""
 "Minden beállított szolgáltató helyi hitelesítési állapotának "
 "eltávolításához:"
 
-#: ../../how-to/authenticate-with-aeat.md:215
+#: ../../how-to/authenticate-with-aeat.md:236
 msgid "Act for someone else (apoderado)"
 msgstr "Eljárás valaki más nevében (apoderado)"
 
-#: ../../how-to/authenticate-with-aeat.md:217
+#: ../../how-to/authenticate-with-aeat.md:238
 msgid ""
 "If you act as an authorized tax representative for another taxpayer, "
 "record locally who you represent and the relevant AEAT apoderamiento "
 "scopes. An apoderado is an authorized representative, such as a gestor or"
 " asesor."
 msgstr ""
-"Ha egy másik adózó felhatalmazott adóképviselőjeként jár el, rögzítse "
-"helyileg, hogy kit képvisel, és a vonatkozó AEAT apoderamiento "
-"hatóköröket. Az apoderado felhatalmazott képviselő, például egy gestor "
-"vagy asesor."
+"Ha egy másik adózó felhatalmazott adóképviselőjeként jársz el, rögzítsd "
+"helyileg, kit képviselsz, és a vonatkozó AEAT apoderamiento hatóköröket. "
+"Az apoderado felhatalmazott képviselő, például egy gestor vagy asesor."
 
-#: ../../how-to/authenticate-with-aeat.md:221
+#: ../../how-to/authenticate-with-aeat.md:242
 msgid ""
 "The apoderamiento itself is granted at AEAT. The represented party "
 "authorizes you through AEAT's own apoderamiento procedures. The commands "
@@ -422,42 +473,42 @@ msgid ""
 " to AEAT."
 msgstr ""
 "Magát az apoderamientót az AEAT-nál adják meg. A képviselt fél az AEAT "
-"saját apoderamiento-eljárásain keresztül hatalmazza fel Önt. Az ebben a "
-"szakaszban szereplő parancsok ezt a felhatalmazást a helyi profiljában "
+"saját apoderamiento-eljárásain keresztül hatalmaz fel téged. Az ebben a "
+"szakaszban szereplő parancsok ezt a felhatalmazást a helyi profilodban "
 "rögzítik, hogy az olvasási parancsok tudják, kinek az adatait olvassák. "
 "Soha nem regisztrálnak, hosszabbítanak meg, vonnak vissza vagy mondanak "
 "le apoderamientót az AEAT-nál. Egyetlen parancs sem ír képviseleti "
 "állapotot az AEAT-hoz."
 
-#: ../../how-to/authenticate-with-aeat.md:227
+#: ../../how-to/authenticate-with-aeat.md:248
 msgid "See the accepted scopes"
 msgstr "Az elfogadott hatókörök megtekintése"
 
-#: ../../how-to/authenticate-with-aeat.md:229
+#: ../../how-to/authenticate-with-aeat.md:250
 msgid "List the scope codes the tool accepts:"
-msgstr "Listázza az eszköz által elfogadott hatókörkódokat:"
+msgstr "Listázd az eszköz által elfogadott hatókörkódokat:"
 
-#: ../../how-to/authenticate-with-aeat.md:235
+#: ../../how-to/authenticate-with-aeat.md:256
 msgid "Each scope is an AEAT apoderamiento area. Examples include:"
 msgstr "Minden hatókör egy AEAT apoderamiento-terület. Például:"
 
-#: ../../how-to/authenticate-with-aeat.md:237
+#: ../../how-to/authenticate-with-aeat.md:258
 msgid "`RENT` for modelos 100 and 714."
 msgstr "`RENT` a Modelo 100 és 714 esetében."
 
-#: ../../how-to/authenticate-with-aeat.md:238
+#: ../../how-to/authenticate-with-aeat.md:259
 msgid "`IVA` for modelos 303 and 390."
 msgstr "`IVA` a Modelo 303 és 390 esetében."
 
-#: ../../how-to/authenticate-with-aeat.md:239
+#: ../../how-to/authenticate-with-aeat.md:260
 msgid "`PAGOSF` for modelos 130 and 131."
 msgstr "`PAGOSF` a Modelo 130 és 131 esetében."
 
-#: ../../how-to/authenticate-with-aeat.md:240
+#: ../../how-to/authenticate-with-aeat.md:261
 msgid "`RETEN` for withholding modelos."
 msgstr "`RETEN` a forrásadó-modelók esetében."
 
-#: ../../how-to/authenticate-with-aeat.md:241
+#: ../../how-to/authenticate-with-aeat.md:262
 msgid ""
 "`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC`, and `EXPED` for their "
 "respective authority areas."
@@ -465,32 +516,32 @@ msgstr ""
 "`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC` és `EXPED` a hozzájuk tartozó "
 "hatósági területekhez."
 
-#: ../../how-to/authenticate-with-aeat.md:244
+#: ../../how-to/authenticate-with-aeat.md:265
 msgid "Record who you represent"
-msgstr "Rögzítse, kit képvisel"
+msgstr "Rögzítsd, kit képviselsz"
 
-#: ../../how-to/authenticate-with-aeat.md:246
+#: ../../how-to/authenticate-with-aeat.md:267
 msgid ""
-"Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) "
-"and the scopes that match the grant at AEAT:"
+"Set the represented party's tax identifier (a NIF or NIE) and the scopes "
+"that match the grant at AEAT:"
 msgstr ""
-"Adja meg a képviselt fél adóazonosítóját (NIF, CIF, DNI, NIE vagy NII) és"
-" az AEAT-nál kapott felhatalmazásnak megfelelő hatóköröket:"
+"Add meg a képviselt fél adóazonosítóját (NIF vagy NIE) és az AEAT-nál "
+"megadott felhatalmazásnak megfelelő hatóköröket:"
 
-#: ../../how-to/authenticate-with-aeat.md:253
+#: ../../how-to/authenticate-with-aeat.md:274
 msgid ""
 "Repeat `--scope` for each code. The CLI rejects a comma-separated list. "
 "Scope codes are uppercase. Use `--scope ALL` to record every catalogue "
-"scope at once. The CLI rejects unknown codes and lists the accepted "
-"codes."
+"scope at once. The CLI rejects unknown codes. Without any `--scope`, it "
+"refuses with a message that lists the accepted codes."
 msgstr ""
-"Ismételje meg a `--scope` kapcsolót minden kódhoz. A CLI elutasítja a "
-"vesszővel elválasztott listát. A hatókörkódok nagybetűsek. Használja a "
-"`--scope ALL` kapcsolót, hogy egyszerre rögzítse az összes katalógusbeli "
-"hatókört. A CLI elutasítja az ismeretlen kódokat, és felsorolja az "
-"elfogadott kódokat."
+"Ismételd meg a `--scope` kapcsolót minden kódhoz. A CLI elutasítja a "
+"vesszővel elválasztott listát. A hatókörkódok nagybetűsek. A `--scope "
+"ALL` kapcsolóval egyszerre rögzítheted az összes katalógusbeli hatókört. "
+"A CLI elutasítja az ismeretlen kódokat. `--scope` nélkül olyan üzenettel "
+"utasítja el a parancsot, amely felsorolja az elfogadott kódokat."
 
-#: ../../how-to/authenticate-with-aeat.md:257
+#: ../../how-to/authenticate-with-aeat.md:279
 msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
@@ -498,64 +549,64 @@ msgstr ""
 "Az aktív profil legfeljebb egy apoderado-konfigurációt tárol; az újbóli "
 "beállítás felülírja azt. A képviselt azonosító titkosítva van tárolva."
 
-#: ../../how-to/authenticate-with-aeat.md:260
+#: ../../how-to/authenticate-with-aeat.md:282
 msgid "Review or retire the configuration"
 msgstr "A konfiguráció áttekintése vagy megszüntetése"
 
-#: ../../how-to/authenticate-with-aeat.md:262
+#: ../../how-to/authenticate-with-aeat.md:284
 msgid "Show what is recorded for the active profile:"
-msgstr "Mutassa meg, mi van rögzítve az aktív profilhoz:"
+msgstr "Nézd meg, mi van rögzítve az aktív profilhoz:"
 
-#: ../../how-to/authenticate-with-aeat.md:268
+#: ../../how-to/authenticate-with-aeat.md:290
 msgid ""
 "`aeat config auth apoderado check` is the live-verification verb, but the"
-" live AEAT read path is sealed. It refuses with a \"live verification "
-"unavailable\" message and points you back to `status`. Use `aeat config "
-"auth apoderado status` for the offline configuration read."
+" live check is not available. It refuses with `The live check of "
+"representatives is unavailable, or contact with the AEAT failed.` Use "
+"`aeat config auth apoderado status` for the offline configuration read."
 msgstr ""
 "Az `aeat config auth apoderado check` az élő ellenőrzés parancsa, de az "
-"élő AEAT olvasási útvonal le van zárva. Egy „live verification "
-"unavailable” üzenettel elutasítja a műveletet, és visszairányítja Önt a "
-"`status`-hoz. Az offline konfiguráció beolvasásához használja az `aeat "
-"config auth apoderado status` parancsot."
+"élő ellenőrzés nem érhető el. A `The live check of representatives is "
+"unavailable, or contact with the AEAT failed.` üzenettel utasítja el a "
+"műveletet. Az offline konfiguráció beolvasásához használd az `aeat config"
+" auth apoderado status` parancsot."
 
-#: ../../how-to/authenticate-with-aeat.md:273
+#: ../../how-to/authenticate-with-aeat.md:295
 msgid "Remove the configuration when the representation ends:"
-msgstr "Távolítsa el a konfigurációt, amikor a képviselet megszűnik:"
+msgstr "Távolítsd el a konfigurációt, amikor a képviselet megszűnik:"
 
-#: ../../how-to/authenticate-with-aeat.md:279
+#: ../../how-to/authenticate-with-aeat.md:301
 msgid ""
 "Clearing removes only the local record. The apoderamiento at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
 "A törlés csak a helyi bejegyzést távolítja el. Az AEAT-nál lévő "
-"apoderamientót ez nem érinti. Azt az AEAT saját eljárásain keresztül "
-"vonja vissza."
+"apoderamientót ez nem érinti. Azt az AEAT saját eljárásain keresztül vond"
+" vissza."
 
-#: ../../how-to/authenticate-with-aeat.md:282
+#: ../../how-to/authenticate-with-aeat.md:304
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/authenticate-with-aeat.md:284
+#: ../../how-to/authenticate-with-aeat.md:306
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr "[A Modelo 036 censo-adatok karbantartása a profiljában](censo-update.md)"
+msgstr "[Tartsd karban a profilod Modelo 036 censo-adatait](censo-update.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:285
+#: ../../how-to/authenticate-with-aeat.md:307
 msgid "[Set up your taxpayer profile](profile-setup.md)"
-msgstr "[Az adózói profil beállítása](profile-setup.md)"
+msgstr "[Állítsd be az adózói profilodat](profile-setup.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:286
+#: ../../how-to/authenticate-with-aeat.md:308
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
-msgstr "[A helyi beállítás diagnosztizálása és javítása](troubleshooting.md)"
+msgstr "[Diagnosztizáld és javítsd a helyi beállításodat](troubleshooting.md)"
 
-#: ../../how-to/authenticate-with-aeat.md:288
+#: ../../how-to/authenticate-with-aeat.md:310
 msgid ""
 "Run `aeat config auth test` before each live-read task. Follow [Renew "
 "your certificate before it expires](#renew-your-certificate-before-it-"
 "expires) when the command reports an expiry warning."
 msgstr ""
-"Futtassa az `aeat config auth test` parancsot minden élő olvasási feladat"
-" előtt. Kövesse az [Újítsa meg a tanúsítványát, mielőtt lejár](#renew-"
+"Futtasd az `aeat config auth test` parancsot minden élő olvasási feladat "
+"előtt. Kövesd az [Újítsd meg a tanúsítványodat, mielőtt lejár](#renew-"
 "your-certificate-before-it-expires) szakaszt, amikor a parancs lejárati "
 "figyelmeztetést jelez."
 

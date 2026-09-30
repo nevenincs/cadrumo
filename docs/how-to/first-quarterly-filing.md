@@ -3,8 +3,8 @@
 This page covers your first quarterly Modelo 130 filing, end to end: bring a
 quarter of transactions into the ledger, classify them as business income and
 deductible expenses, prepare the draft, and check that it passed verification
-before you file it. It is written for a self-employed taxpayer with a NIF,
-CIF, NIE, or other filing identity who is running Cadrumo for the first time.
+before you file it. It is written for a self-employed taxpayer with a NIF or NIE
+who is running Cadrumo for the first time.
 
 Cadrumo never submits a return to the Agencia Estatal de Administración
 Tributaria (AEAT). It produces the Modelo 130 fichero-BOE artefact locally;
@@ -42,15 +42,28 @@ An imported row carries a date and an amount, but it does not yet say how the
 tax calculation should treat it. Classify each row before you calculate.
 
 Mark the collected payment as business income and the purchase as a deductible
-business expense with a category. Take each transaction id from the listing
-above. The income classification takes only the business decision:
+business expense with a category. Take each transaction id from the listing.
+The income classification takes only the business decision.
+
+The expense also needs `--category-id`, the taxable base, the IVA fields, and
+`--deduction-kind`, the exact source of the IVA deduction (`domestic_current`
+here). Then register the supplier's invoice. The invoice takes its IVA rate as
+a percentage (`--iva-rate 21`), while `classify` takes a decimal (`0.21`):
 
 ```{cli-sequence} first-quarter-classify-income
-:verify: Confirm the collected payment is classified as business income.
+:verify: Confirm both rows are classified and the supplier invoice is registered.
 ```
 
-For an expense, add `--category-id <category-id>` plus the taxable base and
-IVA fields. List the accepted categories any time:
+Link the invoice to the expense row with the `evidence_id` the registration
+printed:
+
+```{cli-sequence} first-quarter-link-invoice
+```
+
+[Attach invoices and receipts](ledger-evidence.md) shows the link step with its
+output.
+
+List the accepted expense categories any time:
 
 ```{cli-sequence} ledger-category-list
 :verify: Confirm the accepted expense categories read back.
@@ -61,8 +74,8 @@ and the review queue), read [Classify transactions](classify-transactions.md).
 
 ## Prepare the Modelo 130 draft
 
-Once the quarter's rows are classified, prepare the instalment. The preparation
-below sets up a self-employed profile and a classified ledger, then creates the
+Once the quarter's rows are classified, prepare the instalment. The example
+starts from a self-employed profile and a classified ledger, then creates the
 draft, calculates it, and verifies it. Modelo 130 is the IRPF payment on
 account for self-employed activity under estimación directa.
 
@@ -77,7 +90,7 @@ Read the frames in order:
 - Calculate it. Cadrumo reads the classified ledger and fills the boxes:
   casilla `01` is the quarter's income, casilla `02` the deductible expenses,
   casilla `03` the net yield, and casilla `04` the instalment. Casilla 01 shows
-  1000.00, not the 1210.00 you collected: IVA is never part of your income, so
+  1000, not the 1210.00 you collected: IVA is never part of your income, so
   the 210.00 of IVA is left out. With the example ledger the net yield is
   `500.00` and the instalment is `100.00`, twenty percent of the net. The three
   `--binding ...=0` values are the prior-period carries a true first quarter
@@ -89,12 +102,13 @@ Read the frames in order:
 
 The verification result is the signal that the draft is ready. Verification
 refuses until every deductible-expense row carries linked purchase-invoice
-evidence, so this example registers the supplier invoice and attaches it before
-it calculates. Attach in that order: a draft bundles its evidence when you
+evidence, so the classification step registered the supplier invoice and linked
+it before you calculate. Keep that order: a draft bundles its evidence when you
 verify it, so an invoice attached afterwards does not reach the filing.
 
 The sequence below exports the verified draft and then records the local filed
-marker.
+marker. Export refuses to overwrite an existing file unless you add `--replace`;
+[The filing workflow](filing-spine.md) explains the export rules.
 
 ```{cli-sequence} first-quarter-export-file
 :verify: Confirm the export succeeds and the filing marker stays local.

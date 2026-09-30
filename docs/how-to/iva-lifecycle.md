@@ -19,12 +19,13 @@ IVA amount), so they feed the IVA calculations without re-entry - one
 ledger, two tax angles. If you have not run that run-through's stage 1 and
 stage 2 `profile create` and `ledger add` commands, run them first.
 
-The CLI prints help, labels, and messages in Spanish. This page keeps the
-explanations in English.
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you
+[choose another language](profile-setup.md#choose-the-output-language).
 
 ## Prerequisites
 
-A working `aeat` command, a master-key passphrase (the tool prompts for
+A working `aeat` command, your passphrase (the tool prompts for
 it), and the profile and
 first-quarter ledger rows from
 [the income-tax year, stages 1 and 2](irpf-lifecycle.md). If you have no
@@ -67,8 +68,8 @@ would want it locked.
 
 ## Stage 2: the first quarterly return
 
-The first quarter's rows are already recorded and classified with their IVA
-detail (the sequence seeds them). Create, calculate, verify and file Modelo
+The example starts from the first quarter's rows, already recorded and
+classified with their IVA detail. Create, calculate, verify and file Modelo
 303 for the quarter; the export step writes the file with the all-zero
 development software identity:
 
@@ -81,10 +82,11 @@ IVA charged (repercutido), the purchase's 105 of deductible IVA paid
 (soportado), and the seeded wallet feeds the prior-compensation box. With
 Ana's rows the quarter ends with IVA to pay - repercutido exceeds soportado.
 
-Upload the file at the portal, then record the filing with `aeat app modelo
-work file` and pull the justificante with `aeat app modelo reconcile pull` (both
-shown in the sequence above) - the same closing rhythm as every filing in these
-run-throughs.
+Enter the calculated box values at the portal, then record the filing with
+`aeat app modelo work file` and pull the justificante with `aeat app modelo
+reconcile pull`. The first-quarter sequence runs the first command and shows the
+second as a display frame. This is the same closing rhythm as every filing in
+these run-throughs.
 
 The per-box detail of this workflow is
 [Prepare a Modelo 303 IVA filing](modelo-303.md).
@@ -112,7 +114,7 @@ its invoice. [Attach invoices and receipts](ledger-evidence.md) walks through it
 In the third quarter the carry shows itself: the same chain with `3T` brings the
 prior-compensation box from the wallet, so the second quarter's credit reduces
 what you pay now. Watch the balance move across the year with the wallet balance
-command shown running in stage 1 above.
+command shown running in stage 1.
 
 The balance reports the total, active, and expired credit and the lots it is
 made of. Credit expires after the legal window, so the wallet also names the
@@ -142,8 +144,8 @@ consistent by fixing the underlying records, never the declarations.
 ## Stage 5: the fourth quarter and the annual summary
 
 Close the fourth quarter with the same `4T` chain in January. Then prepare the
-annual Modelo 390 summary, annual token `0A`, same year. Modelo 390 declares no
-new figures: it summarises the year, and its totals must reconcile with the four
+annual Modelo 390 summary, annual token `0A`, same year. Modelo 390 adds no new
+amount to pay: it summarises the year, and its totals must reconcile with the four
 quarterly returns you filed. The calculation reads your filed Modelo 303
 records; a missing or unevidenced quarter blocks the annual verify with a
 cross-period finding that names it. The verification includes the reconciliation
@@ -160,7 +162,7 @@ The commands from `work calculate` onwards each resolve all four filed quarters,
 so they are shown as display frames until every quarter of the year is filed.
 
 The per-box detail is
-[Prepare the annual Modelo 390 summary](modelo-390.md).
+[Prepare the annual Modelo 390 IVA summary](modelo-390.md).
 
 ## What you completed
 
@@ -173,7 +175,7 @@ annual summary that reconciled against the four quarters on your own record.
 
 - [The income-tax year](irpf-lifecycle.md) - the same persona through IRPF.
 - [Prepare a Modelo 303 IVA filing](modelo-303.md)
-- [Prepare the annual Modelo 390 summary](modelo-390.md)
+- [Prepare the annual Modelo 390 IVA summary](modelo-390.md)
 - [Prepare a Modelo 349 recapitulative declaration](modelo-349.md)
 - [Deduct input IVA under prorrata](prorrata.md) - when your
   activity mixes IVA-taxed and exempt operations.

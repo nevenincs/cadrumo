@@ -1,10 +1,11 @@
 profile:
   errors:
-    foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
-      under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
-      not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
+    foral_regime: 'Residents in {tax_region} file with the corresponding Hacienda
+      Foral, not with the AEAT: the Basque territories under the Concierto Económico
+      (Ley 12/2002) and Navarra under the Convenio Económico (Ley 28/1990). This CLI
+      does not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
       (Gipuzkoa), araba.eus/ogasun (Álava), or hacienda.navarra.es (Navarra) depending
-      on your territory.
+      on your territory.'
     not_configured: No tax-residence profile is configured for RENTA. Run `aeat config
       profile edit NAME --tax-residence-ccaa <ccaa>` to configure it.
   journey:

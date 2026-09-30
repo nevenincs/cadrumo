@@ -255,6 +255,101 @@ docs:
       reviewed_at: Ellenőrzés dátuma
       reviewed_by: Ellenőrizte
       title: Katalógusbejegyzés
+  site:
+    aria:
+      breadcrumb: Morzsamenü
+      broadcast_links: Az értesítés hivatkozásai
+      dismiss_notice: Értesítés elvetése
+      footer_channels: A dokumentáció frissítési csatornái
+      language: 'Nyelv: {language}'
+      primary_navigation: Fő
+      repository: A projekt tárháza a GitHubon
+      search_documentation: Keresés a dokumentációban
+      site_updates: Az oldal újdonságai
+      toggle_navigation: Navigációs oldalsáv be- és kikapcsolása
+      toggle_theme: Váltás világos, sötét és automatikus téma között
+      toggle_toc: Tartalomjegyzék-oldalsáv be- és kikapcsolása
+    breadcrumb:
+      home: Kezdőlap
+    broadcast:
+      label: Béta
+      message: Visszafelé nem kompatibilis változások várhatók. A benyújtás előtt
+        ellenőrizd az Agencia Estatal de Administración Tributaria (AEAT) határidőit.
+    class_label:
+      casilla: Rovat
+      cli: Parancs
+      doc: Dokumentáció
+      legal: Jogszabály
+      modelo: Nyomtatvány
+      technical: Referencia
+    cli_help:
+      close: Súgó bezárása
+      required: kötelező
+    download:
+      direct_heading: Közvetlen letöltések a legutóbbi kiadáshoz
+    footer:
+      get_help: Kérj segítséget
+      kicker: A projekt közleményei
+      note: A Cadrumo béta állapotú, helyben futó szoftver. Nem adótanácsadás, nem
+        áll kapcsolatban az Agencia Estatal de Administración Tributaria (AEAT) szervezettel,
+        és soha nem helyettesíti az AEAT hivatalos eszközeit vagy egy szakképzett
+        szakember tanácsát.
+      stay_current: Maradj naprakész
+      trust_and_responsibility: Bizalom és felelősség
+    kind_label:
+      casilla: Rovat
+      cli: Parancs
+      concept: Fogalom
+      page: Oldal
+    link:
+      critical_updates: Kritikus frissítések
+      disclaimer: Jogi nyilatkozat
+      events_and_deadlines: Események és határidők
+      get_cadrumo: Töltsd le a Cadrumót
+      release_notes: Kiadási jegyzetek
+      report_issue: Jelents egy hibát
+      repository: Tárház
+      updates: Újdonságok
+    meta:
+      description: A {product} segít helyben előkészíteni, ellenőrizni és exportálni
+        a spanyol adófájljaidat. A {product} soha nem nyújtja be és nem küldi el őket
+        helyetted.
+      short_title: '{product} dokumentáció'
+      title: '{product} dokumentáció: spanyol adóügyek helyi előkészítése'
+    nav:
+      api: API
+      cli_reference: CLI-referencia
+      getting_started: Első lépések
+      how_it_works: Hogyan működik
+    search:
+      full_text_crumb: Teljes szöveges keresés
+      full_text_for: „{query}” keresése a dokumentációban
+      hint_close: bezárás
+      hint_navigate: léptetés
+      hint_open: megnyitás
+      noscript: A kereséshez JavaScript kell. Böngészd a dokumentációt a navigációs
+        oldalsávból, vagy nézd meg a szójegyzéket a szakkifejezésekhez.
+      on_this_page: Ezen az oldalon
+      open_full_text: Teljes szöveges keresés megnyitása
+      page_title: Keresés
+      placeholder: Keresés a dokumentációban…
+      query_label: Keresési kifejezés
+      result_fallback: Találat
+      result_many: '{count} találat'
+      result_one: 1 találat
+      searching: Keresés…
+    sequence:
+      command_error_output: A parancs hibakimenete
+      command_output: A parancs kimenete
+      copied: Másolva
+      copy_command: Parancs másolása
+      copy_failed: A másolás nem sikerült
+      hide_output: Kimenet elrejtése
+      next_command: Következő parancs
+      previous_command: Előző parancs
+      rundown: Parancsok áttekintése
+      shell: Terminálértelmező
+      show_output: Kimenet megjelenítése
   terminology:
     cli:
       authority: A forrás hitelesítő szerve, ha a mező „source”.

@@ -25,8 +25,10 @@ state behind.
 
 Profile state is bucket-scoped under
 `<root>/buckets/<bucket-id>/`. The bucket contains `db/cadrumo.db`, encrypted
-blobs, audit material, `manifest.toml`, `.lock`, and an output-language hint.
-Key material is rooted under `<root>/keystore/<bucket-id>/`. Tokens, logs,
+blobs under `data/`, the `custody/` envelopes that hold the wrapped data key
+for the passphrase and the recovery code, `manifest.toml`,
+`profile.commit.v1.json`, `.lock`, and an `output-language.hint` file.
+Session and login-throttle state live under `<root>/keystore/<bucket-id>/`. Tokens, logs,
 secrets, blobs, and audit paths derive from the same product root unless an
 explicit Cadrumo setting overrides them.
 
@@ -49,11 +51,11 @@ untouched and requires the operator to choose a separate, explicit disposition.
 | Surface | Cadrumo behavior |
 | --- | --- |
 | Calculation and verification | Local; evaluates saved records against bundled registry rules and evidence |
-| Export | Writes an AEAT-compatible local file after verification and required evidence gates pass; portal acceptance is not guaranteed |
+| Export | Writes an AEAT-compatible local file after verification and required evidence gates pass; refuses to overwrite an existing file without `--replace`; portal acceptance is not guaranteed, and files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept |
 | Live AEAT access | Separately invoked, authenticated, and read-only |
 | Submission | Forbidden; no Cadrumo submission command exists |
-| Official filing | Performed by a human through an official AEAT channel |
-| Filing history | Recorded locally after the human filing; reconciliation compares totals and, for enrolled modelos, captured per-casilla values |
+| Official filing | Performed by a human through an official AEAT channel; for modelos whose file AEAT does not accept, the human keys the calculated values into the portal form |
+| Filing history | Recorded locally after the human filing; reconciliation compares header fields, the result total where the modelo declares its result box, and, for enrolled modelos, casilla values from a filed declaration |
 | Responsibility | The taxpayer or authorized filer reviews figures, meets deadlines, uploads, and retains the justificante |
 
 See [Protect access to your data](../how-to/protect-data-access.md) for recovery,

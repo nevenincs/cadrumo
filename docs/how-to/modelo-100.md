@@ -3,16 +3,16 @@
 This page covers the annual Renta filing: creating the Modelo 100 work unit,
 letting the year's data flow in, supplying the manual values that apply to
 you, and verifying and exporting the declaration. Modelo 100 is the annual
-IRPF declaration; the registry's official title is "Modelo 100. Declaración
-del Impuesto sobre la Renta de las Personas Físicas."
+IRPF (personal income tax) declaration; the registry's official title is
+"Modelo 100. Declaración del Impuesto sobre la Renta de las Personas Físicas."
 
 Modelo 100 is the largest form the tool prepares - the 2025 revision carries
 over two thousand casillas and two hundred formulas - and it is the one
 filing that gathers the whole year: your ledger, your profile facts, your
 quarterly instalments, and the withholdings others reported on your behalf.
 For how those values arrive and how to trace any figure to its source, read
-[How the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
-- this page stays with the commands.
+[Deep dive: how the Renta declaration is assembled](../explanation/how-renta-is-assembled.md).
+This page stays with the commands.
 
 `aeat` does not submit Modelo 100 to AEAT. Export creates a local file that
 you upload through the official AEAT channel yourself.
@@ -41,9 +41,9 @@ profile](profile-setup.md).
   ```
 
   The transaction ledger is not the stock-inventory register. If your activity
-  holds stock, maintain its encrypted inventory ledger separately, then enter
-  the applicable Renta stock figures manually. There is no automatic
-  inventory-to-Modelo-100 projection in this version.
+  holds stock, keep its encrypted inventory ledger for the filing year with
+  `aeat app ledger inventory`. Calculation reads that ledger for casillas 0177,
+  0181, and 0182.
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
@@ -53,14 +53,16 @@ profile](profile-setup.md).
   :verify: Confirm the declaration's required source filings and dependencies read back.
   ```
 
-  `dependencies` names each source filing and whether its clean-state
-  evidence is satisfied; an unfiled or unevidenced quarter blocks the annual
-  verify. Record or reconcile those filings first - see
-  [Reconcile a filing](reconcile.md).
+  `dependencies` names each source filing the registry can fold in and whether
+  its clean-state evidence is satisfied. Verification scopes out the filings
+  that do not apply to your profile and reports them as advisories, as the
+  example that follows shows. For a filing that does apply, an unfiled or
+  unevidenced quarter blocks the annual verify. Record or reconcile those
+  filings first - see [Reconcile a filing](reconcile.md).
 
 ## Create, calculate, and verify
 
-The example below follows an employee filer - a Madrid-resident salaried
+The following example follows an employee filer - a Madrid-resident salaried
 taxpayer filing an individual 2025 return, with no self-employed activity, so
 the Modelo 130/131 and retención-model folds are scoped out and the annual
 calculation uses the employment figures alone. If you also file quarterly Modelo 130
@@ -75,10 +77,11 @@ Calculation reads the year's classified ledger, the profile facts, the prior
 filings the registry binds in, and any carry-forward from last year's
 declaration (negative bases carry via a prior-filing binding), then runs the
 registry formulas and saves a draft revision. Here casilla `0003` carries the
-24000 of salary income, casilla `0012` the rendimiento neto del trabajo, and
-casilla `0019` the reducción por rendimientos del trabajo (art. 20 LIRPF) of
-2000. The tool never fabricates a missing prior period: what it does not have
-on record stays a visible blank for you to resolve, not a guessed zero.
+24000 of salary income, casilla `0012` the total countable gross employment
+income (`24000.00`), and casilla `0019` the other deductible employment
+expenses (art. 19 LIRPF) of `2000.00`. The tool never fabricates a missing
+prior period: what it does not have on record stays a visible blank for you to
+resolve, not a guessed zero.
 
 Most of Modelo 100's casillas are optional manual inputs for situations the
 ledger cannot know (employment income details, capital income, deductions).
@@ -88,14 +91,16 @@ Find what applies to you and what is still missing:
 :verify: Confirm the declaration's missing bindings, required casillas, and observations read back.
 ```
 
-For stock under estimación directa, inspect and supply boxes 0177, 0181, and
-0182 when they apply. They are manual inputs in the current registry. Do not use
-0155 as an inventory substitute. Calculation does not treat it as an inventory
-input.
+For stock under estimación directa, casillas 0177, 0181, and 0182 are bound to
+your encrypted inventory ledger for the filing year. `--casilla` and `--binding`
+refuse a value for them. Without a complete ledger for that year, calculation
+warns that no inventory ledger is available and the casillas stay at `0`, so
+create the ledger before you file. Don't put stock figures in casilla 0155:
+calculation doesn't read it as an inventory figure.
 
 Supply a manual casilla and recalculate by passing `--casilla 0003=24000` on
 the calculate command, alongside the bindings the declaration still needs (the
-main sequence above shows the full form). Recalculating replaces the current
+calculation example shows the full form). Recalculating replaces the current
 draft revision.
 
 For the full input workflow - bound versus manual casillas, offsets, and
@@ -106,13 +111,16 @@ spreadsheet review of the assembled declaration, see
 
 ## Export and file
 
-The verify step in the sequence above ran the annual completeness check,
+The verify step in the calculation example ran the annual completeness check,
 including the cross-period gates: every dependency filing must be filed and
 evidenced, and every carried figure must still point at the revision it was
 filed under. A blocked report names the unresolved dependency. Resolve it, then
-rerun verification. See [Verify a draft filing](verification-reports.md).
+rerun verification. See [Verify a filing](verification-reports.md).
 
-Export the verified declaration. Export is the local finish line. Recording the
+Export the verified declaration. Modelo 100 always writes an XML file, whatever
+name you choose. Export refuses to overwrite an existing file unless you add
+`--replace`, and refuses when the output folder does not exist. Export is the
+local finish line. Recording the
 filed marker afterwards is optional and applies only while the obligation
 window is open; it is an internal note that you have already presented the file
 at the portal. The Renta 2025 window opens on 8 April 2026, after the date this
@@ -127,7 +135,7 @@ See [Reconcile a filing](reconcile.md) for the reconciliation verdicts.
 
 ## Next steps
 
-- [How the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
+- [Deep dive: how the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
 - [Prepare a Modelo 130 IRPF instalment](modelo-130.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [File your modelo at the AEAT portal](file-at-aeat.md)

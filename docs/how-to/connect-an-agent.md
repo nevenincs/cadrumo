@@ -12,9 +12,10 @@ cadrumo-mcp --help
 aeat app runtime status
 ```
 
-If `cadrumo-mcp` is unavailable, install Cadrumo first. The command and the
-`aeat` CLI ship in the same Cadrumo distribution. Start or provision the local
-runtime using the controls described in [Workstation setup](../workstation-setup.md).
+If `cadrumo-mcp` is unavailable, install Cadrumo first - see
+[Get Cadrumo](../download.md). The command and the `aeat` CLI ship in the same
+Cadrumo distribution. The adapter locates or starts the local runtime when it
+connects.
 
 ## Register one profile-bound server
 
@@ -57,3 +58,9 @@ after a disconnect instead of submitting the same effect blindly.
 To rotate or narrow an existing grant, reconnect with its protected credential
 reference and prepare a new authorization request. Human approval is required
 for the change. Revoking the grant prevents future admission under that key.
+
+Discover the currently supported operations with `search`; a CLI command's
+availability alone does not make it available through MCP. Calculations use
+Cadrumo's deterministic engine and published tax authority. Connecting an agent
+does not authorize submission to AEAT. Review the prepared filing yourself as
+described in the [filing guide](file-at-aeat.md).

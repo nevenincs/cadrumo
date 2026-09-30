@@ -1,4 +1,4 @@
-"""Admitting a published authority hashes the whole database and recomputes its receipts.
+"""Admitting a published authority hashes the whole database and binds it to its descriptor.
 
 Every test uses this checkout's real published pair. The first measures the
 reader's peak Python allocation while it admits the database: hashing by
@@ -6,7 +6,7 @@ reading the file whole allocates at least the database's size, streaming it
 allocates a few chunks. The second proves the streamed digest still refuses a
 database whose bytes differ from the descriptor by a single byte. The rest
 republish an edited copy under its own content address, so the digest admits
-it and only the recorded compiler closure and format decide.
+it and only the manifest decides.
 """
 
 from __future__ import annotations
@@ -96,55 +96,23 @@ def _republished_copy(directory: Path, statements: tuple[tuple[str, tuple[str, .
     return directory / _DESCRIPTOR_NAME
 
 
-def test_admission_exposes_the_recorded_compiler_closure_behind_the_compiler_receipt() -> None:
-    reader = SQLiteAuthorityReader(bundled_authority_descriptor_path(), max_connections=1)
-    try:
-        closure = reader.compiler_closure()
-        build = reader.build_identity()
-    finally:
-        reader.close()
-
-    assert closure.sources
-    assert closure.identity_digest == build.compiler_identity_digest
-    assert "cadrumo/domain/calculations/registry/authority_compiler_closure.py" in {
-        path for path, _digest in closure.sources
-    }
-
-
-def test_admission_refuses_a_compiler_closure_row_that_no_longer_recomputes_the_receipt(tmp_path: Path) -> None:
+def test_admission_refuses_a_manifest_naming_another_generation_than_its_descriptor(tmp_path: Path) -> None:
     descriptor = _republished_copy(
         tmp_path,
-        (
-            (
-                "UPDATE compiler_sources SET sha256 = ? WHERE path = (SELECT min(path) FROM compiler_sources)",
-                (sha256_hex(b"tampered compiler source"),),
-            ),
-        ),
+        (("UPDATE authority_manifest SET logical_generation = ?", (sha256_hex(b"another generation"),)),),
     )
 
-    with pytest.raises(AuthorityStoreCorruptionError, match="compiler closure does not recompute"):
+    with pytest.raises(AuthorityStoreCorruptionError, match="manifest disagrees with its descriptor"):
         SQLiteAuthorityReader(descriptor, max_connections=1)
 
 
-def test_admission_refuses_a_dropped_compiler_closure_row(tmp_path: Path) -> None:
+def test_admission_refuses_the_previous_format_that_recorded_the_compiler_and_its_environment(
+    tmp_path: Path,
+) -> None:
     descriptor = _republished_copy(
         tmp_path,
-        (("DELETE FROM compiler_sources WHERE path = (SELECT max(path) FROM compiler_sources)", ()),),
+        (("UPDATE authority_manifest SET format = ?", ("cadrumo-authority-sqlite-v3",)),),
     )
 
-    with pytest.raises(AuthorityStoreCorruptionError, match="compiler closure does not recompute"):
-        SQLiteAuthorityReader(descriptor, max_connections=1)
-
-
-def test_admission_refuses_the_previous_format_that_recorded_no_compiler_closure(tmp_path: Path) -> None:
-    descriptor = _republished_copy(
-        tmp_path,
-        (
-            ("UPDATE authority_manifest SET format = ?", ("cadrumo-authority-sqlite-v2",)),
-            ("DROP TABLE compiler_sources", ()),
-            ("DROP TABLE compiler_environment", ()),
-        ),
-    )
-
-    with pytest.raises(AuthorityStoreFormatError, match="cadrumo-authority-sqlite-v2"):
+    with pytest.raises(AuthorityStoreFormatError, match="cadrumo-authority-sqlite-v3"):
         SQLiteAuthorityReader(descriptor, max_connections=1)

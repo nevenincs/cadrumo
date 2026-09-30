@@ -11,7 +11,6 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXPECTED_WIRING: Final[dict[str, str]] = {
-    "dev.docs.apidocs": "docs-generate-api-stubs",
     "dev.docs.sequences": "docs-generate-sequences",
     "dev.docs.terminology.coverage": "report-terminology-coverage",
     "dev.docs.terminology.synonyms": "docs-synonyms-maintain",

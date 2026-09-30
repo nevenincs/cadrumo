@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-09-29 18:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -86,15 +86,19 @@ msgstr "Identitat del servidor MCP"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP executable"
-msgstr "Executable de la CLI per a humans"
+msgstr "Executable MCP"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo-mcp`"
-msgstr "`cadrumo`"
+msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP tool prefix"
 msgstr "Prefix d'eines MCP"
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo_`"
+msgstr "`cadrumo_`"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP resource scheme"

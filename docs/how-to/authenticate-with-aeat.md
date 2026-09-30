@@ -12,26 +12,33 @@ If that does not restore the command, report the failure with the Cadrumo
 version and redacted output.
 
 When available to your identity, the command-line interface (CLI) can read
-filed declarations, expedientes, notifications, and filed justificantes. For
-Modelo 036/Censo profile facts, use the [profile/Censo facts guide](censo-update.md).
-Cadrumo no longer retrieves these facts live.
+filed declarations, expedientes, notifications, and filed justificantes. To
+pull your census address into your profile, use the [census facts
+guide](censo-update.md).
 
 ## Before you start
 
 You need:
 
 - an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
-  config auth configure` refuses with `No hay un perfil activo` until you
-  create one. Start the interactive wizard (a NIF, CIF, DNI, or NIE is a
-  Spanish tax identifier); it prompts for the profile passphrase and offers
-  an optional recovery code once the profile exists:
+  config auth configure` refuses with `No active profile.` until you
+  create one. Start the interactive wizard (it asks for your NIF or NIE; for
+  a Spanish citizen, the NIF is the DNI number plus letter). It prompts for
+  the profile passphrase and offers an optional recovery code once the
+  profile exists:
 
   ```{cli-sequence} authenticate-profile
   :verify: Review interactive profile creation and confirm a profile is active.
   ```
 
-- the master-key passphrase that protects your local store; the tool
-  prompts for it.
+- the passphrase that protects your local store; the tool prompts for it.
+- the `browser` extra, because `aeat config auth login` and every live read
+  drive a browser. Install it with `pip install "cadrumo[browser]"`, or follow
+  [Install Cadrumo](../workstation-setup.md).
+
+The examples in this documentation are recorded in English. `aeat` prints its
+messages in Spanish unless you [choose another
+language](profile-setup.md#choose-the-output-language).
 
 ## See supported providers
 
@@ -41,19 +48,14 @@ List providers:
 :verify: Confirm the tool lists the supported authentication providers.
 ```
 
-The list marks each provider as `disponible` (available now) or `reservado (no
-disponible aún)` (reserved, not available yet). Three are available:
+Cadrumo supports three providers:
 
 - `certificate`: your digital certificate file (certificado digital).
 - `clave_movil`: mobile-based Cl@ve, confirmed on your phone.
 - `clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login.
 
-Two more are listed but reserved, so you cannot configure them yet:
-
-- `clave_pin`: Cl@ve PIN, a one-time code system from AEAT. Reserved.
-- `dnie_pkcs`: the national ID card (DNI electrónico). Reserved.
-
-Configure one of the available providers.
+Pass the identifier to `--provider`. Cl@ve PIN and the electronic national ID
+card (DNI electrónico) are not supported.
 
 ## Configure a provider
 
@@ -64,6 +66,19 @@ Configure the provider you use:
 
 Use `--file` for providers that need a file, such as your digital certificate.
 Keep credential files private and do not share them.
+
+The command stores the provider choice and the certificate path, never a
+secret. Supply the secrets separately:
+
+- `certificate`: bind the passphrase to a registered certificate source with
+  `aeat config auth certificate secret set`, or set the
+  `CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable.
+- `clave_permanente`: set `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` and
+  `CADRUMO_CLAVE_PERMANENTE_PASSWORD`.
+- `clave_movil`: set `CADRUMO_CLAVE_MOVIL_DNI_NIE`.
+
+The [environment overrides reference](../reference/environment-overrides.md)
+describes these variables.
 
 ## Check local readiness
 
@@ -109,8 +124,12 @@ Point the tool at the renewed file:
 ```{cli-sequence} authenticate-configure-renewed
 ```
 
-If the renewed certificate uses a new password, rotate the stored
-passphrase for its source:
+If the renewed file uses a new password, register it as a
+[named certificate source](#manage-several-certificates) if it is not one yet,
+then rotate the stored passphrase for that source. `secret set` refuses a name
+that is not registered. It prompts without
+echo, or reads `{"certificate_passphrase": "..."}` from `--secrets-stdin` or
+`--secrets-fd`:
 
 ```{cli-sequence} authenticate-secret-set
 ```
@@ -165,6 +184,8 @@ The report lists each registered certificate with its status:
 - `expiring`: within the renewal window (60 days or fewer by default, or 14
   days or fewer for the critical window). A warning names the certificate.
 - `expired`: already expired. A warning names the certificate.
+- `file_missing`, `unreadable`, or `corrupt`: Cadrumo cannot read the file, or
+  cannot open it with the stored passphrase.
 
 Renew an expiring or expired certificate with the body that issued it, then
 re-register it under its existing name:
@@ -243,8 +264,8 @@ Each scope is an AEAT apoderamiento area. Examples include:
 
 ### Record who you represent
 
-Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) and
-the scopes that match the grant at AEAT:
+Set the represented party's tax identifier (a NIF or NIE) and the scopes that
+match the grant at AEAT:
 
 ```{cli-sequence} authenticate-apoderado-configure
 :verify: Confirm the tool records the represented party and scopes locally.
@@ -252,7 +273,8 @@ the scopes that match the grant at AEAT:
 
 Repeat `--scope` for each code. The CLI rejects a comma-separated list. Scope
 codes are uppercase. Use `--scope ALL` to record every catalogue scope at
-once. The CLI rejects unknown codes and lists the accepted codes.
+once. The CLI rejects unknown codes. Without any `--scope`, it refuses with a
+message that lists the accepted codes.
 
 The active profile holds at most one apoderado configuration; configuring
 again replaces it. The represented identifier is stored encrypted.
@@ -266,9 +288,9 @@ Show what is recorded for the active profile:
 ```
 
 `aeat config auth apoderado check` is the live-verification verb, but the
-live AEAT read path is sealed. It refuses with a "live verification unavailable"
-message and points you back to `status`. Use `aeat config auth apoderado status`
-for the offline configuration read.
+live check is not available. It refuses with `The live check of representatives
+is unavailable, or contact with the AEAT failed.` Use
+`aeat config auth apoderado status` for the offline configuration read.
 
 Remove the configuration when the representation ends:
 

@@ -59,7 +59,9 @@
         "--iva-rate",
         "0.21",
         "--iva-amount",
-        "105"
+        "105",
+        "--deduction-kind",
+        "domestic_current"
       ],
       "captures": [],
       "envelope": null,

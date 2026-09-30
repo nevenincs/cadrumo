@@ -110,8 +110,16 @@ def cli_exception_envelope_view(error: CadrumoError) -> CadrumoError:
     from ..core.optional_extras import MissingOptionalExtraError
 
     if isinstance(error, MissingOptionalExtraError):
+        # `feature` rides the envelope because the registered message key
+        # interpolates it: the refusal has to say WHICH capability is missing,
+        # and the alternative was the generic internal-error sentence, which
+        # named nothing and left the operator no next step. It is a fixed
+        # label from the checked-in extras registry, not observed data, so it
+        # widens the view without widening what the view exists to withhold --
+        # `error.extra` itself and the `name`/`path` module attributes.
         safe_context: Mapping[str, object] = {
             "extra": error.extra.extra,
+            "feature": error.extra.feature,
             "import_name": error.extra.import_name,
             "importable": False,
         }

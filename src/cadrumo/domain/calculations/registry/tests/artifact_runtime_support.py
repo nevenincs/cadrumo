@@ -10,8 +10,6 @@ from .....core.casilla_id import validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....core.tax_domain import TaxDomain
-from ..authority_artifact import AuthorityBuildIdentity
-from ..authority_compiler_closure import AuthorityCompilerClosure, AuthorityCompilerEnvironment
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..runtime_catalogues import (
     ApoderamientoScopeRecord,
@@ -247,20 +245,6 @@ def minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
     )
 
 
-def synthetic_build_receipts(
-    source_label: str,
-    compiler_label: str = "compiler",
-) -> tuple[AuthorityBuildIdentity, AuthorityCompilerClosure]:
-    """Return build receipts whose compiler receipt recomputes from a one-file synthetic closure."""
-    closure = AuthorityCompilerClosure(
-        (("cadrumo/fixture_compiler.py", sha256_hex(compiler_label.encode())),),
-        AuthorityCompilerEnvironment(
-            python="3.13",
-            pyproject_sha256=sha256_hex(b"fixture pyproject"),
-            uv_lock_sha256=sha256_hex(b"fixture lock"),
-            pydantic="2.0.0",
-            pydantic_core="2.0.0",
-        ),
-    )
-    build = AuthorityBuildIdentity.from_inputs(sha256_hex(source_label.encode()), closure.identity_digest)
-    return build, closure
+def synthetic_legal_identity(source_label: str) -> str:
+    """Return a well-formed legal identity standing for a synthetic set of legal sources."""
+    return sha256_hex(source_label.encode())

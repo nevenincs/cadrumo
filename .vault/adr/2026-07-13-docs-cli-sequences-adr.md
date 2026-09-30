@@ -4,7 +4,7 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-13'
 modified: '2026-09-29'
-body_hash: 'sha256:f3eae64a255379e03b3a64498c4b9cb85315965117fc24f88ce3ed0b98d5cf77'
+body_hash: 'sha256:ce18b318b8a58ac7e2a2544f501c6e1c62e472153817e612431023540481cba8'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
 ---
@@ -58,6 +58,15 @@ sequence HTML, and the inline payload repeats the visible output.
   it.
 - A4: check and refresh report a named advisory, never a failure, for any
   reader-facing frame whose recorded output exceeds 64 KiB.
+- A5, amending D2's storage layout: a golden, and the JSON shown to readers,
+  keeps each record of an array of 16 or more objects on one line when the record
+  fits in 1,024 characters. Every other value keeps the two-space layout. Only
+  whitespace changes: keys, values, types and order are identical. A change to
+  one observation then moves one line instead of a dozen.
+- A6, amending D5's highlighting: JSON output larger than 16 KiB renders as
+  escaped plain text without syntax highlighting. It shows the complete output;
+  only the per-token markup, which multiplied large outputs several times over,
+  is dropped.
 
 Rejected: content-addressed deduplication of identical outputs across goldens.
 It keeps every byte on the pages, adds an indirection to every review diff, and

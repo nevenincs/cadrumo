@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 19:58+0200\n"
+"POT-Creation-Date: 2026-09-29 18:34+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -32,9 +32,9 @@ msgid ""
 "authority. The canonical human executable is `aeat`. The separate Model "
 "Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
-"A parancssori felület (CLI) élő súgót tesz közzé a parancsok hivatkozási "
-"forrásaként. A kanonikus emberi végrehajtható a `aeat`. A különálló Model"
-" Context Protocol (MCP) végrehajtható a `cadrumo-mcp`."
+"A parancssori felület (CLI) élő súgót tesz közzé a parancsok irányadó "
+"forrásaként. A kanonikus, embereknek szánt végrehajtható az `aeat`. A "
+"különálló Model Context Protocol (MCP) végrehajtható a `cadrumo-mcp`."
 
 #: ../../reference/commands-and-configuration.md
 msgid "Command family"
@@ -42,7 +42,7 @@ msgstr "Parancscsalád"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Live authority"
-msgstr "Élő forrás"
+msgstr "Élő irányadó forrás"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Structured map"
@@ -50,11 +50,11 @@ msgstr "Strukturált térkép"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root behavior and global options"
-msgstr "Gyökérviselkedés és globális beállítások"
+msgstr "Gyökérszintű működés és globális beállítások"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat --help`"
-msgstr "Az `aeat --help` súgóparancs"
+msgstr "`aeat --help`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[CLI overview](../cli/index.rst)"
@@ -66,7 +66,7 @@ msgstr "Profil, hitelesítés, diagnosztika, Google és helyi konfiguráció"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat config --help` and leaf help"
-msgstr "`aeat config --help` és a levélszintű súgó"
+msgstr "`aeat config --help` és a parancsszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Configuration commands](../cli/config.rst)"
@@ -80,7 +80,7 @@ msgstr ""
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat app --help` and leaf help"
-msgstr "`aeat app --help` és a levélszintű súgó"
+msgstr "`aeat app --help` és a parancsszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Application commands](../cli/app.rst)"
@@ -92,7 +92,7 @@ msgstr "JSON-borítékok és kimeneti sémák"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Leaf help with the selected format"
-msgstr "Levélszintű súgó a kiválasztott formátummal"
+msgstr "Parancsszintű súgó a kiválasztott formátummal"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Command schemas](../cli/schemas.rst)"
@@ -104,7 +104,7 @@ msgstr "Nem interaktív konvenciók"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root and leaf help"
-msgstr "Gyökér- és levélszintű súgó"
+msgstr "Gyökérszintű és parancsszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Automation reference](../cli/automation.rst)"
@@ -113,19 +113,19 @@ msgstr "[Automatizálási referencia](../cli/automation.rst)"
 #: ../../reference/commands-and-configuration.md:17
 msgid ""
 "The filing stages relate as `calculate` → `review` → `verify` → `export` "
-"→ human upload → local record → reconcile. The stage names describe "
+"→ human filing → local record → reconcile. The stage names describe "
 "Cadrumo's local workflow. Exact command definitions come from live `aeat "
 "... --help`. Read [the workflow explanation](../explanation/index.md) for"
 " why the stages are separate and [the how-to guides](../how-to/index.md) "
 "for task sequences."
 msgstr ""
-"A bevallási szakaszok így kapcsolódnak: `calculate` → `review` → `verify`"
-" → `export` → emberi feltöltés → helyi rögzítés → egyeztetés. A "
+"A benyújtási szakaszok így kapcsolódnak: `calculate` → `review` → "
+"`verify` → `export` → emberi benyújtás → helyi rögzítés → egyeztetés. A "
 "szakasznevek a Cadrumo helyi munkafolyamatát írják le. A pontos "
-"parancsdefiníciók az élő `aeat ... --help` súgóból származnak. Olvassa el"
-" [a munkafolyamat magyarázatát](../explanation/index.md) arról, miért "
-"különállók a szakaszok, és [a how-to útmutatókat](../how-to/index.md) a "
-"feladatsorokhoz."
+"parancsdefiníciók az élő `aeat ... --help` súgóból származnak. Olvasd el "
+"[a munkafolyamat magyarázatát](../explanation/index.md) arról, miért "
+"különállók a szakaszok, és nézd meg [az útmutatókat](../how-to/index.md) "
+"a feladatsorokhoz."
 
 #: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
@@ -145,7 +145,7 @@ msgstr "Hatókör"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`CADRUMO_*` / `cadrumo_*`"
-msgstr "A `CADRUMO_*` / `cadrumo_*` környezeti változók"
+msgstr "`CADRUMO_*` / `cadrumo_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Cadrumo product"
@@ -161,7 +161,7 @@ msgstr ""
 
 #: ../../reference/commands-and-configuration.md
 msgid "`AEAT_*` / `aeat_*`"
-msgstr "Az `AEAT_*` / `aeat_*` környezeti változók"
+msgstr "`AEAT_*` / `aeat_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "AEAT integration"
@@ -169,39 +169,48 @@ msgstr "AEAT-integráció"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
-"Authority endpoints, authority credentials, live-read controls, and "
-"preserved authority terminology"
+"Sede endpoints and paths, bundled manual and normative corpus roots, and "
+"the language of authority terminology"
 msgstr ""
-"Hivatali végpontok, hivatali hitelesítő adatok, élő olvasás vezérlői és "
-"megőrzött hivatali terminológia"
+"Sede-végpontok és -útvonalak, a mellékelt kézikönyv- és normatív korpusz "
+"gyökerei, valamint a hivatali terminológia nyelve"
 
 #: ../../reference/commands-and-configuration.md:30
 msgid ""
 "Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`, "
-"`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`, and "
-"`CADRUMO_OUTPUT_LANGUAGE`. `CADRUMO_SECRET_PASSPHRASE` remains a "
-"separately governed programmatic-substrate setting; the CLI does not read"
-" it as an operator secret-input fallback. Use the explicit leaf "
-"`--secrets-stdin` / `--secrets-fd` pair or root `--profile-secrets-stdin`"
-" / `--profile-secrets-fd` pair described in [Protect access to your data"
-"](../how-to/protect-data-access.md#run-without-a-passphrase-prompt). Live"
-" `aeat config --help` and its leaf help define operator-facing "
-"configuration. The [configuration map](../cli/config.rst) groups those "
-"commands. Python fields are listed in the generated Cadrumo application "
-"programming interface ([API](../api/cadrumo.rst))."
+"`CADRUMO_SECRET_STORE_DIR`, and `CADRUMO_OUTPUT_LANGUAGE`. For the output"
+" language and its precedence, see [Choose the output language](../how-to"
+"/profile-setup.md#choose-the-output-language). Every variable is listed "
+"in [Environment overrides](environment-overrides.md). "
+"`CADRUMO_SECRET_PASSPHRASE` remains a separately governed programmatic-"
+"substrate setting; the CLI does not read it as an operator secret-input "
+"fallback. Use the explicit leaf `--secrets-stdin` / `--secrets-fd` pair "
+"or root `--profile-secrets-stdin` / `--profile-secrets-fd` pair described"
+" in [Protect access to your data](../how-to/protect-data-access.md#run-"
+"without-a-passphrase-prompt). Live `aeat config --help` and its leaf help"
+" define operator-facing configuration. The [configuration "
+"map](../cli/config.rst) groups those commands. Python fields are listed "
+"in the Cadrumo application programming interface ([API](../api/index.md))"
+" reference of the full documentation build."
 msgstr ""
 "A termékvezérlők példái közé tartozik a `CADRUMO_LOCAL_STORAGE_ROOT`, a "
-"`CADRUMO_SECRET_STORE_BACKEND`, a `CADRUMO_SECRET_STORE_DIR`, a "
-"`CADRUMO_SECRET_PASSPHRASE` és a `CADRUMO_OUTPUT_LANGUAGE`. Az élő `aeat "
-"config --help` és a levélszintű súgója határozza meg az operátornak szóló"
-" konfigurációt. Használja az [Adathozzáférés védelme](../how-to/protect-"
-"data-access.md#run-without-a-passphrase-prompt) részben leírt `--secrets-"
-"stdin` / `--secrets-fd` vagy `--profile-secrets-stdin` / `--profile-"
-"secrets-fd` párokat. A [konfigurációs térkép](../cli/config.rst) "
-"csoportosítja ezeket a parancsokat. A Python-mezőket a generált Cadrumo "
-"alkalmazásprogramozási felület ([API](../api/cadrumo.rst)) sorolja fel."
+"`CADRUMO_SECRET_STORE_DIR` és a `CADRUMO_OUTPUT_LANGUAGE`. A kimeneti "
+"nyelvről és annak elsőbbségéről lásd: [A kimeneti nyelv kiválasztása"
+"](../how-to/profile-setup.md#choose-the-output-language). Minden változót"
+" felsorol a [Környezeti felülírások](environment-overrides.md) oldal. A "
+"`CADRUMO_SECRET_PASSPHRASE` továbbra is külön szabályozott, programozott "
+"alaprétegbeli beállítás; a CLI nem olvassa be a kezelői titokbevitel "
+"tartalékaként. Használd a [Védd az adataidhoz való hozzáférést](../how-to"
+"/protect-data-access.md#run-without-a-passphrase-prompt) oldalon leírt "
+"explicit parancsszintű `--secrets-stdin` / `--secrets-fd` párt vagy a "
+"gyökérszintű `--profile-secrets-stdin` / `--profile-secrets-fd` párt. Az "
+"élő `aeat config --help` és a parancsszintű súgója határozza meg a "
+"kezelőnek szóló konfigurációt. A [konfigurációs "
+"térkép](../cli/config.rst) csoportosítja ezeket a parancsokat. A Python-"
+"mezők a teljes dokumentációépítés Cadrumo alkalmazásprogramozási felület "
+"([API](../api/index.md)) referenciájában szerepelnek."
 
-#: ../../reference/commands-and-configuration.md:44
+#: ../../reference/commands-and-configuration.md:47
 msgid ""
 "Former product-owned `AEAT_*` state controls are not aliases for "
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "
