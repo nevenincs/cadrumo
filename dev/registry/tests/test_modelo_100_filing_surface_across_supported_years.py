@@ -190,12 +190,21 @@ def test_ledger_targets_are_bound_wherever_the_edition_declares_them(
 
 
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
-def test_work_certificate_is_an_alternate_source_of_suffered_work_retenciones(
+def test_work_certificate_is_the_only_source_of_suffered_work_retenciones(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
+    """Casilla 0596 is filled from the certificate the payer issued, and from nothing else.
+
+    The retencion credited here is the one the declarant SUFFERED on its salary.
+    Only the payer's certificate evidences that figure for this taxpayer, so the
+    casilla names it as its single source: an alternate would let a second,
+    weaker source fill the same credit.
+    """
     snapshot = edition(filing_year)
     casilla = next(item for item in snapshot.revision.casillas if item.id == _WORK_RETENCIONES_CASILLA)
-    assert _WORK_CERTIFICATE in casilla.alternate_bindings
+
+    assert casilla.binding == _WORK_CERTIFICATE
+    assert casilla.alternate_bindings == ()
     assert _WORK_CERTIFICATE in {binding.id for binding in snapshot.revision.bindings}
 
 
@@ -264,27 +273,21 @@ def test_settlement_formulas_reproduce_the_official_label_arithmetic(
         assert _expression_coefficients(formula.expression) == official, (filing_year, casilla_id)
 
 
-def _work_retencion_equivalents(snapshot: RegistrySnapshot) -> set[str]:
-    """The sources of casilla 0596 other than the work certificate; equivalents must agree."""
-    casilla = next(item for item in snapshot.revision.casillas if item.id == _WORK_RETENCIONES_CASILLA)
-    return {str(casilla.binding), *(str(item) for item in casilla.alternate_bindings)} - {_WORK_CERTIFICATE}
-
-
 def _binding_inputs(
-    snapshot: RegistrySnapshot, *, work_certificate: Decimal
+    snapshot: RegistrySnapshot,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, bool], dict[BindingId, date], dict[BindingId, str]]:
-    """Neutral inputs for every scalar binding the edition declares, plus the work certificate.
+    """Neutral inputs for every scalar binding the edition declares.
 
-    The other equivalent sources of casilla 0596 stay unsupplied: equivalent
-    bindings must agree, so the certificate is the only source of that value.
+    The work certificate is excluded: its binding is operator-keyed, so the
+    figure enters at the casilla it names rather than on the binding channel,
+    and supplying both would assert one value through two channels.
     """
     decimals: dict[BindingId, Decimal] = {}
     booleans: dict[BindingId, bool] = {}
     dates: dict[BindingId, date] = {}
     enums: dict[BindingId, str] = {}
-    equivalents = _work_retencion_equivalents(snapshot)
     for binding in snapshot.revision.bindings:
-        if binding.id in equivalents:
+        if binding.id == _WORK_CERTIFICATE:
             continue
         channel = binding.value.channel
         if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
@@ -296,21 +299,19 @@ def _binding_inputs(
         elif channel is BindingValueChannel.ENUM:
             enums[binding.id] = "madrid"
     decimals["renta-profile-declaration-type"] = Decimal("1")
-    decimals[_WORK_CERTIFICATE] = work_certificate
     return decimals, booleans, dates, enums
 
 
 def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: Decimal) -> Mapping[str, Decimal | None]:
-    decimals, booleans, dates, enums = _binding_inputs(snapshot, work_certificate=work_certificate)
-    equivalents = _work_retencion_equivalents(snapshot)
+    decimals, booleans, dates, enums = _binding_inputs(snapshot)
     relations: dict[RelationId, Decimal] = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.source is BindingSourceKind.RELATION_PREFILL and binding.id not in equivalents
+        if binding.source is BindingSourceKind.RELATION_PREFILL
     }
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"0003": Decimal("30000.00")},
+        inputs={"0003": Decimal("30000.00"), _WORK_RETENCIONES_CASILLA: work_certificate},
         date_context={"filing_period": date(filing_year, 12, 31)},
         binding_values=decimals,
         enum_binding_values=enums,

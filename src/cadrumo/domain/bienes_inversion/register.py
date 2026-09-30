@@ -1032,8 +1032,26 @@ def validate_investment_asset_reciprocity(
     if missing_observations:
         raise BienInversionValidationError(
             "bienes-inversion assets acquired in the filing year have no reciprocal ledger observation: "
-            + ", ".join(missing_observations)
+            + ", ".join(missing_observations),
+            context={"investment_asset_ids": ",".join(missing_observations)},
         )
+
+
+def _reciprocity_context(
+    observation: _InvestmentAssetLink,
+    *,
+    investment_asset_id: str | None = None,
+) -> dict[str, str]:
+    """Build the stable-identifier context every reciprocity refusal carries.
+
+    Never a fact value: only the ledger transaction id the observation names
+    and, where already resolved, the investment asset id it was compared
+    against.
+    """
+    context: dict[str, str] = {"ledger_transaction_id": observation.ledger_id}
+    if investment_asset_id is not None:
+        context["investment_asset_id"] = investment_asset_id
+    return context
 
 
 def _validate_investment_observation(
@@ -1046,9 +1064,15 @@ def _validate_investment_observation(
         return
     asset_id = observation.investment_asset_id
     if asset_id is None or asset_id not in records_by_id:
-        raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
+        raise BienInversionValidationError(
+            "investment observation has no reciprocal bienes-inversion record",
+            context=_reciprocity_context(observation, investment_asset_id=asset_id),
+        )
     if asset_id in seen_assets:
-        raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
+        raise BienInversionValidationError(
+            "multiple investment observations reference one bienes-inversion asset",
+            context=_reciprocity_context(observation, investment_asset_id=asset_id),
+        )
     record = records_by_id[asset_id]
     _validate_investment_record_reciprocity(observation, record, filing_year)
     seen_assets.add(asset_id)
@@ -1058,10 +1082,16 @@ def _is_investment_acquisition_observation(observation: _InvestmentAssetLink) ->
     kind = observation.deduction_fact_kind
     asset_id = observation.investment_asset_id
     if kind is not None and is_iva_deduction_kind(kind, "kind.owner_only"):
-        raise BienInversionValidationError("regularisation is not a ledger acquisition observation")
+        raise BienInversionValidationError(
+            "regularisation is not a ledger acquisition observation",
+            context=_reciprocity_context(observation),
+        )
     if kind is None or not is_iva_deduction_kind(kind, "kind.investment_acquisition"):
         if asset_id is not None:
-            raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
+            raise BienInversionValidationError(
+                "non-investment observation cannot carry investment_asset_id",
+                context=_reciprocity_context(observation, investment_asset_id=asset_id),
+            )
         return False
     return True
 
@@ -1072,8 +1102,17 @@ def _validate_investment_record_reciprocity(
     filing_year: int,
 ) -> None:
     if record.acquisition_ledger_id != observation.ledger_id:
-        raise BienInversionValidationError("investment asset acquisition_ledger_id is not reciprocal")
+        raise BienInversionValidationError(
+            "investment asset acquisition_ledger_id is not reciprocal",
+            context=_reciprocity_context(observation, investment_asset_id=record.identifier),
+        )
     if record.acquisition_year != filing_year or observation.transaction_date.year != filing_year:
-        raise BienInversionValidationError("investment asset and observation must share the filing year")
+        raise BienInversionValidationError(
+            "investment asset and observation must share the filing year",
+            context=_reciprocity_context(observation, investment_asset_id=record.identifier),
+        )
     if record.prorrata_sector_id != observation.prorrata_sector_id:
-        raise BienInversionValidationError("investment asset and observation must share the prorrata sector")
+        raise BienInversionValidationError(
+            "investment asset and observation must share the prorrata sector",
+            context=_reciprocity_context(observation, investment_asset_id=record.identifier),
+        )

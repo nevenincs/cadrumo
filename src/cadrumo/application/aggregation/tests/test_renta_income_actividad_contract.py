@@ -7,8 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, LedgerWithholdingDerivation
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
+    ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -112,7 +113,7 @@ def _m130_2026_q1_revision() -> ModeloRevision:
             ),
             _m130_renta_income_binding(
                 _M130_RETENCIONES_BINDING,
-                fact="withheld_amount_sum",
+                fact="declared_withheld_amount_sum",
                 legal_refs=_M130_RETENCIONES_LEGAL_REFS,
             ),
         ),
@@ -282,10 +283,19 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     assert observation.taxable_base_amount == Decimal("2000.00")
     assert observation.withheld_amount == Decimal("300.00")
 
+    assert observation.withheld_derivation is LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA
+
     revision = _m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert aggregation.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == Decimal("2000.00")
-    assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
+    # The figure is reconstructed, and the credit takes only what an invoice
+    # declares, so it reaches the observation and stops short of the binding.
+    # What the operator is not claiming is reported, not lost.
+    assert resolved[_M130_RETENCIONES_BINDING] == Decimal("0")
+    partition = ledger_renta_withholding_derivation_partition(revision, aggregation.observations)
+    assert partition.declared_total == Decimal("0")
+    assert partition.inferred_total == Decimal("300.00")
+    assert partition.inferred_observations == (observation,)
 
 
 def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> None:
@@ -337,13 +347,13 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
             activity_category_matcher=m130_activity_category_matcher,
             employment_category_matcher=m130_employment_category_matcher,
         )
-        resolved = resolve_ledger_renta_income_aggregation_binding_values(
-            _m130_2026_q1_revision(),
-            aggregation.observations,
-        )
+        # The projected retención, not the credit: this receipt's figure is
+        # reconstructed from the bank shortfall, and the declared-only credit
+        # fact leaves every such figure out. Halving it would still be wrong
+        # where the projection is read, which is what this test owns.
         return (
             aggregation.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA],
-            resolved[_M130_RETENCIONES_BINDING],
+            aggregation.observations[0].withheld_amount,
         )
 
     business_income, business_retencion = resolved_pair(
@@ -390,8 +400,22 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
 
     resolution = _income_resolver(transactions).resolve(context)
 
-    assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("300.00")
-    assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("300.00")
+    # The retención is reconstructed from the bank shortfall, so the credit
+    # leaves it out and says so. Casilla 06 carries the excluded state as a zero
+    # PLUS a finding, never a zero alone.
+    assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("0")
+    assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("0")
+    excluded = [
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "inferred_retencion_excluded_from_credit"
+    ]
+    assert len(excluded) == 1
+    assert "300.00 EUR" in excluded[0].message
+    assert tx.transaction_id in excluded[0].message
+    assert not [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "advisory_retencion_credit_grade"
+    ], "an excluded figure claims no credit, so it carries no credit grade"
 
 
 def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -> None:
@@ -427,7 +451,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
         diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
     assert len(advisories) == 1, "a dropped retenciones binding must surface exactly one advisory"
-    assert "withheld_amount_sum" in advisories[0].message
+    assert "declared_withheld_amount_sum" in advisories[0].message
     assert "300.00" in advisories[0].message, "the advisory must name the amount the taxpayer loses"
     # Attributed like every sibling diagnostic in this resolver's envelope, so
     # an agent can trace the advisory to the source that raised it.

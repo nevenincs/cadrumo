@@ -23,7 +23,6 @@ from ...application.modelo.export import (
     export_modelo_revision,
 )
 from ...application.modelo.export_ports import ModeloExportPorts
-from ...application.modelo.export_sink import ModeloExportOutputPathError
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.workflow.persistence import workflow_state_repository
@@ -138,6 +137,14 @@ def export_modelo_revision_for_cli(
     Both the standalone export and review-package builder create a fichero-BOE
     draft through this boundary. Their output contracts remain separate.
 
+    ``ModeloExportOutputPathError`` is deliberately not among the refusals
+    translated to ``typer.BadParameter`` below: it already carries a
+    registered error code and a typed ``context`` (``output_path``, a stable
+    ``reason`` token such as ``"parent directory does not exist"``), and
+    ``typer.BadParameter`` has no context slot to carry that into. Left to
+    propagate, the command error boundary forwards it verbatim so the
+    operator sees the specific reason instead of a contextless refusal.
+
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
@@ -162,7 +169,6 @@ def export_modelo_revision_for_cli(
         WorkUnitNotFoundError,
         ModeloExportCrossBucketRefusedError,
         ModeloExportNoActiveBucketError,
-        ModeloExportOutputPathError,
         ModeloIvaWalletReconciliationBlocked,
         ModeloPaymentElectionCapabilityRefusedError,
         ModeloPaymentElectionIncompatibleError,

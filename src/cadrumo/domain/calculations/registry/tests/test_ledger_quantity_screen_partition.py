@@ -59,7 +59,7 @@ def test_the_renta_family_screens_only_the_withholding() -> None:
     suffered retención remains independent. If both families screened everything
     the empty IVA exclusion set would carry no information.
     """
-    assert frozenset({"withheld_amount_sum"}) == _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS
+    assert frozenset({"declared_withheld_amount_sum"}) == _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS
 
 
 def test_every_declared_exclusion_states_its_reason() -> None:

@@ -761,6 +761,7 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0592","label":"For attributed withholdings on movable-capital income","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0592","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0593","label":"For attributed withholdings on real-estate-capital income","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0593","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0594","label":"For attributed withholdings on income from economic activities","legal_refs":["ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0594","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
+            {"binding_id":null,"binding_source":null,"casilla_id":"0597","label":"For movable-capital income","legal_refs":["ley-35-2006:art-25","ley-35-2006:art-26","ley-35-2006:art-101","rd-439-2007:art-90","ley-35-2006:art-99","orden-eha-3377-2011:art-1","orden-hac-277-2026:art-3"],"number":"0597","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form","aeat-modelo-193-296-note-2025","boe-modelo-193-2011-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0599","label":"For income from economic activities","legal_refs":["ley-35-2006:art-99","rd-439-2007:art-95","orden-hac-277-2026:art-3"],"number":"0599","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0600","label":"For attributed withholdings on capital gains and losses imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:art-37","ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0600","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0601","label":"Imputed by economic-interest groupings and joint ventures (UTEs)","legal_refs":["ley-35-2006:art-86","ley-35-2006:art-87","ley-35-2006:art-88","ley-35-2006:art-89","ley-35-2006:art-99","orden-hac-277-2026:art-3"],"number":"0601","source_refs":["aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]},
@@ -2359,106 +2360,6 @@
             {"binding_id":"renta-profile-spouse-eu-eea-country","binding_source":"profile","casilla_id":"ZRUE2","label":"Spouse's country of residence, EU or EEA","legal_refs":["orden-hac-277-2026:art-3"],"number":"*43","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-xsd","boe-modelo-100-2025-form"]}
           ],
           "relation_prefill": [
-            {
-              "binding_id": "renta-modelo-111-retenciones-periodicas",
-              "binding_source": "relation_prefill",
-              "casilla_id": "0596",
-              "label": "For employment income",
-              "legal_refs": [
-                "ley-35-2006:art-17",
-                "ley-35-2006:art-18",
-                "ley-35-2006:art-19",
-                "ley-35-2006:art-20",
-                "ley-35-2006:art-101",
-                "rd-439-2007:art-80",
-                "rd-439-2007:art-86",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-108",
-                "orden-hac-277-2026:art-3",
-                "orden-eha-3127-2009:art-1",
-                "orden-hac-1431-2025:art-2"
-              ],
-              "number": "0596",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "boe-modelo-100-2025-form",
-                "aeat-renta-2025-manual-parte1",
-                "aeat-modelo-190-instructions-2025",
-                "boe-modelo-190-2025-form"
-              ]
-            },
-            {
-              "binding_id": "renta-modelo-190-retenciones-anuales",
-              "binding_source": "relation_prefill",
-              "casilla_id": "0596",
-              "label": "For employment income",
-              "legal_refs": [
-                "ley-35-2006:art-17",
-                "ley-35-2006:art-18",
-                "ley-35-2006:art-19",
-                "ley-35-2006:art-20",
-                "ley-35-2006:art-101",
-                "rd-439-2007:art-80",
-                "rd-439-2007:art-86",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-108",
-                "orden-hac-277-2026:art-3",
-                "orden-eha-3127-2009:art-1",
-                "orden-hac-1431-2025:art-2"
-              ],
-              "number": "0596",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "boe-modelo-100-2025-form",
-                "aeat-renta-2025-manual-parte1",
-                "aeat-modelo-190-instructions-2025",
-                "boe-modelo-190-2025-form"
-              ]
-            },
-            {
-              "binding_id": "renta-modelo-123-retenciones-periodicas",
-              "binding_source": "relation_prefill",
-              "casilla_id": "0597",
-              "label": "For movable-capital income",
-              "legal_refs": [
-                "ley-35-2006:art-25",
-                "ley-35-2006:art-26",
-                "ley-35-2006:art-101",
-                "rd-439-2007:art-90",
-                "ley-35-2006:art-99",
-                "orden-eha-3377-2011:art-1",
-                "orden-hac-277-2026:art-3"
-              ],
-              "number": "0597",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "boe-modelo-100-2025-form",
-                "aeat-modelo-193-296-note-2025",
-                "boe-modelo-193-2011-form"
-              ]
-            },
-            {
-              "binding_id": "renta-modelo-193-retenciones-anuales",
-              "binding_source": "relation_prefill",
-              "casilla_id": "0597",
-              "label": "For movable-capital income",
-              "legal_refs": [
-                "ley-35-2006:art-25",
-                "ley-35-2006:art-26",
-                "ley-35-2006:art-101",
-                "rd-439-2007:art-90",
-                "ley-35-2006:art-99",
-                "orden-eha-3377-2011:art-1",
-                "orden-hac-277-2026:art-3"
-              ],
-              "number": "0597",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "boe-modelo-100-2025-form",
-                "aeat-modelo-193-296-note-2025",
-                "boe-modelo-193-2011-form"
-              ]
-            },
             {
               "binding_id": "renta-modelo-184-atribucion-actividades-economicas",
               "binding_source": "relation_prefill",

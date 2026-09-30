@@ -127,7 +127,7 @@ source_refs = ["enrolled-modelo-341-procedure"]
 
 [[revisions."2016-y-siguientes".lineage_attestations]]
 family = "casillas"
-continuidad_id = "tipo-declaracion-resultado"
+continuidad_id = "filing-period"
 from_revision = "2005-2015"
 to_revision = "2016-y-siguientes"
 origin = "seeded"

@@ -55,18 +55,12 @@ def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
 
 # Relation values required by the prior-edition snapshot (zero - not exercised).
 _REL_PRIOR_EDITION = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 # Relation values required by the reviewed-edition snapshot (zero - not exercised).
 _REL_REVIEWED_EDITION = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -81,9 +75,6 @@ def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
         date_context={"filing_period": date(_PRIOR_EDITION, 12, 31)},
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),

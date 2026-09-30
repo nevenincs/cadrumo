@@ -62,7 +62,7 @@ modelo:
                 otherwise.
               label: Supplementary page indicator
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              label: Return type (original / substitute / supplementary)
+              label: 'Return type: result code (I payment)'
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Amount of the advance payment of the deduction actually received
                 in the tax period. Regularisation applies where what was received

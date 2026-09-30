@@ -592,6 +592,10 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
         )
     for producer_id in M202_UNSUPPORTED_PRODUCER_IDS:
         assert producer_id.value in str(exc_info.value)
+    assert exc_info.value.context == {
+        "missing_fact_ids": tuple(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS),
+        "reason": "m202_producer_facts_unsupported",
+    }
 
 
 def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:

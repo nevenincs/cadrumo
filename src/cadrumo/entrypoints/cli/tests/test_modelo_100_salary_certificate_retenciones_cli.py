@@ -1,4 +1,4 @@
-"""CLI reproduction for M100 work-retention binding equivalence."""
+"""CLI reproduction for the M100 work-retention credit the payee keys."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
-        label="M100 M190 retenciones CLI profile",
+        label="M100 salary certificate retenciones CLI profile",
     ) as profile:
         yield profile
 
@@ -80,7 +80,9 @@ def _seed_m100_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    seed_test_profile_record(record, root=runtime_profile.storage_root, label="M100 M190 retenciones CLI profile")
+    seed_test_profile_record(
+        record, root=runtime_profile.storage_root, label="M100 salary certificate retenciones CLI profile"
+    )
 
 
 def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
@@ -106,10 +108,10 @@ def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
     )
 
 
-def test_m100_cli_m190_annual_retenciones_populates_0596(
+def test_m100_cli_salary_certificate_retenciones_populates_0596(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Real CLI reproduction: accepted M190 annual-retention binding affects 0596."""
+    """Real CLI reproduction: the payee salary-certificate binding affects 0596."""
     _seed_m100_profile(runtime_profile)
     _seed_prior_year_zero_carry(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
@@ -137,7 +139,7 @@ def test_m100_cli_m190_annual_retenciones_populates_0596(
             "--binding",
             "renta-modelo-184-atribucion-actividades-economicas=0",
             "--binding",
-            "renta-modelo-190-retenciones-anuales=4200",
+            "renta-certificado-trabajo-retenciones=4200",
             "--relation",
             "renta-modelo-130-pagos-fraccionados=0",
             "--relation",

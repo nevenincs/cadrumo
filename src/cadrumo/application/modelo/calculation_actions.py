@@ -1563,7 +1563,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
         preparation.snapshot.revision,
         profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
-        supplied_casilla_ids=frozenset(text_casilla_inputs or ()),
+        supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics

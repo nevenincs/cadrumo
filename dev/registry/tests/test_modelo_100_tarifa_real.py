@@ -344,9 +344,6 @@ _PERE_AGE_70_BIRTH_DATE_BINDINGS: dict[BindingId, date] = {
 def _base_binding_values() -> dict[BindingId, Decimal]:
     return {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -394,9 +391,6 @@ _BIRTH_DATE_BINDINGS: dict[BindingId, date] = {
 # RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
 # do not exercise M130/M131 cross-model integration.
 _RELATION_VALUES: dict[RelationId, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }

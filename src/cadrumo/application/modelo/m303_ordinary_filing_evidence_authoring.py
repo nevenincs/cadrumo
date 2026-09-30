@@ -222,11 +222,11 @@ def _require_period_scoped_attestation(
             require_modelo_390_question_in_period(request.period, operation=operation)
         return
     if not supplied:
+        evidence_values = {"period": request.period.registry_token, "exonerado_390_attestation_present": False}
         raise M303FilingEvidenceError(
-            precondition_failure=m303_filing_evidence_failure(
-                "missing",
-                {"period": request.period.registry_token, "exonerado_390_attestation_present": False},
-            )
+            translated_message="application.modelo.errors.m303_filing_evidence_exonerado_390_missing",
+            context={**evidence_values, "filing_year": request.filing_year},
+            precondition_failure=m303_filing_evidence_failure("missing", evidence_values),
         )
 
 
