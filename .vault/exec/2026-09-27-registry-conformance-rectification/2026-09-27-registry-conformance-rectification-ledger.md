@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e8eb82c21eeb129d3ab67e3dd8997699c198a3312e4b6caf04423ca2fbc2d48'
+body_hash: 'sha256:51e9178444b18bf06a709fd4c0fa5a7d6ee210e005fdd1e9a6dc6fa7e7fe7fab'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -518,3 +518,4 @@ related:
 - `S17` moved: 0245-0247 marriage members to 2022, maternity 0611 to 2023 and 2025, guardería cap to 2022; restored 0604 refs; amending-law refs per incentive year; kept with evidence: 193 relation (other branch owns 0597), 0613, 0150, 0512, 184 and 190 relations, Madrid, maritime; ruling 8: product cannot represent a shortened period, documented only; my corrections: count pin 23 to 25, a phantom covering-test reference, maternity in the source mesh expected set
 - `S11` 165 2023 design authored at 2023-2025 (Orden HFP/1284/2023 applies from ejercicio 2023) with storage reuse; 210 payer-mode parameter opens at 2023; 151 and 390 candidates genuinely new; 165 converter apply blocked by the export scenario table rendering below the floor (P05.S32)
 - `S11` Correction to the preceding 202 verify row: the run reported complete=True with `registry_rollout=incomplete,` not rollout complete; `registry_rollout` is the registry-wide collapse state, which stays incomplete while other modelos are still being rectified
+- `S11` 210 verification against 0b6bfacc: equivalence, facts, indexed (3307 coordinates), cache and publication readiness passed, but `inputs_stable=False` because a concurrent lane captured corpus evidence mid-run, so the run is not certifying; the verification round is suspended while lanes write and runs once over every touched modelo when they finish
