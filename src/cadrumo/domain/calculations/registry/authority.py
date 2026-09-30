@@ -37,6 +37,7 @@ from .authority_artifact import (
     AuthorityGenerationPin,
     EvidenceComponentQuery,
     ExportLayoutComponentQuery,
+    FormLayoutComponentQuery,
     GovernedFactComponentQuery,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
@@ -73,6 +74,7 @@ from .schema import (
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_exports import ExportLayoutDefinition
+from .schema_form_layouts import FormLayoutDefinition
 from .schema_references import LegalReference, SourceReference
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
@@ -783,6 +785,22 @@ class PinnedAuthorityOperation:
         )
         if not isinstance(value, ExportLayoutDefinition):
             raise RegistryValidationError("export layout component decoded to an unexpected type")
+        return value
+
+    def form_layout(self, modelo_id: str | Modelo, revision_id: str) -> FormLayoutDefinition | None:
+        """Load a revision's declared form layout, or ``None`` when it declares none.
+
+        Absence is the inspection-only arm, not an error: the revision exists
+        and has no published layout. An unknown revision still refuses.
+        """
+        normalized = Modelo(modelo_id).value
+        query = FormLayoutComponentQuery(normalized, revision_id)
+        if query not in self._reader.component_queries():
+            self.revision(normalized, revision_id)
+            return None
+        value = self._reader.load(query, pin=self.generation)
+        if not isinstance(value, FormLayoutDefinition):
+            raise RegistryValidationError("form layout component decoded to an unexpected type")
         return value
 
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:

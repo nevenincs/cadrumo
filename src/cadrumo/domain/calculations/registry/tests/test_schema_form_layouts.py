@@ -208,3 +208,20 @@ def test_a_layout_refuses_duplicate_placements_and_dangling_aliases() -> None:
         _layout(placements=dangling)
     with pytest.raises(ValidationError, match="not a lowercase SHA-256"):
         _layout(source_state_digest="A" * 64)
+
+
+def test_a_design_constant_may_name_the_casilla_printed_at_its_box() -> None:
+    cell = FormCell(kind=FormCellKind.DESIGN_CONSTANT, casilla_id="02", literal="00400")
+    assert (cell.casilla_id, cell.literal) == ("02", "00400")
+    with pytest.raises(ValidationError, match="names the wrong address"):
+        FormCell(kind=FormCellKind.DESIGN_CONSTANT, binding_id="b", literal="00400")
+
+
+def test_a_field_fixes_a_design_constant_only_on_a_casilla() -> None:
+    assert FormFieldBlock(id="f", casilla_id="02", design_constant="00400").design_constant == "00400"
+    with pytest.raises(ValidationError, match="fixes a design constant on no casilla"):
+        FormFieldBlock(id="f", binding_id="b", design_constant="00400")
+
+
+def test_casilla_sections_lists_every_shown_casilla_at_its_section() -> None:
+    assert _layout().casilla_sections() == {"01": ("p1", "s1")}

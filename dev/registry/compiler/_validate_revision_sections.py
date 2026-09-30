@@ -58,6 +58,7 @@ from .validate_bindings import validate_binding_registration_section
 from .validate_evidence import EvidenceValidator
 from .validate_export_layout_coverage import validate_export_layout_record_coverage
 from .validate_exports import validate_export_layout_section
+from .validate_form_layouts import validate_form_layout_section
 from .validate_formulas import validate_formula_section
 from .validate_registry_surfaces import (
     validate_application_link_section,
@@ -234,6 +235,7 @@ def _validate_revision_tail_sections(
 ) -> None:
     """Append identity, extraction, and cross-surface validation failures."""
     failures.extend(validate_revision_id_window_agreement(prefix=prefix, revision=revision))
+    failures.extend(validate_form_layout_section(prefix=prefix, revision=revision))
     failures.extend(validate_valid_from_ejercicio_convention(prefix=prefix, revision=revision))
     failures.extend(
         validate_extraction_profile_section(
