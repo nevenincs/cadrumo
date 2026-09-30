@@ -2002,6 +2002,17 @@ tui:
     workbench:
       attention:
         staged: Changed, not applied
+      bulk_confirm:
+        column:
+          value: Assumed value
+        confirm: Confirm and keep for review
+        count: 'Boxes to confirm: {count}'
+        intro: Cadrumo holds these values, but nobody entered them. Confirm them only
+          if they are right for you.
+        sourced_left_out: 'Boxes filled from a source are not listed: they update
+          from their source.'
+        tick: I have checked these values and they are right for me
+        title: Confirm assumed values
       calculate:
         apply_first: Apply or discard your changes before recalculating [R].
         at_risk_cancel: Keep the current values
@@ -2039,9 +2050,36 @@ tui:
         source_policy_undecided: It is not yet decided whether this source may be
           replaced by hand.
       editor:
+        area:
+          declarations: the earlier declaration
+          ledger: your records (Ledger)
+          none: the place it comes from
+          profile: your profile
+          withholding: your withholding certificates
+        block:
+          affects: Affects
+          asks: What it asks
+          can_change: Can you change it?
+          new_value: New value
+          now: Now
+          where_from: Where it comes from
+        can_change:
+          calculated: No. Cadrumo works it out from other boxes. Change those boxes
+            instead.
+          fixed: No. The official form fixes this value.
+          here: Yes. Type the new value below.
+          not_here: Not here. Change it in {area}, then calculate again.
+          not_yet: Not here yet. Change it in {area}.
+          recorded: No. This declaration is recorded as filed.
+          replace: Yes. Your value will replace the source's {value}, in this declaration
+            only. Your records do not change, and you can go back to the source's
+            value at any time.
+          replace_unknown: Yes. Your value will replace the source's value, in this
+            declaration only. Your records do not change, and you can go back to the
+            source's value at any time.
         cancel: Cancel
         clear: Clear
-        current: 'Now: {value} · {origin}'
+        confirm_hint: Press ⏎ to confirm {value}, or type the right value.
         format:
           boolean: Answer yes or no.
           date: A calendar date.
@@ -2051,6 +2089,7 @@ tui:
           ratio: Type the value as it appears on the form.
           text: Free text.
           year: A four-digit year.
+        keys: 'Keys: ⏎ {save_next} · Ctrl+⏎ {save}'
         placeholder:
           boolean: yes or no
           date: Date, e.g. 31/03/2026
@@ -2061,8 +2100,9 @@ tui:
           text: Text
           year: Year, e.g. 2026
         read_as: ✓ Will be read as {value}
-        restore: Restore source
-        save: Add to changes
+        restore: Go back to the source's value
+        save: Keep for review
+        save_next: Keep and go to next
         unreadable: This value could not be read.
       export:
         title: Export the declaration
@@ -2356,6 +2396,7 @@ tui:
       stage_refused:
         not_editable: This box cannot be changed that way.
         nothing_to_clear: There is no value of yours to clear in this box.
+        nothing_to_confirm: This box holds no assumed value to confirm.
         nothing_to_restore: This box already shows its source's value.
       staged:
         clear: (will be cleared)

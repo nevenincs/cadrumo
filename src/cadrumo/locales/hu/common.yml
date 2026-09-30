@@ -2030,6 +2030,17 @@ tui:
     workbench:
       attention:
         staged: Módosítva, még nem alkalmazva
+      bulk_confirm:
+        column:
+          value: Feltételezett érték
+        confirm: Megerősítés és megtartás átnézésre
+        count: 'Megerősítendő rovatok: {count}'
+        intro: A Cadrumo tárolja ezeket az értékeket, de senki nem adta meg őket.
+          Csak akkor erősítse meg őket, ha Önre nézve helyesek.
+        sourced_left_out: 'A forrásból kitöltött rovatok nem szerepelnek: azok a forrásukból
+          frissülnek.'
+        tick: Átnéztem ezeket az értékeket, és helyesek
+        title: Feltételezett értékek megerősítése
       calculate:
         apply_first: Az újraszámítás előtt alkalmazza vagy vesse el a módosításait
           [R].
@@ -2069,9 +2080,37 @@ tui:
           jelenik meg, amíg vissza nem állítja a forrást.
         source_policy_undecided: Még nincs eldöntve, hogy ez a forrás kézzel felülírható-e.
       editor:
+        area:
+          declarations: a korábbi bevallás
+          ledger: a nyilvántartásai (Főkönyv)
+          none: az érték forrása
+          profile: a profilja
+          withholding: a levonási igazolásai
+        block:
+          affects: Hatással van
+          asks: Mit kér
+          can_change: Módosíthatja?
+          new_value: Új érték
+          now: Jelenleg
+          where_from: Honnan származik
+        can_change:
+          calculated: Nem. A Cadrumo más rovatokból számítja ki. Inkább azokat a rovatokat
+            módosítsa.
+          fixed: Nem. A hivatalos nyomtatvány rögzíti ezt az értéket.
+          here: Igen. Írja be lent az új értéket.
+          not_here: 'Itt nem. Módosítsa itt: {area}, majd számoljon újra.'
+          not_yet: 'Itt még nem. Módosítsa itt: {area}.'
+          recorded: Nem. Ez a bevallás benyújtottként van rögzítve.
+          replace: Igen. Az Ön értéke felülírja a forrás értékét ({value}), csak ebben
+            a bevallásban. A nyilvántartásai nem változnak, és bármikor visszatérhet
+            a forrás értékéhez.
+          replace_unknown: Igen. Az Ön értéke felülírja a forrás értékét, csak ebben
+            a bevallásban. A nyilvántartásai nem változnak, és bármikor visszatérhet
+            a forrás értékéhez.
         cancel: Mégse
         clear: Törlés
-        current: 'Most: {value} · {origin}'
+        confirm_hint: Nyomja meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy
+          írja be a helyes értéket.
         format:
           boolean: Válaszoljon igennel vagy nemmel.
           date: Naptári dátum.
@@ -2081,6 +2120,7 @@ tui:
           ratio: Az értéket úgy adja meg, ahogy a nyomtatványon szerepel.
           text: Szabad szöveg.
           year: Négyjegyű évszám.
+        keys: 'Billentyűk: ⏎ {save_next} · Ctrl+⏎ {save}'
         placeholder:
           boolean: igen vagy nem
           date: Dátum, pl. 2026.03.31.
@@ -2091,8 +2131,9 @@ tui:
           text: Szöveg
           year: Év, pl. 2026
         read_as: '✓ Így kerül rögzítésre: {value}'
-        restore: Forrás visszaállítása
-        save: Hozzáadás a módosításokhoz
+        restore: Vissza a forrás értékéhez
+        save: Megtartás átnézésre
+        save_next: Megtartás és tovább
         unreadable: Ez az érték nem olvasható.
       export:
         title: A bevallás exportálása
@@ -2392,6 +2433,7 @@ tui:
       stage_refused:
         not_editable: Ez a rovat így nem módosítható.
         nothing_to_clear: Ebben a rovatban nincs törölhető saját érték.
+        nothing_to_confirm: Ebben a rovatban nincs megerősítendő feltételezett érték.
         nothing_to_restore: Ez a rovat már a forrás értékét mutatja.
       staged:
         clear: (törlésre kerül)

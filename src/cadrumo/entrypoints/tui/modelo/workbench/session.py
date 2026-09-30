@@ -10,6 +10,11 @@ where the filer types, a clear where they declared a value, and a restore where
 their value replaces a source. Anything else is refused here with the reason,
 before it could reach the application.
 
+Confirming an assumed value makes it the filer's own: the value the
+calculation holds is kept as a typed value, exactly as if the filer had typed
+it. Only a box the filer types into can be confirmed this way. A box a source
+fills is never confirmed, because a value kept over a source replaces it.
+
 When the declaration moves underneath the staged changes -- another
 calculation, new source data -- the changes are kept and re-based on what the
 declaration holds now: each is checked again against its field, a change that
@@ -54,6 +59,7 @@ class StageRefusal(StrEnum):
     NOT_EDITABLE = "not_editable"
     NOTHING_TO_CLEAR = "nothing_to_clear"
     NOTHING_TO_RESTORE = "nothing_to_restore"
+    NOTHING_TO_CONFIRM = "nothing_to_confirm"
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,7 +135,12 @@ class WorkbenchEditSession:
         return value_text(CasillaListEntry(field), self._language)
 
     def stage_value(self, field: ModeloFormField, value: ModeloFormScalar, display: str) -> StageRefusal | None:
-        """Stage a typed value, or drop the change when it equals what the field holds."""
+        """Stage a typed value, or drop the change when it equals what the field holds.
+
+        Only the filer's own value, or their value over a source, is dropped
+        when unchanged: an assumed value kept unchanged is staged, because
+        keeping it is how the filer confirms it.
+        """
         if field.editability not in TYPED_EDITABILITIES:
             return StageRefusal.NOT_EDITABLE
         key = address_key(field.address)
@@ -146,11 +157,29 @@ class WorkbenchEditSession:
         )
         return None
 
+    def stage_confirmation(self, field: ModeloFormField) -> StageRefusal | None:
+        """Stage an assumed value as the filer's own, without retyping it.
+
+        Only a box the filer types into, holding a value nobody is recorded as
+        having entered, can be confirmed. A box a source fills is refused, since
+        keeping a value over it would replace the source rather than confirm it.
+        """
+        if field.editability is not ModeloFormEditability.EDITABLE_VALUE or edit_address(field) != field.address:
+            return StageRefusal.NOT_EDITABLE
+        if field.origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM or field.value is None:
+            return StageRefusal.NOTHING_TO_CONFIRM
+        return self.stage_value(field, field.value, self._before(field))
+
     def stage_clear(self, field: ModeloFormField) -> StageRefusal | None:
-        """Stage removing a value the filer declared."""
+        """Stage removing a value the filer declared.
+
+        Only the filer's own value can be removed. An assumed value is nobody's:
+        the application refuses to empty a box something else fills, so the
+        filer confirms it or types another value, 0 included, instead.
+        """
         if field.editability is not ModeloFormEditability.EDITABLE_VALUE:
             return StageRefusal.NOT_EDITABLE
-        if field.origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.DEFAULT_TO_CONFIRM}:
+        if field.origin is not ModeloFormOrigin.ENTERED:
             return StageRefusal.NOTHING_TO_CLEAR
         self._changes[address_key(field.address)] = StagedChange(
             field=field,

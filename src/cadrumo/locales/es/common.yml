@@ -2061,6 +2061,17 @@ tui:
     workbench:
       attention:
         staged: Cambiada, sin aplicar
+      bulk_confirm:
+        column:
+          value: Valor supuesto
+        confirm: Confirmar y dejar para revisar
+        count: 'Casillas por confirmar: {count}'
+        intro: Cadrumo tiene estos valores, pero nadie los introdujo. Confírmalos
+          solo si son correctos para ti.
+        sourced_left_out: 'No aparecen las casillas que se rellenan desde un origen:
+          se actualizan desde él.'
+        tick: He revisado estos valores y son correctos para mí
+        title: Confirmar valores supuestos
       calculate:
         apply_first: Aplica o descarta tus cambios antes de recalcular [R].
         at_risk_cancel: Conservar los valores actuales
@@ -2099,9 +2110,34 @@ tui:
         source_policy_undecided: Aún no se ha decidido si este origen puede sustituirse
           a mano.
       editor:
+        area:
+          declarations: la declaración anterior
+          ledger: tus registros (Libro mayor)
+          none: el lugar del que sale
+          profile: tu perfil
+          withholding: tus justificantes de retenciones
+        block:
+          affects: Afecta a
+          asks: Qué pide
+          can_change: ¿Puedes cambiarlo?
+          new_value: Nuevo valor
+          now: Ahora
+          where_from: De dónde sale
+        can_change:
+          calculated: No. Cadrumo lo calcula a partir de otras casillas. Cambia esas
+            casillas.
+          fixed: No. El modelo oficial fija este valor.
+          here: Sí. Escribe el nuevo valor debajo.
+          not_here: Aquí no. Cámbialo en {area} y vuelve a calcular.
+          not_yet: Aquí todavía no. Cámbialo en {area}.
+          recorded: No. Esta declaración está registrada como presentada.
+          replace: Sí. Tu valor sustituirá al del origen ({value}), solo en esta declaración.
+            Tus registros no cambian y puedes volver al valor del origen cuando quieras.
+          replace_unknown: Sí. Tu valor sustituirá al del origen, solo en esta declaración.
+            Tus registros no cambian y puedes volver al valor del origen cuando quieras.
         cancel: Cancelar
         clear: Vaciar
-        current: 'Ahora: {value} · {origin}'
+        confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
         format:
           boolean: Responde sí o no.
           date: Una fecha del calendario.
@@ -2111,6 +2147,7 @@ tui:
           ratio: Escribe el valor tal como figura en el impreso.
           text: Texto libre.
           year: Un año de cuatro cifras.
+        keys: 'Teclas: ⏎ {save_next} · Ctrl+⏎ {save}'
         placeholder:
           boolean: sí o no
           date: Fecha, p. ej. 31/03/2026
@@ -2121,8 +2158,9 @@ tui:
           text: Texto
           year: Año, p. ej. 2026
         read_as: ✓ Se leerá como {value}
-        restore: Restaurar origen
-        save: Guardar en cambios
+        restore: Volver al valor del origen
+        save: Dejar para revisar
+        save_next: Dejar y pasar a la siguiente
         unreadable: No se ha podido leer este valor.
       export:
         title: Exportar la declaración
@@ -2419,6 +2457,7 @@ tui:
       stage_refused:
         not_editable: Esta casilla no se puede cambiar así.
         nothing_to_clear: No hay un valor tuyo que vaciar en esta casilla.
+        nothing_to_confirm: Esta casilla no tiene ningún valor supuesto que confirmar.
         nothing_to_restore: Esta casilla ya muestra el valor de su origen.
       staged:
         clear: (se vaciará)

@@ -2049,6 +2049,17 @@ tui:
     workbench:
       attention:
         staged: Canviada, sense aplicar
+      bulk_confirm:
+        column:
+          value: Valor suposat
+        confirm: Confirmar i deixar per revisar
+        count: 'Caselles per confirmar: {count}'
+        intro: Cadrumo té aquests valors, però ningú no els ha introduït. Confirma'ls
+          només si són correctes per a tu.
+        sourced_left_out: 'No hi apareixen les caselles que s''emplenen des d''un
+          origen: s''actualitzen des d''ell.'
+        tick: He revisat aquests valors i són correctes per a mi
+        title: Confirmar valors suposats
       calculate:
         apply_first: Aplica o descarta els teus canvis abans de recalcular [R].
         at_risk_cancel: Conserva els valors actuals
@@ -2088,9 +2099,36 @@ tui:
         source_policy_undecided: Encara no s'ha decidit si aquest origen es pot substituir
           a mà.
       editor:
+        area:
+          declarations: la declaració anterior
+          ledger: els teus registres (Llibre major)
+          none: el lloc d'on surt
+          profile: el teu perfil
+          withholding: els teus justificants de retencions
+        block:
+          affects: Afecta
+          asks: Què demana
+          can_change: El pots canviar?
+          new_value: Nou valor
+          now: Ara
+          where_from: D'on surt
+        can_change:
+          calculated: No. Cadrumo ho calcula a partir d'altres caselles. Canvia aquelles
+            caselles.
+          fixed: No. El model oficial fixa aquest valor.
+          here: Sí. Escriu el nou valor a sota.
+          not_here: Aquí no. Canvia-ho a {area} i torna a calcular.
+          not_yet: Aquí encara no. Canvia-ho a {area}.
+          recorded: No. Aquesta declaració està registrada com a presentada.
+          replace: Sí. El teu valor substituirà el de l'origen ({value}), només en
+            aquesta declaració. Els teus registres no canvien i pots tornar al valor
+            de l'origen quan vulguis.
+          replace_unknown: Sí. El teu valor substituirà el de l'origen, només en aquesta
+            declaració. Els teus registres no canvien i pots tornar al valor de l'origen
+            quan vulguis.
         cancel: Cancel·la
         clear: Buida
-        current: 'Ara: {value} · {origin}'
+        confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
         format:
           boolean: Respon sí o no.
           date: Una data del calendari.
@@ -2100,6 +2138,7 @@ tui:
           ratio: Escriu el valor tal com figura a l'imprès.
           text: Text lliure.
           year: Un any de quatre xifres.
+        keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
         placeholder:
           boolean: sí o no
           date: Data, p. ex. 31/03/2026
@@ -2110,8 +2149,9 @@ tui:
           text: Text
           year: Any, p. ex. 2026
         read_as: ✓ Es llegirà com {value}
-        restore: Restaura l'origen
-        save: Afegeix als canvis
+        restore: Tornar al valor de l'origen
+        save: Deixar per revisar
+        save_next: Deixar i passar a la següent
         unreadable: No s'ha pogut llegir aquest valor.
       export:
         title: Exporta la declaració
@@ -2410,6 +2450,7 @@ tui:
       stage_refused:
         not_editable: Aquesta casella no es pot canviar així.
         nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.
+        nothing_to_confirm: Aquesta casella no té cap valor suposat per confirmar.
         nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
       staged:
         clear: (es buidarà)
