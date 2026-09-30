@@ -78,6 +78,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
+from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_string
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -88,6 +89,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
@@ -398,6 +400,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -629,6 +632,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
@@ -1428,6 +1432,32 @@ def _source_bound_casilla_inputs(
     }
 
 
+def _caller_operator_layer(
+    *,
+    preparation: _BucketAggregationPreparation,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+) -> CalculationOperatorLayer:
+    """Project the validated caller tier of one run onto the persisted operator layer.
+
+    Only the caller channels are read: the backend, bound, profile and borrador
+    tiers merged into the revision's replay maps never reach the layer, so a
+    later replay cannot promote a source value into an operator override.
+    """
+    return CalculationOperatorLayer(
+        decimal_casilla_inputs={
+            casilla_id: _canonical_decimal_string(value) for casilla_id, value in preparation.casilla_inputs.items()
+        },
+        text_casilla_inputs=dict(text_casilla_inputs or {}),
+        binding_overrides={
+            **{
+                binding_id: _canonical_decimal_string(value) for binding_id, value in preparation.binding_values.items()
+            },
+            **dict(enum_binding_values or {}),
+        },
+    )
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -1436,6 +1466,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    record_operator_layer: bool = False,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -1472,6 +1503,15 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     ``profile`` is the work profile the calling command already loaded for
     this bucket. When omitted, the readiness gate loads it once; either way
     the profile the gate checked is the only one the calculation reads.
+
+    ``record_operator_layer`` states that the caller inputs of this run are
+    the operator's own values -- an edit or a workspace recalculation replaying
+    the operator's work -- so the revision records exactly that caller tier as
+    its :class:`~cadrumo.domain.modelos.calculation_revision_operator_layer.CalculationOperatorLayer`.
+    The layer is derived here from the validated caller channels, never passed
+    in beside them, so it cannot disagree with what the engine received. A
+    caller that does not set it records no layer, and its revision id is the
+    one it always had.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     preparation = _prepare_bucket_aggregation_calculation(
@@ -1515,6 +1555,15 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         casilla_inputs=preparation.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=(
+            _caller_operator_layer(
+                preparation=preparation,
+                text_casilla_inputs=text_casilla_inputs,
+                enum_binding_values=enum_binding_values,
+            )
+            if record_operator_layer
+            else None
+        ),
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=preparation.m210_gross_income_source_mode,
         binding_values=preparation.binding_values,
