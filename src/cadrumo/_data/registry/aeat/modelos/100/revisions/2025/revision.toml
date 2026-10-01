@@ -8761,10 +8761,6 @@ id = "2061"
 position = 2021
 
 [[revisions."2025".casilla_positions]]
-id = "ANOASDLG"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
 id = "AJ"
 position = 2247
 
@@ -8778,10 +8774,6 @@ position = 2247
 
 [[revisions."2025".casilla_positions]]
 id = "CONVASDLG"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "A"
 position = 2247
 
 [[revisions."2025".casilla_positions]]
@@ -8825,15 +8817,7 @@ id = "DP_APENOM_D"
 position = 2247
 
 [[revisions."2025".casilla_positions]]
-id = "C"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
 id = "ECIVIL"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "D"
 position = 2247
 
 [[revisions."2025".casilla_positions]]
@@ -8846,18 +8830,6 @@ position = 2247
 
 [[revisions."2025".casilla_positions]]
 id = "FNACDLG"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "E"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "F"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "HIJOSUE"
 position = 2247
 
 [[revisions."2025".casilla_positions]]
@@ -8917,20 +8889,48 @@ id = "ZRUE2"
 position = 2247
 
 [[revisions."2025".casilla_positions]]
-id = "J"
-position = 2247
-
-[[revisions."2025".casilla_positions]]
-id = "M"
-position = 2248
-
-[[revisions."2025".casilla_positions]]
 id = "eo-agraria-reduccion-irregularidad-base"
 position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "prestacion-inss-maternidad-paternidad-exenta"
 position = 2248
+
+[[revisions."2025".casilla_positions]]
+id = "A"
+position = 2213
+
+[[revisions."2025".casilla_positions]]
+id = "ANOASDLG"
+position = 2214
+
+[[revisions."2025".casilla_positions]]
+id = "C"
+position = 2216
+
+[[revisions."2025".casilla_positions]]
+id = "D"
+position = 2217
+
+[[revisions."2025".casilla_positions]]
+id = "E"
+position = 2227
+
+[[revisions."2025".casilla_positions]]
+id = "F"
+position = 2228
+
+[[revisions."2025".casilla_positions]]
+id = "HIJOSUE"
+position = 2233
+
+[[revisions."2025".casilla_positions]]
+id = "J"
+position = 2234
+
+[[revisions."2025".casilla_positions]]
+id = "M"
+position = 2234
 
 [[revisions."2025".family_overrides]]
 family = "formulas"

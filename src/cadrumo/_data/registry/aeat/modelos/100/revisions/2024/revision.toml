@@ -8029,10 +8029,6 @@ id = "FNACDLG"
 position = 2096
 
 [[revisions."2024".casilla_positions]]
-id = "HIJOSUE"
-position = 2098
-
-[[revisions."2024".casilla_positions]]
 id = "MINUSDLG"
 position = 2101
 
@@ -8075,6 +8071,42 @@ position = 2101
 [[revisions."2024".casilla_positions]]
 id = "ZRUE2"
 position = 2101
+
+[[revisions."2024".casilla_positions]]
+id = "2148"
+position = 2064
+
+[[revisions."2024".casilla_positions]]
+id = "A"
+position = 2065
+
+[[revisions."2024".casilla_positions]]
+id = "C"
+position = 2069
+
+[[revisions."2024".casilla_positions]]
+id = "D"
+position = 2071
+
+[[revisions."2024".casilla_positions]]
+id = "E"
+position = 2082
+
+[[revisions."2024".casilla_positions]]
+id = "F"
+position = 2084
+
+[[revisions."2024".casilla_positions]]
+id = "HIJOSUE"
+position = 2089
+
+[[revisions."2024".casilla_positions]]
+id = "J"
+position = 2091
+
+[[revisions."2024".casilla_positions]]
+id = "M"
+position = 2092
 [[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-base-liquidable-general-sometida-a-gravamen"}
