@@ -1247,7 +1247,10 @@ function wire() {
   $('#query').addEventListener('input', (event) => { ui.query = event.target.value; renderGrid(); });
   $('#run').addEventListener('change', (event) => {
     ui.run = event.target.value;
-    if (ui.openKey) history.replaceState(null, '', location.pathname + location.search);
+    const url = new URL(location.href);
+    url.searchParams.set('run', ui.run);
+    url.hash = '';
+    history.replaceState(null, '', url);
     ui.openKey = null;
     load();
   });
@@ -1362,6 +1365,8 @@ function wire() {
 }
 
 readPrefs();
+// `?run=<name>` opens a run other than the default, so a link can name one.
+ui.run = new URLSearchParams(location.search).get('run') || null;
 wire();
 load().then(route);
 connect();

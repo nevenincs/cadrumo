@@ -428,6 +428,19 @@ A stale calculation plus a missing box read incomplete instead of blocked
 scrolls (`screen.py:1567`); three producers emit box-less unresolved notes beside staging's boxed
 ones; and three docstrings or fields describe behaviour the code no longer has. Being fixed.
 
+### binding-input-registry-notes | low | naming the unowned inputs surfaced registry modelling questions
+
+Naming the 2,850 placed binding inputs no casilla owns from their record designs (2026-10-01)
+found ids that disagree with the official text and fields the registry models oddly. Modelo 390
+carries printed casilla numbers 66, 74-78, 80-83 and 114-118 on binding inputs rather than
+casillas; Modelo 360 represents 146 inputs at the export position of a labelled casilla; 131's
+`*-vivienda-porcentaje` and `*-vivienda-limite` hold days of activity and `deduccion-art-110-tramo`
+is a bracket code; 232's `vinculada-metodo-*` name a method section 4 does not have; 369's
+T36904 heading is truncated in its sidecar and union section 6 mistypes row 27; 714/720 merge the
+"Situación" code and text, give C2 "% Titularidad 2" C1's heading and cut several texts at the
+line wrap; 353 has "163.sixies". The names follow the official text, not the ids. Open for the
+registry's owner.
+
 ## Recommendations
 
 - sources-hub-reason: a follow-on ADR decides whether the operator layer records an override
