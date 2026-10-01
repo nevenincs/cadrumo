@@ -353,10 +353,10 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Read the interpreter pin
+      - name: Read the release builder interpreter pin
         id: pin
         shell: bash
-        run: echo "python=$(tr -d '[:space:]' < .python-version)" >> "$GITHUB_OUTPUT"
+        run: echo "python=$(tr -d '[:space:]' < dev/packaging/release-python-version)" >> "$GITHUB_OUTPUT"
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
