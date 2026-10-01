@@ -14,18 +14,28 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from textual.widgets import Static
 
 from ......application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormExport,
     ModeloFormFiling,
+    ModeloFormIssue,
     ModeloWorkForm,
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
-from ......domain.modelos.verification_report import VerificationCompletenessStatus
+from ......domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+)
+from ....components.host import ScreenHostApp
+from ..header import attention_chips, missing_count
+from ..issues import WorkbenchIssuesScreen
 from ..progress import (
     NextAction,
     StepStatus,
@@ -36,9 +46,11 @@ from ..progress import (
     stepper_text,
     workbench_progress,
 )
+from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import DONE_MARK, HERE_MARK
 from ..wording import day_text
-from .workbench_fixture import synthetic_form
+from .declaration_states import with_findings
+from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -183,3 +195,69 @@ def test_once_checked_a_note_the_check_decides_no_longer_sends_the_filer_back_to
     )
 
     assert workbench_progress(checked, staged=0, verified=False, filed=False).next_action is NextAction.RESOLVE
+
+
+def _missing_only_a_finding_names(form: ModeloWorkForm) -> ModeloWorkForm:
+    """The form checked incomplete for a value no box shows, as a record value of a table is."""
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id="op.codigo-pais",
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        message_facts={"casilla_id": "op.codigo-pais"},
+        legal_refs=("rd-439-2007:art-110",),
+    )
+    return form.model_copy(
+        update={
+            "issues": (ModeloFormIssue(finding=finding),),
+            "verification": VerificationCompletenessStatus.INCOMPLETE,
+        }
+    )
+
+
+def test_when_only_values_are_missing_the_next_step_is_filling_them_in_as_the_header_counts() -> None:
+    form = _missing_only_a_finding_names(synthetic_form(calculated=True, needs_input=False))
+
+    progress = workbench_progress(form, staged=0, verified=False, filed=False)
+    with override_settings(cadrumo_output_language="en"):
+        line = next_action_text(progress, OutputLanguage.EN)
+        chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
+
+    assert chips == {"missing": 1}
+    assert progress.next_action is NextAction.FILL
+    assert progress.count == missing_count(form) == 1
+    assert progress.findings_lead, "a value only a finding names is reached from the findings list"
+    assert line == "Complete the marked boxes (to do: 1)"
+
+
+def test_a_blocker_beside_the_missing_value_still_sends_the_filer_to_resolve_it() -> None:
+    """Teeth for the rule above: the missing-input step is offered only when nothing blocks."""
+    form = _missing_only_a_finding_names(synthetic_form(calculated=True, needs_input=False))
+    blocking = with_findings(form, blocking=(None,)).issues
+    blocked = form.model_copy(
+        update={"issues": (*form.issues, *blocking), "verification": VerificationCompletenessStatus.BLOCKED}
+    )
+
+    progress = workbench_progress(blocked, staged=0, verified=False, filed=False)
+
+    assert progress.next_action is NextAction.RESOLVE
+    assert not progress.findings_lead
+
+
+@pytest.mark.asyncio
+async def test_f8_on_values_only_findings_name_opens_the_findings_list_the_next_line_names() -> None:
+    form = _missing_only_a_finding_names(synthetic_form(calculated=True, needs_input=False))
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(140, 40)) as pilot:
+            for _ in range(8):
+                await pilot.pause()
+            next_line = str(screen.query_one("#wb-next", Static).render())
+            await pilot.press("f8")
+            for _ in range(8):
+                await pilot.pause()
+            opened = app.screen
+
+    assert next_line.endswith("[i]")
+    assert isinstance(opened, WorkbenchIssuesScreen)

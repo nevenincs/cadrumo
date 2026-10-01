@@ -142,6 +142,9 @@ class WorkbenchProgress:
     blocking: int = 0
     #: When the latest file for the AEAT was created, once one was; the next-action line names that day.
     file_created_at: datetime | None = None
+    #: Whether the values still to fill in are named only by findings, such as a table's record values,
+    #: so the findings list, not the next box, leads to them.
+    findings_lead: bool = False
 
     @property
     def filing_withheld(self) -> bool:
@@ -162,6 +165,10 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     accepted, but an assumed value still keeps filling in open: only the filer
     can say it is right. Every step shows whether it is done, wherever it sits;
     the first step not done is the current one.
+
+    When nothing blocks and only values are missing, the next action is
+    filling them in, never resolving what blocks; where findings alone name
+    those values, the findings list leads to them (``findings_lead``).
     """
     counts = to_do_counts(form)
     to_fill = counts.needs_input
@@ -193,7 +200,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
             steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
         else:
             steps.append(StepState(step, StepStatus.PENDING))
-    action, count = _next(
+    action, count, findings_lead = _next(
         form,
         staged=staged,
         to_fill=to_fill,
@@ -214,6 +221,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         assumed=0 if filed else assumed,
         blocking=0 if filed else blocking,
         file_created_at=None if form.last_export is None else form.last_export.exported_at,
+        findings_lead=findings_lead,
     )
 
 
@@ -229,35 +237,39 @@ def _next(
     awaiting: int,
     verified: bool,
     filed: bool,
-) -> tuple[NextAction, int]:
+) -> tuple[NextAction, int, bool]:
     if staged:
-        return NextAction.APPLY, staged
+        return NextAction.APPLY, staged, False
     if filed:
-        return NextAction.RECORDED, 0
+        return NextAction.RECORDED, 0, False
     if form.calculation_revision_id is not None and form.calculation_out_of_date:
-        return NextAction.RECALCULATE, 0
+        return NextAction.RECALCULATE, 0, False
     if to_fill and not verified:
-        return NextAction.FILL, to_fill + unboxed
+        return NextAction.FILL, to_fill + unboxed, False
     if assumed:
         # The count is the header's: the assumed boxes, the only values a filer confirms.
-        return NextAction.CONFIRM, confirm_count(form)
+        return NextAction.CONFIRM, confirm_count(form), False
     if verified and not blocking:
         export = form.last_export
         if export is None:
-            return NextAction.EXPORT, 0
-        return (NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN), 0
+            return NextAction.EXPORT, 0, False
+        return (NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN), 0, False
     if form.calculation_revision_id is None:
-        return NextAction.CALCULATE, 0
+        return NextAction.CALCULATE, 0, False
     if awaiting and awaiting == blocking and not blocked:
         # Only the check can say whether what blocks stands, and it also judges
         # whether the values still missing are ones the declaration needs.
-        return NextAction.VERIFY, 0
+        return NextAction.VERIFY, 0, False
+    if unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED):
+        # Only values are missing, so the step is filling them in, counted as the
+        # header's missing chip counts them; findings name them, so they lead there.
+        return NextAction.FILL, to_fill + unboxed, True
     if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
         # The header's chips count what blocks filing and the missing values
         # only a finding names; boxes the check marked stand in only when no
         # finding is left to count.
-        return NextAction.RESOLVE, (blocking + unboxed) or blocked
-    return NextAction.VERIFY, 0
+        return NextAction.RESOLVE, (blocking + unboxed) or blocked, False
+    return NextAction.VERIFY, 0, False
 
 
 def _awaiting_the_check(form: ModeloWorkForm) -> int:

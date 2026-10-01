@@ -254,6 +254,8 @@ _NEXT_KEYS: Final[Mapping[NextAction, str]] = {
     NextAction.RECORD_AFTER_FILE: "F8",
     NextAction.RECORDED: "",
 }
+_FINDINGS_KEY: Final[str] = _NEXT_KEYS[NextAction.RESOLVE]
+"""The key the next-action line names when the findings list leads to what is left, whichever step it is."""
 _CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = {
     VerificationCompletenessStatus.COMPLETE: "tui.modelo.workbench.operation.checked.complete",
     VerificationCompletenessStatus.INCOMPLETE: "tui.modelo.workbench.operation.checked.incomplete",
@@ -921,7 +923,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         stepper = stepper_text(progress)
         self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
-        key = _NEXT_KEYS[progress.next_action]
+        key = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
         action = next_action_text(progress, self._language)
         self._next_words = f"{action} [{key}]" if key else action
         width = max(self._width() - _GUTTERS, 1)
@@ -1934,7 +1936,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self.action_review()
         elif action is NextAction.CONFIRM:
             self._confirm_next()
-        elif action is NextAction.RESOLVE and (load.form.verification is not None or load.form.calculation_notes):
+        elif progress.findings_lead or (
+            action is NextAction.RESOLVE and (load.form.verification is not None or load.form.calculation_notes)
+        ):
             self.action_issues()
         elif action in {NextAction.FILL, NextAction.RESOLVE}:
             self._advance_attention(1)
