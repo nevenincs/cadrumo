@@ -21,7 +21,7 @@ from ..casilla_list import CasillaList
 from ..legend import LEGEND_LOCALE_KEYS, legend_glyphs
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import WORKBENCH_MARKS
-from .workbench_fixture import FakeActions, FakeReader
+from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -168,3 +168,24 @@ async def test_the_footer_keeps_help_and_the_next_step_in_reach(width: int) -> N
     assert "? Help" in keys
     assert "f8 Next step" in keys
     assert edge <= width
+
+
+@pytest.mark.asyncio
+async def test_on_a_short_terminal_the_greeting_and_an_empty_result_line_give_their_lines_to_the_boxes() -> None:
+    # Calculated, with no settlement box, nothing exported and nothing to count, as a Modelo 349 is.
+    form = synthetic_form(needs_input=False, calculated=True).model_copy(
+        update={"result": None, "result_addresses": (), "issues": (), "verification": None}
+    )
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _settle(pilot)
+            notice = screen.query_one("#wb-notice", Static)
+            notice_shown, notice_height = notice.display, notice.region.height
+            outcome = screen.query_one("#wb-outcome")
+            outcome_shown, outcome_height = outcome.display, outcome.region.height
+            app.exit(None)
+
+    assert not notice_shown and notice_height == 0, "a short terminal is not greeted on the notice line"
+    assert not outcome_shown and outcome_height == 0, "a line with no result, file or count takes no row"

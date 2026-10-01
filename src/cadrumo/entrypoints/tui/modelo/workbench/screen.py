@@ -44,6 +44,7 @@ from textual.app import ComposeResult
 from textual.await_remove import AwaitRemove
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.visual import VisualType
 from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
 
@@ -306,6 +307,16 @@ _SCROLL_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.scroll"
 """The only keys the footer shows while the symbols panel is open."""
 _GREETED: Final[WeakSet[object]] = WeakSet()
 """The applications whose filer has already been told once where to find what the symbols mean."""
+
+
+class NoticeLine(Static):
+    """The workbench's notice line, which takes a line only while it says something."""
+
+    @override
+    def update(self, content: VisualType = "", *, layout: bool = True) -> None:
+        """Say ``content``, showing the line only while there is something to say."""
+        super().update(content, layout=layout)
+        self.display = bool(str(content))
 
 
 class SymbolsPanel(VerticalScroll):
@@ -611,7 +622,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             with Horizontal(id="wb-steps", classes="wb-line"):
                 yield Static(id="wb-stepper", markup=False)
                 yield Static(id="wb-next", markup=False)
-            yield Static(id="wb-notice", markup=False)
+            notice = NoticeLine(id="wb-notice", markup=False)
+            notice.display = False
+            yield notice
         with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
         with Horizontal(id="wb-body"):
@@ -882,9 +895,13 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         return None
 
     def _greet(self) -> None:
-        """Say once per session, on the notice line, where to find what the symbols mean."""
+        """Say once per session, on the notice line, where to find what the symbols mean.
+
+        A short terminal keeps that line for the boxes: there ``?`` still says
+        what each symbol means.
+        """
         app = self.app
-        if app in _GREETED:
+        if app in _GREETED or self.has_class("-short"):
             return
         _GREETED.add(app)
         notice = self.query_one("#wb-notice", Static)
@@ -939,6 +956,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         file_widget.set_class(file is not None and file.out_of_date, "-out-of-date")
         chips_widget = self.query_one("#wb-chips", Static)
         chips_widget.update(line.chips_content())
+        chips_widget.display = bool(line.chips)
+        # A declaration with no result, no file and nothing to count gives the line back to the boxes.
+        self.query_one("#wb-outcome").display = bool(line.result or line.stale or line.file or line.chips)
         # With no result beside them, or stacked below it, the first of the marks starts the line.
         marks_lead = line.stacked or not line.result
         stale.set_class(marks_lead, "-leading")

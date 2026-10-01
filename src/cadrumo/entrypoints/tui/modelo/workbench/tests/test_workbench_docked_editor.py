@@ -230,7 +230,7 @@ async def test_the_arrow_keys_in_the_panel_never_move_the_list_and_the_workbench
 @pytest.mark.asyncio
 async def test_the_list_stays_scrollable_with_the_mouse_while_the_panel_is_docked() -> None:
     with override_settings(cadrumo_output_language="en"):
-        screen = _workbench()
+        screen = ModeloWorkbenchScreen(FakeReader(form=long_section_form(16)), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 30)) as pilot:
             await _settle(pilot)
