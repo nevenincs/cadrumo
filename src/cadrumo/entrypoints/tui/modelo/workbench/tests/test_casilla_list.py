@@ -14,7 +14,9 @@ from typing import override
 import pytest
 from textual.app import App, ComposeResult
 
+from ......application.modelo.source_policy import source_policy
 from ......application.modelo.work_form_models import (
+    ModeloFormBinding,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormField,
@@ -22,10 +24,13 @@ from ......application.modelo.work_form_models import (
     ModeloFormText,
     ModeloFormTextDisclosure,
 )
+from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import tr
 from ....components.theme import install_cadrumo_themes
 from ..casilla_list import CasillaList, CasillaListEntry, CasillaListHeading, CasillaListItem, CasillaListNote
+from ..vocabulary import origin_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -209,3 +214,29 @@ async def test_headings_and_notes_keep_their_own_style_when_rendered() -> None:
     assert heading.color != muted_style.color
     assert note is not None and note.color == muted_style.color
     assert note.color != plain.color
+
+
+@pytest.mark.asyncio
+async def test_on_the_widest_list_the_source_follows_the_origin_words_after_the_rows_separator() -> None:
+    sourced = _field(
+        "01", "Ingresos", ModeloFormOrigin.IMPORTED, Decimal("10"), editability=ModeloFormEditability.LOCKED_SOURCE
+    ).model_copy(
+        update={
+            "bindings": (
+                ModeloFormBinding(
+                    binding_id="m130.ingresos",
+                    policy=source_policy(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION),
+                    resolved=True,
+                ),
+            )
+        }
+    )
+    with override_settings(cadrumo_output_language="en"):
+        app = _ListHarness((CasillaListEntry(sourced),), OutputLanguage.EN)
+        async with app.run_test(size=(200, 10)) as pilot:
+            await pilot.pause()
+            line = next(row for row in _screen_lines(app.query_one(CasillaList)) if "[01]" in row)
+        words = origin_words(sourced)
+        source = tr(source_policy(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION).label_key)
+
+    assert f"{words} · {source}" in line

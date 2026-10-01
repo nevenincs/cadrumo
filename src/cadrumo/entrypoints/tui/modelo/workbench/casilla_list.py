@@ -870,7 +870,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             room -= words_cells
         value = min(measures.value, max(room - min(measures.label, _LABEL_FLOOR), 1))
         label = max(min(measures.label, room - value), 1)
-        detail = show_words and width >= _WIDEST and room - value - label >= 1 + _DETAIL_WIDTH
+        detail = show_words and width >= _WIDEST and room - value - label >= cell_len(_SEPARATOR) + _DETAIL_WIDTH
         return _Columns(
             box=measures.box, label=label, value=value, words=measures.words if show_words else 0, detail=detail
         )
@@ -1223,8 +1223,9 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             text.append(" " + entry.origin_mark, style=self._role_style(entry.origin_role))
             if columns.words:
                 text.append(" " + _fit(entry.origin_words, columns.words), style=self._style("muted"))
-            if columns.detail:
-                text.append(" " + _fit(self._detail(entry), _DETAIL_WIDTH), style=self._style("muted"))
+            detail = self._detail(entry) if columns.detail else ""
+            if detail:
+                text.append(_SEPARATOR + _fit(detail, _DETAIL_WIDTH), style=self._style("muted"))
             return text
         text.append(" " * (_LEAD - 1 + entry.indent + columns.box + 1))
         if sub_line < len(labels):
