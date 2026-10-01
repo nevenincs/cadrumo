@@ -1585,6 +1585,10 @@ application:
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
+      iva_intra_eu_self_assessment_unrecordable: 'A Cadrumo egyelőre nem tudja rögzíteni
+        a Közösségen belüli beszerzéshez szükséges igazoló dokumentumot, ezért ez
+        a nyilatkozat nem mehet át az ellenőrzésen (érintett tételek száma: %{transaction_count}).
+        Nyújtsa be más módon.'
       iva_selected_scope_evidence_failure: A bevallás egyes IVA-tételeihez hiányoznak
         az alátámasztó bizonylatok (%{source_ref_count} hivatkozással, %{unidentified_source_count}
         hivatkozás nélkül), ezért az ellenőrzés nem fejezhető be.
@@ -1625,6 +1629,9 @@ application:
         nincsenek hozzájuk mentett alátámasztó bizonylatok.
       oss_source_unrouted: Egyes egyablakos (OSS) tételek a nyomtatvány egyik rovatában
         sem szerepelnek.
+      printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
+        sorok összegével (%{printed_sum}), ezért a fájl összegei nem stimmelnének,
+        és az AEAT elutasíthatja.
       pulled_filing_casilla_mismatch: '[%{casilla_number}] rovat, %{filing_year} %{period_code}
         időszak: a számítás eredménye %{computed_value}, de az AEAT-hez benyújtott
         bevallásban %{filed_value} szerepel.'

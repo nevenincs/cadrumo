@@ -63,6 +63,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import VerificationReport
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
 from .verification_repository_support import (
@@ -433,20 +434,28 @@ def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisio
     return IvaWalletDecisionRepository(objects=objects), settings
 
 
-def build_verified_modelo_303_revision(
+def calculate_and_verify_modelo_303_revision(
     *,
     positive_result: bool = False,
     negative_result: bool = False,
     casilla_111: Decimal | None = None,
+    autoconsumo_promotor_base: Decimal | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[
     str,
     str,
+    VerificationReport,
     CalculationRevision,
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
 ]:
+    """Calculate one 2026 2T Modelo 303 revision and run the real verify gate over it.
+
+    The report is returned whatever it grants, so a caller can assert a refusal;
+    the revision is reloaded after verification so it carries the state the
+    gate left it in.
+    """
     taxpayer_nif = _synthetic_valid_nif(12_345_678)
     bucket_id = _seed_profile(
         tax_id=taxpayer_nif,
@@ -477,6 +486,8 @@ def build_verified_modelo_303_revision(
         binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
     if negative_result:
         binding_values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("2000.00")
+    if autoconsumo_promotor_base is not None:
+        binding_values["modelo-303-autoconsumo-promotor-base"] = autoconsumo_promotor_base
 
     casilla_inputs = {
         "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
@@ -526,6 +537,31 @@ def build_verified_modelo_303_revision(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
-    assert report.granted_verificado_completo is True
     verified = calc_repo.load().revisions[revision.calculation_revision_id]
+    return taxpayer_nif, bucket_id, report, verified, work_repo, calc_repo, event_repo
+
+
+def build_verified_modelo_303_revision(
+    *,
+    positive_result: bool = False,
+    negative_result: bool = False,
+    casilla_111: Decimal | None = None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[
+    str,
+    str,
+    CalculationRevision,
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
+    taxpayer_nif, bucket_id, report, verified, work_repo, calc_repo, event_repo = (
+        calculate_and_verify_modelo_303_revision(
+            positive_result=positive_result,
+            negative_result=negative_result,
+            casilla_111=casilla_111,
+            operation=operation,
+        )
+    )
+    assert report.granted_verificado_completo is True
     return taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo

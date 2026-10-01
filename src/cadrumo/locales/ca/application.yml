@@ -1625,6 +1625,10 @@ application:
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
         no es pot completar.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo encara no pot registrar el
+        justificant que necessita una adquisició intracomunitària, de manera que aquesta
+        declaració no pot superar la comprovació (%{transaction_count} apunts afectats).
+        Presenteu aquesta declaració per una altra via.
       iva_selected_scope_evidence_failure: Falten justificants en alguns apunts d'IVA
         d'aquesta declaració (%{source_ref_count} amb referència i %{unidentified_source_count}
         sense), així que la comprovació no pot acabar.
@@ -1665,6 +1669,9 @@ application:
         (OSS), però no hi ha justificants desats d'aquestes operacions.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
+      printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
+        línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
+        i l'AEAT podria rebutjar-lo.
       pulled_filing_casilla_mismatch: 'Casella [%{casilla_number}] del període %{period_code}
         de %{filing_year}: el càlcul dona %{computed_value}, però la declaració presentada
         a l''AEAT mostra %{filed_value}.'

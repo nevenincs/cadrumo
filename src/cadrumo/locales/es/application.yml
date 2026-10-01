@@ -1628,6 +1628,10 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo todavía no puede registrar
+        el justificante que necesita una adquisición intracomunitaria, por lo que
+        esta declaración no puede superar la comprobación (%{transaction_count} apuntes
+        afectados). Preséntela por otra vía.
       iva_selected_scope_evidence_failure: Faltan justificantes en algunos apuntes
         de IVA de esta declaración (%{source_ref_count} con referencia y %{unidentified_source_count}
         sin ella), así que la comprobación no puede terminar.
@@ -1668,6 +1672,9 @@ application:
         (OSS), pero no hay justificantes guardados de ellas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
+      printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
+        impresas que la componen (%{printed_sum}), así que el fichero no cuadraría
+        y la AEAT podría rechazarlo.
       pulled_filing_casilla_mismatch: 'Casilla [%{casilla_number}] del periodo %{period_code}
         de %{filing_year}: el cálculo da %{computed_value}, pero la declaración presentada
         ante la AEAT muestra %{filed_value}.'

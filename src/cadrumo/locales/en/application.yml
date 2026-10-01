@@ -1516,6 +1516,10 @@ application:
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo cannot yet record the supporting
+        document that a purchase from another EU country needs, so this declaration
+        cannot pass the check (%{transaction_count} ledger entries affected). File
+        it another way.
       iva_selected_scope_evidence_failure: Some VAT entries in this declaration are
         missing supporting documents (%{source_ref_count} with a reference, %{unidentified_source_count}
         without one), so the check cannot finish.
@@ -1554,6 +1558,9 @@ application:
         but no supporting documents for it are saved.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
+      printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
+        that make it up (%{printed_sum}), so the file would not add up and AEAT may
+        reject it.
       pulled_filing_casilla_mismatch: 'Box [%{casilla_number}] for period %{period_code}
         %{filing_year}: the calculation gives %{computed_value}, but the declaration
         submitted to AEAT shows %{filed_value}.'

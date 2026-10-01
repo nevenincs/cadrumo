@@ -63,6 +63,21 @@ predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
 expression = 'equals(["27", "iva.cuota-devengada-total"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# Printed-total consistency for [27]. The equals predicate above compares [27]
+# with the semantic total it projects, which holds by construction; this one
+# compares it with the printed boxes the record design adds into it. The 2022
+# design (aeat-dr-303-2022, campo 51, posicion 500) defines "Total cuota
+# devengada ( [03] + [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] +
+# [26]) [27]". A semantic total that also carries an amount none of those boxes
+# shows yields a fichero whose [27] does not add up, so the filing is refused
+# whatever the unprinted amount is. Successor designs extend the addends, and
+# their revisions restate this predicate with their own list.
+[[revisions.2022.verification_predicates]]
+id = "equals-sum:dr303-27-equals-printed-summands"
+predicate_id = "modelo-303-dr303-27-equals-printed-summands"
+expression = 'equals_sum(["27", "03", "06", "09", "11", "13", "15", "18", "21", "24", "26"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
 [[revisions.2022.verification_predicates]]
 id = "equals:dr303-33-equals-iva-soportado-importaciones"
 predicate_id = "modelo-303-dr303-33-equals-iva-soportado-importaciones"
