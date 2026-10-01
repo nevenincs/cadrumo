@@ -106,28 +106,38 @@ def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
 
-def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: Path) -> None:
-    """M100 suffered-retencion deps scope out; self-filed deps still block.
+#: Payer-side withholding returns. The retenciones a renta taxpayer deducts are
+#: sourced from the perceptor's own certificates and records, so none of these is
+#: a cross-period dependency of Modelo 100.
+_M100_PAYER_SIDE_WITHHOLDING_MODELOS = frozenset({"111", "123", "190", "193"})
 
-    The grounded payee/payer distinction (``taxpayer_files_source = false`` on the suffered
-    classifications) lets a salaried taxpayer reach export, while pagos-fraccionados the taxpayer
-    DOES file stay enforced. Classification-driven, not schedule-driven (the reverted Option 1).
+
+def test_m100_payer_side_withholding_returns_are_not_dependencies_self_filed_enforced(tmp_path: Path) -> None:
+    """M100 depends on no payer-side withholding return; self-filed pagos fraccionados still block.
+
+    Withholding credits are read from the perceptor's side, so 111/123/190/193 never
+    enter the dependency set and nothing has to be scoped out for a salaried
+    taxpayer. The pagos fraccionados the taxpayer DOES file (130/131) stay enforced:
+    an undeclared activity state is fail-closed, so they block until filed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
             published_authority_operation().snapshot("100", filing_year=2024, period="0A"),
         )
 
-    # M115 (arrendamiento retenciones) was retired as a dormant M100
-    # rental-retention source; the surviving suffered-retencion set is 111/123/193.
-    suffered = {"111", "123", "193"}
+    dependencies = {item.requirement.source_modelo for item in verdict.dependencies}
     scoped_out = {
         item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory
     }
-    assert suffered <= scoped_out, f"suffered deps must be scoped out, got {scoped_out}"
-    assert has_modelo_not_applicable(verdict) is True
-    assert all(item.clean for item in verdict.dependencies if item.modelo_not_applicable_advisory)
-    assert scoped_out.isdisjoint({"130", "131"}), "self-filed pagos fraccionados must NOT be scoped out"
+    blocking = {item.requirement.source_modelo for item in verdict.dependencies if not item.clean}
+
+    assert dependencies.isdisjoint(_M100_PAYER_SIDE_WITHHOLDING_MODELOS), (
+        f"payer-side withholding returns must not be M100 dependencies, got {dependencies}"
+    )
+    assert scoped_out == set(), f"no M100 dependency is scoped out by default, got {scoped_out}"
+    assert has_modelo_not_applicable(verdict) is False
+    assert {"130", "131"} <= dependencies
+    assert {"130", "131"} <= blocking, "self-filed pagos fraccionados must stay enforced"
 
 
 def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
@@ -293,18 +303,11 @@ def test_cross_period_dependency_inventory_covers_the_reviewed_renta_target_mode
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
     assert inventory.items[0].target_period == Period.from_year_and_code(newest_authored_edition("100"), "0A")
-    # M115 (arrendamiento retenciones) and M180 (retenciones anuales arrendamiento)
-    # dependency classifications were retired as dormant M100 rental-retention
-    # sources; the surviving suffered-retencion sources are 111/123/193.
-    assert set(inventory.items[0].source_modelos) >= {
-        "111",
-        "123",
-        "130",
-        "131",
-        "184",
-        "190",
-        "193",
-    }
+    # The prior Modelo 100 (negative base carry), the self-filed pagos
+    # fraccionados and the Modelo 184 attribution. Withholding credits are sourced
+    # from the perceptor's side, so no payer-side withholding return appears.
+    assert set(inventory.items[0].source_modelos) == {"100", "130", "131", "184"}
+    assert set(inventory.items[0].source_modelos).isdisjoint(_M100_PAYER_SIDE_WITHHOLDING_MODELOS)
 
 
 def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asset_scope(

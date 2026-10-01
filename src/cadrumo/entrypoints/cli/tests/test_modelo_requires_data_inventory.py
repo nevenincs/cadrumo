@@ -102,8 +102,16 @@ def test_requires_classifies_real_m130_sources_without_an_active_profile() -> No
     assert no_profile_notice["action"] is None
 
 
-def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_sources() -> None:
-    """Real M100 alternates remain visible instead of collapsing to the primary."""
+def test_requires_buckets_relation_prefill_bindings_and_advises_on_unbucketed_sources() -> None:
+    """Real M100 relation-prefilled casillas surface in their own bucket.
+
+    ``requires`` inventories bound casillas, reading each one's primary binding and
+    any reviewed alternates. On the 2025 edition the bound casilla 1577 is prefilled
+    by relation from the Modelo 184 attribution of income from an entidad en
+    regimen de atribucion. The Modelo 130 and 131 pagos fraccionados bindings feed
+    casilla 0604 through a formula rather than a bound casilla, so this inventory
+    does not list them.
+    """
     invocation = invoke_cached_cli(
         [
             "--format",
@@ -120,11 +128,10 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     )
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
-    relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
-    assert {
-        ("renta-modelo-130-pagos-fraccionados", "relation_prefill"),
-        ("renta-modelo-131-pagos-fraccionados", "relation_prefill"),
-    } <= relation_pairs
+    relation_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
+    assert relation_rows == {
+        ("1577", "renta-modelo-184-atribucion-actividades-economicas", "relation_prefill"),
+    }
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
     assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
 

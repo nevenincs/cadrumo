@@ -6,9 +6,9 @@ against (``factual_evidence``). That declaration reaches the application layer
 intact: it is a field on the fold requirement and a typed ``Literal`` at the
 handoff. What used to happen next is that the resolvers dropped it at the join,
 leaving the mesh a bare mapping of binding id to Decimal, so a ``factual_evidence``
-Modelo 193 retención the taxpayer SUFFERED arrived by the identical path a
-``direct_annual_settlement`` Modelo 130 pago fraccionado did, and no consumer could
-tell them apart.
+carry of the prior Modelo 200's pending negative tax bases arrived by the identical
+path a ``direct_annual_settlement`` Modelo 202 pago fraccionado did, and no consumer
+could tell them apart.
 
 The value is CARRIED, not gated. A taxpayer is entitled to a suffered retención and
 dropping it silently is an over-declaration, which is the direction this apparatus
@@ -54,6 +54,16 @@ def _m100_2024() -> RegistrySnapshot:
     return published_snapshot("100", filing_year=2024, period="0A")
 
 
+def _m200_2025() -> RegistrySnapshot:
+    """Modelo 200 2025 declares relation carries of both treatments in one revision.
+
+    The prior Modelo 200's pending bases and deterioro balances are
+    ``factual_evidence``; the Modelo 202 pagos fraccionados are
+    ``direct_annual_settlement``.
+    """
+    return published_snapshot("200", filing_year=2025, period="0A")
+
+
 def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
     """Map each provider-backed binding id to its fold requirement."""
     requirements = relation_source_requirements(
@@ -81,7 +91,7 @@ def test_the_join_carries_both_declared_treatments_and_they_differ() -> None:
     named relation id, so a registry rename does not make this pass vacuously while
     the distinction is lost.
     """
-    snapshot = _m100_2024()
+    snapshot = _m200_2025()
 
     treatments = _grounded_treatments(snapshot)
 
