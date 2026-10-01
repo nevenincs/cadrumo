@@ -39,7 +39,6 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.result_disposition import result_disposition_casilla_ids
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, ParameterId
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -47,7 +46,7 @@ from ...domain.calculations.registry.schema_base import CasillaSignConstraint
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
-from .settlement_casilla import declaration_result_casilla_id
+from .settlement_casilla import declaration_result_casillas
 from .source_policy import source_policy
 from .value_presentation import LOCALE_NUMBER_FORMATS, SCREEN_MINUS_SIGN, group_decimal_text
 
@@ -380,22 +379,6 @@ def _printed_box(casilla: CasillaDefinition | None) -> str | None:
     return None
 
 
-def _result_casilla_ids(snapshot: RegistrySnapshot) -> frozenset[str]:
-    """The casillas holding the declaration's result, by the rule the workbench's settlement result follows.
-
-    The modelo's declared "tipo de declaración" result boxes this revision
-    defines come first; otherwise the casilla the registry declares the final
-    result; otherwise none.
-    """
-    defined = {str(item.id) for item in snapshot.revision.casillas}
-    declared = result_disposition_casilla_ids(str(snapshot.modelo.id)) or ()
-    present = frozenset(str(item) for item in declared if str(item) in defined)
-    if present:
-        return present
-    role = declaration_result_casilla_id(snapshot.revision)
-    return frozenset[str]() if role is None else frozenset({str(role)})
-
-
 def _reach(
     start: str,
     *,
@@ -513,7 +496,8 @@ def build_casilla_help_card(
     )
     graph = _dependents(snapshot.revision.formulas)
     feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
-    results = _result_casilla_ids(snapshot)
+    selected = declaration_result_casillas(str(snapshot.modelo.id), snapshot.revision)
+    results = frozenset[str]() if selected is None else frozenset(str(item) for item in selected.casilla_ids)
     is_result = str(casilla.id) in results
     reach = (
         None

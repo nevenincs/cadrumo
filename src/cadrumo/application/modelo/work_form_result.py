@@ -27,14 +27,10 @@ from typing import Final
 
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...core.result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-)
+from ...core.result_disposition import ResultDisposition, derive_result_disposition
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.filing.schema import ModeloValueKind
-from .settlement_casilla import declaration_result_casilla_id
+from .settlement_casilla import declaration_result_casillas
 from .work_form_models import ModeloFormResult, ModeloFormResultDirection
 from .work_review import ModeloWorkReviewCasilla
 
@@ -107,13 +103,13 @@ def settlement_result(
         AmbiguousDeclarationResultError: The registry declares two final-result
             casillas for the revision, so it has none.
     """
-    result_ids = result_disposition_casilla_ids(modelo)
-    if result_ids is not None:
-        declared = _declared_type_result(modelo, result_ids, rows, period)
-        if declared is not None:
-            return declared
-    role_casilla = declaration_result_casilla_id(revision)
-    if role_casilla is None or str(role_casilla) not in rows:
+    selected = declaration_result_casillas(modelo, revision)
+    if selected is None:
+        return None
+    if selected.by_declared_type:
+        return _declared_type_result(modelo, selected.casilla_ids, rows, period)
+    role_casilla = selected.casilla_ids[0]
+    if str(role_casilla) not in rows:
         return None
     return ModeloFormResult(
         casilla_id=role_casilla,
