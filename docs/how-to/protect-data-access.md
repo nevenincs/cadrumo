@@ -14,7 +14,7 @@ resort.
 
 You need:
 
-- An active profile - see [set up your taxpayer profile](profile-setup.md).
+- An active profile; see [set up your taxpayer profile](profile-setup.md).
 - Your current profile passphrase.
 
 The examples in this documentation are recorded in English. `aeat` prints its
@@ -264,14 +264,14 @@ strings while decoding JSON and validating secret fields, so the application
 does not claim guaranteed memory erasure. Never reuse the pipe, redirect it to
 a regular file, or log the JSON object.
 
-Interactive commands may prompt only on a verified terminal. A redirected or
+Interactive commands may prompt only on a confirmed terminal. A redirected or
 non-interactive invocation without the required explicit channel is refused.
 
 ## Log out of the active profile
 
-Run `aeat config logout` when you finish working with a profile. Logout
-closes the active storage session, discards in-memory key material, disposes the
-bucket engines, and keeps the profile selected for the next exact login:
+Run `aeat config logout` when you finish working with a profile. Logout closes
+the active storage session, discards in-memory key material, closes the storage
+connections, and keeps the profile selected for the next exact login:
 
 ```{cli-sequence} protect-data-access-logout
 :verify: Confirm logout closes the active session without deleting the profile.
@@ -314,10 +314,11 @@ backup instructions.
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
-  see where encrypted custody ends and deliberate plaintext handoffs begin.
-- [Set up your taxpayer profile](profile-setup.md) - create, export, and
+- [Import, export, and supporting
+  documents](../reference/import-export-and-evidence.md): see where encrypted
+  custody ends and deliberate plaintext handoffs begin.
+- [Set up your taxpayer profile](profile-setup.md): create, export, and
   import profiles.
-- [Diagnose and repair your local setup](troubleshooting.md) - quarantine
+- [Diagnose and repair your local setup](troubleshooting.md): quarantine
   unreadable records and fix storage or integrity problems without a reset.
-- [CLI reference](../cli/index.rst) - full option reference.
+- [CLI reference](../cli/index.rst): full option reference.

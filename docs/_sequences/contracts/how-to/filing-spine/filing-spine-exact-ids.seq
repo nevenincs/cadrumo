@@ -1,13 +1,13 @@
 :seed: iva-evidence-2026
-@step Create the work unit for the filing target.
+@step Create the declaration for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
-@step Record another sale so this exact-reference example owns a fresh calculation revision under cumulative page execution.
+@step Record another sale so this exact-reference example owns a fresh calculation under cumulative page execution.
 @setup aeat app ledger add --date 2026-03-25 --amount 60.50 --direction INCOMING --description "Exact reference transition sale" --classification BUSINESS --taxable-base 50 --iva-rate 0.21 --iva-amount 10.50 --iva-category domestic_general --idempotency-key filing-spine-exact-reference-transition
-@step Calculate the quarter so a saved revision carries a reference number.
+@step Calculate the quarter so a saved calculation carries a reference number.
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @capture revision_id result.calculation_revision_id
-@step Verify a specific calculation by its reference number.
+@step Check a specific calculation by its reference number.
 aeat app modelo work verify {revision_id}
 @step File a specific calculation by its reference number.
 aeat app modelo work file {revision_id}

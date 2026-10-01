@@ -871,6 +871,10 @@ cli:
           per al model %{modelo}. Tokens vàlids: %{tokens}.'
       export:
         actor_help: El teu nom o etiqueta, registrat a l'esdeveniment MODELO_EXPORTED.
+        development_file_not_accepted: 'L''AEAT no acceptarà aquest fitxer per presentar
+          la declaració: conté l''identificador de programari de desenvolupament de
+          Cadrumo, format només per zeros. Introdueix els valors calculats de les
+          caselles al formulari de l''AEAT.'
         errors:
           output_required: Indica --output PATH per al fitxer fichero-BOE.
         help: 'Exporta un càlcul desat comprovat i complet, o registrat com a presentat,
@@ -879,6 +883,8 @@ cli:
           local; mai contacta amb l''AEAT, i el fitxer generat no és evidència oficial
           de presentació davant l''AEAT. Usa el justificant de l''AEAT, la consulta
           de declaracions presentades o el coteig CSV després de presentar.'
+        local_file_not_receipt: El fitxer exportat no és un justificant de presentació
+          de l'AEAT.
         output_help: Camí on escriure el fitxer fichero-BOE.
         replace_help: Substitueix un fitxer que ja existeix a --output. Sense aquesta
           opció es rebutja un fitxer d'exportació existent per no destruir una exportació
@@ -1013,13 +1019,13 @@ cli:
         override_evidence_locator_required: Indica --evidence-locator amb la referència
           d'evidència que dona suport a aquesta sobreescriptura.
         override_filing_year_help: Exercici del període del Model 303 del qual se
-          sobreescriu l'arrossegament de compensació prèvia.
+          sobreescriu l arrossegament de compensació prèvia.
         override_help: Registra una sobreescriptura de l'arrossegament de compensació
           prèvia del Modelo 303 des d'evidència externa al moneder local. Només desbloqueja
           el càlcul i no compleix el requisit d'evidència oficial de la comprovació.
           Requereix --confirm.
         override_period_help: Període de la declaració dependent del Model 303 que
-          rep l'arrossegament, per exemple 2T o 3T.
+          rep l arrossegament, per exemple 2T o 3T.
         override_reason_help: Motiu obligatori de la sobreescriptura, registrat com
           a origen auditable.
         override_reason_required: Indica --reason explicant per que se sobreescriu
@@ -1121,6 +1127,9 @@ cli:
           o baja.'
         revision_help: Identificador de la versió del model oficial (de les definicions
           dels models).
+        sources_still_missing: Els teus registres han superat les comprovacions d'aquest
+          període, però a la declaració encara li falten valors d'algunes fonts. Revisa
+          els valors que falten abans de calcular.
         year_help: Exercici de presentació.
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.

@@ -811,8 +811,19 @@ def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) 
     assert "0A" in result.output
 
 
+@pytest.mark.parametrize(
+    ("output_language", "expected_notice"),
+    [
+        ("en", "The exported file is not an AEAT filing receipt."),
+        ("es", "El fichero exportado no es un justificante de presentación de la AEAT."),
+        ("ca", "El fitxer exportat no és un justificant de presentació de l'AEAT."),
+        ("hu", "Az exportált fájl nem az AEAT által kiállított benyújtási igazolás."),
+    ],
+)
 def test_export_resolves_visible_target_to_current_verified_revision(
     tmp_path: Path,
+    output_language: str,
+    expected_notice: str,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -828,6 +839,8 @@ def test_export_resolves_visible_target_to_current_verified_revision(
 
     result = _invoke(
         [
+            "--language",
+            output_language,
             "--format",
             "json",
             "app",
@@ -854,7 +867,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert notice["context"]["modelo"] == "111"
     assert notice["context"]["filing_year"] == "2026"
     assert notice["context"]["period"] == "1T"
-    assert notice["message"] == "The local export is not official filing evidence."
+    assert notice["message"] == expected_notice
     assert notice["action"] is None
     assert out.exists()
 

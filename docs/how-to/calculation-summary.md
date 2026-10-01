@@ -1,13 +1,14 @@
-# Share and verify a calculation summary
+(share-and-verify-a-calculation-summary)=
+# Share and check a calculation summary
 
-This page covers the calculation summary: a PDF of a verified or filed
-calculation that an accountant can read, that carries its own data, and that
+This page covers the calculation summary: a PDF of a calculation that has
+passed the check or been recorded as filed, which an accountant can read, that carries its own data, and that
 anyone can check for changes. You write it with one command, hand it on, and
 later confirm that a copy still matches what your encrypted store holds. The
 same command writes a plain CSV table instead when you choose `--document-format
 csv`.
 
-A summary is a local calculation, not evidence from the Agencia Estatal de
+A summary is a local calculation, not proof from the Agencia Estatal de
 Administración Tributaria (AEAT). The official proof of a filing is the AEAT
 receipt (justificante), the filed-declarations lookup, or the Código Seguro de
 Verificación check at the AEAT portal. The summary says so on its first page and
@@ -15,8 +16,8 @@ in every footer.
 
 ## Before you start
 
-**Requirement:** a calculation that has passed verification or been filed. See
-[Verify a filing](verification-reports.md). The command refuses a calculation
+**Requirement:** a calculation that has passed the check or been recorded as
+filed. See [Check a draft declaration and act on the issues](verification-reports.md). The command refuses a calculation
 that is still a draft. The profile must also declare your NIF and name, because
 the report names the filer in full.
 
@@ -32,7 +33,7 @@ extra to install.
 
 ## Write a summary
 
-Address the work unit the way `aeat app modelo work review` does, and choose the
+Address the declaration the way `aeat app modelo work review` does, and choose the
 `pdf` document format:
 
 ```text
@@ -58,22 +59,21 @@ The first page states that the document is a local calculation and names the
 software identity the filing file would carry. For the development identity
 (program `0000`, developer NIF `00000000T`) it says that file cannot be
 presented at AEAT. For a modelo whose layout Cadrumo does not fill with a
-software identity, such as Modelo 130, it says so instead. A table then shows the calculation's state, its verification,
+software identity, such as Modelo 130, it says so instead. A table then shows the calculation's state, its check,
 whether a filing is recorded, the export instant, and your NIF and name.
 
-Each registry section follows as a table of casilla, concept and amount. Three
+Each section of the modelo follows as a table of box, concept and amount. Three
 states read differently:
 
 - a figure, including a zero, is a calculated value;
 - `sin dato` (`no data`) means the calculation recorded no value;
-- `n/a · no aplicable` (`n/a · not applicable`) means the registry proves the
-  casilla does not apply to the period.
+- `n/a · no aplicable` (`n/a · not applicable`) means the official rules show that the box does not apply to the period.
 
 Subtotals are set in bold and the result row is shaded. The last section,
-Traceability and integrity, prints every identifier in full: the calculation
-revision, work unit, verification report, filing record, registry snapshot and
-authority generation, the ledger snapshot fingerprint, the report and CSV
-digests, and the signing key's fingerprint.
+Traceability and integrity, prints every identifier in full: the saved
+calculation, the declaration, the check report, the filing record, the tax rules
+snapshot and its published version, the fingerprint of the snapshot of your
+records, the report and CSV digests, and the signing key's fingerprint.
 
 ## What travels inside the file
 
@@ -82,7 +82,7 @@ embeds four files, which any PDF viewer lists as attachments:
 
 - `cadrumo-calculation-report.json`, the authoritative data the pages render;
 - `cadrumo-calculation-report.csv`, the same table the CSV format writes, with
-  one row per casilla and a `value_state` of `value`, `absent`, or
+  one row per box and a `value_state` of `value`, `absent`, or
   `not_applicable`;
 - `cadrumo-report-certification.json`, the signed integrity statement;
 - `cadrumo-report-certification.sig`, its 64-byte Ed25519 signature.
@@ -91,14 +91,13 @@ Your NIF and name appear on the pages and in the embedded JSON and CSV, because
 the summary is your own document. They never appear in the document metadata,
 which carries only identifiers, digests, codes and the signing public key. Third
 parties, such as the perceptors behind a withholding, appear only as keyed
-digests. The filing file and your evidence documents are not embedded.
+digests. The filing file and your supporting documents are not embedded.
 
 ## What the signature means
 
 The summary is signed with your profile's key, the same key that signs your
 review packages. A valid signature means that this key declared that, at the
-export instant by this computer's clock, the named calculation, verification,
-registry snapshot and authority produced exactly this report, CSV and pages.
+export instant by this computer's clock, the named calculation, check and official rules data produced exactly this report, CSV and pages.
 
 It does not mean that AEAT accepted or received a filing, that the calculation
 is legally correct, that the inputs were true, or that the key belongs to a
@@ -107,7 +106,8 @@ Cadrumo or with OpenSSL as described below. A recipient trusts the key by
 comparing its fingerprint, printed on the last page, with one received from you
 through another channel.
 
-## Verify a summary with Cadrumo
+(verify-a-summary-with-cadrumo)=
+## Check a summary with Cadrumo
 
 On the computer holding the profile that wrote it, check a summary against your
 encrypted store:
@@ -136,7 +136,8 @@ check is `valid_unpinned` unless you also name the key you trust:
 aeat app modelo work report-verify summary.pdf --document-only --trusted-key PUBLIC_KEY_HEX
 ```
 
-## Verify a summary without Cadrumo
+(verify-a-summary-without-cadrumo)=
+## Check a summary without Cadrumo
 
 A recipient with OpenSSL 3 can check the signature. First save the four embedded
 files into one folder, from the attachments panel of a PDF viewer or with

@@ -1,10 +1,11 @@
-# Import, export, and evidence
+(import-export-and-evidence)=
+# Import, export, and supporting documents
 
-At a high level, the architecture turns source documents and operator inputs
-into a traceable tax position. It deliberately separates “data we received,”
-“values we calculated,” “a file prepared for the Agencia Estatal de
-Administración Tributaria (AEAT),” and “evidence that AEAT actually received
-it.”
+At a high level, the architecture turns your source documents and the
+information you enter into a traceable tax position. It deliberately separates
+“data we received,” “values we calculated,” “a file prepared for the Agencia
+Estatal de Administración Tributaria (AEAT),” and “proof that AEAT actually
+received it.”
 
 `source documents → typed financial facts → registry-grounded calculation → AEAT export file → official filing evidence`
 
@@ -12,29 +13,29 @@ it.”
 
 | Layer | Actual data | Meaning for you |
 | --- | --- | --- |
-| Source evidence | Taxpayer document bytes, provenance, and content digests; separately, official source material grounds the registry | The original material supporting the tax position and the sources governing its interpretation |
-| Ledger facts | Typed transactions, direction, category, amount, dates, and linked evidence | The economic events that may participate in a return; the filing period is derived from their dates |
-| Other business inputs | Typed invoice catalogues and stock-inventory ledgers in encrypted repositories; typed foreign-asset observations supplied by the caller | Reusable business facts that remain separate from a filing until an enrolled resolver projects them |
-| Registry | {term}`modelo` revision, numbered {term}`casilla` fields, formulas, bindings, legal references, and export layout | The versioned rulebook used to interpret the facts |
-| Calculation revision | Inputs, observations, overrides, calculated casillas, and provenance | A reproducible attempt at calculating one return |
+| Source documents | Taxpayer document bytes, where they came from, and content digests (fingerprints); separately, official source material grounds the tax rules | The original material supporting the tax position and the sources governing its interpretation |
+| Your records | Typed transactions, direction, category, amount, dates, and linked supporting documents | The economic events that may participate in a return; the filing period is derived from their dates |
+| Other business inputs | Typed invoice catalogues and stock inventories in encrypted repositories; typed foreign-asset observations supplied by the caller | Reusable business facts that remain separate from a filing until an enrolled resolver projects them |
+| Tax rules | {term}`modelo` revision, numbered {term}`casilla` fields, formulas, the rules that fill each box, legal references, and export layout | The versioned rulebook used to interpret the facts |
+| Saved calculation | Inputs, observations, overrides, calculated boxes (casillas), and where each value came from | A reproducible attempt at calculating one return |
 | Filing record | Current or superseded filing state linked to a calculation revision and optionally carrying the external AEAT status | What the application records as filed, and the history behind it |
-| Official evidence | {term}`justificante`, AEAT verification record, or captured filed declaration | Evidence originating from AEAT after submission |
+| AEAT receipt and records | {term}`justificante` (the AEAT receipt), an AEAT record that verifies a filing, or a filed declaration read from AEAT | Proof that comes from AEAT after the filing |
 
-Every calculated casilla can carry formula, legal, and source provenance. Ledger
-evidence records which financial facts contributed to it. Review the values in
-[Review calculation values](../how-to/review-calculation-values.md), then follow
-the full revision workflow in [Prepare and manage filings](../how-to/filing-spine.md).
+Every calculated box (casilla) can show its formula, its legal reference, and
+its source. Your records show which financial facts contributed to it. Review
+the values in [Review calculation values](../how-to/review-calculation-values.md),
+then follow the full workflow for saved calculations in [Prepare and manage filings](../how-to/filing-spine.md).
 
-A registry binding is a typed projection contract, not a place to attach a
+A rule that fills a box is a typed projection contract, not a place to attach a
 source record. Binary documents follow the encrypted attachment path.
 Transactions, invoice catalogues, and stock inventory remain in their owning
 typed repositories. Modelo 720 instead accepts typed foreign-asset observations
 from the caller. An enrolled resolver projects only the scalar or repeating-row
-fields requested by the registry. The encrypted stock `InventoryLedger` is
-enrolled for the Modelo 100 2025 revision: it projects casillas 0177, 0181,
-and 0182 for each activity with an inventory ledger for the filing year.
-`--casilla` and `--binding` refuse values for those casillas. Without an
-inventory ledger for the year, calculation warns and the casillas stay 0.
+fields the tax rules request. The encrypted stock `InventoryLedger` is
+enrolled for the Modelo 100 2025 revision: it projects boxes 0177, 0181,
+and 0182 for each activity with a stock inventory for the filing year.
+`--casilla` and `--binding` refuse values for those boxes. Without a
+stock inventory for the year, calculation warns and the boxes stay 0.
 
 ## What can be imported
 
@@ -45,35 +46,34 @@ inventory ledger for the year, calculation warns and the casillas stay 0.
   - OFX or QFX when the optional OFX dependency is installed
   - Recognized German-language N26 monthly statement PDFs
 
-  These become normalized ledger transactions, not tax-return values directly.
-  File detection also uses content signatures to avoid trusting misleading
-  extensions. Importing a row does not infer business use, category, taxable
-  base, Impuesto sobre el Valor Añadido (IVA), or Impuesto sobre la Renta de
-  las Personas Físicas (IRPF) treatment. See
-  [Import and manage transactions](../how-to/import-bank-statements.md).
+  These become normalized transactions in your records, not tax-return values
+  directly. File detection also uses content signatures to avoid trusting
+  misleading extensions. Importing a row does not infer business use, category,
+  taxable base, Impuesto sobre el Valor Añadido (VAT), or Impuesto sobre la
+  Renta de las Personas Físicas (IRPF) treatment. See [Import and manage
+  transactions](../how-to/import-bank-statements.md).
 
 - **Purchase invoices and receipts:**
 
   - PDF
-  - PNG or JPEG image evidence
+  - PNG or JPEG images of supporting documents
   - CSV or XLSX for structured invoice-catalogue rows
 
-  Document bytes are stored as evidence and can then be linked to ledger facts.
-  Structured invoice rows, document evidence, and bank transactions remain
-  separate records until you link them. These records can substantiate a
-  transaction or IVA treatment. Importing an invoice does not automatically
-  make it deductible. See
-  [Attach invoices and receipts](../how-to/ledger-evidence.md) and
-  [Manage business invoices](../how-to/manage-invoices.md).
+  Document bytes are stored as supporting documents and can then be linked to
+  your records. Structured invoice rows, supporting documents, and bank
+  transactions remain separate records until you link them. These records can
+  substantiate a transaction or VAT treatment. Importing an invoice does not
+  automatically make it deductible. See [Attach invoices and receipts to transactions](../how-to/ledger-evidence.md) and [Manage business
+  invoices](../how-to/manage-invoices.md).
 
 - **AEAT declaration copies:**
 
   - PDF, but only where the relevant Modelo and revision have an exact extraction
     profile
 
-  These produce observed casilla values with document digest and registry
-  revision provenance. They are observations, not automatically trusted
-  calculation authority. Casilla reconciliation currently covers modelos 100,
+  These produce observed box values with the document digest and the version
+  of the tax rules they came from. They are observations, not automatically
+  trusted calculation authority. Box reconciliation currently covers Modelos 100,
   111, 130, 190, 303, and 390.
 
 - **AEAT submitted-data files:**
@@ -81,56 +81,57 @@ inventory ledger for the year, calculation warns and the casillas stay 0.
   - Fixed-width “Diseño de Registros” files
   - XML-dictionary layouts
 
-  These can be parsed into casilla observations where a complete registry layout
-  exists. Support is revision-specific, not universal. This surface parses AEAT
+  These can be parsed into box observations where the tax rules hold a complete
+  layout. Support is revision-specific, not universal. This surface parses AEAT
   archive bytes; the submitted-data importer is not a general CSV importer.
 
-- **AEAT justificantes:**
+- **AEAT receipts (justificantes):**
 
-  - Justificante PDF or a receipt read from AEAT
+  - AEAT receipt (justificante) PDF, or a receipt read from AEAT
 
   The parser extracts receipt metadata such as Modelo, period, taxpayer,
-  submission time, verification code, and totals. A justificante supports the
+  submission time, verification code, and totals. An AEAT receipt supports the
   claim that AEAT returned specific receipt information. It is not necessarily a
-  complete representation of every filed casilla, and it does not prove that the
-  tax answer is correct. See [Reconcile a filing](../how-to/reconcile.md).
+  complete representation of every filed box, and it does not prove that the
+  tax answer is correct. See [Reconcile a filed modelo against its AEAT receipt](../how-to/reconcile.md).
 
 - **Google Drive and Sheets:**
 
   - Drive links and folder pulls acquire supported PDF, PNG, and JPEG bytes through
     the normal encrypted attachment path.
-  - Sheets can provide typed operator, binding, and relation edits for
-    calculation. Pull can also assemble row-set observations in its output.
+  - Sheets can provide typed edits to user values, to the rules that fill each
+    box, and to relations for calculation. Pull can also assemble row-set observations in its output.
   - Sheet-based computation uses the canonical local calculation engine and is
     explicitly non-persistent until another canonical workflow accepts the
     result.
 
   Google is an optional acquisition and review adapter, not the tax database,
-  ledger authority, calculation authority, or recovery system. See
-  [Review calculations with Google Sheets](../how-to/review-with-google-sheets.md).
+  the authority for your records, the authority for calculations, or the
+  recovery system. See [Review calculations with Google
+  Sheets](../how-to/review-with-google-sheets.md).
 
 ## What each export actually means
 
 | Export | Purpose | What it does not prove |
 | --- | --- | --- |
-| AEAT fichero or XML export | Produces the local payload where the selected Modelo revision has a complete registry export layout: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
-| Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a filing artefact or authoritative calculation record |
-| Accountant review package | Shares the draft, calculation revision, provenance, and ledger evidence when present in a checksum-verifiable ZIP | Checksums alone do not identify who created or approved it |
-| Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued evidence |
+| AEAT fichero or XML export | Produces the local payload where the selected Modelo revision has a complete export layout in the tax rules: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
+| Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a file for filing or an authoritative calculation record |
+| Accountant review package | Shares the draft, saved calculation, where each value came from, and supporting documents when present, in a ZIP you can check against its checksums | Checksums alone do not identify who created or approved it |
+| Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued proof |
 | Sealed custody archive | Backup and full recovery of the secured profile | It is not the same thing as an audit or accountant package |
 
 The filing exporter explicitly writes a local file and never contacts AEAT. It
 refuses to overwrite an existing file unless you pass `--replace`, and refuses
 an output path whose parent directory is missing. It can reread the output and detect drift from the approved draft for
-parser-covered casillas. It reports any unchecked casillas separately. This
-remains pre-filing verification. Follow
+boxes the parser covers. It reports any unchecked boxes separately. This
+remains a check before filing. Follow
 [File your modelo at the AEAT portal](../how-to/file-at-aeat.md) to
-complete the operator-controlled filing steps.
+complete the filing steps, which you control.
 
 The application labels local exports as
 `local_export_not_official_aeat_filing_evidence`. Official proof must come back
-from AEAT as a justificante, filed-declaration history, verification record, or
-captured filed copy.
+from AEAT as an AEAT receipt (justificante), filed-declaration history,
+verification record, or a filed copy read from AEAT.
 
 The base accountant review ZIP is plaintext and checksum-verifiable. Separate
 operations can add an Ed25519 signature envelope or encrypt the package for a
@@ -139,11 +140,10 @@ counter-signing, receipt verification, and recipient encryption are distinct
 operations. A review-only handoff carries no filing authority.
 
 Signing and counter-signing leave the ZIP plaintext. Creating a
-counter-signature does not verify the operator signature or archive;
-receipt verification performs those checks. Recipient encryption encrypts the
-bytes supplied to it, but does not first require checksum or signature
-verification. After decryption, verify the recovered package and signatures
-separately.
+counter-signature does not verify the original signature or archive; receipt
+verification performs those checks. Recipient encryption encrypts the bytes
+supplied to it, but does not first require checksum or signature verification.
+After decryption, verify the recovered package and signatures separately.
 
 No command writes a portable profile bundle or a data-subject right-of-access
 response in this version. The commands that produced them were withdrawn when
@@ -173,8 +173,8 @@ intended to let the recipient establish:
 
 - Which original records supported the return.
 - Whether those bytes still match their recorded SHA-256 digests.
-- Which ledger facts contributed to which casillas.
-- Which registry and legal references governed the calculation.
+- Which entries in your records contributed to which boxes (casillas).
+- Which tax rules and legal references governed the calculation.
 - Which calculation revision and filing record were involved.
 - Whether later revisions superseded the original position.
 
@@ -186,7 +186,7 @@ recalculates the tax result. Through the current command-line interface,
 supplied.
 
 The current audit commands do not yet provide a complete one-command audit
-handoff. The command-line audit surface has no payload-loader registry or
+handoff. The command-line audit surface has no payload-loader catalogue or
 bundle-build command. Every
 non-empty audit evidence bundle therefore appears incomplete through the command-line
 interface. A forced incomplete export may omit records and may contain only the
@@ -200,7 +200,7 @@ A genuinely complete audit handoff would normally combine:
 2. The exact submitted-file digest or captured filed copy.
 3. A verified audit evidence bundle containing every referenced supporting record.
 4. The calculation or review package explaining how those records produced the
-   declared casillas.
+   declared boxes.
 
 That combination supports both halves of the audit question: “Was this actually
 filed?” and “What facts, rules, and calculations produced it?”
@@ -217,15 +217,16 @@ authoritative layouts and real evidence. Consequently:
 - Import and export support must not be described as universal across all
   Modelos and periods.
 - Filed declaración-PDF extraction requires an exact registered profile.
-- An operator-supplied local observation, local export, checksum, Google Sheet,
-  or review ZIP cannot prove AEAT acceptance. A locally held AEAT justificante
-  can become official evidence. Import it through the external-evidence
-  workflow.
+- A local observation you supplied, local export, checksum, Google Sheet, or
+  review ZIP cannot prove AEAT acceptance. A locally held AEAT receipt
+  (justificante) can become official proof. Import it through the workflow for
+  AEAT receipts.
 - Integrity proves that bytes have not changed; it does not establish signer
   identity or independent legal authenticity. Use the separate review-package
   signing workflow when author identity matters.
-- Evidence is encrypted in normal custody. Base review and audit ZIPs are
-  deliberate plaintext exports, so secure delivery becomes your responsibility.
+- Supporting documents are encrypted in normal custody. Base review and audit
+  ZIPs are deliberate plaintext exports, so secure delivery becomes your
+  responsibility.
 - A forced incomplete audit evidence bundle export is not a complete handoff.
 - `audit check` reruns bundle checks. Through the current command-line
   interface, it cannot verify referenced bytes, and it does not reproduce or

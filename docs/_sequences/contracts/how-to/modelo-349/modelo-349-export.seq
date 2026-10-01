@@ -2,7 +2,7 @@
 @setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
-@step Export the verified declaration to a local file for upload through the AEAT channel.
+@step Export the checked declaration to a local file for upload through the AEAT channel.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
 @expect result.format == "fichero-boe"
 @expect result.output_path == "modelo-349.boe"

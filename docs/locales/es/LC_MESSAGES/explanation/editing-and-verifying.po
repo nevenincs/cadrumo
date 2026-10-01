@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:43+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: ../../explanation/editing-and-verifying.md:1
-msgid "Editing and verifying a calculation"
-msgstr "Editar y verificar un cálculo"
+#: ../../explanation/editing-and-verifying.md:2
+msgid "Editing and checking a calculation"
+msgstr "Editar y comprobar un cálculo"
 
-#: ../../explanation/editing-and-verifying.md:3
+#: ../../explanation/editing-and-verifying.md:4
 #, python-brace-format
 msgid ""
 "This page covers what a saved calculation actually is, what the "
@@ -37,11 +37,11 @@ msgstr ""
 "un {term}`modelo`; para las acciones paso a paso, enlaza con las guías "
 "prácticas."
 
-#: ../../explanation/editing-and-verifying.md:8
+#: ../../explanation/editing-and-verifying.md:9
 msgid "A calculation is a saved version, not a final answer"
 msgstr "Un cálculo es una versión guardada, no una respuesta definitiva"
 
-#: ../../explanation/editing-and-verifying.md:10
+#: ../../explanation/editing-and-verifying.md:11
 msgid ""
 "Each time you run a calculation, the tool saves that result as its own "
 "version and keeps the ones that came before. Nothing is overwritten. Tax "
@@ -62,13 +62,12 @@ msgstr ""
 " hasta que tú lo decidas. La mecánica está en [El flujo de presentación"
 "](../how-to/filing-spine.md)."
 
-#: ../../explanation/editing-and-verifying.md:19
+#: ../../explanation/editing-and-verifying.md:20
 msgid ""
-"A modelo is made of casillas (numbered boxes). Each box either holds a "
-"value or waits for one. Editing is the act of giving a box the value the "
-"form still needs, then recalculating so the totals reflect it - see "
-"[Review and supply calculation inputs](../how-to/review-calculation-"
-"values.md)."
+"A modelo is made of boxes (numbered boxes). Each box either holds a value"
+" or waits for one. Editing is the act of giving a box the value the form "
+"still needs, then recalculating so the totals reflect it - see [Review "
+"and supply calculation inputs](../how-to/review-calculation-values.md)."
 msgstr ""
 "Un modelo se compone de casillas (recuadros numerados). Cada casilla "
 "contiene un valor o espera uno. Editar es el acto de dar a una casilla el"
@@ -76,41 +75,43 @@ msgstr ""
 "totales lo reflejen; consulta [Revisar y aportar las entradas de cálculo"
 "](../how-to/review-calculation-values.md)."
 
-#: ../../explanation/editing-and-verifying.md:24
-msgid "What verifying checks"
-msgstr "Qué comprueba la verificación"
-
 #: ../../explanation/editing-and-verifying.md:26
+msgid "What the check looks at"
+msgstr "Qué revisa la comprobación"
+
+#: ../../explanation/editing-and-verifying.md:28
 msgid ""
-"Verifying runs a completeness check over a draft against the agency's "
+"The check runs a completeness test over a draft against the agency's "
 "published rules for that modelo and year: every required box has a value,"
 " the sums add up with no box contradicting another, and nothing blocks "
 "the form - including conditions outside the draft itself, such as an "
-"earlier period this form builds on being filed and evidenced. The check "
-"saves a report whatever the result, and the report's completeness status "
-"is one of three values: **complete** (the draft becomes a verified "
-"version and is locked), **incomplete** (required boxes still empty), or "
-"**blocked** (a failed rule or an unresolved dependency, named in the "
-"report). An incomplete or blocked draft stays a draft. Running the check "
-"and acting on each finding is covered in [Verify a filing](../how-to"
-"/verification-reports.md)."
+"earlier period this form builds on being recorded as filed and backed by "
+"proof from AEAT. The check saves a report whatever the result, and the "
+"report's completeness status is one of three values: **complete** (the "
+"draft becomes a checked version and is locked), **incomplete** (required "
+"boxes still empty), or **blocked** (a failed rule or an unresolved "
+"dependency, named in the report). An incomplete or blocked draft stays a "
+"draft. Running the check and acting on each issue is covered in [Check a "
+"draft declaration and act on the issues](../how-to/verification-"
+"reports.md)."
 msgstr ""
-"Verificar ejecuta una comprobación de completitud sobre un borrador "
+"La comprobación ejecuta una prueba de completitud sobre un borrador "
 "frente a las reglas que la Agencia publica para ese modelo y año: cada "
 "casilla obligatoria tiene un valor, las sumas cuadran sin que una casilla"
 " contradiga a otra y nada bloquea el modelo, incluidas condiciones ajenas"
 " al propio borrador, como que un periodo anterior en el que se apoya este"
-" modelo esté presentado y con evidencia. La comprobación guarda un "
-"informe sea cual sea el resultado, y el estado de completitud del informe"
-" es uno de tres valores: **completo** (el borrador pasa a ser una versión"
-" verificada y queda bloqueado), **incompleto** (aún hay casillas "
-"obligatorias vacías) o **bloqueado** (una regla incumplida o una "
-"dependencia sin resolver, indicada en el informe). Un borrador incompleto"
-" o bloqueado sigue siendo un borrador. Ejecutar la comprobación y actuar "
-"sobre cada hallazgo se explica en [Verificar una presentación](../how-to"
-"/verification-reports.md)."
+" modelo esté registrado como presentado y respaldado por una prueba de la"
+" AEAT. La comprobación guarda un informe sea cual sea el resultado, y el "
+"estado de completitud del informe es uno de tres valores: **completo** "
+"(el borrador pasa a ser una versión comprobada y queda bloqueado), "
+"**incompleto** (aún hay casillas obligatorias vacías) o **bloqueado** "
+"(una regla incumplida o una dependencia sin resolver, indicada en el "
+"informe). Un borrador incompleto o bloqueado sigue siendo un borrador. "
+"Ejecutar la comprobación y actuar sobre cada incidencia se explica en "
+"[Comprobar un borrador de declaración y actuar según las incidencias"
+"](../how-to/verification-reports.md)."
 
-#: ../../explanation/editing-and-verifying.md:38
+#: ../../explanation/editing-and-verifying.md:40
 msgid ""
 "A passed check is a local check: it means \"my draft is complete and "
 "consistent\", never \"AEAT accepted my filing\", \"the upload will "
@@ -123,13 +124,13 @@ msgstr ""
 "nunca contacta con la AEAT y la comprobación ignora por completo los "
 "plazos."
 
-#: ../../explanation/editing-and-verifying.md:43
-msgid "Why the tool wants a verified version before it builds the export file"
+#: ../../explanation/editing-and-verifying.md:46
+msgid "Why the tool wants a checked version before it builds the upload file"
 msgstr ""
-"Por qué la herramienta quiere una versión verificada antes de generar el "
-"fichero de exportación"
+"Por qué la herramienta quiere una versión comprobada antes de generar el "
+"fichero para subir"
 
-#: ../../explanation/editing-and-verifying.md:45
+#: ../../explanation/editing-and-verifying.md:48
 msgid ""
 "The export file is the thing that leaves the tool for the agency's "
 "portal, so it is built only from a version that has passed the "
@@ -146,49 +147,47 @@ msgstr ""
 " una presentación: una protección frente a que un borrador incompleto se "
 "presente por accidente."
 
-#: ../../explanation/editing-and-verifying.md:51
+#: ../../explanation/editing-and-verifying.md:54
 msgid "Correcting a filed return"
 msgstr "Corregir una declaración presentada"
 
-#: ../../explanation/editing-and-verifying.md:53
+#: ../../explanation/editing-and-verifying.md:56
+#, python-brace-format
 msgid ""
 "A filed return is not corrected by recalculating the same period. If you "
-"find a mistake after filing at the agency, build an amendment - a "
+"find a mistake after filing at the agency, build a correction - a "
 "complementaria, sustitutiva, or rectificativa - from the filing record. "
-"That record must carry imported agency evidence, such as the "
-"justificante. Building the amendment submits nothing: you file the "
-"correction at the portal yourself. The steps are in [Correct an already "
-"filed local record](../how-to/review-calculation-values.md#correct-an-"
-"already-filed-local-record)."
+"That record must carry imported proof from the agency, such as the "
+"justificante. Building the correction submits nothing: you file it at the"
+" portal yourself. The steps are in {ref}`Correct a declaration already "
+"recorded as filed <correct-an-already-filed-local-record>`."
 msgstr ""
 "Una declaración presentada no se corrige recalculando el mismo periodo. "
 "Si encuentras un error después de presentar en la Agencia, crea una "
-"rectificación (una complementaria, una sustitutiva o una rectificativa) a"
-" partir del registro de la presentación. Ese registro debe llevar "
-"evidencia de la Agencia importada, como el justificante. Crear la "
-"rectificación no presenta nada: la corrección la presentas tú mismo en el"
-" portal. Los pasos están en [Corrige un registro local ya presentado"
-"](../how-to/review-calculation-values.md#correct-an-already-filed-local-"
-"record)."
+"corrección (una complementaria, una sustitutiva o una rectificativa) a "
+"partir del registro de la presentación. Ese registro debe llevar una "
+"prueba de la Agencia importada, como el justificante. Crear la corrección"
+" no presenta nada: la presentas tú mismo en el portal. Los pasos están en"
+" {ref}`Corrige una declaración ya registrada como presentada <correct-an-"
+"already-filed-local-record>`."
 
-#: ../../explanation/editing-and-verifying.md:60
+#: ../../explanation/editing-and-verifying.md:63
 msgid "Where this sits in the journey"
 msgstr "Dónde encaja esto en el recorrido"
 
-#: ../../explanation/editing-and-verifying.md:62
+#: ../../explanation/editing-and-verifying.md:65
 msgid ""
 "This page is part of the [how-it-works overview](index.md) cluster. "
-"Earlier filings feed into later ones; for how a verified prior period "
+"Earlier filings feed into later ones; for how a checked prior period "
 "carries forward, see [How filings build on earlier ones](building-on-"
 "earlier-filings.md). Once a version has passed the check, the next "
-"outputs are covered in [Reviewing your numbers and producing the export "
+"outputs are covered in [Reviewing your numbers and producing the upload "
 "file](reviewing-and-exporting.md)."
 msgstr ""
 "Esta página forma parte del grupo de la [visión general de cómo "
 "funciona](index.md). Las presentaciones anteriores alimentan las "
-"posteriores; para saber cómo se arrastra un periodo anterior verificado, "
+"posteriores; para saber cómo se arrastra un periodo anterior comprobado, "
 "consulta [Cómo las presentaciones se apoyan en las anteriores](building-"
 "on-earlier-filings.md). Una vez que una versión ha superado la "
 "comprobación, las siguientes salidas se tratan en [Revisar tus cifras y "
-"generar el fichero de exportación](reviewing-and-exporting.md)."
-
+"generar el fichero para subir](reviewing-and-exporting.md)."

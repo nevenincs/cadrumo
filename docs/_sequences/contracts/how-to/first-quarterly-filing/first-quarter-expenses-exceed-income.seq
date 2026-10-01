@@ -1,5 +1,5 @@
 :seed: autonomo-irpf-2026
-@step Register the invoice for a second office-supplies purchase as encrypted evidence bytes.
+@step Register the invoice for a second office-supplies purchase as encrypted supporting document.
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0099 --invoice-date 2026-03-10 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
 @capture second_purchase_evidence_id result.evidence_id
 @step Record the second purchase as a deductible expense, so the quarter's expenses exceed its income.
@@ -18,7 +18,7 @@ aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130
 @expect result.casilla_values.13 == "100.00"
 @expect result.casilla_values.14 == "-100.00"
 @expect result.casilla_values.19 == "-100.00"
-@step Verify the draft; a negative result verifies like any other.
+@step Check the draft; a negative result passes the check like any other.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
 @expect result.completeness_status == "complete"

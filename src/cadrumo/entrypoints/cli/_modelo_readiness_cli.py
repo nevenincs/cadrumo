@@ -14,6 +14,7 @@ from ...application.state_projection import (
     build_operator_state_projection,
 )
 from ...application.state_projection_ports import StateProjectionReadPorts
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -262,10 +263,7 @@ def _readiness_lines(
     lines.extend(_readiness_ledger_export_lines(report, export_context))
     lines.extend(_readiness_detail_lines(report))
     if _ledger_ready_but_bindings_missing(report):
-        lines.append(
-            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
-            "missing_bindings/source_binding_ready still decide source completeness.",
-        )
+        lines.append(f"readiness_note\t{tr('cli.app.modelo.readiness.sources_still_missing')}")
     return lines
 
 
@@ -344,10 +342,7 @@ def _readiness_notices(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="modelo.readiness.ledger_preflight_scope",
-                message=(
-                    "ledger_ready only means the period ledger rows passed transaction preflight; "
-                    "missing_bindings/source_binding_ready still decide source completeness."
-                ),
+                message=tr("cli.app.modelo.readiness.sources_still_missing"),
                 context={
                     "ledger_ready": "true",
                     "binding_ready": "false",

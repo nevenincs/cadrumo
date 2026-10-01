@@ -24,8 +24,8 @@ construction, exactly like the CLI.
 cadrumo-mcp --help
 ```
 
-If the command is not found, install Cadrumo first - see
-[Get Cadrumo](../download.md).
+If the command is not found, install Cadrumo first; see [Get
+Cadrumo](../download.md).
 
 ## Register the server
 
@@ -48,18 +48,11 @@ no working directory and no path of its own.
 
 ## Before the first agent session
 
-The server uses the same local encrypted store and the same active profile
-as the CLI. A server cannot answer a passphrase prompt, so configure the
-passphrase for unattended runs first - see
-[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
+The server uses the same local encrypted store and the same active profile as
+the CLI. A server cannot answer a passphrase prompt, so configure the passphrase
+for unattended runs first; see [Run without a passphrase
+prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 ## What the agent can and cannot do
 
-The agent can import and classify records, run calculations, verify drafts, and
-prepare exports, because those are local operations. Commands that write an
-export file or record a filing marker ask you to confirm first. The agent
-cannot submit anything to AEAT, and it cannot invent a figure: calculations
-always run inside the deterministic engine, and every value keeps its legal
-references. You review and file yourself, exactly as in the
-[Quickstart](quickstart.md) and the
-[filing guide](file-at-aeat.md).
+The agent can import and classify records, run calculations, check drafts, and prepare exports, because those are local operations. Commands that write an export file or record a filing ask you to confirm first. The agent cannot submit anything to AEAT, and it cannot invent a figure: calculations always run inside the deterministic engine, and every value keeps its legal references. You review and file yourself, exactly as in the [Quickstart](quickstart.md) and the [filing guide](file-at-aeat.md).

@@ -781,7 +781,7 @@ def _render_catalogue(catalogue: Catalog) -> str:
     """Render a Babel catalogue while retaining its existing order and header."""
     output = io.BytesIO()
     write_po(output, catalogue, sort_output=False, sort_by_file=False, ignore_obsolete=False)
-    return output.getvalue().decode(UTF_8)
+    return output.getvalue().decode(UTF_8).rstrip("\n") + "\n"
 
 
 __all__ = ["DocumentationLocaleMutationError", "apply_manifest"]

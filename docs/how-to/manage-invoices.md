@@ -4,9 +4,9 @@ Record the invoices your business issues and receives: the money a customer
 owes you and the money you owe a supplier. This guide covers both kinds and
 shows which records feed your tax calculations.
 
-A business invoice is not the same as a purchase receipt you attach as evidence.
-Receipts support a deductible expense on a ledger transaction (see
-[Attach invoices and receipts](ledger-evidence.md)). Business invoices recorded
+A business invoice is not the same as a purchase receipt you attach as a supporting document.
+Receipts support a deductible expense on a transaction in your records (see
+[Attach invoices and receipts to transactions](ledger-evidence.md)). Business invoices recorded
 here are the commercial documents themselves: an *issued* invoice (you billed a
 customer) or a *received* invoice (a supplier billed you).
 
@@ -31,8 +31,7 @@ Cadrumo keeps business invoices in one catalogue (`aeat app ledger invoice
 edit invoices.
 
 Every invoice you record is linkable and calculable. Match it to a bank
-transaction with `aeat app ledger link`, and a calculation reads it directly -
-for example the Modelo 349 recapitulative declaration of intra-community
+transaction with `aeat app ledger link`, and a calculation reads it directly, for example the Modelo 349 recapitulative declaration of intra-community
 operations.
 
 Record every invoice with `invoice add`. There is no second copy to create.
@@ -90,7 +89,7 @@ supplies after an exempt import, `H` the same via a fiscal representative,
 (returns), and `C` (substitutions).
 
 `invoice update` corrects the note, counterparty name and country, operation
-type and date, IVA category, retention, invoice class, series, and the
+type and date, VAT category, withholding, invoice class, series, and the
 rectified invoice number. To correct the invoice number, date, tax id,
 currency, or totals, remove the invoice and record it again.
 
@@ -133,7 +132,7 @@ Remove a catalogue invoice you created by mistake, confirming with `--yes`.
 If the invoice is still linked to a transaction, the removal is refused, so
 the bank transaction never ends up citing an invoice that no longer exists.
 `aeat` has no command that unlinks an invoice. Removing the linked transaction
-releases the link (see [Correct mistakes in your ledger](correct-ledger-entries.md)).
+releases the link (see [Correct mistakes in your records](correct-ledger-entries.md)).
 The example removes an invoice that has no link:
 
 ```{cli-sequence} invoices-catalogue-remove
@@ -148,10 +147,10 @@ when you create them. This is the modelo your issued and received invoices
 drive directly. Modelo 100 calculations also read the invoice linked to an
 income or expense transaction, for example the withholding declared on it.
 
-Modelo 303 (quarterly IVA) and Modelo 390 (annual IVA summary) take their
-amounts from your classified ledger, not from the invoice catalogue. They do
-check the catalogue: if an invoice's IVA for the period exceeds what the ledger
-carries, the calculation refuses until you record and classify the matching
+Modelo 303 (quarterly VAT) and Modelo 390 (annual VAT summary) take their
+amounts from the transactions you have classified in your records, not from the
+invoice catalogue. They do check the catalogue: if an invoice's VAT for the
+period exceeds what your records carry, the calculation refuses until you record and classify the matching
 transactions (see [Classify transactions](classify-transactions.md)).
 Recording an invoice here does not add it to a Modelo 303.
 
@@ -161,8 +160,8 @@ through the OSS-specific workflow.
 
 ## Where to go next
 
-- [Attach invoices and receipts](ledger-evidence.md)
+- [Attach invoices and receipts to transactions](ledger-evidence.md)
 - [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
-- [Prepare a Modelo 303 IVA filing](modelo-303.md)
+- [Prepare a Modelo 303 VAT filing](modelo-303.md)
 - [CLI reference](../cli/index.rst)

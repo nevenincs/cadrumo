@@ -1,17 +1,19 @@
-# Attach invoices and receipts to ledger transactions
+(attach-invoices-and-receipts-to-ledger-transactions)=
+# Attach invoices and receipts to transactions
 
-Store an evidence record for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Stored evidence remains under encrypted local custody. Google Drive pull commands reach your authorized account before storing the downloaded bytes locally.
+Store a supporting document for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Stored supporting documents stay encrypted on your computer. Google Drive pull commands reach your authorized account before storing the downloaded file on your computer.
 
 ## Before you start
 
 You need:
 
-- An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
+- An active taxpayer profile. Supporting documents are stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - Your passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
-- Transactions in your ledger. If your ledger is empty, see [Import and manage transactions](import-bank-statements.md) first.
-- The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
+- Transactions in your records. If you have none yet, see [Import and manage transactions](import-bank-statements.md) first.
+- The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as a record of where it came from. Your original file is never needed again after `add`.
 
-## Add an evidence record
+(add-an-evidence-record)=
+## Add a supporting document
 
 Record the invoice file and its details, then view the stored record. The file
 path is the only required part; every metadata flag is optional. Here
@@ -19,39 +21,38 @@ path is the only required part; every metadata flag is optional. Here
 decimal such as `0.21`:
 
 ```{cli-sequence} ledger-evidence-add
-:verify: Confirm the evidence record stored the supplier and invoice details.
+:verify: Confirm the supporting document record stored the supplier and invoice details.
 ```
 
-The command prints the evidence ID and the 64-character content id of the stored document: `attachment_id` in `--format json` output, `source_sha256` in text output. Note the evidence ID down - later commands need it. Add what you know now; update the rest later.
+The command prints the supporting document's ID and the 64-character content id of the stored document: `attachment_id` in `--format json` output, `source_sha256` in text output. Note the supporting document's ID down: later commands need it. Add what you know now; update the rest later.
 
-## Attach an evidence record to a transaction
+(attach-an-evidence-record-to-a-transaction)=
+## Attach a supporting document to a transaction
 
-Attach the evidence record to the transaction it supports. The example starts
-with one evidence record and one expense, then attaches the record to the
-expense:
+Attach the supporting document to the transaction it supports. The example starts with one supporting document and one expense, then attaches the document to the expense:
 
 ```{cli-sequence} ledger-evidence-attach
-:verify: Confirm the purchase-invoice evidence attached to the transaction.
+:verify: Confirm the purchase invoice attached to the transaction.
 ```
 
-A transaction carries at most one purchase-invoice evidence record. Attached purchase evidence is immutable: the command refuses a different record, and refuses re-attaching the same one. To change it, remove the transaction and add it again with the correct evidence.
+A transaction carries at most one purchase-invoice supporting document. An attached purchase-invoice supporting document cannot be changed: the command refuses a different one, and refuses re-attaching the same one. To change it, remove the transaction and add it again with the correct supporting document.
 
-Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the evidence document, while `link` binds the transaction to an invoice and requires `--invoice-id`. That id comes from an imported, reconciled, or manually added invoice - the id `aeat app ledger invoice add` prints is exactly the one to pass.
+Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the supporting document, while `link` ties the transaction to an invoice and requires `--invoice-id`. That id comes from an imported, reconciled, or manually added invoice - the id `aeat app ledger invoice add` prints is exactly the one to pass.
 
-For most receipts and invoices, use `--purchase-invoice-evidence-id`; the evidence id comes straight from `evidence add`.
+For most receipts and invoices, use `--purchase-invoice-evidence-id`; the id comes straight from `evidence add`.
 
-The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a document already in encrypted attachment storage, and it refuses any id that has no stored document (`attachment_ids must reference existing secure attachment manifests and blobs`). The commands that store a document print that id: `evidence add` and `evidence pull-all`, as `attachment_id` in JSON output and as `source_sha256` in text output. The evidence id from `evidence add` is a shorter id and is not accepted here. Inspect a stored attachment with `aeat app ledger evidence attachment-view <attachment-id>`.
+The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a document already in encrypted attachment storage, and it refuses any id that has no stored document (`attachment_ids must reference existing secure attachment manifests and blobs`). The commands that store a document print that id: `evidence add` and `evidence pull-all`, as `attachment_id` in JSON output and as `source_sha256` in text output. The supporting document's ID from `evidence add` is a shorter id and is not accepted here. Inspect a stored attachment with `aeat app ledger evidence attachment-view <attachment-id>`.
 
-To unlink a supplementary attachment without deleting its bytes, run `aeat app ledger detach` with the transaction id and the attachment's `--attachment-id`. Detach cannot clear purchase-invoice evidence.
+To unlink a supplementary attachment without deleting its bytes, run `aeat app ledger detach` with the transaction id and the attachment's `--attachment-id`. Detach cannot clear a purchase-invoice supporting document.
 
 ## Pull a document from Google Drive instead
 
-When the document lives in Google Drive, pull it straight into encrypted evidence storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
+When the document lives in Google Drive, pull it straight into encrypted storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
 
 ```{cli-sequence} ledger-evidence-pull
 ```
 
-The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and register it with `aeat app ledger evidence add`.
+The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as a record of where it came from. A supporting document always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and register it with `aeat app ledger evidence add`.
 
 ## Bulk-fetch every invoice in a Drive folder
 
@@ -60,7 +61,7 @@ Fetch every PDF and image invoice in one Drive folder at once, instead of one do
 ```{cli-sequence} ledger-evidence-pull-all
 ```
 
-The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>`.
+The command lists the folder's contents, downloads each PDF or image, and stores every file encrypted. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>`.
 
 Re-run the same command any time. A file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and register it with `aeat app ledger evidence add`.
 
@@ -72,41 +73,42 @@ An invoice *record* - who owes whom, for what amount - is not a stored
 document. [Manage business invoices](manage-invoices.md) owns invoice
 records: registering issued and received invoices, the reconciliation
 catalogue, and linking a catalogue invoice to the transaction that settles
-it. This page is about the documents - PDFs and images - you store as
-evidence and link to transactions.
+it. This page is about the documents - PDFs and images - you store as supporting documents and link to transactions.
 
-## List, view, update, and remove evidence records
+(list-view-update-and-remove-evidence-records)=
+## List, view, update, and remove supporting documents
 
 List every stored record, view one in full, update its details, and remove one
-you no longer need. The example starts with one evidence record, lists and
-inspects it, changes the supplier, and confirms the change:
+you no longer need. The sequence records a supporting document, lists and inspects it, changes the supplier, and confirms the change:
 
 ```{cli-sequence} ledger-evidence-manage
-:verify: Confirm the evidence record's supplier was updated.
+:verify: Confirm the supporting document record's supplier was updated.
 ```
 
-Remove an evidence record you no longer need, addressing it by id:
+Remove a supporting document you no longer need, addressing it by id:
 
 ```{cli-sequence} ledger-evidence-remove
-:verify: Confirm the evidence record no longer appears in the catalogue.
+:verify: Confirm the supporting document record no longer appears in the catalogue.
 ```
 
-Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
+Removing applies to supporting documents, not transactions. To fix a transaction row itself, see [Correct mistakes in your records](correct-ledger-entries.md).
 
-## Evidence and input IVA deduction
+(evidence-and-input-iva-deduction)=
+## Supporting documents and input VAT deduction
 
-Evidence also decides whether input IVA deducts. Input IVA deducts only when the row carries `--deduction-kind` on `aeat app ledger add` or `classify`. The kinds are `domestic_current`, `domestic_investment`, `import_current`, `import_investment`, `intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, `rectification`, and `investment_goods_regularisation`. Only `domestic_current` and `domestic_investment` can be substantiated from the ledger today. They take their evidence from the linked purchase-invoice record, so attach it first; `domestic_investment` also needs `--investment-asset-id`. The other kinds need a customs declaration, an intra-EU self-assessment, a REAGP receipt, rectification evidence, or a bienes de inversión record that a ledger row cannot link, so the IVA calculation holds such a row back.
+Supporting documents also decide whether input VAT deducts. Input VAT deducts only when the row carries `--deduction-kind` on `aeat app ledger add` or `classify`. The kinds are `domestic_current`, `domestic_investment`, `import_current`, `import_investment`, `intra_eu_current`, `intra_eu_investment`, `reagp_compensation`, `rectification`, and `investment_goods_regularisation`. Only `domestic_current` and `domestic_investment` can be substantiated from your records today. They take their supporting document from the linked purchase-invoice record, so attach it first; `domestic_investment` also needs `--investment-asset-id`. The other kinds need a customs declaration, an intra-EU self-assessment, a REAGP receipt, proof of the rectification, or a bienes de inversión record that a row in your records cannot link, so the VAT calculation holds such a row back.
 
 ## After you correct a row
 
-If you merge or split transactions, check the new rows and re-attach evidence where needed. [Correct mistakes in your ledger](correct-ledger-entries.md) covers row changes.
+If you merge or split transactions, check the new rows and re-attach supporting documents where needed. [Correct mistakes in your records](correct-ledger-entries.md) covers row changes.
 
-## Where evidence shows up
+(where-evidence-shows-up)=
+## Where supporting documents show up
 
-Ledger exports include the evidence link with each transaction. Ledger-derived calculations carry the evidence trail through to filing artifacts.
+Exports of your records include the link to the supporting document with each transaction. Calculations based on your records carry the trail of supporting documents through to the filing files.
 
-Read [Import, export, and evidence](../reference/import-export-and-evidence.md)
-for the difference between linked ledger evidence, an AEAT upload file,
+Read [Import, export, and supporting documents](../reference/import-export-and-evidence.md)
+for the difference between linked supporting documents, an AEAT upload file,
 official filing proof, and an audit bundle.
 
 ## Where to get help
@@ -117,8 +119,8 @@ official filing proof, and an audit bundle.
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) - understand how evidence participates in calculation, filing, and audit.
-- [Import and manage transactions](import-bank-statements.md) - bring more transactions into the ledger.
-- [Correct mistakes in your ledger](correct-ledger-entries.md) - fix mistakes in transaction rows.
+- [Import, export, and supporting documents](../reference/import-export-and-evidence.md) - understand how supporting documents take part in calculation, filing, and audit.
+- [Import and manage transactions](import-bank-statements.md) - bring more transactions into your records.
+- [Correct mistakes in your records](correct-ledger-entries.md) - fix mistakes in transaction rows.
 - [Classify transactions](classify-transactions.md) - assign tax categories to your transactions.
 - [CLI reference](../cli/index.rst) - the full command surface.

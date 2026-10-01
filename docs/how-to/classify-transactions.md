@@ -1,10 +1,10 @@
 # Classify transactions
 
-This page covers the classification of ledger transactions: deciding whether a
+This page covers the classification of the transactions in your records: deciding whether a
 row is business, personal, or mixed, adding the category and tax fields a
 calculation needs, recording mixed-use shares, batch and rule-based
 classification, and the review queue that lists everything still waiting for a
-decision. Use it after transactions are in the active profile's ledger -
+decision. Use it after transactions are in the active profile's records -
 imported rows have dates and amounts, but they do not yet say how the tax
 calculation should treat them.
 
@@ -17,7 +17,7 @@ You need:
 
 - An active taxpayer profile. Every command on this page works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - Your profile passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
-- A ledger with transactions in it. See [Import and manage transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
+- Transactions in your records. See [Import and manage transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
 
 The examples in this documentation are recorded in English. `aeat` prints its messages in Spanish unless you [choose another language](profile-setup.md#choose-the-output-language). Option names are the same in every language.
 
@@ -31,12 +31,12 @@ the unclassified rows and inspects the expense:
 :verify: Confirm the row is still unclassified before you decide.
 ```
 
-Use the description, amount, counterparty, source document, and business context
+Use the description, amount, counterparty, supporting document, and business context
 to decide how to classify the row.
 
 ## Choose the classification
 
-Use one of the ledger classification states that command help accepts:
+Use one of the classification states that command help accepts:
 
 - `BUSINESS` for a fully business-related transaction
 - `PERSONAL` for a personal transaction that should not feed tax calculations
@@ -65,19 +65,19 @@ and `--kind issued` for customer invoices.
 ## Add tax fields when needed
 
 If a row needs regulated tax fields, add only the fields that apply. The
-sequence classifies the expense with its taxable base, rate, and IVA amount:
+sequence classifies the expense with its taxable base, rate, and VAT amount:
 
 ```{cli-sequence} classify-tax-fields
-:verify: Confirm the taxable base and IVA fields were recorded on the row.
+:verify: Confirm the taxable base and VAT fields were recorded on the row.
 ```
 
-Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
+Common fields include taxable base, VAT rate, VAT amount, VAT category, IRPF
 category, the deduction kind, and the counterparty's EU member state for
-intracommunity IVA cases. Use `aeat app ledger classify --help` for the exact
+intracommunity VAT cases. Use `aeat app ledger classify --help` for the exact
 current option list.
 
-For ordinary domestic IVA, use the taxable base, rate, and amount shown by the
-invoice. For example, a EUR 121.00 purchase with 21 percent IVA usually has
+For ordinary domestic VAT, use the taxable base, rate, and amount shown by the
+invoice. For example, a EUR 121.00 purchase with 21 percent VAT usually has
 `--taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00`.
 
 Most purchases need no `--iva-category`, including reduced-rate ones. When you leave it out, Cadrumo reads the category from
@@ -87,36 +87,37 @@ such as exempt or not-subject supplies, purchases from EU suppliers, or recargo
 de equivalencia. Run `aeat app ledger classify --help` to see the accepted
 values.
 
-### Say where the input IVA comes from
+(say-where-the-input-iva-comes-from)=
+### Say where the input VAT comes from
 
-For a purchase, `--deduction-kind` names the exact source of the input IVA
-deduction. Cadrumo never infers it. Without it, the row's IVA is not deducted,
+For a purchase, `--deduction-kind` names the exact source of the input VAT
+deduction. Cadrumo never infers it. Without it, the row's VAT is not deducted,
 and the calculation reports the row as missing a deduction classification.
 
 For an ordinary purchase from a Spanish supplier, use
 `--deduction-kind domestic_current`, as the sequence does. This kind also needs
-the purchase invoice evidence linked to the row. See
-[Attach invoices and receipts](ledger-evidence.md). `aeat app ledger add` takes
-the same option, plus `--purchase-invoice-evidence-id` to link the evidence when
+the purchase invoice linked to the row as a supporting document. See
+[Attach invoices and receipts to transactions](ledger-evidence.md). `aeat app ledger add` takes
+the same option, plus `--purchase-invoice-evidence-id` to link the supporting document when
 you record the row.
 
-Other sources use other kinds, each with its own required evidence:
+Other sources use other kinds, each with its own required proof:
 
 - `domestic_investment` - investment goods bought in Spain, with the invoice as
-  evidence.
+  proof.
 - `import_current` and `import_investment` - imports, with the customs
-  declaration as evidence.
+  declaration as proof.
 - `intra_eu_current` and `intra_eu_investment` - intra-EU acquisitions, with
-  your own self-assessment as evidence.
+  your own self-assessment as proof.
 - `reagp_compensation` - the compensation of the REAGP regime, with the REAGP
-  receipt as evidence.
-- `rectification` - a corrected invoice, with the rectification evidence.
+  receipt as proof.
+- `rectification` - a corrected invoice, with proof of the rectification.
 
 The `*_investment` kinds also need `--investment-asset-id`, the identity of the
 record in your investment goods register.
 
 Each kind feeds its own Modelo 303 boxes. Only `domestic_current` rows count
-in the ordinary domestic input IVA boxes.
+in the ordinary domestic input VAT boxes.
 
 (classify-mixed-use-transactions)=
 ## Classify mixed-use transactions
@@ -172,7 +173,7 @@ workflow; keep the census facts in your profile correct first - see
 
 For bulk review, `classify --file` reads a CSV with columns
 `transaction_id`, `classification`, and optional classification facts such as
-`category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA columns,
+`category_id`, `business_pct`, `usage_ratio_id`, taxable-base and VAT columns,
 `iva_category`, and `irpf_category`. Prepare a narrow CSV holding only the rows
 you mean to change, one row per transaction:
 
@@ -192,7 +193,7 @@ CSV, and confirms the result:
 ```
 
 Use the CSV path when filtered review shows many rows you can classify safely
-from their descriptions, counterparties, and source documents. Keep a copy of
+from their descriptions, counterparties, and supporting documents. Keep a copy of
 the file. It gives you a record of how you classified that period if you are
 later asked to justify your return. The CSV has no column for the deduction
 kind; set it with `classify` or `add` on each purchase row. This path does not
@@ -204,7 +205,7 @@ split/merge state; use the transaction workflow for those row-level edits.
 Rules automatically classify transactions whose description contains a word or
 phrase you specify. Matching ignores uppercase and lowercase differences. The
 sequence adds a rule, lists the rules, previews the effect, then applies it. The
-example ledger holds no rows, so the preview and the apply match nothing:
+example's records hold no rows, so the preview and the apply match nothing:
 
 ```{cli-sequence} classify-rules
 :verify: Confirm the stored rule is registered and applies cleanly.
@@ -217,7 +218,7 @@ classifications you already set by hand.
 
 Cadrumo can use a configured language model to suggest how to classify each
 transaction. The suggestion is a starting point. You must confirm or correct
-it. It does not fill in tax amounts such as taxable base, IVA rate, or IRPF
+it. It does not fill in tax amounts such as taxable base, VAT rate, or IRPF
 category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
@@ -228,7 +229,7 @@ provider, preview, apply, and override flow.
 
 The review queue is one profile-wide list of everything that still wants your
 attention before a filing: transactions without a classification, invoice
-records that are unmatched or disputed, and verification findings on modelo
+records that are unmatched or disputed, and issues found by the check on modelo
 drafts. Each row names the command to run next, so the queue is a
 to-do list you can work through top to bottom. The queue is read-only; items
 clear when you fix the underlying record. The example starts from the imported
@@ -249,27 +250,26 @@ the command to run next. Narrow the list by kind, modelo, or state:
 Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
 `payable_invoice`, `collectible_invoice`, and `modelo_finding`. The default
 state is `pending`. Inspect one item in full, including the suggested next
-command, with `aeat app review view <item-id>`. Modelo findings are grounded
-in registry rules; add `--explain` to show the legal references, or use the
+command, with `aeat app review view <item-id>`. Issues on a modelo are grounded
+in the tax rules; add `--explain` to show the legal references, or use the
 global `--format json` flag (before the command) for a `legal_refs` field on
 every row.
 
 Transaction items clear when you classify the row (this page). Invoice items
 clear when you link or update the invoice - see
-[Attach invoices and receipts](ledger-evidence.md). Modelo findings clear when
-you fix the reported values and verify again - see
-[Verify a filing](verification-reports.md).
+[Attach invoices and receipts to transactions](ledger-evidence.md). Issues on a modelo clear when you fix the reported values and check again - see
+[Check a draft declaration and act on the issues](verification-reports.md).
 
 ## Confirm readiness
 
 Run preflight after classification. The example starts from the classified
-quarter, then runs preflight and reads the ledger status:
+quarter, then runs preflight and reads the status of your records:
 
 ```{cli-sequence} classify-confirm-readiness
 :verify: Confirm preflight reports the classified quarter's readiness.
 ```
 
-Preflight names rows that still need category, taxable base, IVA amount, IVA
+Preflight names rows that still need category, taxable base, VAT amount, VAT
 rate, currency, or proportionality reference.
 
 ## Correct a classification

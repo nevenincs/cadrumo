@@ -292,8 +292,8 @@ msgid ""
 "llm.md#set-up-the-local-reader)."
 msgstr ""
 "La classificació amb un LLM només s'executa en aquest lector local; no hi"
-" intervé cap proveïdor al núvol. Consulta [Classifica les transaccions "
-"amb un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
+" intervé cap proveïdor al núvol. Consulta [Classifica els moviments amb "
+"un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
 
 #: ../../workstation-setup.md:120
 msgid ""

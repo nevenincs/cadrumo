@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:43+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -20,41 +20,41 @@ msgstr ""
 
 #: ../../explanation/from-records-to-figures.md:1
 msgid "How your records become tax figures"
-msgstr "Hogyan válnak a nyilvántartásaid adóadatokká"
+msgstr "Hogyan válnak az Ön nyilvántartásai adóadatokká"
 
 #: ../../explanation/from-records-to-figures.md:3
 msgid ""
 "This page covers where the numbers on your tax form come from: how a "
-"plain bank movement turns into a figure for each numbered box on an "
+"plain bank transaction turns into a figure for each numbered box on an "
 "official form, and why the tool is built to let you explain every figure "
 "later. It walks through the idea, not the buttons - the how-to guides "
 "linked from each section carry the commands."
 msgstr ""
-"Ez az oldal arról szól, honnan származnak az adóűrlapodon szereplő "
-"számok: hogyan válik egy egyszerű banki mozgásból adat egy hivatalos "
-"űrlap minden egyes számozott casillájához, és miért úgy épült az eszköz, "
-"hogy később minden adatot meg tudj magyarázni. A gondolatot járja körül, "
-"nem a gombokat - az egyes szakaszokból hivatkozott útmutatók tartalmazzák"
-" a parancsokat."
+"Ez az oldal arról szól, honnan származnak az Ön adónyomtatványán szereplő"
+" számok: hogyan válik egy egyszerű banki tranzakcióból adat egy hivatalos"
+" nyomtatvány minden egyes számozott rovatához, és miért úgy épült az "
+"eszköz, hogy később minden adatot meg tudjon magyarázni. A gondolatot "
+"járja körül, nem a gombokat - az egyes szakaszokból hivatkozott útmutatók"
+" tartalmazzák a parancsokat."
 
 #: ../../explanation/from-records-to-figures.md:9
 #, python-brace-format
 msgid ""
-"The forms in question are modelos that you file with the {term}`AEAT`. "
-"Each modelo is made of {term}`casillas <casilla>`. Your job, with the "
+"The forms in question are modelos that you send to the {term}`AEAT`. Each"
+" modelo is made of numbered {term}`boxes <casilla>`. Your job, with the "
 "tool's help, is to put the right figure in each box and to keep the "
-"evidence behind it."
+"supporting documents behind it."
 msgstr ""
-"A szóban forgó űrlapok modelók, amelyeket az {term}`AEAT`-nál nyújtasz "
-"be. Minden modelo {term}`casillákból <casilla>` áll. A te feladatod, az "
-"eszköz segítségével, hogy a megfelelő adatot tedd minden casillába, és "
-"megőrizd a mögötte lévő bizonyítékot."
+"A szóban forgó nyomtatványokat az {term}`AEAT`-nak nyújtja be. Minden "
+"nyomtatvány számozott {term}`rovatokból <casilla>` áll. Az Ön feladata, "
+"az eszköz segítségével, hogy a megfelelő adatot tegye minden rovatba, és "
+"megőrizze a mögötte lévő bizonylatokat."
 
-#: ../../explanation/from-records-to-figures.md:11
-msgid "A bank movement means nothing on its own"
+#: ../../explanation/from-records-to-figures.md:12
+msgid "A bank transaction means nothing on its own"
 msgstr "Egy banki mozgás önmagában semmit sem jelent"
 
-#: ../../explanation/from-records-to-figures.md:13
+#: ../../explanation/from-records-to-figures.md:14
 msgid ""
 "A line on a bank statement is just a date and an amount. The money moved,"
 " but the statement doesn't know whether it was a customer paying you, a "
@@ -62,40 +62,40 @@ msgid ""
 "accounts."
 msgstr ""
 "Egy sor a bankszámlakivonaton csupán egy dátum és egy összeg. A pénz "
-"mozgott, de a kivonat nem tudja, hogy egy neked fizető ügyfélről, egy "
-"általad kifizetett beszállítóról, a heti bevásárlásodról, vagy a saját "
-"számláid közötti átvezetésről volt-e szó."
+"mozgott, de a kivonat nem tudja, hogy egy Önnek fizető ügyfélről, egy Ön "
+"által kifizetett beszállítóról, az Ön heti bevásárlásáról, vagy az Ön "
+"saját számlái közötti átvezetésről volt-e szó."
 
-#: ../../explanation/from-records-to-figures.md:15
+#: ../../explanation/from-records-to-figures.md:16
 msgid ""
 "Tax meaning isn't in the bank data. You add it. Until you do, a movement "
 "can't count toward any box on any form."
 msgstr ""
-"Az adóügyi jelentés nincs benne a banki adatokban. Te adod hozzá. Amíg "
-"meg nem teszed, egy mozgás nem számíthat bele egyetlen űrlap egyetlen "
-"casillájába sem."
+"Az adóügyi jelentés nincs benne a banki adatokban. Ön adja hozzá. Amíg "
+"ezt meg nem teszi, egy mozgás nem számíthat bele egyetlen nyomtatvány "
+"egyetlen rovatába sem."
 
-#: ../../explanation/from-records-to-figures.md:17
+#: ../../explanation/from-records-to-figures.md:18
 msgid "Making a record tax-ready"
 msgstr "Egy nyilvántartás adókészre tétele"
 
-#: ../../explanation/from-records-to-figures.md:19
+#: ../../explanation/from-records-to-figures.md:20
 msgid ""
 "To give a movement tax meaning, you turn it into a sorted, categorized "
 "record. A tax-ready record carries three things:"
 msgstr ""
-"Ahhoz, hogy egy mozgásnak adóügyi jelentést adj, besorolt, kategorizált "
-"nyilvántartássá alakítod. Egy adókész nyilvántartás három dolgot hordoz:"
+"Ahhoz, hogy egy mozgásnak adóügyi jelentést adjon, besorolt, kategorizált"
+" nyilvántartássá alakítja. Egy adókész nyilvántartás három dolgot hordoz:"
 
-#: ../../explanation/from-records-to-figures.md:21
+#: ../../explanation/from-records-to-figures.md:22
 msgid "a business, personal, or mixed decision;"
 msgstr "egy üzleti, magán vagy vegyes döntést;"
 
-#: ../../explanation/from-records-to-figures.md:22
+#: ../../explanation/from-records-to-figures.md:23
 msgid "a category, such as customer sales or office supplies;"
 msgstr "egy kategóriát, például vevői értékesítés vagy irodaszer;"
 
-#: ../../explanation/from-records-to-figures.md:23
+#: ../../explanation/from-records-to-figures.md:24
 msgid ""
 "and, for a mixed cost, the business-versus-personal split, so only the "
 "business share counts."
@@ -103,22 +103,22 @@ msgstr ""
 "és egy vegyes költség esetén az üzleti-magán megosztást, hogy csak az "
 "üzleti hányad számítson."
 
-#: ../../explanation/from-records-to-figures.md:25
+#: ../../explanation/from-records-to-figures.md:26
 msgid ""
 "A record that has all of this is ready to feed into a calculation. To do "
 "this for your own movements, see [Classify transactions](../how-to"
 "/classify-transactions.md)."
 msgstr ""
 "Egy olyan nyilvántartás, amely mindezt tartalmazza, készen áll arra, hogy"
-" egy számításba táplálják. Ha ezt a saját mozgásaidnál szeretnéd "
+" egy számításba táplálják. Ha ezt a saját tranzakcióinál szeretné "
 "elvégezni, lásd: [Tranzakciók besorolása](../how-to/classify-"
 "transactions.md)."
 
-#: ../../explanation/from-records-to-figures.md:27
+#: ../../explanation/from-records-to-figures.md:28
 msgid "Splitting a mixed cost, and checking readiness"
 msgstr "Egy vegyes költség megosztása és a készültség ellenőrzése"
 
-#: ../../explanation/from-records-to-figures.md:29
+#: ../../explanation/from-records-to-figures.md:30
 msgid ""
 "Some costs serve both your business and your private life - a phone bill,"
 " home internet, a home office. Only the business share counts, and the "
@@ -127,15 +127,15 @@ msgid ""
 "- see [the mixed-use workflow](../how-to/classify-transactions.md"
 "#classify-mixed-use-transactions)."
 msgstr ""
-"Néhány költség az üzleti és a magánéletedet egyaránt szolgálja - egy "
+"Néhány költség az Ön üzleti és magánéletét egyaránt szolgálja - egy "
 "telefonszámla, otthoni internet, egy otthoni iroda. Csak az üzleti hányad"
 " számít, és a megosztás származhat az adott nyilvántartáson szereplő "
-"százalékból, a teljes kategóriára elmentett alapértelmezésből, vagy a "
-"nyilvántartott adataidból kiszámított arányból - lásd: [a vegyes "
+"százalékból, a teljes kategóriára elmentett alapértelmezésből, vagy az Ön"
+" nyilvántartott adataiból kiszámított arányból - lásd: [a vegyes "
 "használatú munkafolyamat](../how-to/classify-transactions.md#classify-"
 "mixed-use-transactions)."
 
-#: ../../explanation/from-records-to-figures.md:35
+#: ../../explanation/from-records-to-figures.md:36
 msgid ""
 "Before the tool adds anything up, a readiness check flags each record in "
 "the period that is still missing a decision, a category, a tax figure, a "
@@ -148,24 +148,25 @@ msgstr ""
 "minden olyan nyilvántartást az időszakban, amelyből még hiányzik egy "
 "döntés, egy kategória, egy adóadat, egy megosztási hivatkozás vagy egy "
 "átváltható pénznem. Az ellenőrzés semmit nem változtat; megmondja, mely "
-"nyilvántartások nem készek, hogy még azelőtt kijavítsd a nyersanyagot, "
-"hogy bármely összegben megbíznál - lásd a készültségi szakaszt itt: "
+"nyilvántartások nem készek, hogy még azelőtt kijavítsa a nyersanyagot, "
+"hogy bármely összegben megbízna - lásd a készültségi szakaszt itt: "
 "[Tranzakciók importálása és kezelése](../how-to/import-bank-"
 "statements.md)."
 
-#: ../../explanation/from-records-to-figures.md:42
+#: ../../explanation/from-records-to-figures.md:43
 msgid "Which form, and which period"
-msgstr "Melyik űrlap és melyik időszak"
+msgstr "Melyik nyomtatvány és melyik időszak"
 
-#: ../../explanation/from-records-to-figures.md:44
+#: ../../explanation/from-records-to-figures.md:45
 msgid ""
 "A calculation is always for one form, one year, and one period. The "
 "period decides which of your records count."
 msgstr ""
-"Egy számítás mindig egy űrlapra, egy évre és egy időszakra vonatkozik. Az"
-" időszak dönti el, mely nyilvántartásaid számítanak."
+"Egy számítás mindig egy nyomtatványra, egy évre és egy időszakra "
+"vonatkozik. Az időszak dönti el, hogy az Ön nyilvántartásai közül melyek "
+"számítanak."
 
-#: ../../explanation/from-records-to-figures.md:46
+#: ../../explanation/from-records-to-figures.md:47
 msgid ""
 "A period is a quarter, a single month, or a whole year. The tool turns it"
 " into a start and end date, then keeps only the records whose date falls "
@@ -178,38 +179,39 @@ msgstr ""
 "eszköz kezdő- és záródátummá alakítja, majd csak azokat a "
 "nyilvántartásokat tartja meg, amelyek dátuma ebbe az ablakba esik. Egy "
 "első negyedéves benyújtás januártól márciusig lát; egy márciusi benyújtás"
-" csak márciust. Egyes űrlapok halmozottan számolnak: egy Modelo 130 "
-"előleg az év elejétől a mai napig olvas, így a második negyedéves "
+" csak márciust. Egyes nyomtatványok halmozottan számolnak: egy Modelo 130"
+" előleg az év elejétől a mai napig olvas, így a második negyedéves "
 "benyújtása januártól júniusig lát."
 
-#: ../../explanation/from-records-to-figures.md:48
+#: ../../explanation/from-records-to-figures.md:49
+#, python-brace-format
 msgid ""
 "Choosing the right form for your activity is its own decision - see [Find"
 " out which modelos apply to you](../how-to/choose-modelo.md). For how "
-"quarters, months, and annual periods map to dates, see [Period tokens and"
-" dates](../how-to/filing-calendar.md#period-tokens-and-dates)."
+"quarters, months, and annual periods map to dates, see {ref}`Period codes"
+" and dates <period-tokens-and-dates>`."
 msgstr ""
-"A tevékenységedhez megfelelő űrlap kiválasztása külön döntés - lásd: "
-"[Tudd meg, mely modelók vonatkoznak rád](../how-to/choose-modelo.md). "
-"Arról, hogyan képződnek le a negyedévek, hónapok és éves időszakok "
-"dátumokra, lásd: [Időszak-tokenek és dátumok](../how-to/filing-"
-"calendar.md#period-tokens-and-dates)."
+"Az Ön tevékenységéhez megfelelő nyomtatvány kiválasztása külön döntés - "
+"lásd: [Tudja meg, mely nyomtatványok vonatkoznak Önre](../how-to/choose-"
+"modelo.md). Arról, hogyan képződnek le a negyedévek, hónapok és éves "
+"időszakok dátumokra, lásd: {ref}`Időszakkódok és dátumok <period-tokens-"
+"and-dates>`."
 
-#: ../../explanation/from-records-to-figures.md:50
+#: ../../explanation/from-records-to-figures.md:51
 msgid "From records to numbered boxes"
-msgstr "A nyilvántartásoktól a számozott casillákig"
+msgstr "A nyilvántartásoktól a számozott rovatokig"
 
-#: ../../explanation/from-records-to-figures.md:52
+#: ../../explanation/from-records-to-figures.md:53
 msgid ""
 "Here's where the figures appear. The tool reads two things: your tax-"
 "ready records for the period, and your profile - who you are and what you"
 " do."
 msgstr ""
-"Itt jelennek meg a számok. Az eszköz két dolgot olvas be: az időszakra "
-"vonatkozó adókész nyilvántartásaidat, és a profilodat - hogy ki vagy és "
-"mit csinálsz."
+"Itt jelennek meg a számok. Az eszköz két dolgot olvas be: az Ön időszakra"
+" vonatkozó adókész nyilvántartásait, és az Ön profilját - hogy kicsoda Ön"
+" és mivel foglalkozik."
 
-#: ../../explanation/from-records-to-figures.md:54
+#: ../../explanation/from-records-to-figures.md:55
 msgid ""
 "It then applies the rules the agency publishes for that form. Those rules"
 " decide which input feeds which box, and how the boxes relate to each "
@@ -219,30 +221,30 @@ msgid ""
 "a net figure, a rate applied to reach the tax due - until every box on "
 "the form holds a figure."
 msgstr ""
-"Ezután alkalmazza a hivatal által az adott űrlapra közzétett szabályokat."
-" Ezek a szabályok döntik el, melyik bemenet melyik casillát táplálja, és "
-"hogyan viszonyulnak a casillák egymáshoz. Egy irodaszerként megjelölt "
-"költség az effajta kiadás casillájába kerül. A bevétel a saját "
-"casillájába kerül. Onnan a szabályok összeadnak, kivonnak és kulcsokat "
+"Ezután alkalmazza a hivatal által az adott nyomtatványra közzétett "
+"szabályokat. Ezek a szabályok döntik el, melyik bemenet melyik rovatot "
+"táplálja, és hogyan viszonyulnak a rovatok egymáshoz. Egy irodaszerként "
+"megjelölt költség az effajta kiadás rovatába kerül. A bevétel a saját "
+"rovatába kerül. Onnan a szabályok összeadnak, kivonnak és kulcsokat "
 "alkalmaznak - az összbevételből levonják a levonható költségeket egy "
 "nettó értékhez, egy kulcsot alkalmaznak a fizetendő adó eléréséhez -, "
-"amíg az űrlap minden casillája tartalmaz egy adatot."
+"amíg a nyomtatvány minden rovata tartalmaz egy adatot."
 
-#: ../../explanation/from-records-to-figures.md:56
+#: ../../explanation/from-records-to-figures.md:57
 msgid ""
 "You don't wire any of this by hand. You make your records tax-ready and "
 "keep your profile current; the published rules do the routing and the "
 "arithmetic."
 msgstr ""
-"Ebből semmit nem kell kézzel bekötnöd. Adókésszé teszed a "
-"nyilvántartásaidat, és naprakészen tartod a profilodat; a közzétett "
+"Ebből semmit nem kell kézzel bekötnie. Ön adókésszé teszi a "
+"nyilvántartásait, és naprakészen tartja a profilját; a közzétett "
 "szabályok végzik az útválasztást és a számolást."
 
-#: ../../explanation/from-records-to-figures.md:58
+#: ../../explanation/from-records-to-figures.md:59
 msgid "Tracing a number back to the law"
 msgstr "Egy szám visszavezetése a törvényhez"
 
-#: ../../explanation/from-records-to-figures.md:60
+#: ../../explanation/from-records-to-figures.md:61
 msgid ""
 "Every figure the tool produces keeps three things attached: the rule that"
 " produced it, the law article behind that rule, and the official source "
@@ -252,10 +254,10 @@ msgstr ""
 "Minden adathoz, amelyet az eszköz előállít, három dolog kapcsolódik: a "
 "szabály, amely előállította, a szabály mögötti törvénycikk, és a "
 "hivatalos forrás, amely megmagyarázza - például egy AEAT-kézikönyv vagy a"
-" BOE-űrlap. Az általad beírt bemeneti adatok ugyanezt a visszavezető "
-"nyomot hordozzák a forrásukhoz."
+" BOE-nyomtatvány. Az Ön által beírt bemeneti adatok ugyanezt a "
+"visszavezető nyomot hordozzák a forrásukhoz."
 
-#: ../../explanation/from-records-to-figures.md:62
+#: ../../explanation/from-records-to-figures.md:63
 msgid ""
 "This is the point of the whole design. Spanish tax filing expects you to "
 "justify every number. If an inspector asks why a box holds a certain "
@@ -263,32 +265,31 @@ msgid ""
 "turned those records into that figure. Nothing is a black box."
 msgstr ""
 "Ez a teljes felépítés lényege. A spanyol adóbevallás elvárja, hogy minden"
-" számot igazolj. Ha egy ellenőr megkérdezi, miért tartalmaz egy casilla "
-"egy bizonyos adatot, megmutathatod a mögötte lévő nyilvántartásokat, "
+" számot igazoljon. Ha egy ellenőr megkérdezi, miért tartalmaz egy rovat "
+"egy bizonyos adatot, megmutathatja a mögötte lévő nyilvántartásokat, "
 "valamint a szabályt és a törvényt, amely ezekből a nyilvántartásokból azt"
 " az adatot alkotta. Semmi sem fekete doboz."
 
-#: ../../explanation/from-records-to-figures.md:64
+#: ../../explanation/from-records-to-figures.md:65
 msgid "Where this sits in the journey"
 msgstr "Hol helyezkedik el ez az útban"
 
-#: ../../explanation/from-records-to-figures.md:66
+#: ../../explanation/from-records-to-figures.md:67
 msgid ""
 "This page is part of understanding the AEAT pipeline - how your data "
-"flows from bank statement to filed form."
+"flows from bank statement to the form you file."
 msgstr ""
 "Ez az oldal az AEAT-folyamat megértésének része: hogyan áramlanak az "
-"adataid a bankszámlakivonattól a benyújtott űrlapig."
-
-#: ../../explanation/from-records-to-figures.md:68
-msgid "Start at the [how-it-works overview](index.md)."
-msgstr "Kezdd a [működési áttekintéssel](index.md)."
+"adatai a bankszámlakivonattól az Ön által benyújtott nyomtatványig."
 
 #: ../../explanation/from-records-to-figures.md:69
-msgid ""
-"Continue to the next stage: [Editing and verifying a calculation"
-"](editing-and-verifying.md)."
-msgstr ""
-"Folytasd a következő szakasszal: [Egy számítás szerkesztése és "
-"ellenőrzése](editing-and-verifying.md)."
+msgid "Start at the [how-it-works overview](index.md)."
+msgstr "Kezdje a [működési áttekintéssel](index.md)."
 
+#: ../../explanation/from-records-to-figures.md:70
+msgid ""
+"Continue to the next stage: [Editing and checking a calculation](editing-"
+"and-verifying.md)."
+msgstr ""
+"Folytassa a következő szakasszal: [Egy számítás szerkesztése és "
+"ellenőrzése](editing-and-verifying.md)."

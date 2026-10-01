@@ -1,7 +1,7 @@
 @step Create your taxpayer profile interactively so the passphrase is chosen at the terminal.
 @static aeat config profile create me
 @blocked interactive-tty Profile creation prompts for the passphrase through an interactive terminal.
-@step Confirm the selected profile is active before adding taxpayer facts and ledger rows.
+@step Confirm the selected profile is active before adding taxpayer facts and entries.
 @result aeat --format json config profile list
 @expect result.profiles[0].active == true
 @expect exit_code == 0

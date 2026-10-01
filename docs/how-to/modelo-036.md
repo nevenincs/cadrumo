@@ -16,7 +16,8 @@ You need:
 - Your passphrase. These commands open the encrypted store, so
   they prompt for the passphrase.
 - The date you filed the declaration at the sede.
-- Optional: the justificante - the receipt number the sede shows after you file.
+- Optional: the AEAT receipt number (justificante) that the sede shows after you
+  file.
 
 `aeat` prints its messages in Spanish unless you choose another language. Add
 `--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one command, or
@@ -52,7 +53,7 @@ Record a baja:
 ```{cli-sequence} modelo-036-record-baja
 ```
 
-`--declared-on` is required - the ISO date (year-month-day) you filed at the sede.
+`--declared-on` is required: the ISO date (year-month-day) you filed at the sede.
 `--sede-justificante` is optional and accepts up to 128 characters. `--note` adds an
 optional note for your own records, up to 512 characters.
 
@@ -64,7 +65,7 @@ The command prints the saved record:
 - The event kind - alta, modificacion, or baja.
 - The declared-on date.
 - When the record was saved.
-- The justificante, if you gave one.
+- The AEAT receipt number, if you gave one.
 
 That printed output is your confirmation. Save it with your records.
 
@@ -77,10 +78,11 @@ its id (the example starts with an alta already recorded, so the list has a row)
 :verify: Confirm the recorded declaration appears in the list and opens by its id.
 ```
 
-The list shows each declaration's id, event kind, declared-on date, recorded-at
-timestamp, and whether you gave a justificante. An empty list means you have recorded
-no declarations yet. The view shows the full record, including the justificante and
-your note if you gave them. An id that matches no recorded declaration is refused.
+The list shows each declaration's id, event kind, declared-on date, the time it
+was recorded, and whether you gave an AEAT receipt number. An empty list means you
+have recorded no declarations yet. The view shows the full record, including the
+AEAT receipt number and your note if you gave them. An id that matches no recorded
+declaration is refused.
 
 No command edits or deletes a recorded declaration.
 
@@ -89,10 +91,10 @@ No command edits or deletes a recorded declaration.
 Re-running the command with identical values is safe - it records no additional
 declaration, and you get the same declaration ID back.
 
-Running the command with a corrected kind, date, or justificante records an
-additional declaration. Add a `--note` explaining the correction so your audit trail
-stays readable. Changing only `--note` does not create a new record. No command
-edits or deletes a recorded declaration.
+Running the command with a corrected kind, date, or AEAT receipt number records an
+additional declaration. Add a `--note` explaining the correction so your audit
+trail stays readable. Changing only `--note` does not create a new record. No
+command edits or deletes a recorded declaration.
 
 ## What the record does and does not do
 

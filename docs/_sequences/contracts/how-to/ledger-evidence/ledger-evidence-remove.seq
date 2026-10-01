@@ -1,9 +1,9 @@
-@step Record an evidence file so there is one to remove.
+@step Record a supporting document file so there is one to remove.
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
 @capture evidence_id result.evidence_id
-@step Remove an evidence record by id, confirming with --yes.
+@step Remove a supporting document record by id, confirming with --yes.
 aeat app ledger evidence remove {evidence_id} --yes
-@step Confirm the removed evidence id is no longer addressable, regardless of other evidence already recorded on this page.
+@step Confirm the removed supporting document reference is no longer addressable, regardless of other supporting documents already recorded on this page.
 @result aeat --format json app ledger evidence view {evidence_id}
 @expect error.code == "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 @expect exit_code == 2

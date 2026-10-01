@@ -1,4 +1,5 @@
-# Editing and verifying a calculation
+(editing-and-verifying-a-calculation)=
+# Editing and checking a calculation
 
 This page covers what a saved calculation actually is, what the completeness
 check does - and does not - tell you, and how a filed return gets corrected.
@@ -16,31 +17,33 @@ saved version is a record of one attempt, not a verdict; its numbers commit
 to nothing until you decide they do. The mechanics live in
 [The filing workflow](../how-to/filing-spine.md).
 
-A modelo is made of casillas (numbered boxes). Each box either holds a value
+A modelo is made of boxes (numbered boxes). Each box either holds a value
 or waits for one. Editing is the act of giving a box the value the form still
 needs, then recalculating so the totals reflect it - see
 [Review and supply calculation inputs](../how-to/review-calculation-values.md).
 
-## What verifying checks
+(what-verifying-checks)=
+## What the check looks at
 
-Verifying runs a completeness check over a draft against the agency's
+The check runs a completeness test over a draft against the agency's
 published rules for that modelo and year: every required box has a value,
 the sums add up with no box contradicting another, and nothing blocks the
 form - including conditions outside the draft itself, such as an earlier
-period this form builds on being filed and evidenced. The check saves a
+period this form builds on being recorded as filed and backed by proof from AEAT. The check saves a
 report whatever the result, and the report's completeness status is one of
-three values: **complete** (the draft becomes a verified version and is
+three values: **complete** (the draft becomes a checked version and is
 locked), **incomplete** (required boxes still empty), or **blocked** (a failed
 rule or an unresolved dependency, named in the report). An incomplete or
-blocked draft stays a draft. Running the check and acting on each finding is
-covered in [Verify a filing](../how-to/verification-reports.md).
+blocked draft stays a draft. Running the check and acting on each issue is
+covered in [Check a draft declaration and act on the issues](../how-to/verification-reports.md).
 
 A passed check is a local check: it means "my draft is complete and
 consistent", never "AEAT accepted my filing", "the upload will succeed", or
 "I am on time" - the tool never contacts AEAT, and the check ignores
 deadlines entirely.
 
-## Why the tool wants a verified version before it builds the export file
+(why-the-tool-wants-a-verified-version-before-it-builds-the-export-file)=
+## Why the tool wants a checked version before it builds the upload file
 
 The export file is the thing that leaves the tool for the agency's portal, so
 it is built only from a version that has passed the completeness check (or
@@ -51,17 +54,16 @@ against an incomplete draft being filed by accident.
 ## Correcting a filed return
 
 A filed return is not corrected by recalculating the same period. If you find
-a mistake after filing at the agency, build an amendment - a complementaria,
+a mistake after filing at the agency, build a correction - a complementaria,
 sustitutiva, or rectificativa - from the filing record. That record must carry
-imported agency evidence, such as the justificante. Building the amendment
-submits nothing: you file the correction at the portal yourself. The steps are
-in [Correct an already filed local record](../how-to/review-calculation-values.md#correct-an-already-filed-local-record).
+imported proof from the agency, such as the justificante. Building the correction
+submits nothing: you file it at the portal yourself. The steps are
+in {ref}`Correct a declaration already recorded as filed <correct-an-already-filed-local-record>`.
 
 ## Where this sits in the journey
 
 This page is part of the [how-it-works overview](index.md)
-cluster. Earlier filings feed into later ones; for how a verified prior
-period carries forward, see
+cluster. Earlier filings feed into later ones; for how a checked prior period carries forward, see
 [How filings build on earlier ones](building-on-earlier-filings.md). Once a
 version has passed the check, the next outputs are covered in
-[Reviewing your numbers and producing the export file](reviewing-and-exporting.md).
+[Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).

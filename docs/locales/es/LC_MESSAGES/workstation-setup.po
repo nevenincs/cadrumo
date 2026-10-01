@@ -293,9 +293,8 @@ msgid ""
 "llm.md#set-up-the-local-reader)."
 msgstr ""
 "La clasificación con un LLM se ejecuta solo en este lector local; no "
-"interviene ningún proveedor en la nube. Consulta [Clasificar "
-"transacciones con un LLM](how-to/classify-with-llm.md#set-up-the-local-"
-"reader)."
+"interviene ningún proveedor en la nube. Consulta [Clasificar movimientos "
+"con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
 
 #: ../../workstation-setup.md:120
 msgid ""

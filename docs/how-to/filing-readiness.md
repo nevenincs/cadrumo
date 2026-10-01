@@ -1,10 +1,10 @@
 # Check that a filing is ready
 
-Verification tells you whether a draft's box values pass the registry rules.
-Readiness asks an earlier question: is everything the calculation depends on
-in place: profile facts, transaction data, and earlier filings? Use the
-commands in this guide before you calculate, and again before you export, so
-nothing silent is missing underneath a clean-looking draft.
+The check tells you whether a draft's box values pass the rules of the official
+form. Readiness asks an earlier question: is everything the calculation depends on
+in place: profile facts, transaction data, and earlier filings? Use the commands
+in this guide before you calculate, and again before you export, so nothing silent
+is missing underneath a clean-looking draft.
 
 These commands read the active profile and prompt for your passphrase. If you
 have no profile, create one first with
@@ -16,64 +16,50 @@ language](profile-setup.md#choose-the-output-language).
 
 ## Run the readiness report
 
-Find the resolved revision id first, then report whether the active profile is
-ready for that modelo, year, and period:
+Find the id of the version of the official form first, then report whether the active profile is ready for that modelo, year, and period:
 
 ```{cli-sequence} filing-readiness-report
 :verify: Confirm the readiness report resolves for the modelo, year, and period.
 ```
 
-The command exits with status 2 while the target is not ready, so a script
-detects the gap from the exit status. In this example `ready` is `false`
-because the fresh profile still has missing source bindings.
+The command exits with status 2 while the target is not ready, so a script detects the gap from the exit status. In this example `ready` is `false` because the fresh profile still lacks the sources for some of the modelo's values.
 
 The report covers four axes, each reported separately:
 
 - **Profile readiness** (`profile_ready`) - every profile fact the modelo
   requires. Each missing fact is listed by its section and field key, so you
   know exactly what to fill in with `aeat config profile edit`.
-- **Registry readiness** (`registry_ready`) - whether a registry revision
-  covers the modelo, year, and period.
-- **Ledger readiness** (`ledger_ready`) - for ledger-fed modelos, the same
-  source checks as `aeat app ledger preflight`, listing each transaction that
-  blocks the period and why.
-- **Source bindings** (`binding_ready`) - the figures the form pulls from other
-  sources. `missing_bindings` lists each binding that is not available yet.
+- **Tax rules readiness** (`registry_ready`) - whether the tax rules hold a version of the official form that covers the modelo, year, and period.
+- **Records readiness** (`ledger_ready`) - for modelos filled from your records, the same source checks as `aeat app ledger preflight`, listing each transaction that blocks the period and why.
+- **Values Cadrumo fills in** (`binding_ready`) - the figures the form pulls from other sources. `missing_bindings` lists each of these values whose source is not available yet.
 
-Readiness does not check box-level completeness of a draft. That is what
-`aeat app modelo work verify` does. See
-[Verify a filing](verification-reports.md).
+Readiness does not check box-level completeness of a draft. That is what the check
+(`aeat app modelo work verify`) does. See [Check a draft declaration and act on the issues](verification-reports.md).
 
 ## Check what this filing depends on
 
 Some modelos fold in values from other filings. An annual summary reads its
 quarters, and a cross-modelo box reads another form's result. List the
-registry-declared dependencies for a filing year, then narrow to one modelo, or
-to one modelo and period:
+dependencies the official form declares for a filing year, then narrow to one
+modelo, or to one modelo and period:
 
 ```{cli-sequence} filing-readiness-dependencies
 :verify: Confirm the dependency inventory resolves for the filing year.
 ```
 
-`--period` requires `--modelo`. With both set, the command also evaluates the
-current blockers for that exact filing (for example an earlier period whose
-official evidence is still missing), so you see what must be resolved before
-this period can safely build on the ones before it. For the background, see
-[How filings build on earlier ones](../explanation/building-on-earlier-filings.md).
+`--period` requires `--modelo`. With both set, the command also evaluates the current blockers for that exact filing (for example an earlier period whose AEAT receipt is still missing), so you see what must be resolved before this period can safely build on the ones before it. For the background, see [Building on earlier filings](../explanation/building-on-earlier-filings.md).
 
 ## See everything that happened to a filing
 
-Stream every recorded lifecycle event for one modelo (calculations,
-verification passes and refusals, filings, corrections, imports):
+List every recorded lifecycle event for one modelo (calculations, checks passed and refused, filings, corrections, imports):
 
 ```{cli-sequence} filing-readiness-history
 :verify: Confirm the modelo history stream resolves for the filing year.
 ```
 
-Add `--period` to narrow to one period. This is the modelo-wide audit trail;
-for the event stream of a single workspace, use
-`aeat app modelo work history`. See
-[The filing workflow](filing-spine.md).
+Add `--period` to narrow to one period. This is the modelo-wide audit trail; for
+the events of a single declaration, use `aeat app modelo work history`. See [The
+filing workflow](filing-spine.md).
 
 ## Compare two filing years
 
@@ -82,13 +68,7 @@ See how this year's figures moved against last year's, box by box:
 ```{cli-sequence} filing-readiness-compare
 ```
 
-Pass `--year` exactly twice. Each compared year needs a work unit with a
-calculated revision; the command refuses otherwise. Each row shows the box, its label and section,
-both values, the difference, and the percent change; all-zero rows are
-omitted from the text output. The comparison uses the most recent verified
-revision of each year and falls back to the latest draft when no verified
-revision exists. A year compared from a draft is flagged `BORRADOR` in the
-output.
+Pass `--year` exactly twice. Each compared year needs a declaration with a saved calculation; the command refuses otherwise. Each row shows the box, its label and section, both values, the difference, and the percent change; all-zero rows are omitted from the text output. The comparison uses the most recent checked calculation of each year and falls back to the latest draft when none has passed the check. A year compared from a draft is flagged `BORRADOR` in the output.
 
 Use the comparison as a sanity check before filing: an unexpected jump in a
 box is worth tracing back to its transactions before you export.
@@ -104,10 +84,7 @@ Modelo 100 would look like from the quarters filed so far:
 `--ccaa` names your autonomous community of tax residence, which selects the
 regional scale for the Modelo 100 calculation.
 
-The projection needs a registry revision of Modelo 100 for the year you
-project. Until that year's revision is published, `project` refuses and says
-that no registry revision covers the filing year. A covered year also needs the
-date-valued profile facts a Renta filer declares.
+The projection needs a version of the official Modelo 100 form for the year you project. Until that year's version is published, `project` refuses and says that no version of the form covers the filing year. A covered year also needs the date-valued profile facts a Renta filer declares.
 
 The output shows the accumulated Modelo 130 figures (income, expenses, net
 result, instalments paid) and the projected Modelo 100 result: the taxable
@@ -127,40 +104,36 @@ personal circumstances, or specific boxes:
 ```{cli-sequence} filing-readiness-project-refine
 ```
 
-Withholdings bindings default to zero when not supplied, so a projection
-without them overstates the balance due if you had retenciones. Each
-projected box carries its formula and legal references in the JSON output,
-the same grounding as a real calculation.
+Withholdings default to zero when not supplied, so a projection without them
+overstates the balance due if you had retenciones. Each projected box carries its
+formula and legal references in the JSON output, the same legal basis as a real
+calculation.
 
 For when the year-end filing actually happens, see
-[Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
+{ref}`Period codes and dates <period-tokens-and-dates>`.
 
 ## Trace a value to its legal basis
 
-Every computed value carries its grounding, and each review stage surfaces it.
-The formula behind each computed box carries its legal and source references.
-See [Review and supply calculation inputs](review-calculation-values.md):
+Every calculated value carries its legal basis, and each review step shows it. The formula behind each calculated box carries its legal and source references. See [Review and supply calculation inputs](review-calculation-values.md):
 
 ```{cli-sequence} filing-readiness-formulas
 :verify: Confirm each computed box exposes its formula and grounding.
 ```
 
-Two more grounding surfaces round out the trace:
+Two more places show the legal basis:
 
-- Verification findings name the legal references behind each rule. See
-  [Verify a filing](verification-reports.md).
-- `aeat app review queue --explain` - pending findings with their legal
-  references. See
-  [the review queue](classify-transactions.md#see-everything-that-still-needs-a-decision).
+- The issues from the check name the legal references behind each rule. See [Check a draft declaration and act on the issues](verification-reports.md).
+- `aeat app review queue --explain` - pending issues with their legal references.
+  See [the review
+  queue](classify-transactions.md#see-everything-that-still-needs-a-decision).
 
 ## Next steps
 
-- [Verify a filing](verification-reports.md) - box-level verification of the
+- [Check a draft declaration and act on the issues](verification-reports.md) - box-by-box check of the
   draft.
-- [Review and supply calculation inputs](review-calculation-values.md) -
-  fill missing values readiness or verification surfaced.
+- [Review and supply calculation inputs](review-calculation-values.md) - fill
+  missing values that readiness or the check found.
 - [How filings build on earlier ones](../explanation/building-on-earlier-filings.md) -
   how cross-period dependencies work.
-- [The filing workflow](filing-spine.md) - workspaces,
-  revisions, and per-workspace history.
+- [The filing workflow](filing-spine.md) - declarations, earlier calculations, and the history of each declaration.
 - [CLI reference](../cli/index.rst) - full option reference.

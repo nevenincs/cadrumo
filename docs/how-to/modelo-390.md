@@ -1,8 +1,9 @@
-# Prepare the annual Modelo 390 IVA summary
+(prepare-the-annual-modelo-390-iva-summary)=
+# Prepare the annual Modelo 390 VAT summary
 
 Use this guide when the active profile must prepare Modelo 390, the annual
-Impuesto sobre el Valor Añadido (IVA) summary. Modelo 390 is an annual return,
-but part of its review depends on the same year's periodic Modelo 303 IVA
+Impuesto sobre el Valor Añadido (VAT) summary. Modelo 390 is an annual return,
+but part of its review depends on the same year's periodic Modelo 303 VAT
 self-assessments.
 
 Cadrumo does not submit Modelo 390 to the Agencia Estatal de Administración
@@ -13,15 +14,15 @@ AEAT channel yourself.
 
 ## The filing task
 
-Modelo 390 is the annual summary of your quarterly IVA filings. To prepare it:
+Modelo 390 is the annual summary of your quarterly VAT filings. To prepare it:
 
 1. Prepare and review the four quarterly Modelo 303 periods first.
 2. Create a Modelo 390 draft for the annual period (`--period 0A`).
-3. Calculate the annual summary from your year's ledger and the 303 values.
+3. Calculate the annual summary from your year's records and the 303 values.
 4. Review the calculated totals against your quarterly records.
-5. Verify the draft is complete.
+5. Check that the draft is complete.
 6. Export the annual file for review.
-7. Enter the figures at the AEAT portal yourself and keep the justificante.
+7. Enter the figures at the AEAT portal yourself and keep the AEAT receipt.
 
 Not every taxpayer files Modelo 390. AEAT exonerates taxpayers included in the
 Suministro Inmediato de Información (SII), and quarterly filers taxed only in
@@ -31,7 +32,7 @@ operations in the Modelo 303 for the last period instead - see the AEAT guide to
 the
 [exoneration from Modelo 390](https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-gran-empresa/se-declara-volumen-operaciones/obligados-presentar-modelo-303/exonerados-presentacion-modelo-390.html).
 The Modelo 303 for the last period of the year (`4T`, or `12` for monthly
-filers) needs an attestation that the exemption does not apply. Create it with
+filers) needs a confirmation that the exemption does not apply. Create it with
 `aeat app modelo work attest-m303-exonerado-390`, passing the year, the last
 period (`--period 4T`), and the moment you checked the conditions
 (`--observed-at`).
@@ -44,33 +45,19 @@ commands, read
 [The filing workflow](filing-spine.md)
 after this guide.
 
-## Create, calculate, and verify the annual draft
+(create-calculate-and-verify-the-annual-draft)=
+## Create, calculate, and check the annual draft
 
 **Requirement:** a valid taxpayer profile. Create one with `aeat config profile
 create <name>`. See [Set up your taxpayer profile](profile-setup.md).
 
-The example starts with the four 2025 Modelo 303 quarters filed locally, so the
-annual summary can fold them in. It then creates the Modelo 390 draft for 2025,
-calculates it, and verifies it. The example uses 2025 because the annual return
-needs the year's four quarters already filed:
+The example starts with the four 2025 Modelo 303 quarters recorded as filed, so the annual summary can fold them in. It then creates the Modelo 390 draft for 2025, calculates it, and checks it. The example uses 2025 because the annual return needs the year's four quarters already recorded as filed:
 
 ```{cli-sequence} modelo-390-annual-2025
-:verify: Confirm the annual summary passed verification before you export it.
+:verify: Confirm the annual summary passed the check before you export it.
 ```
 
-Verify grants verified-complete and reports non-blocking advisories: the four
-quarters are filed locally but carry no external AEAT justificante yet, so the
-tool discloses that the annual reconciliation rests on local-only evidence. That
-disclosure is correct - a locally-filed quarter is honest evidence for the
-annual fold-in, and the advisory tells you where an official justificante would
-strengthen the record. In this example the four quarters charged 1470.00 of IVA
-between them (420 + 315 + 210 + 525) and the year carries 105.00 of deductible
-input IVA (one evidenced purchase, 500 base at 21%), so the annual cuota
-devengada is 1470.00, the deducible total is 105.00, and the régimen-general
-result is 1365.00 (1470.00 − 105.00) - the full annual IVA equation, each figure
-matching the sum of the quarters (the reconciliation invariant). Input IVA counts
-only once the purchase carries linked invoice evidence. The rest of this guide
-explains each stage and the checks around it.
+The check passes the draft as complete and reports issues that do not block filing: the four quarters are recorded as filed but carry no AEAT receipt yet, so the tool discloses that the annual reconciliation rests only on filings recorded in Cadrumo. That disclosure is correct - a quarter recorded as filed is honest proof for the annual fold-in, and the issue tells you where an AEAT receipt would strengthen the record. In this example the four quarters charged 1470.00 of VAT between them (420 + 315 + 210 + 525) and the year carries 105.00 of deductible input VAT (one purchase with a supporting document, 500 base at 21%), so the annual cuota devengada is 1470.00, the deducible total is 105.00, and the régimen-general result is 1365.00 (1470.00 − 105.00) - the full annual VAT equation, each figure matching the sum of the quarters (the reconciliation invariant). Input VAT counts only once the purchase has the invoice linked as a supporting document. The rest of this guide explains each stage and the checks around it.
 
 ## Setup steps before you start
 
@@ -81,80 +68,68 @@ Start with the local filing context:
   [Maintain Modelo 036 census facts in your profile](censo-update.md).
 - Use [Plan your filing calendar](filing-calendar.md) to confirm the annual
   filing window.
-- Confirm the annual period token with
-  [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
+- Confirm the annual period code with
+  {ref}`Period codes and dates <period-tokens-and-dates>`.
   Modelo 390 uses `--period 0A`.
-- [Import or add your transactions](import-bank-statements.md), then
-  [classify them](classify-transactions.md). The annual ledger totals depend on
-  the active profile's classified IVA rows.
+- [Import or add your transactions](import-bank-statements.md), then [classify
+  them](classify-transactions.md). The annual totals from your records depend on
+  the active profile's classified VAT entries.
 - Prepare the same year's Modelo 303 periods first. Standard quarterly profiles
-  use `1T`, `2T`, `3T`, and `4T`; monthly IVA-liquidation cases need extra
-  review because the current Modelo 390 bindings are modelled against the
-  quarterly 303 periods.
+  use `1T`, `2T`, `3T`, and `4T`; monthly VAT-liquidation cases need extra review
+  because the current Modelo 390 is set up against the quarterly 303 periods.
 - Finish the Modelo 303 review path before relying on its values. See
-  [Prepare a Modelo 303 IVA filing](modelo-303.md).
+  [Prepare a Modelo 303 VAT filing](modelo-303.md).
 
 Modelo 390 combines two kinds of values:
 
-- annual IVA ledger aggregates for the full filing year (binding source
+- annual VAT totals from your records for the full filing year (source
   `ledger_iva_aggregation`)
-- 303-derived values pulled from the same year's quarters (binding source
-  `relation_prefill`, reported by verification findings as
-  `origin=registry_relation`), where the registry names the 303 casillas and
-  periods that feed the annual summary
+- values taken from the same year's 303 quarters (source `relation_prefill`,
+  reported by the check's issues as `origin=registry_relation`), where the tax
+  rules name the 303 boxes and periods that feed the annual summary
 
-The 303-derived inputs depend on each quarter's filed evidence. Verification
-hard-blocks until that evidence is present (see "What each Modelo 303 quarter
-needs before you verify"). The CLI does not guarantee that remote AEAT
-history is current, captured, or reconciled.
+The values taken from 303 depend on each quarter's recorded filing or AEAT receipt. The check blocks until one is present (see "What each Modelo 303 quarter needs before you check" below). The CLI does not guarantee that the history AEAT holds is current, read, or reconciled.
 
-The implemented 390 registry bindings include 303 quarter sums for annual
-devengada, deducible, and régimen general result reconciliation. They also
-include compensation values copied or summed from the same year's 303 periods.
+The rules that fill Modelo 390's boxes include 303 quarter sums for annual devengada, deducible, and régimen general result reconciliation. They also include compensation values copied or summed from the same year's 303 periods.
 
 (what-each-modelo-303-quarter-needs-before-you-verify)=
-## What each Modelo 303 quarter needs before you verify
+## What each Modelo 303 quarter needs before you check
 
-Modelo 390 verification depends on the four quarterly Modelo 303 returns.
-`work calculate` for Modelo 390 produces a draft, but `work verify` hard-blocks
-with `cross_period_dependency_unclean` blocking findings until each 303 quarter
-(`1T`, `2T`, `3T`, `4T`) has stored *filed* evidence. A calculated or verified
-303 draft is not enough: the gate reports
-`blockers=missing_observation, missing_current_filing_record` for every quarter
-that lacks a filed record.
+The Modelo 390 check depends on the four quarterly Modelo 303 returns. `work
+calculate` for Modelo 390 produces a draft, but `work verify` blocks with
+`cross_period_dependency_unclean` issues that block filing until each 303 quarter
+(`1T`, `2T`, `3T`, `4T`) has a recorded filing or an AEAT receipt. A calculated or
+checked 303 draft is not enough: the check reports `blockers=missing_observation,
+missing_current_filing_record` for every quarter with no recorded filing.
 
-Establish each quarter's evidence one of two ways before you verify Modelo 390.
+Establish each quarter's filing status one of two ways before you check Modelo
+390.
 
-The first way is to mark each 303 quarter as filed locally, while its AEAT
-filing-obligation window is open. Prepare and verify each quarter (see
-[Prepare a Modelo 303 IVA filing](modelo-303.md)), then record each one with the
-local filed marker, repeating for `1T`, `2T`, `3T`, and `4T`. `work file`
-records the filing locally only; it does not submit to AEAT, and it refuses
-outside the obligation window:
+The first way is to record each 303 quarter as filed, while its AEAT filing-obligation window is open. Prepare and check each quarter (see [Prepare a Modelo 303 VAT filing](modelo-303.md)), then record each filing, repeating for `1T`, `2T`, `3T`, and `4T`. `work file` only records the filing in Cadrumo; it does not submit to AEAT, and it refuses outside the obligation window:
 
 ```{cli-sequence} modelo-390-file-quarter
 ```
 
-The second way is to capture or reconcile the official AEAT justificante for each
-quarter. `live filed pull-sources` reads filed declarations from AEAT and refuses
-when AEAT authentication is not configured (it needs a Cl@ve identity matching
-the active profile), so it is a live read shown as a display frame. `reconcile
-import` reads a local justificante PDF and never contacts AEAT, but it needs the
+The second way is to read or reconcile the official AEAT receipt for each quarter.
+`live filed pull-sources` reads your filed declarations from AEAT and refuses when
+AEAT authentication is not set up (it needs a Cl@ve identity matching the active
+profile), so it is a live read shown as an example that is not run. `reconcile
+import` reads a local AEAT receipt PDF and never contacts AEAT, but it needs the
 real receipt:
 
 ```{cli-sequence} modelo-390-external-evidence
 ```
 
-If you cannot establish a quarter's evidence, do not force the annual return
-past the block. Repair the missing 303 evidence first, or report the gap.
+If you cannot establish a quarter's filing status, do not force the annual return past the block. Fix the missing 303 filing record or AEAT receipt first, or report the gap.
 
-## Check each visible filing target
+(check-each-visible-filing-target)=
+## Check each filing target
 
-Use the same active profile for every command. Inspect the four 303 filing
-targets before you work on the annual target, repeating the `work status` check
-for each of `1T`, `2T`, `3T`, and `4T`, and list all saved work with `work list`
-to see the broader filing surface (the inspection example under "Inspect the
-annual work unit" runs `work list` and the annual `work status`).
+Use the same active profile for every command. Inspect the four 303 filing targets
+before you work on the annual target, repeating the `work status` check for each
+of `1T`, `2T`, `3T`, and `4T`, and list all saved declarations with `work list` to
+see all your filings (the inspect sequence under "Inspect the annual declaration"
+below runs `work list` and the annual `work status`).
 
 No command switches a current filing target for you. To move from one quarter
 to another, change `--period`. To move from the quarterly 303 review to the
@@ -162,11 +137,7 @@ annual 390 review, change both `--modelo` and `--period`.
 
 ## Review the 303 values that feed Modelo 390
 
-For each Modelo 303 period, list its saved revisions and inspect the filed one.
-These reads need the year's filed 303 quarters, so they are shown as display
-frames rather than run. If no filed revision exists locally, inspect the current
-or verified revision instead with `--select latest-verified` or `--select
-current`:
+For each Modelo 303 period, list its saved calculations and inspect the one recorded as filed. These reads need the year's 303 quarters recorded as filed, so they are shown as examples that are not run. If no calculation recorded as filed exists locally, inspect the current or checked calculation instead with `--select latest-verified` or `--select current`:
 
 ```{cli-sequence} modelo-390-review-303
 ```
@@ -179,21 +150,9 @@ Modelo 390 reconciles from Modelo 303:
 - `iva.resultado-regimen-general`
 - `iva.compensacion-generada-periodo`
 
-If a 303 return was filed outside Cadrumo, capture or reconcile the official
-evidence before you rely on local values, with the `live filed pull-sources` or
-`reconcile import` commands shown under
-[What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify).
-Live filed capture is read-only; reconciliation reads the justificante or
-declaration file you supply. The current Modelo 390 calculation path does not
-make a fresh AEAT remote-state check a blanket prerequisite for calculation.
+If a 303 return was filed outside Cadrumo, read or reconcile the official AEAT data before you rely on local values, with the `live filed pull-sources` or `reconcile import` commands shown under [What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify) above. Reading filed declarations from AEAT is read-only; reconciliation reads the AEAT receipt or declaration file you supply. Modelo 390 calculation does not require a fresh check against what AEAT holds before it runs.
 
-For IVA compensation history, use the IVA wallet commands; they support the
-compensation carry-forward review but are not a general Modelo 390 reconciliation
-gate. Inspect the balance with the `iva-wallet balance` frame in the inspection
-example. Seed an opening balance, fix a wrong seed, or review the AEAT-side
-history with the following commands. The seed runs. Correcting a seed is
-refused once a filed 303 has consumed it, and the history read reaches AEAT, so
-those two are display frames:
+For VAT compensation history, use the VAT wallet commands; they support the compensation carry-forward review but are not a general Modelo 390 reconciliation gate. Inspect the balance with the `iva-wallet balance` step in the inspection example. Seed an opening balance, fix a wrong seed, or review the AEAT-side history with the following commands. The seed runs. Correcting a seed is refused once a 303 recorded as filed has consumed it, and the history read reaches AEAT, so those two are examples that are not run:
 
 ```{cli-sequence} modelo-390-wallet
 :verify: Confirm the opening compensation balance seeds.
@@ -204,52 +163,32 @@ Modelo 303 history from AEAT and refuses when AEAT authentication is not
 configured. Use `seed` only when you have a real opening compensation balance
 from before the local Modelo 303 history.
 
-## Inspect the annual work unit
+(inspect-the-annual-work-unit)=
+## Inspect the annual declaration
 
-Check the saved annual target and its bindings, casillas, and formulas. Add
-`--missing` to the bindings listing to focus on unfilled fields. The following
-example creates the annual draft and inspects its structure; the full-value
-chain that folds in the four filed quarters is the "Create, calculate, and
-verify" example:
+Check the saved annual declaration: its boxes, its formulas, and the values Cadrumo fills in (`bindings`). Add `--missing` to that listing to focus on unfilled fields. The following example creates the annual draft and inspects its structure; the full-value chain that folds in the four quarters recorded as filed is the "Create, calculate, and check" example:
 
 ```{cli-sequence} modelo-390-inspect
-:verify: Confirm the annual work unit's bindings and formulas read back.
+:verify: Confirm the annual declaration's inputs and formulas read back.
 ```
 
-The binding list shows ledger IVA aggregation bindings (source
-`ledger_iva_aggregation`) and 303-derived bindings (source `relation_prefill`,
-their ids prefixed `modelo-390-prev-303-`). Treat the 303-derived rows as values
-that must be reviewed against the prior 303 periods. Do not assume `work
-calculate` scans every local 303 work unit, every calculation revision, or every
-local filing record automatically.
+That listing shows totals from your records (source `ledger_iva_aggregation`) and values taken from 303 (source `relation_prefill`, their ids prefixed `modelo-390-prev-303-`). Treat the values taken from 303 as figures that must be reviewed against the earlier 303 periods. Do not assume `work calculate` scans every local 303 declaration, every saved calculation, or every recorded filing automatically.
 
 ## Supply reviewed 303-derived values if needed
 
-Check the annual ledger window before calculation with the `ledger preflight`
-and `ledger status` frames in the inspection example.
+Check the annual period's records before calculation with the `ledger preflight` and `ledger status` steps in the inspection example.
 
-The annual calculation uses the annual ledger window for 390 ledger-backed IVA
-aggregates. For 303-derived values, the registry defines the binding IDs and the
-source periods. If those binding values are not already available to the
-calculation, inspect the missing binding list and supply reviewed values
-explicitly. The reviewed sums come from your own 303 review. The following
-example passes the ones this guide's year produces (1470.00 devengada, 105.00
-deducible, 1365.00 régimen general), which match the annual ledger totals, and
-the reconciliation casillas carry the supplied figures:
+The annual calculation uses your records for the whole year for the VAT totals in Modelo 390. For values taken from 303, the tax rules define the ids of the values Cadrumo fills in and their source periods. If those values are not already available to the calculation, inspect the list of missing values and supply reviewed values explicitly. The reviewed sums come from your own 303 review. The following example passes the ones this guide's year produces (1470.00 devengada, 105.00 deducible, 1365.00 régimen general), which match the annual totals from your records, and the reconciliation boxes carry the supplied figures:
 
 ```{cli-sequence} modelo-390-supply-binding
-:verify: Confirm the supplied 303-derived values land on the annual reconciliation casillas.
+:verify: Confirm the supplied 303-derived values land on the annual reconciliation boxes.
 ```
 
-Use reviewed numbers, not placeholders. If the reviewed 303 history is missing
-or inconsistent, stop and repair the 303 evidence before continuing. For
-casilla-level review and binding mechanics, see
-[Review and supply calculation inputs](review-calculation-values.md).
+Use reviewed numbers, not placeholders. If the reviewed 303 history is missing or inconsistent, stop and fix the 303 filing records or AEAT receipts before continuing. For review box by box and how values are filled in, see [Review and supply calculation inputs](review-calculation-values.md).
 
 ## Review the annual calculation
 
-Inspect the saved annual revisions with the `work revisions` and `work revision`
-frames in the inspection example.
+Inspect the saved annual calculations with the `work revisions` and `work revision` steps in the inspection example.
 
 Compare the annual totals with the 303 reconciliation values:
 
@@ -260,12 +199,7 @@ Compare the annual totals with the 303 reconciliation values:
 - `iva.anual.resultado-regimen-general` should be reviewed against
   `iva.anual.reconciliacion.resultado-303`.
 
-If the annual ledger totals and 303-derived reconciliation values diverge, do
-not force the 390 to pass first. Review the annual ledger window, each 303
-revision, any official justificantes, and the supplied 390 bindings. Use the
-spreadsheet review loop when you need a wider calculation surface, then run
-`work calculate` and `work verify` again on the same target. `spreadsheet push`
-reaches Google, so it is shown as a display frame:
+If the annual totals from your records and the reconciliation values taken from 303 diverge, do not force the 390 to pass first. Review the annual period's records, each 303 calculation, any AEAT receipts, and the values you supplied for the 390. Use the spreadsheet review loop when you need a wider view of the calculation, then run `work calculate` and `work verify` again on the same target. `spreadsheet push` reaches Google, so it is shown as an example that is not run:
 
 ```{cli-sequence} modelo-390-sheets-export
 ```
@@ -277,36 +211,17 @@ The spreadsheet workflow is a review surface; it does not submit to AEAT.
 
 ## Export and file
 
-The verify step in the annual example promoted the annual draft to
-`verificado_completo`. If verification instead reports
-`cross_period_dependency_unclean` blocking findings, each named 303 quarter is
-missing filed evidence; establish it first (see
-[What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify)),
-then verify again. Verification does not prove that AEAT has accepted the
-filing. Inspect the stored verification report by id when you need the detailed
-result:
+The check step in the annual example passed the annual draft as complete (`verificado_completo`). If the check instead reports `cross_period_dependency_unclean` issues that block filing, each named 303 quarter has no recorded filing or AEAT receipt; establish it first (see [What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify)), then check again. The check does not prove that AEAT has accepted the filing. Inspect the saved check report by id when you need the detailed result:
 
 ```{cli-sequence} modelo-390-verification-report
 ```
 
-Export the verified or locally filed revision. Export needs the four filed 303
-quarters' evidence, so the export and the post-portal steps here are display
-frames rather than run. Export refuses to overwrite an existing file unless you
-add `--replace`, and refuses when the output folder does not exist. The file
-carries the development software identity, so keep it for review:
+Export the checked calculation or the one recorded as filed. Export needs the four 303 quarters recorded as filed, so the export and the post-portal steps here are examples that are not run. Export refuses to overwrite an existing file unless you add `--replace`, and refuses when the output folder does not exist. The file carries the development software identity, so keep it for review:
 
 ```{cli-sequence} modelo-390-export-file
 ```
 
-Enter the calculated figures through AEAT's official channel; the full checklist
-is in [File your modelo at the AEAT portal](file-at-aeat.md). Review your
-filing records with `filing-record list` and `filing-record view`. `work file`
-is an internal local marker; it does not submit anything to AEAT. The following
-example lists a profile that filed nothing, so it reports no records; your own
-listing carries one row per filing you recorded. If the annual return was filed
-outside this local workflow, import an external filing record only from
-official evidence. That import needs the official receipt, and the
-evidence-bundle read addresses a bundle by id, so both stay display frames:
+Enter the calculated figures through AEAT's official channel; the full checklist is in [File your modelo at the AEAT portal](file-at-aeat.md). Review the filings you recorded with `filing-record list` and `filing-record view`. `work file` only records the filing in Cadrumo; it does not submit anything to AEAT. The following example lists a profile that recorded nothing, so it reports no records; your own listing has one row per filing you recorded. If the annual return was filed outside Cadrumo, import an external filing record only from an official AEAT receipt. That import needs the official receipt, and reading a stored proof bundle addresses it by id, so both stay examples that are not run:
 
 ```{cli-sequence} modelo-390-records-audit
 :verify: Confirm the local filing records read back.
@@ -314,43 +229,38 @@ evidence-bundle read addresses a bundle by id, so both stay display frames:
 
 ## What Modelo 390 does not check for you
 
-The current implementation supports Modelo 390's annual 303 reconciliation in
-the registry, but it does not enforce every operational policy you might want
-for a dependable annual filing workflow.
+The tax rules in Cadrumo support Modelo 390's annual 303 reconciliation, but Cadrumo does not enforce every operational policy you might want for a dependable annual filing workflow.
 
-Use these limits when deciding how much evidence to review:
+Use these limits when deciding how much to review yourself:
 
 - Modelo 390 does not look at all local filing history regardless of state.
   303-derived resolution is keyed by modelo, filing year, and period.
-- The calculate-time resolver and the verify gate treat 303 evidence
-  differently. The resolver that prefills 303-derived values does not apply a
-  lifecycle-state filter, so `work calculate` can produce a draft. The verify
-  gate is stricter: it blocks until each 303 quarter has a filed record or a
-  captured/reconciled AEAT justificante (see "What each Modelo 303 quarter needs
-  before you verify").
-- The annual `work calculate` path should not be treated as a general "latest
-  active 303 revision" selector. Use `work revision --select filed`,
-  `latest-verified`, or exact revision IDs when you need a specific 303 value.
-- Local `work file` records, AEAT captured filed observations, and justificante
-  reconciliation are related but separate evidence surfaces. The current CLI
-  does not require them to be in sync before every Modelo 390 calculation.
-- Missing 303 history can leave 390 303-derived bindings unavailable or force
-  operator-supplied reviewed values. Calculation can still produce a draft, but
-  verify blocks until the missing quarters have filed evidence.
-- Remote AEAT state is not binding unless you explicitly capture or reconcile
-  it in the workflow you are running.
+- Calculation and the check treat 303 filings differently. Calculation fills in
+  the values taken from 303 without looking at each quarter's state, so
+  `work calculate` can produce a draft. The check is stricter: it blocks until
+  each 303 quarter has a recorded filing or an AEAT receipt that was read or
+  reconciled (see "What each Modelo 303 quarter needs before you check").
+- The annual `work calculate` should not be treated as a general "latest active
+  303 calculation" selector. Use `work revision --select filed`,
+  `latest-verified`, or exact calculation IDs when you need a specific 303 value.
+- Filings you record with `work file`, filed declarations read from AEAT, and
+  AEAT receipt reconciliation are related but separate. Cadrumo does not
+  require them to agree before every Modelo 390 calculation.
+- Missing 303 history can leave the values taken from 303 unavailable or force
+  you to supply reviewed values. Calculation can still produce a draft, but the
+  check blocks until the missing quarters have a recorded filing or an AEAT
+  receipt.
+- What AEAT holds does not count unless you explicitly read or reconcile it in
+  the workflow you are running.
 
-For a conservative annual close, calculate and review every 303 period, reconcile
-official evidence where available, inspect the 390 303-derived bindings, and
-verify the annual draft before export. If the CLI does not expose the check you
-need, report that gap instead of documenting it as enforced behavior.
+For a conservative annual close, calculate and review every 303 period, reconcile official AEAT receipts where available, inspect the values taken from 303, and check the annual draft before export. If the command line does not offer the check you need, report that gap instead of documenting it as enforced behavior.
 
 ## Next steps
 
-- [Prepare a Modelo 303 IVA filing](modelo-303.md)
+- [Prepare a Modelo 303 VAT filing](modelo-303.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
-- [Reconcile a filed modelo against its justificante](reconcile.md)
+- [Reconcile a filed modelo against its AEAT receipt](reconcile.md)
 - [The filing workflow](filing-spine.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 - [CLI reference](../cli/index.rst)

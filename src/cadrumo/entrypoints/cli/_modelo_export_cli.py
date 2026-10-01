@@ -49,7 +49,7 @@ def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.export.local_export_not_official_evidence",
-        message="The local export is not official filing evidence.",
+        message=tr("cli.app.modelo.export.local_file_not_receipt"),
         context={
             "evidence_status": result.local_evidence_status,
             "modelo": str(result.modelo),
@@ -77,10 +77,7 @@ def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.export.development_software_identity",
-        message=(
-            "The file header carries Cadrumo's all-zero development software identity; "
-            "AEAT will not accept this file for presentation."
-        ),
+        message=tr("cli.app.modelo.export.development_file_not_accepted"),
         context={
             "software_identity_grade": str(result.software_identity_grade),
             "modelo": str(result.modelo),

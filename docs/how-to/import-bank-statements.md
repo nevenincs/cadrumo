@@ -1,6 +1,6 @@
 # Import and manage transactions
 
-This page covers the ledger's transaction workflow: importing your bank
+This page covers the transaction workflow in your records: importing your bank
 statement, adding any missing transactions by hand, reviewing and correcting
 them, and checking readiness before a calculation. A line on a bank statement
 is just a date and an amount - the tax meaning is added later, in
@@ -53,7 +53,7 @@ previews the standard quarter's statement, imports it, and confirms one imported
 row:
 
 ```{cli-sequence} import-preview-save
-:verify: Confirm the statement's rows were imported into the ledger.
+:verify: Confirm the statement's rows were imported into the records.
 ```
 
 `--provider csv` names the statement format. `--provider auto` asks `aeat` to
@@ -71,7 +71,7 @@ not a readable file.`); fix the path and run it again.
 Add `--verify` when you want import diagnostics alongside the save:
 
 ```{cli-sequence} import-diagnostics
-:verify: Confirm the verified import saved the statement's rows.
+:verify: Confirm the checked import saved the statement's rows.
 ```
 
 If the diagnostics should check the rows against a different original file,
@@ -98,7 +98,7 @@ accounts.
 
 `ledger add` accepts the same tax fields you set during classification, so you
 record a complete transaction in one step. `--amount` is the gross total
-(taxable base plus IVA), and the tool refuses the row if the base plus IVA does
+(taxable base plus VAT), and the tool refuses the row if the base plus VAT does
 not match the gross to the cent:
 
 ```{cli-sequence} import-add-tax-details
@@ -111,25 +111,25 @@ Useful optional fields:
 - `--counterparty` records who you paid or were paid by.
 - `--category-id` assigns the income or expense category. Run
   `aeat app ledger categories` to list the ids.
-- `--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA breakdown.
-- `--deduction-kind` names the source of a purchase's input IVA deduction, and
-  `--purchase-invoice-evidence-id` links the invoice evidence. Without a
-  deduction kind the input IVA is not deducted. See
-  [Classify transactions](classify-transactions.md#say-where-the-input-iva-comes-from).
+- `--taxable-base`, `--iva-rate`, and `--iva-amount` record the VAT breakdown.
+- `--deduction-kind` names the source of a purchase's input VAT deduction, and
+  `--purchase-invoice-evidence-id` links the invoice's supporting document. Without a
+  deduction kind the input VAT is not deducted. See
+  {ref}`Classify transactions <say-where-the-input-iva-comes-from>`.
 - `--irpf-category` records the IRPF (personal income tax) category.
 - `--source-jurisdiction` records the country a movement belongs to, as an
   ISO two-letter code, which matters for non-resident scopes.
-- `--notes` adds a short operator note.
+- `--notes` adds a short note.
 
 For a part-business, part-personal movement, set `--classification MIXED` and the
-business share with `--business-pct`, a value from `0` to `1`. For the IVA
+business share with `--business-pct`, a value from `0` to `1`. For the VAT
 category, EU member-state, and usage-ratio semantics behind these fields, see
 [Classify transactions](classify-transactions.md).
 
 Use the invoice commands when you also need to track whether an invoice exists
-separately from the bank movement. Received invoices are supplier invoices you
+separately from the bank transaction. Received invoices are supplier invoices you
 owe; issued invoices are customer invoices owed to you. `invoice add` takes the
-IVA rate as a percentage, such as `--iva-rate 21`, unlike `ledger add`, which
+VAT rate as a percentage, such as `--iva-rate 21`, unlike `ledger add`, which
 takes a decimal:
 
 ```{cli-sequence} import-invoice-records
@@ -137,7 +137,7 @@ takes a decimal:
 ```
 
 For the full invoice-record workflow, see
-[Attach invoices and receipts](ledger-evidence.md).
+[Attach invoices and receipts to transactions](ledger-evidence.md).
 
 ## Review rows
 
@@ -150,25 +150,25 @@ commands:
 ```
 
 For a broader review queue, use `ledger review` to inspect selected rows and
-`ledger check` to report aggregate ledger anomalies across periods. Both are
+`ledger check` to report anomalies across all your records and periods. Both are
 local-only:
 
 ```{cli-sequence} import-review-check
-:verify: Confirm the aggregate ledger check runs cleanly.
+:verify: Confirm the aggregate records check runs cleanly.
 ```
 
 ## Export rows for review
 
-Export the active ledger to a file. The `--year` and `--period` filter keeps the
+Export your records to a file. The `--year` and `--period` filter keeps the
 export aligned with the transaction dates. Exports are review snapshots, not an
 edit-and-reimport path:
 
 ```{cli-sequence} import-export-rows
-:verify: Confirm the ledger exports for the requested period.
+:verify: Confirm the records export for the requested period.
 ```
 
 Add `--export-format xlsx` to write an XLSX snapshot instead, and use the annual
-token `0A` when a whole year is the review scope.
+period code `0A` when a whole year is the review scope.
 
 To change saved rows, use `ledger update`, `ledger classify`, `ledger allocate`,
 `ledger split`, or `ledger merge`.
@@ -176,49 +176,51 @@ To change saved rows, use `ledger update`, `ledger classify`, `ledger allocate`,
 ## Update a row
 
 Use `ledger update` for editable transaction fields - date, value date, amount,
-direction, currency, counterparty, description, taxable base, IVA rate, IVA
+direction, currency, counterparty, description, taxable base, VAT rate, VAT
 amount, IRPF category, notes, or group label:
 
 ```{cli-sequence} import-update-row
-:verify: Confirm the row's description and IVA fields were updated.
+:verify: Confirm the row's description and VAT fields were updated.
 ```
 
 An update gives the transaction a new id; an id you wrote down earlier still
 resolves in `view`, `history`, and `track`. For the full correction workflow -
 splitting, merging, archiving, stashing, removing, and resetting rows - see
-[Correct mistakes in your ledger](correct-ledger-entries.md).
+[Correct mistakes in your records](correct-ledger-entries.md).
 
-## Attach evidence to a transaction
+(attach-evidence-to-a-transaction)=
+## Attach a supporting document to a transaction
 
-Attach secure purchase evidence to a transaction. The evidence id comes from
-`aeat app ledger evidence add`, which registers the invoice PDF or image as
-encrypted evidence. The example registers the invoice PDF as evidence, records
-the expense, then attaches one to the other. `evidence add` takes the IVA rate
+Attach a secure supporting document for a purchase to a transaction. The
+supporting document's id comes from `aeat app ledger evidence add`, which
+registers the invoice PDF or image as an encrypted supporting document. The
+example registers the invoice PDF as a supporting document, records the
+expense, then attaches one to the other. `evidence add` takes the VAT rate
 as a percentage (`21`), while `ledger add` takes a decimal (`0.21`):
 
 ```{cli-sequence} import-attach-evidence
-:verify: Confirm the purchase-invoice evidence attached to the transaction.
+:verify: Confirm the purchase invoice attached to the transaction.
 ```
 
-`attach` is the single door for purchase evidence. The `link` command binds a
-transaction to an invoice record only. Its `--invoice-id` option takes the id
+`attach` is the single door for a purchase's supporting documents. The `link`
+command links a transaction to an invoice record only. Its `--invoice-id` option takes the id
 that `aeat app ledger invoice add` prints, or the id of an imported or
 reconciled invoice. See
-[Attach invoices and receipts](ledger-evidence.md) for the full evidence and
-invoice-record workflow, including the `--attachment-id` option and its current
+[Attach invoices and receipts to transactions](ledger-evidence.md) for the full
+workflow for supporting documents and invoice records, including the `--attachment-id` option and its current
 limitation.
 
-Pull a document straight from Google Drive into encrypted evidence storage with
-`evidence pull`. This command reaches Google Drive, so it runs against your own
+Pull a document straight from Google Drive into encrypted storage with `evidence pull`. This command reaches Google Drive, so it runs against your own
 authorized account rather than in the documentation sandbox:
 
 ```{cli-sequence} import-evidence-pull
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the
-transaction, and keeps the original link as provenance. Gmail links, arbitrary
-URLs, and Drive files outside the granted scope are refused - evidence always
-carries the document itself, never a bare link. For a refused source, download
+transaction, and keeps the original link as a record of where the file came
+from. Gmail links, arbitrary URLs, and Drive files outside the granted scope are
+refused - a supporting document always carries the document itself, never a
+bare link. For a refused source, download
 the document yourself, register it with `aeat app ledger evidence add`, and
 attach it with `aeat app ledger attach --purchase-invoice-evidence-id`.
 
@@ -226,7 +228,7 @@ attach it with `aeat app ledger attach --purchase-invoice-evidence-id`.
 
 Splitting a mixed movement into parts, merging a wrong split back, and
 archiving, stashing, removing, or resetting rows are all corrections.
-[Correct mistakes in your ledger](correct-ledger-entries.md) owns that
+[Correct mistakes in your records](correct-ledger-entries.md) owns that
 workflow, with an example for each command and guidance on picking the
 least destructive fix.
 
@@ -245,10 +247,10 @@ and [LLM-assisted suggestions](classify-with-llm.md).
 
 ## Check readiness for a filing period
 
-Run preflight before calculating a modelo, then check the overall ledger state.
+Run preflight before calculating a modelo, then check the overall state of your records.
 Preflight looks at each record inside the period and flags anything still missing
-before any sums are trusted - a missing classification, category, base, IVA
-amount, IVA rate, split reference, or unconvertible currency:
+before any sums are trusted - a missing classification, category, base, VAT
+amount, VAT rate, split reference, or unconvertible currency:
 
 ```{cli-sequence} import-check-readiness
 :verify: Confirm the period's readiness is reported for the classified quarter.
@@ -261,20 +263,18 @@ preparing.
 
 For calculation review in Google Sheets, see
 [Review calculations with Google Sheets](review-with-google-sheets.md). That
-workflow exports a modelo calculation surface to Sheets; it is separate from
-ledger CSV/XLSX export.
+workflow exports a modelo calculation to Sheets; it is separate from the CSV/XLSX export of your records.
 
 ## If a command stops with an error
 
-If a command reports that no profile is active, the period is invalid, or the
-ledger is not ready, use
+If a command reports that no profile is active, the period is invalid, or your records are not ready, use
 [Diagnose and repair your local setup](troubleshooting.md).
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
+- [Import, export, and supporting documents](../reference/import-export-and-evidence.md) -
   understand what imported rows mean and how they differ from tax facts and
-  filing evidence.
+  proof of filing.
 - [Classify transactions](classify-transactions.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
 - [How your records become tax figures](../explanation/from-records-to-figures.md)

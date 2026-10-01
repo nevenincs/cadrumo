@@ -4,7 +4,7 @@
 aeat app modelo work create --modelo 349 --year 2026 --period 1T
 @step Calculate the draft; with no intra-community invoice there is no operator record.
 aeat app modelo work calculate --modelo 349 --year 2026 --period 1T
-@step Verify the draft; the report reads incomplete and names the empty required boxes.
+@step Check the draft; the report reads incomplete and names the empty required boxes.
 @result aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
 @expect result.completeness_status == "incomplete"
 @expect result.granted_verificado_completo == false
