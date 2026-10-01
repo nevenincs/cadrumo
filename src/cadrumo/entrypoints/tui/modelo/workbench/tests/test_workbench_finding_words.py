@@ -37,6 +37,8 @@ from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormIssue,
     ModeloFormOrigin,
+    ModeloFormRepeatingBlock,
+    ModeloFormSection,
     ModeloWorkForm,
     address_key,
 )
@@ -56,8 +58,13 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ..casilla_list import CasillaListHeading
+from ..header import missing_count
 from ..issues import IssueLevel, IssueLine, WorkbenchIssuesScreen, issue_lines
-from ..vocabulary import BLOCKS_MARK, CHECK_MARK
+from ..navigator import NavigatorState, navigator_rows, presented_form
+from ..page_items import WorkbenchPage, page_items, workbench_pages
+from ..vocabulary import BLOCKS_MARK, CHECK_MARK, DONE_MARK, MISSING_MARK
+from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
 from .workbench_fixture import synthetic_form
 
@@ -445,6 +452,75 @@ def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_lea
         address_key(ModeloFormCasillaAddressV1(casilla_id=casilla_id)) for casilla_id in row_fields
     ]
     assert not any(_leaks(_read_parts(line)) for line in lines)
+
+
+def _operator_record_findings() -> tuple[ModeloVerificationFinding, ...]:
+    return tuple(
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=casilla_id,
+            message_locale_key="application.modelo.findings.missing_required_casilla",
+            message_facts={"casilla_id": casilla_id},
+            legal_refs=(_LEGAL_REF,),
+        )
+        for casilla_id in ("op.codigo-pais", "op.nif-comunitario")
+    )
+
+
+def _records_section(pages: tuple[WorkbenchPage, ...]) -> tuple[WorkbenchPage, ModeloFormSection]:
+    """The page and section holding the 349 operators' table of records."""
+    return next(
+        (page, section)
+        for page in pages
+        for section in page.sections
+        if any(
+            "op.codigo-pais" in block.column_casilla_ids
+            for block in section.blocks
+            if isinstance(block, ModeloFormRepeatingBlock)
+        )
+    )
+
+
+def test_a_value_missing_from_the_records_keeps_its_section_and_page_open_in_both_panes(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _form_349(operation, _operator_record_findings())
+    with override_settings(cadrumo_output_language="en"):
+        pages = workbench_pages(presented_form(form))
+        page, section = _records_section(pages)
+        index = pages.index(page)
+        heading = next(
+            item
+            for item in page_items(page, staged={})
+            if isinstance(item, CasillaListHeading) and item.level == 0 and section.heading.text in item.text
+        )
+        rows = navigator_rows(pages, current=0, state=NavigatorState(), checked={}, width=60, show_attention=True)
+    page_row = next(row for row in rows if row.option_id == f"page:{index}")
+    section_row = next(row for row in rows if row.option_id == f"section:{index}:{section.id}")
+
+    assert missing_count(form) == 2
+    assert heading.mark is MISSING_MARK
+    assert MISSING_MARK in page_row.marks and DONE_MARK not in page_row.marks
+    assert MISSING_MARK in section_row.marks
+    assert "2" in section_row.prompt.plain
+
+
+def test_a_filed_declaration_marks_no_section_done_in_either_pane(operation: PinnedAuthorityOperation) -> None:
+    form = recorded_as_filed(_form_349(operation, ()))
+    with override_settings(cadrumo_output_language="en"):
+        pages = workbench_pages(presented_form(form, recorded=True))
+        headings = [
+            item
+            for page in pages
+            for item in page_items(page, staged={})
+            if isinstance(item, CasillaListHeading) and item.row is None and item.level == 0
+        ]
+        rows = navigator_rows(pages, current=0, state=NavigatorState(), checked={}, width=60, show_attention=False)
+
+    assert headings, "the filed form still shows its sections"
+    assert all(item.mark is not DONE_MARK and not item.text.startswith(DONE_MARK.glyph) for item in headings)
+    assert not any(DONE_MARK in row.marks for row in rows)
 
 
 def _glyph_colours(widget: Widget, glyph: str) -> list[Color]:

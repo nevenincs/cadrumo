@@ -228,8 +228,11 @@ def checked_boxes(form: ModeloWorkForm) -> dict[str, int]:
 
 
 def page_counts(page: WorkbenchPage, checked: Mapping[str, int]) -> AttentionCounts:
-    """What one page needs, over its sections and its calculation details."""
-    return field_counts(page.fields(), checked, recorded=page.recorded, applies=page.applies)
+    """What one page needs, over its sections, their tables of records and its calculation details."""
+    counts = field_counts(page.fields(), checked, recorded=page.recorded, applies=page.applies)
+    for records in page.records.values():
+        counts = counts + records
+    return counts
 
 
 def _room(width: int, lead: Text, tail: Text) -> int:
@@ -326,6 +329,9 @@ def _section_rows(
         chips = Text()
         if show_attention and applies:
             counts = field_counts((item for section in group for item in section_fields(section)), checked)
+            for section in group:
+                records = page.records.get(section.id)
+                counts = counts if records is None else counts + records
             chips = counts.text()
             line.append(f"{counts.mark.glyph} ")
             section_marks.append(counts.mark)

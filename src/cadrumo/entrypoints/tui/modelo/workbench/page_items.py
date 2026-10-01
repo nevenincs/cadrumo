@@ -20,12 +20,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_models import (
+    ModeloFormAttention,
     ModeloFormBindingInputsBlock,
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -52,7 +55,15 @@ from .casilla_list import (
     shown_rate,
 )
 from .grid import CasillaListRecords, GridRowPlace, GridShape, GridSlot
-from .vocabulary import AttentionCounts, WorkbenchMark, field_counts, field_needs_filer, holds_nothing, holds_zero
+from .vocabulary import (
+    DONE_MARK,
+    AttentionCounts,
+    WorkbenchMark,
+    field_counts,
+    field_needs_filer,
+    holds_nothing,
+    holds_zero,
+)
 
 DETAILS_PAGE_ID: Final[str] = "details"
 _RATIO_DATA_TYPE: Final[str] = "ratio"
@@ -66,6 +77,17 @@ _RECORDS_KEY: Final[str] = "tui.modelo.workbench.repeating"
 _CASILLA_KIND: Final[str] = "casilla"
 _RECORDS_UNKNOWN_KEY: Final[str] = "tui.modelo.workbench.grid.records_unknown"
 _RECORDS_READ_ONLY_KEY: Final[str] = "tui.modelo.workbench.grid.records_read_only"
+
+
+_RECORD_FINDING_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
+    {
+        ModeloFormAttention.BLOCKS: "blocks",
+        ModeloFormAttention.MISSING: "missing",
+        ModeloFormAttention.CONFIRM: "confirm",
+        ModeloFormAttention.CHECK: "check",
+    }
+)
+"""Where a finding about a table's values counts on the attention scale; one for information counts nowhere."""
 
 
 class WorkbenchFilter(StrEnum):
@@ -131,12 +153,49 @@ class WorkbenchPage:
     recorded: bool = False
     #: ``False`` when the read model states the page does not apply this period, so it asks for no value.
     applies: bool = True
+    #: What the last check found about the values of each section's tables of records, by section id.
+    records: Mapping[str, AttentionCounts] = dataclass_field(default_factory=lambda: MappingProxyType({}))
 
     def fields(self) -> tuple[ModeloFormField, ...]:
         """Every field the page holds, in reading order."""
         collected = [field for section in self.sections for field in section_fields(section)]
         collected.extend(self.details)
         return tuple(collected)
+
+
+def records_attention(
+    form: ModeloWorkForm, sections: tuple[ModeloFormSection, ...], *, recorded: bool, applies: bool
+) -> Mapping[str, AttentionCounts]:
+    """What the last check found about the values of each section's tables of records, by section id.
+
+    A finding about a value every record of a table carries names no box, so
+    it stands for the section that holds the table: a section is not done
+    while one of its tables misses a value. As for boxes, nothing is asked of
+    a declaration recorded as filed or of a page that does not apply.
+    """
+    asked = not recorded and applies
+    counts: dict[str, AttentionCounts] = {}
+    for section in sections:
+        columns = {
+            casilla_id
+            for block in section.blocks
+            if isinstance(block, ModeloFormRepeatingBlock)
+            for casilla_id in block.column_casilla_ids
+            if casilla_id is not None
+        }
+        if not columns:
+            continue
+        total = AttentionCounts()
+        for issue in form.issues:
+            if issue.finding.casilla_id is None or str(issue.finding.casilla_id) not in columns:
+                continue
+            level = _RECORD_FINDING_LEVELS.get(issue.attention)
+            if level is None or (level != "check" and not asked):
+                continue
+            total = total + AttentionCounts(**{level: 1, "pending": int(level != "check")})
+        if total != AttentionCounts():
+            counts[section.id] = total
+    return MappingProxyType(counts)
 
 
 def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
@@ -149,6 +208,7 @@ def workbench_pages(form: ModeloWorkForm) -> tuple[WorkbenchPage, ...]:
             sections=page.sections,
             recorded=recorded,
             applies=page.applies is not False,
+            records=records_attention(form, page.sections, recorded=recorded, applies=page.applies is not False),
         )
         for page in form.pages
     ]
@@ -309,29 +369,56 @@ def _record_items(block: ModeloFormRepeatingBlock) -> list[CasillaListItem]:
     return items
 
 
-def section_counts(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> AttentionCounts:
-    """What one section holds on the attention scale the navigator, the grid rows and the header share."""
-    return field_counts(section_fields(section), recorded=recorded, applies=applies)
+def section_counts(
+    section: ModeloFormSection,
+    *,
+    recorded: bool = False,
+    applies: bool = True,
+    records: AttentionCounts | None = None,
+) -> AttentionCounts:
+    """What one section holds on the attention scale the navigator, the grid rows and the header share.
+
+    ``records`` is what the last check found about the values of the
+    section's tables of records (:func:`records_attention`).
+    """
+    counts = field_counts(section_fields(section), recorded=recorded, applies=applies)
+    return counts if records is None else counts + records
 
 
-def section_mark(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> WorkbenchMark:
+def section_mark(
+    section: ModeloFormSection,
+    *,
+    recorded: bool = False,
+    applies: bool = True,
+    records: AttentionCounts | None = None,
+) -> WorkbenchMark | None:
     """The most severe thing a section holds: a blocker, a missing, failed or assumed value, then what still waits.
 
     A section is done only when nothing is to do and nothing waits on an
     import or a calculation. On a declaration recorded as filed, and on a page
     that does not apply, no value is asked, but a failure or a wait is still a
-    fact about the box and keeps its mark.
+    fact about the box and keeps its mark. A filed declaration draws no done
+    mark, as its navigator draws none: completing it is no longer the filer's
+    task.
     """
-    return section_counts(section, recorded=recorded, applies=applies).mark
+    mark = section_counts(section, recorded=recorded, applies=applies, records=records).mark
+    return None if recorded and mark is DONE_MARK else mark
 
 
-def section_heading_text(section: ModeloFormSection, *, recorded: bool = False, applies: bool = True) -> str:
+def section_heading_text(
+    section: ModeloFormSection,
+    *,
+    recorded: bool = False,
+    applies: bool = True,
+    records: AttentionCounts | None = None,
+) -> str:
     """Say whether a section is complete, or how many of its fields still need the filer."""
-    counts = section_counts(section, recorded=recorded, applies=applies)
+    counts = section_counts(section, recorded=recorded, applies=applies, records=records)
     if counts.pending:
         pending_text = tr("tui.modelo.workbench.section.pending", heading=section.heading.text, count=counts.pending)
         return f"{counts.mark.glyph} {pending_text}"
-    return f"{counts.mark.glyph} {section.heading.text}"
+    mark = section_mark(section, recorded=recorded, applies=applies, records=records)
+    return section.heading.text if mark is None else f"{mark.glyph} {section.heading.text}"
 
 
 def section_nav_text(section: ModeloFormSection, width: int, *, recorded: bool = False) -> str:
@@ -366,9 +453,10 @@ def _section_items(
             items.extend(_record_items(block))
     if not items:
         return []
+    records = page.records.get(section.id)
     heading = CasillaListHeading(
-        section_heading_text(section, recorded=page.recorded, applies=page.applies),
-        mark=section_mark(section, recorded=page.recorded, applies=page.applies),
+        section_heading_text(section, recorded=page.recorded, applies=page.applies, records=records),
+        mark=section_mark(section, recorded=page.recorded, applies=page.applies, records=records),
     )
     return [heading, *items]
 
@@ -437,6 +525,7 @@ __all__ = [
     "official_page",
     "page_items",
     "page_of",
+    "records_attention",
     "section_counts",
     "section_heading_text",
     "section_mark",
