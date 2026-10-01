@@ -233,7 +233,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "textual" },
     { name = "typer" },
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
+    { name = "tzdata" },
     { name = "xlrd" },
 ]
 
@@ -400,7 +400,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
     { name = "textual", specifier = ">=8.2.8,<9" },
     { name = "typer", specifier = ">=0.20.0,<1" },
-    { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
+    { name = "tzdata", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
 provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "llm", "pdf", "all"]

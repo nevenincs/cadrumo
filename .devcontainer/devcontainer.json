@@ -20,6 +20,8 @@
   "workspaceFolder": "/workspace",
   "remoteUser": "cadrumo",
   "containerUser": "cadrumo",
+  "init": true,
+  "runArgs": ["--shm-size=1g"],
 
   "mounts": [
     // Persist the encrypted secure-storage root and any cached AEAT
@@ -40,21 +42,17 @@
     "source=cadrumo-venv,target=/workspace/.venv,type=volume"
   ],
 
-  // uv sync + Playwright + vault tooling are already pre-baked at image
-  // build time; postCreateCommand only converges the live-mounted workspace
-  // (picking up source drift since the image was built) and provisions the
-  // local env file. `playwright install --with-deps` is deliberately NOT run
-  // here — browser provisioning remains the explicit `setup-browser` action.
-  // `just` itself is installed in the image (Debian trixie ships 1.40.0).
-  "postCreateCommand": "just setup",
+  // Converge the mounted checkout and reuse the image's provisioned browsers.
+  "postCreateCommand": "just init",
 
   "remoteEnv": {
     // Headless Chromium in the container has no interactive display; the
     // live AEAT browser paths must run headless. The certificate itself is
     // per-user and per-machine and is never baked into the image (see
-    // docs/workstation-setup.md); mount or set AEAT_CERTIFICATE_PATH after
+    // docs/workstation-setup.md); mount or set CADRUMO_CERTIFICATE_PATH after
     // the container starts if you need `aeat app live ...` locally.
-    "AEAT_BROWSER_HEADLESS": "true"
+    "CADRUMO_BROWSER_HEADLESS": "true",
+    "CADRUMO_BROWSER_CHANNEL": "chromium"
   },
 
   "customizations": {
