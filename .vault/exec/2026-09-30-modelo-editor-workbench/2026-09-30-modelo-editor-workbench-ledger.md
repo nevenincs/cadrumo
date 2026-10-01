@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:303b08e3a674084942aab4576cdeab55a056b10bad9445c0bb68268abcae2bf7'
+body_hash: 'sha256:2c59054589c4b51552e04a862a724d0a93f7d096f5b6195e9565333e18a45060'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -923,6 +923,32 @@ related:
 - `S52` `verify:` `dev.docs.sequences check after a generator refresh of eight goldens` -> `pass`
 - `S52` `verify:` `dev.quality.types --count, 17` -> `pass`
 - `S52` `by:` `orchestrator`
+- `S49` `M` `dev/registry/form_layout/generator.py`
+- `S49` `A` `dev/registry/form_layout/official_headings.py`
+- `S49` `A` `dev/registry/form_layout/official_headings.toml`
+- `S49` `A` `dev/registry/form_layout/tests/test_form_layout_official_headings.py`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/form_layouts/0001-form-layout.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S49` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_official_headings_real.py`
+- `S49` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S49` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S49` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S49` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S49` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S49` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S49` `M` `src/cadrumo/locales/ca/modelo/schema/349.yml`
+- `S49` `M` `src/cadrumo/locales/en/modelo/schema/349.yml`
+- `S49` `M` `src/cadrumo/locales/es/modelo/schema/349.yml`
+- `S49` `M` `src/cadrumo/locales/hu/modelo/schema/349.yml`
+- `S49` `verify:` `python -m dev.registry.form_layout generate --check, stability` -> `pass`
+- `S49` `verify:` `pytest src/cadrumo/entrypoints/tui with the locale audit, 660 passed` -> `pass`
+- `S49` `verify:` `pytest TUI integration, 797 passed` -> `pass`
+- `S49` `verify:` `dev.docs.sequences check` -> `pass`
+- `S49` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S49` `by:` `orchestrator`
 
 ## Notes
 
@@ -1000,3 +1026,6 @@ related:
 - `S52` Commits 8748180707
 - `S52` Three deferred reasons are restored to the filing block; `terminal_origin_mismatch` stays deferred because only a non-production observation route produces it
 - `S52` An intra-community acquisition is held back whole, so the payable is not overstated, but it can never be filed and verification crashes on an undeclared precondition identity
+- `S49` Commits bbe5ad2816, 7fb949d8fa
+- `S49` Modelo 349 is fully headed from its record design; Modelo 100 heads only eight data-entry sections, because Renta's printed form is not in the corpus, and every other page and section is listed with its reason
+- `S49` Headings reach the layout through a reviewer-quote file the generator checks against each cited source line
