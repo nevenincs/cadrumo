@@ -135,6 +135,13 @@ Where it stops:
   edition whose export surface has no scenario there is reported unchecked by
   the gate, which blocks ``--apply``; the typed, order and locale proofs still
   run.
+
+For an authored change, ``--accepted-modelo-dir`` adds an independent retained
+casilla order comparison against an accepted source snapshot before staging or
+application. Intentional identity changes require explicit ``--rename-casilla
+OLD=NEW`` pairs. New and removed members are reported separately; missing
+comparison coverage refuses the operation. Without a supplied snapshot, the
+migration's equivalence proof covers its own rewrite of the current source.
 """
 
 from __future__ import annotations
@@ -180,6 +187,8 @@ from dev._paths import REPO_ROOT
 from dev.registry.compiler.identifier_lineage import identifier_lineage
 from dev.test_runs.paths import allocate_run_directory
 
+from .casilla_order_review import render_report as render_casilla_order_review
+from .casilla_order_review import review_casilla_order
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
@@ -4483,9 +4492,43 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="limit --drop-restatement to this family; repeatable, defaults to every accepted family",
     )
     parser.add_argument("--apply", action="store_true", help="publish the staged modelo when the gate is clean")
+    parser.add_argument(
+        "--accepted-modelo-dir",
+        type=Path,
+        help="accepted modelo source snapshot for an independent retained-casilla order check before staging",
+    )
+    parser.add_argument(
+        "--rename-casilla",
+        action="append",
+        default=[],
+        metavar="OLD=NEW",
+        help="explicit one-to-one identity rename for --accepted-modelo-dir; repeatable",
+    )
     arguments = parser.parse_args(argv)
     if arguments.family and not arguments.drop_restatement:
         parser.error("--family only applies to --drop-restatement")
+    if arguments.rename_casilla and arguments.accepted_modelo_dir is None:
+        parser.error("--rename-casilla requires --accepted-modelo-dir")
+    if arguments.accepted_modelo_dir is not None:
+        try:
+            renames: list[tuple[str, str]] = []
+            for value in arguments.rename_casilla:
+                old, separator, new = value.partition("=")
+                if not separator or not old or not new or "=" in new:
+                    raise ValueError(f"invalid casilla rename {value!r}; expected OLD=NEW")
+                renames.append((old, new))
+            order_review = review_casilla_order(
+                arguments.accepted_modelo_dir,
+                arguments.registry_root / _MODELOS / arguments.modelo,
+                renames=renames,
+            )
+        except (RegistryError, ValueError) as exc:
+            sys.stderr.write(f"accepted-source order review refused: {exc}\n")
+            return 1
+        sys.stdout.write(render_casilla_order_review(order_review) + "\n")
+        if not order_review.passed:
+            sys.stderr.write(f"accepted-source order review refused: {order_review.status}\n")
+            return 1
     try:
         outcome = (
             drop_restatement(

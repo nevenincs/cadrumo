@@ -6918,3 +6918,15 @@ segmento = "DP200012"
 section = ["liquidacion_correcciones", "libertad_amortizacion_vehiculos_recarga_disminuciones"]
 semantic_role = "is_correccion_libertad_amortizacion_vehiculos_recarga_disminuciones"
 legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4"]
+
+# aeat-dr-200-2024, DP200014B, row 70, field 65, offset 1000, width 17.
+[[revisions."2024".casillas]]
+id = "DP200014B:00031"
+continuidad_id = "is-rectificativa-discrepancia-criterio-administrativo-total"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 DP200014B has no administrative-discrepancy TOTAL numbered [00031]. aeat-dr-200-2024 DP200014B row 70, field 65 first prints this monetary adjustment for a rectifying self-assessment. DP200001's Entidades de capital-riesgo [00031] is an unrelated one-byte entity flag, not its predecessor."
+number = "00031"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "rectificativa_discrepancia_criterio_administrativo_total"]
+semantic_role = "is_liquidacion_iv_importe"
+legal_refs = ["ley-27-2014:art-124", "orden-hac-657-2025:modelo-200"]

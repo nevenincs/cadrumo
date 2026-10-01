@@ -307,7 +307,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:71 DP200001 41|180|1|Num
 [[revisions."2022".casillas]]
-id = "00031"
+id = "DP200001:00031"
+segmento = "DP200001"
 continuidad_id = "is-entidades-de-capital-riesgo"
 number = "00031"
 section = ["entidades_de_capital_riesgo"]

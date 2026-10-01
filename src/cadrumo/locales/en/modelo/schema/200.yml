@@ -9951,6 +9951,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Profit and loss account (II) - Discontinued operations - PROFIT
               AND LOSS ACCOUNT RESULT [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-total:
+            label: Settlement IV - Self-assessment result - Disagreement with the
+              administrative position for certain corrective self-assessment cases
+              that do not belong in other boxes - Total [00031]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
             help: Flag indicating the tax regime for asset contributions to companies
               for asset management under Law 8/2012 [00062].

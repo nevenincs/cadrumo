@@ -4,9 +4,11 @@ format = 'fixed_width'
 source_refs = ['aeat-dr-200-2025']
 legal_refs = [
     'ley-27-2014:art-100',
+    'ley-27-2014:art-124',
     'ley-27-2014:art-19',
     'ley-27-2014:art-39',
     'ley-27-2014:art-41',
+    'orden-hac-529-2026:art-1',
     'rd-634-2015:art-3',
 ]
 dictionary_path_overrides = []

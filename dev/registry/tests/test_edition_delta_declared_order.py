@@ -34,6 +34,7 @@ from ..edition_delta_migration import (
     _write_edition,
     _write_order_restorations,
     declared_order_restorations,
+    main,
     migrate_modelo,
 )
 from ..edition_family_delta import collapse_keyed_families
@@ -205,6 +206,59 @@ def test_the_merge_moves_a_complete_statements_new_members_to_the_end(tmp_path: 
     assert live != _stated_casilla_order()
     assert set(live[-len(stated_new) :]) == stated_new
     assert _formula_order(modelo_dir) != _stated_formula_order()
+
+
+def test_accepted_source_order_drift_refuses_apply_before_staging(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    reference = _build_modelo(tmp_path / "accepted")
+    root = tmp_path / "candidate" / "registry" / "aeat"
+    candidate = shutil.copytree(reference, root / "modelos" / _MODELO_ID)
+    fragment = candidate / "revisions" / _BASELINE / "casillas" / "0001-declarations.toml"
+    fragment.write_text(_casillas(_BASELINE, tuple(reversed(_BASELINE_ROWS))), encoding="utf-8")
+    before = fragment.read_bytes()
+    work = tmp_path / "migration-work"
+
+    result = main(
+        [
+            "--registry-root",
+            str(root),
+            "--modelo",
+            _MODELO_ID,
+            "--work-dir",
+            str(work),
+            "--accepted-modelo-dir",
+            str(reference),
+            "--apply",
+        ]
+    )
+
+    assert result == 1
+    assert "accepted-source order review refused: drift" in capsys.readouterr().err
+    assert not work.exists()
+    assert fragment.read_bytes() == before
+
+
+def test_casilla_rename_requires_an_accepted_source_snapshot(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit) as refusal:
+        main(
+            [
+                "--registry-root",
+                str(tmp_path),
+                "--modelo",
+                _MODELO_ID,
+                "--work-dir",
+                str(tmp_path / "work"),
+                "--rename-casilla",
+                "0001=DP:0001",
+            ]
+        )
+
+    assert refusal.value.code == 2
+    assert "--rename-casilla requires --accepted-modelo-dir" in capsys.readouterr().err
+    assert not (tmp_path / "work").exists()
 
 
 def test_a_complete_statement_over_a_baseline_is_restored_to_its_stated_order(tmp_path: Path) -> None:

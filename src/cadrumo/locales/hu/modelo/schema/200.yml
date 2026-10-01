@@ -9925,6 +9925,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Eredménykimutatás (II) - Megszűnt tevékenységek - AZ EREDMÉNYKIMUTATÁS
               EREDMÉNYE [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-total:
+            label: Elszámolás IV - Az önadózás eredménye - Eltérés a hatósági állásponttól
+              egyes helyesbítő önadózási esetekben, amelyek más rovatokba nem tartoznak
+              - Összesen [00031]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
             help: Jelölő a 8/2012. törvény szerinti, eszközkezelési társaságokba történő
               eszköz-hozzájárulások adórendszere esetén [00062].
