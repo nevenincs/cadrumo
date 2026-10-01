@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:38d5f9fb32404d32625b1a35a87224f0dbe3af6e3d73c1ca5fc322080984bcf4'
+body_hash: 'sha256:33f252b6c8f5270488906119e37dbd434ea75179320f03ab1121da3000765d1a'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -775,6 +775,106 @@ related:
 - `S51` `verify:` `tests the packs moved, 15 files, 321 passed` -> `pass`
 - `S51` `verify:` `dev.docs.sequences check on the 15 moved sequences, 14 pass, modelo-390-annual-2025 diverges on a concurrent calculation change` -> `fail`
 - `S51` `by:` `orchestrator`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/bulk_confirm.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_deadline_parity.py`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_filing_gates.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_review_check.py`
+- `S44` `M` `src/cadrumo/locales/ca/common.yml`
+- `S44` `M` `src/cadrumo/locales/en/common.yml`
+- `S44` `M` `src/cadrumo/locales/es/common.yml`
+- `S44` `M` `src/cadrumo/locales/hu/common.yml`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_aeat_import_date.py`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_filters.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_lifecycle.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_out_of_date.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issue_routes.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S44` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_state.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S44` `M` `dev/acceptance/income_tax/tests/test_tui_journey.py`
+- `S44` `M` `dev/acceptance/income_tax/tui_journey.py`
+- `S44` `verify:` `pytest src/cadrumo/entrypoints/tui with the locale audit, 636 passed, one failure from another lane's in-flight catalogue` -> `pass`
+- `S44` `verify:` `pytest dev/acceptance income_tax and profile tui journeys, 33 passed` -> `pass`
+- `S44` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S44` `by:` `orchestrator`
+- `S45` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S45` `M` `src/cadrumo/application/modelo/edit_parse_text.py`
+- `S45` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_edit_refusal_errors.py`
+- `S45` `M` `src/cadrumo/locales/ca/application.yml`
+- `S45` `M` `src/cadrumo/locales/en/application.yml`
+- `S45` `M` `src/cadrumo/locales/es/application.yml`
+- `S45` `M` `src/cadrumo/locales/hu/application.yml`
+- `S45` `A` `docs/api/cadrumo.application.modelo.finding_message_text.rst`
+- `S45` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S45` `A` `src/cadrumo/application/modelo/finding_message_text.py`
+- `S45` `A` `src/cadrumo/application/modelo/tests/test_work_form_binding_labels.py`
+- `S45` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S45` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S45` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S45` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S45` `M` `src/cadrumo/locales/ca/common.yml`
+- `S45` `M` `src/cadrumo/locales/en/common.yml`
+- `S45` `M` `src/cadrumo/locales/es/common.yml`
+- `S45` `M` `src/cadrumo/locales/hu/common.yml`
+- `S45` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issue_choices.py`
+- `S45` `M` `dev/locales/fstring_registry.py`
+- `S45` `M` `dev/locales/tests/test_audit.py`
+- `S45` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_unrouted_source_issue_projection.py`
+- `S45` `A` `src/cadrumo/domain/modelos/tests/test_calculation_source_issue_identity.py`
+- `S45` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S45` `M` `src/cadrumo/locales/en/cli.yml`
+- `S45` `M` `src/cadrumo/locales/es/cli.yml`
+- `S45` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S45` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S45` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_form_last_export.py`
+- `S45` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_calculation_notes.py`
+- `S45` `A` `src/cadrumo/application/modelo/calculation_note_gate.py`
+- `S45` `M` `src/cadrumo/application/modelo/export.py`
+- `S45` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S45` `A` `src/cadrumo/application/modelo/tests/test_calculation_note_gate.py`
+- `S45` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S45` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S45` `A` `src/cadrumo/entrypoints/cli/tests/test_calculation_blocked_filing_cli.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_work_form_calculation_notes.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/tests/test_maternidad_meses_reach_the_calculate_path.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_190_withholding_detail_gate.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S45` `verify:` `pytest TUI, application/modelo, domain/modelos and dev/locales, 3137 passed` -> `pass`
+- `S45` `verify:` `pytest application gate and real-CLI blocked filing, 7 passed` -> `pass`
+- `S45` `verify:` `export round trip reads tipo de declaracion N in 4T and B in 3T` -> `pass`
+- `S45` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S45` `by:` `orchestrator`
+- `S47` `M` `dev/tui/harness/sequences.py`
+- `S47` `M` `dev/tui/harness/tests/test_sequence_scenarios.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S47` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/editor_panel.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/sectioned_form.py`
+- `S47` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_docked_editor.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_editing.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_and_footer.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_origin_in_help.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_recorded.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_scoped_confirm.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S47` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_acceptance.py`
+- `S47` `verify:` `pytest src/cadrumo/entrypoints/tui with the locale audit, 648 passed` -> `pass`
+- `S47` `verify:` `pytest TUI integration, 378 passed` -> `pass`
+- `S47` `verify:` `pytest dev/tui/harness/tests, 52 passed` -> `pass`
+- `S47` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S47` `by:` `orchestrator`
 
 ## Notes
 
@@ -837,3 +937,12 @@ related:
 - `S46` Rates for 303 `[07]/[08]` and `[153]/[154]` cannot be grounded from the registry and show a dot with a note; the export scale and a row-level rate are registry follow-ups
 - `S51` All five catalogue packs, the docs batch (211 messages) and 12 source edits with their catalogues landed through the integration checkpoints 421f48dd30 and 19eecd8355 and the merge a4b108f6db, so the lane made no commit of its own
 - `S51` Two docs messages were dropped from the batch for pre-existing wrong translations, and CLI help wording (about 300 keys) waits for a design pack
+- `S44` Commits 3491eb8017, 90d7a3ff7d, 1b1d39f647, 926b42ec11, 2a88f79dd5, 03a681c3f8, 909bd64dbf
+- `S44` Much of the lane's work reached history through the integration checkpoints 421f48dd30, 4a9190c8fc and 19eecd8355
+- `S44` A persisted export fact replaced the session-only export flag; an out-of-date file refuses recording with no override, by the orchestrator's ruling
+- `S45` Commits e9e9c43056, 0c717e92db, adbb0586aa, 82269767a4, ff105a8b31, d3c02004a1, c128c3f557, 73ad980c2c, 923b07fe33
+- `S45` The 4T result disposition for 130 and 131 was a filing-grade export defect grounded on each modelo's bundled instructions, sections (5) and (6)
+- `S45` Four diagnostic reasons misfire for sources that do not apply to the filer, so the operator narrowed the filing block; S52 restores them once the producers skip such sources
+- `S45` Much of C1 reached history through checkpoint eaac53fd5b
+- `S47` Commits 6bc71c8944
+- `S47` The preview harness and the TUI acceptance test were adapted because the editor now docks at their sizes; the installed financial-child journey waits for an editor screen and was not run

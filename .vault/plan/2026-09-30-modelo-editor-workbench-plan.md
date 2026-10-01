@@ -7,9 +7,9 @@ tier: L2
 related:
   - '[[2026-09-30-modelo-editor-workbench-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
-modified: '2026-09-30'
+modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:af1846be7279ba381dfdd518108e5cdbfd1c28ca4288221e3acbc39489589d94'
+body_hash: 'sha256:c7b5c824f48bc345b9c8c8407dc0b021579d41ed0d50bbc632ebd96bfc30d323'
 ---
 
 # `modelo-editor-workbench` plan
@@ -124,10 +124,10 @@ Converge the workbench on the filer-facing design the UX session specified, one 
 
 Close what the combined render and the design verification found: nothing unconfirmed reaches AEAT, every finding and blocker reads in the filer's words and colour, rows never contradict their own state, and the box panel docks beside the list as the operator decided.
 
-- [ ] `P07.S44` - Withhold export and recording while assumed values remain, count the next step as the blockers do, and draw every blocker mark in the error colour; `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`.
-- [ ] `P07.S45` - Word finding facts at the render boundary, name repeated-row findings in the filer's words at the missing level, carry calculation diagnostics to the workbench, and name an unnamed input by the box it feeds; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P07.S44` - Withhold export and recording while assumed values remain, count the next step as the blockers do, and draw every blocker mark in the error colour; `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`.
+- [x] `P07.S45` - Word finding facts at the render boundary, name repeated-row findings in the filer's words at the missing level, carry calculation diagnostics to the workbench, and name an unnamed input by the box it feeds; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P07.S46` - Keep a held zero apart from an empty box, give rate values their unit, and word sources, panels and staged changes in the filer's terms; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
-- [ ] `P07.S47` - Dock the box panel at the foot of the workbench, with the dialog below thirty rows of height; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [x] `P07.S47` - Dock the box panel at the foot of the workbench, with the dialog below thirty rows of height; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [ ] `P07.S48` - Show the chain from an edited box to the result; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [ ] `P07.S49` - Author official headings for Modelo 100, then 349; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
