@@ -30,6 +30,7 @@ from ..sequences import (
     EDITOR_PAGE,
     F8_CONFIRM_PAGE,
     ISSUES_PAGE,
+    NEXT_PAGE,
     RECALCULATE_PAGE,
     REVIEW_PAGE,
     SEQUENCE_SCENARIOS,
@@ -45,7 +46,7 @@ _INSTALMENT = SEQUENCE_SCENARIOS["modelo-130-first-quarter"]
 _UNVERIFIED = SEQUENCE_SCENARIOS["verification-reports-incomplete"]
 _NOTHING_ASSUMED = SEQUENCE_SCENARIOS["modelo-349-first-quarter"]
 _ANNUAL_RETURN = SEQUENCE_SCENARIOS["modelo-100-renta-2025"]
-_BROWSING_PAGES = ("workbench", "sources", "legend", "search", "not-editable")
+_BROWSING_PAGES = ("workbench", NEXT_PAGE, "sources", "legend", "search", "not-editable")
 _FIRST_QUARTER_PAGES = (*_BROWSING_PAGES, ISSUES_PAGE)
 _INSTALMENT_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 _EVERY_PAGE = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
@@ -186,6 +187,7 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
     painted = {frame.shot.page: frame.screen for frame in frames}
     assert painted == {
         "workbench": _qualname(ModeloWorkbenchScreen),
+        NEXT_PAGE: _qualname(ModeloWorkbenchScreen),
         "sources": _qualname(WorkbenchSourcesScreen),
         "legend": _qualname(ModeloWorkbenchScreen),
         "search": _qualname(ModeloWorkbenchScreen),
@@ -197,6 +199,8 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
         ISSUES_PAGE: _qualname(WorkbenchIssuesScreen),
     }
     assert _surface_text(frames[0].frame_text) == _surface_text(frames[-1].frame_text)
+    turned = next(frame for frame in frames if frame.shot.page == NEXT_PAGE)
+    assert _surface_text(turned.frame_text) != _surface_text(frames[0].frame_text), "] turned no page"
 
 
 @pytest.mark.integration

@@ -70,6 +70,7 @@ from dev.docs.sequences.golden_store import golden_path, read_golden
 from dev.docs.sequences.runner import SANDBOX_PROFILE_LABEL, SequenceSandbox, executed_sequence_sandbox
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
+NEXT_PAGE: Final[str] = "next-page"
 ISSUES_PAGE: Final[str] = "issues"
 REVIEW_PAGE: Final[str] = "review"
 RECALCULATE_PAGE: Final[str] = "recalculate"
@@ -255,6 +256,18 @@ async def _open_assumed_panel(scenario: SequenceScenario, pilot: Pilot[object]) 
     await _first_box(scenario, pilot, assumed, "holds an assumed value the filer can confirm")
 
 
+async def _turn_one_page(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
+    """Press ``]`` once, as a filer turns to the declaration's next page; a one-page declaration has none."""
+    workbench = _workbench(scenario, pilot.app)
+    if len(workbench.pages_shown) < 2:
+        raise PageUnavailableError(f"{scenario.sequence_id}: the declaration has one page, so ] turns to none")
+    before = workbench.query_one(CasillaList).items
+    await pilot.press("right_square_bracket")
+    await _settle(pilot)
+    if workbench.query_one(CasillaList).items == before:
+        raise PageUnavailableError(f"{scenario.sequence_id}: ] stayed where it was, on the last page")
+
+
 async def _open_legend(scenario: SequenceScenario, pilot: Pilot[object]) -> None:
     """Press ``?`` twice: the first widens the help band, the second opens the legend of every mark."""
     await pilot.press("question_mark", "question_mark")
@@ -377,6 +390,7 @@ async def _stay(_scenario: SequenceScenario, _pilot: Pilot[object]) -> None:
 
 _PAGE_SCREENS: Final[dict[str, type[object]]] = {
     "workbench": ModeloWorkbenchScreen,
+    NEXT_PAGE: ModeloWorkbenchScreen,
     "sources": WorkbenchSourcesScreen,
     "legend": ModeloWorkbenchScreen,
     "search": ModeloWorkbenchScreen,
@@ -394,6 +408,7 @@ The box panel is named by the panel itself: it docks in the workbench on a
 tall terminal and opens in its own dialog on a short one."""
 _PAGE_WALKS: Final[dict[str, _Walk]] = {
     "workbench": _stay,
+    NEXT_PAGE: _turn_one_page,
     "sources": _open_sources,
     "legend": _open_legend,
     "search": _search_a_box,
@@ -676,6 +691,7 @@ __all__ = [
     "EDITOR_PAGE",
     "F8_CONFIRM_PAGE",
     "ISSUES_PAGE",
+    "NEXT_PAGE",
     "RECALCULATE_PAGE",
     "REVIEW_PAGE",
     "SEQUENCE_SCENARIOS",
