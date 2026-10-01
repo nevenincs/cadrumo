@@ -1,4 +1,7 @@
-[[revisions."2024".applicability]]
+# Who files Modelo 200: every IS contribuyente (LIS art. 124) and, through the same
+# modelo, the IRNR establecimientos permanentes (TRLIRNR arts. 2 and 24). The member
+# cites only those standing provisions, so the 2023 edition inherits it unchanged.
+[[revisions."2022".applicability]]
 id = "m200-seed"
 applicable_entity_types = ["legal_entity"]
 applicable_fiscal_residencies = ["resident_irpf"]

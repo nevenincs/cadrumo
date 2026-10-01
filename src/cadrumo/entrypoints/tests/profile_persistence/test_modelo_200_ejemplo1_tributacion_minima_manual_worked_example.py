@@ -153,7 +153,10 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, manual_editions_printing
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    manual_editions_printing,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -272,15 +275,18 @@ def _ejemplo1_oracle() -> _ManualWorkedExample:
 _EJEMPLO1_ORACLE = _ejemplo1_oracle()
 
 
-def _authored_m200_exercise(exercise: int) -> bool:
+def _calculated_m200_exercise(exercise: int) -> bool:
+    """Whether an authored Modelo 200 revision covering the exercise claims calculation authority."""
     return any(
         revision.valid_from.year <= exercise and (revision.valid_to is None or exercise <= revision.valid_to.year)
-        for revision in authored_revisions(_M200)
+        for revision in authored_revisions_where(
+            _M200, lambda revision: revision.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY
+        )
     )
 
 
 # Every Sociedades manual edition that prints Ejemplo 1's liquidacion rows, restricted
-# to the exercises an authored Modelo 200 revision covers.
+# to the exercises an authored Modelo 200 revision calculates.
 _EJEMPLO1_EDITIONS = tuple(
     exercise
     for exercise in manual_editions_printing(
@@ -290,7 +296,7 @@ _EJEMPLO1_EDITIONS = tuple(
         "Cuota liquida [00592] 270.000",
         "Cuota liquida [00592] 300.000",
     )
-    if _authored_m200_exercise(exercise)
+    if _calculated_m200_exercise(exercise)
 )
 assert _EJEMPLO1_ORACLE.filing_year in _EJEMPLO1_EDITIONS
 

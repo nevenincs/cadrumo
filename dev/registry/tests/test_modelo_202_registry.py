@@ -8,6 +8,7 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffsetByTargetPeriod, TargetPeriods
@@ -268,7 +269,8 @@ def test_committed_modelo_202_art_40_2_base_reads_the_modelo_200_box_net_of_rete
 
     The Modelo 200 cuota liquida is net of deducciones and bonificaciones only; the
     box the relation reads must also subtract the retenciones e ingresos a cuenta,
-    in each authored Modelo 200 edition it can resolve to.
+    in each authored Modelo 200 edition that calculates it. An applicability-grade
+    edition computes nothing, so a relation reading it takes the filed value.
     """
     modelo, _catalogues = _load_modelo_202()
     modelo_200, _ = _committed_modelo("200")
@@ -281,7 +283,13 @@ def test_committed_modelo_202_art_40_2_base_reads_the_modelo_200_box_net_of_rete
             cited = {text for citation in binding.source_citations for text in citation.required_text}
             assert "retenciones e ingresos a cuenta" in cited, revision.id
     assert relation_sources == {"DP200014B:00599"}
-    for revision_200 in modelo_200.revisions.values():
+    calculating = [
+        revision_200
+        for revision_200 in modelo_200.revisions.values()
+        if revision_200.effective_authority_grade is not RegistryAuthorityGrade.APPLICABILITY
+    ]
+    assert calculating, "no Modelo 200 edition calculates, so this check proves nothing"
+    for revision_200 in calculating:
         retenciones = {
             casilla.id
             for casilla in revision_200.casillas

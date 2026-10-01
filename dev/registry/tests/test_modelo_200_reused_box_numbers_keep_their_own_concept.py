@@ -166,7 +166,23 @@ def _casillas(revision: ModeloRevision) -> dict[str, CasillaDefinition]:
     return {str(casilla.id): casilla for casilla in revision.casillas}
 
 
-@pytest.mark.parametrize("revision", authored_revisions(_MODELO), ids=lambda revision: str(revision.id))
+def _mapped_revisions() -> tuple[ModeloRevision, ...]:
+    """The editions whose record-design epoch has a semantic map: only those map design cells to casillas."""
+    return tuple(
+        revision
+        for revision in authored_revisions(_MODELO)
+        if (_MAPPINGS / str(_design_source(revision).record_design_epoch)).is_dir()
+    )
+
+
+def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
+    mapped = {str(revision.id) for revision in _mapped_revisions()}
+    exporting = {str(revision.id) for revision in authored_revisions(_MODELO) if revision.export_layouts}
+    assert exporting, "no edition exports, so this check proves nothing"
+    assert exporting <= mapped
+
+
+@pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) -> None:
     semantic_map = _semantic_map(str(_design_source(revision).record_design_epoch))
     expected = _ECHOES | _AWAITING_SEGMENT_QUALIFIED_IDS
@@ -175,7 +191,7 @@ def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) 
         assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == expected
 
 
-@pytest.mark.parametrize("revision", authored_revisions(_MODELO), ids=lambda revision: str(revision.id))
+@pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_a_box_declared_for_its_own_sheet_is_where_that_sheet_maps(revision: ModeloRevision) -> None:
     """Every design cell whose sheet has its own casilla for the printed number maps to that casilla."""
     design = _design_source(revision)

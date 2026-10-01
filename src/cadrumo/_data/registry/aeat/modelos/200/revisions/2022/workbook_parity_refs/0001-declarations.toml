@@ -1,0 +1,11 @@
+# Record-design parity anchor: the ejercicio 2022 diseno de registro. No formula is
+# declared, so no numeric parity run is required.
+[[revisions."2022".workbook_parity_refs]]
+id = "modelo-200-dr-xls"
+workbook_source = "aeat-dr-200-2022"
+fixture_id = "modelo-200-2022-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["orden-hfp-523-2023:modelo-200"]
+source_refs = ["aeat-dr-200-2022"]

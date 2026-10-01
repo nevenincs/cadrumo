@@ -70,6 +70,7 @@ from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _grounded_observations,
     _observations_from_requirements,
+    source_editions_calculate,
 )
 from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import authored_revisions_where
@@ -381,6 +382,10 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
             for filing_year, period in _full_relation_filing_year_periods(
                 revision=revision, relation_ids=relation_ids, floor=supported_years.floor
             ):
+                if not source_editions_calculate(
+                    relation_source_requirements(revision, filing_year=filing_year, period=period)
+                ):
+                    continue
                 exercised += 1
                 _assert_relations_resolve_from_observations(
                     target_modelo=modelo.id,

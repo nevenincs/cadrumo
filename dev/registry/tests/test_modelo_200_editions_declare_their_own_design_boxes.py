@@ -4,8 +4,12 @@ Each Modelo 200 edition cites exactly one AEAT record design. A numbered box
 that design does not print cannot belong to the edition, and a box the earlier
 design already prints cannot first appear in the later edition: it belongs to
 the edition whose design prints it first, and the later edition reaches it by
-storage reuse. A cohort cell the later design no longer prints is retired by an
-evolution record rather than silently dropped.
+storage reuse. A later row that does first appear on such a box says why on the
+row itself: either the earlier edition is silent on a field its design prints,
+which is recorded declaration debt, or the field is new on the later design and
+the earlier design prints no field with its caption. A cohort cell the later
+design no longer prints is retired by an evolution record rather than silently
+dropped.
 """
 
 from __future__ import annotations
@@ -18,8 +22,9 @@ from itertools import pairwise
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaEvolutionKind
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
@@ -49,6 +54,52 @@ def _design_boxes(revision_id: str) -> frozenset[tuple[str, str]]:
         for field in sheet.fields
         for number in _PRINTED_BOX.findall(field.description)
     )
+
+
+@cache
+def _design_captions(revision_id: str) -> dict[str, frozenset[str]]:
+    """Return, per printed number, every caption the edition's own design prints it with."""
+    revision = compiled_bundled_authority().modelo(_MODELO).revisions[revision_id]
+    sources = compiled_bundled_authority().catalogues.sources
+    (design,) = [ref for ref in revision.source_refs if sources[ref].kind == "record_design"]
+    extraction = extract_record_design(bundled_path() / sources[design].corpus_path)
+    captions: dict[str, set[str]] = {}
+    for sheet in extraction.require_complete():
+        for field in sheet.fields:
+            for number in _PRINTED_BOX.findall(field.description):
+                captions.setdefault(number, set()).add(_plain(field.description))
+    return {number: frozenset(texts) for number, texts in captions.items()}
+
+
+def _plain(text: str) -> str:
+    return " ".join(text.split())
+
+
+def unexplained_late_rows(
+    later: Iterable[CasillaDefinition],
+    late: Iterable[Box],
+    earlier_captions: dict[str, frozenset[str]],
+) -> list[str]:
+    """Return later-edition rows on a late box whose own row does not account for the earlier edition's silence.
+
+    A row accounts for it by recording that the earlier edition is silent on a field
+    its design prints, or by claiming the field is new on its own design while the
+    earlier design prints no field with the row's caption.
+    """
+    late = set(late)
+    unexplained = []
+    for casilla in later:
+        if (casilla.segmento, str(casilla.number)) not in late:
+            continue
+        origin = casilla.continuidad_origin
+        if origin is CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT:
+            continue
+        if origin is CasillaLineageOrigin.NEW_ON_FORM and _plain(casilla.label) not in earlier_captions.get(
+            str(casilla.number), frozenset()
+        ):
+            continue
+        unexplained.append(str(casilla.id))
+    return sorted(unexplained)
 
 
 def _declared_boxes(revision: ModeloRevision) -> frozenset[Box]:
@@ -105,10 +156,11 @@ def test_every_numbered_box_an_edition_declares_is_printed_by_its_own_design() -
         assert unprinted_boxes(_declared_boxes(revision), _design_boxes(str(revision.id))) == [], revision.id
 
 
-def test_no_box_the_earlier_design_prints_first_appears_in_the_later_edition() -> None:
+def test_no_box_the_earlier_design_prints_first_appears_in_the_later_edition_unexplained() -> None:
     for earlier, later in _consecutive_editions():
-        assert late_boxes(_declared_boxes(later), _declared_boxes(earlier), _design_boxes(str(earlier.id))) == [], (
-            f"{later.id} declares boxes {earlier.id}'s design already prints"
+        late = late_boxes(_declared_boxes(later), _declared_boxes(earlier), _design_boxes(str(earlier.id)))
+        assert unexplained_late_rows(later.casillas, late, _design_captions(str(earlier.id))) == [], (
+            f"{later.id} declares boxes {earlier.id}'s design already prints without recording why"
         )
 
 
@@ -125,7 +177,26 @@ def test_the_checks_detect_a_box_declared_by_the_wrong_edition() -> None:
     assert late_boxes({(sheet, number)}, set(), earlier_printed) == [(sheet, number)]
 
 
+def test_the_checks_detect_a_late_row_that_does_not_say_why() -> None:
+    """A late row with no absence origin, or a new-on-form claim the earlier design refutes, is reported."""
+    earlier, _later = _consecutive_editions()[-1]
+    captions = _design_captions(str(earlier.id))
+    row = next(
+        casilla
+        for casilla in earlier.casillas
+        if _NUMBERED.fullmatch(str(casilla.number)) and _plain(casilla.label) in captions.get(str(casilla.number), ())
+    )
+    box = {(row.segmento, str(row.number))}
+    silent = row.model_copy(update={"continuidad_origin": None})
+    refuted = row.model_copy(update={"continuidad_origin": CasillaLineageOrigin.NEW_ON_FORM})
+    recorded = row.model_copy(update={"continuidad_origin": CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT})
+    assert unexplained_late_rows([silent], box, captions) == [str(row.id)]
+    assert unexplained_late_rows([refuted], box, captions) == [str(row.id)]
+    assert unexplained_late_rows([recorded], box, captions) == []
+
+
 def test_cells_the_later_design_stops_printing_are_retired_not_dropped() -> None:
+    dropped_anywhere = False
     for earlier, later in _consecutive_editions():
         later_ids = {str(casilla.id) for casilla in later.casillas}
         retired = {
@@ -141,8 +212,9 @@ def test_cells_the_later_design_stops_printing_are_retired_not_dropped() -> None
             and casilla.continuidad_id not in {c.continuidad_id for c in later.casillas}
             and _NUMBERED.fullmatch(str(casilla.number))
         ]
-        assert dropped, f"{later.id} drops no {earlier.id} box, so this check proves nothing"
+        dropped_anywhere = dropped_anywhere or bool(dropped)
         assert [box for box in dropped if _chain(earlier, box) not in retired] == []
+    assert dropped_anywhere, "no edition drops a box of the one before it, so this check proves nothing"
 
 
 def _chain(revision: ModeloRevision, casilla_id: str) -> str | None:

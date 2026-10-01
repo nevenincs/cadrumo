@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from html import unescape
@@ -173,37 +174,43 @@ def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
     assert snapshot.revision.casillas
 
 
-# The calendar-year exercise whose filing campaign the one bundled Modelo 200 form
-# order fixes, read from the order's applicability; the campaign runs in the
-# following year.
-(_ORDER_CALENDAR_EXERCISE,) = (
-    source_first_exercise(source)
-    for source in sources_where(lambda source: source.id.startswith("boe-modelo-200-") and source.id.endswith("-form"))
+# Every bundled Modelo 200 approving order, read with the exercise its applicability
+# opens; its filing campaign runs in the following year.
+_ORDER_FORM_SOURCES = tuple(
+    sorted(
+        source.id
+        for source in sources_where(
+            lambda source: source.id.startswith("boe-modelo-200-") and source.id.endswith("-form"),
+        )
+    )
 )
 
 
-def test_modelo_200_calendar_year_deadline_matches_boe_order() -> None:
-    campaign = _ORDER_CALENDAR_EXERCISE + 1
+@pytest.mark.parametrize("source_id", _ORDER_FORM_SOURCES)
+def test_modelo_200_calendar_year_deadline_matches_boe_order(source_id: str) -> None:
     modelo, catalogues = _load_modelo_200()
+    source = catalogues.sources[source_id]
+    exercise = source_first_exercise(source)
+    campaign = exercise + 1
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=_ORDER_CALENDAR_EXERCISE,
+        filing_year=exercise,
         period="0A",
-        grade=RegistryAuthorityGrade.CALCULATION,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 
-    window = snapshot.revision.deadline_windows[0]
-    source = catalogues.sources[f"boe-modelo-200-{campaign}-form"]
-    source_text = _normalized_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
+    (window,) = [window for window in snapshot.revision.deadline_windows if window.filing_year == exercise]
+    source_text = " ".join(_normalized_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8")).split())
+    cutoff = re.search(rf"desde el dia 1 de julio hasta el (\d+) de julio de {campaign}", source_text)
 
     assert "modelo 200 de declaracion del impuesto sobre sociedades" in source_text
-    assert "25 dias naturales siguientes a los seis meses posteriores" in source_text
-    assert f"desde el dia 1 de julio hasta el 22 de julio de {campaign}" in source_text
+    assert re.search(r"(25|veinticinco) dias naturales siguientes a los seis meses posteriores", source_text)
+    assert cutoff is not None
     assert window.opens_on == date(campaign, 7, 1)
     assert window.closes_on == date(campaign, 7, 25)
-    assert window.payment_cutoff_on == date(campaign, 7, 22)
+    assert window.payment_cutoff_on == date(campaign, 7, int(cutoff.group(1)))
 
 
 def test_modelo_200_form_order_is_boe_corpus_backed() -> None:

@@ -1,4 +1,5 @@
 [revisions."2024"]
+casilla_storage_baseline = "2023"
 binding_source_refs = ["aeat-modelo-200-manual-2024"]
 # Rows and formulas cite the 2024 design, which prints this edition's boxes;
 # the 2025 design governs only the successor edition.
@@ -78,6 +79,8 @@ source_refs = [
     "aeat-dr-200-2024",
     "aeat-modelo-200-manual-2024",
 ]
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2024".family_dispositions.extraction_profiles]
 reason = """
@@ -85,3 +88,2773 @@ An extraction profile matches printed labels in a filed artefact, and every labe
 .properties field dictionaries across the whole corpus returns that modelo and no other. Authoring patterns without such a document would invent them. Modelo 100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
 legal_refs = ["ley-27-2014:art-124", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "00670" }
+fields = { binding = "modelo-200-bin-pendiente-ejercicios-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01494" }
+fields = { binding = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01495" }
+fields = { binding = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014:00550" }
+fields = { formula = "modelo-200-base-imponible-previa", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014:00552" }
+fields = { formula = "modelo-200-base-imponible", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014:00558" }
+fields = { formula = "modelo-200-tipo-gravamen-por-forma-juridica", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014:00562" }
+fields = { formula = "modelo-200-cuota-integra", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014:00582" }
+fields = { formula = "modelo-200-cuota-integra-ajustada-positiva", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014B:00592" }
+fields = { formula = "modelo-200-cuota-liquida", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014B:00599" }
+fields = { formula = "modelo-200-cuota-ejercicio-a-ingresar-devolver", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200014B:00611" }
+fields = { formula = "modelo-200-cuota-diferencial", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_positions]]
+id = "00035"
+position = 34
+
+[[revisions."2024".casilla_positions]]
+id = "00044"
+position = 43
+
+[[revisions."2024".casilla_positions]]
+id = "00052"
+position = 51
+
+[[revisions."2024".casilla_positions]]
+id = "00053"
+position = 52
+
+[[revisions."2024".casilla_positions]]
+id = "00054"
+position = 53
+
+[[revisions."2024".casilla_positions]]
+id = "00059"
+position = 58
+
+[[revisions."2024".casilla_positions]]
+id = "00075"
+position = 74
+
+[[revisions."2024".casilla_positions]]
+id = "00076"
+position = 75
+
+[[revisions."2024".casilla_positions]]
+id = "00077"
+position = 76
+
+[[revisions."2024".casilla_positions]]
+id = "00090"
+position = 89
+
+[[revisions."2024".casilla_positions]]
+id = "00091"
+position = 90
+
+[[revisions."2024".casilla_positions]]
+id = "00092"
+position = 91
+
+[[revisions."2024".casilla_positions]]
+id = "00096"
+position = 95
+
+[[revisions."2024".casilla_positions]]
+id = "00698"
+position = 96
+
+[[revisions."2024".casilla_positions]]
+id = "00713"
+position = 97
+
+[[revisions."2024".casilla_positions]]
+id = "00795"
+position = 98
+
+[[revisions."2024".casilla_positions]]
+id = "00797"
+position = 99
+
+[[revisions."2024".casilla_positions]]
+id = "00798"
+position = 100
+
+[[revisions."2024".casilla_positions]]
+id = "00799"
+position = 101
+
+[[revisions."2024".casilla_positions]]
+id = "00800"
+position = 102
+
+[[revisions."2024".casilla_positions]]
+id = "00807"
+position = 103
+
+[[revisions."2024".casilla_positions]]
+id = "00808"
+position = 104
+
+[[revisions."2024".casilla_positions]]
+id = "00809"
+position = 105
+
+[[revisions."2024".casilla_positions]]
+id = "00888"
+position = 106
+
+[[revisions."2024".casilla_positions]]
+id = "00889"
+position = 107
+
+[[revisions."2024".casilla_positions]]
+id = "01075"
+position = 108
+
+[[revisions."2024".casilla_positions]]
+id = "01076"
+position = 109
+
+[[revisions."2024".casilla_positions]]
+id = "01077"
+position = 110
+
+[[revisions."2024".casilla_positions]]
+id = "01369"
+position = 111
+
+[[revisions."2024".casilla_positions]]
+id = "01370"
+position = 112
+
+[[revisions."2024".casilla_positions]]
+id = "01371"
+position = 113
+
+[[revisions."2024".casilla_positions]]
+id = "02190"
+position = 114
+
+[[revisions."2024".casilla_positions]]
+id = "02191"
+position = 115
+
+[[revisions."2024".casilla_positions]]
+id = "02192"
+position = 116
+
+[[revisions."2024".casilla_positions]]
+id = "02455"
+position = 117
+
+[[revisions."2024".casilla_positions]]
+id = "02456"
+position = 118
+
+[[revisions."2024".casilla_positions]]
+id = "02457"
+position = 119
+
+[[revisions."2024".casilla_positions]]
+id = "02462"
+position = 120
+
+[[revisions."2024".casilla_positions]]
+id = "02463"
+position = 121
+
+[[revisions."2024".casilla_positions]]
+id = "02464"
+position = 122
+
+[[revisions."2024".casilla_positions]]
+id = "00097"
+position = 123
+
+[[revisions."2024".casilla_positions]]
+id = "00098"
+position = 124
+
+[[revisions."2024".casilla_positions]]
+id = "00366"
+position = 392
+
+[[revisions."2024".casilla_positions]]
+id = "00367"
+position = 393
+
+[[revisions."2024".casilla_positions]]
+id = "00369"
+position = 395
+
+[[revisions."2024".casilla_positions]]
+id = "00447"
+position = 473
+
+[[revisions."2024".casilla_positions]]
+id = "00474"
+position = 500
+
+[[revisions."2024".casilla_positions]]
+id = "00487"
+position = 513
+
+[[revisions."2024".casilla_positions]]
+id = "00488"
+position = 514
+
+[[revisions."2024".casilla_positions]]
+id = "00501"
+position = 527
+
+[[revisions."2024".casilla_positions]]
+id = "00524"
+position = 550
+
+[[revisions."2024".casilla_positions]]
+id = "00525"
+position = 551
+
+[[revisions."2024".casilla_positions]]
+id = "00526"
+position = 552
+
+[[revisions."2024".casilla_positions]]
+id = "00696"
+position = 708
+
+[[revisions."2024".casilla_positions]]
+id = "00697"
+position = 709
+
+[[revisions."2024".casilla_positions]]
+id = "00714"
+position = 724
+
+[[revisions."2024".casilla_positions]]
+id = "00744"
+position = 754
+
+[[revisions."2024".casilla_positions]]
+id = "00745"
+position = 755
+
+[[revisions."2024".casilla_positions]]
+id = "00746"
+position = 756
+
+[[revisions."2024".casilla_positions]]
+id = "00749"
+position = 759
+
+[[revisions."2024".casilla_positions]]
+id = "00750"
+position = 760
+
+[[revisions."2024".casilla_positions]]
+id = "00752"
+position = 762
+
+[[revisions."2024".casilla_positions]]
+id = "00753"
+position = 763
+
+[[revisions."2024".casilla_positions]]
+id = "00754"
+position = 764
+
+[[revisions."2024".casilla_positions]]
+id = "00755"
+position = 765
+
+[[revisions."2024".casilla_positions]]
+id = "00756"
+position = 766
+
+[[revisions."2024".casilla_positions]]
+id = "00757"
+position = 767
+
+[[revisions."2024".casilla_positions]]
+id = "00758"
+position = 768
+
+[[revisions."2024".casilla_positions]]
+id = "00759"
+position = 769
+
+[[revisions."2024".casilla_positions]]
+id = "00764"
+position = 774
+
+[[revisions."2024".casilla_positions]]
+id = "00765"
+position = 775
+
+[[revisions."2024".casilla_positions]]
+id = "00766"
+position = 776
+
+[[revisions."2024".casilla_positions]]
+id = "00767"
+position = 777
+
+[[revisions."2024".casilla_positions]]
+id = "00768"
+position = 778
+
+[[revisions."2024".casilla_positions]]
+id = "00769"
+position = 779
+
+[[revisions."2024".casilla_positions]]
+id = "00770"
+position = 780
+
+[[revisions."2024".casilla_positions]]
+id = "00771"
+position = 781
+
+[[revisions."2024".casilla_positions]]
+id = "00772"
+position = 782
+
+[[revisions."2024".casilla_positions]]
+id = "00774"
+position = 784
+
+[[revisions."2024".casilla_positions]]
+id = "00775"
+position = 785
+
+[[revisions."2024".casilla_positions]]
+id = "00776"
+position = 786
+
+[[revisions."2024".casilla_positions]]
+id = "00779"
+position = 789
+
+[[revisions."2024".casilla_positions]]
+id = "00780"
+position = 790
+
+[[revisions."2024".casilla_positions]]
+id = "00781"
+position = 791
+
+[[revisions."2024".casilla_positions]]
+id = "00782"
+position = 792
+
+[[revisions."2024".casilla_positions]]
+id = "00783"
+position = 793
+
+[[revisions."2024".casilla_positions]]
+id = "00784"
+position = 794
+
+[[revisions."2024".casilla_positions]]
+id = "00785"
+position = 795
+
+[[revisions."2024".casilla_positions]]
+id = "00786"
+position = 796
+
+[[revisions."2024".casilla_positions]]
+id = "00787"
+position = 797
+
+[[revisions."2024".casilla_positions]]
+id = "00788"
+position = 798
+
+[[revisions."2024".casilla_positions]]
+id = "00789"
+position = 799
+
+[[revisions."2024".casilla_positions]]
+id = "00790"
+position = 800
+
+[[revisions."2024".casilla_positions]]
+id = "00791"
+position = 801
+
+[[revisions."2024".casilla_positions]]
+id = "00792"
+position = 802
+
+[[revisions."2024".casilla_positions]]
+id = "00793"
+position = 803
+
+[[revisions."2024".casilla_positions]]
+id = "00794"
+position = 804
+
+[[revisions."2024".casilla_positions]]
+id = "00796"
+position = 805
+
+[[revisions."2024".casilla_positions]]
+id = "00812"
+position = 814
+
+[[revisions."2024".casilla_positions]]
+id = "00816"
+position = 818
+
+[[revisions."2024".casilla_positions]]
+id = "00817"
+position = 819
+
+[[revisions."2024".casilla_positions]]
+id = "00825"
+position = 827
+
+[[revisions."2024".casilla_positions]]
+id = "00828"
+position = 830
+
+[[revisions."2024".casilla_positions]]
+id = "00829"
+position = 831
+
+[[revisions."2024".casilla_positions]]
+id = "00830"
+position = 832
+
+[[revisions."2024".casilla_positions]]
+id = "00846"
+position = 848
+
+[[revisions."2024".casilla_positions]]
+id = "00849"
+position = 851
+
+[[revisions."2024".casilla_positions]]
+id = "00866"
+position = 868
+
+[[revisions."2024".casilla_positions]]
+id = "00870"
+position = 871
+
+[[revisions."2024".casilla_positions]]
+id = "00874"
+position = 876
+
+[[revisions."2024".casilla_positions]]
+id = "00875"
+position = 877
+
+[[revisions."2024".casilla_positions]]
+id = "00877"
+position = 878
+
+[[revisions."2024".casilla_positions]]
+id = "01180"
+position = 879
+
+[[revisions."2024".casilla_positions]]
+id = "01195"
+position = 880
+
+[[revisions."2024".casilla_positions]]
+id = "01197"
+position = 881
+
+[[revisions."2024".casilla_positions]]
+id = "01207"
+position = 882
+
+[[revisions."2024".casilla_positions]]
+id = "01208"
+position = 883
+
+[[revisions."2024".casilla_positions]]
+id = "01223"
+position = 884
+
+[[revisions."2024".casilla_positions]]
+id = "01229"
+position = 885
+
+[[revisions."2024".casilla_positions]]
+id = "01232"
+position = 886
+
+[[revisions."2024".casilla_positions]]
+id = "01871"
+position = 887
+
+[[revisions."2024".casilla_positions]]
+id = "01900"
+position = 888
+
+[[revisions."2024".casilla_positions]]
+id = "01901"
+position = 889
+
+[[revisions."2024".casilla_positions]]
+id = "01902"
+position = 890
+
+[[revisions."2024".casilla_positions]]
+id = "01907"
+position = 891
+
+[[revisions."2024".casilla_positions]]
+id = "01908"
+position = 892
+
+[[revisions."2024".casilla_positions]]
+id = "01999"
+position = 893
+
+[[revisions."2024".casilla_positions]]
+id = "02026"
+position = 894
+
+[[revisions."2024".casilla_positions]]
+id = "02027"
+position = 895
+
+[[revisions."2024".casilla_positions]]
+id = "02028"
+position = 896
+
+[[revisions."2024".casilla_positions]]
+id = "02029"
+position = 897
+
+[[revisions."2024".casilla_positions]]
+id = "02030"
+position = 898
+
+[[revisions."2024".casilla_positions]]
+id = "02031"
+position = 899
+
+[[revisions."2024".casilla_positions]]
+id = "02032"
+position = 900
+
+[[revisions."2024".casilla_positions]]
+id = "02033"
+position = 901
+
+[[revisions."2024".casilla_positions]]
+id = "02034"
+position = 902
+
+[[revisions."2024".casilla_positions]]
+id = "02035"
+position = 903
+
+[[revisions."2024".casilla_positions]]
+id = "02036"
+position = 904
+
+[[revisions."2024".casilla_positions]]
+id = "02037"
+position = 905
+
+[[revisions."2024".casilla_positions]]
+id = "02038"
+position = 906
+
+[[revisions."2024".casilla_positions]]
+id = "02039"
+position = 907
+
+[[revisions."2024".casilla_positions]]
+id = "02040"
+position = 908
+
+[[revisions."2024".casilla_positions]]
+id = "02041"
+position = 909
+
+[[revisions."2024".casilla_positions]]
+id = "02042"
+position = 910
+
+[[revisions."2024".casilla_positions]]
+id = "02043"
+position = 911
+
+[[revisions."2024".casilla_positions]]
+id = "02044"
+position = 912
+
+[[revisions."2024".casilla_positions]]
+id = "02053"
+position = 913
+
+[[revisions."2024".casilla_positions]]
+id = "02054"
+position = 914
+
+[[revisions."2024".casilla_positions]]
+id = "02055"
+position = 915
+
+[[revisions."2024".casilla_positions]]
+id = "02058"
+position = 916
+
+[[revisions."2024".casilla_positions]]
+id = "02280"
+position = 917
+
+[[revisions."2024".casilla_positions]]
+id = "02371"
+position = 918
+
+[[revisions."2024".casilla_positions]]
+id = "02372"
+position = 919
+
+[[revisions."2024".casilla_positions]]
+id = "02373"
+position = 920
+
+[[revisions."2024".casilla_positions]]
+id = "00878"
+position = 921
+
+[[revisions."2024".casilla_positions]]
+id = "00879"
+position = 922
+
+[[revisions."2024".casilla_positions]]
+id = "00880"
+position = 923
+
+[[revisions."2024".casilla_positions]]
+id = "00881"
+position = 924
+
+[[revisions."2024".casilla_positions]]
+id = "00882"
+position = 925
+
+[[revisions."2024".casilla_positions]]
+id = "00899"
+position = 940
+
+[[revisions."2024".casilla_positions]]
+id = "00901"
+position = 942
+
+[[revisions."2024".casilla_positions]]
+id = "00904"
+position = 943
+
+[[revisions."2024".casilla_positions]]
+id = "00905"
+position = 944
+
+[[revisions."2024".casilla_positions]]
+id = "00902"
+position = 945
+
+[[revisions."2024".casilla_positions]]
+id = "00906"
+position = 946
+
+[[revisions."2024".casilla_positions]]
+id = "00913"
+position = 953
+
+[[revisions."2024".casilla_positions]]
+id = "00914"
+position = 954
+
+[[revisions."2024".casilla_positions]]
+id = "00915"
+position = 955
+
+[[revisions."2024".casilla_positions]]
+id = "00925"
+position = 964
+
+[[revisions."2024".casilla_positions]]
+id = "00927"
+position = 966
+
+[[revisions."2024".casilla_positions]]
+id = "03352"
+position = 968
+
+[[revisions."2024".casilla_positions]]
+id = "03353"
+position = 969
+
+[[revisions."2024".casilla_positions]]
+id = "00929"
+position = 971
+
+[[revisions."2024".casilla_positions]]
+id = "00932"
+position = 974
+
+[[revisions."2024".casilla_positions]]
+id = "00941"
+position = 983
+
+[[revisions."2024".casilla_positions]]
+id = "00955"
+position = 999
+
+[[revisions."2024".casilla_positions]]
+id = "00956"
+position = 1000
+
+[[revisions."2024".casilla_positions]]
+id = "00957"
+position = 1001
+
+[[revisions."2024".casilla_positions]]
+id = "00987"
+position = 1029
+
+[[revisions."2024".casilla_positions]]
+id = "00988"
+position = 1030
+
+[[revisions."2024".casilla_positions]]
+id = "00989"
+position = 1031
+
+[[revisions."2024".casilla_positions]]
+id = "00990"
+position = 1032
+
+[[revisions."2024".casilla_positions]]
+id = "00991"
+position = 1033
+
+[[revisions."2024".casilla_positions]]
+id = "00992"
+position = 1034
+
+[[revisions."2024".casilla_positions]]
+id = "00999"
+position = 1041
+
+[[revisions."2024".casilla_positions]]
+id = "01108"
+position = 1042
+
+[[revisions."2024".casilla_positions]]
+id = "01138"
+position = 1043
+
+[[revisions."2024".casilla_positions]]
+id = "01174"
+position = 1044
+
+[[revisions."2024".casilla_positions]]
+id = "02376"
+position = 1069
+
+[[revisions."2024".casilla_positions]]
+id = "01009"
+position = 1105
+
+[[revisions."2024".casilla_positions]]
+id = "01010"
+position = 1106
+
+[[revisions."2024".casilla_positions]]
+id = "01013"
+position = 1109
+
+[[revisions."2024".casilla_positions]]
+id = "01015"
+position = 1111
+
+[[revisions."2024".casilla_positions]]
+id = "01016"
+position = 1112
+
+[[revisions."2024".casilla_positions]]
+id = "01043"
+position = 1137
+
+[[revisions."2024".casilla_positions]]
+id = "01044"
+position = 1138
+
+[[revisions."2024".casilla_positions]]
+id = "01048"
+position = 1142
+
+[[revisions."2024".casilla_positions]]
+id = "01049"
+position = 1143
+
+[[revisions."2024".casilla_positions]]
+id = "01051"
+position = 1145
+
+[[revisions."2024".casilla_positions]]
+id = "01073"
+position = 1167
+
+[[revisions."2024".casilla_positions]]
+id = "01087"
+position = 1178
+
+[[revisions."2024".casilla_positions]]
+id = "01088"
+position = 1179
+
+[[revisions."2024".casilla_positions]]
+id = "01089"
+position = 1180
+
+[[revisions."2024".casilla_positions]]
+id = "01110"
+position = 1201
+
+[[revisions."2024".casilla_positions]]
+id = "01141"
+position = 1230
+
+[[revisions."2024".casilla_positions]]
+id = "01142"
+position = 1231
+
+[[revisions."2024".casilla_positions]]
+id = "01144"
+position = 1233
+
+[[revisions."2024".casilla_positions]]
+id = "01145"
+position = 1234
+
+[[revisions."2024".casilla_positions]]
+id = "01146"
+position = 1235
+
+[[revisions."2024".casilla_positions]]
+id = "01150"
+position = 1239
+
+[[revisions."2024".casilla_positions]]
+id = "01151"
+position = 1240
+
+[[revisions."2024".casilla_positions]]
+id = "01152"
+position = 1241
+
+[[revisions."2024".casilla_positions]]
+id = "01153"
+position = 1242
+
+[[revisions."2024".casilla_positions]]
+id = "01154"
+position = 1243
+
+[[revisions."2024".casilla_positions]]
+id = "01155"
+position = 1244
+
+[[revisions."2024".casilla_positions]]
+id = "01156"
+position = 1245
+
+[[revisions."2024".casilla_positions]]
+id = "01157"
+position = 1246
+
+[[revisions."2024".casilla_positions]]
+id = "01177"
+position = 1264
+
+[[revisions."2024".casilla_positions]]
+id = "01184"
+position = 1270
+
+[[revisions."2024".casilla_positions]]
+id = "01200"
+position = 1284
+
+[[revisions."2024".casilla_positions]]
+id = "01217"
+position = 1299
+
+[[revisions."2024".casilla_positions]]
+id = "01218"
+position = 1300
+
+[[revisions."2024".casilla_positions]]
+id = "01219"
+position = 1301
+
+[[revisions."2024".casilla_positions]]
+id = "01220"
+position = 1302
+
+[[revisions."2024".casilla_positions]]
+id = "01221"
+position = 1303
+
+[[revisions."2024".casilla_positions]]
+id = "01222"
+position = 1304
+
+[[revisions."2024".casilla_positions]]
+id = "01225"
+position = 1306
+
+[[revisions."2024".casilla_positions]]
+id = "01226"
+position = 1307
+
+[[revisions."2024".casilla_positions]]
+id = "01233"
+position = 1310
+
+[[revisions."2024".casilla_positions]]
+id = "01235"
+position = 1312
+
+[[revisions."2024".casilla_positions]]
+id = "01236"
+position = 1313
+
+[[revisions."2024".casilla_positions]]
+id = "01237"
+position = 1314
+
+[[revisions."2024".casilla_positions]]
+id = "01238"
+position = 1315
+
+[[revisions."2024".casilla_positions]]
+id = "01239"
+position = 1316
+
+[[revisions."2024".casilla_positions]]
+id = "01249"
+position = 1326
+
+[[revisions."2024".casilla_positions]]
+id = "01256"
+position = 1333
+
+[[revisions."2024".casilla_positions]]
+id = "01257"
+position = 1334
+
+[[revisions."2024".casilla_positions]]
+id = "01258"
+position = 1335
+
+[[revisions."2024".casilla_positions]]
+id = "01259"
+position = 1336
+
+[[revisions."2024".casilla_positions]]
+id = "01260"
+position = 1337
+
+[[revisions."2024".casilla_positions]]
+id = "01261"
+position = 1338
+
+[[revisions."2024".casilla_positions]]
+id = "01262"
+position = 1339
+
+[[revisions."2024".casilla_positions]]
+id = "01263"
+position = 1340
+
+[[revisions."2024".casilla_positions]]
+id = "01264"
+position = 1341
+
+[[revisions."2024".casilla_positions]]
+id = "01265"
+position = 1342
+
+[[revisions."2024".casilla_positions]]
+id = "01266"
+position = 1343
+
+[[revisions."2024".casilla_positions]]
+id = "01267"
+position = 1344
+
+[[revisions."2024".casilla_positions]]
+id = "01268"
+position = 1345
+
+[[revisions."2024".casilla_positions]]
+id = "01269"
+position = 1346
+
+[[revisions."2024".casilla_positions]]
+id = "01270"
+position = 1347
+
+[[revisions."2024".casilla_positions]]
+id = "01271"
+position = 1348
+
+[[revisions."2024".casilla_positions]]
+id = "01272"
+position = 1349
+
+[[revisions."2024".casilla_positions]]
+id = "01273"
+position = 1350
+
+[[revisions."2024".casilla_positions]]
+id = "01274"
+position = 1351
+
+[[revisions."2024".casilla_positions]]
+id = "01281"
+position = 1355
+
+[[revisions."2024".casilla_positions]]
+id = "01282"
+position = 1356
+
+[[revisions."2024".casilla_positions]]
+id = "01283"
+position = 1357
+
+[[revisions."2024".casilla_positions]]
+id = "01295"
+position = 1369
+
+[[revisions."2024".casilla_positions]]
+id = "01296"
+position = 1370
+
+[[revisions."2024".casilla_positions]]
+id = "01297"
+position = 1371
+
+[[revisions."2024".casilla_positions]]
+id = "01299"
+position = 1373
+
+[[revisions."2024".casilla_positions]]
+id = "01300"
+position = 1374
+
+[[revisions."2024".casilla_positions]]
+id = "01301"
+position = 1375
+
+[[revisions."2024".casilla_positions]]
+id = "01302"
+position = 1376
+
+[[revisions."2024".casilla_positions]]
+id = "01305"
+position = 1379
+
+[[revisions."2024".casilla_positions]]
+id = "01306"
+position = 1380
+
+[[revisions."2024".casilla_positions]]
+id = "01307"
+position = 1381
+
+[[revisions."2024".casilla_positions]]
+id = "01313"
+position = 1387
+
+[[revisions."2024".casilla_positions]]
+id = "01314"
+position = 1388
+
+[[revisions."2024".casilla_positions]]
+id = "01315"
+position = 1389
+
+[[revisions."2024".casilla_positions]]
+id = "01316"
+position = 1390
+
+[[revisions."2024".casilla_positions]]
+id = "01318"
+position = 1392
+
+[[revisions."2024".casilla_positions]]
+id = "01323"
+position = 1397
+
+[[revisions."2024".casilla_positions]]
+id = "01324"
+position = 1398
+
+[[revisions."2024".casilla_positions]]
+id = "01325"
+position = 1399
+
+[[revisions."2024".casilla_positions]]
+id = "01326"
+position = 1400
+
+[[revisions."2024".casilla_positions]]
+id = "01327"
+position = 1401
+
+[[revisions."2024".casilla_positions]]
+id = "01328"
+position = 1402
+
+[[revisions."2024".casilla_positions]]
+id = "01329"
+position = 1403
+
+[[revisions."2024".casilla_positions]]
+id = "01331"
+position = 1404
+
+[[revisions."2024".casilla_positions]]
+id = "01334"
+position = 1407
+
+[[revisions."2024".casilla_positions]]
+id = "01335"
+position = 1408
+
+[[revisions."2024".casilla_positions]]
+id = "01336"
+position = 1409
+
+[[revisions."2024".casilla_positions]]
+id = "01338"
+position = 1411
+
+[[revisions."2024".casilla_positions]]
+id = "01339"
+position = 1412
+
+[[revisions."2024".casilla_positions]]
+id = "01340"
+position = 1413
+
+[[revisions."2024".casilla_positions]]
+id = "01343"
+position = 1416
+
+[[revisions."2024".casilla_positions]]
+id = "01350"
+position = 1423
+
+[[revisions."2024".casilla_positions]]
+id = "01360"
+position = 1433
+
+[[revisions."2024".casilla_positions]]
+id = "01361"
+position = 1434
+
+[[revisions."2024".casilla_positions]]
+id = "01362"
+position = 1435
+
+[[revisions."2024".casilla_positions]]
+id = "01363"
+position = 1436
+
+[[revisions."2024".casilla_positions]]
+id = "01364"
+position = 1437
+
+[[revisions."2024".casilla_positions]]
+id = "01365"
+position = 1438
+
+[[revisions."2024".casilla_positions]]
+id = "01366"
+position = 1439
+
+[[revisions."2024".casilla_positions]]
+id = "01367"
+position = 1440
+
+[[revisions."2024".casilla_positions]]
+id = "01368"
+position = 1441
+
+[[revisions."2024".casilla_positions]]
+id = "01372"
+position = 1442
+
+[[revisions."2024".casilla_positions]]
+id = "01373"
+position = 1443
+
+[[revisions."2024".casilla_positions]]
+id = "01374"
+position = 1444
+
+[[revisions."2024".casilla_positions]]
+id = "01375"
+position = 1445
+
+[[revisions."2024".casilla_positions]]
+id = "01376"
+position = 1446
+
+[[revisions."2024".casilla_positions]]
+id = "01377"
+position = 1447
+
+[[revisions."2024".casilla_positions]]
+id = "01378"
+position = 1448
+
+[[revisions."2024".casilla_positions]]
+id = "01379"
+position = 1449
+
+[[revisions."2024".casilla_positions]]
+id = "01380"
+position = 1450
+
+[[revisions."2024".casilla_positions]]
+id = "01381"
+position = 1451
+
+[[revisions."2024".casilla_positions]]
+id = "01382"
+position = 1452
+
+[[revisions."2024".casilla_positions]]
+id = "01383"
+position = 1453
+
+[[revisions."2024".casilla_positions]]
+id = "01384"
+position = 1454
+
+[[revisions."2024".casilla_positions]]
+id = "01395"
+position = 1465
+
+[[revisions."2024".casilla_positions]]
+id = "01396"
+position = 1466
+
+[[revisions."2024".casilla_positions]]
+id = "01397"
+position = 1467
+
+[[revisions."2024".casilla_positions]]
+id = "01398"
+position = 1468
+
+[[revisions."2024".casilla_positions]]
+id = "01399"
+position = 1469
+
+[[revisions."2024".casilla_positions]]
+id = "01400"
+position = 1470
+
+[[revisions."2024".casilla_positions]]
+id = "01401"
+position = 1471
+
+[[revisions."2024".casilla_positions]]
+id = "01402"
+position = 1472
+
+[[revisions."2024".casilla_positions]]
+id = "01403"
+position = 1473
+
+[[revisions."2024".casilla_positions]]
+id = "01410"
+position = 1480
+
+[[revisions."2024".casilla_positions]]
+id = "01411"
+position = 1481
+
+[[revisions."2024".casilla_positions]]
+id = "01412"
+position = 1482
+
+[[revisions."2024".casilla_positions]]
+id = "01414"
+position = 1484
+
+[[revisions."2024".casilla_positions]]
+id = "01415"
+position = 1485
+
+[[revisions."2024".casilla_positions]]
+id = "01416"
+position = 1486
+
+[[revisions."2024".casilla_positions]]
+id = "01417"
+position = 1487
+
+[[revisions."2024".casilla_positions]]
+id = "01418"
+position = 1488
+
+[[revisions."2024".casilla_positions]]
+id = "01419"
+position = 1489
+
+[[revisions."2024".casilla_positions]]
+id = "01420"
+position = 1490
+
+[[revisions."2024".casilla_positions]]
+id = "01421"
+position = 1491
+
+[[revisions."2024".casilla_positions]]
+id = "01422"
+position = 1492
+
+[[revisions."2024".casilla_positions]]
+id = "01423"
+position = 1493
+
+[[revisions."2024".casilla_positions]]
+id = "01424"
+position = 1494
+
+[[revisions."2024".casilla_positions]]
+id = "01425"
+position = 1495
+
+[[revisions."2024".casilla_positions]]
+id = "01457"
+position = 1525
+
+[[revisions."2024".casilla_positions]]
+id = "01469"
+position = 1531
+
+[[revisions."2024".casilla_positions]]
+id = "01472"
+position = 1534
+
+[[revisions."2024".casilla_positions]]
+id = "01479"
+position = 1541
+
+[[revisions."2024".casilla_positions]]
+id = "01480"
+position = 1542
+
+[[revisions."2024".casilla_positions]]
+id = "01500"
+position = 1562
+
+[[revisions."2024".casilla_positions]]
+id = "01505"
+position = 1563
+
+[[revisions."2024".casilla_positions]]
+id = "01509"
+position = 1564
+
+[[revisions."2024".casilla_positions]]
+id = "01510"
+position = 1565
+
+[[revisions."2024".casilla_positions]]
+id = "01515"
+position = 1570
+
+[[revisions."2024".casilla_positions]]
+id = "01522"
+position = 1577
+
+[[revisions."2024".casilla_positions]]
+id = "01571"
+position = 1625
+
+[[revisions."2024".casilla_positions]]
+id = "01574"
+position = 1628
+
+[[revisions."2024".casilla_positions]]
+id = "01575"
+position = 1629
+
+[[revisions."2024".casilla_positions]]
+id = "01576"
+position = 1630
+
+[[revisions."2024".casilla_positions]]
+id = "01577"
+position = 1631
+
+[[revisions."2024".casilla_positions]]
+id = "01578"
+position = 1632
+
+[[revisions."2024".casilla_positions]]
+id = "01583"
+position = 1637
+
+[[revisions."2024".casilla_positions]]
+id = "01584"
+position = 1638
+
+[[revisions."2024".casilla_positions]]
+id = "01585"
+position = 1639
+
+[[revisions."2024".casilla_positions]]
+id = "01597"
+position = 1651
+
+[[revisions."2024".casilla_positions]]
+id = "01602"
+position = 1654
+
+[[revisions."2024".casilla_positions]]
+id = "01607"
+position = 1659
+
+[[revisions."2024".casilla_positions]]
+id = "01608"
+position = 1660
+
+[[revisions."2024".casilla_positions]]
+id = "01609"
+position = 1661
+
+[[revisions."2024".casilla_positions]]
+id = "01610"
+position = 1662
+
+[[revisions."2024".casilla_positions]]
+id = "01611"
+position = 1663
+
+[[revisions."2024".casilla_positions]]
+id = "01612"
+position = 1664
+
+[[revisions."2024".casilla_positions]]
+id = "01613"
+position = 1665
+
+[[revisions."2024".casilla_positions]]
+id = "01614"
+position = 1666
+
+[[revisions."2024".casilla_positions]]
+id = "01615"
+position = 1667
+
+[[revisions."2024".casilla_positions]]
+id = "01616"
+position = 1668
+
+[[revisions."2024".casilla_positions]]
+id = "01623"
+position = 1675
+
+[[revisions."2024".casilla_positions]]
+id = "01624"
+position = 1676
+
+[[revisions."2024".casilla_positions]]
+id = "01625"
+position = 1677
+
+[[revisions."2024".casilla_positions]]
+id = "01626"
+position = 1678
+
+[[revisions."2024".casilla_positions]]
+id = "01627"
+position = 1679
+
+[[revisions."2024".casilla_positions]]
+id = "01628"
+position = 1680
+
+[[revisions."2024".casilla_positions]]
+id = "01629"
+position = 1681
+
+[[revisions."2024".casilla_positions]]
+id = "01631"
+position = 1683
+
+[[revisions."2024".casilla_positions]]
+id = "01632"
+position = 1684
+
+[[revisions."2024".casilla_positions]]
+id = "01633"
+position = 1685
+
+[[revisions."2024".casilla_positions]]
+id = "01635"
+position = 1687
+
+[[revisions."2024".casilla_positions]]
+id = "01636"
+position = 1688
+
+[[revisions."2024".casilla_positions]]
+id = "01637"
+position = 1689
+
+[[revisions."2024".casilla_positions]]
+id = "01642"
+position = 1691
+
+[[revisions."2024".casilla_positions]]
+id = "01643"
+position = 1692
+
+[[revisions."2024".casilla_positions]]
+id = "01644"
+position = 1693
+
+[[revisions."2024".casilla_positions]]
+id = "01646"
+position = 1695
+
+[[revisions."2024".casilla_positions]]
+id = "01647"
+position = 1696
+
+[[revisions."2024".casilla_positions]]
+id = "01648"
+position = 1697
+
+[[revisions."2024".casilla_positions]]
+id = "01650"
+position = 1699
+
+[[revisions."2024".casilla_positions]]
+id = "01651"
+position = 1700
+
+[[revisions."2024".casilla_positions]]
+id = "01652"
+position = 1701
+
+[[revisions."2024".casilla_positions]]
+id = "01653"
+position = 1702
+
+[[revisions."2024".casilla_positions]]
+id = "01654"
+position = 1703
+
+[[revisions."2024".casilla_positions]]
+id = "01655"
+position = 1704
+
+[[revisions."2024".casilla_positions]]
+id = "01656"
+position = 1705
+
+[[revisions."2024".casilla_positions]]
+id = "01657"
+position = 1706
+
+[[revisions."2024".casilla_positions]]
+id = "01658"
+position = 1707
+
+[[revisions."2024".casilla_positions]]
+id = "01659"
+position = 1708
+
+[[revisions."2024".casilla_positions]]
+id = "01660"
+position = 1709
+
+[[revisions."2024".casilla_positions]]
+id = "01661"
+position = 1710
+
+[[revisions."2024".casilla_positions]]
+id = "01662"
+position = 1711
+
+[[revisions."2024".casilla_positions]]
+id = "01663"
+position = 1712
+
+[[revisions."2024".casilla_positions]]
+id = "01664"
+position = 1713
+
+[[revisions."2024".casilla_positions]]
+id = "01666"
+position = 1715
+
+[[revisions."2024".casilla_positions]]
+id = "01667"
+position = 1716
+
+[[revisions."2024".casilla_positions]]
+id = "01668"
+position = 1717
+
+[[revisions."2024".casilla_positions]]
+id = "01670"
+position = 1719
+
+[[revisions."2024".casilla_positions]]
+id = "01671"
+position = 1720
+
+[[revisions."2024".casilla_positions]]
+id = "01672"
+position = 1721
+
+[[revisions."2024".casilla_positions]]
+id = "01683"
+position = 1732
+
+[[revisions."2024".casilla_positions]]
+id = "01684"
+position = 1733
+
+[[revisions."2024".casilla_positions]]
+id = "01685"
+position = 1734
+
+[[revisions."2024".casilla_positions]]
+id = "01689"
+position = 1738
+
+[[revisions."2024".casilla_positions]]
+id = "01690"
+position = 1739
+
+[[revisions."2024".casilla_positions]]
+id = "01692"
+position = 1740
+
+[[revisions."2024".casilla_positions]]
+id = "01693"
+position = 1741
+
+[[revisions."2024".casilla_positions]]
+id = "01694"
+position = 1742
+
+[[revisions."2024".casilla_positions]]
+id = "01695"
+position = 1743
+
+[[revisions."2024".casilla_positions]]
+id = "01696"
+position = 1744
+
+[[revisions."2024".casilla_positions]]
+id = "01697"
+position = 1745
+
+[[revisions."2024".casilla_positions]]
+id = "01701"
+position = 1749
+
+[[revisions."2024".casilla_positions]]
+id = "01702"
+position = 1750
+
+[[revisions."2024".casilla_positions]]
+id = "01704"
+position = 1751
+
+[[revisions."2024".casilla_positions]]
+id = "01705"
+position = 1752
+
+[[revisions."2024".casilla_positions]]
+id = "01706"
+position = 1753
+
+[[revisions."2024".casilla_positions]]
+id = "01707"
+position = 1754
+
+[[revisions."2024".casilla_positions]]
+id = "01708"
+position = 1755
+
+[[revisions."2024".casilla_positions]]
+id = "01709"
+position = 1756
+
+[[revisions."2024".casilla_positions]]
+id = "01729"
+position = 1776
+
+[[revisions."2024".casilla_positions]]
+id = "01731"
+position = 1778
+
+[[revisions."2024".casilla_positions]]
+id = "01732"
+position = 1779
+
+[[revisions."2024".casilla_positions]]
+id = "01733"
+position = 1780
+
+[[revisions."2024".casilla_positions]]
+id = "01734"
+position = 1781
+
+[[revisions."2024".casilla_positions]]
+id = "01735"
+position = 1782
+
+[[revisions."2024".casilla_positions]]
+id = "01741"
+position = 1788
+
+[[revisions."2024".casilla_positions]]
+id = "01742"
+position = 1789
+
+[[revisions."2024".casilla_positions]]
+id = "01763"
+position = 1809
+
+[[revisions."2024".casilla_positions]]
+id = "01772"
+position = 1817
+
+[[revisions."2024".casilla_positions]]
+id = "01800"
+position = 1829
+
+[[revisions."2024".casilla_positions]]
+id = "01801"
+position = 1830
+
+[[revisions."2024".casilla_positions]]
+id = "01802"
+position = 1831
+
+[[revisions."2024".casilla_positions]]
+id = "01803"
+position = 1832
+
+[[revisions."2024".casilla_positions]]
+id = "01804"
+position = 1833
+
+[[revisions."2024".casilla_positions]]
+id = "01805"
+position = 1834
+
+[[revisions."2024".casilla_positions]]
+id = "01806"
+position = 1835
+
+[[revisions."2024".casilla_positions]]
+id = "01820"
+position = 1847
+
+[[revisions."2024".casilla_positions]]
+id = "01830"
+position = 1856
+
+[[revisions."2024".casilla_positions]]
+id = "01835"
+position = 1861
+
+[[revisions."2024".casilla_positions]]
+id = "01847"
+position = 1873
+
+[[revisions."2024".casilla_positions]]
+id = "01860"
+position = 1886
+
+[[revisions."2024".casilla_positions]]
+id = "01861"
+position = 1887
+
+[[revisions."2024".casilla_positions]]
+id = "01862"
+position = 1888
+
+[[revisions."2024".casilla_positions]]
+id = "01863"
+position = 1889
+
+[[revisions."2024".casilla_positions]]
+id = "01864"
+position = 1890
+
+[[revisions."2024".casilla_positions]]
+id = "01865"
+position = 1891
+
+[[revisions."2024".casilla_positions]]
+id = "01866"
+position = 1892
+
+[[revisions."2024".casilla_positions]]
+id = "01867"
+position = 1893
+
+[[revisions."2024".casilla_positions]]
+id = "01868"
+position = 1894
+
+[[revisions."2024".casilla_positions]]
+id = "01869"
+position = 1895
+
+[[revisions."2024".casilla_positions]]
+id = "01870"
+position = 1896
+
+[[revisions."2024".casilla_positions]]
+id = "01872"
+position = 1897
+
+[[revisions."2024".casilla_positions]]
+id = "01877"
+position = 1902
+
+[[revisions."2024".casilla_positions]]
+id = "01878"
+position = 1903
+
+[[revisions."2024".casilla_positions]]
+id = "01879"
+position = 1904
+
+[[revisions."2024".casilla_positions]]
+id = "01883"
+position = 1908
+
+[[revisions."2024".casilla_positions]]
+id = "01884"
+position = 1909
+
+[[revisions."2024".casilla_positions]]
+id = "01885"
+position = 1910
+
+[[revisions."2024".casilla_positions]]
+id = "01903"
+position = 1925
+
+[[revisions."2024".casilla_positions]]
+id = "01904"
+position = 1926
+
+[[revisions."2024".casilla_positions]]
+id = "01913"
+position = 1929
+
+[[revisions."2024".casilla_positions]]
+id = "01914"
+position = 1930
+
+[[revisions."2024".casilla_positions]]
+id = "01928"
+position = 1944
+
+[[revisions."2024".casilla_positions]]
+id = "01929"
+position = 1945
+
+[[revisions."2024".casilla_positions]]
+id = "01930"
+position = 1946
+
+[[revisions."2024".casilla_positions]]
+id = "01936"
+position = 1951
+
+[[revisions."2024".casilla_positions]]
+id = "01961"
+position = 1976
+
+[[revisions."2024".casilla_positions]]
+id = "01962"
+position = 1977
+
+[[revisions."2024".casilla_positions]]
+id = "01976"
+position = 1991
+
+[[revisions."2024".casilla_positions]]
+id = "01984"
+position = 1999
+
+[[revisions."2024".casilla_positions]]
+id = "01995"
+position = 2009
+
+[[revisions."2024".casilla_positions]]
+id = "01996"
+position = 2010
+
+[[revisions."2024".casilla_positions]]
+id = "02070"
+position = 2011
+
+[[revisions."2024".casilla_positions]]
+id = "02071"
+position = 2012
+
+[[revisions."2024".casilla_positions]]
+id = "02072"
+position = 2013
+
+[[revisions."2024".casilla_positions]]
+id = "02073"
+position = 2014
+
+[[revisions."2024".casilla_positions]]
+id = "02074"
+position = 2015
+
+[[revisions."2024".casilla_positions]]
+id = "02075"
+position = 2016
+
+[[revisions."2024".casilla_positions]]
+id = "02077"
+position = 2018
+
+[[revisions."2024".casilla_positions]]
+id = "02078"
+position = 2019
+
+[[revisions."2024".casilla_positions]]
+id = "02079"
+position = 2020
+
+[[revisions."2024".casilla_positions]]
+id = "02080"
+position = 2021
+
+[[revisions."2024".casilla_positions]]
+id = "02140"
+position = 2081
+
+[[revisions."2024".casilla_positions]]
+id = "02141"
+position = 2082
+
+[[revisions."2024".casilla_positions]]
+id = "02142"
+position = 2083
+
+[[revisions."2024".casilla_positions]]
+id = "02143"
+position = 2084
+
+[[revisions."2024".casilla_positions]]
+id = "02198"
+position = 2136
+
+[[revisions."2024".casilla_positions]]
+id = "02203"
+position = 2141
+
+[[revisions."2024".casilla_positions]]
+id = "02220"
+position = 2156
+
+[[revisions."2024".casilla_positions]]
+id = "02240"
+position = 2176
+
+[[revisions."2024".casilla_positions]]
+id = "02277"
+position = 2213
+
+[[revisions."2024".casilla_positions]]
+id = "02278"
+position = 2214
+
+[[revisions."2024".casilla_positions]]
+id = "02279"
+position = 2215
+
+[[revisions."2024".casilla_positions]]
+id = "02284"
+position = 2219
+
+[[revisions."2024".casilla_positions]]
+id = "02285"
+position = 2220
+
+[[revisions."2024".casilla_positions]]
+id = "02286"
+position = 2221
+
+[[revisions."2024".casilla_positions]]
+id = "02287"
+position = 2222
+
+[[revisions."2024".casilla_positions]]
+id = "02288"
+position = 2223
+
+[[revisions."2024".casilla_positions]]
+id = "02301"
+position = 2236
+
+[[revisions."2024".casilla_positions]]
+id = "02302"
+position = 2237
+
+[[revisions."2024".casilla_positions]]
+id = "02312"
+position = 2247
+
+[[revisions."2024".casilla_positions]]
+id = "02313"
+position = 2248
+
+[[revisions."2024".casilla_positions]]
+id = "02316"
+position = 2251
+
+[[revisions."2024".casilla_positions]]
+id = "02317"
+position = 2252
+
+[[revisions."2024".casilla_positions]]
+id = "02318"
+position = 2253
+
+[[revisions."2024".casilla_positions]]
+id = "02321"
+position = 2256
+
+[[revisions."2024".casilla_positions]]
+id = "02326"
+position = 2261
+
+[[revisions."2024".casilla_positions]]
+id = "02353"
+position = 2288
+
+[[revisions."2024".casilla_positions]]
+id = "02354"
+position = 2289
+
+[[revisions."2024".casilla_positions]]
+id = "02355"
+position = 2290
+
+[[revisions."2024".casilla_positions]]
+id = "02362"
+position = 2297
+
+[[revisions."2024".casilla_positions]]
+id = "02363"
+position = 2298
+
+[[revisions."2024".casilla_positions]]
+id = "02364"
+position = 2299
+
+[[revisions."2024".casilla_positions]]
+id = "02365"
+position = 2300
+
+[[revisions."2024".casilla_positions]]
+id = "02366"
+position = 2301
+
+[[revisions."2024".casilla_positions]]
+id = "02367"
+position = 2302
+
+[[revisions."2024".casilla_positions]]
+id = "02368"
+position = 2303
+
+[[revisions."2024".casilla_positions]]
+id = "02369"
+position = 2304
+
+[[revisions."2024".casilla_positions]]
+id = "02370"
+position = 2305
+
+[[revisions."2024".casilla_positions]]
+id = "02374"
+position = 2306
+
+[[revisions."2024".casilla_positions]]
+id = "02375"
+position = 2307
+
+[[revisions."2024".casilla_positions]]
+id = "02378"
+position = 2308
+
+[[revisions."2024".casilla_positions]]
+id = "02379"
+position = 2309
+
+[[revisions."2024".casilla_positions]]
+id = "02407"
+position = 2337
+
+[[revisions."2024".casilla_positions]]
+id = "02408"
+position = 2338
+
+[[revisions."2024".casilla_positions]]
+id = "02409"
+position = 2339
+
+[[revisions."2024".casilla_positions]]
+id = "02437"
+position = 2364
+
+[[revisions."2024".casilla_positions]]
+id = "02438"
+position = 2365
+
+[[revisions."2024".casilla_positions]]
+id = "02442"
+position = 2366
+
+[[revisions."2024".casilla_positions]]
+id = "02443"
+position = 2367
+
+[[revisions."2024".casilla_positions]]
+id = "02444"
+position = 2368
+
+[[revisions."2024".casilla_positions]]
+id = "02445"
+position = 2369
+
+[[revisions."2024".casilla_positions]]
+id = "02447"
+position = 2370
+
+[[revisions."2024".casilla_positions]]
+id = "02449"
+position = 2372
+
+[[revisions."2024".casilla_positions]]
+id = "02450"
+position = 2373
+
+[[revisions."2024".casilla_positions]]
+id = "02458"
+position = 2377
+
+[[revisions."2024".casilla_positions]]
+id = "02459"
+position = 2378
+
+[[revisions."2024".casilla_positions]]
+id = "02460"
+position = 2379
+
+[[revisions."2024".casilla_positions]]
+id = "02461"
+position = 2380
+
+[[revisions."2024".casilla_positions]]
+id = "02465"
+position = 2381
+
+[[revisions."2024".casilla_positions]]
+id = "02466"
+position = 2382
+
+[[revisions."2024".casilla_positions]]
+id = "02467"
+position = 2383
+
+[[revisions."2024".casilla_positions]]
+id = "02468"
+position = 2384
+
+[[revisions."2024".casilla_positions]]
+id = "02471"
+position = 2387
+
+[[revisions."2024".casilla_positions]]
+id = "02475"
+position = 2391
+
+[[revisions."2024".casilla_positions]]
+id = "02476"
+position = 2392
+
+[[revisions."2024".casilla_positions]]
+id = "02487"
+position = 2403
+
+[[revisions."2024".casilla_positions]]
+id = "02488"
+position = 2404
+
+[[revisions."2024".casilla_positions]]
+id = "02489"
+position = 2405
+
+[[revisions."2024".casilla_positions]]
+id = "02490"
+position = 2406
+
+[[revisions."2024".casilla_positions]]
+id = "02491"
+position = 2407
+
+[[revisions."2024".casilla_positions]]
+id = "02492"
+position = 2408
+
+[[revisions."2024".casilla_positions]]
+id = "02493"
+position = 2409
+
+[[revisions."2024".casilla_positions]]
+id = "02494"
+position = 2410
+
+[[revisions."2024".casilla_positions]]
+id = "02495"
+position = 2411
+
+[[revisions."2024".casilla_positions]]
+id = "02496"
+position = 2412
+
+[[revisions."2024".casilla_positions]]
+id = "02576"
+position = 2492
+
+[[revisions."2024".casilla_positions]]
+id = "02577"
+position = 2493
+
+[[revisions."2024".casilla_positions]]
+id = "02691"
+position = 2607
+
+[[revisions."2024".casilla_positions]]
+id = "02692"
+position = 2608
+
+[[revisions."2024".casilla_positions]]
+id = "02693"
+position = 2609
+
+[[revisions."2024".casilla_positions]]
+id = "02694"
+position = 2610
+
+[[revisions."2024".casilla_positions]]
+id = "02695"
+position = 2611
+
+[[revisions."2024".casilla_positions]]
+id = "02696"
+position = 2612
+
+[[revisions."2024".casilla_positions]]
+id = "02697"
+position = 2613
+
+[[revisions."2024".casilla_positions]]
+id = "02698"
+position = 2614
+
+[[revisions."2024".casilla_positions]]
+id = "02700"
+position = 2616
+
+[[revisions."2024".casilla_positions]]
+id = "02701"
+position = 2617
+
+[[revisions."2024".casilla_positions]]
+id = "02702"
+position = 2618
+
+[[revisions."2024".casilla_positions]]
+id = "02703"
+position = 2619
+
+[[revisions."2024".casilla_positions]]
+id = "02704"
+position = 2620
+
+[[revisions."2024".casilla_positions]]
+id = "02705"
+position = 2621
+
+[[revisions."2024".casilla_positions]]
+id = "02706"
+position = 2622
+
+[[revisions."2024".casilla_positions]]
+id = "02707"
+position = 2623
+
+[[revisions."2024".casilla_positions]]
+id = "02708"
+position = 2624
+
+[[revisions."2024".casilla_positions]]
+id = "02709"
+position = 2625
+
+[[revisions."2024".casilla_positions]]
+id = "02710"
+position = 2626
+
+[[revisions."2024".casilla_positions]]
+id = "02757"
+position = 2673
+
+[[revisions."2024".casilla_positions]]
+id = "02758"
+position = 2674
+
+[[revisions."2024".casilla_positions]]
+id = "02759"
+position = 2675
+
+[[revisions."2024".casilla_positions]]
+id = "02760"
+position = 2676
+
+[[revisions."2024".casilla_positions]]
+id = "02762"
+position = 2678
+
+[[revisions."2024".casilla_positions]]
+id = "02763"
+position = 2679
+
+[[revisions."2024".casilla_positions]]
+id = "02764"
+position = 2680
+
+[[revisions."2024".casilla_positions]]
+id = "02765"
+position = 2681
+
+[[revisions."2024".casilla_positions]]
+id = "02766"
+position = 2682
+
+[[revisions."2024".casilla_positions]]
+id = "02767"
+position = 2683
+
+[[revisions."2024".casilla_positions]]
+id = "02768"
+position = 2684
+
+[[revisions."2024".casilla_positions]]
+id = "02769"
+position = 2685
+
+[[revisions."2024".casilla_positions]]
+id = "02770"
+position = 2686
+
+[[revisions."2024".casilla_positions]]
+id = "02772"
+position = 2688
+
+[[revisions."2024".casilla_positions]]
+id = "02773"
+position = 2689
+
+[[revisions."2024".casilla_positions]]
+id = "02774"
+position = 2690
+
+[[revisions."2024".casilla_positions]]
+id = "02775"
+position = 2691
+
+[[revisions."2024".casilla_positions]]
+id = "02776"
+position = 2692
+
+[[revisions."2024".casilla_positions]]
+id = "02777"
+position = 2693
+
+[[revisions."2024".casilla_positions]]
+id = "02778"
+position = 2694
+
+[[revisions."2024".casilla_positions]]
+id = "02779"
+position = 2695
+
+[[revisions."2024".casilla_positions]]
+id = "02780"
+position = 2696
+
+[[revisions."2024".casilla_positions]]
+id = "02782"
+position = 2698
+
+[[revisions."2024".casilla_positions]]
+id = "02783"
+position = 2699
+
+[[revisions."2024".casilla_positions]]
+id = "02784"
+position = 2700
+
+[[revisions."2024".casilla_positions]]
+id = "02785"
+position = 2701
+
+[[revisions."2024".casilla_positions]]
+id = "02786"
+position = 2702
+
+[[revisions."2024".casilla_positions]]
+id = "02787"
+position = 2703
+
+[[revisions."2024".casilla_positions]]
+id = "02788"
+position = 2704
+
+[[revisions."2024".casilla_positions]]
+id = "02789"
+position = 2705
+
+[[revisions."2024".casilla_positions]]
+id = "02790"
+position = 2706
+
+[[revisions."2024".casilla_positions]]
+id = "02792"
+position = 2708
+
+[[revisions."2024".casilla_positions]]
+id = "02793"
+position = 2709
+
+[[revisions."2024".casilla_positions]]
+id = "02794"
+position = 2710
+
+[[revisions."2024".casilla_positions]]
+id = "02795"
+position = 2711
+
+[[revisions."2024".casilla_positions]]
+id = "02796"
+position = 2712
+
+[[revisions."2024".casilla_positions]]
+id = "02797"
+position = 2713
+
+[[revisions."2024".casilla_positions]]
+id = "02798"
+position = 2714
+
+[[revisions."2024".casilla_positions]]
+id = "02799"
+position = 2715
+
+[[revisions."2024".casilla_positions]]
+id = "02800"
+position = 2716
+
+[[revisions."2024".casilla_positions]]
+id = "02802"
+position = 2718
+
+[[revisions."2024".casilla_positions]]
+id = "02803"
+position = 2719
+
+[[revisions."2024".casilla_positions]]
+id = "02804"
+position = 2720
+
+[[revisions."2024".casilla_positions]]
+id = "02805"
+position = 2721
+
+[[revisions."2024".casilla_positions]]
+id = "02806"
+position = 2722
+
+[[revisions."2024".casilla_positions]]
+id = "02810"
+position = 2726
+
+[[revisions."2024".casilla_positions]]
+id = "02850"
+position = 2762
+
+[[revisions."2024".casilla_positions]]
+id = "02912"
+position = 2824
+
+[[revisions."2024".casilla_positions]]
+id = "02913"
+position = 2825
+
+[[revisions."2024".casilla_positions]]
+id = "02918"
+position = 2829
+
+[[revisions."2024".casilla_positions]]
+id = "02919"
+position = 2830
+
+[[revisions."2024".casilla_positions]]
+id = "02920"
+position = 2831
+
+[[revisions."2024".casilla_positions]]
+id = "02972"
+position = 2874
+
+[[revisions."2024".casilla_positions]]
+id = "02975"
+position = 2876
+
+[[revisions."2024".casilla_positions]]
+id = "02977"
+position = 2878
+
+[[revisions."2024".casilla_positions]]
+id = "03242"
+position = 3137
+
+[[revisions."2024".casilla_positions]]
+id = "03243"
+position = 3138
+
+[[revisions."2024".casilla_positions]]
+id = "03244"
+position = 3139
+
+[[revisions."2024".casilla_positions]]
+id = "03245"
+position = 3140
+
+[[revisions."2024".casilla_positions]]
+id = "03276"
+position = 3169
+
+[[revisions."2024".casilla_positions]]
+id = "03277"
+position = 3170
+
+[[revisions."2024".casilla_positions]]
+id = "03278"
+position = 3171
+
+[[revisions."2024".casilla_positions]]
+id = "03279"
+position = 3172
+
+[[revisions."2024".casilla_positions]]
+id = "03280"
+position = 3173
+
+[[revisions."2024".casilla_positions]]
+id = "03312"
+position = 3200
+
+[[revisions."2024".casilla_positions]]
+id = "03313"
+position = 3201
+
+[[revisions."2024".casilla_positions]]
+id = "03317"
+position = 3204
+
+[[revisions."2024".casilla_positions]]
+id = "03318"
+position = 3205
+
+[[revisions."2024".casilla_positions]]
+id = "03319"
+position = 3206
+
+[[revisions."2024".casilla_positions]]
+id = "03320"
+position = 3207
+
+[[revisions."2024".casilla_positions]]
+id = "03354"
+position = 3238
+
+[[revisions."2024".casilla_positions]]
+id = "03357"
+position = 3240
+
+[[revisions."2024".casilla_positions]]
+id = "03358"
+position = 3241
+
+[[revisions."2024".casilla_positions]]
+id = "1506"
+position = 3287
+
+[[revisions."2024".casilla_positions]]
+id = "1809"
+position = 3288
+
+[[revisions."2024".casilla_positions]]
+id = "1810"
+position = 3289
+
+[[revisions."2024".casilla_positions]]
+id = "1507"
+position = 3290
+
+[[revisions."2024".casilla_positions]]
+id = "1508"
+position = 3291
+
+[[revisions."2024".casilla_positions]]
+id = "DP200014:01330"
+position = 3334
+
+[[revisions."2024".casilla_positions]]
+id = "DP200014:SAL_RESERVA_DOTACION"
+position = 3335
+
+[[revisions."2024".casilla_positions]]
+id = "DP200014:bin-aplicada-maxima"
+position = 3336
+
+[[revisions."2024".casilla_positions]]
+id = "DP200018:00588"
+position = 3360
+
+[[revisions."2024".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2023", id = "modelo-200-anual"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-200-deadline"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-200-filing"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-200-workflow"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]}
+sequence_removals = {source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]}
+
+[[revisions."2024".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-200-2023-0a"}
+replacement_id = "modelo-200-2024-0a"
+fields = {closes_on = 2025-07-25, filing_year = 2024, opens_on = 2025-07-01, payment_cutoff_on = 2025-07-22, period = "2024 0A"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["boe-modelo-200-2025-form", "aeat-modelo-200-manual-2024"]}
+sequence_removals = {legal_refs = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023", id = "modelo-200-dr-xls"}
+fields = {fixture_id = "modelo-200-2024-record-design-layout", workbook_source = "aeat-dr-200-2024"}
+sequence_additions = {legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"], source_refs = ["aeat-dr-200-2024"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+
+[[revisions."2024".family_positions]]
+family = "application_links"
+id = "modelo-200-deadline"
+position = 4
+
+[[revisions."2024".family_positions]]
+family = "application_links"
+id = "modelo-200-workflow"
+position = 7
+
+[[revisions."2024".family_positions]]
+family = "application_links"
+id = "modelo-200-filing"
+position = 7
