@@ -1311,6 +1311,9 @@ application:
         őriz meg OSS bizonyítékot.
       oss_source_unrouted: 'Egyetlen aggregációs kötés sem használja fel ezeket az
         egyablakos forrásokat (hivatkozások: %{source_ref_ids}).'
+      printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
+        sorok összegével (%{printed_sum}), ezért a fájl összegei nem stimmelnének,
+        és az AEAT elutasíthatja.
       pulled_filing_casilla_mismatch: A(z) %{period_code} %{filing_year} %{casilla_number}
         rovat számított értéke %{computed_value} a bevallott %{filed_value} ellenében
         (%{mismatch_kind}).

@@ -1356,6 +1356,9 @@ application:
         no conserva evidencia de la OSS.
       oss_source_unrouted: 'Ninguna vinculación de agregación consume estas fuentes
         de ventanilla única (referencias: %{source_ref_ids}).'
+      printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
+        impresas que la componen (%{printed_sum}), así que el fichero no cuadraría
+        y la AEAT podría rechazarlo.
       pulled_filing_casilla_mismatch: La casilla %{casilla_number} de %{period_code}
         %{filing_year} calculó %{computed_value} frente a lo declarado %{filed_value}
         (%{mismatch_kind}).

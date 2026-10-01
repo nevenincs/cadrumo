@@ -1353,6 +1353,9 @@ application:
         però no conserva evidència de l'OSS.
       oss_source_unrouted: 'Cap vinculació d''agregació no consumeix aquestes fonts
         de finestreta única (referències: %{source_ref_ids}).'
+      printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
+        línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
+        i l'AEAT podria rebutjar-lo.
       pulled_filing_casilla_mismatch: La casella %{casilla_number} de %{period_code}
         %{filing_year} va calcular %{computed_value} davant el declarat %{filed_value}
         (%{mismatch_kind}).

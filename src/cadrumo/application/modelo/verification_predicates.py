@@ -204,6 +204,35 @@ def _evaluate_equals(
     return lhs == rhs
 
 
+def _equals_sum_operands(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> tuple[CasillaId, Decimal, Decimal] | None:
+    """Return the total casilla, its value, and the sum of its addends.
+
+    ``None`` on malformed arity, which registry validation refuses at authoring
+    time; a missing casilla reads as ``Decimal(0)`` like every other operator.
+    """
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) < 3:
+        return None
+    total_id, *addend_ids = ids
+    addend_sum = sum((casilla_values.get(cid, Decimal(0)) for cid in addend_ids), Decimal(0))
+    return total_id, casilla_values.get(total_id, Decimal(0)), addend_sum
+
+
+def _evaluate_equals_sum(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    operands = _equals_sum_operands(predicate, casilla_values)
+    if operands is None:
+        return True
+    _total_id, total, addend_sum = operands
+    return total == addend_sum
+
+
 def _evaluate_implies_nonzero(
     predicate: ParsedVerificationPredicate,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -264,6 +293,7 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _evaluate_at_most_one_positive,
         VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _evaluate_cap_le_when_positive,
         VerificationPredicateOperator.EQUALS: _evaluate_equals,
+        VerificationPredicateOperator.EQUALS_SUM: _evaluate_equals_sum,
         VerificationPredicateOperator.IMPLIES_NONZERO: _evaluate_implies_nonzero,
         VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _evaluate_implies_any_nonzero,
         VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _evaluate_profile_field_required,
@@ -290,6 +320,9 @@ def evaluate_predicate_expression(
       casilla is strictly positive, the limited casilla MUST NOT exceed it.
     - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
       holds iff the two named casillas hold the same value.
+    - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — printed-total
+      invariant: predicate holds iff the first casilla equals the exact sum of
+      the rest.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with strictly-positive antecedent: predicate holds iff
       antecedent <= 0 OR consequent != 0.
@@ -467,6 +500,22 @@ def _advisory_equals_fires(
     return lhs != rhs
 
 
+def _advisory_equals_sum_fires(
+    expr: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _text_values: Mapping[CasillaId, str],
+    _profile: TaxpayerProfile | None,
+) -> bool | None:
+    predicate = parse_verification_predicate_expression(expr)
+    if predicate is None or predicate.operator is not VerificationPredicateOperator.EQUALS_SUM:
+        return None
+    operands = _equals_sum_operands(predicate, casilla_values)
+    if operands is None:
+        return False
+    _total_id, total, addend_sum = operands
+    return total != addend_sum
+
+
 def _advisory_casilla_equals_implies_nonzero_fires(
     expr: str,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -579,6 +628,7 @@ _ADVISORY_PREDICATE_EVALUATORS: tuple[_AdvisoryPredicateEvaluator, ...] = (
     _advisory_implies_any_nonzero_fires,
     _advisory_roll_forward_balances_fires,
     _advisory_equals_fires,
+    _advisory_equals_sum_fires,
     _advisory_casilla_equals_implies_nonzero_fires,
     _advisory_casilla_equals_implies_profile_flag_fires,
     _advisory_casilla_equals_implies_diverges_fires,
@@ -648,6 +698,44 @@ def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> M
         casilla_id=casilla_id,
         message_locale_key="application.modelo.findings.registry_advisory_predicate_fired",
         message_facts=message_facts,
+        legal_refs=legal_refs,
+    )
+
+
+def _blocking_predicate_finding(
+    predicate: VerificationPredicateDefinition,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> ModeloVerificationFinding:
+    """Build the refusal for a violated registry-authored blocking predicate.
+
+    A violated ``equals_sum`` names its total box and the sum of the boxes the
+    design adds into it, so the filer can see the two figures that disagree;
+    every other operator reports the predicate identity alone.
+    """
+    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    parsed = parse_verification_predicate_expression(predicate.expression)
+    if parsed is not None and parsed.operator is VerificationPredicateOperator.EQUALS_SUM:
+        operands = _equals_sum_operands(parsed, casilla_values)
+        if operands is not None:
+            total_id, _total, addend_sum = operands
+            return ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=total_id,
+                message_locale_key="application.modelo.findings.printed_total_mismatch",
+                message_facts={
+                    "predicate_id": predicate.predicate_id,
+                    "box": str(total_id),
+                    "printed_sum": addend_sum,
+                },
+                legal_refs=legal_refs,
+            )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=_unique_predicate_casilla_id(predicate),
+        message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+        message_facts={"predicate_id": predicate.predicate_id},
         legal_refs=legal_refs,
     )
 
@@ -770,14 +858,7 @@ def evaluate_verification_predicates(
                 findings.append(_advisory_predicate_finding(predicate))
         else:
             if not evaluate_predicate_expression(predicate.expression, casilla_values, profile):
-                finding = ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    casilla_id=_unique_predicate_casilla_id(predicate),
-                    message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
-                    message_facts={"predicate_id": predicate.predicate_id},
-                    legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                )
+                finding = _blocking_predicate_finding(predicate, casilla_values)
                 findings.append(finding)
                 if blocking_finding_observer is not None:
                     blocking_finding_observer(finding, predicate)
