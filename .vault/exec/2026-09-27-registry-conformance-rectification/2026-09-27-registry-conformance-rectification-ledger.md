@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b257adca6bd961cc91cefe57f3e4a900786a3b0dbf0d5660ec0b5e94a49e1f7'
+body_hash: 'sha256:ec096e1a00a1d638c4899a418e59dc45cd0c3e2b3c3c5c38450d069bda99883e'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1491,6 +1491,9 @@ related:
 - `S11` `M` `dev/registry/tests/test_edition_delta_migration_assessment.py`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
 - `S11` `verify:` `converter proves contract-defined member order with declared-order restorations and refusals, detector fails a misplaced stated row; 58-modelo converter sweep passed; 165 and 100/2025 order restored; converter suite 169 and modelo set 226 passed; published fcf7dc61; gated commit 969ecc57b6` -> `pass`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S11` `verify:` `Modelo 100 2024/2025 identity fields and Modelo 200 2025 boxes 03599-03646 hydrate in their pre-regression order with content identical; converter proofs for 100 and 200 unchanged and minimal; inspection 0 findings; published 2e106bda; 226 passed; gated commit b7c49338dd 32 passed` -> `pass`
 
 ## Notes
 
