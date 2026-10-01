@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:89ec54b2faa3b885761ef45bd0d4015ef55c7fb2c0e74a71774c4897127389cf'
+body_hash: 'sha256:203d6bbfed990b500e9f72447b5309c016cc78a712c245270b4849b262cb42af'
 ---
 
 # `registry-conformance-rectification` plan
@@ -129,7 +129,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S47` - Move the 2025 maritime exemption formula off box 0525 onto an internal casilla with its domain constant, withdraw the Modelo 184 relation into box 1577 with the shared tests that name it, and prove stored revisions carrying the withdrawn Modelo 131 relation are handled explicitly; `src/cadrumo/domain/renta/maritime_exemption.py`.
 - [x] `P05.S48` - Apply the autonomica scale to box 0523 as every dictionary states, compute box 0512 for 2022 and 2023 including Valencia's rule from 28 October 2022, and ground the catalogue's regional minimo effective dates in the regional laws; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P05.S49` - Re-author Modelos 222 and 296 for 2022 as the storage baseline and re-store their 2023 editions as deltas over it through the converter, instead of storing 2022 against the later edition; `src/cadrumo/_data/registry/aeat/modelos/222/`.
-- [ ] `P05.S50` - Finish Modelo 200's provenance and declaration debt: 2024 members still citing the 2025 design, the 00081 widening, the 03312 section and lineage, the catalogue entries for Ley 7/2024 art. 6 and Orden HAC/529/2026 art. 1, and the reused-number boxes neither edition declares; `src/cadrumo/_data/registry/aeat/modelos/200/`.
+- [x] `P05.S50` - Finish Modelo 200's provenance and declaration debt: 2024 members still citing the 2025 design, the 00081 widening, the 03312 section and lineage, the catalogue entries for Ley 7/2024 art. 6 and Orden HAC/529/2026 art. 1, and the reused-number boxes neither edition declares; `src/cadrumo/_data/registry/aeat/modelos/200/`.
 - [x] `P05.S51` - Give the capability, extemporaneidad and calendar tests synthetic missing-window examples instead of real gaps that this step closed; `dev/registry/tests/test_modelo_capability.py`.
 - [ ] `P05.S52` - Regenerate the docs sequence goldens through their generator against the published authority, and rewrite or retire the review-values-relation sequence now that no annual Modelo 100 relation survives; `docs/_sequences/`.
 - [x] `P05.S53` - Give the three 2023 Modelo 303 internal carriers their continuity origin and evidence claims, which the 2022 relocation left without them; `src/cadrumo/_data/registry/aeat/modelos/303/`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:86f7d81d485b53071ae089104465cb698769db304925283a18359d00eae56773'
+body_hash: 'sha256:5819f0553cd08d788f56d243cadd9e55c22f1a1216935d4566db30b9e02e28ba'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1384,6 +1384,34 @@ related:
 - `S43` `verify:` `agraria engine stated at 2022 with per-year ordenes, minorado and jovenes bases per each orden, reduccion 25/15/5 percent grounded in Ordenes HFP/405/2023, HAC/348/2024 and HFP/1359/2023; inspection 0 findings; converter no-op; dev 568 and runtime 362 passed then the two scenario items fixed; gated commit 3293259c99` -> `pass`
 - `S44` `D` `dev/registry/tests/test_modelo_210_inception_statement.py`
 - `S44` `verify:` `registry-wide declared-inception agreement test passes without the 210 copy` -> `pass`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0002-dp200001.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0013-dp200010.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0014-dp200011.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0052-dp200032.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0053-dp200033.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0061-dp200041.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0062-dp200042.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0063-dp200043.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0013-dp200010.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0014-dp200011.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0054-dp200032.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0055-dp200033.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0063-dp200041.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0064-dp200042.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0065-dp200043.toml`
+- `S50` `A` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0019-record-m200-page-010.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0022-record-m200-page-011.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0109-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0110-record-m200-page-032.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0112-record-m200-page-033.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0120-record-m200-page-041.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0121-record-m200-page-042.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0122-record-m200-page-042.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0124-record-m200-page-043.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0125-record-m200-page-043.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S50` `verify:` `45 equity-statement cells per edition carry their own sheet-scoped casillas from their design lines, absent input exports the zero fill, a remapped cell is caught; 27 echo cells kept; 2025 target republished and current; inspection 0 findings; dev 388 and runtime 104 passed; gated commit db50af829c` -> `pass`
 
 ## Notes
 
@@ -1463,3 +1491,6 @@ related:
 - `S43` the six Modelo 100 lineage-ledger rows of this step were swept into commit 62dc742fab by a concurrent stage; between that commit and 3293259c99 the ledger named rows the tree did not yet hold
 - `S43` Madrid birth deduction years not authored: the facts entry carries only 2025 and no 2022 or 2023 autonomic manual is held
 - `S43` for 2023 the engine applies 15 percent per Orden HAC/348/2024 art. 2 and the manual's chapter text while the manual's worked example uses 10 percent; returned to the operator
+- `S50` three cells printing 00501 and 00573 still export those boxes until the two ids are sheet-scoped, which touches about 40 files; returned to the operator
+- `S50` about 1900 cells per edition of the 2025 filing export are filled from an unprefixed casilla whose design text differs (text comparison, some false positives), 130 of them on liquidacion sheets; list in the lane scratch `masked_debt.tsv;` returned to the operator
+- `S50` the 2024 export target has never published: its f0089 sign defect and 180 undeclared mapping ids block it
