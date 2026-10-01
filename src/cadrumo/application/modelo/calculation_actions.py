@@ -154,7 +154,7 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source, is_printed_box
+from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -174,6 +174,7 @@ from .m303_regimen_simplificado_scope import (
     taxpayer_profile_for_work,
 )
 from .preconditions import build_modelo_precondition_failure
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics, resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
@@ -1611,7 +1612,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(channels.source_resolution),
         source_issues=_unrouted_source_issues(
-            channels.reconciliation.source_diagnostics, preparation.snapshot.revision
+            channels.reconciliation.source_diagnostics,
+            snapshot_printed_boxes(ports.operation, preparation.snapshot),
         ),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
@@ -1720,7 +1722,7 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
 
 def _unrouted_source_issues(
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...],
-    registry_revision: ModeloRevision,
+    boxes: PrintedBoxes,
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project unrouted source conditions into durable revision issues.
 
@@ -1737,10 +1739,10 @@ def _unrouted_source_issues(
 
     Every other reason that withholds filing persists the same way, so a
     reopened declaration still says what blocks it. A box whose source
-    produced no value persists only when the form prints it: a working figure
-    that could not be worked out is worth checking, not a filed figure missing.
+    produced no value persists only when the form prints it, as ``boxes`` reads
+    the published layout: a working figure that could not be worked out is worth
+    checking, not a filed figure missing.
     """
-    casillas = {str(casilla.id): casilla for casilla in registry_revision.casillas}
     issues: list[CalculationSourceIssue] = []
     for diagnostic in source_diagnostics:
         reason = _durable_source_issue_reason(diagnostic)
@@ -1750,9 +1752,7 @@ def _unrouted_source_issues(
         if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
             continue
         casilla_id = None if diagnostic.casilla_id is None else str(diagnostic.casilla_id)
-        if reason in PRINTED_BOX_REASONS and not is_printed_box(
-            None if casilla_id is None else casillas.get(casilla_id)
-        ):
+        if reason in PRINTED_BOX_REASONS and not boxes.prints(casilla_id):
             continue
         issues.append(
             CalculationSourceIssue(

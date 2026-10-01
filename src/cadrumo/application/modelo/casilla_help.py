@@ -46,6 +46,7 @@ from ...domain.calculations.registry.schema_base import CasillaSignConstraint
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .settlement_casilla import declaration_result_casillas
 from .source_policy import source_policy
 from .value_presentation import LOCALE_NUMBER_FORMATS, SCREEN_MINUS_SIGN, group_decimal_text
@@ -370,21 +371,13 @@ def _dependents(formulas: Iterable[FormulaDefinition]) -> dict[str, frozenset[st
     return {used: frozenset(targets) for used, targets in graph.items()}
 
 
-def _printed_box(casilla: CasillaDefinition | None) -> str | None:
-    """The box the form prints ``casilla`` in, bracketed; ``None`` for a working figure it does not print."""
-    if casilla is not None and casilla.number.isdigit():
-        return f"[{casilla.number}]"
-    if casilla is not None and casilla.form_number is not None:
-        return f"[{casilla.form_number}]"
-    return None
-
-
 def _reach(
     start: str,
     *,
     graph: Mapping[str, frozenset[str]],
     results: frozenset[str],
     casillas: Mapping[str, CasillaDefinition],
+    boxes: PrintedBoxes,
     box_text: Callable[[str], str],
 ) -> ModeloHelpReachV1:
     """Walk every casilla a change to ``start`` reaches, keeping the fewest-formula route to a result box.
@@ -395,7 +388,7 @@ def _reach(
     """
 
     def order(key: str) -> tuple[bool, str]:
-        return (_printed_box(casillas.get(key)) is None, key)
+        return (not boxes.prints(key), key)
 
     parents: dict[str, str] = {}
     reached: set[str] = {start}
@@ -420,12 +413,10 @@ def _reach(
     path = tuple(
         ModeloHelpBoxV1(casilla_id=casillas[key].id, box=box_text(key))
         for key in route
-        if key in results or _printed_box(casillas.get(key)) is not None
+        if key in results or boxes.prints(key)
     )
     on_path = set(route)
-    others = sum(
-        1 for key in reached if key != start and key not in on_path and _printed_box(casillas.get(key)) is not None
-    )
+    others = sum(1 for key in reached if key != start and key not in on_path and boxes.prints(key))
     return ModeloHelpReachV1(path=path, others=others)
 
 
@@ -450,8 +441,11 @@ def build_casilla_help_card(
     parameters = {str(item.id): item for item in snapshot.revision.parameters}
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
 
+    boxes = snapshot_printed_boxes(operation, snapshot)
+
     def box_text(key: str) -> str:
-        return _printed_box(casillas.get(key)) or _phrase(language, "formula.working_figure")
+        number = boxes.number(key)
+        return _phrase(language, "formula.working_figure") if number is None else f"[{number}]"
 
     def box_of(target: CasillaId) -> str:
         return box_text(str(target))
@@ -502,7 +496,7 @@ def build_casilla_help_card(
     reach = (
         None
         if is_result or not results
-        else _reach(str(casilla.id), graph=graph, results=results, casillas=casillas, box_text=box_text)
+        else _reach(str(casilla.id), graph=graph, results=results, casillas=casillas, boxes=boxes, box_text=box_text)
     )
     return ModeloCasillaHelpCardV1(
         casilla_id=casilla.id,

@@ -17,6 +17,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationSourceIssue
 from ...aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceDiagnosticReason
 from ..calculation_actions import _unrouted_source_issues
+from ..printed_boxes import snapshot_printed_boxes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -25,8 +26,8 @@ def _project(
     operation: PinnedAuthorityOperation, diagnostics: tuple[CalculationSourceDiagnostic, ...]
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project diagnostics against the Modelo 130 first-quarter revision, whose box 01 the form prints."""
-    revision = operation.snapshot("130", filing_year=2026, period="1T").revision
-    return _unrouted_source_issues(diagnostics, revision)
+    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    return _unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
 
 
 def _diagnostic(reason: CalculationSourceDiagnosticReason, message: str) -> CalculationSourceDiagnostic:

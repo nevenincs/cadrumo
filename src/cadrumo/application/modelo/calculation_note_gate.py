@@ -16,16 +16,14 @@ left to their own check step or to the export
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
-from .calculation_notes import GATE_REFUSED_REASONS, printed_box_number, what_locale_key
+from .calculation_notes import GATE_REFUSED_REASONS, what_locale_key
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 
 
 class ModeloCalculationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
@@ -50,14 +48,13 @@ def require_no_blocking_calculation_notes(
     revision: CalculationRevision,
     *,
     action: str,
-    casillas: Mapping[str, CasillaDefinition] | None = None,
+    boxes: PrintedBoxes | None = None,
 ) -> None:
     """Refuse ``action`` while ``revision`` carries a persisted blocking note.
 
     The refusal is worded by the first note's own catalogue sentence and
-    carries every note's reason in its context. ``casillas`` are the
-    revision's casilla definitions, used to name the note's box by its printed
-    number.
+    carries every note's reason in its context. ``boxes`` are the boxes the
+    revision's form prints, used to name the note's box by its printed number.
 
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
@@ -66,8 +63,7 @@ def require_no_blocking_calculation_notes(
     if not blocking:
         return
     first = blocking[0]
-    casilla = None if first.casilla_id is None or casillas is None else casillas.get(str(first.casilla_id))
-    box = printed_box_number(casilla)
+    box = None if boxes is None or first.casilla_id is None else boxes.number(str(first.casilla_id))
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),
         context={
@@ -93,11 +89,7 @@ def require_work_unit_calculation_unblocked(
     snapshot = operation.snapshot(
         str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
     )
-    require_no_blocking_calculation_notes(
-        revision,
-        action=action,
-        casillas={str(casilla.id): casilla for casilla in snapshot.revision.casillas},
-    )
+    require_no_blocking_calculation_notes(revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot))
 
 
 __all__ = [

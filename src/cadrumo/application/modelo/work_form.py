@@ -101,6 +101,7 @@ from .edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
+from .printed_boxes import printed_box_number
 from .required_inputs import filer_required_casilla_ids
 from .source_policy import SourceOverridePolicy, source_policy
 from .work_form_models import (
@@ -363,7 +364,7 @@ def _fed_box_label(binding_id: str, context: _FormContext) -> ModeloFormText | N
     if len(fed) != 1:
         return None
     (casilla_id,) = fed
-    box = context.placed_boxes.get(casilla_id) or _box(context.casillas.get(casilla_id), None)
+    box = context.placed_boxes.get(casilla_id) or printed_box_number(context.casillas.get(casilla_id), None)
     if box is None:
         return None
     for locale, disclosure in (
@@ -411,18 +412,6 @@ def _names_only_its_box(text: str, locators: tuple[re.Pattern[str], ...]) -> boo
 
 def _normalized(text: str) -> str:
     return re.sub(r"[\W_]+", " ", text).strip().casefold()
-
-
-def _box(casilla: CasillaDefinition | None, placement: FormPlacementDefinition | None) -> str | None:
-    """Return the official printed box number, never a semantic id."""
-    if placement is not None and placement.box_number is not None:
-        return placement.box_number
-    if casilla is not None:
-        if casilla.form_number is not None:
-            return casilla.form_number
-        if casilla.number.isdigit():
-            return casilla.number
-    return None
 
 
 def _bindings(row: ModeloWorkReviewCasilla) -> tuple[ModeloFormBinding, ...]:
@@ -560,7 +549,7 @@ def _casilla_field(
         origin, value = ModeloFormOrigin.CALCULATION_FAILED, None
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
-        box=_box(casilla, placement),
+        box=printed_box_number(casilla, placement),
         label=label,
         help=_help(casilla, label.text, context),
         data_type=str(row.data_type),
@@ -1233,17 +1222,17 @@ def _calculation_notes(
         for field in fields
         if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
-    casillas = {str(casilla.id): casilla for casilla in context.snapshot.revision.casillas}
     notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
     for reason, casilla_id in sources:
         if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
-        attention = note_attention(reason, casilla=None if casilla_id is None else casillas.get(casilla_id))
+        box = None if casilla_id is None else boxes.get(casilla_id)
+        attention = note_attention(reason, box=box)
         notes[(reason, casilla_id)] = ModeloFormCalculationNote(
             reason=reason,
             attention=attention,
             casilla_id=casilla_id,
-            box=None if casilla_id is None else boxes.get(casilla_id),
+            box=box,
             durable=reason in BLOCKING_REASONS and attention is ModeloFormAttention.BLOCKS,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))

@@ -16,11 +16,11 @@ filing on the same set, so the two can never disagree.
 A printed box that could not be worked out, a source with no route and a source
 store not ready are refused by the gate: their producers report only sources
 that apply to the filer. A box that could not be worked out blocks only when the
-form prints it (:data:`PRINTED_BOX_REASONS`); a working figure is worth checking.
-A value arriving by an undeclared route is worth checking and persists with the
-calculation: it still fires for a route kept without a terminal origin by
-design, so refusing on it would refuse declarations calculated through that
-route. Every diagnostic that does not persist is held in this process only until
+form prints it (:data:`PRINTED_BOX_REASONS`, as :mod:`.printed_boxes` reads the
+form); a working figure is worth checking. A value arriving by an undeclared
+route is worth checking and persists with the calculation: it still fires for a
+route kept without a terminal origin by design, so refusing on it would refuse
+declarations calculated through that route. Every diagnostic that does not persist is held in this process only until
 the next calculation of the declaration (:class:`CalculationNoteStore`), and a
 declaration opened afresh says to calculate again to see them.
 """
@@ -33,7 +33,6 @@ from types import MappingProxyType
 from typing import Final, get_args
 
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceDiagnosticReason
 from .work_form_models import ModeloFormAttention
 
@@ -157,23 +156,13 @@ STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
 
 
-def is_printed_box(casilla: CasillaDefinition | None) -> bool:
-    """Whether the form prints ``casilla`` as a numbered box, so a figure missing there is a filed figure."""
-    return casilla is not None and (casilla.form_number is not None or casilla.number.isdigit())
+def note_attention(reason: str, *, box: str | None) -> ModeloFormAttention:
+    """Place one diagnostic reason on the filer's scale; ``box`` is the number the form prints for the box it names.
 
-
-def printed_box_number(casilla: CasillaDefinition | None) -> str | None:
-    """The number the form prints for ``casilla``, or ``None`` when it prints none."""
-    if casilla is None:
-        return None
-    if casilla.form_number is not None:
-        return str(casilla.form_number)
-    return casilla.number if casilla.number.isdigit() else None
-
-
-def note_attention(reason: str, *, casilla: CasillaDefinition | None) -> ModeloFormAttention:
-    """Place one diagnostic reason, about ``casilla`` when it names one, on the filer's scale."""
-    if reason in PRINTED_BOX_REASONS and not is_printed_box(casilla):
+    ``box`` is ``None`` when the reason names no box or a working figure the
+    form does not print (:mod:`.printed_boxes`).
+    """
+    if reason in PRINTED_BOX_REASONS and box is None:
         return _C
     return CALCULATION_NOTE_ATTENTION[reason]
 
@@ -265,9 +254,7 @@ __all__ = [
     "UNWORKED_BOX_REASONS",
     "CalculationNoteStore",
     "durable_binding_source",
-    "is_printed_box",
     "note_attention",
-    "printed_box_number",
     "what_locale_key",
     "what_to_do_locale_key",
 ]

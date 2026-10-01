@@ -67,8 +67,8 @@ if TYPE_CHECKING:
     # state-free CLI surface pays no runtime aggregation-import cost, matching the
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
+    from ...application.modelo.printed_boxes import PrintedBoxes
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 
 def _modelo_rendering_value(key: str) -> str:
@@ -226,15 +226,15 @@ def source_diagnostic_notice(
     diagnostic: CalculationSourceDiagnostic,
     *,
     code: str,
-    casillas: Mapping[str, CasillaDefinition] | None = None,
+    boxes: PrintedBoxes | None = None,
 ) -> Notice:
     """Project one source diagnostic onto a notice whose context is routable.
 
     The message is the catalogue's sentence for the diagnostic's reason, and
     the context carries its place on the same scale the editor's findings list
     uses (``level``), the printed box it names (``box``), and the calculation's
-    own technical account (``detail``). ``casillas`` are the revision's casilla
-    definitions, which decide whether the box is one the form prints.
+    own technical account (``detail``). ``boxes`` are the boxes the revision's
+    form prints, which decide whether the box is one the form prints and its number.
 
     The single projection for source-resolution advisories, shared by every
     command that emits them so their context cannot diverge per call site.
@@ -276,12 +276,11 @@ def source_diagnostic_notice(
         # remains reserved for Notice.action by the Notice validator.
         "remedy": diagnostic.remedy,
     }
-    from ...application.modelo.calculation_notes import note_attention, printed_box_number, what_locale_key
+    from ...application.modelo.calculation_notes import note_attention, what_locale_key
     from ...application.modelo.work_form_models import ModeloFormAttention
 
-    casilla = None if diagnostic.casilla_id is None or casillas is None else casillas.get(str(diagnostic.casilla_id))
-    box = printed_box_number(casilla)
-    attention = note_attention(diagnostic.reason, casilla=casilla)
+    box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
+    attention = note_attention(diagnostic.reason, box=box)
     context.update({key: value for key, value in optional.items() if value})
     context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
     return Notice(
