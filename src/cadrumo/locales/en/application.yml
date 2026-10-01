@@ -846,8 +846,8 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: Cadrumo estimated a 1 % or 2 % withholding from a payment shortfall,
           and a bank fee or a discount could explain it.
-        what_to_do: Confirm the withholding with your client's invoice or certificate,
-          or correct the record.
+        what_to_do: Check the withholding against your client's invoice or certificate
+          in your records, correct the record if it differs, and calculate again.
       invoice_category_counterparty_mismatch:
         what: The VAT treatment of an invoice does not fit its customer's country,
           so the invoice was left out.

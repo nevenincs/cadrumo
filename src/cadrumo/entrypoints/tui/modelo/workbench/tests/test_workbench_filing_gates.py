@@ -23,6 +23,7 @@ from textual.color import Color
 from textual.pilot import Pilot
 from textual.widgets import Static
 
+from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
 from ......application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormCalculationNote,
@@ -40,7 +41,7 @@ from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NA
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
 from ..header import attention_chips, blocking_count
-from ..issues import WorkbenchIssuesScreen
+from ..issues import IssueLevel, WorkbenchIssuesScreen, issue_lines
 from ..progress import NextAction, next_action_text, workbench_progress
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen
@@ -287,13 +288,29 @@ async def test_the_bulk_confirm_tick_reads_unticked_until_the_filer_ticks_it() -
     assert cell_len(ticked) == cell_len(unticked)
 
 
-def test_a_note_the_filer_should_confirm_counts_with_the_assumed_values() -> None:
-    note = ModeloFormCalculationNote(reason="orphaned_override", attention=ModeloFormAttention.CONFIRM)
-    form = _declaration(assumed=True).model_copy(update={"calculation_notes": (note,)})
+@pytest.mark.parametrize("reason", ["m349_clave_inferred_from_category", "orphaned_override"])
+def test_a_value_the_calculation_inferred_is_worth_checking_and_never_promised_a_confirmation(reason: str) -> None:
+    """Nothing in the editor confirms a note, so no chip counts one to confirm while the next step is the file."""
+    note = ModeloFormCalculationNote(reason=reason, attention=CALCULATION_NOTE_ATTENTION[reason])
+    form = _declaration(assumed=False).model_copy(update={"calculation_notes": (note,)})
+    with override_settings(cadrumo_output_language="en"):
+        chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
+        progress = workbench_progress(form, staged=0, verified=True, filed=False)
+        lines = issue_lines(form)
+
+    assert note.attention is ModeloFormAttention.CHECK
+    assert "confirm" not in chips
+    assert progress.next_action is NextAction.EXPORT
+    assert [line.level for line in lines if line.from_calculation] == [IssueLevel.CHECK]
+    assert blocking_count(form) == 0
+
+
+def test_an_assumed_box_is_still_counted_to_confirm_and_offered_next() -> None:
+    """Teeth for the rule above: the confirm chip and the confirm step still count what a filer can confirm."""
+    form = _declaration(assumed=True)
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
     progress = workbench_progress(form, staged=0, verified=True, filed=False)
 
-    assert chips["confirm"] == 2
-    assert progress.next_action is NextAction.CONFIRM and progress.count == 2
-    assert blocking_count(form) == 0
+    assert chips["confirm"] == 1
+    assert progress.next_action is NextAction.CONFIRM and progress.count == 1

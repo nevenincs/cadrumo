@@ -239,7 +239,7 @@ def _next(
     if to_fill and not verified:
         return NextAction.FILL, to_fill + unboxed
     if assumed:
-        # The count is the header's: the assumed boxes and the notes waiting on the filer alike.
+        # The count is the header's: the assumed boxes, the only values a filer confirms.
         return NextAction.CONFIRM, confirm_count(form)
     if verified and not blocking:
         export = form.last_export

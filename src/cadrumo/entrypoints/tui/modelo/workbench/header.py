@@ -408,13 +408,12 @@ def blocking_count(form: ModeloWorkForm) -> int:
 
 
 def confirm_count(form: ModeloWorkForm) -> int:
-    """How many things wait for the filer to confirm: assumed values on pages that apply, and the calculation's notes.
+    """How many values wait for the filer to confirm: the assumed values on pages that apply.
 
-    A note at this level is a value the calculation assumed or kept that no
-    box lists as assumed, so nothing is counted twice.
+    Only an assumed box can be confirmed, so nothing else is counted: the
+    next-action line offers confirming exactly what this counts.
     """
-    notes = sum(1 for note in form.calculation_notes if note.attention is ModeloFormAttention.CONFIRM)
-    return to_do_counts(form).default_to_confirm + notes
+    return to_do_counts(form).default_to_confirm
 
 
 def missing_findings(form: ModeloWorkForm) -> int:

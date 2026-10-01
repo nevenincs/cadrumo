@@ -41,7 +41,6 @@ from .work_form_models import ModeloFormAttention
 
 _B = ModeloFormAttention.BLOCKS
 _M = ModeloFormAttention.MISSING
-_A = ModeloFormAttention.CONFIRM
 _C = ModeloFormAttention.CHECK
 _I = ModeloFormAttention.INFO
 
@@ -86,14 +85,15 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "unclassified_declarant_role_fact": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
-        # A value Cadrumo assumed or kept, for the filer to confirm.
-        "operator_override_diverges_from_computed": _A,
-        "orphaned_override": _A,
-        "devengo_date_proxy_attribution": _A,
-        "m349_clave_inferred_from_category": _A,
-        "inferred_retencion_rate_unmatched": _A,
-        "inferred_retencion_sectoral_rate_unconfirmed": _A,
-        # Worth checking.
+        # Worth checking. A value Cadrumo inferred or kept is among them: no box
+        # lists it as assumed, so nothing in the editor can confirm it, and the
+        # filer checks it against their records instead.
+        "operator_override_diverges_from_computed": _C,
+        "orphaned_override": _C,
+        "devengo_date_proxy_attribution": _C,
+        "m349_clave_inferred_from_category": _C,
+        "inferred_retencion_rate_unmatched": _C,
+        "inferred_retencion_sectoral_rate_unconfirmed": _C,
         "invoice_category_counterparty_mismatch": _C,
         "invoice_recargo_departs_from_published_rate": _C,
         "invoice_recargo_not_attributable_to_a_tier": _C,
@@ -236,6 +236,8 @@ def _require_total_levels() -> None:
     blocking_level = frozenset(reason for reason, level in CALCULATION_NOTE_ATTENTION.items() if level is _B)
     if blocking_level.symmetric_difference(BLOCKING_REASONS):
         raise ValueError("the blocking level holds exactly the reasons the application refuses filing on")
+    if ModeloFormAttention.CONFIRM in CALCULATION_NOTE_ATTENTION.values():
+        raise ValueError("only an assumed box is confirmed; no calculation note waits for a confirmation")
     if not PRINTED_BOX_REASONS <= GATE_REFUSED_REASONS:
         raise ValueError("a reason that blocks only on a printed box must be one the gate refuses")
 

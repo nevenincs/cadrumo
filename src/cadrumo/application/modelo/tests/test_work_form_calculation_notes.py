@@ -227,7 +227,7 @@ def test_each_reason_takes_its_place_on_the_scale_most_urgent_first(operation: P
 
     assert [(note.reason, note.attention) for note in notes] == [
         ("unrouted_observation", ModeloFormAttention.BLOCKS),
-        ("operator_override_diverges_from_computed", ModeloFormAttention.CONFIRM),
+        ("operator_override_diverges_from_computed", ModeloFormAttention.CHECK),
         ("oss_no_live_source", ModeloFormAttention.INFO),
     ]
 

@@ -878,8 +878,8 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: A Cadrumo egy befizetés hiányából 1 % vagy 2 % levonást becsült, amelyet
           banki költség vagy engedmény is magyarázhat.
-        what_to_do: Erősítse meg a levonást az ügyfele számlájával vagy igazolásával,
-          vagy javítsa a tételt.
+        what_to_do: Ellenőrizze a levonást az ügyfele számlájával vagy igazolásával
+          a nyilvántartásában, javítsa a tételt, ha eltér, majd számoljon újra.
       invoice_category_counterparty_mismatch:
         what: Egy számla áfa-kezelése nem illik az ügyfél országához, ezért a számla
           kimaradt.

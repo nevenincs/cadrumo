@@ -918,8 +918,8 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: Cadrumo ha estimado una retención del 1 % o del 2 % a partir de lo que
           faltaba en un cobro, y podría ser una comisión o un descuento.
-        what_to_do: Confirma la retención con la factura o el certificado de tu cliente,
-          o corrige el registro.
+        what_to_do: Revisa la retención con la factura o el certificado de tu cliente
+          en tus registros, corrige el registro si es distinta y vuelve a calcular.
       invoice_category_counterparty_mismatch:
         what: El tratamiento de IVA de una factura no encaja con el país del cliente,
           así que se ha dejado fuera.

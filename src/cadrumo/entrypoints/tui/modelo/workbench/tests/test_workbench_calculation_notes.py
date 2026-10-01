@@ -152,7 +152,7 @@ def test_notes_join_the_findings_on_one_scale() -> None:
                 ),
                 ModeloFormCalculationNote(
                     reason="operator_override_diverges_from_computed",
-                    attention=ModeloFormAttention.CONFIRM,
+                    attention=ModeloFormAttention.CHECK,
                     casilla_id="06",
                     box="06",
                 ),
@@ -164,13 +164,13 @@ def test_notes_join_the_findings_on_one_scale() -> None:
 
     assert [(line.level, line.from_calculation) for line in lines] == [
         (IssueLevel.BLOCKS, True),
-        (IssueLevel.CONFIRM, True),
         (IssueLevel.CHECK, False),
+        (IssueLevel.CHECK, True),
     ]
     assert lines[0].where == "In your records"
     assert lines[0].message == "An amount from your records is not placed in any box of this declaration."
-    assert lines[1].message == "The value in box 06 is the one you entered, not the one Cadrumo worked out."
-    assert lines[1].key == ("casilla", "06")
+    assert lines[2].message == "The value in box 06 is the one you entered, not the one Cadrumo worked out."
+    assert lines[2].key == ("casilla", "06")
 
 
 async def _list_text(form: ModeloWorkForm) -> str:
