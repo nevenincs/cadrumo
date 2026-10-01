@@ -139,13 +139,37 @@ async def test_the_help_and_the_legend_of_a_recorded_declaration_name_no_key_tha
             app.exit(None)
 
     words = [lookup_translation(key, locale="en") for key in _CHANGE_KEY_WORDS]
+    open_box = lookup_translation("tui.modelo.workbench.sources.key.go", locale="en")
     edit = lookup_translation("tui.modelo.workbench.key.edit", locale="en")
     assert all(words)
-    assert edit is not None
-    assert edit in band, "the help band still names the keys a reader uses"
+    assert open_box is not None and edit is not None
+    assert open_box in band, "the help band still names the keys a reader uses"
+    assert f"⏎ {edit}" not in band, "Enter opens a box to read, not to edit"
     for text in (band, legend):
         named = [segment.strip() for line in text.splitlines() for segment in line.split(" · ")]
         for word in words:
             assert not [segment for segment in named if segment.endswith(f" {word}")], (
                 f"a recorded declaration's help names the key for {word!r}"
             )
+
+
+@pytest.mark.asyncio
+async def test_on_a_recorded_declaration_enter_is_named_for_opening_the_box_not_editing_it() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        draft = ModeloWorkbenchScreen(FakeReader(form=synthetic_form()), actions=FakeActions())
+        draft_app = ScreenHostApp(draft)
+        async with draft_app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            draft_enter = draft.query_one(CasillaList).binding_for("enter")
+            draft_app.exit(None)
+        filed = ModeloWorkbenchScreen(
+            FakeReader(form=recorded_as_filed(synthetic_form()), verified=True, filed=True), actions=FakeActions()
+        )
+        filed_app = ScreenHostApp(filed)
+        async with filed_app.run_test(size=(140, 40)) as pilot:
+            await _settle(pilot)
+            filed_enter = filed.query_one(CasillaList).binding_for("enter")
+            filed_app.exit(None)
+
+    assert draft_enter is not None and draft_enter.description == tr("tui.modelo.workbench.key.edit", locale="en")
+    assert filed_enter is not None and filed_enter.description == tr("tui.modelo.workbench.sources.key.go", locale="en")

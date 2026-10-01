@@ -290,6 +290,8 @@ _LIST_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "enter": "tui.modelo.workbench.key.edit",
     "s": "tui.modelo.workbench.key.sources",
 }
+_RECORDED_ENTER_LOCALE_KEY: Final[str] = "tui.modelo.workbench.sources.key.go"
+"""What Enter does on a declaration recorded as filed: it opens the box, to read it, never to edit it."""
 _CLOSE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.key.close"
 _EMPTY_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty"
 _EMPTY_NEXT_LOCALE_KEY: Final[str] = "tui.modelo.workbench.filter.empty_next"
@@ -685,7 +687,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         A declaration recorded as filed shows no key that would change it or
         lead to something left to do.
         """
-        descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
+        descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
         others = [
             active.binding
             for key, active in self.active_bindings.items()
@@ -711,6 +713,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             budget -= cost
         return frozenset(shown)
 
+    def _list_locale_keys(self) -> Mapping[str, str]:
+        """What the list's keys say: Enter opens a box to read once the declaration is recorded as filed."""
+        if self.recorded:
+            return {**_LIST_LOCALE_KEYS, "enter": _RECORDED_ENTER_LOCALE_KEY}
+        return _LIST_LOCALE_KEYS
+
     def _palette_cost(self) -> int:
         """The cells the footer keeps at its right edge for the command palette key, when it shows one."""
         app = self.app
@@ -732,7 +740,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         shown = self._footer_keys(self._width())
         describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=shown)
-        self.query_one(CasillaList).describe_keys(_LIST_LOCALE_KEYS, shown=shown)
+        self.query_one(CasillaList).describe_keys(self._list_locale_keys(), shown=shown)
         self.refresh_bindings()
 
     # ── reading ─────────────────────────────────────────────────────────
@@ -1155,7 +1163,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     def _all_keys_text(self) -> str:
         """Every key the help and the legend name; on a declaration recorded as filed, none that would change it."""
-        descriptions = {**_LIST_LOCALE_KEYS, **_SCREEN_LOCALE_KEYS}
+        descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
         hidden = _CHANGE_KEYS if self.recorded else frozenset()
         return " · ".join(
             self._key_label(key, descriptions[key])
