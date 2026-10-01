@@ -457,7 +457,7 @@
               "box": "44",
               "casilla_id": "44",
               "detail": "Casilla '44' was filed with the value you supplied (150.00), not the 0.00 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
-              "level": "confirm",
+              "level": "check",
               "reason": "operator_override_diverges_from_computed",
               "remedy": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla.",
               "source_kind": "operator_casilla_input"

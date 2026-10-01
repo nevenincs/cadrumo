@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:e30706defea8f5e6d020ab0f409e4fbdeaa07285649fe5904859abe525a6a054'
+body_hash: 'sha256:6957080d13cc3fa488319a3d3c40dc52495f001d213ad17f9bc2c7c512f0c7f4'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -440,6 +440,18 @@ T36904 heading is truncated in its sidecar and union section 6 mistypes row 27; 
 "Situación" code and text, give C2 "% Titularidad 2" C1's heading and cut several texts at the
 line wrap; 353 has "163.sixies". The names follow the official text, not the ids. Open for the
 registry's owner.
+
+### corrective-lane-reconciliation | low | committed P07 corrections pass current integration checks
+
+Reviewed 2026-10-01 from `82b7844265`, with assertion correction `1ea2c9f348`. This checkout was clean at that starting head; no later local integration commit was present. PRs #711 and #713 remain open; no push, publication or new PR was made. This entry resolves the earlier Being fixed status for check-route-dead-end (`bddac42022`), printed-box-rule (`637bcec358`), confirm-chip (`d4956e6b3b`), and the stale verdict, duplicate diagnostics, docstrings and dock-scroll parts of p07-review-lows (`3e51374010`, `3cbe40e4f6`, `62f588960b`, `64d071c990`, `e5069b9fbc` and their subsequent integrated UX corrections). Verdict for these corrections: PASS. Fresh sequential TUI integration passed all 799 tests, exit 0 (`uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/tui`, log `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T122417.509876Z-pytest-78852-d5e5113c/run.log`). Two blocked-filing CLI tests and the type gate passed. After the naming changes, the owning confirmation, calculation-note and filing-gate tests passed all 36 tests (`20261001T130208.412201Z-pytest-36976-f824a605/run.log`). The confirmation test still executes the real encrypted-store edit path and proves the persisted value becomes ENTERED; its assertion now compares rendered text with StatusLine.text() inside the English settings scope.
+
+### integrated-preview-refresh | low | 712 fresh frames cover the integrated corrective runtime
+
+Frozen source `82b7844265` and copied authority generation `80682128474579ef10bdf92c2299305a96459bc911326a60f71bd3c0e770f3af` produced 712 frames through `dev.tui render --sequence all`, exit 0, at 80x24, 120x40, 200x50 and 80x50 in both appearances. Start and end source fingerprints agree. No frames failed or were skipped; no glyphs are missing. The 80 geometry advisories identify independently scrollable navigation, legend or source panes; none reports edge overflow or non-scrollable overflow. Reviewed the compact confirmation dialog, blocked/stale header and official grid, negative-result workbench, medium dock and annual Modelo 390. Eight scenario goldens match. The ninth, verification-reports-incomplete, differs only at notices[0].context.level: the committed confirm-chip correction changed confirm to check. The owning documentation refresh changes only that field; both its fresh sequence check and the owning how-to/verification-reports page check pass. Original captures retain their divergent provenance. Artifacts and log are under `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/p07-snapshot/.tmp-tui-visual-inventory/runs/current` and `p07-render.log`. P07 and plan-close review remain PENDING for S62, S63 and the later planned work. The newer naming tree requires separate current captures.
+
+### binding-name-resolution | low | optional binding text follows typed relationships and preserves unproven fields
+
+S64 implements the approved order: binding catalogue key, owner casilla, provider casilla, unambiguous casilla at the declared record/offset, fed-box label, then unnamed. Both record ID and record type are typed coordinates; this reaches Modelo 360's page_01 relationship without guessing from names. The prepared packs contribute 2,847 distinct labels and 517 help leaves per language, with 44 grounded printed-code leaves in the box-number slot. Counts describe keys, not occurrences across revisions. Every authored leaf belongs to a declared binding and resolves in all four languages; the dedicated gate detects an orphan or missing translation. The form sweep covers every reachable published revision, and 127 owning form/help tests pass (`20261001T125705.936561Z-pytest-87392-7d81d6e0/run.log`). The locale projection, catalogue and parity checks pass (11 tests, `20261001T130303.958215Z-pytest-59452-f5425d6b/run.log`), Ruff passes and the type gate passes. No BindingDefinition field or authority publication is needed. The three Modelo 369 fichero.tipo-y-cierre fields remain visible and unnamed: typed authority data does not prove they are export-envelope constants. Earlier binding-input-registry-notes remain open for registry ownership. Visual review of the newly named tree is pending; this entry does not close the whole plan.
 
 ## Recommendations
 

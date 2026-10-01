@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f13f2a163f210550804e5300663a54991db7568538dc09f0be2577e71b2b25b'
+body_hash: 'sha256:b331be8c2520814267c2d888a8dfdfdd0e8883fe8b53916b643d118e4afee5ee'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -954,6 +954,9 @@ related:
 - `S36` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py` -> `pass`
 - `S36` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py` -> `pass`
 - `S36` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S51` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S51` `verify:` `uv run --no-sync python -m dev.docs.sequences check --sequence verification-reports-incomplete` -> `pass`
+- `S51` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/verification-reports` -> `pass`
 
 ## Notes
 
@@ -1034,3 +1037,4 @@ related:
 - `S49` Commits bbe5ad2816, 7fb949d8fa
 - `S49` Modelo 349 is fully headed from its record design; Modelo 100 heads only eight data-entry sections, because Renta's printed form is not in the corpus, and every other page and section is listed with its reason
 - `S49` Headings reach the layout through a reviewer-quote file the generator checks against each cited source line
+- `S51` The earlier confirm-chip correction changed the advisory level from confirm to check; the owning refresh changes only `notices[0].context.level.` Oversized JSON output advisories remain documentation work.
