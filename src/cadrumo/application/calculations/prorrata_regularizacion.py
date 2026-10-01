@@ -53,7 +53,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.binding_targets import casillas_by_binding, sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -467,16 +467,19 @@ def _missing_current_year_casillas(
 
 def _unresolved_binding_diagnostics(
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
     message: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
     return tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
             source_kind=_SOURCE_KIND.value,
             resolver_id=resolver_id,
             binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
             message=message,
         )
         for binding_id in binding_ids
@@ -802,6 +805,7 @@ def _merge_current_year_values(
 
 def _missing_current_year_resolution(
     *,
+    revision: ModeloRevision,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
     declared_binding_ids: tuple[BindingId, ...],
@@ -818,6 +822,7 @@ def _missing_current_year_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=declared_binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
             message=message,
@@ -867,6 +872,7 @@ def _resolve_prorrata_provisional_source(
 
 def _missing_provisional_resolution(
     *,
+    revision: ModeloRevision,
     context: CalculationSourceContext,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
@@ -882,6 +888,7 @@ def _missing_provisional_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=declared_binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
             message=message,
@@ -931,6 +938,7 @@ def _resolved_prorrata_resolution(
     )
     unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
     diagnostics = _unresolved_binding_diagnostics(
+        revision=revision,
         binding_ids=unresolved,
         resolver_id=resolver_id,
         message="prorrata_regularizacion binding selector did not map to a resolver output",
@@ -1022,6 +1030,7 @@ class ProrrataRegularizacionSourceResolver:
             unresolved_casilla_ids=self._unresolved_current_year_casilla_ids,
         )
         missing_resolution = _missing_current_year_resolution(
+            revision=revision,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             declared_binding_ids=declared_binding_ids,
@@ -1080,6 +1089,7 @@ class ProrrataRegularizacionSourceResolver:
         )
         if provisional_source.percentage is None:
             return _missing_provisional_resolution(
+                revision=revision,
                 context=context,
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

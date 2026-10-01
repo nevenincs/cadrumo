@@ -27,6 +27,7 @@ __all__ = [
     "binding_consumers",
     "bound_casilla_binding_ids",
     "casillas_by_binding",
+    "sole_bound_casilla",
 ]
 
 
@@ -52,6 +53,16 @@ def casillas_by_binding(revision: ModeloRevision) -> Mapping[BindingId, tuple[Ca
             if casilla.id not in populated_by:
                 populated_by.append(casilla.id)
     return {binding_id: tuple(casilla_ids) for binding_id, casilla_ids in mapping.items()}
+
+
+def sole_bound_casilla(revision: ModeloRevision, binding_id: BindingId) -> CasillaId | None:
+    """The one casilla ``binding_id`` populates in ``revision``, or ``None`` when it populates none or several.
+
+    A diagnostic about a binding names this box, so the box it could not work
+    out is reported once, by its box, and never also as a box-less binding.
+    """
+    owners = casillas_by_binding(revision).get(binding_id, ())
+    return owners[0] if len(owners) == 1 else None
 
 
 class BindingConsumerKind(StrEnum):

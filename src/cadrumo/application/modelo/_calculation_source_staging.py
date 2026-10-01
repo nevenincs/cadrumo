@@ -472,6 +472,11 @@ def add_expected_missing_binding_diagnostics(
     reported, because nothing is missing: a binding the owning resolver
     declared inapplicable to the filer, and a row binding whose values arrived
     on the row channel (one per activity or asset row) rather than as a scalar.
+
+    A gap the owning resolver already reported is reported once: a resolver
+    diagnostic that names the box stands, and one that names only the binding
+    gives way to the diagnostic naming its box, so one cause never shows at two
+    levels.
     """
     missing = expected_but_missing_binding_ids(
         revision,
@@ -492,6 +497,11 @@ def add_expected_missing_binding_diagnostics(
         *source_resolution.inapplicable_binding_ids,
         *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
     }
+    reported_with_box = {
+        diagnostic.binding_id
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.reason == "unresolved_binding" and diagnostic.casilla_id is not None
+    }
     diagnostics = tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
@@ -505,12 +515,20 @@ def add_expected_missing_binding_diagnostics(
             ),
         )
         for binding_id, casilla_id, source in missing
-        if binding_id not in not_missing
+        if binding_id not in not_missing and binding_id not in reported_with_box
+    )
+    boxed = {diagnostic.binding_id for diagnostic in diagnostics}
+    kept = tuple(
+        diagnostic
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.reason != "unresolved_binding"
+        or diagnostic.casilla_id is not None
+        or diagnostic.binding_id not in boxed
     )
     return source_resolution.model_copy(
         update={
             "unresolved_binding_ids": unresolved_binding_ids,
-            "diagnostics": source_resolution.diagnostics + diagnostics,
+            "diagnostics": kept + diagnostics,
         },
     )
 

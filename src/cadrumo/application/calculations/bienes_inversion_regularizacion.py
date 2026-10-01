@@ -48,6 +48,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -172,15 +173,18 @@ def _settlement_period_tokens(revision: ModeloRevision) -> tuple[str, ...]:
 
 def _unresolved_binding_diagnostics(
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
     message: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
     return tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
             source_kind=_REGISTER_SOURCE.value,
             binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
             resolver_id=resolver_id,
             message=message,
         )
@@ -266,6 +270,7 @@ def _resolve_regularizacion_parameters(
             owned_sources=owned_sources,
             unresolved_binding_ids=binding_ids,
             diagnostics=_unresolved_binding_diagnostics(
+                revision=context.revision,
                 binding_ids=binding_ids,
                 resolver_id=resolver_id,
                 message=str(exc),
@@ -336,6 +341,7 @@ def _current_year_prorrata_is_missing(
 def _pending_prorrata_resolution(
     binding_ids: tuple[BindingId, ...],
     *,
+    revision: ModeloRevision,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
     prorrata_id: CasillaId | None,
@@ -346,6 +352,7 @@ def _pending_prorrata_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=binding_ids,
             resolver_id=resolver_id,
             message=(
@@ -361,6 +368,7 @@ def _project_regularizaciones(
     register: BienesInversionIvaRegister,
     parameters: BienesInversionRegularizacionParameters,
     *,
+    revision: ModeloRevision,
     filing_year: int,
     current_year_values: Mapping[CasillaId, Decimal],
     missing_casilla_ids: tuple[CasillaId, ...],
@@ -396,6 +404,7 @@ def _project_regularizaciones(
     if annual_projection.pending_percentage_count:
         return _pending_prorrata_resolution(
             binding_ids,
+            revision=revision,
             resolver_id=resolver_id,
             owned_sources=owned_sources,
             prorrata_id=prorrata_id,
@@ -442,6 +451,7 @@ def _resolved_regularizacion_resolution(
         ),
         unresolved_binding_ids=unresolved,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=context.revision,
             binding_ids=unresolved,
             resolver_id=resolver_id,
             message="bienes_inversion_regularizacion binding selector did not map to a resolver output",
@@ -638,6 +648,7 @@ class BienesInversionRegularizacionSourceResolver:
                 owned_sources=self.owned_sources,
                 unresolved_binding_ids=declared_binding_ids,
                 diagnostics=_unresolved_binding_diagnostics(
+                    revision=context.revision,
                     binding_ids=declared_binding_ids,
                     resolver_id=self.resolver_id,
                     message=(
@@ -698,6 +709,7 @@ class BienesInversionRegularizacionSourceResolver:
         projections = _project_regularizaciones(
             register,
             parameters=parameters,
+            revision=context.revision,
             filing_year=context.filing_year,
             current_year_values=current_year_values,
             missing_casilla_ids=self._missing_current_year_casilla_ids,
