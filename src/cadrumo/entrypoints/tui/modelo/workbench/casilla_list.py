@@ -208,6 +208,8 @@ class CasillaListEntry:
     previous_text: str | None = None
     #: The one rate box of an official row, which prints the rate the row's base is taxed at.
     rate_of_row: bool = False
+    #: On a row's rate box, whether the row's base holds no amount; ``None`` where no base box is known.
+    row_base_empty: bool | None = None
     #: The declaration is recorded as filed: its values are facts, and nothing on it asks for the filer.
     recorded: bool = False
     #: ``False`` on a page the read model states does not apply this period, which asks for no value.
@@ -358,12 +360,17 @@ def shown_rate(field: ModeloFormField) -> ModeloFormRate | ModeloFormPrintedRate
 
 
 def rate_is_value(field: ModeloFormField) -> bool:
-    """Whether a box shows its row's rate as its value: only a box the design fixes, which holds nothing of its own.
+    """Whether a box shows its row's rate as its value, as the official form prints it.
 
-    Any other rate box, typed, calculated, failed or empty, shows its own
-    value, and its row's rate is said beside it rather than in its place.
+    A box the design fixes holds nothing of its own, so it shows its row's
+    rate. A calculated rate box in a row grounded on one rate shows that rate
+    whatever the base, never a figure worked out from an empty base. Any other
+    rate box, typed, failed or empty, or calculated in a row with no grounded
+    rate, shows its own value, and its row's rate is said beside it.
     """
-    return field.editability is ModeloFormEditability.DESIGN_CONSTANT and shown_rate(field) is not None
+    if field.editability is ModeloFormEditability.DESIGN_CONSTANT:
+        return shown_rate(field) is not None
+    return field.origin is ModeloFormOrigin.CALCULATED and field.grounded_rate is not None
 
 
 def own_ratio_unit(field: ModeloFormField) -> ModeloEditRatioUnit | None:
@@ -452,9 +459,15 @@ def _bare_rate(field: ModeloFormField) -> bool:
 
 
 def _ungrounded_rate(entry: CasillaListEntry) -> bool:
-    """Whether an entry is a row's rate box that holds no value and shows no rate."""
+    """Whether an entry is a row's rate box that shows no rate: it holds no value, or one worked out from no base.
+
+    With no grounded rate, a rate the calculation works out of an empty base
+    is no rate the row applies, so it is not shown as one.
+    """
     field = entry.field
-    return entry.rate_of_row and shown_rate(field) is None and field.value is None
+    if not entry.rate_of_row or shown_rate(field) is not None:
+        return False
+    return field.value is None or (field.origin is ModeloFormOrigin.CALCULATED and entry.row_base_empty is True)
 
 
 def rate_note(entry: CasillaListEntry, language: OutputLanguage | None = None) -> str | None:

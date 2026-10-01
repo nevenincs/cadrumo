@@ -255,6 +255,7 @@ def _entry(
     label: str | None = None,
     row_label: str | None = None,
     rate_of_row: bool = False,
+    row_base_empty: bool | None = None,
     page: WorkbenchPage,
 ) -> CasillaListEntry:
     change = staged.get(address_key(field.address))
@@ -265,11 +266,24 @@ def _entry(
         staged_text=None if change is None else change.text,
         previous_text=None if change is None else change.previous_text,
         rate_of_row=rate_of_row,
+        row_base_empty=row_base_empty if rate_of_row else None,
         recorded=page.recorded,
         applies=page.applies,
         row_label=row_label,
         column_label=None if row_label is None else label,
     )
+
+
+def _base_empty(row: ModeloFormGridRow, rate_box: ModeloFormField | None) -> bool | None:
+    """Whether the base box before a row's rate box holds no amount; ``None`` where the row has no such box."""
+    if rate_box is None:
+        return None
+    fields = [cell.field for cell in row.cells]
+    index = next((position for position, item in enumerate(fields) if item is rate_box), None)
+    base = None if not index else fields[index - 1]
+    if base is None or base.data_type == _RATIO_DATA_TYPE:
+        return None
+    return not _holds_amount(base)
 
 
 def _rate_box(row: ModeloFormGridRow) -> ModeloFormField | None:
@@ -315,6 +329,7 @@ def _grid_items(
         row_items: list[CasillaListItem] = []
         slots: list[GridSlot] = []
         rate_box = _rate_box(row)
+        base_empty = _base_empty(row, rate_box)
         for heading, cell in zip(headings, row.cells, strict=True):
             field = cell.field
             if field is not None and _shown(field, staged, mode, page):
@@ -326,6 +341,7 @@ def _grid_items(
                         label=heading,
                         row_label=row.heading.text,
                         rate_of_row=field is rate_box,
+                        row_base_empty=base_empty,
                         page=page,
                     )
                 )

@@ -151,10 +151,11 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
         failed = replace(
             calculated, field=calculated.field.model_copy(update={"origin": ModeloFormOrigin.CALCULATION_FAILED})
         )
-        assert rate_note(worked_out, OutputLanguage.EN) == f"This row's rate is {rate}."
-        # A worked-out zero is a rate of zero, in the rate's unit, in the row and in the grid.
-        assert row_value_text(worked_out, OutputLanguage.EN) == f"0{_PERCENT}"
-        assert grid_value_text(worked_out, OutputLanguage.EN) == f"0{_PERCENT}"
+        # A worked-out rate in a row grounded on one rate reads that rate, as the form prints it, whatever the
+        # base: never a 0 % worked out of an empty base, and with nothing more to say beside it.
+        assert rate_note(worked_out, OutputLanguage.EN) is None
+        assert row_value_text(worked_out, OutputLanguage.EN) == rate
+        assert grid_value_text(worked_out, OutputLanguage.EN) == rate
         assert row_value_text(failed, OutputLanguage.EN) == "·"
 
         def worked(figure: str) -> str:
@@ -163,11 +164,11 @@ def test_a_grounded_rate_box_reads_the_rate_and_an_ungrounded_one_claims_none(
             )
             return row_value_text(replace(calculated, field=field), OutputLanguage.EN)
 
-        # The row's 2 % establishes the scale of a figure equal to it as a fraction or as a percentage.
+        # The row's grounded rate is what the cell reads, at either scale of the worked-out figure; a figure
+        # departing from it is a matter for the check, not for the cell, which still prints the row's rate.
         assert worked("2.00") == rate
         assert worked("0.02") == rate
-        # A figure matching the row's rate at neither scale is never guessed, and never shown bare: only a dot.
-        assert worked("3") == "·"
+        assert worked("3") == rate
         # An optional rate box nobody filled shows nothing; one holding a zero shows it, and says it was left at 0.
         optional = entries["169"]
         assert optional.field.origin is ModeloFormOrigin.OPTIONAL_EMPTY

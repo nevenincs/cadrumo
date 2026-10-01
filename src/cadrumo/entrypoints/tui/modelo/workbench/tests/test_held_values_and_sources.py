@@ -637,3 +637,28 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
         isinstance(item, CasillaListRecords | CasillaListNote) and column in item.column_casilla_ids for item in listed
     )
     assert any(heading in line or unknown in line for line in shown), shown
+
+
+def test_a_calculated_rate_box_reads_its_rows_grounded_rate_and_one_with_no_grounded_rate_and_no_base_a_dot(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _real_form(operation, "303", "1T", 2026, Decimal("0"))
+    with override_settings(cadrumo_output_language="en"):
+        entries = {
+            item.field.box: item
+            for page in workbench_pages(form)
+            for item in page_items(page, staged={})
+            if isinstance(item, CasillaListEntry) and item.field.box in {"166", "154"}
+        }
+        grounded = entries["166"]
+        ungrounded = entries["154"]
+        grounded_text = row_value_text(grounded, OutputLanguage.EN)
+        ungrounded_text = row_value_text(ungrounded, OutputLanguage.EN)
+        ungrounded_note = rate_note(ungrounded, OutputLanguage.EN)
+
+    assert grounded.field.grounded_rate is not None, "the 2 % row's base is grounded on one rate"
+    assert grounded.field.origin is ModeloFormOrigin.CALCULATED
+    assert grounded_text == "2 %", "the form prints the row's rate, never a 0 % worked out of an empty base"
+    assert ungrounded.field.grounded_rate is None and ungrounded.row_base_empty is True
+    assert ungrounded_text == "·"
+    assert ungrounded_note == tr("tui.modelo.workbench.rate.not_grounded", locale="en")
