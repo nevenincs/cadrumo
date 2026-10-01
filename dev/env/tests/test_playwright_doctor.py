@@ -66,13 +66,14 @@ def test_run_doctor_fails_for_a_channel_that_cannot_exist(capsys: pytest.Capture
     assert f"playwright install {bogus_channel}" in captured.err
 
 
-def test_run_doctor_defaults_to_the_live_configured_setting() -> None:
+def test_run_doctor_defaults_to_the_live_configured_setting(monkeypatch: pytest.MonkeyPatch) -> None:
     """With no explicit channel, `run_doctor` resolves and probes `Settings.cadrumo_browser_channel`.
 
-    The default settings value is `chrome`, which is provisioned on the test
-    workstation (`just setup-browser`), so the settings-driven default path
-    exits 0 exactly like an explicit `channel="chrome"` probe would.
+    The default settings value is bundled `chromium`, which `just setup-browser`
+    provisions, so the settings-driven default path exits 0 exactly like an
+    explicit `channel="chromium"` probe would.
     """
-    assert Settings().cadrumo_browser_channel == "chrome"
+    monkeypatch.delenv("CADRUMO_BROWSER_CHANNEL", raising=False)
+    assert Settings().cadrumo_browser_channel == "chromium"
     exit_code = run_doctor()
     assert exit_code == 0
