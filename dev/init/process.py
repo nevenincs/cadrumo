@@ -20,6 +20,7 @@ Stdlib-only, by the constraint stated in :mod:`dev.init`.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -37,9 +38,16 @@ from dev.exit_codes import (
 from .contract import DONE, FAILED, StepResult
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from .contract import Step
+
+#: The activation marker of the interpreter `init` itself runs on. `init`
+#: starts under ``uv run --isolated``, which activates a throwaway environment;
+#: a step that inherits the marker makes every nested ``uv`` warn that it does
+#: not match the project's ``.venv`` before ignoring it.
+_ACTIVE_ENVIRONMENT_VARIABLE: Final = "VIRTUAL_ENV"
 
 #: How many trailing lines of a failed step's output the report carries. Enough
 #: to hold a Python traceback's final frames or a resolver's conflict summary,
@@ -119,6 +127,24 @@ def tail(text: str, lines: int = TAIL_LINES) -> str:
     return "\n".join(kept)
 
 
+def step_environment(source: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Return the environment a step runs with.
+
+    Every step targets the project environment, never the ephemeral one
+    `init` runs on, so that environment's activation marker is not passed on.
+
+    Args:
+        source: The environment to derive from; the process environment when
+            omitted.
+
+    Returns:
+        A copy of ``source`` without the activation marker.
+    """
+    environment = dict(os.environ if source is None else source)
+    environment.pop(_ACTIVE_ENVIRONMENT_VARIABLE, None)
+    return environment
+
+
 def classify(code: int, output: str) -> int:
     """Map a failed step onto the fleet exit-code contract.
 
@@ -179,6 +205,7 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
         completed = subprocess.run(
             argv,
             cwd=cwd,
+            env=step_environment(),
             capture_output=True,
             text=True,
             encoding="utf-8",

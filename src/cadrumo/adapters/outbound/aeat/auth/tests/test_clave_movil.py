@@ -171,21 +171,31 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
     assert "support-marker" not in serialized
 
 
-def test_fresh_login_overrides_the_shared_headless_browser_default(tmp_path: Path) -> None:
-    """The QR page must be visible even though routine browser reads are headless."""
+@pytest.mark.parametrize(
+    ("non_qr", "headless", "expected_headless"),
+    [(False, True, False), (False, False, False), (True, True, True), (True, False, False)],
+)
+def test_fresh_login_browser_mode_matches_the_authentication_flow(
+    tmp_path: Path,
+    non_qr: bool,
+    headless: bool,
+    expected_headless: bool,
+) -> None:
+    """Non-QR honors headless configuration; QR retains its visible scan page."""
     configured = Settings(
         cadrumo_token_dir=tmp_path,
         cadrumo_local_storage_root=tmp_path / "storage",
         cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
-        cadrumo_browser_headless=True,
+        cadrumo_browser_headless=headless,
+        cadrumo_clave_prefer_non_qr=non_qr,
     )
     provider = ClaveMovilAuthProvider(configured)
 
     fresh = provider._fresh_login_settings()
 
-    assert configured.cadrumo_browser_headless is True
-    assert fresh.cadrumo_browser_headless is False
-    assert provider._attempt_context()["headless"] is False
+    assert configured.cadrumo_browser_headless is headless
+    assert fresh.cadrumo_browser_headless is expected_headless
+    assert provider._attempt_context()["headless"] is expected_headless
 
 
 @pytest.mark.parametrize(
