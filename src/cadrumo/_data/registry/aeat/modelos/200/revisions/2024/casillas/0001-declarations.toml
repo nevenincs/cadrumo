@@ -25363,3 +25363,363 @@ semantic_role = "is_tributacion_conjunta_porcentaje_estado"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Tributación conjunta porcentaje de tributación a la Administración del Estado is the single cuota-chain Estado-share casilla; no sibling casilla shares this role within the modelo revision."
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+[[revisions."2024".casillas]]
+id = "DP200010:00592"
+continuidad_id = "is-ecpn-total-cambios-combinacion-negocios-prima-emision"
+number = "00592"
+segmento = "DP200010"
+section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200011:00599"
+continuidad_id = "is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto"
+number = "00599"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200032:00417"
+continuidad_id = "is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas"
+number = "00417"
+segmento = "DP200032"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "conversion_de_deuda_en_patrimonio_neto"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200032:00558"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-prima-emision"
+number = "00558"
+segmento = "DP200032"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200032:00562"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion"
+number = "00562"
+segmento = "DP200032"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200033:00563"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas"
+number = "00563"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200033:00565"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio"
+number = "00565"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200033:00566"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta"
+number = "00566"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200033:00567"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado"
+number = "00567"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200033:00568"
+continuidad_id = "is-ecpn-bde-total-cambios-saldo-cierre-total"
+number = "00568"
+segmento = "DP200033"
+section = ["banco_de_espana_estado_cambios_patrimonio_neto_ii", "saldo_de_cierre_periodo_corriente"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200041:00399"
+continuidad_id = "is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias"
+number = "00399"
+segmento = "DP200041"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_i", "ingresos_y_gastos_reconocidos"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00417"
+continuidad_id = "is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias"
+number = "00417"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "saldo_final_ejercicio_anterior"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00418"
+continuidad_id = "is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores"
+number = "00418"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "saldo_final_ejercicio_anterior"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00547"
+continuidad_id = "is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias"
+number = "00547"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00558"
+continuidad_id = "is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision"
+number = "00558"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00562"
+continuidad_id = "is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas"
+number = "00562"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00569"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado"
+number = "00569"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00570"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido"
+number = "00570"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00571"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision"
+number = "00571"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00572"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas"
+number = "00572"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00575"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas"
+number = "00575"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00582"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-escriturado"
+number = "00582"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00583"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido"
+number = "00583"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00584"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision"
+number = "00584"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00585"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-reservas"
+number = "00585"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00588"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas"
+number = "00588"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00599"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias"
+number = "00599"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00601"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas"
+number = "00601"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00611"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas"
+number = "00611"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200042:00625"
+continuidad_id = "is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias"
+number = "00625"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_ii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00550"
+continuidad_id = "is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio"
+number = "00550"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00552"
+continuidad_id = "is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio"
+number = "00552"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00563"
+continuidad_id = "is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio"
+number = "00563"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00565"
+continuidad_id = "is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio"
+number = "00565"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00566"
+continuidad_id = "is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor"
+number = "00566"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00567"
+continuidad_id = "is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados"
+number = "00567"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00568"
+continuidad_id = "is-ecpp-aseguradoras-iii-combinacion-negocios-total"
+number = "00568"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00576"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio"
+number = "00576"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00577"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta"
+number = "00577"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00581"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-operaciones-socios-total"
+number = "00581"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "operaciones_con_socios_o_mutualistas"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00590"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta"
+number = "00590"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00592"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor"
+number = "00592"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00603"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta"
+number = "00603"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00605"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor"
+number = "00605"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+[[revisions."2024".casillas]]
+id = "DP200043:00619"
+continuidad_id = "is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados"
+number = "00619"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]

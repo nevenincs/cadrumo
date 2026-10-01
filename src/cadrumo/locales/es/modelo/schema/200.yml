@@ -8862,6 +8862,38 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estado de cambios patrimonio neto (II) - Ajustes por errores de
               ejercicios anteriores - Capital - Escriturado [00408]
+          is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Conversión de deuda en patrimonio neto - Ganancias
+              acumuladas [00417]
+          is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - (-) Dividendos
+              a cuenta [00566]
+          is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Otras
+              reservas [00563]
+          is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Otro
+              resultado global acumulado [00567]
+          is-ecpn-bde-total-cambios-saldo-cierre-prima-emision:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Prima
+              de emisión [00558]
+          is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Reservas
+              de revalorización [00562]
+          is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Resultado
+              del ejercicio [00565]
+          is-ecpn-bde-total-cambios-saldo-cierre-total:
+            label: Contabilidad Banco de España - Estado cambios patrimonio neto (II)
+              - Estado total cambios - Saldo de cierre (período corriente) - Total
+              [00568]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Estado de cambios patrimonio neto (III) - Operaciones con socios
               o propietarios - Operaciones con acciones o participaciones propias
@@ -8884,6 +8916,10 @@ modelo:
           is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
             label: Estado de cambios patrimonio neto (III) - Ajustes por errores de
               ejercicios anteriores - Otros instrumentos patrimonio neto [00417]
+          is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto:
+            label: Estado de cambios patrimonio neto (III) - Operaciones con socios
+              o propietarios - Incremento (reducción) de patr. neto de combinación
+              de negocios - Otros instrumentos patrimonio neto [00599]
           is-ecpn-iii-combinacion-negocios-total:
             label: Estado de cambios patrimonio neto (III) - Operaciones con socios
               o propietarios - Incremento (reducción) de patr. neto de combinación
@@ -8984,6 +9020,10 @@ modelo:
             label: Estado de cambios patrimonio neto (II) - Operaciones con socios
               o propietarios - Incremento (reducción) de patr. neto de combinación
               de negocios - Capital - Escriturado [00590]
+          is-ecpn-total-cambios-combinacion-negocios-prima-emision:
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Incremento (reducción) de patr. neto de combinación
+              de negocios - Prima de emisión [00592]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
             label: Estado de cambios patrimonio neto (II) - Operaciones con socios
               o propietarios - Conversión de pasivos en patrim. neto - Acciones y
@@ -9075,6 +9115,146 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Estado de cambios patrimonio neto (I) - Transferencias a la cta.
               pérdidas y ganancias - Otros ingresos/gastos [00348]
+          is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (I) -
+              Ingresos y gastos reconocidos - Importes transferidos a la cuenta de
+              pérdidas y ganancias [00399]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Operaciones con socios o mutualistas - Operaciones con acciones o
+              participaciones propias (netas). (Acciones en patrimonio propias) [00547]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios. Otras aportaciones de
+              socios o mutualistas [00562]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios. Prima emisión [00558]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas. Escriturado [00569]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas. (No exigido) [00570]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas. Otras aportaciones de socios o mutualistas [00575]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas. Prima emisión [00571]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              -Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas. Reservas [00572]
+          is-ecpp-aseguradoras-ii-otras-variaciones-escriturado:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Escriturado [00582]
+          is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - (No exigido) [00583]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Otras aportaciones de socios
+              o mutualistas [00588]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Otras variaciones - (Acciones
+              en patrimonio propias) [00625]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Pagos basados en instrumentos
+              de patrimonio - (Acciones en patrimonio propias) [00599]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Pagos basados en instrumentos
+              de patrimonio - Otras aportaciones de socios o mutualistas [00601]
+          is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Prima emisión [00584]
+          is-ecpp-aseguradoras-ii-otras-variaciones-reservas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Reservas [00585]
+          is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Otras variaciones del patrimonio neto - Traspasos entre partidas de
+              patrimonio neto - Reservas [00611]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Saldo, final ejercicio anterior - (Acciones en patrimonio propias)
+              [00417]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (II)
+              - Saldo, final ejercicio anterior - Resultados de ejercicios anteriores
+              [00418]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Operaciones con acciones o
+              participaciones propias (netas) - Otros instrumentos de patrimonio [00552]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Operaciones con acciones o
+              participaciones propias (netas) - Resultado del ejercicio [00550]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios - Ajustes por cambios
+              de valor [00566]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios - Otros instrumentos
+              de patrimonio [00565]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios - Resultado del ejercicio
+              [00563]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios - Subvenciones donaciones
+              y legados [00567]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-total:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Incremento (reducción) de patr.
+              neto resultante de una combinación de negocios - Total [00568]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas - (Dividendo a cuenta) [00577]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas - Resultado del ejercicio [00576]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-total:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Operaciones con socios o mutualistas - Otras operaciones con socios
+              o mutualistas - Total [00581]
+          is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Otras variaciones del patrimonio neto - Ajustes por cambios de valor
+              [00592]
+          is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Otras variaciones del patrimonio neto - (Dividendo a cuenta) [00590]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Otras variaciones del patrimonio neto - Pagos basados en instrumentos
+              de patrimonio - Ajustes por cambios de valor [00605]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Otras variaciones del patrimonio neto - Pagos basados en instrumentos
+              de patrimonio - (Dividendo a cuenta) [00603]
+          is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados:
+            label: Entidades aseguradoras - Estado cambios patrimonio propio (III)
+              - Otras variaciones del patrimonio neto - Traspasos entre partidas de
+              patrimonio neto - Subvenciones donaciones y legados [00619]
           is-entidad-aseguradora:
             help: Indicador de entidad aseguradora [00025].
             label: Entidad aseguradora [00025]

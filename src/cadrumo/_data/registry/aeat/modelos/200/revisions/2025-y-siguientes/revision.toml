@@ -19390,6 +19390,276 @@ fields = {continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoja
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200010:00592" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 113/113, filas 118/118, posicion 1832: Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Incremento (reducción) de patr. neto de combinación de negocios - Prima de emisión [00592]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200011:00599" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200011/DP200011, campos 101/101, filas 106/106, posicion 1628: Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - Incremento (reducción) de patr. neto de combinación de negocios - Otros instrumentos patrimonio neto [00599]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200032:00417" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200032/DP200032, campos 57/57, filas 62/62, posicion 880: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Conversión de deuda en patrimonio neto - Ganancias acumuladas [00417]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200032:00558" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200032/DP200032, campos 99/99, filas 104/104, posicion 1594: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Prima de emisión [00558]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200032:00562" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200032/DP200032, campos 103/103, filas 108/108, posicion 1662: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Reservas de revalorización [00562]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200033:00563" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200033/DP200033, campos 86/86, filas 91/91, posicion 1373: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Otras reservas [00563]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200033:00565" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200033/DP200033, campos 88/88, filas 93/93, posicion 1407: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Resultado del ejercicio [00565]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200033:00566" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200033/DP200033, campos 89/89, filas 94/94, posicion 1424: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - (-) Dividendos a cuenta [00566]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200033:00567" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200033/DP200033, campos 90/90, filas 95/95, posicion 1441: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Otro resultado global acumulado [00567]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200033:00568" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200033/DP200033, campos 91/91, filas 96/96, posicion 1458: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Saldo de cierre (período corriente) - Total [00568]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200041:00399" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200041/DP200041, campos 23/23, filas 28/28, posicion 302: Entidades aseguradoras - Estado cambios patrimonio propio (I) - Ingresos y gastos reconocidos - Importes transferidos a la cuenta de pérdidas y ganancias [00399]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00417" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 10/10, filas 15/15, posicion 81: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Saldo, final ejercicio anterior - (Acciones en patrimonio propias) [00417]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00418" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 11/11, filas 16/16, posicion 98: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Saldo, final ejercicio anterior - Resultados de ejercicios anteriores [00418]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00547" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 80/80, filas 85/85, posicion 1271: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Operaciones con socios o mutualistas - Operaciones con acciones o participaciones propias (netas). (Acciones en patrimonio propias) [00547]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00558" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 85/85, filas 90/90, posicion 1356: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios. Prima emisión [00558]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00562" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 89/89, filas 94/94, posicion 1424: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios. Otras aportaciones de socios o mutualistas [00562]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00569" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 90/90, filas 95/95, posicion 1441: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. Escriturado [00569]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00570" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 91/91, filas 96/96, posicion 1458: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (No exigido) [00570]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00571" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 92/92, filas 97/97, posicion 1475: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. Prima emisión [00571]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00572" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 93/93, filas 98/98, posicion 1492: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. Reservas [00572]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00575" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 96/96, filas 101/101, posicion 1543: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. Otras aportaciones de socios o mutualistas [00575]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00582" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 97/97, filas 102/102, posicion 1560: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Escriturado [00582]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00583" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 98/98, filas 103/103, posicion 1577: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - (No exigido) [00583]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00584" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 99/99, filas 104/104, posicion 1594: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Prima emisión [00584]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00585" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 100/100, filas 105/105, posicion 1611: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Reservas [00585]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00588" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 103/103, filas 108/108, posicion 1662: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Otras aportaciones de socios o mutualistas [00588]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00599" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 108/108, filas 113/113, posicion 1747: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Pagos basados en instrumentos de patrimonio - (Acciones en patrimonio propias) [00599]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00601" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 110/110, filas 115/115, posicion 1781: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Pagos basados en instrumentos de patrimonio - Otras aportaciones de socios o mutualistas [00601]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00611" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 114/114, filas 119/119, posicion 1849: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Traspasos entre partidas de patrimonio neto - Reservas [00611]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00625" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200042/DP200042, campos 122/122, filas 127/127, posicion 1985: Entidades aseguradoras - Estado cambios patrimonio propio (II) - Otras variaciones del patrimonio neto - Otras variaciones - (Acciones en patrimonio propias) [00625]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00550" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 66/66, filas 71/71, posicion 1033: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Operaciones con acciones o participaciones propias (netas) - Resultado del ejercicio [00550]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00552" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 68/68, filas 73/73, posicion 1067: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Operaciones con acciones o participaciones propias (netas) - Otros instrumentos de patrimonio [00552]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00563" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 72/72, filas 77/77, posicion 1135: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios - Resultado del ejercicio [00563]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00565" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 74/74, filas 79/79, posicion 1169: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios - Otros instrumentos de patrimonio [00565]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00566" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 75/75, filas 80/80, posicion 1186: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios - Ajustes por cambios de valor [00566]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00567" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 76/76, filas 81/81, posicion 1203: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios - Subvenciones donaciones y legados [00567]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00568" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 77/77, filas 82/82, posicion 1220: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Incremento (reducción) de patr. neto resultante de una combinación de negocios - Total [00568]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00576" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 78/78, filas 83/83, posicion 1237: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas - Resultado del ejercicio [00576]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00577" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 79/79, filas 84/84, posicion 1254: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas - (Dividendo a cuenta) [00577]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00581" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 83/83, filas 88/88, posicion 1322: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas - Total [00581]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00590" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 85/85, filas 90/90, posicion 1356: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Otras variaciones del patrimonio neto - (Dividendo a cuenta) [00590]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00592" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 87/87, filas 92/92, posicion 1390: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Otras variaciones del patrimonio neto - Ajustes por cambios de valor [00592]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00603" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 91/91, filas 96/96, posicion 1458: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Otras variaciones del patrimonio neto - Pagos basados en instrumentos de patrimonio - (Dividendo a cuenta) [00603]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00605" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 93/93, filas 98/98, posicion 1492: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Otras variaciones del patrimonio neto - Pagos basados en instrumentos de patrimonio - Ajustes por cambios de valor [00605]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00619" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200043/DP200043, campos 100/100, filas 105/105, posicion 1611: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Otras variaciones del patrimonio neto - Traspasos entre partidas de patrimonio neto - Subvenciones donaciones y legados [00619]. Descripcion, tipo, posicion, longitud y validacion coinciden en ambos disenos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
 [[revisions."2025-y-siguientes".casilla_removals]]
 selector = { revision = "2024", id = "00067" }
 

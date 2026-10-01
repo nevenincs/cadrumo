@@ -8897,6 +8897,38 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Statement of changes in equity (II) - Adjustments for errors from
               previous periods - Capital - Subscribed [00408]
+          is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Conversion of debt into equity - Retained
+              earnings [00417]
+          is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - (-)
+              Interim dividends [00566]
+          is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Other
+              reserves [00563]
+          is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Accumulated
+              other comprehensive income [00567]
+          is-ecpn-bde-total-cambios-saldo-cierre-prima-emision:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Share
+              premium [00558]
+          is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Revaluation
+              reserves [00562]
+          is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Profit
+              or loss for the year [00565]
+          is-ecpn-bde-total-cambios-saldo-cierre-total:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Closing balance (current period) - Total
+              [00568]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Statement of changes in equity (III) - Transactions with shareholders
               or owners - Transactions with own shares or equity interests - Interim
@@ -8919,6 +8951,10 @@ modelo:
           is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
             label: Statement of changes in equity (III) - Adjustments for errors from
               previous periods - Other equity instruments [00417]
+          is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto:
+            label: Statement of changes in equity (III) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Other equity instruments [00599]
           is-ecpn-iii-combinacion-negocios-total:
             label: Statement of changes in equity (III) - Transactions with shareholders
               or owners - Increase (reduction) in equity from business combination
@@ -9014,19 +9050,24 @@ modelo:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - Increase (reduction) in equity from business combination
               - Capital - Subscribed [00590]
+          is-ecpn-total-cambios-combinacion-negocios-prima-emision:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Share premium [00592]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - Conversion of liabilities into equity - Treasury shares
               and equity holdings [00552]
           is-ecpn-total-cambios-conversion-pasivos-prima-emision:
-            label: Settlement III - Tax base - Tax base before offsetting negative
-              tax bases [00550]
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Conversion of liabilities into equity - Share premium [00550]
           is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - (-) Distribution of dividends - Own shares and equity interests
               [00566]
           is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
-            label: Settlement III - Tax base - Gross tax liability [00562]
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Capital - Subscribed [00562]
           is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
             label: Statement of changes in equity (II) - Transactions with shareholders
               or owners - (-) Distribution of dividends - Capital - Uncalled [00563]
@@ -9098,6 +9139,143 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Statement of changes in equity (I) - Transfers to the profit and
               loss account - Other income/expenses [00348]
+          is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
+            label: Insurance undertakings - Statement of changes in own equity (I)
+              - Recognised income and expense - Amounts transferred to the profit
+              and loss account [00399]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net). (Own shares in equity) [00547]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination. Other contributions
+              from shareholders or mutual members [00562]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination. Share premium [00558]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Subscribed [00569]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. (Uncalled) [00570]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Other contributions from shareholders
+              or mutual members [00575]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Share premium [00571]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members. Reserves [00572]
+          is-ecpp-aseguradoras-ii-otras-variaciones-escriturado:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Subscribed [00582]
+          is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - (Uncalled) [00583]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Other contributions from shareholders or
+              mutual members [00588]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Other changes - (Own shares in equity) [00625]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share-based payments - (Own shares in equity)
+              [00599]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share-based payments - Other contributions
+              from shareholders or mutual members [00601]
+          is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Share premium [00584]
+          is-ecpp-aseguradoras-ii-otras-variaciones-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Reserves [00585]
+          is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Other changes in equity - Transfers between equity items - Reserves
+              [00611]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Balance, end of the previous year - (Own shares in equity) [00417]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              - Balance, end of the previous year - Prior years' results [00418]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net) - Other equity instruments [00552]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Transactions with
+              own shares or equity interests (net) - Profit or loss for the year [00550]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Valuation adjustments
+              [00566]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Other equity instruments
+              [00565]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Profit or loss for
+              the year [00563]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Grants, donations
+              and bequests [00567]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-total:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Increase (reduction)
+              in equity resulting from a business combination - Total [00568]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - (Interim dividend) [00577]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - Profit or loss for the year [00576]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-total:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members - Total [00581]
+          is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Valuation adjustments [00592]
+          is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - (Interim dividend) [00590]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Share-based payments - Valuation adjustments
+              [00605]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Share-based payments - (Interim dividend)
+              [00603]
+          is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Other changes in equity - Transfers between equity items - Grants,
+              donations and bequests [00619]
           is-entidad-aseguradora:
             help: Flag indicating an insurance entity [00025].
             label: Insurance entity [00025]

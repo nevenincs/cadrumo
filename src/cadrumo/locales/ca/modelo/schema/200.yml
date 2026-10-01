@@ -8767,6 +8767,38 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Estat de canvis en el patrimoni net (II) - Ajustos per errors d'exercicis
               anteriors - Capital - Escripturat [00408]
+          is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Conversió de deute en patrimoni net
+              - Guanys acumulats [00417]
+          is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - (-) Dividends a compte [00566]
+          is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Altres reserves [00563]
+          is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Altre resultat global acumulat [00567]
+          is-ecpn-bde-total-cambios-saldo-cierre-prima-emision:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Prima d'emissió [00558]
+          is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Reserves de revaloració [00562]
+          is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Resultat de l'exercici [00565]
+          is-ecpn-bde-total-cambios-saldo-cierre-total:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Saldo de tancament (període corrent)
+              - Total [00568]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
               o propietaris - Operacions amb accions o participacions pròpies - Dividend
@@ -8789,6 +8821,10 @@ modelo:
           is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
             label: Estat de canvis en el patrimoni net (III) - Ajustos per errors
               d'exercicis anteriors - Altres instruments de patrimoni net [00417]
+          is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto:
+            label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+              o propietaris - Increment (reducció) de patrim. net de combinació de
+              negocis - Altres instruments de patrimoni net [00599]
           is-ecpn-iii-combinacion-negocios-total:
             label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
               o propietaris - Increment (reducció) de patrim. net de combinació de
@@ -8888,6 +8924,10 @@ modelo:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - Increment (reducció) de patrim. net de combinació de
               negocis - Capital - Escripturat [00590]
+          is-ecpn-total-cambios-combinacion-negocios-prima-emision:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Increment (reducció) de patrim. net de combinació de
+              negocis - Prima d'emissió [00592]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - Conversió de passius en patrimoni net - Accions i participacions
@@ -8977,6 +9017,147 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Estat de canvis en el patrimoni net (I) - Transferències al compte
               de pèrdues i guanys - Altres ingressos/despeses [00348]
+          is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (I) - Ingressos i despeses reconeguts - Imports transferits al compte
+              de pèrdues i guanys [00399]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Operacions amb accions o
+              participacions pròpies (netes). (Accions en patrimoni pròpies) [00547]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis. Altres aportacions
+              de socis o mutualistes [00562]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis. Prima d'emissió
+              [00558]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. Escripturat [00569]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. (No exigit) [00570]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. Altres aportacions de socis o mutualistes [00575]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. Prima d'emissió [00571]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. Reserves [00572]
+          is-ecpp-aseguradoras-ii-otras-variaciones-escriturado:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Escripturat [00582]
+          is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - (No exigit) [00583]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Altres aportacions de socis
+              o mutualistes [00588]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Altres variacions - (Accions
+              en patrimoni pròpies) [00625]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Pagaments basats en instruments
+              de patrimoni - (Accions en patrimoni pròpies) [00599]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Pagaments basats en instruments
+              de patrimoni - Altres aportacions de socis o mutualistes [00601]
+          is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Prima d'emissió [00584]
+          is-ecpp-aseguradoras-ii-otras-variaciones-reservas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Reserves [00585]
+          is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Altres variacions del patrimoni net - Traspassos entre partides
+              de patrimoni net - Reserves [00611]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Saldo, final de l'exercici anterior - (Accions en patrimoni pròpies)
+              [00417]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) - Saldo, final de l'exercici anterior - Resultats d'exercicis anteriors
+              [00418]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Operacions amb accions
+              o participacions pròpies (netes) - Altres instruments de patrimoni [00552]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Operacions amb accions
+              o participacions pròpies (netes) - Resultat de l'exercici [00550]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis - Ajustaments per
+              canvis de valor [00566]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis - Altres instruments
+              de patrimoni [00565]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis - Resultat de l'exercici
+              [00563]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis - Subvencions, donacions
+              i llegats [00567]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-total:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Increment (reducció) de
+              patrimoni net resultant d'una combinació de negocis - Total [00568]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes - (Dividend a compte) [00577]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes - Resultat de l'exercici [00576]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-total:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes - Total [00581]
+          is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Altres variacions del patrimoni net - Ajustaments per canvis
+              de valor [00592]
+          is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Altres variacions del patrimoni net - (Dividend a compte) [00590]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Altres variacions del patrimoni net - Pagaments basats en instruments
+              de patrimoni - Ajustaments per canvis de valor [00605]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Altres variacions del patrimoni net - Pagaments basats en instruments
+              de patrimoni - (Dividend a compte) [00603]
+          is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Altres variacions del patrimoni net - Traspassos entre partides
+              de patrimoni net - Subvencions, donacions i llegats [00619]
           is-entidad-aseguradora:
             help: Indicador d'entitat asseguradora [00025].
             label: Entitat asseguradora [00025]

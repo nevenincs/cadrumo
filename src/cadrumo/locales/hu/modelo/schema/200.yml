@@ -8864,6 +8864,38 @@ modelo:
           is-ecpn-ajuste-errores-importe:
             label: Saját tőke változásainak kimutatása (II) - Előző időszakok hibái
               miatti kiigazítások - Tőke - Jegyzett [00408]
+          is-ecpn-bde-total-cambios-conversion-deuda-ganancias-acumuladas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Adósság átalakítása saját
+              tőkévé - Felhalmozott nyereség [00417]
+          is-ecpn-bde-total-cambios-saldo-cierre-dividendos-cuenta:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - (-) Osztalékelőleg [00566]
+          is-ecpn-bde-total-cambios-saldo-cierre-otras-reservas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Egyéb tartalékok [00563]
+          is-ecpn-bde-total-cambios-saldo-cierre-otro-resultado-global-acumulado:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Halmozott egyéb átfogó jövedelem [00567]
+          is-ecpn-bde-total-cambios-saldo-cierre-prima-emision:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Ázsió [00558]
+          is-ecpn-bde-total-cambios-saldo-cierre-reservas-revalorizacion:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Átértékelési tartalék [00562]
+          is-ecpn-bde-total-cambios-saldo-cierre-resultado-ejercicio:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Tárgyévi eredmény [00565]
+          is-ecpn-bde-total-cambios-saldo-cierre-total:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
+              - Összesen [00568]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
@@ -8886,6 +8918,10 @@ modelo:
           is-ecpn-iii-ajustes-errores-otros-instrumentos-patrimonio-neto:
             label: Saját tőke változásainak kimutatása (III) - Előző időszakok hibái
               miatti kiigazítások - Egyéb saját tőke instrumentumok [00417]
+          is-ecpn-iii-combinacion-negocios-otros-instrumentos-patrimonio-neto:
+            label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
+              (csökkenése) - Egyéb tőkeinstrumentumok [00599]
           is-ecpn-iii-combinacion-negocios-total:
             label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
@@ -8986,19 +9022,25 @@ modelo:
             label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
               (csökkenése) - Tőke - Jegyzett [00590]
+          is-ecpn-total-cambios-combinacion-negocios-prima-emision:
+            label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Üzleti kombinációból eredő saját tőke növekedése
+              (csökkenése) - Ázsió [00592]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
             label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - Kötelezettségek saját tőkévé alakítása - Saját
               részvények és saját tőkerészesedések [00552]
           is-ecpn-total-cambios-conversion-pasivos-prima-emision:
-            label: Elszámolás III - Adóalap - Adóalap a negatív adóalapok kompenzálása
-              előtt [00550]
+            label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - Kötelezettségek átalakítása saját tőkévé - Ázsió
+              [00550]
           is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
             label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - (-) Osztalékfizetés - Saját részvények és üzletrészek
               [00566]
           is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
-            label: Elszámolás III - Adóalap - Teljes adókötelezettség [00562]
+            label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
+              folytatott ügyletek - (-) Osztalékfizetés - Tőke - Jegyzett [00562]
           is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
             label: Saját tőke változásainak kimutatása (II) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - (-) Osztalékfizetés - Tőke - Be nem hívott [00563]
@@ -9071,6 +9113,141 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Saját tőke változásainak kimutatása (I) - Átvezetések az eredménykimutatásba
               - Egyéb bevételek/ráfordítások [00348]
+          is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
+            label: Biztosítók - Saját tőke változásainak kimutatása (I) - Elszámolt
+              bevételek és ráfordítások - Az eredménykimutatásba átvezetett összegek
+              [00399]
+          is-ecpp-aseguradoras-ii-acciones-propias-netas-acciones-propias:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Saját részvényekkel
+              vagy üzletrészekkel végzett műveletek (nettó). (Saját részvények) [00547]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-otras-aportaciones-socios-mutualistas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése). Tagok vagy kölcsönös egyesületi
+              tagok egyéb hozzájárulásai [00562]
+          is-ecpp-aseguradoras-ii-combinacion-negocios-prima-emision:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése). Ázsió [00558]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-escriturado:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal. Jegyzett [00569]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-no-exigido:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal. (Be nem hívott) [00570]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-otras-aportaciones-socios-mutualistas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal. Tagok vagy kölcsönös egyesületi
+              tagok egyéb hozzájárulásai [00575]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-prima-emision:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal. Ázsió [00571]
+          is-ecpp-aseguradoras-ii-otras-operaciones-socios-reservas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal. Tartalékok [00572]
+          is-ecpp-aseguradoras-ii-otras-variaciones-escriturado:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Jegyzett [00582]
+          is-ecpp-aseguradoras-ii-otras-variaciones-no-exigido:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - (Be nem hívott) [00583]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-aportaciones-socios-mutualistas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Tagok vagy kölcsönös egyesületi tagok egyéb hozzájárulásai
+              [00588]
+          is-ecpp-aseguradoras-ii-otras-variaciones-otras-variaciones-acciones-propias:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Egyéb változások - (Saját részvények) [00625]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-acciones-propias:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Részvényalapú kifizetések - (Saját részvények) [00599]
+          is-ecpp-aseguradoras-ii-otras-variaciones-pagos-instrumentos-patrimonio-otras-aportaciones-socios-mutualistas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Részvényalapú kifizetések - Tagok vagy kölcsönös
+              egyesületi tagok egyéb hozzájárulásai [00601]
+          is-ecpp-aseguradoras-ii-otras-variaciones-prima-emision:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Ázsió [00584]
+          is-ecpp-aseguradoras-ii-otras-variaciones-reservas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Tartalékok [00585]
+          is-ecpp-aseguradoras-ii-otras-variaciones-traspasos-reservas:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Saját tőke
+              egyéb változásai - Átvezetések a saját tőke tételei között - Tartalékok
+              [00611]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-acciones-propias:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Egyenleg,
+              előző év vége - (Saját részvények) [00417]
+          is-ecpp-aseguradoras-ii-saldo-final-anterior-resultados-ejercicios-anteriores:
+            label: Biztosítók - Saját tőke változásainak kimutatása (II) - Egyenleg,
+              előző év vége - Előző évek eredménye [00418]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-otros-instrumentos-patrimonio:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Saját részvényekkel
+              vagy üzletrészekkel végzett műveletek (nettó) - Egyéb tőkeinstrumentumok
+              [00552]
+          is-ecpp-aseguradoras-iii-acciones-propias-netas-resultado-ejercicio:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Saját részvényekkel
+              vagy üzletrészekkel végzett műveletek (nettó) - Tárgyévi eredmény [00550]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-ajustes-cambios-valor:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése) - Értékelési különbözetek [00566]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-otros-instrumentos-patrimonio:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése) - Egyéb tőkeinstrumentumok
+              [00565]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-resultado-ejercicio:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése) - Tárgyévi eredmény [00563]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-subvenciones-donaciones-legados:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése) - Támogatások, adományok és
+              hagyományok [00567]
+          is-ecpp-aseguradoras-iii-combinacion-negocios-total:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Üzleti kombinációból
+              eredő saját tőke növekedése (csökkenése) - Összesen [00568]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-dividendo-cuenta:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal - (Előlegosztalék) [00577]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-resultado-ejercicio:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal - Tárgyévi eredmény [00576]
+          is-ecpp-aseguradoras-iii-otras-operaciones-socios-total:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb ügyletek
+              tagokkal vagy kölcsönös egyesületi tagokkal - Összesen [00581]
+          is-ecpp-aseguradoras-iii-otras-variaciones-ajustes-cambios-valor:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Saját
+              tőke egyéb változásai - Értékelési különbözetek [00592]
+          is-ecpp-aseguradoras-iii-otras-variaciones-dividendo-cuenta:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Saját
+              tőke egyéb változásai - (Előlegosztalék) [00590]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-ajustes-cambios-valor:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Saját
+              tőke egyéb változásai - Részvényalapú kifizetések - Értékelési különbözetek
+              [00605]
+          is-ecpp-aseguradoras-iii-otras-variaciones-pagos-instrumentos-patrimonio-dividendo-cuenta:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Saját
+              tőke egyéb változásai - Részvényalapú kifizetések - (Előlegosztalék)
+              [00603]
+          is-ecpp-aseguradoras-iii-otras-variaciones-traspasos-subvenciones-donaciones-legados:
+            label: Biztosítók - Saját tőke változásainak kimutatása (III) - Saját
+              tőke egyéb változásai - Átvezetések a saját tőke tételei között - Támogatások,
+              adományok és hagyományok [00619]
           is-entidad-aseguradora:
             help: Jelölő biztosító szervezet esetén [00025].
             label: Biztosító szervezet [00025]
