@@ -120,7 +120,7 @@ from .header import (
     result_view,
     status_line,
 )
-from .issues import ConfirmAssumedValues, IssuesChoice, WorkbenchIssuesScreen, blocks_marked
+from .issues import CalculateAgain, ConfirmAssumedValues, IssuesChoice, WorkbenchIssuesScreen, blocks_marked
 from .keys import describe_bindings
 from .legend import first_open_text, legend_panel, mark_for_glyph, more_text, on_screen_text
 from .navigator import (
@@ -2053,6 +2053,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
                 # The part of the form that holds the chosen box, as b there offers it: its section, else its page.
                 self._go_to(choice.at)
                 self.action_bulk_confirm()
+            elif isinstance(choice, CalculateAgain):
+                self.action_calculate()
             elif choice is not None:
                 self._go_to(choice)
 

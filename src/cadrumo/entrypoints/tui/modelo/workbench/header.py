@@ -56,7 +56,7 @@ from .....application.modelo.work_form_models import (
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .casilla_list import CasillaListEntry, value_text
-from .issues import IssueLevel, blocks_marked, issue_lines
+from .issues import IssueLevel, issue_lines, levels_marked
 from .navigator import to_do_counts
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, CONFIRM_MARK, MISSING_MARK, STALE_MARK, WorkbenchMark
 from .wording import date_text, day_text, modelo_number, modelo_title, period_words
@@ -210,8 +210,8 @@ class AttentionChip:
 
     @property
     def content(self) -> Content:
-        """The chip as drawn: a blocker's mark in the error colour, as every surface draws it."""
-        return blocks_marked(self.text)
+        """The chip as drawn: its level's glyph in that level's colour, as every surface draws it."""
+        return levels_marked(self.text)
 
 
 def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool) -> str:

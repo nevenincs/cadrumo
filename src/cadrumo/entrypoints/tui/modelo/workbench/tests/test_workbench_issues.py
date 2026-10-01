@@ -20,10 +20,13 @@ from decimal import Decimal
 import pytest
 from rich.cells import cell_len
 from rich.console import Console
+from textual.content import Content
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.work_form_models import (
+    ModeloFormAttention,
+    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
@@ -56,6 +59,7 @@ from ..issues import (
     WorkbenchIssuesScreen,
     issue_lines,
     level_counts,
+    levels_marked,
     title_text,
     unentered_boxes,
     unentered_levels,
@@ -592,3 +596,58 @@ async def test_on_the_smallest_terminal_the_status_keeps_one_line_the_list_opens
     assert visible_rows >= 6, "the list keeps room to show its entries"
     assert footer_edges and max(footer_edges) <= 80, "no footer key runs past the edge"
     assert clipped == [], "no footer key is cut short"
+
+
+def _styled(content: Content, glyph: str) -> set[str]:
+    """The styles drawn over each standing occurrence of ``glyph`` in ``content``."""
+    plain = content.plain
+    return {str(span.style) for span in content.spans if plain[span.start : span.end] == glyph}
+
+
+def test_each_level_glyph_takes_its_one_colour_wherever_it_marks_a_level() -> None:
+    title = levels_marked("Issues to look at   ▲ 1   ! 2   ◐ 1   ◆ 1   i 2")
+    heading = levels_marked("◆ Worth checking (1)")
+    prose = levels_marked("Revisa la retenció i torna a calcular.")
+
+    assert _styled(title, "▲") == {"$error"} and _styled(title, "!") == {"$error"}
+    assert _styled(title, "◐") == {"$warning"} and _styled(title, "◆") == {"$warning"}
+    assert _styled(title, "i") == {"$secondary"}
+    assert _styled(heading, "◆") == {"$warning"}
+    assert prose.spans == [], "a word in prose is never taken for a mark"
+
+
+@pytest.mark.asyncio
+async def test_a_stale_calculation_names_c_beside_what_to_do_and_c_calculates_again() -> None:
+    stale = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.ledger_snapshot_drift",
+        legal_refs=("ley-58-2003:art-119",),
+    )
+    information = ModeloFormCalculationNote(reason="oss_no_live_source", attention=ModeloFormAttention.INFO)
+    form = synthetic_form(calculated=True, needs_input=False).model_copy(
+        update={
+            "issues": (ModeloFormIssue(finding=stale),),
+            "calculation_notes": (information,),
+            "verification": VerificationCompletenessStatus.BLOCKED,
+        }
+    )
+    actions = FakeActions()
+    with override_settings(cadrumo_output_language="en"):
+        lines = issue_lines(form)
+        screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=actions)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await _settle(pilot)
+            await pilot.press("i")
+            await _settle(pilot)
+            listed = _list_text(app.screen) if isinstance(app.screen, WorkbenchIssuesScreen) else ""
+            await pilot.press("c")
+            await _settle(pilot)
+            app.exit(None)
+
+    stale_line = next(line for line in lines if line.recalculates)
+    info_line = next(line for line in lines if line.level is IssueLevel.INFO)
+    assert f"{stale_line.action} [c]" in listed
+    assert info_line.action not in listed, "nothing to do is not said for what is only for information"
+    assert actions.requested == ["calculate"]

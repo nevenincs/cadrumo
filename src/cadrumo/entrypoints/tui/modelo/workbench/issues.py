@@ -201,6 +201,8 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     }
 )
 _CONFIRM_SCOPE_KEY: Final[str] = "b"
+_CALCULATE_KEY: Final[str] = "c"
+_OPEN_AREA_KEY: Final[str] = "a"
 _CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.confirm_all"
 """What ``b`` does, in full, where the list has room to say it; the footer says it in two words."""
 _FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", _CONFIRM_SCOPE_KEY, "t")
@@ -269,6 +271,8 @@ class IssueLine:
     area: SourceSurface | None = None
     #: Whether the latest calculation noticed this, rather than the check.
     from_calculation: bool = False
+    #: Whether calculating again is what puts this right, so ``c`` does it from the list.
+    recalculates: bool = False
 
     @property
     def blocking(self) -> bool:
@@ -288,8 +292,13 @@ class ConfirmAssumedValues:
     at: AddressKey
 
 
-type IssuesChoice = AddressKey | OpenSourceSurface | ConfirmAssumedValues
-"""Where the findings list leads: a box, the area that owns a value, or confirming the assumed values."""
+@dataclass(frozen=True, slots=True)
+class CalculateAgain:
+    """The filer asked, from the findings list, to calculate the declaration again."""
+
+
+type IssuesChoice = AddressKey | OpenSourceSurface | ConfirmAssumedValues | CalculateAgain
+"""Where the findings list leads: a box, the area that owns a value, confirming the assumed values, or calculating."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -360,6 +369,30 @@ def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dic
         elif field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
             words.setdefault(str(field.address.casilla_id), field.label.text)
     return words
+
+
+_LEVEL_GLYPH_STYLES: Final[tuple[tuple[str, str], ...]] = (
+    (r"(?:^|(?<=\s))" + re.escape(BLOCKS_MARK.glyph) + r"(?=\s)", _BLOCKS_STYLE),
+    (r"(?:^|(?<=\s))" + re.escape(MISSING_MARK.glyph) + r"(?=\s)", _BLOCKS_STYLE),
+    (r"(?:^|(?<=\s))" + re.escape(CONFIRM_MARK.glyph) + r"(?=\s)", "$warning"),
+    (r"(?:^|(?<=\s))" + re.escape(CHECK_MARK.glyph) + r"(?=\s)", "$warning"),
+    (r"^" + re.escape(INFO_MARK.glyph) + r"(?=\s)|(?<=\s)" + re.escape(INFO_MARK.glyph) + r"(?=\s\d)", "$secondary"),
+)
+"""Each level's glyph where it marks a level, in its one colour: what blocks and what is missing as an error,
+what is assumed and what is worth checking as a warning, what is for information muted."""
+
+
+def levels_marked(text: str) -> Content:
+    """``text`` as a heading, a title or a chip draws it: each level's glyph in that level's colour.
+
+    Only a glyph standing on its own is a mark: the information mark only
+    where it opens the text or stands before a count, so a word "i" in prose
+    is never coloured.
+    """
+    content = Content(text)
+    for pattern, style in _LEVEL_GLYPH_STYLES:
+        content = content.highlight_regex(pattern, style=style)
+    return content
 
 
 def blocks_marked(text: str) -> Content:
@@ -520,6 +553,7 @@ def issue_lines(form: ModeloWorkForm) -> tuple[IssueLine, ...]:
                 technical=technical_text(finding),
                 key=key,
                 area=None if field is None else open_area_target(field),
+                recalculates=finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION,
             )
         )
     pages = {
@@ -619,13 +653,23 @@ def _paragraph(text: str, style: str = "") -> Text | None:
 
 
 def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
+    action = None if line.level is IssueLevel.INFO else _action_with_key(line)
     return _entry(
         _paragraph(line.where, "bold"),
         _paragraph(line.message),
-        _paragraph(line.action, "italic"),
+        _paragraph(action or "", "italic"),
         _paragraph(line.detail) if expanded else None,
         _paragraph(line.technical, "dim") if technical else None,
     )
+
+
+def _action_with_key(line: IssueLine) -> str:
+    """What to do, with the key that does it from this list where there is one."""
+    if line.recalculates:
+        return f"{line.action} [{_CALCULATE_KEY}]"
+    if line.area is not None:
+        return f"{line.action} [{_OPEN_AREA_KEY}]"
+    return line.action
 
 
 def _what_to_do(key: str) -> Text | None:
@@ -681,7 +725,7 @@ class _IssueList(OptionList):
             self.refresh_bindings()
 
 
-class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | ConfirmAssumedValues | None]):
+class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     """Everything to look at before filing; choosing a box returns it to the workbench."""
 
     SCOPED_CSS: ClassVar[bool] = False
@@ -711,7 +755,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         }
         WorkbenchIssuesScreen #issues-title {
             text-style: bold;
-            color: $primary;
+            color: $foreground;
         }
         WorkbenchIssuesScreen #issues-verdict {
             color: $secondary;
@@ -719,6 +763,9 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         }
         WorkbenchIssuesScreen #issues-list {
             height: 1fr;
+        }
+        WorkbenchIssuesScreen #issues-list > .option-list--option-disabled {
+            color: $foreground;
         }
         WorkbenchIssuesScreen #issues-list > .option-list--option-highlighted,
         WorkbenchIssuesScreen #issues-list:focus > .option-list--option-highlighted {
@@ -737,6 +784,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
     BINDINGS: ClassVar = [
         Binding("escape", "close", "", show=False),
         Binding("t", "technical", "", show=False),
+        Binding("c", "calculate", "", show=False),
         Binding("a", "open_area", "", show=False),
         Binding("b", "confirm_scope", "", show=False),
     ]
@@ -763,7 +811,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="issues-status")
             title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
-            yield Static(blocks_marked(title), id="issues-title", markup=False)
+            yield Static(levels_marked(title), id="issues-title", markup=False)
             yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
             yield _IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
@@ -794,7 +842,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
             heading = level_words(level)
             if not (self._recorded and level in TO_DO_LEVELS):
                 heading = f"{heading} ({count})"
-            options.append(Option(blocks_marked(heading), id=f"level-{level.value}", disabled=True))
+            options.append(Option(levels_marked(heading).stylize("bold"), id=f"level-{level.value}", disabled=True))
             if unentered is not None:
                 options.extend(self._unentered_options(unentered))
             options.extend(
@@ -951,7 +999,14 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
             return self._highlighted_area() is not None
         if action == "confirm_scope":
             return self._confirm_target() is not None
+        if action == "calculate":
+            return not self._recorded and any(line.recalculates for line in self._lines)
         return True
+
+    def action_calculate(self) -> None:
+        """Close the list asking the workbench to calculate the declaration again, as a finding here says to."""
+        if not self._recorded and any(line.recalculates for line in self._lines):
+            self.dismiss(CalculateAgain())
 
     def action_open_area(self) -> None:
         """Close the list asking the workbench to open the area that owns the selected finding's value."""
@@ -1031,6 +1086,7 @@ __all__ = [
     "ASSUMED_BOXES_BEFORE_SECTIONS",
     "LEVEL_MARKS",
     "TO_DO_LEVELS",
+    "CalculateAgain",
     "ConfirmAssumedValues",
     "IssueLevel",
     "IssueLine",
@@ -1043,6 +1099,7 @@ __all__ = [
     "issue_lines",
     "level_counts",
     "level_words",
+    "levels_marked",
     "technical_text",
     "title_text",
     "unentered_boxes",
