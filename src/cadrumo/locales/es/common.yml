@@ -2166,6 +2166,7 @@ tui:
         block:
           affects: Afecta a
           asks: Qué pide
+          calculation: Cálculo
           can_change: ¿Puedes cambiarlo?
           new_value: Nuevo valor
           now: Ahora

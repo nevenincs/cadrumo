@@ -1734,6 +1734,7 @@ application:
         other_modelos: importe trasladado desde modelos relacionados
         percent_of: '{rate} % de {amount}'
         previous_period: '{value} del periodo anterior'
+        recorded_values: 'Valores usados: {values}. Resultado: {result}.'
         rule: regla de cálculo propia de este modelo
         table: valor de la tabla oficial
         working_figure: cifra intermedia

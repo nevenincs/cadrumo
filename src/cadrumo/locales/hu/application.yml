@@ -1696,6 +1696,7 @@ application:
         other_modelos: kapcsolódó nyomtatványokból átvett összeg
         percent_of: '{amount} {rate} %-a'
         previous_period: '{value} az előző időszakból'
+        recorded_values: 'Felhasznált értékek: {values}. Eredmény: {result}.'
         rule: a nyomtatvány saját számítási szabálya
         table: érték a hivatalos táblázatból
         working_figure: részösszeg

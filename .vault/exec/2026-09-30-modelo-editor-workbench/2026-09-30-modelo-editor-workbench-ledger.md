@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0b8b95b07cdd38a848c1dabfbb799770f9580993faccffbfe1620ad63eb7127'
+body_hash: 'sha256:60edeb34dc632c9503bba7e96e9273aaf427533b83f9b544f4cc0ac8b5febb88'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1002,6 +1002,25 @@ related:
 - `S28` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
 - `S28` `verify:` `python -m dev.tui render --sequence all (frozen 82b7844265; 712 frames)` -> `pass`
 - `S28` `verify:` `python -m dev.tui render --sequence modelo-390-annual-2025 --sequence modelo-100-renta-2025 --sequence verification-reports-incomplete --viewport small --viewport medium (frozen 3a24afb920; 124 frames)` -> `pass`
+- `S63` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S63` `A` `src/cadrumo/application/modelo/tests/test_casilla_formula_values.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S63` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_formula_values_real.py`
+- `S63` `M` `src/cadrumo/locales/en/application.yml`
+- `S63` `M` `src/cadrumo/locales/en/common.yml`
+- `S63` `M` `src/cadrumo/locales/es/application.yml`
+- `S63` `M` `src/cadrumo/locales/es/common.yml`
+- `S63` `M` `src/cadrumo/locales/ca/application.yml`
+- `S63` `M` `src/cadrumo/locales/ca/common.yml`
+- `S63` `M` `src/cadrumo/locales/hu/application.yml`
+- `S63` `M` `src/cadrumo/locales/hu/common.yml`
+- `S63` `verify:` `formula-values application tests (29 cases; 20261001T221119.861072Z)` -> `pass`
+- `S63` `verify:` `formula-values real TUI matrix (16 cases; 20261001T222633.523637Z)` -> `pass`
+- `S63` `verify:` `existing editor dock help integration (95 cases; 20261001T221146.229530Z)` -> `pass`
+- `S63` `verify:` `Ruff S63 six Python files` -> `pass`
+- `S63` `by:` `vaultspec-high-executor`
 
 ## Notes
 

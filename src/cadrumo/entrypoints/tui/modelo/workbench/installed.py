@@ -78,6 +78,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.identity.bucket import BucketId
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from .....domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -171,6 +172,8 @@ class _ReadState:
     verification_report_id: str | None
     asks_m303_evidence: bool
     registry_revision_id: str
+    #: The immutable operand traces of the calculation the form is showing.
+    observations: tuple[CasillaObservation, ...]
     #: Why the declaration cannot be edited, in the filer's words; ``None`` when it can.
     edit_refusal: str | None = None
 
@@ -244,6 +247,7 @@ class InstalledModeloWorkbench:
             asks_m303_evidence=str(declaration.modelo) == _M303
             and (head is None or head.filing_instance_evidence is None),
             registry_revision_id=str(form.registry_revision_id),
+            observations=() if head is None else head.observations,
         )
         return loaded
 
@@ -281,6 +285,9 @@ class InstalledModeloWorkbench:
             operation=self._operation,
             language=language,
             on=declaration.period.end_date,
+            observation=None
+            if state is None
+            else next((item for item in state.observations if item.casilla_id == casilla_id), None),
         )
 
     # -- editing -------------------------------------------------------------

@@ -1730,6 +1730,7 @@ application:
         other_modelos: import traslladat des de models relacionats
         percent_of: '{rate} % de {amount}'
         previous_period: '{value} del període anterior'
+        recorded_values: 'Valors utilitzats: {values}. Resultat: {result}.'
         rule: regla de càlcul pròpia d'aquest model
         table: valor de la taula oficial
         working_figure: xifra intermèdia

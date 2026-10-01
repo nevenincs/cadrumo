@@ -464,6 +464,7 @@ class CasillaEditorPanel(Vertical):
         can_restore: bool = False,
         read_only_reason: str | None = None,
         affects: str | None = None,
+        calculation: str | None = None,
         status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
@@ -492,6 +493,7 @@ class CasillaEditorPanel(Vertical):
         self._can_clear = can_clear and read_only_reason is None
         self._can_restore = can_restore and read_only_reason is None
         self._affects = affects
+        self._calculation = calculation
         self._status_line = status_line
         self._open_area = open_area_target(field) if read_only_reason is not None else None
         self._parsed: WorkbenchParsed | None = None
@@ -543,6 +545,10 @@ class CasillaEditorPanel(Vertical):
             self._block("editor-asks", "tui.modelo.workbench.editor.block.asks", asks),
             self._block("editor-now", "tui.modelo.workbench.editor.block.now", self._now_text()),
         ]
+        if self._calculation is not None:
+            blocks.append(
+                self._block("editor-calculation", "tui.modelo.workbench.editor.block.calculation", self._calculation)
+            )
         where = where_from_text(field, aeat_imported=self._aeat_imported, language=self._language)
         if where is not None:
             blocks.append(self._block("editor-where", "tui.modelo.workbench.editor.block.where_from", where))
@@ -782,6 +788,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         can_restore: bool = False,
         read_only_reason: str | None = None,
         affects: str | None = None,
+        calculation: str | None = None,
         status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
@@ -797,6 +804,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
             can_restore=can_restore,
             read_only_reason=read_only_reason,
             affects=affects,
+            calculation=calculation,
             status_line=status_line,
             recorded=recorded,
             aeat_imported=aeat_imported,

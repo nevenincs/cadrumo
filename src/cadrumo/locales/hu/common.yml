@@ -2147,6 +2147,7 @@ tui:
         block:
           affects: Hatással van
           asks: Mit kér
+          calculation: Számítás
           can_change: Módosíthatja?
           new_value: Új érték
           now: Jelenleg

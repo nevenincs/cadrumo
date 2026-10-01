@@ -1584,6 +1584,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             read_only_reason=read_only_reason(field, self._language, recorded=recorded),
             # An unread card says nothing, rather than that the box affects nothing.
             affects=affects_text(card, form, result=result),
+            calculation=(
+                None
+                if card is None or card.formula is None
+                else "\n".join(part for part in (card.formula.text, card.formula.values_text) if part is not None)
+            ),
             # Docked, the header stays in view and the panel need not repeat its result line.
             status_line=None if docked else self._status_line(),
             recorded=recorded,

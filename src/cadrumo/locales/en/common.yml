@@ -2108,6 +2108,7 @@ tui:
         block:
           affects: Affects
           asks: What it asks
+          calculation: Calculation
           can_change: Can you change it?
           new_value: New value
           now: Now

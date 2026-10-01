@@ -30,7 +30,7 @@ from collections import deque
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final
+from typing import Final, override
 
 from pydantic import BaseModel
 
@@ -40,16 +40,24 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import BindingId, ParameterId
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaSignConstraint
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
+from .edit_value_grammar import ratio_unit
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .settlement_casilla import declaration_result_casillas
 from .source_policy import source_policy
-from .value_presentation import LOCALE_NUMBER_FORMATS, SCREEN_MINUS_SIGN, group_decimal_text
+from .value_presentation import (
+    LOCALE_NUMBER_FORMATS,
+    SCREEN_MINUS_SIGN,
+    VALUE_ABSENT_LOCALE_KEY,
+    format_casilla_value,
+    group_decimal_text,
+)
 
 _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "constraint.at_least": "application.modelo.help.constraint.at_least",
@@ -72,6 +80,7 @@ _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "formula.rule": "application.modelo.help.formula.rule",
     "formula.table": "application.modelo.help.formula.table",
     "formula.working_figure": "application.modelo.help.formula.working_figure",
+    "formula.recorded_values": "application.modelo.help.formula.recorded_values",
     "source_kind.dictionary": "application.modelo.help.source_kind.dictionary",
     "source_kind.form_spec": "application.modelo.help.source_kind.form_spec",
     "source_kind.instructions": "application.modelo.help.source_kind.instructions",
@@ -120,6 +129,8 @@ class ModeloHelpFormulaV1(BaseModel):
 
     text: str
     complete: bool
+    #: The same arithmetic with recorded operands and result; never a new calculation.
+    values_text: str | None = None
 
 
 class ModeloHelpQuoteV1(BaseModel):
@@ -285,6 +296,100 @@ def _parameter_value(parameter: ParameterDefinition | None, on: date) -> Decimal
     return in_force[-1].value if len(in_force) == 1 else None
 
 
+def _formula_values_text(
+    formula: FormulaDefinition,
+    observation: CasillaObservation,
+    *,
+    casillas: Mapping[str, CasillaDefinition],
+    bindings: Mapping[str, BindingDefinition],
+    box_of: Callable[[CasillaId], str],
+    binding_name: Callable[[BindingId], str],
+    language: OutputLanguage,
+) -> str | None:
+    """Substitute the recorded trace, without evaluating the formula or guessing gaps.
+
+    Some table operations record several references for one lookup result;
+    their tuples are not parallel and cannot safely be paired. Repeated
+    references must also agree before they can be substituted by identity.
+    """
+    if len(observation.operand_refs) != len(observation.operand_values):
+        return None
+    values: dict[str, Decimal] = {}
+    for key, value in zip(observation.operand_refs, observation.operand_values, strict=True):
+        if key in values and values[key] != value:
+            return None
+        values[key] = value
+
+    def formatted(key: str, data_type: str, maximum: Decimal | None = None) -> str:
+        value = values.get(key)
+        if value is None:
+            return lookup_translation(VALUE_ABSENT_LOCALE_KEY, locale=language.value) or "?"
+        return format_casilla_value(
+            value, data_type=data_type, language=language, ratio_unit=ratio_unit(data_type, maximum)
+        )
+
+    class ValueRenderer(_FormulaRenderer):
+        """Keep the declared arithmetic and replace its references with traced figures."""
+
+        @override
+        def render(self, node: FormulaExpression, *, nested: bool = False) -> str:
+            if node.op is not None and (str(node.op).startswith("lookup_") or node.op == "cross_model_sum"):
+                self.complete = False
+            if node.op == "percent":
+                amount, rate = (self.render(arg, nested=True) for arg in node.args)
+                return _phrase(language, "formula.percent_of", rate=rate.removesuffix("\u00a0%"), amount=amount)
+            return super().render(node, nested=nested)
+
+        @override
+        def leaf(self, node: FormulaExpression) -> str:
+            if node.casilla_id is not None:
+                casilla = casillas[str(node.casilla_id)]
+                maximum = None if casilla.constraints is None else casilla.constraints.max_value
+                return f"{box_of(node.casilla_id)} {formatted(str(node.casilla_id), str(casilla.data_type), maximum)}"
+            if node.binding is not None:
+                binding = bindings[str(node.binding)]
+                return f"{binding_name(node.binding)} {formatted(str(node.binding), str(binding.value.data_type))}"
+            if node.parameter is not None:
+                value = values.get(str(node.parameter))
+                return super().leaf(node) if value is None else _number(value, language)
+            return super().leaf(node)
+
+    renderer = ValueRenderer(
+        box_of=box_of,
+        binding_name=binding_name,
+        # A parameter not captured by this calculation stays absent, even if
+        # the authority could supply one now.
+        parameter_value=lambda _key: None,
+        language=language,
+    )
+    expression = renderer.render(formula.expression)
+    target = casillas[str(observation.casilla_id)]
+    maximum = None if target.constraints is None else target.constraints.max_value
+    result = format_casilla_value(
+        observation.value,
+        data_type=str(target.data_type),
+        language=language,
+        ratio_unit=ratio_unit(str(target.data_type), maximum),
+    )
+    if not renderer.complete:
+        operands = []
+        for key in values:
+            if key in casillas:
+                operands.append(renderer.leaf(FormulaExpression(casilla_id=casillas[key].id)))
+            elif key in bindings:
+                operands.append(renderer.leaf(FormulaExpression(binding=bindings[key].id)))
+            else:
+                # The trace may name a legal parameter or a cross-model relation.
+                # Its numeric value is recorded, its identifier is not a label.
+                operands.append(_number(values[key], language))
+        return (
+            _phrase(language, "formula.recorded_values", values=" · ".join(operands), result=result)
+            if operands
+            else None
+        )
+    return f"{expression} = {result}"
+
+
 def legal_citation_text(reference: LegalReference) -> str:
     """Cite one legal reference from its own identifier, falling back to the official document id."""
     document, _, locator = str(reference.id).partition(":")
@@ -431,11 +536,15 @@ def build_casilla_help_card(
     operation: PinnedAuthorityOperation,
     language: OutputLanguage,
     on: date,
+    observation: CasillaObservation | None = None,
 ) -> ModeloCasillaHelpCardV1:
     """Assemble the mechanical help of one casilla of ``snapshot`` in ``language``.
 
     ``on`` selects the parameter values in force, normally the last day of the
     filing period. A casilla the revision does not define is refused.
+    ``observation`` is the current calculation's stored trace for this box;
+    its operands and result are formatted without evaluating the formula.
+    A missing or mismatched trace leaves the static formula available.
     """
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
     casilla = casillas.get(str(casilla_id))
@@ -472,7 +581,18 @@ def build_casilla_help_card(
             language=language,
         )
         text = f"{box_of(casilla.id)} = {renderer.render(formula.expression)}"
-        formula_card = ModeloHelpFormulaV1(text=text, complete=renderer.complete)
+        values_text = None
+        if observation is not None and observation.casilla_id == casilla.id and observation.formula_id == formula.id:
+            values_text = _formula_values_text(
+                formula,
+                observation,
+                casillas=casillas,
+                bindings=bindings,
+                box_of=box_of,
+                binding_name=binding_name,
+                language=language,
+            )
+        formula_card = ModeloHelpFormulaV1(text=text, complete=renderer.complete, values_text=values_text)
         for citation in formula.source_citations:
             source = operation.source_reference(citation.source_ref)
             quotes.append(

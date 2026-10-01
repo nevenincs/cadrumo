@@ -1619,6 +1619,7 @@ application:
         other_modelos: amount carried from related modelos
         percent_of: '{rate} % of {amount}'
         previous_period: '{value} from the previous period'
+        recorded_values: 'Values used: {values}. Result: {result}.'
         rule: calculation rule specific to this modelo
         table: value from the official table
         working_figure: intermediate figure

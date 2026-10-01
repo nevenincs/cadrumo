@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:de4756c27f7e6503ef423affe6e9baea0afc4a3517c60ae361df2ccc02408bcd'
+body_hash: 'sha256:4018a078c57be204818921bf9df158e0d6cd9dddccff68b126343f3309e09eb9'
 ---
 
 # `modelo-editor-workbench` plan
@@ -134,7 +134,7 @@ Close what the combined render and the design verification found: nothing unconf
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
 - [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
 - [ ] `P07.S62` - Declare the scale of Modelo 303's rate literals so the general rate row prints its rate, grounded in the record design; `src/cadrumo/_data/registry/aeat/modelos/303`.
-- [ ] `P07.S63` - Show a calculated box's formula with its values in the editor, so a zero result says why; `src/cadrumo/application/modelo/casilla_help.py`.
+- [x] `P07.S63` - Show a calculated box's formula with its values in the editor, so a zero result says why; `src/cadrumo/application/modelo/casilla_help.py`.
 
 ### Phase `P08` - declarations list
 

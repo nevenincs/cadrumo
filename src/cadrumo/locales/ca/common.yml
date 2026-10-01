@@ -2154,6 +2154,7 @@ tui:
         block:
           affects: Afecta
           asks: Què demana
+          calculation: Càlcul
           can_change: El pots canviar?
           new_value: Nou valor
           now: Ara
