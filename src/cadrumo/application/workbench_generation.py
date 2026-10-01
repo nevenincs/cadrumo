@@ -23,7 +23,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal, Protocol, Self, runtime_checkable
@@ -32,6 +32,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, ValidationError, model_validator
 
 from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ..core.hashing import content_hash_hex
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
@@ -77,12 +78,14 @@ from .ledger.workspace import (
     LedgerWorkspaceProjectionV1,
     LedgerWorkspaceStatus,
 )
+from .modelo.declaration_summary import declaration_summary
 from .modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceObservationV1,
     project_declarations_calendar,
 )
+from .modelo.declarations_portfolio import project_declarations_portfolio
 from .modelo.declarations_workspace import (
     DeclarationResultCasillaReaderV1,
     DeclarationsLifecycleKind,
@@ -92,7 +95,6 @@ from .modelo.declarations_workspace import (
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
@@ -317,7 +319,7 @@ def _read_declarations_workspace(
         else _declarations_observation(DeclarationsWorkspaceZone.FILING_HISTORY, observed_at)
     )
     try:
-        return project_declarations_workspace(
+        return project_declarations_portfolio(
             operation=operation,
             bucket_id=bucket_id,
             work_units=work_units,
@@ -538,6 +540,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
     capture_memory: WorkbenchCaptureMemory | None = None
+    calendar_aeat_reader: Callable[[], CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]] | None = None
     """The session's reusable capture work; every capture recomputes everything without one."""
     """An absent reader below is a composition fact, not a data fact.
 
@@ -580,7 +583,41 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             result_casilla_reader=self.result_casilla_reader,
             lifecycle_facts=lifecycle_facts,
         )
+        if declarations is not None:
+            current_ids = {unit.current_calculation_revision_id for unit in work_units.values()}
+            current_revisions = {key: value for key, value in revisions.revisions.items() if key in current_ids}
+            declarations = declarations.model_copy(
+                update={
+                    "declarations": tuple(
+                        ref.model_copy(
+                            update={
+                                "summary": ref.summary
+                                or declaration_summary(
+                                    ref,
+                                    revisions=current_revisions,
+                                    verification=verification,
+                                    operation=self.operation,
+                                )
+                            }
+                        )
+                        for ref in declarations.declarations
+                    )
+                }
+            )
         raw_values = record_to_path_values(record)
+        aeat_evidence = (
+            _unbound_calendar_aeat_evidence()
+            if self.calendar_aeat_reader is None or _declared_tax_id(raw_values) is None
+            else self.calendar_aeat_reader()
+        )
+        aeat_projection = build_calendar_evidence_projection(
+            local=CalendarEvidenceReadOutcome(
+                state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
+                value=LocalCalendarEvidenceSources(),
+            ),
+            aeat=aeat_evidence,
+            expected_tax_id=_declared_tax_id(raw_values),
+        )
         calendar_inputs = _read_workbench_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -589,6 +626,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             observed_at=observed_at,
             operation=self.operation,
+            aeat_evidence=aeat_evidence,
             memo=_CalendarMemo(
                 memory=self.capture_memory,
                 key=WorkbenchCalendarMemoKey(
@@ -597,6 +635,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     filings_revision=filings_revision,
                     as_of=as_of,
                     generation=self.operation.generation,
+                    aeat_evidence_revision=content_hash_hex(
+                        {
+                            "state": aeat_evidence.state.model_dump(mode="json"),
+                            "evidence": [row.model_dump(mode="json") for row in aeat_projection.evidence],
+                        }
+                    ),
                 ),
             ),
         )
@@ -960,6 +1004,7 @@ def _read_workbench_calendar_inputs(
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
     memo: _CalendarMemo,
+    aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
 ) -> _WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
 
@@ -992,6 +1037,7 @@ def _read_workbench_calendar_inputs(
         observed_at=observed_at,
         operation=operation,
         memo=memo,
+        aeat_evidence=aeat_evidence,
     )
     if not model_declared:
         # The schedule observation already says why the calendar is empty; the
@@ -1070,6 +1116,15 @@ def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
     )
 
 
+def _unbound_calendar_aeat_evidence() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
+    return CalendarEvidenceReadOutcome(
+        state=HomeZoneState(
+            availability=HomeAvailability.NEVER_CAPTURED,
+            reason_code="workbench.calendar.aeat_reader_unavailable",
+        )
+    )
+
+
 def _build_workbench_calendar_inputs(
     *,
     taxpayer: TaxpayerProfile,
@@ -1080,11 +1135,12 @@ def _build_workbench_calendar_inputs(
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
     memo: _CalendarMemo,
+    aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources] | None = None,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
     query_range = _calendar_query_range(as_of)
 
     def evidence_for(schedule_calendar: OverviewCalendar) -> CalendarEvidenceProjection:
-        return build_calendar_evidence_projection(
+        projection = build_calendar_evidence_projection(
             local=CalendarEvidenceReadOutcome(
                 state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
                 value=LocalCalendarEvidenceSources(
@@ -1094,13 +1150,19 @@ def _build_workbench_calendar_inputs(
                     ),
                 ),
             ),
-            aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
-                state=HomeZoneState(
-                    availability=HomeAvailability.NEVER_CAPTURED,
-                    reason_code="workbench.calendar.aeat_reader_unavailable",
-                ),
-            ),
+            aeat=aeat_evidence or _unbound_calendar_aeat_evidence(),
             expected_tax_id=taxpayer.tax_id,
+        )
+        addresses = {
+            (row.modelo, row.period.filing_year, row.period.registry_token) for row in schedule_calendar.entries
+        }
+        return replace(
+            projection,
+            evidence=tuple(
+                row
+                for row in projection.evidence
+                if row.period is not None and (row.modelo, row.filing_year, row.period.registry_token) in addresses
+            ),
         )
 
     def compute() -> WorkbenchCalendarWork:

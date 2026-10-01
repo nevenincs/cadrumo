@@ -45,6 +45,7 @@ from ...domain.modelos.filing_record import (
     ModeloRecordStatus,
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+from .declaration_summary import DeclarationSummary
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -170,6 +171,7 @@ class DeclarationsWorkspaceDeclarationRefV1(BaseModel):
     has_current_calculation: bool
     has_current_filing: bool
     settled_result: str | None = None
+    summary: DeclarationSummary | None = None
     """The declaration's own settled figure, when the registry grounds one.
 
     `None` means the answer is UNKNOWN, and a surface must render it that way

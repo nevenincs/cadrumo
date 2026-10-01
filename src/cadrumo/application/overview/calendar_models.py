@@ -235,6 +235,13 @@ class OverviewCalendarRange(BaseModel):
         return self.from_date <= candidate <= self.to_date
 
 
+class OverviewAeatEvidenceConcern(StrEnum):
+    """A register observation that cannot establish current completion."""
+
+    INACTIVE_REGISTER = "inactive_register"
+    UNKNOWN_REGISTER = "unknown_register"
+
+
 class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     """Filing evidence attached to one legal calendar obligation.
 
@@ -261,10 +268,20 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     aeat_snapshot_id: SnapshotId | None = None
     aeat_evidence_kind: str | None = Field(default=None, min_length=1, max_length=64)
     aeat_evidence_conflict_reference_ids: tuple[str, ...] = Field(default_factory=tuple)
+    aeat_evidence_concerns: tuple[OverviewAeatEvidenceConcern, ...] = ()
     verified_justificante_csv: AeatCsv | None = None
     justificante_required: bool = True
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @property
+    def aeat_filed(self) -> bool:
+        """An active official filing completes its obligation independently of receipt linkage."""
+        return (
+            self.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+            and not self.aeat_evidence_conflict_reference_ids
+            and not self.aeat_evidence_concerns
+        )
 
 
 class OverviewCalendarEntry(BaseModel):

@@ -23,6 +23,7 @@ from ..calculations.observations_repository import (
 )
 from ..calculations.ports import FiledDeclaracionArtefactProtocol, FiledDeclaracionObservationProtocol
 from .calendar_models import (
+    OverviewAeatEvidenceConcern,
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
     OverviewCalendarEventType,
@@ -223,13 +224,13 @@ def filing_evidence_from_observed_event(
         return None
     if event.modelo is None or event.filing_year is None or event.period is None:
         return None
-    if event.status is not None and not is_active_aeat_filing_status(event.status):
-        return None
     state = event.aeat_submission_state
     if state is None:
         return None
     if not authenticated_identity_matches_expected(event.authenticated_identity, expected_tax_id):
         return None
+    if event.status is not None and not is_active_aeat_filing_status(event.status):
+        return _register_concern(event.modelo, event.filing_year, event.period, event.status)
     return OverviewCalendarFilingEvidence(
         modelo=event.modelo,
         filing_year=event.filing_year,
@@ -271,7 +272,7 @@ def filing_evidence_from_filed_declaration_observation(
     if expected_tax_id and not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
         return None
     if not is_active_aeat_filing_status(observation.status):
-        return None
+        return _register_concern(observation.modelo, observation.ejercicio, observation.period, observation.status)
     verified_csv = _filed_declaration_verified_csv(
         observation,
         verified_artefact_refs=verified_artefact_refs,
@@ -292,6 +293,22 @@ def filing_evidence_from_filed_declaration_observation(
         aeat_evidence_kind="aeat_justificante_pdf" if verified else "filed_declaration_observation",
         verified_justificante_csv=verified_csv if verified else None,
         justificante_verified=verified,
+        evidence_source="filed_declaration_observation",
+    )
+
+
+def _register_concern(modelo: str, year: int, period: _Period, status: str | None) -> OverviewCalendarFilingEvidence:
+    """Retain an identity-matched concern without claiming a filing or its amount."""
+    concern = (
+        OverviewAeatEvidenceConcern.INACTIVE_REGISTER
+        if (status or "").strip().upper() == "BAJA"
+        else OverviewAeatEvidenceConcern.UNKNOWN_REGISTER
+    )
+    return OverviewCalendarFilingEvidence(
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        aeat_evidence_concerns=(concern,),
         evidence_source="filed_declaration_observation",
     )
 
@@ -360,9 +377,7 @@ def filing_evidence_from_calculation_observation(
             if verified
             else OverviewAeatSubmissionState.SUBMITTED_OBSERVED
         ),
-        aeat_submitted_at=verified_justificante.presented_at
-        if verified_justificante is not None
-        else payload.captured_at,
+        aeat_submitted_at=verified_justificante.presented_at if verified_justificante is not None else None,
         aeat_reference_id=target.aeat_reference_id,
         aeat_evidence_kind=target.source_kind.value,
         verified_justificante_csv=verified_justificante.csv if verified_justificante is not None else None,

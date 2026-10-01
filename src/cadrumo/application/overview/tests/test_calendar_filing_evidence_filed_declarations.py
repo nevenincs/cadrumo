@@ -9,7 +9,7 @@ import pytest
 from ....core.period import Period
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ..calendar_evidence import calendar_filing_evidence_from_sources
-from ..calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
+from ..calendar_models import OverviewAeatEvidenceConcern, OverviewAeatSubmissionState, OverviewLocalFilingState
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )
@@ -95,7 +95,12 @@ def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None
         expected_tax_id="X1234567L",
     )
 
-    assert evidence == ()
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
+    assert row.aeat_evidence_concerns == (OverviewAeatEvidenceConcern.INACTIVE_REGISTER,)
+    assert row.justificante_verified is False
+    assert row.aeat_filed is False
 
 
 def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:

@@ -17,6 +17,10 @@ from a declaration and never from a label, a box number or a bare sign:
   settlement box.
 
 A result box that holds no value yet has no direction either.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations
@@ -63,13 +67,13 @@ def _amount(row: ModeloWorkReviewCasilla) -> Decimal | None:
 
 
 def _declared_type_result(
-    modelo: str, result_ids: tuple[CasillaId, ...], rows: Mapping[str, ModeloWorkReviewCasilla], period: Period
+    modelo: str, result_ids: tuple[CasillaId, ...], values: Mapping[str, Decimal | None], period: Period
 ) -> ModeloFormResult | None:
     """The result by the modelo's declared "tipo de declaración" rule, over the result boxes this revision has."""
-    present = tuple(casilla_id for casilla_id in result_ids if str(casilla_id) in rows)
-    if not present:
+    if not any(str(casilla_id) in values for casilla_id in result_ids):
         return None
-    amounts = {casilla_id: _amount(rows[str(casilla_id)]) for casilla_id in present}
+    present = result_ids
+    amounts = {casilla_id: values.get(str(casilla_id)) for casilla_id in present}
     known = {casilla_id: amount for casilla_id, amount in amounts.items() if amount is not None}
     nonzero = [casilla_id for casilla_id, amount in known.items() if amount != 0]
     settling = nonzero[0] if len(nonzero) == 1 else present[0]
@@ -102,21 +106,41 @@ def settlement_result(
     Raises:
         AmbiguousDeclarationResultError: The registry declares two final-result
             casillas for the revision, so it has none.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
+    """
+    return settlement_result_values(modelo, revision, {key: _amount(row) for key, row in rows.items()}, period)
+
+
+def settlement_result_values(
+    modelo: str, revision: ModeloRevision, values: Mapping[str, Decimal | None], period: Period
+) -> ModeloFormResult | None:
+    """Read the same settlement contract from already-loaded calculation values.
+
+    Portfolio summaries use this path without building a review or a full form.
+    Missing settlement operands remain unknown, including a partially computed
+    result split across several declared boxes.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     selected = declaration_result_casillas(modelo, revision)
     if selected is None:
         return None
     if selected.by_declared_type:
-        return _declared_type_result(modelo, selected.casilla_ids, rows, period)
+        return _declared_type_result(modelo, selected.casilla_ids, values, period)
     role_casilla = selected.casilla_ids[0]
-    if str(role_casilla) not in rows:
+    if str(role_casilla) not in values:
         return None
     return ModeloFormResult(
         casilla_id=role_casilla,
         box=None,
-        value=_amount(rows[str(role_casilla)]),
+        value=values[str(role_casilla)],
         direction=ModeloFormResultDirection.UNKNOWN,
     )
 
 
-__all__ = ["settlement_result"]
+__all__ = ["settlement_result", "settlement_result_values"]

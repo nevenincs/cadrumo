@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9486b8ac8a76dcfad1b5ff30606791ca8df990a9b8037f8929118afd5fedc5b'
+body_hash: 'sha256:217f20840b6cd948928b021e63972edab601565d7b62ba4d3435b486b0726585'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1346,6 +1346,28 @@ related:
 - `S58` `verify:` `rendered user-scope link/fragment check (24316 links)` -> `pass`
 - `S58` `verify:` `Ruff formatting and git diff --check owned docs/CLI scope` -> `pass`
 - `S58` `by:` `vaultspec-standard-executor`
+- `S53` `A` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S53` `A` `src/cadrumo/application/modelo/declarations_portfolio.py`
+- `S53` `M` `src/cadrumo/application/modelo/declarations_workspace.py`
+- `S53` `M` `src/cadrumo/application/modelo/work_form_result.py`
+- `S53` `A` `src/cadrumo/application/modelo/tests/test_declaration_summary.py`
+- `S53` `A` `src/cadrumo/application/modelo/tests/test_declarations_portfolio.py`
+- `S53` `M` `src/cadrumo/application/workbench_capture_memory.py`
+- `S53` `M` `src/cadrumo/application/workbench_generation.py`
+- `S53` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S53` `verify:` `pytest P08 summary/portfolio/calendar/generation/encrypted-reader focused scope -n0 -m unit-or-integration (92 applicable passes; identity isolation and discard followup 32 passes)` -> `pass`
+- `S53` `by:` `vaultspec-high-executor`
+- `S54` `M` `src/cadrumo/application/modelo/declarations_calendar.py`
+- `S54` `M` `src/cadrumo/application/overview/_calendar_evidence_sources.py`
+- `S54` `M` `src/cadrumo/application/overview/calendar.py`
+- `S54` `M` `src/cadrumo/application/overview/calendar_evidence.py`
+- `S54` `M` `src/cadrumo/application/overview/calendar_models.py`
+- `S54` `A` `src/cadrumo/application/overview/tests/test_calendar_external_completion.py`
+- `S54` `M` `src/cadrumo/application/overview/tests/test_calendar_filing_evidence_filed_declarations.py`
+- `S54` `A` `src/cadrumo/entrypoints/calendar_evidence_composition.py`
+- `S54` `A` `src/cadrumo/entrypoints/tests/test_calendar_evidence_composition.py`
+- `S54` `verify:` `pytest encrypted AEAT reader six real encrypted-store cases and official calendar/list source classification in current 92-pass foundation scope` -> `pass`
+- `S54` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1429,3 +1451,5 @@ related:
 - `S51` The earlier confirm-chip correction changed the advisory level from confirm to check; the owning refresh changes only `notices[0].context.level.` Oversized JSON output advisories remain documentation work.
 - `S64` Three Modelo 369 envelope-role inputs remain visible and unnamed because typed data does not prove their role; binding-input-registry-notes remain open. Frozen naming captures follow the code checkpoint.
 - `S28` The broad frozen render exposed a one-field golden mismatch (confirm to check); the owning refresh and sequence/page checks resolved it, and the current-source capture has no divergences. The dev.tui before/after diff exits 1 to report changed frames; its report and both immutable review snapshots are preserved. S50/S30 remain open for the unfinished planned scope.
+- `S53` The first current foundation run detected an over-broad duplicate-address assertion. Canonical WorkUnit identity revalidation now refuses only the malformed row; healthy neighbours survive. Corrected owning identity/discard suite passes. S54 application prerequisites land in this coherent foundation checkpoint; UI and final preview review remain open.
+- `S54` Application source/evidence foundation checkpoint only. Installed route and truthful external details are owned by S55; final integrated captures still required.

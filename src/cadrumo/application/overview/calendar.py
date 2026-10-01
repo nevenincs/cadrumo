@@ -338,6 +338,8 @@ def _annotate_entry_with_work_unit(
     due_soon_days: int,
 ) -> _OverviewCalendarEntry:
     status = _local_work_unit_status(unit, entry.adjusted_closes_on, today, due_soon_days)
+    if entry.filing_evidence.aeat_filed:
+        status = _ObligationStatus.FILED
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
     return entry.model_copy(
         update={
@@ -348,6 +350,8 @@ def _annotate_entry_with_work_unit(
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
             "local_work_unit_revision_id": unit.revision_id,
+            "recovery": None if status is _ObligationStatus.FILED else entry.recovery,
+            "recovery_action": None if status is _ObligationStatus.FILED else entry.recovery_action,
         },
     )
 
@@ -923,6 +927,14 @@ def _calendar_entry_from_obligation(
         holiday_coverage = _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     period = obligation.period
     status = _classify_obligation_status(adjusted, today, due_soon_days)
+    evidence = _calendar_entry_filing_evidence(
+        modelo=obligation.modelo,
+        filing_year=period.filing_year,
+        period=period,
+        evidence=filing_evidence,
+    )
+    if evidence.aeat_filed:
+        status = _ObligationStatus.FILED
     recovery = None
     if status is _ObligationStatus.OVERDUE:
         try:
@@ -981,12 +993,7 @@ def _calendar_entry_from_obligation(
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
             operation=operation,
         ),
-        filing_evidence=_calendar_entry_filing_evidence(
-            modelo=obligation.modelo,
-            filing_year=period.filing_year,
-            period=period,
-            evidence=filing_evidence,
-        ),
+        filing_evidence=evidence,
     )
 
 

@@ -34,6 +34,7 @@ from ..overview.calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
+from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
 from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
@@ -127,6 +128,9 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     aeat_submission_state: OverviewAeatSubmissionState | None
     justificante_verified: bool | None
     evidence_conflicted: bool
+    aeat_submitted_at: datetime | None = None
+    aeat_reference_id: str | None = Field(default=None, exclude=True, repr=False)
+    aeat_needs_check: bool = False
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
@@ -211,6 +215,7 @@ class DeclarationsCalendarProjectionV1(BaseModel):
     query_range: OverviewCalendarRange
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[DeclarationsCalendarEntryRefV1, ...]
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -241,6 +246,7 @@ def project_declarations_calendar(
         query_range=calendar.range,
         sources=sources,
         entries=tuple(rows),
+        coverage=calendar.coverage,
     )
 
 
@@ -364,6 +370,9 @@ def _project_calendar_row(
         aeat_submission_state=aeat_submission_state,
         justificante_verified=justificante_verified,
         evidence_conflicted=bool(authority.aeat_evidence_conflict_reference_ids),
+        aeat_submitted_at=authority.aeat_submitted_at,
+        aeat_reference_id=authority.aeat_reference_id,
+        aeat_needs_check=bool(authority.aeat_evidence_concerns),
         conditional_recargo_preview=conditional_recargo_preview_from_recovery(
             entry.recovery,
             rate_reference_on=entry.evaluated_on,

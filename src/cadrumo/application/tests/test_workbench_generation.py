@@ -273,7 +273,7 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
 def test_secure_profile_provider_contains_rejected_declarations_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A contradictory declaration catalogue refuses only its workspace source."""
+    """An invalid declaration identity refuses its row while retaining its healthy neighbour."""
     period = Period.from_year_and_code(2026, "1T")
     revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
@@ -320,10 +320,16 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     generation = InstalledWorkbenchGenerationProviderV1(door)()
 
     assert generation.home.projection is not None
-    assert generation.declarations.projection is None
-    assert generation.declarations.availability is WorkbenchGenerationAvailability.UNAVAILABLE
-    assert generation.declarations.refusal == "workbench.declarations.snapshot_projector_unavailable"
-    assert generation.declarations_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
+    projection = generation.declarations.projection
+    assert projection is not None
+    assert len(projection.declarations) == 2
+    healthy, refused = projection.declarations
+    assert healthy.work_unit_id == unit.work_unit_id
+    assert healthy.summary is not None and healthy.summary.state.value == "draft"
+    assert refused.work_unit_id == duplicate_address.work_unit_id
+    assert refused.summary is not None and refused.summary.state.value == "unreadable"
+    assert all(row.summary is not None and row.summary.result is None for row in projection.declarations)
+    assert all(zone.availability.value == "stale" for zone in projection.zones if zone.item_count is not None)
 
 
 def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(

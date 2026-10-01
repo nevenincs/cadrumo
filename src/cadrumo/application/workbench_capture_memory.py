@@ -79,6 +79,7 @@ class WorkbenchCalendarMemoKey:
     filings_revision: str
     as_of: date
     generation: AuthorityGenerationPin
+    aeat_evidence_revision: str = "unbound"
 
 
 @dataclass(frozen=True, slots=True)
