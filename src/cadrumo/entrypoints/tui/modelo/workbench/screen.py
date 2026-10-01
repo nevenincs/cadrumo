@@ -96,7 +96,14 @@ from .casilla_list import (
     grid_cell_title,
     rate_note,
 )
-from .editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, EditorOutcome, read_only_reason
+from .editor import (
+    CasillaEditorPanel,
+    CasillaEditorScreen,
+    EditorDecision,
+    EditorOutcome,
+    affects_text,
+    read_only_reason,
+)
 from .export import WorkbenchExportScreen
 from .header import (
     DeadlineTone,
@@ -1475,7 +1482,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             self._edit_unavailable()
             return
         if self._held_card(field) is None and isinstance(field.address, ModeloFormCasillaAddressV1):
-            # The panel names the boxes this one affects, which only the full help knows: read it first.
+            # The panel says what a change to this box reaches, which only the full help knows: read it first.
             self.run_worker(partial(self._open_editor_once_explained, entry), group="workbench-editor", exclusive=True)
             return
         self._push_editor(entry, actions, self._held_card(field))
@@ -1500,6 +1507,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         """
         field = entry.field
         recorded = self.recorded
+        form = self.form
+        result = (
+            None
+            if form is None
+            else result_view(form, self._language, staged=len(self._session.changes), recorded=recorded)
+        )
         probe = WorkbenchEditSession(self._language)
         docked = self._height() >= _DOCKED_FROM
         host = CasillaEditorPanel if docked else CasillaEditorScreen
@@ -1511,7 +1524,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             can_clear=probe.stage_clear(field) is None,
             can_restore=probe.stage_restore(field) is None,
             read_only_reason=read_only_reason(field, self._language, recorded=recorded),
-            feeds=() if card is None else card.feeds,
+            # An unread card says nothing, rather than that the box affects nothing.
+            affects=affects_text(card, form, result=result),
             # Docked, the header stays in view and the panel need not repeat its result line.
             status_line=None if docked else self._status_line(),
             recorded=recorded,

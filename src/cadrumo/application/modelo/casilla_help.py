@@ -13,7 +13,10 @@ written at runtime:
   identifier ("Ley 35/2006, art. 99") with its official link;
 * the declared constraints in words, or a plain statement that none are
   declared, which is different from saying the box is unconstrained;
-* where a bound value comes from, and which boxes use this one.
+* where a bound value comes from, and which boxes use this one;
+* how a change to the box travels to the declaration's result: the fewest
+  formulas from it to the result box, the other printed boxes it also
+  reaches, or that no formula chain reaches the result at all.
 
 The explanation a person wrote for the casilla is the form's own ``help``; this
 card adds what the registry can say mechanically, so a box with no written help
@@ -23,7 +26,8 @@ still explains itself.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections import deque
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from typing import Final
@@ -35,6 +39,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.result_disposition import result_disposition_casilla_ids
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, ParameterId
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -42,6 +47,7 @@ from ...domain.calculations.registry.schema_base import CasillaSignConstraint
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
+from .settlement_casilla import declaration_result_casilla_id
 from .source_policy import source_policy
 from .value_presentation import LOCALE_NUMBER_FORMATS, SCREEN_MINUS_SIGN, group_decimal_text
 
@@ -136,8 +142,37 @@ class ModeloHelpCitationV1(BaseModel):
     permalink: str
 
 
+class ModeloHelpBoxV1(BaseModel):
+    """One box a change passes through, written as the filer reads it ("[07]")."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    casilla_id: CasillaId
+    box: str
+
+
+class ModeloHelpReachV1(BaseModel):
+    """How a change to one casilla travels to the declaration's result through the revision's formulas.
+
+    ``path`` runs from the first printed box the change reaches to the result
+    box, along the fewest formulas; working figures the form does not print
+    are left out of it. It is empty when no formula chain leads from the
+    casilla to the result. ``others`` counts the printed boxes the change also
+    reaches that are not on ``path``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: tuple[ModeloHelpBoxV1, ...]
+    others: int
+
+
 class ModeloCasillaHelpCardV1(BaseModel):
-    """Everything the registry can say mechanically about one casilla."""
+    """Everything the registry can say mechanically about one casilla.
+
+    ``reach`` is ``None`` when the revision names no result box, and for a
+    result box itself, which ``is_result`` says.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -148,6 +183,8 @@ class ModeloCasillaHelpCardV1(BaseModel):
     constraints: tuple[str, ...]
     origins: tuple[str, ...]
     feeds: tuple[str, ...]
+    reach: ModeloHelpReachV1 | None = None
+    is_result: bool = False
 
 
 class CasillaHelpCatalogueError(InternalInvariantError):
@@ -323,6 +360,92 @@ def _uses(formula: FormulaDefinition) -> set[str]:
     return found
 
 
+def _dependents(formulas: Iterable[FormulaDefinition]) -> dict[str, frozenset[str]]:
+    """Each casilla's direct dependents: the casillas whose formula reads it."""
+    graph: dict[str, set[str]] = {}
+    for formula in formulas:
+        target = str(formula.target_casilla_id)
+        for used in _uses(formula):
+            if used != target:
+                graph.setdefault(used, set()).add(target)
+    return {used: frozenset(targets) for used, targets in graph.items()}
+
+
+def _printed_box(casilla: CasillaDefinition | None) -> str | None:
+    """The box the form prints ``casilla`` in, bracketed; ``None`` for a working figure it does not print."""
+    if casilla is not None and casilla.number.isdigit():
+        return f"[{casilla.number}]"
+    if casilla is not None and casilla.form_number is not None:
+        return f"[{casilla.form_number}]"
+    return None
+
+
+def _result_casilla_ids(snapshot: RegistrySnapshot) -> frozenset[str]:
+    """The casillas holding the declaration's result, by the rule the workbench's settlement result follows.
+
+    The modelo's declared "tipo de declaración" result boxes this revision
+    defines come first; otherwise the casilla the registry declares the final
+    result; otherwise none.
+    """
+    defined = {str(item.id) for item in snapshot.revision.casillas}
+    declared = result_disposition_casilla_ids(str(snapshot.modelo.id)) or ()
+    present = frozenset(str(item) for item in declared if str(item) in defined)
+    if present:
+        return present
+    role = declaration_result_casilla_id(snapshot.revision)
+    return frozenset[str]() if role is None else frozenset({str(role)})
+
+
+def _reach(
+    start: str,
+    *,
+    graph: Mapping[str, frozenset[str]],
+    results: frozenset[str],
+    casillas: Mapping[str, CasillaDefinition],
+    box_text: Callable[[str], str],
+) -> ModeloHelpReachV1:
+    """Walk every casilla a change to ``start`` reaches, keeping the fewest-formula route to a result box.
+
+    Among routes of equal length the one through printed boxes, then the
+    lowest casilla ids, is kept, so the same revision always gives the same
+    chain.
+    """
+
+    def order(key: str) -> tuple[bool, str]:
+        return (_printed_box(casillas.get(key)) is None, key)
+
+    parents: dict[str, str] = {}
+    reached: set[str] = {start}
+    queue: deque[str] = deque([start])
+    found: str | None = None
+    while queue:
+        node = queue.popleft()
+        for following in sorted(graph.get(node, frozenset()), key=order):
+            if following in reached:
+                continue
+            reached.add(following)
+            parents[following] = node
+            if found is None and following in results:
+                found = following
+            queue.append(following)
+    route: list[str] = []
+    step = found
+    while step is not None and step != start:
+        route.append(step)
+        step = parents.get(step)
+    route.reverse()
+    path = tuple(
+        ModeloHelpBoxV1(casilla_id=casillas[key].id, box=box_text(key))
+        for key in route
+        if key in results or _printed_box(casillas.get(key)) is not None
+    )
+    on_path = set(route)
+    others = sum(
+        1 for key in reached if key != start and key not in on_path and _printed_box(casillas.get(key)) is not None
+    )
+    return ModeloHelpReachV1(path=path, others=others)
+
+
 def build_casilla_help_card(
     casilla_id: CasillaId,
     *,
@@ -344,13 +467,11 @@ def build_casilla_help_card(
     parameters = {str(item.id): item for item in snapshot.revision.parameters}
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
 
+    def box_text(key: str) -> str:
+        return _printed_box(casillas.get(key)) or _phrase(language, "formula.working_figure")
+
     def box_of(target: CasillaId) -> str:
-        other = casillas.get(str(target))
-        if other is not None and other.number.isdigit():
-            return f"[{other.number}]"
-        if other is not None and other.form_number is not None:
-            return f"[{other.form_number}]"
-        return _phrase(language, "formula.working_figure")
+        return box_text(str(target))
 
     def binding_name(binding_id: BindingId) -> str:
         binding = bindings.get(str(binding_id))
@@ -390,14 +511,14 @@ def build_casilla_help_card(
         for text in (_origin_sentence(bindings.get(str(binding_id)), language) for binding_id in _bound_by(casilla))
         if text is not None
     )
-    feeds = tuple(
-        sorted(
-            {
-                box_of(item.target_casilla_id)
-                for item in snapshot.revision.formulas
-                if str(casilla.id) in _uses(item) and str(item.target_casilla_id) != str(casilla.id)
-            }
-        )
+    graph = _dependents(snapshot.revision.formulas)
+    feeds = tuple(sorted({box_text(target) for target in graph.get(str(casilla.id), frozenset())}))
+    results = _result_casilla_ids(snapshot)
+    is_result = str(casilla.id) in results
+    reach = (
+        None
+        if is_result or not results
+        else _reach(str(casilla.id), graph=graph, results=results, casillas=casillas, box_text=box_text)
     )
     return ModeloCasillaHelpCardV1(
         casilla_id=casilla.id,
@@ -407,15 +528,19 @@ def build_casilla_help_card(
         constraints=_constraint_sentences(casilla.constraints, language),
         origins=origins,
         feeds=feeds,
+        reach=reach,
+        is_result=is_result,
     )
 
 
 __all__ = [
     "CasillaHelpCatalogueError",
     "ModeloCasillaHelpCardV1",
+    "ModeloHelpBoxV1",
     "ModeloHelpCitationV1",
     "ModeloHelpFormulaV1",
     "ModeloHelpQuoteV1",
+    "ModeloHelpReachV1",
     "build_casilla_help_card",
     "legal_citation_text",
 ]

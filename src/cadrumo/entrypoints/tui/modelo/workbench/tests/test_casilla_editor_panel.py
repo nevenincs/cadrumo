@@ -104,7 +104,7 @@ def _editor(
     can_clear: bool = False,
     can_restore: bool = False,
     reason: str | None = None,
-    feeds: tuple[str, ...] = (),
+    affects: str | None = None,
     status_line: str | None = None,
 ) -> CasillaEditorScreen:
     return CasillaEditorScreen(
@@ -114,17 +114,17 @@ def _editor(
         can_clear=can_clear,
         can_restore=can_restore,
         read_only_reason=reason,
-        feeds=feeds,
+        affects=affects,
         status_line=status_line,
     )
 
 
 def _read_only(
-    field: ModeloFormField, language: str, *, feeds: tuple[str, ...] = (), status_line: str | None = None
+    field: ModeloFormField, language: str, *, affects: str | None = None, status_line: str | None = None
 ) -> CasillaEditorScreen:
     reason = read_only_reason(field, OutputLanguage(language))
     assert reason is not None
-    return _editor(field, language, reason=reason, feeds=feeds, status_line=status_line)
+    return _editor(field, language, reason=reason, affects=affects, status_line=status_line)
 
 
 def _text(editor: CasillaEditorScreen, widget_id: str) -> str:
@@ -149,7 +149,7 @@ def _longest_blank_run(text: str, region: Region) -> int:
 @pytest.mark.asyncio
 async def test_the_panel_answers_what_it_asks_what_it_holds_whether_it_changes_and_what_it_affects() -> None:
     with override_settings(cadrumo_output_language="en"):
-        editor = _editor(_assumed(), "en", feeds=("[07]", "[19]"))
+        editor = _editor(_assumed(), "en", affects="[07], [19]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
@@ -176,7 +176,7 @@ async def test_the_boxes_it_affects_come_between_can_you_change_it_and_the_new_v
     language: str, size: tuple[int, int]
 ) -> None:
     with override_settings(cadrumo_output_language=language):
-        editor = _editor(_assumed(), language, feeds=("[07]",))
+        editor = _editor(_assumed(), language, affects="[07]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
             await _settle(pilot)
@@ -204,9 +204,9 @@ async def test_the_panel_is_as_tall_as_what_it_says_with_no_empty_band(
 ) -> None:
     with override_settings(cadrumo_output_language=language):
         editor = (
-            _editor(_assumed(), language, feeds=("[07]",), status_line=_STATUS)
+            _editor(_assumed(), language, affects="[07]", status_line=_STATUS)
             if case == "editable"
-            else _read_only(_sourced(), language, feeds=("[03]",), status_line=_STATUS)
+            else _read_only(_sourced(), language, affects="[03]", status_line=_STATUS)
         )
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
@@ -316,7 +316,7 @@ async def test_a_sourced_box_says_where_it_comes_from_what_it_affects_and_where_
     size: tuple[int, int],
 ) -> None:
     with override_settings(cadrumo_output_language="es"):
-        editor = _read_only(_sourced(), "es", feeds=("[03]",))
+        editor = _read_only(_sourced(), "es", affects="[03]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
             await _settle(pilot)
@@ -597,7 +597,7 @@ async def test_the_input_and_every_button_stay_in_view_however_long_the_answers(
             language,
             can_clear=True,
             can_restore=True,
-            feeds=("[07]", "[12]", "[19]"),
+            affects="[07] → [12] → [19]",
             status_line=_STATUS,
         )
         app = ScreenHostApp(editor)

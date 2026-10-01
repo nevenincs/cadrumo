@@ -2137,6 +2137,12 @@ tui:
         source_policy_undecided: Ezt az értéket itt még nem írhatja felül. Javítsa
           ott, ahonnan származik, majd számoljon újra.
       editor:
+        affects:
+          is_result: Ez a rovat a bevallás eredménye.
+          not_result: 'Nem változtatja meg az eredményt: egyetlen számítás sem vezet
+            ebből a rovatból az eredményhez.'
+          now: (jelenleg {amount})
+          others: 'További rovatok, amelyeket szintén módosít: {count}'
         area:
           none: az érték forrása
         block:

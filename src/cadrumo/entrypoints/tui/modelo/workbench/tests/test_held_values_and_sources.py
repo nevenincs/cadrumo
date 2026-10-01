@@ -379,7 +379,7 @@ async def test_a_value_from_aeat_data_names_the_day_it_was_imported_on_every_sur
 async def test_the_panel_says_what_a_box_affects_before_the_new_value_and_a_filed_one_how_to_change_it() -> None:
     field = form_field("06", "Withholdings", ModeloFormOrigin.DEFAULT_TO_CONFIRM, Decimal("0.00"))
     with override_settings(cadrumo_output_language="en"):
-        panel = CasillaEditorScreen(field, parse=FakeActions().parse, language=OutputLanguage.EN, feeds=("[07]",))
+        panel = CasillaEditorScreen(field, parse=FakeActions().parse, language=OutputLanguage.EN, affects="[07]")
         async with ScreenHostApp(panel).run_test(size=(140, 40)) as pilot:
             await _settle(pilot)
             affects = panel.query_one("#editor-affects").region

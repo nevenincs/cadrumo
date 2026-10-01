@@ -2098,6 +2098,12 @@ tui:
         source_policy_undecided: You cannot replace this value here yet. Correct it
           where it comes from, then calculate again.
       editor:
+        affects:
+          is_result: This box is the result of the declaration.
+          not_result: 'It does not change the result: no calculation leads from this
+            box to it.'
+          now: (now {amount})
+          others: 'Other boxes it also changes: {count}'
         area:
           none: the place it comes from
         block:

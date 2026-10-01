@@ -14,7 +14,7 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..casilla_help import build_casilla_help_card, legal_citation_text
+from ..casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card, legal_citation_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -100,3 +100,82 @@ def test_a_box_without_limits_states_none(operation: PinnedAuthorityOperation) -
 def test_an_undefined_casilla_is_refused(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(KeyError):
         _card(operation, "999")
+
+
+def _path(card: ModeloCasillaHelpCardV1) -> list[str]:
+    assert card.reach is not None
+    return [step.box for step in card.reach.path]
+
+
+def test_a_change_travels_to_the_result_along_the_official_form(operation: PinnedAuthorityOperation) -> None:
+    """Modelo 130: [07] = [04] - [05] - [06], [12] = [07] + [11], [14] = [12] - [13], [17] from [14], [19] from [17].
+
+    [14] also feeds [15], which feeds [17] again: a longer route, so [15] is
+    counted as another box the change reaches rather than put on the chain.
+    """
+    instalments = _card(operation, "05")
+    income = _card(operation, "01")
+
+    assert _path(instalments) == ["[07]", "[12]", "[14]", "[17]", "[19]"]
+    assert _path(income) == ["[03]", "[04]", "[07]", "[12]", "[14]", "[17]", "[19]"]
+    assert instalments.reach is not None
+    assert instalments.reach.others == 1
+    assert not instalments.is_result
+
+
+def test_a_box_feeding_the_result_directly_is_one_step_from_it(operation: PinnedAuthorityOperation) -> None:
+    """Modelo 130's [18] (the earlier return's result being corrected) is subtracted in [19] itself."""
+    card = _card(operation, "18")
+
+    assert _path(card) == ["[19]"]
+    assert card.reach is not None
+    assert card.reach.others == 0
+
+
+def test_the_result_box_is_marked_and_has_no_chain(operation: PinnedAuthorityOperation) -> None:
+    card = _card(operation, "19")
+
+    assert card.is_result
+    assert card.reach is None
+
+
+def _card_303(operation: PinnedAuthorityOperation, casilla_id: str) -> ModeloCasillaHelpCardV1:
+    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    return build_casilla_help_card(
+        casilla_id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON
+    )
+
+
+def test_a_303_box_reaches_its_result_and_an_informative_one_does_not(operation: PinnedAuthorityOperation) -> None:
+    """Modelo 303: [69] sums [66] with its adjustments and [71] settles [69]; [59] is additional information."""
+    general = _card_303(operation, "66")
+    informative = _card_303(operation, "59")
+
+    assert _path(general) == ["[69]", "[71]"]
+    assert informative.reach is not None
+    assert informative.reach.path == ()
+    assert not informative.is_result
+
+
+def test_working_figures_on_the_way_are_left_out_of_the_chain(operation: PinnedAuthorityOperation) -> None:
+    """A deductible quota reaches [46] through the total-deductible working figure the form does not print."""
+    card = _card_303(operation, "29")
+
+    path = _path(card)
+    assert path[0] == "[46]"
+    assert path[-1] == "[71]"
+    assert all(re.fullmatch(r"\[\d+\]", box) for box in path)
+    assert card.reach is not None
+    assert card.reach.others > 0, "[46] also reaches [64] and [66], which the shortest chain passes by"
+
+
+def test_a_modelo_that_names_no_result_gives_no_chain(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("349", filing_year=2026, period="1T")
+    casilla = snapshot.revision.casillas[0]
+
+    card = build_casilla_help_card(
+        casilla.id, snapshot=snapshot, operation=operation, language=OutputLanguage.EN, on=_ON
+    )
+
+    assert card.reach is None
+    assert not card.is_result

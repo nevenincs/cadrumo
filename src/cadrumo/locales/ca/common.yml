@@ -2144,6 +2144,12 @@ tui:
         source_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
           on s'origina i torna a calcular.
       editor:
+        affects:
+          is_result: Aquesta casella és el resultat de la declaració.
+          not_result: 'No canvia el resultat: cap càlcul no porta d''aquesta casella
+            fins a ell.'
+          now: (ara {amount})
+          others: 'Altres caselles que també canvia: {count}'
         area:
           none: el lloc d'on surt
         block:
