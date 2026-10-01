@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:73aee57c12dd7ccb0d41b13f9085189fa8df899ddd002185939874d6417ec756'
+body_hash: 'sha256:7827e49b704c0d3e0445bc4c85bd65e83e2f0348bf37d955f9e2f7dccc339911'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -354,17 +354,30 @@ lanes' uncommitted work into history, one of them while a file was mid-edit. Not
 lanes verify their files against HEAD before each commit and report which commit holds their
 work.
 
-### m303-result-route | high | Modelo 303's result does not run through its printed amount boxes
+### m303-result-route | high | Modelo 303 can export a [27] its printed boxes do not add up to
 
 The chain shown in the editor (2588ffa2ac) follows the registry's formula graph, and on 303 the
 printed VAT amounts [03], [06], [09] and the total [27] reach no result: [46] is computed from
 separate unprinted figures, while the official design sums [27] from the amounts and [46] from
 [27] less [45]. The editor states that these boxes do not change the result, which is true of
-the engine and not of the form. If a printed amount box can be overridden, the exported file
-could carry lines that do not add up to its total and result; whether the export's own sum checks
-refuse that is being verified. Until settled, the editor must not tell a filer such a box has no
-effect. Open for the registry's owner: route 303's result through its printed boxes, or ground
-why it does not.
+the engine and not of the form. Verified on 2026-10-01: no printed amount box from [01] to [71]
+can be overridden (each is bound, calculated or a design constant, and the edit executor, the
+calculation inputs and the CLI binding override all refuse), and every box a filer can type keeps
+[46] = [27] - [45] and [71] = [69] - [70] + [109] (- [112] from 2026). The editor now says the
+calculation does not link such a box (069ae8ec92), which is accurate.
+
+The verification found a different route that does break the printed sums: the autoconsumo del
+promotor base (`aeat app modelo work calculate --autoconsumo-promotor-base`, or the profile fact
+`iva.autoconsumo_promotor_base`) adds its cuota to [27] through `iva.cuota-devengada-total`
+(`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml:1`,
+extended at `2023/revision.toml:1463`) while no printed box carries it
+(`2023/casillas/0001-declarations.toml:51`). With a base of 1000 on a synthetic 2025 1T ledger,
+verification granted complete and the export wrote [09] 2100.00 and [27] 2310.00 with every
+other [27] summand at zero, against the record design's [27] sum
+(`06-303-ejercicio-2025-...extracted.md:104`). No check refused it and the filer was not told.
+Open for the registry's owner, on main as well: route the autoconsumo base and cuota through the
+printed rate boxes the instructions assign, grounded in AEAT text the corpus does not yet hold,
+and add a check that [27] equals its printed summands.
 
 ## Recommendations
 
