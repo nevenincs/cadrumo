@@ -819,6 +819,9 @@ cli:
           for modelo %{modelo}. Valid tokens: %{tokens}.'
       export:
         actor_help: Your name or label, recorded in the MODELO_EXPORTED event.
+        development_file_not_accepted: 'AEAT will not accept this file for filing:
+          it contains Cadrumo''s all-zero development software identity. Enter the
+          calculated box values in the AEAT form instead.'
         errors:
           output_required: Supply --output PATH for the fichero-BOE file.
         help: 'Export a saved calculation that is checked and complete, or recorded
@@ -827,6 +830,7 @@ cli:
           contacts AEAT, and the generated file is not official AEAT filing evidence.
           Use AEAT justificante, declaration consultation, or CSV cotejo evidence
           after filing.'
+        local_file_not_receipt: The exported file is not an AEAT filing receipt.
         output_help: Path to write the fichero-BOE file to.
         replace_help: Replace a file already at --output. Without it, an existing
           export file is refused so an earlier export is never destroyed.
@@ -1050,6 +1054,8 @@ cli:
           annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta,
           modificacion, or baja.'
         revision_help: Version id of the official form (from the modelo definitions).
+        sources_still_missing: Your records passed this period's checks, but the declaration
+          still lacks values from some sources. Review the missing values before calculating.
         year_help: Filing year.
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.

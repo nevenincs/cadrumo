@@ -128,11 +128,11 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
     assert raised.value.extra is extra
-    # The refusal carries machine identity only: no install command, and no
-    # human feature label that would read as operator-facing prose.
+    # The refusal names the missing capability for the catalogue-rendered fix.
     assert "pip install" not in str(raised.value)
     assert raised.value.context == {
         "extra": "ghost",
+        "feature": "a ghost feature",
         "import_name": "aeat_definitely_not_installed_xyz",
         "importable": False,
     }

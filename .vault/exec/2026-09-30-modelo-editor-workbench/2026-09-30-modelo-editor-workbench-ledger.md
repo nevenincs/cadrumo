@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:2bcdbf636cf6d8a298a9701928a620e6225f52a37a87c3a4be5e00d2419a546c'
+body_hash: 'sha256:6cad6430ebc839b0581967a11815f4e61aab0443da167b16b9208f4bc35aebba'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1506,6 +1506,11 @@ related:
 - `S59` `verify:` `pytest locale parity/contract/binding catalogue/casilla catalogue/Hungarian diacritics focused suite -n0 -m unit 105 cases` -> `pass`
 - `S59` `verify:` `dev.locales audit all four live product catalogues` -> `pass`
 - `S59` `by:` `vaultspec-standard-executor`
+- `S58` `M` `src/cadrumo/locales/en/cli.yml`
+- `S58` `M` `src/cadrumo/locales/es/cli.yml`
+- `S58` `M` `src/cadrumo/application/tests/test_provisioning.py`
+- `S58` `verify:` `pytest provisioning refusal contract in current 35-pass correction run` -> `pass`
+- `S58` `verify:` `dev.locales current notice keys and catalogue audit` -> `pass`
 
 ## Notes
 
@@ -1596,3 +1601,4 @@ related:
 - `S62` Prepared compiler and candidate companion checkpoint. Live export/layout installation, complete authority publication and runtime rate adoption remain outstanding, so S62 stays open. Existing export-only journal/recovery is unchanged; each installed export must be repaired with the canonical form generator before the next export invocation. Corrected HU names and Modelo100 binding questions share catalogue files with S59/S64.
 - `S64` A scalar input aliases a casilla only when exact record/offset/length, numeric type and independent consumer checks prove one write address. Ambiguous or independent consumers remain distinct. The Modelo100 boolean direct-binding question follows the established lookup priority; provider casilla names remain unchanged.
 - `S59` Used the prepared proper-name pack and a bounded residual manifest. The proper name remains Modelo plus its code; surrounding Hungarian nouns carry case. Current human-wording changes were preserved. Generic schema, LLM, taxpayer and vehicle-model concepts retain modell where that is their actual meaning. Catalogue occurrences across revisions are not counted as distinct binding inputs.
+- `S58` Followup records the actual en/es cli notice shards left unstaged by the earlier documentation checkpoint. Missing-extra refusal now names its feature through the canonical catalogue; machine identity and no-install-command assertion remain.

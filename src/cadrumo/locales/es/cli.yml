@@ -881,6 +881,10 @@ cli:
           para el modelo %{modelo}. Tokens válidos: %{tokens}.'
       export:
         actor_help: Tu nombre o etiqueta, registrado en el evento MODELO_EXPORTED.
+        development_file_not_accepted: 'La AEAT no aceptará este fichero para presentar
+          la declaración: contiene el identificador de software de desarrollo de Cadrumo,
+          compuesto solo por ceros. Introduce los valores calculados de las casillas
+          en el formulario de la AEAT.'
         errors:
           output_required: Indica --output PATH para el fichero-BOE.
         help: 'Exporta un cálculo guardado comprobado y completo, o registrado como
@@ -889,6 +893,8 @@ cli:
           100. Solo local; nunca contacta con la AEAT, y el fichero generado no es
           evidencia oficial de presentación ante la AEAT. Usa el justificante de la
           AEAT, la consulta de declaraciones presentadas o el cotejo CSV tras presentar.'
+        local_file_not_receipt: El fichero exportado no es un justificante de presentación
+          de la AEAT.
         output_help: Ruta donde escribir el fichero-BOE.
         replace_help: Sustituye un archivo ya existente en --output. Sin esta opción
           se rechaza un archivo de exportación existente para no destruir una exportación
@@ -1132,6 +1138,9 @@ cli:
           alta, modificacion o baja.'
         revision_help: Identificador de la versión del modelo oficial (de las definiciones
           de los modelos).
+        sources_still_missing: Tus registros han superado las comprobaciones de este
+          periodo, pero a la declaración aún le faltan valores de algunas fuentes.
+          Revisa los valores que faltan antes de calcular.
         year_help: Ejercicio de presentación.
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
