@@ -1,5 +1,5 @@
 [revisions."2025-y-siguientes"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised from the 2024 edition. Of 54 boxes shared with it, 39 sit at different offsets, and the eleven unnumbered Informacion adicional slots -- whose number IS a position range -- move from 555-741 to 633-819, a uniform shift of 78 bytes matching the space six added boxes take. Materialising this edition by inheritance would place those eleven fields 78 bytes into the wrong slot while every box id still matched, so the record would serialise plausibly and be wrong. This edition also prints four rate tiers where 2023-2024 print two, so its cardinality is not derivable from theirs either.", legal_refs = ["orden-hfp-227-2017:art-2"], cause = "official_structure_differs", source_refs = ["aeat-dr-222-2025"] } }
+predecessor = { none = { reason = "aeat-dr-222-2025 restructures the 2023-2024 record: it adds box [67] on DR22201 and boxes [61]-[66], two further rate tiers, on DR22202, which shifts every later field, so the eleven unnumbered Informacion adicional slots, whose number is a position range, move from 555-741 to 633-819, and box [23] becomes filer input where the 2023-2024 instructions compute it. No merge of the 2024 edition yields this one, so no predecessor is declared. The payload is stored against the 2024 edition through casilla_storage_baseline and family_storage_baseline: of the 69 casillas both editions share (56 boxes, 2 declarant fields, 11 Informacion adicional slots), only genuine differences are overrides (11 position ranges, 13 computed boxes citing this era's instructions, 8 four-tier cardinality reasons, box [23]'s manual input, 2 declarant source lists), the 7 new boxes are stated, and the export layout stays stated per edition. Storage reuse makes no continuity claim.", legal_refs = ["orden-hfp-227-2017:art-2"], cause = "official_structure_differs", source_refs = ["aeat-dr-222-2025"] } }
 formula_source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 casilla_source_refs = ["aeat-dr-222-2025"]
 application_link_source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
@@ -94,12 +94,43 @@ The rate boxes 17, 21, 24, 62 and 65 (19/20 or 5/7 of the tipo de gravamen by ci
 negocios) stay filer input, as does the minimum [33]. NOT CLAIMED -- filing: the \
 relationship families are unresolved and Modelo 220 group data has no binding."""
 reviewed_at = 2026-09-11
-# Storage reuse only, not legal continuity: the keyed families below are stored
-# as differences from the 2024 edition's effective members. The casillas and the
-# export layout stay stated in full for the structural reason the predecessor
-# declaration gives.
+# Storage reuse only, not legal continuity: the casillas and the keyed families
+# below are stored as differences from the 2024 edition's effective members. The
+# export layout stays stated per edition, for the structural reason the
+# predecessor declaration gives.
+casilla_storage_baseline = "2024"
 family_storage_baseline = "2024"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+# The seven boxes new on aeat-dr-222-2025 take their places in its record order:
+# [67] after [06] on DR22201, and the tier 3 and 4 boxes [61]-[66] after [25] on DR22202.
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "67"
+position = 6
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "61"
+position = 41
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "62"
+position = 42
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "63"
+position = 43
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "64"
+position = 44
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "65"
+position = 45
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "66"
+position = 46
 
 [[revisions."2025-y-siguientes".family_removals]]
 family = "formulas"
@@ -279,3 +310,419 @@ selector = {revision = "2024", id = "aeat-dr-222-2023-2024"}
 replacement_id = "aeat-dr-222-2025"
 sequence_additions = {casillas = [{casilla_id = "61", number = "61"}, {casilla_id = "62", number = "62"}, {casilla_id = "63", number = "63"}, {casilla_id = "64", number = "64"}, {casilla_id = "65", number = "65"}, {casilla_id = "66", number = "66"}, {casilla_id = "67", number = "67"}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
 sequence_removals = {source_refs = [0, 1]}
+
+# Box [23] is computed in 2023-2024 (clave [23] = clave [19] - clave [20]); the
+# 2025 instructions make [19] the sum of the four tier bases, so [23] is filer input.
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "23" }
+fields = { continuidad_origin = "seeded", input_kind = "manual", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = ["formula"]
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "01" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "02" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "03" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "04" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "05" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "06" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "37" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "07" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "08" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "38" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "39" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "59" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "60" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "10" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "11" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "12" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "13" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "44" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "45" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "46" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "14" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "15" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "47" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "48" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "16" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "17" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "49" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "50" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "51" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "58" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "52" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "53" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "18" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "19" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "20" }
+fields = { continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "21" }
+fields = { continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "22" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "24" }
+fields = { continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "25" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "54" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "57" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "42" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "43" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "55" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "56" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "26" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "27" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "28" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "29" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "30" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "31" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "32" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded", semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "33" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "34" }
+fields = { additional_source_refs = ["aeat-modelo-222-instructions"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "35" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.ejercicio" }
+fields = { continuidad_origin = "seeded", source_refs = ["boe-modelo-202-base-order"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.tipo-declaracion" }
+fields = { continuidad_origin = "seeded", source_refs = ["boe-modelo-202-base-order"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.quita-espera-importe-excluido" }
+fields = { continuidad_origin = "seeded", number = "633-649" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.quita-espera-integrado-base" }
+fields = { continuidad_origin = "seeded", number = "650-666" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.quita-espera-integrado-cuota" }
+fields = { continuidad_origin = "seeded", number = "667-683" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.reversion-deterioros" }
+fields = { continuidad_origin = "seeded", number = "684-700" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.reserva-inversiones-canarias" }
+fields = { continuidad_origin = "seeded", number = "701-717" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.bonificacion-ley-19-1994" }
+fields = { continuidad_origin = "seeded", number = "718-734" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.regimen-zec-no-computable" }
+fields = { continuidad_origin = "seeded", number = "735-751" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.minoracion-bonificacion-art-33" }
+fields = { continuidad_origin = "seeded", number = "752-768" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.aumento-capital-compensacion-creditos" }
+fields = { continuidad_origin = "seeded", number = "769-785" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.renta-exenta-cap-xiv-tit-vii" }
+fields = { continuidad_origin = "seeded", number = "786-802" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "info.bonificacion-art-34" }
+fields = { continuidad_origin = "seeded", number = "803-819" }
+removed_fields = []
+restate_provenance = true
