@@ -6449,6 +6449,9 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deduccions per incentivar determ. activitats - Total - aplicat
               en aquesta liquidació [00588]
+          is-abono-deducciones-id-i-insuficiencia-cuota-estado:
+            label: Liquidació IV - Resultat de l'autoliquidació - Abonament deduccions
+              I+D+i per insuficiència de quota - Estat [00083]
           is-agrupacion-de-interes-economico-espanola:
             help: Indicador d'agrupació d'interès econòmic espanyola [00013].
             label: Agrupació d'interès econòmic espanyola [00013]
@@ -9845,6 +9848,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Compte de pèrdues i guanys (II) - Operacions interrompudes - RESULTAT
               DEL COMPTE DE PÈRDUES I GUANYS [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-estado:
+            label: Liquidació IV - Resultat de l'autoliquidació - Discrepància de
+              criteri administratiu per a determinats supòsits d'autoliquidació rectificativa
+              que no s'hagin d'incloure en altres caselles - Estat [00032]
           is-rectificativa-discrepancia-criterio-administrativo-total:
             label: Liquidació IV - Resultat de l'autoliquidació - Discrepància de
               criteri administratiu per a determinats supòsits d'autoliquidació rectificativa

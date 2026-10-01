@@ -1473,7 +1473,7 @@ number = "00905"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2025"]
 semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '00902'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -1492,7 +1492,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '00906'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -1603,7 +1603,7 @@ number = "00941"
 section = ["reversion_por_deterioro_de_valores_representativos", "dotaciones_pendientes_de_integracion_a_principio_d"]
 semantic_role = "is_correccion_reversion_deterioro_valores_saldo_inicial"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '00955'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -1622,7 +1622,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '00956'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -1641,7 +1641,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '00957'
 continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -1858,7 +1858,7 @@ number = "01073"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01087'
 continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -1877,7 +1877,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01088'
 continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -1896,7 +1896,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01089'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -1915,7 +1915,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01110'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -1934,7 +1934,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01141'
 continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -1953,7 +1953,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01142'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -1972,7 +1972,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01144'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -1991,7 +1991,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01145'
 continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2010,7 +2010,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01146'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2029,7 +2029,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01150'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2048,7 +2048,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01151'
 continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2067,7 +2067,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01152'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2086,7 +2086,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01153'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2105,7 +2105,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01154'
 continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2124,7 +2124,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01155'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2143,7 +2143,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01156'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2162,7 +2162,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01157'
 continuidad_id = "public-interest-todos-contra-cancer-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2235,7 +2235,7 @@ number = "01219"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_cumplido_condiciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01220'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2254,7 +2254,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01221'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2273,7 +2273,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01222'
 continuidad_id = "public-interest-wine-tourism-conference-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2310,7 +2310,7 @@ number = "01226"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01233'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2329,7 +2329,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01235'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2348,7 +2348,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01236'
 continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2367,7 +2367,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01237'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2386,7 +2386,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01238'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2405,7 +2405,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01239'
 continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2478,7 +2478,7 @@ number = "01260"
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 semantic_role = "is_gastos_financieros_limite_art16_calculo"
 legal_refs = ["ley-27-2014:art-16"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01261'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2497,7 +2497,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01262'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2516,7 +2516,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01263'
 continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2535,7 +2535,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01264'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2554,7 +2554,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01265'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2573,7 +2573,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01266'
 continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2592,7 +2592,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01267'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2611,7 +2611,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01268'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2630,7 +2630,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01269'
 continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2668,7 +2668,7 @@ section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"
 data_type = "decimal"
 semantic_role = "is_deduccion_di_interna_tipo_gravamen"
 legal_refs = ["ley-27-2014:dt-23"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01272'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2687,7 +2687,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01273'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2706,7 +2706,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01274'
 continuidad_id = "public-interest-barcelona-music-lab-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -2725,7 +2725,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01281'
 continuidad_id = "public-interest-south-summit-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -2744,7 +2744,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01282'
 continuidad_id = "public-interest-south-summit-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -2763,7 +2763,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01283'
 continuidad_id = "public-interest-south-summit-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -3332,7 +3332,7 @@ number = "01402"
 section = ["reserva_capitalizacion", "2023"]
 semantic_role = "is_reserva_capitalizacion_importe"
 legal_refs = ["ley-27-2014:art-25"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01403'
 continuidad_id = "capitalization-reserve-2023-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -3491,7 +3491,7 @@ number = "01457"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 semantic_role = "is_deduccion_di_internacional_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01469'
 continuidad_id = "deferred-tax-excess-quota-2023-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -4136,7 +4136,7 @@ number = "01672"
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 semantic_role = "is_conversion_aid_conjunta_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01683'
 continuidad_id = "is-deduccion-acontecimiento-interes-publico-otras"
 continuidad_origin = "predecessor_edition_silent"
@@ -4154,7 +4154,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01684'
 continuidad_id = "01684"
 continuidad_origin = "predecessor_edition_silent"
@@ -4172,7 +4172,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01685'
 continuidad_id = "01685"
 continuidad_origin = "predecessor_edition_silent"
@@ -4190,7 +4190,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01689'
 continuidad_id = "ordinary-donation-2014-subtotal-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -4209,7 +4209,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01690'
 continuidad_id = "ordinary-donation-2014-subtotal-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -4282,7 +4282,7 @@ number = "01697"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01701'
 continuidad_id = "priority-donation-2014-subtotal-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -4301,7 +4301,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01702'
 continuidad_id = "priority-donation-2014-subtotal-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -4356,7 +4356,7 @@ number = "01707"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01708'
 continuidad_id = "riib-2024-current-advance-materialization"
 continuidad_origin = "new_on_form"
@@ -4676,7 +4676,7 @@ number = "01869"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "disminucion"]
 semantic_role = "is_correccion_deterioro_participaciones_dt16_saldo_final"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01870'
 continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -4758,7 +4758,7 @@ number = "01885"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 semantic_role = "is_correccion_libertad_amortizacion_vehiculos_permanente_disminucion"
 legal_refs = ["ley-27-2014:da-18"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01903'
 continuidad_id = "public-interest-hockey-centenary-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -4777,7 +4777,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01904'
 continuidad_id = "public-interest-hockey-centenary-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -4805,7 +4805,7 @@ number = "01913"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 semantic_role = "is_deduccion_inversion_canarias_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01914'
 continuidad_id = "public-interest-universo-mujer-three-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -4878,7 +4878,7 @@ number = "01962"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 semantic_role = "is_correccion_libertad_amortizacion_vehiculos_permanente_disminucion"
 legal_refs = ["ley-27-2014:da-18"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '01976'
 continuidad_id = "public-interest-hockey-centenary-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -4996,7 +4996,7 @@ number = "02078"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 semantic_role = "is_deduccion_inversion_canarias_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02079'
 continuidad_id = "is-informacion-adicional-limites-deducciones-canarias-generada"
 continuidad_origin = "predecessor_edition_silent"
@@ -5014,7 +5014,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02080'
 continuidad_id = "02080"
 continuidad_origin = "predecessor_edition_silent"
@@ -5131,7 +5131,7 @@ number = "02279"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2024_innovacion_tecnologica"]
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02284'
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5150,7 +5150,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02285'
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5169,7 +5169,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02286'
 continuidad_id = "public-interest-manifesta-fifteen-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5188,7 +5188,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02287'
 continuidad_id = "02287"
 continuidad_origin = "predecessor_edition_silent"
@@ -5206,7 +5206,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02288'
 continuidad_id = "02288"
 continuidad_origin = "predecessor_edition_silent"
@@ -5341,7 +5341,7 @@ number = "02362"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2023"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02363'
 continuidad_id = "riib-2024-advance-investment-a-b"
 continuidad_origin = "new_on_form"
@@ -5356,7 +5356,7 @@ section = [
 legal_refs = [
     'ley-31-2022:da-70',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02364'
 continuidad_id = "riib-2024-advance-investment-c"
 continuidad_origin = "new_on_form"
@@ -5371,7 +5371,7 @@ section = [
 legal_refs = [
     'ley-31-2022:da-70',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02365'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5390,7 +5390,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02366'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5409,7 +5409,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02367'
 continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5599,7 +5599,7 @@ number = "02450"
 section = ["deducc_para_incentivar_determ_actividades", "2025_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02458'
 continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5618,7 +5618,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02459'
 continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5637,7 +5637,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02460'
 continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5701,7 +5701,7 @@ number = "02468"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02471'
 continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5806,7 +5806,7 @@ number = "02494"
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
 semantic_role = "is_conversion_aid_rectificativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02495'
 continuidad_id = "02495"
 continuidad_origin = "predecessor_edition_silent"
@@ -5824,7 +5824,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02496'
 continuidad_id = "02496"
 continuidad_origin = "predecessor_edition_silent"
@@ -5842,7 +5842,7 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02576'
 continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5857,7 +5857,7 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02577'
 continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5872,7 +5872,7 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02691'
 continuidad_id = "ordinary-recurrent-donation-2024-subperiod-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5887,7 +5887,7 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02692'
 continuidad_id = "ordinary-recurrent-donation-2024-subperiod-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5902,7 +5902,7 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02693'
 continuidad_id = "ordinary-recurrent-donation-2024-subperiod-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5917,7 +5917,7 @@ section = [
 legal_refs = [
     'ley-49-2002:art-20',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02694'
 continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5933,7 +5933,7 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02695'
 continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5949,7 +5949,7 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02696'
 continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -5965,7 +5965,7 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02697'
 continuidad_id = "priority-recurrent-donation-2024-subperiod-generated"
 continuidad_origin = "predecessor_edition_silent"
@@ -5981,7 +5981,7 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02698'
 continuidad_id = "priority-recurrent-donation-2024-subperiod-applied"
 continuidad_origin = "predecessor_edition_silent"
@@ -5997,7 +5997,7 @@ legal_refs = [
     'ley-49-2002:art-20',
     'ley-49-2002:art-22',
 ]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '02700'
 continuidad_id = "priority-recurrent-donation-2024-subperiod-remaining"
 continuidad_origin = "predecessor_edition_silent"
@@ -6679,7 +6679,7 @@ number = "03280"
 section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
 semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
 legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = '03312'
 continuidad_id = "ric-2024-current-advance-materialization"
 continuidad_origin = "new_on_form"
@@ -6863,7 +6863,7 @@ input_kind = "computed"
 formula = "modelo-200-bin-aplicada-maxima"
 internal_only = true
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
-[[revisions.2024.casillas]]
+[[revisions."2024".casillas]]
 id = 'DP200018:00588'
 continuidad_id = "incentive-deductions-detail-total-applied"
 continuidad_origin = "new_on_form"
@@ -6930,3 +6930,15 @@ segmento = "DP200014B"
 section = ["liquidacion_iv", "rectificativa_discrepancia_criterio_administrativo_total"]
 semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-124", "orden-hac-657-2025:modelo-200"]
+
+# aeat-dr-200-2024, DP200014B, row 71, field 66, offset 1017, width 17.
+[[revisions."2024".casillas]]
+id = "DP200014B:00032"
+continuidad_id = "is-rectificativa-discrepancia-criterio-administrativo-estado"
+number = "00032"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "rectificativa_discrepancia_criterio_administrativo_estado"]
+semantic_role = "is_liquidacion_iv_importe"
+legal_refs = ["ley-27-2014:art-124", "orden-hac-657-2025:modelo-200"]
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 DP200014B has no administrative-discrepancy Estado numbered [00032]. aeat-dr-200-2024 DP200014B row 71, field 66 first prints the monetary rectifying-self-assessment amount. DP200001 Sociedades desarrollo industrial regional [00032] is an unrelated one-byte entity character, not its predecessor."

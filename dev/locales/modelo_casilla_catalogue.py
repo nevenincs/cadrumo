@@ -1904,7 +1904,8 @@ class ModeloCasillaCatalogue:
         by one of the manifest's keys in its own locale, or, for a Spanish
         change, by a manifest key read through the Spanish fallback. Any other
         change means the manifest reached text it did not declare, and the
-        install is refused. Returns how many coordinates changed per locale.
+        install is refused. New inconsistent composed-segment renderings are
+        refused before cutover. Returns how many coordinates changed per locale.
 
         Raises:
             CollapseVerificationError: An install is pending, a key is not a
@@ -1946,6 +1947,19 @@ class ModeloCasillaCatalogue:
                 if source is None or source[0] not in manifest.get(source[1], {}):
                     unattributed.append(coordinate)
                 changed[locale] += 1
+            affected_locales = self.locales if SOURCE_LOCALE in manifest else tuple(manifest)
+            introduced_drift: list[tuple[str, str, tuple[str, ...]]] = []
+            for locale in affected_locales:
+                if locale == SOURCE_LOCALE:
+                    continue
+                existing = self.segment_drift(locale)
+                for segment, renderings in proof.segment_drift(locale).items():
+                    if set(renderings) - set(existing.get(segment, ())):
+                        introduced_drift.append((locale, segment, renderings))
+            if introduced_drift:
+                raise CollapseVerificationError(
+                    f"authored values introduce inconsistent composed-segment renderings: {introduced_drift[:5]}"
+                )
         except BaseException:
             _discard(pending_dir)
             raise

@@ -73,7 +73,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:116 DP200001 86|225|1|Num
 [[revisions."2023".casillas]]
-id = "00083"
+id = "DP200001:00083"
+segmento = "DP200001"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:116 (DP200001 field 86): Tipo gravamen reducido para empresa emergente [00083]. aeat-dr-200-2022 prints no field with this caption. Its box [00083] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:80 (DP200001 field 50): Empresa emergente [00083]; 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1517 (DP200014B field 41): Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"

@@ -6544,6 +6544,9 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deductions to incentivise certain activities - Total - applied
               in this settlement [00588]
+          is-abono-deducciones-id-i-insuficiencia-cuota-estado:
+            label: Settlement IV - Self-assessment result - Credit of R&D&I deductions
+              due to insufficient tax liability - State [00083]
           is-agrupacion-de-interes-economico-espanola:
             help: Flag indicating a Spanish economic interest grouping [00013].
             label: Spanish economic interest grouping [00013]
@@ -9951,6 +9954,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Profit and loss account (II) - Discontinued operations - PROFIT
               AND LOSS ACCOUNT RESULT [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-estado:
+            label: Settlement IV - Self-assessment result - Disagreement with the
+              administrative position for certain corrective self-assessment cases
+              that do not belong in other boxes - State [00032]
           is-rectificativa-discrepancia-criterio-administrativo-total:
             label: Settlement IV - Self-assessment result - Disagreement with the
               administrative position for certain corrective self-assessment cases

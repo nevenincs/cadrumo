@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-conformance-rectification'
 date: '2026-09-27'
-modified: '2026-10-01'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:09fdca1a63f8d437ad636c9e26d11eb73723918b7fc2b0acd40193d4e471aaec'
+body_hash: 'sha256:c2937b27f887c9b7aecc7241fff59300ce9f60d39773fa52b289423fb26ee7be'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1633,6 +1633,27 @@ related:
 - `S50` `verify:` `just check-types` -> `pass`
 - `S50` `verify:` `Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\final-collapse` -> `pass`
 - `S50` `verify:` `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir C:\Users\hello\AppData\Local\Temp\modelo200-00031-repair-20261001\delta-proof` -> `pass`
+- `S50` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S50` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0002-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/0029-record-m200-page-014b.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0002-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0029-record-m200-page-014b.toml`
+- `S50` `verify:` `combined registry-runtime pytest 218 passed 3 failed` -> `fail`
+- `S50` `verify:` `corrected reused-number catalogue-authoring and shipped-catalogue pytest` -> `pass`
+- `S50` `verify:` `just check-registry authority a9765727` -> `pass`
+- `S50` `verify:` `just check-bindings unchanged 33 warning findings` -> `pass`
+- `S50` `verify:` `just check-registry-gate authority a9765727` -> `pass`
+- `S50` `verify:` `just check-style corrected tests` -> `pass`
+- `S50` `verify:` `just check-format corrected tests` -> `pass`
+- `S50` `verify:` `just check-data-format` -> `pass`
+- `S50` `verify:` `just check-types corrected tests` -> `pass`
+- `S50` `verify:` `just docs-sequences-check` -> `pass`
+- `S50` `verify:` `final accepted-source Modelo 200 delta proof no-op` -> `pass`
+- `S50` `verify:` `stable scoped Modelo 200 collapse parity and readiness` -> `pass`
+- `S50` `verify:` `final live inspection retained content and order` -> `pass`
 
 ## Notes
 
@@ -1734,3 +1755,4 @@ related:
 - `S50` The complete scoped proof verifies this installed six-concept correction while the larger S50 mapping inventory remains open. Active authority is a5b486f5; the isolated indexed witness is not substituted for the active descriptor. Candidate, installed source, publication and development runtime pass; installed-package adoption remains unverified after the real wheelhouse setup failure. The concurrent main merge prevents an isolated commit; its staged files remain untouched.
 - `S50` Fresh user-requested verification completed after authority republication, under the shared serial lock. Full test-registry result and all lane identities are retained in fresh-registry-verification-receipt.json and its linked run logs. Lifecycle health retains three partial lanes, 119 owner-excluded targets and 120 export gaps. Advisory declaration/corpus screen rows retain their own denominators and are not a gate verdict. The main merge is now committed at 93b6999f44; prior merge-in-progress notes describe an earlier state. S50 remains open for the larger mapping inventory; installed-package adoption was not re-run by this registry suite.
 - `S50` S50 remains open for other semantic mapping candidates and declaration debt. The introduced locale segment failure was corrected and its affected checks pass. Installed-package adoption and the previously recorded whole-catalogue literal-anchor failure remain unresolved; their suites were not repeated by this bounded repair.
+- `S50` S50 remains open for other mapping candidates and declaration debt. The three initial test failures were corrected and affected checks pass. Coupled target post-cutover refusal was recovered through the canonical publication journal; no intermediate pytest ran. Installed-package adoption remains unverified. The legal-anchor ratchet now passes without a ceiling change.

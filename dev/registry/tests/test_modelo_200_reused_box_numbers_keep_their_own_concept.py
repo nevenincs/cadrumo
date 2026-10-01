@@ -15,8 +15,8 @@ it maps to the liquidación casilla, the export writes that box's amount into a
 cell meaning something else. These tests hold each edition's semantic map and
 generated layout to that, and render the published edition to prove the cell
 exports its own value when supplied and the design's zero fill when not. In
-particular, DP200014B's signed money box 00031 is distinct from DP200001's
-integer entity flag, which uses the same printed number.
+particular, DP200014B's monetary boxes 00031, 00032 and 00083 are distinct
+from DP200001's integer entity characters sharing those printed numbers.
 """
 
 from __future__ import annotations
@@ -434,7 +434,10 @@ def test_the_new_concepts_follow_the_selected_design(filing_year: int) -> None:
         "DP200012:00004",
         "DP200012:00005",
         "DP200012:00006",
+        "DP200001:00032",
         "DP200014B:00031",
+        "DP200014B:00032",
+        "DP200014B:00083",
     }
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.snapshot(
@@ -452,6 +455,33 @@ def test_the_new_concepts_follow_the_selected_design(filing_year: int) -> None:
         for concept in concepts:
             sheet, number = concept.split(":")
             assert (concept in ids) == ((sheet, number) in printed)
+
+
+@pytest.mark.parametrize("revision", authored_revisions(_MODELO), ids=lambda revision: str(revision.id))
+def test_reused_amount_boxes_follow_the_first_held_design_appearance(revision: ModeloRevision) -> None:
+    """Hydrated amount concepts begin exactly where their own official sheet first prints them."""
+    design = _design_source(revision)
+    sheets = extract_record_design(bundled_path() / design.corpus_path).require_complete()
+    casilla_ids = {str(casilla.id) for casilla in revision.casillas}
+    amount_boxes = {
+        "DP200014B:00032": ("discrepancia de criterio administrativo", "estado"),
+        "DP200014B:00083": ("abono deducciones i+d+i por insuficiencia de cuota", "estado"),
+    }
+    for casilla_id, label_parts in amount_boxes.items():
+        sheet_name, number = casilla_id.split(":")
+        fields = [
+            field
+            for sheet in sheets
+            if sheet.name.strip() == sheet_name
+            for field in sheet.fields
+            if number in _PRINTED_BOX.findall(field.description)
+        ]
+        assert (casilla_id in casilla_ids) == bool(fields), (revision.id, casilla_id)
+        assert all(all(part in field.description.casefold() for part in label_parts) for field in fields), (
+            revision.id,
+            casilla_id,
+            [field.description for field in fields],
+        )
 
 
 @pytest.mark.parametrize(
@@ -540,37 +570,86 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
 
 @pytest.mark.parametrize("filing_year", _filing_years())
 @pytest.mark.parametrize(
-    "amount",
-    [Decimal("123.45"), Decimal("-123.45")],
-    ids=["positive-money", "negative-money"],
+    ("number", "flag_label", "money_label", "money_type_code", "money_signed", "amount"),
+    [
+        pytest.param(
+            "00031",
+            ("entidades", "capital-riesgo"),
+            ("discrepancia", "total"),
+            "N",
+            True,
+            Decimal("123.45"),
+            id="00031-positive",
+        ),
+        pytest.param(
+            "00031",
+            ("entidades", "capital-riesgo"),
+            ("discrepancia", "total"),
+            "N",
+            True,
+            Decimal("-123.45"),
+            id="00031-negative",
+        ),
+        pytest.param(
+            "00032",
+            ("sociedades desarrollo industrial regional",),
+            ("discrepancia de criterio administrativo", "estado"),
+            "N",
+            True,
+            Decimal("123.45"),
+            id="00032-positive",
+        ),
+        pytest.param(
+            "00032",
+            ("sociedades desarrollo industrial regional",),
+            ("discrepancia de criterio administrativo", "estado"),
+            "N",
+            True,
+            Decimal("-123.45"),
+            id="00032-negative",
+        ),
+        pytest.param(
+            "00083",
+            ("tipo gravamen reducido", "empresa emergente"),
+            ("abono deducciones i+d+i por insuficiencia de cuota", "estado"),
+            "Num",
+            False,
+            Decimal("123.45"),
+            id="00083-positive",
+        ),
+    ],
 )
-def test_reused_00031_flag_and_money_export_independently(filing_year: int, amount: Decimal) -> None:
-    """The one-byte DP200001 flag and signed DP200014B amount never borrow each other."""
+def test_reused_flag_and_money_export_independently(
+    filing_year: int,
+    number: str,
+    flag_label: tuple[str, ...],
+    money_label: tuple[str, ...],
+    money_type_code: str,
+    money_signed: bool,
+    amount: Decimal,
+) -> None:
+    """Each DP200001 integer character and DP200014B amount keeps its own cell and wire value."""
     period = Period.from_year_and_code(filing_year, "0A")
     scenario = m200_export_scenario(period)
     with bundled_indexed_authority().operation() as operation:
         revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
         design = _design_source(revision)
         sheets = extract_record_design(bundled_path() / design.corpus_path).require_complete()
-        printed_00031 = [
+        printed_box = [
             (sheet.name.strip(), field)
             for sheet in sheets
             for field in sheet.fields
-            if "00031" in _PRINTED_BOX.findall(field.description)
+            if number in _PRINTED_BOX.findall(field.description)
         ]
         (money_design_field,) = [
             field
-            for sheet, field in printed_00031
-            if sheet == "DP200014B"
-            and "discrepancia" in field.description.casefold()
-            and "total" in field.description.casefold()
+            for sheet, field in printed_box
+            if sheet == "DP200014B" and all(part in field.description.casefold() for part in money_label)
         ]
         (flag_design_field,) = [
             field
-            for sheet, field in printed_00031
-            if sheet == "DP200001"
-            and "entidades" in field.description.casefold()
-            and "capital-riesgo" in field.description.casefold()
+            for sheet, field in printed_box
+            if sheet == "DP200001" and all(part in field.description.casefold() for part in flag_label)
         ]
         layout_fields = [
             field
@@ -582,17 +661,22 @@ def test_reused_00031_flag_and_money_export_independently(filing_year: int, amou
         (money_field,) = [
             field
             for field in layout_fields
-            if str(field.id).split(".")[1].upper() == "DP200014B" and str(field.casilla_id) == "DP200014B:00031"
+            if str(field.id).split(".")[1].upper() == "DP200014B" and str(field.casilla_id) == f"DP200014B:{number}"
         ]
         (flag_field,) = [
             field
             for field in layout_fields
-            if str(field.id).split(".")[1].upper() == "DP200001" and str(field.casilla_id) == "DP200001:00031"
+            if str(field.id).split(".")[1].upper() == "DP200001" and str(field.casilla_id) == f"DP200001:{number}"
         ]
 
-        assert money_design_field.type_code == "N"
+        assert all(part in money_design_field.description.casefold() for part in money_label)
+        assert all(part in flag_design_field.description.casefold() for part in flag_label)
+        assert money_design_field.type_code == money_type_code
         assert flag_design_field.type_code == "Num"
-        assert money_field.data_type == "money" and money_field.signed
+        assert money_field.data_type in {CasillaDataType.MONEY, CasillaDataType.DECIMAL}
+        if money_field.data_type is CasillaDataType.DECIMAL:
+            assert money_field.decimals == 2
+        assert money_field.signed is money_signed
         assert flag_field.data_type == "integer" and not flag_field.signed
         assert (money_field.offset, money_field.length) == (
             money_design_field.offset,
@@ -611,19 +695,24 @@ def test_reused_00031_flag_and_money_export_independently(filing_year: int, amou
         )
         identity = scenario.product_software_identity_factory
         assert identity is not None
-        target_ids = {"DP200001:00031", "DP200014B:00031"}
+        flag_id = f"DP200001:{number}"
+        money_id = f"DP200014B:{number}"
+        target_ids = {flag_id, money_id}
         base_inputs: ModeloInputs = {key: value for key, value in scenario.inputs.items() if key not in target_ids}
 
-        def render(target_input: tuple[str, Decimal]) -> bytes:
-            casilla_id, value = target_input
+        def render(target_input: tuple[str, Decimal] | None = None) -> bytes:
+            inputs = base_inputs
+            if target_input is not None:
+                casilla_id, value = target_input
+                inputs = {**base_inputs, casilla_id: value}
             draft = build_draft(
                 modelo=_MODELO,
                 period=period,
                 profile=ModeloOperatorProfile(
                     tax_id=SYNTHETIC_TAX_ID,
-                    display_name="Modelo 200 reused box 00031",
+                    display_name=f"Modelo 200 reused box {number}",
                 ),
-                inputs={**base_inputs, casilla_id: value},
+                inputs=inputs,
                 schema_provider=provider,
             ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
             sink = _PayloadSink()
@@ -637,8 +726,8 @@ def test_reused_00031_flag_and_money_export_independently(filing_year: int, amou
             )
             return sink.payload
 
-        flag_only = render(("DP200001:00031", Decimal("1")))
-        amount_only = render(("DP200014B:00031", amount))
+        flag_only = render((flag_id, Decimal("1")))
+        amount_only = render((money_id, amount))
         expected_amount = (
             b"N" + _wire(abs(amount), money_design_field.length - 1)
             if amount < 0
@@ -678,6 +767,26 @@ def test_reused_00031_flag_and_money_export_independently(filing_year: int, amou
             )
             == b"0" * flag_design_field.length
         )
+        if number == "00083":
+            empty = render()
+            assert (
+                _slot(
+                    empty,
+                    _record_tag(revision, "DP200014B"),
+                    money_design_field.offset,
+                    money_design_field.length,
+                )
+                == b"0" * money_design_field.length
+            )
+            assert (
+                _slot(
+                    empty,
+                    _record_tag(revision, "DP200001"),
+                    flag_design_field.offset,
+                    flag_design_field.length,
+                )
+                == b"0" * flag_design_field.length
+            )
 
 
 def test_an_absent_cell_does_not_borrow_the_box_sharing_its_number(rendered_edition) -> None:

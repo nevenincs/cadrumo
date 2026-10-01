@@ -6500,6 +6500,9 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Deducc. para incentivar determ.actividades - Total - Aplicado en
               esta liquidación [00588]
+          is-abono-deducciones-id-i-insuficiencia-cuota-estado:
+            label: Liquidación IV - Resultado de la autoliquidación - Abono deducciones
+              I+D+i por insuficiencia de cuota - Estado [00083]
           is-agrupacion-de-interes-economico-espanola:
             help: Indicador de agrupación de interés económico española [00013].
             label: Agrupación de interés económico española [00013]
@@ -9956,6 +9959,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Cuenta de pérdidas y ganancias (II) - Operaciones interrumpidas
               - RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-estado:
+            label: Liquidación IV - Resultado de la autoliquidación - Discrepancia
+              de criterio administrativo para determinados supuestos de autoliquidación
+              rectificativa que no deban incluirse en otras casillas - Estado [00032]
           is-rectificativa-discrepancia-criterio-administrativo-total:
             label: Liquidación IV - Resultado de la autoliquidación - Discrepancia
               de criterio administrativo para determinados supuestos de autoliquidación

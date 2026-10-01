@@ -251,6 +251,71 @@ def test_authored_values_install_only_when_they_serve_every_change(tmp_path: Pat
     assert not pending.exists()
 
 
+@pytest.mark.parametrize(
+    ("initial", "replacement", "refused"),
+    [
+        ("Conversion result: Credit - State", "Conversion result: Payment - State", True),
+        ("Conversion result: Payment - State", "Conversion result: Refund - State", True),
+        ("Conversion result: Payment - State", "Conversion result: Credit - State", False),
+        ("Conversion result: Payment - State", "Conversion result: Payment - State territory", False),
+    ],
+    ids=["introduced-drift", "new-rendering-in-existing-drift", "corrected-drift", "unchanged-drift"],
+)
+def test_authoring_refuses_new_segment_drift_before_installation(
+    tmp_path: Path, initial: str, replacement: str, refused: bool
+) -> None:
+    locales = tmp_path / "locales"
+    pending = tmp_path / "pending"
+    _write_catalogue(
+        locales,
+        {
+            "es": {
+                _OCC_2023: "Resultado de conversión: Abono - Navarra",
+                _OCC_2024: "Resultado de conversión: Abono - Estado",
+            },
+            "en": {_OCC_2023: "Conversion result: Credit - Navarre", _OCC_2024: initial},
+        },
+    )
+    before = load_casilla_values(locales)
+    catalogue = ModeloCasillaCatalogue(_chains(), before)
+    manifest = {"en": {_OCC_2024: replacement}}
+
+    if refused:
+        with pytest.raises(CollapseVerificationError, match="inconsistent composed-segment renderings"):
+            catalogue.author(manifest, locales, pending)
+        assert load_casilla_values(locales) == before
+    else:
+        assert catalogue.author(manifest, locales, pending) == {"en": 1}
+        installed = load_casilla_values(locales)
+        assert installed["en"][_OCC_2024] == replacement
+        assert installed["en"][_OCC_2023] == before["en"][_OCC_2023]
+    assert not pending.exists()
+
+
+def test_a_spanish_segment_edit_checks_the_translations_before_installation(tmp_path: Path) -> None:
+    locales = tmp_path / "locales"
+    pending = tmp_path / "pending"
+    _write_catalogue(
+        locales,
+        {
+            "es": {
+                _OCC_2023: "Resultado de conversión: Abono - Navarra",
+                _OCC_2024: "Resultado de conversión: Devolución - Estado",
+            },
+            "en": {
+                _OCC_2023: "Conversion result: Credit - Navarre",
+                _OCC_2024: "Conversion result: Refund - State",
+            },
+        },
+    )
+    before = load_casilla_values(locales)
+    catalogue = ModeloCasillaCatalogue(_chains(), before)
+    with pytest.raises(CollapseVerificationError, match="inconsistent composed-segment renderings"):
+        catalogue.author({"es": {_OCC_2024: "Resultado de conversión: Abono - Estado"}}, locales, pending)
+    assert load_casilla_values(locales) == before
+    assert not pending.exists()
+
+
 def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path: Path) -> None:
     locales = tmp_path / "locales"
     pending = tmp_path / "pending"

@@ -64,7 +64,7 @@ id = "00067"
 position = 60
 
 [[revisions."2023".casilla_positions]]
-id = "00083"
+id = "DP200001:00083"
 position = 73
 
 [[revisions."2023".casilla_positions]]
@@ -1184,3 +1184,12 @@ selector = { revision = "2022", id = "DP200042:00573" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. aeat-dr-200-2023 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2023"] }
 removed_fields = []
 restate_provenance = true
+[[revisions."2023".casilla_overrides]]
+[revisions."2023".casilla_overrides.selector]
+revision = "2022"
+id = "DP200014B:00083"
+
+[revisions."2023".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-200-2022 DP200014B row 46, field 41: Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. aeat-dr-200-2023 DP200014B row 62, field 57: Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. The same monetary Estado concept continues; it is independent of the DP200001 entity character sharing the printed number."
+source_refs = ["aeat-dr-200-2023"]

@@ -6554,6 +6554,9 @@ modelo:
           incentive-deductions-detail-total-applied:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - Összesen
               - ebben az elszámolásban felhasználva [00588]
+          is-abono-deducciones-id-i-insuficiencia-cuota-estado:
+            label: Elszámolás IV - Az önadózás eredménye - K+F+i levonások jóváírása
+              elégtelen adókötelezettség miatt - Állam [00083]
           is-agrupacion-de-interes-economico-espanola:
             help: Jelölő spanyol gazdasági érdekcsoportosulás esetén [00013].
             label: Spanyol gazdasági érdekcsoportosulás [00013]
@@ -9925,6 +9928,10 @@ modelo:
           is-pyg-resultado-cuenta-perdidas-ganancias:
             label: Eredménykimutatás (II) - Megszűnt tevékenységek - AZ EREDMÉNYKIMUTATÁS
               EREDMÉNYE [00500]
+          is-rectificativa-discrepancia-criterio-administrativo-estado:
+            label: Elszámolás IV - Az önadózás eredménye - Eltérés a hatósági állásponttól
+              egyes helyesbítő önadózási esetekben, amelyek más rovatokba nem tartoznak
+              - Állam [00032]
           is-rectificativa-discrepancia-criterio-administrativo-total:
             label: Elszámolás IV - Az önadózás eredménye - Eltérés a hatósági állásponttól
               egyes helyesbítő önadózási esetekben, amelyek más rovatokba nem tartoznak
