@@ -82,7 +82,6 @@ SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS: Final[dict[AeatSoftwareIdentityGrade | None
 #: The table rows and their labels, in reading order: what was exported, what
 #: it is worth, where it is.
 EXPORT_RESULT_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
-    "calculation_revision_id": "tui.modelo.export.result.label.calculation_revision_id",
     "artefact": "tui.modelo.export.result.label.artefact",
     "export_format": "tui.modelo.export.result.label.export_format",
     "software_identity_grade": "tui.modelo.export.result.label.software_identity_grade",
@@ -90,6 +89,10 @@ EXPORT_RESULT_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
     "completeness": "tui.modelo.export.result.label.completeness",
     "output_path": "tui.modelo.export.result.label.output_path",
     "byte_size": "tui.modelo.export.result.label.byte_size",
+}
+#: Traceability remains available through the explicit technical-details control.
+EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
+    "calculation_revision_id": "tui.modelo.export.result.label.calculation_revision_id",
     "file_sha256": "tui.modelo.export.result.label.file_sha256",
 }
 
@@ -143,12 +146,13 @@ class ModeloExportResultScreen(ModalScreen[None]):
     """State one finished export's facts until the operator closes them."""
 
     DEFAULT_CSS = _EXPORT_RESULT_CSS
-    BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
+    BINDINGS: ClassVar = [Binding("escape", "close", "", show=False), Binding("t", "technical", "", show=False)]
 
     def __init__(self, result: ModeloExportPublicResultV2 | None) -> None:
         """Hold the resolved result, or ``None`` when it could not be read."""
         super().__init__()
         self._result = result
+        self._technical = False
 
     @override
     def compose(self) -> ComposeResult:
@@ -159,24 +163,45 @@ class ModeloExportResultScreen(ModalScreen[None]):
                 if self._result is not None:
                     yield ContentDataTable[str](id="modelo-export-result-table", cursor_type="row", zebra_stripes=True)
             with Horizontal(id="modelo-export-result-actions"):
+                if self._result is not None:
+                    yield Button(tr("tui.modelo.workbench.issues.technical"), id="modelo-export-result-technical")
                 yield Button(tr("tui.modelo.export.result.close"), id="modelo-export-result-close")
 
     def on_mount(self) -> None:
-        """Fill the fact table and put focus on the one way out."""
+        """Fill the ordinary facts and make closing the primary keyboard action."""
         result = self._result
         if result is not None:
             table = self.query_one("#modelo-export-result-table", ContentDataTable)
             table.add_column(tr("flows.modelo_workspace_overview.column.field"), key="field")
             table.add_column(tr("flows.modelo_workspace_overview.column.value"), key="value")
-            values = export_result_values(result)
-            for row_key, label_key in EXPORT_RESULT_ROW_LOCALE_KEYS.items():
-                table.add_row(tr(label_key), values[row_key], key=row_key)
+            self._render_rows()
         self.query_one("#modelo-export-result-close", Button).focus()
+
+    def _render_rows(self) -> None:
+        result = self._result
+        if result is None:
+            return
+        table = self.query_one("#modelo-export-result-table", ContentDataTable)
+        table.clear()
+        values = export_result_values(result)
+        rows = dict(EXPORT_RESULT_ROW_LOCALE_KEYS)
+        if self._technical:
+            rows.update(EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS)
+        for row_key, label_key in rows.items():
+            table.add_row(tr(label_key), values[row_key], key=row_key)
+
+    def action_technical(self) -> None:
+        """Reveal or hide the calculation identity and exact exported-file digest."""
+        if self._result is not None:
+            self._technical = not self._technical
+            self._render_rows()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Close the statement; the export itself is already settled."""
         if event.button.id == "modelo-export-result-close":
             self.dismiss(None)
+        elif event.button.id == "modelo-export-result-technical":
+            self.action_technical()
 
     def action_close(self) -> None:
         """Close the statement from the keyboard."""
@@ -188,6 +213,7 @@ __all__ = [
     "EXPORT_COMPLETENESS_LOCALE_KEYS",
     "EXPORT_EVIDENCE_STATUS_LOCALE_KEYS",
     "EXPORT_RESULT_ROW_LOCALE_KEYS",
+    "EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS",
     "SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS",
     "ModeloExportResultScreen",
     "export_result_values",

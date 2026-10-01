@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cad6430ebc839b0581967a11815f4e61aab0443da167b16b9208f4bc35aebba'
+body_hash: 'sha256:c1f4f6ab549d59e8ca35b15eb6aa701801d73b293ffb564f764289a8af5c2cc9'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1511,6 +1511,11 @@ related:
 - `S58` `M` `src/cadrumo/application/tests/test_provisioning.py`
 - `S58` `verify:` `pytest provisioning refusal contract in current 35-pass correction run` -> `pass`
 - `S58` `verify:` `dev.locales current notice keys and catalogue audit` -> `pass`
+- `S60` `M` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_export_result_screen.py`
+- `S60` `verify:` `pytest real export result projector and Textual technical-detail controls in four locales 19 cases` -> `pass`
+- `S60` `verify:` `narrow ty and Ruff export result source/tests` -> `pass`
+- `S60` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -1602,3 +1607,4 @@ related:
 - `S64` A scalar input aliases a casilla only when exact record/offset/length, numeric type and independent consumer checks prove one write address. Ambiguous or independent consumers remain distinct. The Modelo100 boolean direct-binding question follows the established lookup priority; provider casilla names remain unchanged.
 - `S59` Used the prepared proper-name pack and a bounded residual manifest. The proper name remains Modelo plus its code; surrounding Hungarian nouns carry case. Current human-wording changes were preserved. Generic schema, LLM, taxpayer and vehicle-model concepts retain modell where that is their actual meaning. Catalogue occurrences across revisions are not counted as distinct binding inputs.
 - `S58` Followup records the actual en/es cli notice shards left unstaged by the earlier documentation checkpoint. Missing-extra refusal now names its feature through the canonical catalogue; machine identity and no-install-command assertion remain.
+- `S60` Default export rows retain artefact/grade/completeness/evidence/path/size; calculation identity and file digest require an explicit technical-details action. Declaration summaries, histories, picker and result diff use natural addresses and worded typed periods. Adjacent generic operation host coverage is being reconciled separately before S60 closure.

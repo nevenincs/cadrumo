@@ -34,6 +34,7 @@ from .....application.modelo.operation_definitions import (
 )
 from .....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from .....core.calculation_report_format import CalculationReportDocumentFormat
+from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.modelo_export_artefact import ModeloExportArtefact
@@ -47,6 +48,7 @@ from ..export_result import (
     EXPORT_COMPLETENESS_LOCALE_KEYS,
     EXPORT_EVIDENCE_STATUS_LOCALE_KEYS,
     EXPORT_RESULT_ROW_LOCALE_KEYS,
+    EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS,
     SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS,
     ModeloExportResultScreen,
 )
@@ -160,7 +162,6 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
         await pilot.pause()
 
         assert _table_values(app) == {
-            "calculation_revision_id": _REVISION_ID,
             "artefact": tr("tui.modelo.export.artefact.fichero_boe"),
             "export_format": "fichero-boe",
             "software_identity_grade": tr("tui.modelo.export.result.software_identity_grade.none"),
@@ -170,7 +171,6 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
             "completeness": tr("tui.modelo.export.result.completeness.unverified"),
             "output_path": str(tmp_path / "modelo-189.txt"),
             "byte_size": "500",
-            "file_sha256": _FILE_SHA256,
         }
         warnings = _warnings(app)
         assert tr("tui.modelo.export.result.warning.not_official") in warnings
@@ -255,7 +255,6 @@ async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_wh
         await pilot.pause()
 
         assert _table_values(app) == {
-            "calculation_revision_id": _REVISION_ID,
             "artefact": tr("tui.modelo.export.artefact.calculation_report_pdf"),
             "export_format": "pdf",
             "software_identity_grade": tr("tui.modelo.export.result.software_identity_grade.development_mock"),
@@ -265,7 +264,6 @@ async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_wh
             "completeness": tr("tui.modelo.export.result.completeness.not_assessed"),
             "output_path": str(tmp_path / "modelo-303-report.pdf"),
             "byte_size": "2048",
-            "file_sha256": _FILE_SHA256,
         }
         assert tr("tui.modelo.export.artefact.calculation_report_pdf") != tr(
             "tui.modelo.export.artefact.calculation_report_csv"
@@ -291,6 +289,41 @@ async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_tabl
         assert str(app.screen.query_one("#modelo-export-result-title", Static).content) == tr(
             "tui.modelo.export.result.title"
         )
+        await pilot.press("t")
+        assert not app.screen.query("#modelo-export-result-table")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+@pytest.mark.parametrize("report", [False, True], ids=["filing-file", "report"])
+async def test_export_identifiers_are_revealed_only_by_deliberate_technical_details(
+    tmp_path: Path, language: OutputLanguage, report: bool
+) -> None:
+    """Keep ordinary export facts visible while both controls toggle exact traceability."""
+    result = _publicly_projected(
+        _report_receipt(tmp_path)
+        if report
+        else _filing_file_receipt(tmp_path, completeness_unverified=False, software_identity_grade=None)
+    )
+    with override_settings(cadrumo_output_language=language.value):
+        app = App[None]()
+        async with app.run_test() as pilot:
+            await app.push_screen(ModeloExportResultScreen(result))
+            await pilot.pause()
+            ordinary = _table_values(app)
+            assert "calculation_revision_id" not in ordinary and "file_sha256" not in ordinary
+            assert _REVISION_ID not in ordinary.values() and _FILE_SHA256 not in ordinary.values()
+            assert ordinary["output_path"] == result.output_path
+            assert ordinary["completeness"] == tr(EXPORT_COMPLETENESS_LOCALE_KEYS[result.completeness])
+            await pilot.press("t")
+            await pilot.pause()
+            detailed = _table_values(app)
+            assert detailed["calculation_revision_id"] == _REVISION_ID
+            assert detailed["file_sha256"] == _FILE_SHA256
+            assert {key: detailed[key] for key in ordinary} == ordinary
+            app.screen.query_one("#modelo-export-result-technical", Button).press()
+            await pilot.pause()
+            assert _table_values(app) == ordinary
 
 
 def test_a_settled_export_names_exactly_one_receipt(tmp_path: Path) -> None:
@@ -319,7 +352,10 @@ def test_every_stated_fact_has_a_label(members: set[Enum | None], keys: dict[obj
 
 
 def test_every_public_result_fact_has_a_row() -> None:
-    """Each field the result states about the file is a row; only the version and handoff flag are not."""
+    """Each public fact has an ordinary or technical row; only version and handoff flag are excluded."""
     stated = set(ModeloExportPublicResultV2.model_fields) - {"result_version", "handoff_required"}
 
-    assert set(EXPORT_RESULT_ROW_LOCALE_KEYS) == stated
+    ordinary = set(EXPORT_RESULT_ROW_LOCALE_KEYS)
+    technical = set(EXPORT_RESULT_TECHNICAL_ROW_LOCALE_KEYS)
+    assert ordinary.isdisjoint(technical)
+    assert ordinary | technical == stated
