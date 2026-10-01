@@ -167,10 +167,43 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _declarations_surfaces() -> tuple[Surface, ...]:
+    """Clearly synthetic safe portfolio facts rendered by the production screens."""
+    from .declarations_fixtures import build_external_details, build_grouped, build_picker_modelo, build_picker_period
+
+    return (
+        Surface(
+            "declarations-portfolio",
+            "Synthetic grouped filing portfolio",
+            build_grouped,
+            interfaces=("cadrumo.entrypoints.tui.declarations.grouped.GroupedDeclarationsScreen",),
+        ),
+        Surface(
+            "declarations-new-modelo",
+            "Registry choices in the new-declaration picker",
+            build_picker_modelo,
+            interfaces=("cadrumo.entrypoints.tui.declarations.picker.NewDeclarationPicker",),
+        ),
+        Surface(
+            "declarations-new-period",
+            "Worded supported periods in the new-declaration picker",
+            build_picker_period,
+            interfaces=("cadrumo.entrypoints.tui.declarations.picker.NewDeclarationPicker",),
+        ),
+        Surface(
+            "declarations-external-details",
+            "Synthetic independent AEAT filing observation",
+            build_external_details,
+            interfaces=("cadrumo.entrypoints.tui.declarations.external_details.ExternalFilingDetailsScreen",),
+        ),
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
+        *_declarations_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

@@ -12,6 +12,10 @@ A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
 is never accepted here as mutation authority: every coordinate below is
 independently re-resolved from the target and the current catalogues, never
 copied from a Workspace read.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
 """
 
 from __future__ import annotations
@@ -86,6 +90,10 @@ def calculation_head_digest(head: CalculationRevision | None) -> str:
 
     A verify or a filing changes the head's lifecycle fields, and so this
     digest, even though its id stays the same.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
     """
     return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
 

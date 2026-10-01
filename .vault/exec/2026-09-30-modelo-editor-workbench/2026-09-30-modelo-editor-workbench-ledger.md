@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1f4f6ab549d59e8ca35b15eb6aa701801d73b293ffb564f764289a8af5c2cc9'
+body_hash: 'sha256:663f91cc6aa53a3a3412a6bb90267dee45b8bec25ed9de5b674b9ff1e0dc35d6'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1516,6 +1516,48 @@ related:
 - `S60` `verify:` `pytest real export result projector and Textual technical-detail controls in four locales 19 cases` -> `pass`
 - `S60` `verify:` `narrow ty and Ruff export result source/tests` -> `pass`
 - `S60` `by:` `vaultspec-standard-executor`
+- `S30` `M` `dev/tui/harness/surfaces.py`
+- `S30` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_note_gate.py`
+- `S30` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S30` `M` `src/cadrumo/application/modelo/caller_context.py`
+- `S30` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S30` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S30` `M` `src/cadrumo/application/modelo/edit_preflight.py`
+- `S30` `M` `src/cadrumo/application/modelo/edit_services.py`
+- `S30` `M` `src/cadrumo/application/modelo/edit_value_grammar.py`
+- `S30` `M` `src/cadrumo/application/modelo/printed_boxes.py`
+- `S30` `M` `src/cadrumo/application/modelo/required_inputs.py`
+- `S30` `M` `src/cadrumo/application/modelo/tests/test_printed_boxes.py`
+- `S30` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S30` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S30` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/tests/test_source_advisory_notice_channel.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_record_views.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_affects_chain_real.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_formula_values_real.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issue_routes.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_refinements_real.py`
+- `S30` `A` `dev/tui/harness/declarations_fixtures.py`
+- `S30` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_freshness_real.py`
+- `S30` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
+- `S30` `A` `.vault/adr/2026-10-02-modelo-editor-workbench-generated-export-layout-companion-cutover-adr.md`
+- `S30` `verify:` `pytest real help freshness three cases including both editor hosts and stale asynchronous fetch` -> `pass`
+- `S30` `verify:` `pytest blocked 80x24 Help/F8/Issues/Hungarian quarter eight cases` -> `pass`
+- `S30` `verify:` `pytest core type links/resolution and declarations list 22 cases plus final clock two cases` -> `pass`
+- `S30` `verify:` `pytest unchanged IVA conformance and advisory/reader gates 15 cases plus five real renamed fixture/ledger cases` -> `pass`
+- `S30` `verify:` `narrow ty and Ruff owning correction modules/tests` -> `pass`
+- `S30` `by:` `vaultspec-high-executor`
+- `S56` `M` `dev/tui/harness/surfaces.py`
+- `S56` `A` `dev/tui/harness/declarations_fixtures.py`
+- `S56` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1608,3 +1650,5 @@ related:
 - `S59` Used the prepared proper-name pack and a bounded residual manifest. The proper name remains Modelo plus its code; surrounding Hungarian nouns carry case. Current human-wording changes were preserved. Generic schema, LLM, taxpayer and vehicle-model concepts retain modell where that is their actual meaning. Catalogue occurrences across revisions are not counted as distinct binding inputs.
 - `S58` Followup records the actual en/es cli notice shards left unstaged by the earlier documentation checkpoint. Missing-extra refusal now names its feature through the canonical catalogue; machine identity and no-install-command assertion remain.
 - `S60` Default export rows retain artefact/grade/completeness/evidence/path/size; calculation identity and file digest require an explicit technical-details action. Declaration summaries, histories, picker and result diff use natural addresses and worded typed periods. Adjacent generic operation host coverage is being reconciled separately before S60 closure.
+- `S30` Corrective checkpoint before final integrated review; S30 remains open. Expanded broad source gate classification and rejected source/publication amendment are in the rolling audit. Fresh frozen captures and canonical broad gates will determine final completion.
+- `S56` Four clearly synthetic typed portfolio/picker/period/external-details render surfaces are prepared. The required frozen current-tree four-language, two-size, two-theme render/review has not run yet; S56 remains open.

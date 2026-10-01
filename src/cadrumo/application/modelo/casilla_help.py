@@ -21,6 +21,12 @@ written at runtime:
 The explanation a person wrote for the casilla is the form's own ``help``; this
 card adds what the registry can say mechanically, so a box with no written help
 still explains itself.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`
+        The recorded operand and result trace, read without reevaluating the formula.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+        The pinned registry snapshot supplying the selected modelo revision.
 """
 
 from __future__ import annotations
@@ -372,7 +378,7 @@ def _formula_values_text(
         ratio_unit=ratio_unit(str(target.data_type), maximum),
     )
     if not renderer.complete:
-        operands = []
+        operands: list[str] = []
         for key in values:
             if key in casillas:
                 operands.append(renderer.leaf(FormulaExpression(casilla_id=casillas[key].id)))
@@ -545,6 +551,12 @@ def build_casilla_help_card(
     ``observation`` is the current calculation's stored trace for this box;
     its operands and result are formatted without evaluating the formula.
     A missing or mismatched trace leaves the static formula available.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`
+            The recorded operand and result trace, read without reevaluating the formula.
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            The pinned registry snapshot supplying the selected modelo revision.
     """
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
     casilla = casillas.get(str(casilla_id))

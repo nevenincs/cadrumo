@@ -12,6 +12,12 @@ The merged ``input_values_by_casilla_id`` and ``binding_overrides`` maps are
 deliberately NOT part of it: they fold every source tier together, and
 replaying them would freeze ledger, profile and borrador values as operator
 overrides that outrank every later source.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations
@@ -69,6 +75,10 @@ def caller_context_of(revision: CalculationRevision | None) -> CalculationCaller
 
     ``None`` stands for a work unit with no current calculation: its caller
     context is empty and its operator layer is known to be empty.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
     """
     if revision is None:
         return CalculationCallerContext(
@@ -125,6 +135,10 @@ def caller_context_calculation_inputs(
     reaches the engine exactly as it did when the operator entered it. A
     binding the revision no longer declares refuses there rather than being
     dropped. An unknown operator layer replays no values: nothing is guessed.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     layer = context.known_operator_layer
     binding_values, enum_binding_values = resolve_binding_overrides(layer.binding_overrides, revision)

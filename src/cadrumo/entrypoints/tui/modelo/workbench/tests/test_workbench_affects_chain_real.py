@@ -45,7 +45,7 @@ def instalments(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledM
 
 
 @pytest.fixture(scope="module")
-def vat(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
+def iva(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
     """One real first-quarter Modelo 303."""
     with real_workbench(tmp_path_factory.mktemp("affects-303"), modelo="303") as installed:
         yield installed
@@ -115,10 +115,10 @@ async def test_a_130_box_names_its_chain_to_the_result(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
 async def test_a_303_box_reaches_the_result_and_an_informative_one_says_it_does_not(
-    language: OutputLanguage, vat: InstalledModeloWorkbench
+    language: OutputLanguage, iva: InstalledModeloWorkbench
 ) -> None:
     with override_settings(cadrumo_output_language=language.value):
-        screen = ModeloWorkbenchScreen(vat, actions=vat)
+        screen = ModeloWorkbenchScreen(iva, actions=iva)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_DOCKED) as pilot:
             form = await _opened(pilot, screen)
@@ -136,10 +136,10 @@ async def test_a_303_box_reaches_the_result_and_an_informative_one_says_it_does_
 
 
 def test_the_witness_boxes_are_casillas_of_the_real_forms(
-    instalments: InstalledModeloWorkbench, vat: InstalledModeloWorkbench
+    instalments: InstalledModeloWorkbench, iva: InstalledModeloWorkbench
 ) -> None:
     """The boxes the panel tests open are casilla rows the filer can select, not inputs no box owns."""
-    for workbench, boxes in ((instalments, ("05", "07")), (vat, ("59", "66", "69"))):
+    for workbench, boxes in ((instalments, ("05", "07")), (iva, ("59", "66", "69"))):
         form = workbench.load(OutputLanguage.EN).form
         for box in boxes:
             field = next(field for field in form.fields() if field.box == box)

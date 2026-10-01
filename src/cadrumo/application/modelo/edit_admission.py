@@ -8,6 +8,10 @@ what a renderer happened to display.
 
 Core types:
 :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations

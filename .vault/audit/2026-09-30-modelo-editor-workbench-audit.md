@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5db1b40090e2a9aa48fe1e840efe772a5e027dd739d0b9098052053b7681422'
+body_hash: 'sha256:e8e6802a81aca1451177ed9c47aad38939304ec414dd17f2053052ce9886b92b'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -458,6 +458,27 @@ S64 implements the approved order: binding catalogue key, owner casilla, provide
 Reviewed S64 at commit `3a24afb920` on 2026-10-01. A second frozen snapshot, retaining the same published authority, rendered Modelo 390, Modelo 100 and verification-reports-incomplete at 80x24 and 120x40 in both appearances: 124 frames, exit 0, all three goldens matching, no failed or skipped frames and no missing glyphs. Start and end source fingerprints both equal `aec10b6abc55519325dc2eb626980b5cafe2e970fb4f7b65beab60bc45395c77`. The 22 geometry advisories name independent scroll panes, with no edge or non-scrollable overflow. Reviewed the readable 390 first-page names and their small detail dialog, the 100 confirmation panel with separate confirm/check counts, and the incomplete 303's figures, official grid, source help and next check action. Verdict for the naming batch and its interactions: PASS. This resolves the remaining workbench lookup part of unnamed-boxes through existing schema catalogues and typed casilla relationships; the three unproven 369 envelope inputs and the registry modelling notes stay open. All 460 workbench unit tests pass on this named tree (`uv run --no-sync pytest -q -n4 -m unit src/cadrumo/entrypoints/tui/modelo/workbench/tests`, log `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T131821.223203Z-pytest-75608-125b2192/run.log`). The independent four-language parity check also passes (`20261001T131223.978888Z-pytest-7668-679350e3/run.log`).
 
 The review server on port 8740 remains running and its existing page is untouched. `runs/current` holds these 124 current-source frames; `runs/corrective-82b7844265` preserves the 712-frame broad corrective capture, and `runs/handover-before-p07-resume` preserves the earlier 640-frame review. The owning `dev.tui diff` reports 548 of 712 frames changed between the handover and corrective captures, with exit 1 as its documented changed-frame result; the report is `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/corrective-preview.diff.log`. The before/after evidence closes S28, not S50 or S30. Rate-scale and formula-values work remains queued as S62/S63; declarations and documentation convergence remain open. Artifacts for the named tree and its render log remain under `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/naming-snapshot` and `naming-render.log`.
+
+
+### S62 publication boundary reconciliation | low | Existing source owners suffice before authority publication
+
+The companion cutover proposal is rejected before authorization or rollout. Investigation showed that the refusal came from newly added target checks, not an existing accepted transaction requirement. The accepted export-only source journal and existing generator-owned form-layout writes can converge while consumers remain on the complete prior published generation. Candidate layout regeneration and full validation remain; stale-layout and authority publication checks are not weakened. Install exports through their existing owner, regenerate forms through theirs, verify the complete tree, then publish the atomic authority descriptor. Source interruption fails closed and is repaired through these owners. The pending approval question was withdrawn in commentary. Required source installation, publication and runtime adoption still remain open for S62.
+
+### P09 documentation verification | low | Reconciled pages and four-language links pass current builds
+
+S57 and S58 are committed at 4124f87 and a03c505392. Forty-eight owning documentation checks and twenty-five real export/readiness CLI checks passed against the revised source. Four isolated strict user-scope HTML builds completed with zero warnings, and 24,316 rendered links/fragments passed; Chromium guide captures were inspected in es/en/ca/hu. Commands and sequence assertions were preserved; final integrated sequence/golden evidence remains at the final review gate. The guide preserves explicit PDF integrity traceability while default TUI details continue to hide identifiers.
+
+### integrated-correction-review | medium | Fresh formula help and reachable picker controls are verified
+
+Read-only review of 3a895bd7fe through the current integrated working tree found stale formula help cached across fresh loads, UNKNOWN-direction negative amounts rendered as positive, and initial-stage Cancel outside the 80-column picker. All three are corrected. Real encrypted-store help regressions cover apply/recalculation in both editor hosts and the late old-head fetch race; eight locale/direction cases preserve UNKNOWN signs; seventeen picker geometry cases cover both stages and Show all in four languages and both themes. Eight blocked 80x24 cases prove Help, F8, keyboard Issues and the Hungarian worded quarter remain reachable. Shared heading and stylesheet detectors pass unchanged. Verdict remains PENDING for final authority adoption, broad gates and fresh frozen captures.
+
+### current-broad-gate-classification | low | Expanded source run exposed unsupported host checks and stale prerequisites
+
+The expanded `pytest src -m unit -q` run returned 24945 passed and 30 failed. It overrode the canonical offline selector: twelve OS-keychain cases cannot acquire credentials in this noninteractive Windows logon session, and one OpenSSL case lacks its external executable. Six registry expectations are corrected in existing open PR711 and reflect accepted current sourcing, not authority data to restore. New workbench heading/style, source-honesty, locale wording, core-struct links, clock-seam and IVA naming findings are corrected through their owning gates; no detector was weakened. The canonical final suite remains outstanding. PR711 and PR713 were checked and remain OPEN; integration is local only, with no new PR or push.
+
+### S62 cutover proposal disposition | low | Source authoring is repaired by existing owners before runtime publication
+
+The proposed whole-revision companion-journal amendment is rejected and retained as decision history. It conflated mutable authoring source with the active complete registry authority. Existing export recovery remains byte-for-byte unchanged. The isolated candidate receives a generated form companion and full validation; each live export replacement is followed by the canonical form generator/check before the next target. The active runtime descriptor changes only after complete source/evidence/compiler validation. The pending approval question was withdrawn; no amendment or new publication protocol is required.
 
 ## Recommendations
 

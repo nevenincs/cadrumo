@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8666d55c3ff1b5c4bddba75ceeeed100c65c60b5633cfa11b57f70292619e65'
+body_hash: 'sha256:fcd5f72254f3f7f62771ada1777c948ff54d3285a41a7e7646a8be40e47cca83'
 related:
   - '[[2026-09-30-modelo-editor-workbench-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-audit]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
   - '[[2026-09-30-modelo-editor-workbench-plan]]'
   - '[[2026-09-30-modelo-editor-workbench-reference]]'
+  - '[[2026-10-02-modelo-editor-workbench-generated-export-layout-companion-cutover-adr]]'
 ---
 
 # `modelo-editor-workbench` feature index
@@ -31,6 +32,7 @@ Auto-generated index of all documents tagged with `#modelo-editor-workbench`.
 
 - `2026-09-30-modelo-editor-workbench-adr` - `modelo-editor-workbench` adr: `Schema-derived modelo editor workbench` | (**status:** `accepted`)
 - `2026-09-30-modelo-editor-workbench-operator-layer-adr` - `modelo-editor-workbench` adr: `Persisted operator layer and replayed caller context` | (**status:** `accepted`)
+- `2026-10-02-modelo-editor-workbench-generated-export-layout-companion-cutover-adr` - `modelo-editor-workbench` adr: `Atomically replace generated export and form-layout companions` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
 
 ### audit
 

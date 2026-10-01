@@ -13,6 +13,10 @@ the calculation closure (every casilla a formula, binding, relation or
 verification expectation touches), which includes hundreds of optional boxes a
 filer may leave empty; it measures how much of the calculation materialised,
 not what the filer owes.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations
@@ -28,6 +32,10 @@ def filer_required_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]
 
     A detail-row template casilla is excluded: a repeated record carries one
     value per row, and the rows answer for it.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     row_templates = row_field_template_records_by_casilla(revision)
     return frozenset(

@@ -219,7 +219,7 @@ def _line_with(lines: list[str], box: str) -> str:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("width", [120, 200])
-async def test_the_303_accrued_vat_grid_is_the_official_table_in_the_published_order(
+async def test_the_303_accrued_iva_grid_is_the_official_table_in_the_published_order(
     operation: PinnedAuthorityOperation, width: int
 ) -> None:
     page = _page(_form(operation), _ACCRUED_PAGE)

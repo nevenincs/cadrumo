@@ -1,7 +1,7 @@
 """Refuse to check, export or record a declaration while its calculation left a figure out of every box.
 
 A calculation persists the notes that mean an amount from the filer's records
-reached no box, that the VAT owed on a reverse-charge invoice could not be
+reached no box, that the IVA owed on a reverse-charge invoice could not be
 derived, that a box the form prints could not be worked out, or that a source
 has no route or could not be read yet
 (:data:`~.calculation_notes.GATE_REFUSED_REASONS`). While the current
@@ -14,6 +14,10 @@ An unrouted one-stop-shop row is left to the Modelo 369 check, which reads it
 with its own evidence, as the other reasons the application refuses on are
 left to their own check step or to the export
 (:data:`~.calculation_notes.BLOCKING_REASONS`).
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
 """
 
 from __future__ import annotations
@@ -42,7 +46,12 @@ def _refused_here(issue: CalculationSourceIssue) -> bool:
 
 
 def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
-    """The persisted notes of ``revision`` that withhold checking, exporting and recording it."""
+    """The persisted notes of ``revision`` that withhold checking, exporting and recording it.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
     return tuple(issue for issue in revision.source_issues if _refused_here(issue))
 
 
@@ -60,6 +69,10 @@ def require_no_blocking_calculation_notes(
 
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
     """
     blocking = blocking_calculation_issues(revision)
     if not blocking:
@@ -85,6 +98,10 @@ def require_work_unit_calculation_unblocked(
 
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
     """
     if not blocking_calculation_issues(revision):
         return

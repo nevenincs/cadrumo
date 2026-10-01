@@ -13,6 +13,12 @@ when the declaration moved.
 Parsing is the application's typed grammar in the filer's language. A refusal
 comes back as the sentence that says how to fix the entry; the refused text is
 never echoed or kept.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`
+        The recorded operand and result trace, read without reevaluating the formula.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+        The pinned registry snapshot supplying the selected modelo revision.
 """
 
 from __future__ import annotations

@@ -14,6 +14,7 @@ from textual.widgets import Button, DataTable, Input, Static
 from .....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.config import override_settings
+from .....core.i18n.render import lookup_translation
 from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
@@ -114,7 +115,20 @@ async def test_invoice_catalogue_opens_canonical_detail_and_saves_reviewed_notes
             assert isinstance(detail, LedgerInvoiceDetailScreen)
             rendered = str(detail.query_one("#ledger-record-detail", Static).render())
             assert "121.00" in rendered
-            assert "1. Synthetic service · 1 × 100.00 = 100.00 · VAT RATE_21 21.00" in rendered
+            row_template = lookup_translation("tui.ledger.invoice.line.row", locale="en")
+            assert row_template is not None
+            assert (
+                row_template.format(
+                    index=1,
+                    description="Synthetic service",
+                    quantity="1",
+                    unit_price="100.00",
+                    subtotal="100.00",
+                    rate="RATE_21",
+                    amount="21.00",
+                )
+                in rendered
+            )
             detail.query_one("#ledger-invoice-notes", Input).value = "after"
             detail.query_one("#ledger-invoice-edit-review", Button).press()
             await pilot.pause()

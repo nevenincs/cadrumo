@@ -6,6 +6,7 @@ import pytest
 
 from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....core.config import override_settings
+from ....core.i18n.render import lookup_translation
 from ....core.json_contract import NoticeSeverity
 from .._modelo_rendering import source_diagnostic_notice
 from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
@@ -42,7 +43,11 @@ def test_the_advisory_becomes_a_non_action_notice_worded_by_its_reason_with_its_
     assert context["remedy"] == _REMEDY
     assert notice.action is None
     assert notice.severity is NoticeSeverity.WARNING
-    assert notice.message == "Part of the VAT total in box without a number is not placed in any rate box."
+    expected_template = lookup_translation(
+        "application.modelo.calc_diagnostic.rate_boxes_underaccount_total.what", locale="en"
+    )
+    assert expected_template is not None
+    assert notice.message == expected_template.format(box="without a number")
 
 
 def test_the_text_line_names_the_level_what_happened_and_what_to_do_without_the_account() -> None:
@@ -50,11 +55,16 @@ def test_the_text_line_names_the_level_what_happened_and_what_to_do_without_the_
         notices, lines = _work_calculate_source_advisory_output((_rate_box_diagnostic(),))
 
     assert notices[0].action is None
-    assert lines == [
-        "Blocks filing: Part of the VAT total in box without a number is not placed in any rate box. "
-        "Check the VAT rate on your invoices and records, then calculate again. "
-        "The declaration cannot be exported until this is fixed."
-    ]
+    expected_template = lookup_translation(
+        "application.modelo.calc_diagnostic.rate_boxes_underaccount_total.what", locale="en"
+    )
+    assert expected_template is not None
+    expected_what = expected_template.format(box="without a number")
+    expected_remedy = lookup_translation(
+        "application.modelo.calc_diagnostic.rate_boxes_underaccount_total.what_to_do", locale="en"
+    )
+    assert expected_remedy is not None
+    assert lines == [f"Blocks filing: {expected_what} {expected_remedy}"]
     assert _MESSAGE not in lines[0]
     assert _REMEDY not in lines[0]
 

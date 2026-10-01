@@ -10,6 +10,10 @@ inside the edit baseline.
 The parser (:mod:`.edit_parsing`) reads lexemes against this grammar, and the
 edit executor re-applies the same typed half to every submitted value, so a
 value that passes the parser passes the engine.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations
@@ -208,6 +212,10 @@ def binding_value_grammar(binding: BindingDefinition, *, revision: ModeloRevisio
     token verbatim, a decimal, integer or boolean binding takes a decimal
     (boolean encoded 0 / 1), and a date-consumed, row-set, or free-text binding
     has no override channel.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     value = binding.value
     data_type = value.data_type

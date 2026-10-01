@@ -62,7 +62,7 @@ def _finding_on(box: str) -> ModeloFormIssue:
 
 
 def _assumed_in_two_sections() -> ModeloWorkForm:
-    """Box 07 assumed in the VAT grid's section and box 03 assumed in the first section, with a finding on 07."""
+    """Box 07 assumed in the IVA grid's section and box 03 assumed in the first section, with a finding on 07."""
     form = synthetic_form(needs_input=False)
     assumed = {"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "value": Decimal("0")}
     form = replace_fields(

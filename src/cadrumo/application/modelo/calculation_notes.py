@@ -64,7 +64,7 @@ CHECK_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons a check step refuses on its own evidence, which may also admit them (an attested empty detail)."""
 EXPORT_REFUSED_REASONS: Final[frozenset[str]] = frozenset({"rate_boxes_underaccount_total"})
-"""Reasons the export refuses the file on: a VAT total its rate boxes do not account for."""
+"""Reasons the export refuses the file on: an IVA total its rate boxes do not account for."""
 BLOCKING_REASONS: Final[frozenset[str]] = GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
 """Every reason the application refuses filing on, and so the editor too."""
 

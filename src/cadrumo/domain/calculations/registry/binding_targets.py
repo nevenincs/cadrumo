@@ -60,6 +60,10 @@ def sole_bound_casilla(revision: ModeloRevision, binding_id: BindingId) -> Casil
 
     A diagnostic about a binding names this box, so the box it could not work
     out is reported once, by its box, and never also as a box-less binding.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
     """
     owners = casillas_by_binding(revision).get(binding_id, ())
     return owners[0] if len(owners) == 1 else None

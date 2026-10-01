@@ -26,6 +26,12 @@ snapshot -- and applies the submitted intents to it:
 The resulting calculation records the new operator layer, so the next edit or
 recalculation starts from it. Every value, channel and precondition failure
 returns a typed no-effect refusal; none escapes as a raw exception.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
 """
 
 from __future__ import annotations

@@ -970,6 +970,10 @@ def read_modelo_workspace_manifest_current_coordinate(
     The manifest is a pure function of the authority object, so the current
     coordinate regenerates it and observes its digest exactly as the capture
     did; an unchanged authority yields the capture's own generation.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            The pinned registry snapshot supplying the selected modelo revision.
     """
     if isinstance(authority, RegistrySnapshot):
         manifest = generate_modelo_workspace_field_manifest(authority)

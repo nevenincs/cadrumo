@@ -460,7 +460,7 @@ class CalculationSourceIssue(BaseModel):
     a zero. ``unhandled_binding_source`` is a declared source with no
     executable route. ``source_domain_not_ready`` is a source store that could
     not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
-    reverse-charge invoice whose VAT owed could not be derived. These four block
+    reverse-charge invoice whose IVA owed could not be derived. These four block
     filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
     value that reached the declaration by an undeclared route; it persists so
     a reopened declaration still shows it, but withholds nothing, because the

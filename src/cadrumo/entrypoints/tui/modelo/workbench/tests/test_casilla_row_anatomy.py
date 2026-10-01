@@ -311,7 +311,7 @@ async def test_a_rate_reads_as_a_percentage_where_its_unit_is_declared_and_never
                 "45", "Share", ModeloFormOrigin.ENTERED, Decimal("0.125"), data_type="ratio", constraints=_bounds("1")
             )
         ),
-        CasillaListEntry(_field("02", "VAT rate", ModeloFormOrigin.CALCULATED, Decimal("4"), data_type="ratio")),
+        CasillaListEntry(_field("02", "IVA rate", ModeloFormOrigin.CALCULATED, Decimal("4"), data_type="ratio")),
     )
 
     lines = await _render(items, width=100, language=OutputLanguage.ES)
@@ -319,7 +319,7 @@ async def test_a_rate_reads_as_a_percentage_where_its_unit_is_declared_and_never
     assert f"21{_PERCENT} " in _line_with(lines, "Pro rata")
     assert f"12,5{_PERCENT} " in _line_with(lines, "Share")
     # A rate whose unit nothing declares is neither guessed nor shown as a bare figure: only a dot.
-    undeclared = _line_with(lines, "VAT rate")
+    undeclared = _line_with(lines, "IVA rate")
     assert " · = " in undeclared
     assert not any(character.isdigit() for character in undeclared.split("]", 1)[1])
 

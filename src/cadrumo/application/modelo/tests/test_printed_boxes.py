@@ -42,7 +42,7 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IMPORTS = "iva.anual.soportado.importaciones"
-"""Modelo 390's VAT paid on imports, which the form prints as box [53] by its layout placement."""
+"""Modelo 390's IVA paid on imports, which the form prints as box [53] by its layout placement."""
 _YEAR = 2025
 _WORK_UNIT = "d" * 64
 _CLOCK = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)

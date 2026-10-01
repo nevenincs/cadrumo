@@ -221,7 +221,9 @@ def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool
     return f"{name}{_IDENTITY_SEPARATOR}{period_words(form.period)}"
 
 
-def deadline_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> DeadlineView | None:
+def deadline_view(
+    form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool, width: int | None = None
+) -> DeadlineView | None:
     """Say when the filing window closes, or ``None`` once the declaration is recorded as filed.
 
     The date is the effective one, after any weekend or holiday shift; the days
@@ -231,7 +233,13 @@ def deadline_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: b
         return None
     deadline = form.deadline
     if deadline is None:
-        return DeadlineView(tr("tui.modelo.workbench.header.no_deadline"), DeadlineTone.MUTED)
+        text = tr("tui.modelo.workbench.header.no_deadline")
+        if (
+            width is not None
+            and cell_len(identity_text(form, language, short=True)) + cell_len(text) + len(_PART_GAP) > width
+        ):
+            text = tr("tui.modelo.workbench.header.no_deadline_short")
+        return DeadlineView(text, DeadlineTone.MUTED)
     closes = date_text(deadline.closes_on, language)
     if deadline.days_overdue is not None:
         return DeadlineView(tr("tui.modelo.workbench.header.deadline_passed", date=closes), DeadlineTone.URGENT)

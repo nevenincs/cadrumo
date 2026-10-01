@@ -7,6 +7,12 @@ the number when it states one; otherwise the number the registry declares for
 the form, else the casilla's own number when it is a figure. A box that
 resolves to no number is a working figure the form does not print, and a figure
 missing there is not a filed figure missing.
+
+See Also:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+        The registry declaration supplying casillas, formulas, bindings and layout metadata.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+        The pinned registry snapshot supplying the selected modelo revision.
 """
 
 from __future__ import annotations
@@ -48,7 +54,12 @@ class PrintedBoxes:
 
 
 def printed_boxes(revision: ModeloRevision, layout: FormLayoutDefinition | None) -> PrintedBoxes:
-    """The boxes ``revision``'s form prints, placed by ``layout`` when it is that revision's own."""
+    """The boxes ``revision``'s form prints, placed by ``layout`` when it is that revision's own.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            The registry declaration supplying casillas, formulas, bindings and layout metadata.
+    """
     placements: dict[str, FormPlacementDefinition] = (
         {str(placement.casilla_id): placement for placement in layout.placements}
         if layout is not None and str(layout.revision_id) == str(revision.id)
@@ -63,7 +74,12 @@ def printed_boxes(revision: ModeloRevision, layout: FormLayoutDefinition | None)
 
 
 def snapshot_printed_boxes(operation: PinnedAuthorityOperation, snapshot: RegistrySnapshot) -> PrintedBoxes:
-    """The boxes the form of ``snapshot``'s revision prints, read from its published layout."""
+    """The boxes the form of ``snapshot``'s revision prints, read from its published layout.
+
+    See Also:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+            The pinned registry snapshot supplying the selected modelo revision.
+    """
     return printed_boxes(snapshot.revision, operation.form_layout(str(snapshot.modelo.id), str(snapshot.revision.id)))
 
 

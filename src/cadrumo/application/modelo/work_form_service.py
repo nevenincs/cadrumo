@@ -21,6 +21,12 @@ The change query compares two forms of the same declaration, typically the one
 shown before an apply and the one read after it, and lists every field whose
 value or origin moved, so the filer sees what their change did to the rest of
 the declaration.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
+        The pinned registry snapshot supplying the selected modelo revision.
 """
 
 from __future__ import annotations

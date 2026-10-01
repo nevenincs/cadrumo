@@ -17,6 +17,10 @@ A stale baseline returns the typed compare-and-swap refusal instead of
 findings; a baseline that merely expired should be renewed first. A green
 preflight is review material, never authority: execution repeats every check.
 Findings carry codes, addresses and bounds, never a value.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
 """
 
 from __future__ import annotations

@@ -144,8 +144,8 @@ _NO_BREAK = "\u00a0"
 
 
 @pytest.fixture(scope="module")
-def annual_vat(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
-    """One real annual VAT summary (Modelo 390), whose boxes cite the VAT regulation by article."""
+def annual_iva(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
+    """One real annual IVA summary (Modelo 390), whose boxes cite the IVA regulation by article."""
     root: Path = tmp_path_factory.mktemp("refinements-real-390")
     with real_workbench(root, modelo="390", filing_year=2025, period_code="0A") as installed:
         yield installed
@@ -159,10 +159,10 @@ def _splits_the_citation(line: str, width: int) -> bool:
 
 @pytest.mark.asyncio
 async def test_the_help_band_never_breaks_a_citation_between_art_and_its_number(
-    annual_vat: InstalledModeloWorkbench,
+    annual_iva: InstalledModeloWorkbench,
 ) -> None:
     with override_settings(cadrumo_output_language="en"):
-        load = annual_vat.load(OutputLanguage.EN)
+        load = annual_iva.load(OutputLanguage.EN)
         field = next(
             field
             for field in load.form.fields()
@@ -171,11 +171,11 @@ async def test_the_help_band_never_breaks_a_citation_between_art_and_its_number(
             and isinstance(field.address, ModeloFormCasillaAddressV1)
         )
         assert isinstance(field.address, ModeloFormCasillaAddressV1)
-        card = annual_vat.help_card(field.address.casilla_id, OutputLanguage.EN)
+        card = annual_iva.help_card(field.address.casilla_id, OutputLanguage.EN)
         assert any(item.text.endswith(_ART_71_TEXT) for item in card.legal_basis)
         line = tr("tui.modelo.workbench.help.legal", citations="; ".join(item.text for item in card.legal_basis))
         width = next(width for width in range(76, 200) if _splits_the_citation(line, width))
-        screen = ModeloWorkbenchScreen(annual_vat, actions=annual_vat)
+        screen = ModeloWorkbenchScreen(annual_iva, actions=annual_iva)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width + _GUTTERS, 48)) as pilot:
             await _opened(pilot, screen)

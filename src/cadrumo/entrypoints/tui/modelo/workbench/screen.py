@@ -601,6 +601,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._next_words = ""
         self._drawn: dict[str, tuple[WorkbenchMark, ...]] = {}
         self._cards: dict[tuple[str, OutputLanguage], ModeloCasillaHelpCardV1] = {}
+        self._help_generation = 0
         self._language = OutputLanguage(output_language())
         self._session = WorkbenchEditSession(self._language)
         self._docked: tuple[CasillaListEntry, CasillaEditorPanel] | None = None
@@ -740,7 +741,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return ()
         progress = self._progress(load)
         named = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
-        pinned = [named.lower() if named.startswith("F") and named[1:].isdigit() else named] if named else []
+        pinned = ["question_mark"]
+        if named:
+            pinned.append(named.lower() if named.startswith("F") and named[1:].isdigit() else named)
         pinned.append("f8")
         urgent = {ChipLevel.BLOCKS, ChipLevel.MISSING}
         if any(chip.level in urgent for chip in attention_chips(load.form, recorded=False)):
@@ -850,6 +853,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def show_load(self, load: ModeloWorkFormLoadV1) -> None:
         """Show a fresh read, keeping the page and the casilla under the cursor where they still exist."""
         previous_page = self._pages[self._page_index].id if self._pages else None
+        self._help_generation += 1
+        self._cards.clear()
         self._load = load
         self._pages = workbench_pages(presented_form(load.form, recorded=self.recorded))
         self._inapplicable = inapplicable_pages(load.form)
@@ -922,7 +927,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         width = max(self._width() - _GUTTERS, 1)
         recorded = self.recorded
-        deadline = deadline_view(form, self._language, recorded=recorded)
+        deadline = deadline_view(form, self._language, recorded=recorded, width=width)
         self.query_one("#wb-header", Static).update(fit_identity(form, self._language, deadline, width))
         deadline_widget = self.query_one("#wb-deadline", Static)
         deadline_widget.display = deadline is not None
@@ -1129,14 +1134,18 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         held = self._held_card(field)
         if held is not None:
             return held
+        generation = self._help_generation
+        language = self._language
         try:
-            card = await asyncio.to_thread(self._reader.help_card, address.casilla_id, self._language)
+            card = await asyncio.to_thread(self._reader.help_card, address.casilla_id, language)
         except Exception as failure:
             get_logger(__name__).error(
                 "modelo workbench help could not be assembled: %s", type(failure).__qualname__, exc_info=True
             )
             return None
-        self._cards[(str(address.casilla_id), self._language)] = card
+        if generation != self._help_generation or language != self._language:
+            return None
+        self._cards[(str(address.casilla_id), language)] = card
         return card
 
     async def _fetch_card(self, entry: CasillaListEntry) -> None:
@@ -1188,7 +1197,11 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
     def _box_help(self, entry: CasillaListEntry) -> list[str]:
         """What the band says about one box: its name, its marks in words, its description and its card."""
         field = entry.field
-        lines = [self._help_title(entry), self._state_line(entry)]
+        lines = (
+            [self._state_line(entry), self._help_title(entry)]
+            if self.has_class("-short")
+            else [self._help_title(entry), self._state_line(entry)]
+        )
         lines.append(description_text(field) or tr("tui.modelo.workbench.help.no_explanation"))
         note = rate_note(entry, self._language)
         if note is not None:
@@ -1546,7 +1559,10 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._push_editor(entry, actions, self._held_card(field))
 
     async def _open_editor_once_explained(self, entry: CasillaListEntry) -> None:
+        generation = self._help_generation
         card = await self._card_for(entry.field)
+        if generation != self._help_generation:
+            return
         actions = self._actions
         if actions is not None:
             self._push_editor(entry, actions, card)
