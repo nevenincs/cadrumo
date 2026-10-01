@@ -113,6 +113,8 @@ _CHIP_MARKS: Final[Mapping[ChipLevel, WorkbenchMark]] = MappingProxyType(
         ChipLevel.CHECK: CHECK_MARK,
     }
 )
+_URGENT_CHIPS: Final[frozenset[ChipLevel]] = frozenset({ChipLevel.BLOCKS, ChipLevel.MISSING})
+"""Chips the result line never drops to keep itself on one line: it takes a second line first."""
 _CHIP_LOCALE_KEYS: Final[Mapping[ChipLevel, str]] = MappingProxyType(
     {
         ChipLevel.BLOCKS: "tui.modelo.workbench.header.chip.blocks",
@@ -495,18 +497,19 @@ def fit_result_line(
 ) -> ResultLine:
     """Keep what fits in ``width``, never running past it; the result, the stale mark and the file always stay.
 
-    On one line the box goes first, then the least urgent chips. When the
-    result does not fit one line beside even its stale mark and the file, it
-    takes a line of its own in the fullest words that fit, and the stale mark,
-    the file and the chips share the line below, the least urgent chips going
-    first there.
+    On one line the box goes first, then the chips worth checking or
+    confirming, least urgent first; the result's words are never cut there.
+    When the words do not fit one line beside what blocks or is missing, the
+    result takes a line of its own in the fullest words that fit, and the
+    stale mark, the file and the chips share the line below, the least urgent
+    chips going first there.
     """
     line = ResultLine(view.text, view.stale, chips, file=file)
     if cell_len(line.text()) <= width:
         return line
     line = ResultLine(view.short_text, view.stale, chips, file=file)
     kept = list(chips)
-    while kept and cell_len(line.text()) > width:
+    while kept and kept[-1].level not in _URGENT_CHIPS and cell_len(line.text()) > width:
         kept.pop()
         line = ResultLine(view.short_text, view.stale, tuple(kept), file=file)
     if cell_len(line.text()) <= width:

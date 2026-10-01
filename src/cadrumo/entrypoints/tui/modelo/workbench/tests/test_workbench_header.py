@@ -223,7 +223,7 @@ def test_every_attention_level_with_something_in_it_has_a_chip_and_none_once_rec
     assert recorded == ()
 
 
-def test_a_narrow_line_drops_the_box_and_then_the_least_urgent_chips_but_never_the_result() -> None:
+def test_a_narrow_line_keeps_the_result_and_what_blocks_taking_a_second_line_before_dropping_either() -> None:
     form = with_findings(synthetic_form(), blocking=("06",), worth_checking=("01",))
     with override_settings(cadrumo_output_language="en"):
         view = result_view(form, _EN, staged=3, recorded=False)
@@ -236,11 +236,12 @@ def test_a_narrow_line_drops_the_box_and_then_the_least_urgent_chips_but_never_t
         assert repeated is not None
         whole = repeated.text()
         wide_text = wide.text()
+        narrow_marks = cell_len(narrow.marks_text())
 
     assert wide.result.endswith("[19]") and len(wide.chips) == len(chips)
-    assert not narrow.result.endswith("[19]")
-    assert cell_len(narrow.text()) <= 76
-    assert [chip.level for chip in narrow.chips] == [ChipLevel.BLOCKS, ChipLevel.MISSING][: len(narrow.chips)]
+    assert narrow.stacked, "what blocks and what is missing do not fit beside the result, so they take a line"
+    assert cell_len(narrow.result) <= 76 and narrow_marks <= 76
+    assert [chip.level for chip in narrow.chips][:2] == [ChipLevel.BLOCKS, ChipLevel.MISSING]
     assert tightest.stacked and cell_len(tightest.result) <= 10 and tightest.chips == ()
     assert whole == wide_text
 
@@ -400,3 +401,24 @@ async def test_the_result_carries_the_emphasis_and_the_title_bar_is_a_neutral_su
     assert identity.lower() != theme["primary"].lower(), "the title bar is not the loudest thing on screen"
     assert next_step.lower() != theme["primary"].lower()
     assert next_step.lower() != theme["accent"].lower()
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+@pytest.mark.parametrize("width", [76, 116])
+def test_a_loss_carried_forward_keeps_its_words_whole_dropping_the_box_first(
+    language: OutputLanguage, width: int
+) -> None:
+    form = with_findings(
+        with_result(synthetic_form(calculated=True), ModeloFormResultDirection.TO_DEDUCT_LATER, Decimal("-100")),
+        blocking=(None,),
+        worth_checking=(None,),
+    )
+    with override_settings(cadrumo_output_language=language.value):
+        view = result_view(form, language, staged=0, recorded=False)
+        assert view is not None
+        line = fit_result_line(view, attention_chips(form, recorded=False), width)
+        widest = cell_len(line.marks_text() if line.stacked else line.text())
+
+    assert line.result in (view.text, view.short_text), "the words that say the loss carries forward are never cut"
+    assert ChipLevel.BLOCKS in [chip.level for chip in line.chips]
+    assert cell_len(line.result) <= width and widest <= width
