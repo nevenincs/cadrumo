@@ -8,6 +8,7 @@ shape. Expectations are written by hand, never read back from the renderer.
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -29,6 +30,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.calculations.registry.schema_surfaces import CasillaConstraints
+from ......tests.locales_root_fixture import locales_root_scope
 from ....components.theme import install_cadrumo_themes
 from ..casilla_list import (
     CasillaList,
@@ -175,20 +177,42 @@ async def test_only_the_description_line_is_cut_and_it_never_repeats_the_box_num
     assert note.endswith("…")
 
 
-def test_a_description_that_opens_by_naming_its_box_loses_that_opening_in_every_language() -> None:
-    def described(help_text: str) -> str | None:
-        return description_text(_field("0002", "x", ModeloFormOrigin.ENTERED, help_text=help_text))
+def _described(help_text: str, box: str = "0002") -> str | None:
+    return description_text(_field(box, "x", ModeloFormOrigin.ENTERED, help_text=help_text))
 
-    assert described("Box 0002: use this when you allocate advance payments.") == (
+
+def test_a_description_that_opens_by_naming_its_box_loses_that_opening_in_every_language() -> None:
+    assert _described("Box 0002: use this when you allocate advance payments.") == (
         "Use this when you allocate advance payments."
     )
-    assert described("Casilla 01: base imponible del IVA devengado.") == "Base imponible del IVA devengado."
-    assert described("Casella 01: base imposable de l'IVA meritat.") == "Base imposable de l'IVA meritat."
-    assert described("0002. mező: akkor használja, ha a szerzői jogok.") == "Akkor használja, ha a szerzői jogok."
+    assert _described("Casilla 01: base imponible del IVA devengado.", "01") == "Base imponible del IVA devengado."
+    assert _described("Casella 01: base imposable de l'IVA meritat.", "01") == "Base imposable de l'IVA meritat."
+    assert _described("0002. mező: akkor használja, ha a szerzői jogok.") == "Akkor használja, ha a szerzői jogok."
+    assert _described("Box 0002:") is None
     # A description that only starts with a number, or names something else, is kept whole.
-    assert described("Enter expense 3: the amount paid.") == "Enter expense 3: the amount paid."
-    assert described("Producto 1: aceite.") == "Producto 1: aceite."
-    assert described("Box 700 of modelo 303, tax year 2022.") == "Box 700 of modelo 303, tax year 2022."
+    assert _described("Enter expense 3: the amount paid.") == "Enter expense 3: the amount paid."
+    assert _described("Producto 1: aceite.") == "Producto 1: aceite."
+    assert _described("Box 700 of modelo 303, tax year 2022.", "700") == "Box 700 of modelo 303, tax year 2022."
+    # The opening is dropped because the row already shows that box; one naming another box says something.
+    assert _described("Box 0003: see box 0002.") == "Box 0003: see box 0002."
+
+
+def test_a_reworded_box_opening_in_the_catalogue_is_followed_rather_than_missed(tmp_path: Path) -> None:
+    """The opening is the catalogue's own words for the row's box, so rewording them moves what is dropped."""
+    (tmp_path / "en.yml").write_text(
+        "tui:\n  modelo:\n    workbench:\n      help:\n        box_opening: 'Field {box} -'\n",
+        encoding="utf-8",
+    )
+
+    with locales_root_scope(tmp_path):
+        assert _described("Field 0002 - use this when you allocate advance payments.") == (
+            "Use this when you allocate advance payments."
+        )
+        assert _described("Box 0002: use this when you allocate advance payments.") == (
+            "Box 0002: use this when you allocate advance payments."
+        )
+        # The languages the fixture leaves alone still read the packaged catalogue.
+        assert _described("Casilla 0002: base imponible.") == "Base imponible."
 
 
 @pytest.mark.asyncio

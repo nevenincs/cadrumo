@@ -1763,6 +1763,11 @@ application:
         kóddal elutasították.'
     work_form:
       additional_data_for_box: Kiegészítő adat a(z) {box}. rovathoz
+      box_locator_help:
+        one_year: A {modelo}-es nyomtatvány {box}. rovata, {years}. adóév.
+        onwards: A {modelo}-es nyomtatvány {box}. mezője, {years}. és az azt követő
+          adóévek.
+        year_span: A {modelo}-es nyomtatvány {box}. mezője, {years}. adóév.
       finding_action:
         add_activity_start: Adja meg a profiljában, mikor kezdte a tevékenységét,
           majd számoljon újra.

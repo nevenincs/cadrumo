@@ -154,13 +154,17 @@ _UNNAMED_LOCALE_KEY: Final[str] = "application.modelo.work_form.unnamed_box"
 """The label of a box the form gives no name, in the filer's words."""
 _FEEDS_BOX_LOCALE_KEY: Final[str] = "application.modelo.work_form.additional_data_for_box"
 """The label of an input no box owns that feeds exactly one numbered box, named after that box."""
-_BOX_LOCATOR_HELP: Final[tuple[re.Pattern[str], ...]] = (
-    re.compile(r"^Casilla [\d-]+ del modelo \d+, ejercicios? [\d-]+( y siguientes)?\.$"),
-    re.compile(r"^Box [\d-]+ of [Mm]odelo \d+, tax years? [\d-]+( onwards)?\.$"),
-    re.compile(r"^Casella [\d-]+ del model \d+, exercicis? [\d-]+( i posteriors)?\.$"),
-    re.compile(r"^A \d+-\w+ nyomtatvány [\d-]+\. (rovata|mezője), [\d-]+\. (adóév|és az azt követő adóévek)\.$"),
+_BOX_LOCATOR_HELP_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "application.modelo.work_form.box_locator_help.one_year",
+    "application.modelo.work_form.box_locator_help.year_span",
+    "application.modelo.work_form.box_locator_help.onwards",
 )
-"""Help sentences that only say which box of which modelo and year a casilla is, in each language."""
+"""The catalogue's sentences that only say which box of which modelo and year a casilla is."""
+_BOX_SLOT: Final[str] = "\ue000"
+_YEARS_SLOT: Final[str] = "\ue001"
+"""Placeholders no catalogue text contains, standing where a locator names its box and its year."""
+_FIGURES: Final[str] = "[0-9-]+"
+"""What fills a locator's box and year: digits and the hyphen of a range, never words."""
 _BINDING_DATA_TYPE: Final[Mapping[str, str]] = {
     "money": "money",
     "decimal": "decimal",
@@ -238,6 +242,13 @@ class _FormContext:
             self._export_decimals = decimals
         return self._export_decimals.get(casilla_id)
 
+    @property
+    def box_locators(self) -> tuple[re.Pattern[str], ...]:
+        """The modelo's box-locator help sentences, rendered once per form."""
+        if self._box_locators is None:
+            self._box_locators = _render_box_locators(str(self.snapshot.modelo.id))
+        return self._box_locators
+
     def __init__(
         self,
         *,
@@ -259,6 +270,7 @@ class _FormContext:
         self.bindings: dict[str, BindingDefinition] = {str(item.id): item for item in snapshot.revision.bindings}
         self.snapshot = snapshot
         self._export_decimals: dict[str, int] | None = None
+        self._box_locators: tuple[re.Pattern[str], ...] | None = None
         self.required: frozenset[str] = frozenset(str(item) for item in filer_required_casilla_ids(snapshot.revision))
         self.filed = review.lifecycle_state in _FILED_STATES
         self.surface: dict[tuple[str, str], ModeloEditPermittedSurfaceEntryV1] | None = (
@@ -363,16 +375,38 @@ def _fed_box_label(binding_id: str, context: _FormContext) -> ModeloFormText | N
     raise InternalInvariantError(f"the catalogue has no text for {_FEEDS_BOX_LOCALE_KEY!r}")
 
 
-def _help(casilla: CasillaDefinition, label: str, language: OutputLanguage) -> str | None:
+def _help(casilla: CasillaDefinition, label: str, context: _FormContext) -> str | None:
     """Return the casilla's help unless it only restates the label or names the box."""
     keys = tuple(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
-    text = resolve_modelo_localization(keys, locale=language.value)
+    text = resolve_modelo_localization(keys, locale=context.language.value)
     if not text:
         return None
-    normalized = _normalized(text)
-    if normalized == _normalized(label) or any(pattern.match(text.strip()) for pattern in _BOX_LOCATOR_HELP):
+    if _normalized(text) == _normalized(label) or _names_only_its_box(text, context.box_locators):
         return None
     return text
+
+
+def _render_box_locators(modelo: str) -> tuple[re.Pattern[str], ...]:
+    """The sentences that only say which box of ``modelo`` and which year a help is about, in every language.
+
+    Each is the catalogue's own sentence rendered for the modelo, so a reworded
+    catalogue is followed rather than missed. The box and the year are taken as
+    written, as figures: help an edition inherits names the year of the edition
+    that stated it, and some name the box by its record positions.
+    """
+    locators: list[re.Pattern[str]] = []
+    for language in OutputLanguage:
+        for key in _BOX_LOCATOR_HELP_LOCALE_KEYS:
+            rendered = re.escape(tr(key, locale=language.value, modelo=modelo, box=_BOX_SLOT, years=_YEARS_SLOT))
+            figures = rendered.replace(_BOX_SLOT, _FIGURES).replace(_YEARS_SLOT, _FIGURES)
+            locators.append(re.compile(figures))
+    return tuple(locators)
+
+
+def _names_only_its_box(text: str, locators: tuple[re.Pattern[str], ...]) -> bool:
+    """Whether a help text is one of ``locators``' sentences and says nothing else."""
+    stated = text.strip()
+    return any(locator.fullmatch(stated) for locator in locators)
 
 
 def _normalized(text: str) -> str:
@@ -528,7 +562,7 @@ def _casilla_field(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
         box=_box(casilla, placement),
         label=label,
-        help=_help(casilla, label.text, context.language),
+        help=_help(casilla, label.text, context),
         data_type=str(row.data_type),
         value=value,
         origin=origin,

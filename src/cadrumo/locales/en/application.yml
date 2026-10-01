@@ -1683,6 +1683,10 @@ application:
         with %{error_code}.'
     work_form:
       additional_data_for_box: Additional data for box {box}
+      box_locator_help:
+        one_year: Box {box} of modelo {modelo}, tax year {years}.
+        onwards: Box {box} of Modelo {modelo}, tax years {years} onwards.
+        year_span: Box {box} of Modelo {modelo}, tax years {years}.
       finding_action:
         add_activity_start: Add the date your activity started to your profile, then
           calculate again.

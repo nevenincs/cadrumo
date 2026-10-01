@@ -2270,6 +2270,7 @@ tui:
           changes: 'desactualitzat: canvis sense aplicar: {count} [{key}]'
           recalculate: 'desactualitzat: torna a calcular [{key}]'
       help:
+        box_opening: 'Casella {box}:'
         empty: No hi ha caselles en aquesta vista.
         feeds: 'S''utilitza a: {boxes}'
         formula: 'Càlcul: {formula}'

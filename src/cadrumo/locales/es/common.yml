@@ -2279,6 +2279,7 @@ tui:
           changes: 'desactualizado: cambios sin aplicar: {count} [{key}]'
           recalculate: 'desactualizado: vuelve a calcular [{key}]'
       help:
+        box_opening: 'Casilla {box}:'
         empty: No hay casillas en esta vista.
         feeds: 'Se usa en: {boxes}'
         formula: 'Cálculo: {formula}'

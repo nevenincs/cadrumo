@@ -2263,6 +2263,7 @@ tui:
           changes: 'elavult: még nem alkalmazott módosítások: {count} [{key}]'
           recalculate: 'elavult: számolja újra [{key}]'
       help:
+        box_opening: '{box}. mező:'
         empty: Ebben a nézetben nincs rovat.
         feeds: 'Felhasználva: {boxes}'
         formula: 'Számítás: {formula}'

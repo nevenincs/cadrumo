@@ -2221,6 +2221,7 @@ tui:
           changes: 'out of date: changes not applied yet: {count} [{key}]'
           recalculate: 'out of date: calculate again [{key}]'
       help:
+        box_opening: 'Box {box}:'
         empty: There are no boxes in this view.
         feeds: 'Used in: {boxes}'
         formula: 'Calculation: {formula}'

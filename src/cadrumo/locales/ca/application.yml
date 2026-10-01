@@ -1795,6 +1795,10 @@ application:
         amb %{error_code}.'
     work_form:
       additional_data_for_box: Dada addicional de la casella {box}
+      box_locator_help:
+        one_year: Casella {box} del model {modelo}, exercici {years}.
+        onwards: Casella {box} del model {modelo}, exercicis {years} i posteriors.
+        year_span: Casella {box} del model {modelo}, exercicis {years}.
       finding_action:
         add_activity_start: Afegeix al teu perfil la data en què va començar la teva
           activitat i torna a calcular.

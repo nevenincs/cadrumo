@@ -1799,6 +1799,10 @@ application:
         con %{error_code}.'
     work_form:
       additional_data_for_box: Dato adicional de la casilla {box}
+      box_locator_help:
+        one_year: Casilla {box} del modelo {modelo}, ejercicio {years}.
+        onwards: Casilla {box} del modelo {modelo}, ejercicio {years} y siguientes.
+        year_span: Casilla {box} del modelo {modelo}, ejercicio {years}.
       finding_action:
         add_activity_start: Añade a tu perfil la fecha en que empezó tu actividad
           y vuelve a calcular.

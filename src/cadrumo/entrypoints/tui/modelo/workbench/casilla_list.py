@@ -33,7 +33,6 @@ edit session answers it.
 
 from __future__ import annotations
 
-import re
 from bisect import bisect_right
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
@@ -164,11 +163,8 @@ _RATE_READINGS: Final[frozenset[ModeloEditRatioUnit]] = frozenset(
 _SPANISH_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.SPANISH_FALLBACK, ModeloFormTextDisclosure.OFFICIAL_SPANISH}
 )
-_BOX_PREFIXES: Final[tuple[re.Pattern[str], ...]] = (
-    re.compile(r"^(?:Box|Casilla|Casella)\s+\d[\w.-]*\s*:\s*"),
-    re.compile(r"^\d[\w-]*\.\s+mező\s*:\s*"),
-)
-"""A description that opens by naming its box, in each language the catalogue writes: the row already shows it."""
+_BOX_OPENING_LOCALE_KEY: Final[str] = "tui.modelo.workbench.help.box_opening"
+"""How a description opens by naming its box, in each language the catalogue writes: the row already shows it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,10 +331,13 @@ def description_text(field: ModeloFormField) -> str | None:
     text = field.help
     if not text:
         return None
-    for prefix in _BOX_PREFIXES:
-        stripped = prefix.sub("", text.strip(), count=1)
-        if stripped != text.strip():
-            return stripped[:1].upper() + stripped[1:] if stripped else None
+    stated = text.strip()
+    if field.box:
+        for language in OutputLanguage:
+            opening = tr(_BOX_OPENING_LOCALE_KEY, locale=language.value, box=field.box)
+            if stated.startswith(opening):
+                rest = stated.removeprefix(opening).lstrip()
+                return rest[:1].upper() + rest[1:] if rest else None
     return text
 
 
