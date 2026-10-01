@@ -736,13 +736,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
     def _fresh_login_settings(self) -> Settings:
         """Return browser settings suitable for operator-mediated authentication.
 
-        The shared browser default is headless because most AEAT reads consume
-        persisted session state.  A fresh Cl@ve Movil login is different: its
-        QR branch requires the operator to see and scan the browser page.  Keep
-        that interaction contract local to the provider instead of making every
-        unrelated browser-backed read headed.
+        The QR branch needs a visible page for scanning. The non-QR branch
+        uses the configured identity and contrast data, so it can keep the
+        operator's headless setting while waiting for phone approval.
         """
-        if not self._settings.cadrumo_browser_headless:
+        if self._settings.cadrumo_clave_prefer_non_qr or not self._settings.cadrumo_browser_headless:
             return self._settings
         return self._settings.model_copy(update={"cadrumo_browser_headless": False})
 

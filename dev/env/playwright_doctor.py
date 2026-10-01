@@ -1,13 +1,10 @@
 """Probe whether the workstation satisfies the CONFIGURED Playwright browser channel.
 
-This is the ``just doctor-browser`` recipe: the health check the anti-bot
-channel pinning decision requires but the justfile never built. AEAT browser
-automation is pinned to ``channel: "chrome"`` in New Headless mode for anti-bot
-fingerprint reasons; bundled Chromium is the explicit fallback only if system
-Chrome breaks. This probe reads the ACTUAL configured
+This is the ``just doctor-browser`` recipe. AEAT browser automation launches
+Playwright's bundled Chromium by default. This probe reads the ACTUAL configured
 channel (``cadrumo.core.config.Settings.cadrumo_browser_channel``) rather than
-hardcoding ``"chrome"``, so it stays correct when an operator overrides the channel
-via ``CADRUMO_BROWSER_CHANNEL``.
+hardcoding one, so it stays correct when an operator overrides the channel via
+``CADRUMO_BROWSER_CHANNEL`` (for example to a system ``chrome``).
 
 Unlike ``cadrumo.application.provisioning_browser.probe_playwright_browser`` (a fast
 filesystem-cache check used inside the interactive CLI process, where the
@@ -34,7 +31,7 @@ from cadrumo.core.optional_extras import BROWSER_EXTRA, MissingOptionalExtraErro
 def remediation_for_channel(channel: str) -> str:
     """Return the exact, actionable remediation command for a channel launch failure.
 
-    The ``chrome`` channel is the mandated default; Playwright does not
+    An operator-selected ``chrome`` channel is the exception: Playwright does not
     download a private Chrome copy for it, it installs/detects the SYSTEM Google
     Chrome (via the OS package manager on Linux, which typically needs root/apt
     access), so its remediation spells that constraint out. Every other channel
@@ -46,7 +43,7 @@ def remediation_for_channel(channel: str) -> str:
             "Google Chrome, not a bundled download; on Linux it shells out to the "
             "OS package manager and typically needs root/apt access — pre-install "
             "'google-chrome-stable' yourself first if 'playwright install chrome' "
-            "cannot elevate) or run 'just setup-browser' to provision both channels"
+            "cannot elevate) or run 'just setup-browser' to provision the configured channel"
         )
     return f"run 'playwright install {channel}' (or 'just setup-browser') to install the browser binary"
 

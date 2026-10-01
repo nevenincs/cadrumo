@@ -38,7 +38,7 @@
 # passing — the worst shape of failure there is. Pinning the distro is what
 # keeps the explicit package list below truthful.
 ARG PYTHON_BASE_IMAGE=python:3.13-slim-trixie
-ARG UV_VERSION=0.9.7
+ARG UV_VERSION=0.12.12
 
 FROM ${PYTHON_BASE_IMAGE} AS base
 
@@ -46,7 +46,7 @@ FROM ${PYTHON_BASE_IMAGE} AS base
 # curl/ca-certificates: the official uv installer script.
 # git: uv workspace + vaultspec-rag git-aware tooling.
 # just: the project's task runner. The devcontainer `postCreateCommand`
-#   (`just install && just env-setup`) and every documented dev lane invoke
+#   and every documented dev lane invoke
 #   it, so an image without it builds fine and then fails at container
 #   creation. Debian trixie ships it (1.40.0), so no out-of-band download.
 # build-essential: source builds for any dependency without a manylinux wheel.
@@ -121,7 +121,9 @@ USER ${USERNAME}
 
 ENV PATH="/home/${USERNAME}/.local/bin:/workspace/.venv/bin:${PATH}" \
     UV_LINK_MODE=copy \
-    PLAYWRIGHT_BROWSERS_PATH=/home/${USERNAME}/.cache/ms-playwright
+    PLAYWRIGHT_BROWSERS_PATH=/home/${USERNAME}/.cache/ms-playwright \
+    CADRUMO_BROWSER_CHANNEL=chromium \
+    CADRUMO_BROWSER_HEADLESS=true
 
 
 # ── Development image ────────────────────────────────────────────────────
@@ -140,14 +142,18 @@ COPY --chown=${USERNAME}:${USERNAME} . .
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/uv,uid=${USER_UID},gid=${USER_GID} \
     uv sync --locked --extra workbook-windows --group dev
 
-# Pre-bake headless Chromium so `playwright install --with-deps` is
-# unnecessary at container start (issue #101 acceptance criterion).
+# Pre-bake the Playwright-managed Chromium that setup-browser provisions, owned
+# by the workspace user.
 #
 # Deliberately NO cache mount here. This step's whole purpose is to leave the
 # browser in the image LAYER, and a `type=cache` mount is scratch space that
 # is discarded when the step ends — the browsers would vanish from the built
 # image. (The previous revision mounted the uv cache over this step, which
 # cached nothing it ever wrote but at least did not eat the output.)
+# The cache mount used by uv during build does not preserve its parent owner.
+USER root
+RUN chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.cache
+USER ${USERNAME}
 RUN python -m playwright install chromium
 
 CMD ["bash"]
