@@ -276,8 +276,10 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 "tui.declarations.calendar.detail.action",
                 action=declarations_copy(
                     "tui.declarations.calendar.action.create"
-                    if row.recovery_action is not None
+                    if row.recovery_action is not None and self.controller.recovery_handoff is not None
                     else "tui.declarations.calendar.action.open"
+                    if self.controller.can_open(row)
+                    else "tui.declarations.list.not_openable.help"
                 ),
             )
         )
@@ -333,8 +335,13 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                     ),
                     self._resolve_recovery_confirmation,
                 )
-        elif self.controller.entry_handoff is not None:
-            self.controller.entry_handoff(row)
+        elif self.controller.can_open(row) and self.controller.entry_handoff is not None:
+            try:
+                child = self.controller.entry_handoff(row)
+                if child is not None:
+                    self.app.push_screen(child)
+            except CadrumoError as refusal:
+                self.query_one("#declarations-calendar-notice", Static).update(resolve_error_message(refusal))
         else:
             self.query_one("#declarations-calendar-notice", Static).update(
                 declarations_copy("tui.declarations.refusal.handoff")

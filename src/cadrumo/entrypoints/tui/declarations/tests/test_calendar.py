@@ -35,7 +35,6 @@ _EXPECTED = {
         "Legal:",
         "Días de retraso:",
         "Coherencia con la AEAT:",
-        "Abrir esta declaración",
     ),
     OutputLanguage.EN: (
         "Filing calendar",
@@ -43,7 +42,6 @@ _EXPECTED = {
         "Legal:",
         "Days overdue:",
         "Consistency with AEAT:",
-        "Open this declaration",
     ),
     OutputLanguage.CA: (
         "Calendari fiscal",
@@ -51,7 +49,6 @@ _EXPECTED = {
         "Legal:",
         "Dies de retard:",
         "Coherència amb l'AEAT:",
-        "Obre aquesta declaració",
     ),
     OutputLanguage.HU: (
         "Bevallási naptár",
@@ -59,7 +56,6 @@ _EXPECTED = {
         "Jogi:",
         "Késedelmes napok:",
         "Egyezés az AEAT-tal:",
-        "Bevallás megnyitása",
     ),
 }
 
@@ -362,7 +358,10 @@ async def test_real_locales_change_copy_but_not_natural_semantics(locale: Output
             rendered = _rendered(screen)
             for expected in _EXPECTED[locale]:
                 assert expected in rendered
-            assert "Modelo 130 · 2026 · 1T" in rendered
+            from ...modelo.workbench.wording import period_words
+
+            assert "Modelo 130 · " + period_words(screen.controller.projection.entries[0].period) in rendered
+            assert declarations_copy("tui.declarations.list.not_openable.help") in rendered
             assert "tui.declarations" not in rendered
             assert "not_observed" not in rendered
 

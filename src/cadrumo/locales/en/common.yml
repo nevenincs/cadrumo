@@ -1320,14 +1320,12 @@ tui:
       aeat_confirmation: AEAT confirmation
       aeat_evidence: AEAT status
       availability: Status
-      calculation: Current calculation
       current: Current
       declaration: Declaration
       destination: Area
       filed: Recorded as filed
       local_filing: Local filing status
       local_state: Local status
-      result: Result
       updated: Updated
       when: Date
     confirmation:
@@ -1376,13 +1374,92 @@ tui:
       superseded: Recorded filing replaced
       verification_refused: Check refused
       verified: Check completed
+    list:
+      advice:
+        applicability_undetermined: Your profile does not establish whether you must
+          file this modelo. Check your obligations.
+        applicable_window_missing: This may apply to you, but Cadrumo has no filing
+          deadline for it. Check the official calendar.
+        registry_unmodeled: Cadrumo does not yet support this obligation. Check it
+          and file another way if required.
+      aeat_needs_check:
+        help: Check the AEAT evidence to establish whether this period has been filed.
+      aeat_unlinked:
+        help:
+          confirmed: Official AEAT confirmation shows that this period has been filed.
+          no_refile: Linking does not require filing it again.
+          unavailable: This filing cannot be linked or its receipt opened from this
+            list yet. You do not need to file the same return again.
+      column:
+        deadline: Deadline
+        declaration: Declaration
+        period: Period
+        state: State
+      empty: You have no declarations yet. Press + to start one.
+      filter:
+        all: All
+        attention: Needs attention
+        not_started: Not started
+        recorded: Recorded as filed
+        this_year: This year
+      group:
+        attention: Needs attention
+        in_progress: In progress
+        maybe: Check whether these apply to you
+        not_started: Due, not started
+        ready: Checked, ready to record
+        recorded: Recorded as filed
+      key:
+        new: New declaration
+      keys: + New declaration · / Search · f Filter · s Sort · t Technical details
+      maybe:
+        help: Cadrumo could not tell from your profile whether you must file this.
+          Check it before the deadline.
+      new:
+        choose_modelo: Which modelo?
+        choose_period: Which period?
+        create: Create and open
+        exists: This declaration already exists. Open it?
+        show_all: Show all modelos, not only yours
+        start_confirm: Start {modelo} for {period}?
+      next:
+        check_aeat: Check AEAT filing
+        continue: Continue filling in
+        create_file: Create the file
+        fix: 'Fix what blocks filing: {count}'
+        link_aeat: Link the AEAT filing
+        none: Nothing to do
+        open_local_draft: Open local draft
+        start: Start it
+      not_openable:
+        help: This row cannot be opened here yet.
+      search:
+        hint: Search by Modelo number, name or period
+      sort:
+        deadline: Deadline
+        modelo: Modelo
+        result: Result
+        state: State
+      state:
+        aeat_needs_check: AEAT filing needs checking
+        aeat_unlinked: Filed with AEAT, not linked here
+        aeat_unlinked_on: Filed with AEAT on {date}, not linked here
+        blocked: Something blocks filing
+        calculated: Calculated, not checked
+        checked: Checked
+        correction: Correction
+        draft: Being filled in
+        local_draft: Local draft
+        not_started: Not started
+        superseded: Replaced by a later filing
+        unreadable: Could not be read
+      title: Your declarations
+      unreadable:
+        help: Cadrumo could not read this declaration. The rest of the list is not
+          affected.
     origin:
       aeat: AEAT
       local: Local
-    overview:
-      areas: What you can do
-      declarations: Declarations
-      title: Declarations overview
     refusal:
       handoff: This can't be opened from this session.
       reason:
@@ -1412,27 +1489,19 @@ tui:
     unavailable:
       title: Declarations area unavailable
     value:
-      available: Available
       'no': 'No'
-      none: None
       not_applicable: Not applicable
       result_unknown: Not available
       'yes': 'Yes'
     work_create:
       created: Created {address}. Reopen Declarations to work on it.
-      modelo: Modelo
-      period: Period
       progress: Creating or reopening the selected declaration…
       refusal:
-        modelo: Enter a Modelo number.
         not_applicable: 'Modelo %{modelo} does not apply to this profile: %{reason}
           If it should, correct the profile in Profile (F4) and try again.'
         period: Enter a valid period for the selected year.
         year: Enter a supported four-digit filing year.
       reused: Reopened {address}. Reopen Declarations to work on it.
-      submit: Create or reopen
-      title: Create or reopen a declaration
-      year: Filing year
     work_state:
       borrador: Draft
       descartado: Discarded
@@ -2199,6 +2268,7 @@ tui:
         file_created: File created on {date}
         file_out_of_date: The file from {date} is out of date. Create it again [{key}]
         no_deadline: No deadline on record for this period
+        no_deadline_short: No deadline on record
         own_calculation: Cadrumo's calculation. AEAT has not seen it.
         result:
           choice_pending: 'To carry forward or to be refunded: you choose when you

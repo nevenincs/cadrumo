@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime
 from typing import ClassVar, Final, cast
 
@@ -9,6 +10,7 @@ from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
 
+from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_calendar import (
     DECLARATIONS_CALENDAR_CONTRACT_VERSION,
     DeclarationsCalendarEntryRefV1,
@@ -34,6 +36,7 @@ from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import lookup_translation, output_language, tr
+from ....core.period import Period
 from ....core.text_fold import fold_diacritics
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
@@ -106,8 +109,10 @@ def work_create_refusal_message(refusal: CadrumoError) -> str:
 
 def natural_address(modelo: object, year: object, period: object) -> str:
     """Render the public Modelo/year/period coordinate."""
-    token = getattr(period, "registry_token", str(period))
-    return f"Modelo {modelo} · {year} · {token}"
+    from ..modelo.workbench.wording import period_words
+
+    words = period_words(period) if isinstance(period, Period) else f"{year} · {period}"
+    return f"Modelo {modelo} · {words}"
 
 
 def timestamp_label(value: datetime) -> str:
@@ -160,8 +165,12 @@ class DeclarationsWorkspaceController:
         filing_handoff: FilingHandoffV1 | None = None,
         calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
         calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
+        calendar_entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None,
         calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
         work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
+        creation_targets: tuple[DeclarationTarget, ...] = (),
+        refresh_data: Callable[[], tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]]
+        | None = None,
     ) -> None:
         """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
@@ -188,8 +197,11 @@ class DeclarationsWorkspaceController:
             raise ValueError("unsupported Declarations calendar projection contract")
         self.calendar_projection = calendar_projection
         self.calendar_entry_handoff = calendar_entry_handoff
+        self.calendar_entry_can_open = calendar_entry_can_open
         self.calendar_recovery_handoff = calendar_recovery_handoff
         self.work_create_handoff = work_create_handoff
+        self.creation_targets = creation_targets
+        self.refresh_data = refresh_data
 
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
         """Return one closed zone state."""
@@ -351,6 +363,7 @@ class DeclarationsCalendarController:
         projection: DeclarationsCalendarProjectionV1,
         *,
         entry_handoff: CalendarEntryHandoffV1 | None = None,
+        entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None,
         recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
     ) -> None:
         """Validate and retain only the injected safe calendar facts and callbacks."""
@@ -361,12 +374,17 @@ class DeclarationsCalendarController:
         self.context = context
         self.projection = projection
         self.entry_handoff = entry_handoff
+        self.entry_can_open = entry_can_open
         self.recovery_handoff = recovery_handoff
         _validate_calendar_recovery_actions(projection)
 
     def source(self, source: DeclarationsCalendarSource) -> DeclarationsCalendarSourceStateV1:
         """Return one explicit source state."""
         return next(item for item in self.projection.sources if item.source is source)
+
+    def can_open(self, row: DeclarationsCalendarEntryRefV1) -> bool:
+        """Require an installed action admitted for the exact selected natural address."""
+        return self.entry_handoff is not None and (self.entry_can_open is None or self.entry_can_open(row))
 
     def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
         """Accept a fresh injected snapshot without performing a read."""

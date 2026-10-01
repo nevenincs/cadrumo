@@ -23,6 +23,7 @@ from ....application.modelo.declarations_calendar import (
 )
 from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
@@ -57,11 +58,12 @@ from ....application.workbench_generation import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
-from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from ...adapter_composition import build_censal_fetch_port
@@ -75,6 +77,7 @@ from ..launcher import (
     compose_installed_workbench_generation_provider,
     compose_installed_workbench_root,
 )
+from ..modelo.workbench.installed import ModeloWorkspaceDeclarationAdmissionError
 from ..navigation import TuiScreenContextV1
 from ..profile.overview import ProfileManagerScreen
 from ..secret.login import LoginScreen
@@ -360,7 +363,20 @@ def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captu
     declarations = route.factory(TuiScreenContextV1(destination="workbench.declarations"))
 
     assert isinstance(declarations, DeclarationsWorkspaceScreen)
-    assert declarations.controller.modelo_workspace_factory is None
+    assert declarations.controller.projection.declarations == ()
+    factory = declarations.controller.modelo_workspace_factory
+    assert factory is not None
+    unadmitted = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id="a" * 64,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        state=WorkUnitState.BORRADOR,
+        has_current_calculation=False,
+        has_current_filing=False,
+    )
+    with pytest.raises(ModeloWorkspaceDeclarationAdmissionError):
+        factory(unadmitted)
 
 
 def test_generation_provider_composes_the_real_account_screen_owners_without_effects(

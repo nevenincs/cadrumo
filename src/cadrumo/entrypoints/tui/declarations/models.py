@@ -76,7 +76,7 @@ class FilingHandoffV1(Protocol):
 class CalendarEntryHandoffV1(Protocol):
     """Injected navigation handoff for one natural legal address."""
 
-    def __call__(self, entry: DeclarationsCalendarEntryRefV1, /) -> None:
+    def __call__(self, entry: DeclarationsCalendarEntryRefV1, /) -> Screen[None] | None:
         """Open the selected safe calendar address."""
         ...
 
@@ -94,6 +94,7 @@ class ModeloWorkCreateResultV1:
     """The persisted outcome of one explicitly selected declaration address."""
 
     reused: bool
+    declaration: DeclarationsWorkspaceDeclarationRefV1 | None = None
 
 
 class ModeloWorkCreateHandoffV1(Protocol):

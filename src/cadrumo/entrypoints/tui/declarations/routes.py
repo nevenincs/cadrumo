@@ -10,7 +10,9 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from ....application.modelo.declaration_targets import DeclarationTarget
 from ....application.modelo.declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
 )
@@ -146,6 +148,7 @@ def _resolve_calendar_screen(
             controller.context,
             calendar,
             entry_handoff=controller.calendar_entry_handoff,
+            entry_can_open=controller.calendar_entry_can_open,
             recovery_handoff=controller.calendar_recovery_handoff,
         )
     )
@@ -181,8 +184,12 @@ def declarations_screen_factory(
     filing_handoff: FilingHandoffV1 | None = None,
     calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
     calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
+    calendar_entry_can_open: Callable[[DeclarationsCalendarEntryRefV1], bool] | None = None,
     calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
     work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
+    creation_targets: tuple[DeclarationTarget, ...] = (),
+    refresh_data: Callable[[], tuple[DeclarationsWorkspaceProjectionV1, DeclarationsCalendarProjectionV1 | None]]
+    | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only injected facts, admissions, and typed handoffs."""
     require_canonical_declarations_actions(
@@ -203,8 +210,11 @@ def declarations_screen_factory(
             filing_handoff=filing_handoff,
             calendar_projection=calendar_projection,
             calendar_entry_handoff=calendar_entry_handoff,
+            calendar_entry_can_open=calendar_entry_can_open,
             calendar_recovery_handoff=calendar_recovery_handoff,
             work_create_handoff=work_create_handoff,
+            creation_targets=creation_targets,
+            refresh_data=refresh_data,
         )
         # A caller that asks for a calendar row -- Home's agenda -- opens the
         # calendar itself; everything else opens on the overview, which

@@ -1352,14 +1352,12 @@ tui:
       aeat_confirmation: Confirmació AEAT
       aeat_evidence: Estat a l'AEAT
       availability: Estat
-      calculation: Càlcul actual
       current: Actual
       declaration: Declaració
       destination: Àrea
       filed: Registrada com a presentada
       local_filing: Estat local de presentació
       local_state: Estat local
-      result: Resultat
       updated: Actualitzada
       when: Data
     confirmation:
@@ -1408,13 +1406,94 @@ tui:
       superseded: Presentació registrada substituïda
       verification_refused: Comprovació rebutjada
       verified: Comprovació completada
+    list:
+      advice:
+        applicability_undetermined: El teu perfil no permet determinar si has de presentar
+          aquest model. Comprova les teves obligacions.
+        applicable_window_missing: Et pot afectar, però Cadrumo no disposa d'un termini
+          de presentació. Consulta el calendari oficial.
+        registry_unmodeled: Cadrumo encara no admet aquesta obligació. Comprova-la
+          i, si correspon, presenta-la per una altra via.
+      aeat_needs_check:
+        help: Comprova l'evidència de l'AEAT per saber si aquest període està presentat.
+      aeat_unlinked:
+        help:
+          confirmed: La confirmació oficial de l'AEAT indica que aquest període està
+            presentat.
+          no_refile: Vincular-la no requereix tornar-la a presentar.
+          unavailable: Encara no es pot vincular aquesta presentació ni obrir-ne el
+            justificant des d'aquesta llista. No cal tornar a presentar la mateixa
+            declaració.
+      column:
+        deadline: Termini
+        declaration: Declaració
+        period: Període
+        state: Estat
+      empty: Encara no tens declaracions. Prem + per començar-ne una.
+      filter:
+        all: Totes
+        attention: Requereix atenció
+        not_started: Sense començar
+        recorded: Registrades com a presentades
+        this_year: Aquest any
+      group:
+        attention: Requereix atenció
+        in_progress: En curs
+        maybe: Comprova si t'afecten
+        not_started: Per presentar, sense començar
+        ready: Comprovades, a punt de registrar
+        recorded: Registrades com a presentades
+      key:
+        new: Nova declaració
+      keys: + Nova declaració · / Cercar · f Filtrar · s Ordenar · t Detalls tècnics
+      maybe:
+        help: Cadrumo no ha pogut saber pel teu perfil si l'has de presentar. Comprova-ho
+          abans del termini.
+      new:
+        choose_modelo: Quin model?
+        choose_period: Quin període?
+        create: Crear i obrir
+        exists: Aquesta declaració ja existeix. Obrir-la?
+        show_all: Mostra tots els models, no només els teus
+        start_confirm: Començar el {modelo} de {period}?
+      next:
+        check_aeat: Comprova la presentació a l'AEAT
+        continue: Continuar emplenant
+        create_file: Generar el fitxer
+        fix: 'Resoldre el que impedeix presentar: {count}'
+        link_aeat: Vincula la presentació de l'AEAT
+        none: Res pendent
+        open_local_draft: Obre l'esborrany local
+        start: Començar-la
+      not_openable:
+        help: Aquesta fila encara no es pot obrir des d'aquí.
+      search:
+        hint: Cerca per número de model, nom o període
+      sort:
+        deadline: Termini
+        modelo: Modelo
+        result: Resultat
+        state: Estat
+      state:
+        aeat_needs_check: Presentació a l'AEAT pendent de comprovar
+        aeat_unlinked: Presentada a l'AEAT, sense vincular aquí
+        aeat_unlinked_on: Presentada a l'AEAT el {date}, sense vincular aquí
+        blocked: Alguna cosa n'impedeix la presentació
+        calculated: Calculada, sense comprovar
+        checked: Comprovada
+        correction: Correcció
+        draft: En preparació
+        local_draft: Esborrany local
+        not_started: Sense començar
+        superseded: Substituïda per una presentació posterior
+        unreadable: No s'ha pogut llegir
+      title: Les teves declaracions
+      unreadable:
+        help: Cadrumo no ha pogut llegir aquesta declaració. La resta de la llista
+          no es veu afectada.
     origin:
       aeat: AEAT
       local: Local
-    overview:
-      areas: Què pots fer
-      declarations: Declaracions
-      title: Resum de declaracions
     refusal:
       handoff: Això no es pot obrir des d'aquesta sessió.
       reason:
@@ -1444,28 +1523,20 @@ tui:
     unavailable:
       title: Àrea de declaracions no disponible
     value:
-      available: Disponible
       'no': 'No'
-      none: Cap
       not_applicable: No s'aplica
       result_unknown: No disponible
       'yes': Sí
     work_create:
       created: S'ha creat {address}. Torna a Declaracions per treballar-hi.
-      modelo: Model
-      period: Període
       progress: Creant o reprenent la declaració seleccionada…
       refusal:
-        modelo: Indica un número de model.
         not_applicable: 'El model %{modelo} no s''aplica a aquest perfil: %{reason}
           Si s''hi hauria d''aplicar, corregeix el perfil a Perfil (F4) i torna-ho
           a provar.'
         period: Indica un període vàlid per a l'exercici seleccionat.
         year: Indica un exercici admès de quatre xifres.
       reused: S'ha reprès {address}. Torna a Declaracions per treballar-hi.
-      submit: Crear o reprendre
-      title: Crear o reprendre una declaració
-      year: Exercici
     work_state:
       borrador: Esborrany
       descartado: Descartat
@@ -2248,6 +2319,7 @@ tui:
         file_out_of_date: El fitxer del {date} està desactualitzat. Torna a generar-lo
           [{key}]
         no_deadline: No consta cap termini per a aquest període
+        no_deadline_short: Termini no registrat
         own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
         result:
           choice_pending: 'A compensar o a retornar: ho tries en generar el fitxer'

@@ -1,7 +1,7 @@
 aggregation:
   grouping:
     errors:
-      unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
+      unsupported_modelo: Nincs regisztrált összesítési szerződés a kért nyomtatványhoz.
   invoice_retencion:
     errors:
       euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
@@ -14,28 +14,27 @@ aggregation:
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: A(z) %{source_jurisdiction} source_jurisdiction
-        kívül esik a kiválasztott 210-es nyomtatvány változat által meghatározott
-        forrás-hatókörön; a TRLIRNR 13. cikke csak spanyolországi forrású jövedelmet
-        enged.
+        kívül esik a kiválasztott Modelo 210 változat által meghatározott forrás-hatókörön;
+        a TRLIRNR 13. cikke csak spanyolországi forrású jövedelmet enged.
       incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
         kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
         hivatalos tipo-renta kódra az irpf_category mezőből.
       source_jurisdiction_unresolved: Az M210-es jelölt bejövő tétel source_jurisdiction
         értéke nincs feloldva (None); a TRLIRNR 13. cikke csak a spanyol forrású jövedelmet
         engedi ebbe az IRNR-projekcióba.
-      tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
-        tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
-        és benyújtási időszakhoz.
+      tipo_renta_code_not_declared: A Modelo 210 %{tipo_renta_code} hivatalos tipo-renta
+        kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz és benyújtási
+        időszakhoz.
     errors:
-      income_type_codes_missing: A kiválasztott 210-es nyomtatvány revízió egyetlen,
-        erre a bevallási időszakra érvényes jövedelemtípus-kódot sem deklarál.
-      income_type_namespace_missing: A kiválasztott 210-es nyomtatvány revízió nem
-        pontosan egy kulcsolt jövedelemtípus-kód névteret deklarál.
-      registry_revision_mismatch: A beadott 210-es nyomtatvány revízió nem egyezik
-        azzal a revízióval, amelyet a rögzített jogosultság választ ki ehhez a nyomtatványhoz,
+      income_type_codes_missing: A kiválasztott Modelo 210 revízió egyetlen, erre
+        a bevallási időszakra érvényes jövedelemtípus-kódot sem deklarál.
+      income_type_namespace_missing: A kiválasztott Modelo 210 revízió nem pontosan
+        egy kulcsolt jövedelemtípus-kód névteret deklarál.
+      registry_revision_mismatch: A beadott Modelo 210 revízió nem egyezik azzal a
+        revízióval, amelyet a rögzített jogosultság választ ki ehhez a nyomtatványhoz,
         adóévhez és időszakhoz.
-      source_scope_missing: A kiválasztott 210-es nyomtatvány változat nem határoz
-        meg egyetlen forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
+      source_scope_missing: A kiválasztott Modelo 210 változat nem határoz meg egyetlen
+        forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -99,7 +98,7 @@ aggregation:
       prorrata_transition_missing_register_evidence: A bejelentett különleges arányosítási
         átmenethez nem tartozik alátámasztó nyilvántartási bizonyíték.
       prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
-        bizonyítéka csak az év utolsó 303-es nyomtatvány időszakában alkalmazható.
+        bizonyítéka csak az év utolsó Modelo 303 időszakában alkalmazható.
       recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
         címzettjére vonatkozó adat nem egyezik az Ön nyilvántartásában szereplő, szállítói
         rendszerű tételekkel.
@@ -114,24 +113,23 @@ aggregation:
   modelo_bindings:
     errors:
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
-        és nincs feloldott euró árfolyama, ezért nem deklarálható ezen a modelón.
+        és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
       unsupported_period: Nem támogatott nyomtatvány-időszak az Ön nyilvántartásaiból
         számított összesítésekhez.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
-        369-es nyomtatvány országkódja, ezért szolgáltatásai nem vallhatók be ezen
-        a nyomtatványon.
+        Modelo 369 országkódja, ezért szolgáltatásai nem vallhatók be ezen a nyomtatványon.
       exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
         szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
         fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
         a sémában nem összesíthető.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
-        van megadva, és nincs feloldott euró árfolyama, ezért nem deklarálható ezen
-        a modelón.
+        van megadva, és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen
+        a nyomtatványon.
       invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
         tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
-        nem deklarálható ezen a modelón.
+        nem szerepeltethető ezen a nyomtatványon.
       iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
         túl eltér a rendeltetési tagállam adókulcsától.
   per_modelo:
@@ -147,8 +145,8 @@ aggregation:
       period_mismatch: Az időszak nem egyezik a várt Renta-időszakkal.
       quarterly_period_required: Az M130 bevétel-összesítéshez negyedéves időszak
         szükséges (például --year 2024 --period 1T).
-      unsupported_period: A 100-as nyomtatvány bevétel-összesítéshez éves időszak
-        szükséges (pl. 2024-0A).
+      unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
+        (pl. 2024-0A).
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
@@ -166,35 +164,36 @@ aggregation:
         is származnak. Törölje a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
-        a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
-        nem oldható fel.
+        a Modelo %{modelo} (%{filing_year}, %{period}) bevalláshoz; a(z) %{source_kind}
+        forrás nem oldható fel.
       withholding_annual_source_not_quarterly: 'Az éves összesítő nem készíthető el:
         a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
-        modellt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
+        nyomtatványt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
         időszakok összegzése hónapoknyi forrásadó-levonást hagyna ki.'
       withholding_filer_profile_absent: Az Ön profilja nem tölthető be erre az adóévre,
         így nem állapítható meg, hogy a levonásokat negyedévente vagy havonta vallja-e
         be. Töltse ki a profilt, majd próbálja újra.
       withholding_quarterly_window_not_scheduled: A bevalló benyújtási ütemezése nem
-        rendeli ezt a negyedévet a forrásadó-levonási modellhez (nagyvállalatként
+        rendeli ezt a negyedévet a forrásadó-levonási nyomtatványhoz (nagyvállalatként
         havonta nyújtja be), a havi forrásadó-levonási időszakok pedig még nem támogatottak.
         Semmi sem került rögzítésre.
   service:
     errors:
       currency_conversion_required: A külföldi pénznemű összeget euróra kell váltani,
         mielőtt összesíthető lenne.
-      envelope_modelo_mismatch: Az aggregációs modell nem egyezik az eredmény modellel.
+      envelope_modelo_mismatch: Az összesítés nyomtatványa nem egyezik az eredmény
+        nyomtatványával.
       envelope_period_mismatch: Az aggregációs időszak nem egyezik az eredmény időszakával.
       envelope_provider_payload_mismatch: A szolgáltató nem egyezik az aggregációs
         payload típusával.
-      observations_mismatch: Megfigyelések nem adhatók meg a kért modelóhoz.
-      per_modelo_modelos_not_unique: A modelónkénti aggregáció modelóit pontosan egy
-        szolgáltatónak kell birtokolnia.
+      observations_mismatch: Megfigyelések nem adhatók meg a kért nyomtatványhoz.
+      per_modelo_modelos_not_unique: A nyomtatványonkénti összesítés minden nyomtatványához
+        pontosan egy szolgáltatónak kell tartoznia.
       result_source_kinds_not_unique: Az eredmény forrástípusainak egyedinek kell
         lenniük.
   source_mesh:
     errors:
-      annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
+      annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a Modelo 303
         éves összesítőjének változatlan átadását (első: {first_resolver}; második:
         {second_resolver}).'
       binding_source_mismatch: A source_kind és a binding_source eltérő értékforrás-családra
@@ -507,77 +506,77 @@ entries:
     label: Közvetlen banki terhelés beállítása befizetésekhez
     purpose: Közvetlen banki terhelés beállítása önértékelési bevallásokhoz és adóbefizetésekhez.
   portal_m036_censal:
-    label: 036-os nyomtatvány – Adóhatósági nyilvántartási bevallás
+    label: Modelo 036 - Adóhatósági nyilvántartási bevallás
     purpose: Bejegyzés, módosítás és törlés a vállalkozások és szakemberek nyilvántartásában.
   portal_m037_censal_simplificada:
-    label: 037-es nyomtatvány – Egyszerűsített nyilvántartási bevallás (megszűnt)
+    label: Modelo 037 - Egyszerűsített nyilvántartási bevallás (megszűnt)
     notes:
       '0': A HAC/1526/2024 rendelet hatályon kívül helyezte, 2025-02-03-tól érvényes.
-      '1': A 036-os nyomtatványt kell használni minden további nyilvántartási eljáráshoz.
+      '1': A Modelo 036-at kell használni minden további nyilvántartási eljáráshoz.
     purpose: Egyszerűsített nyilvántartási bevallás önálló vállalkozók számára, 2025-ben
       megszűnt.
   portal_m100_renta:
-    label: 100-as nyomtatvány – Személyi jövedelemadó bevallás
+    label: Modelo 100 - Személyi jövedelemadó bevallás
     purpose: Éves személyi jövedelemadó (IRPF) bevallás.
   portal_m111_retenciones_trabajo:
-    label: 111-es nyomtatvány – Foglalkoztatásból származó jövedelemadó-visszatartás
+    label: Modelo 111 - Foglalkoztatásból származó jövedelemadó-visszatartás
     purpose: IRPF-visszatartások és előlegfizetések önértékelése foglalkoztatásból
       származó jövedelemre.
   portal_m115_retenciones_arrendamientos:
-    label: 115-ös nyomtatvány – Ingatlan-bérbeadásból való visszatartás
+    label: Modelo 115 - Ingatlan-bérbeadásból való visszatartás
     purpose: IRPF-visszatartások önértékelése városi ingatlan-bérbeadásból.
   portal_m123_retenciones_capital:
-    label: 123-as nyomtatvány – Befektetési jövedelemadó-visszatartás
+    label: Modelo 123 - Befektetési jövedelemadó-visszatartás
     purpose: IRPF-visszatartások önértékelése befektetési jövedelemre.
   portal_m130_pago_fraccionado_ed:
-    label: 130-as nyomtatvány – IRPF részletfizetés (közvetlen becslés)
+    label: Modelo 130 - IRPF részletfizetés (közvetlen becslés)
     purpose: Negyedéves IRPF részletfizetés közvetlen becslés szerint adózó önálló
       vállalkozók számára.
   portal_m131_pago_fraccionado_eo:
-    label: 131-es nyomtatvány – IRPF részletfizetés (objektív becslés)
+    label: Modelo 131 - IRPF részletfizetés (objektív becslés)
     purpose: Negyedéves IRPF részletfizetés objektív becslés (modulok) szerint adózó
       önálló vállalkozók számára.
   portal_m180_resumen_arrendamientos:
-    label: 180-as nyomtatvány – Ingatlan-bérbeadás éves összesítő
+    label: Modelo 180 - Ingatlan-bérbeadás éves összesítő
     purpose: Városi ingatlan-bérbeadásból való visszatartások éves összesítője.
   portal_m190_resumen_trabajo:
-    label: 190-es nyomtatvány – Foglalkoztatási visszatartások éves összesítője
+    label: Modelo 190 - Foglalkoztatási visszatartások éves összesítője
     purpose: Foglalkoztatásból származó jövedelemadó-visszatartások és előlegfizetések
       éves összesítője.
   portal_m193_resumen_capital:
-    label: 193-as nyomtatvány – Befektetési visszatartások éves összesítője
+    label: Modelo 193 - Befektetési visszatartások éves összesítője
     purpose: Befektetési jövedelemadó-visszatartások éves összesítője.
   portal_m200_sociedades_anual:
-    label: 200-as nyomtatvány – Társasági adóbevallás
+    label: Modelo 200 - Társasági adóbevallás
     purpose: Éves társasági adóbevallás.
   portal_m202_sociedades_fraccionado:
-    label: 202-es nyomtatvány – Társasági adó részletfizetés
+    label: Modelo 202 - Társasági adó részletfizetés
     purpose: Társasági adó előlege részletfizetés formájában.
   portal_m232_vinculadas:
-    label: 232-es nyomtatvány – Kapcsolt vállalkozásokkal való ügyletek
+    label: Modelo 232 - Kapcsolt vállalkozásokkal való ügyletek
     purpose: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek tájékoztató
       bevallása.
   portal_m303_iva_autoliquidacion:
-    label: 303-as nyomtatvány – IVA önértékelés
+    label: Modelo 303 - IVA önértékelés
     purpose: Időszakos hozzáadottérték-adó (IVA) önértékelés.
   portal_m347_operaciones_terceros:
-    label: 347-es nyomtatvány – Harmadik felekkel folytatott ügyletek
+    label: Modelo 347 - Harmadik felekkel folytatott ügyletek
     purpose: Éves tájékoztató bevallás harmadik felekkel folytatott, 3 005,06 EUR
       feletti ügyletekről.
   portal_m349_intracomunitarias:
-    label: 349-es nyomtatvány – Intraközösségi ügyletek
+    label: Modelo 349 - Intraközösségi ügyletek
     purpose: Összesítő nyilatkozat intraközösségi termékértékesítésekről és -szolgáltatásokról.
   portal_m369_oss_ioss:
-    label: 369-es nyomtatvány – IVA egyablakos rendszer (OSS/IOSS)
+    label: Modelo 369 - IVA egyablakos rendszer (OSS/IOSS)
     purpose: IVA önértékelés az OSS és IOSS egyablakos rendszerek keretein belül.
   portal_m390_resumen_iva:
-    label: 390-es nyomtatvány – Éves IVA összesítő
+    label: Modelo 390 - Éves IVA összesítő
     purpose: Éves összesítő hozzáadottérték-adóra vonatkozó bevallás.
   portal_m720_bienes_extranjero:
-    label: 720-as nyomtatvány – Külföldi vagyon és jogok
+    label: Modelo 720 - Külföldi vagyon és jogok
     purpose: Tájékoztató bevallás külföldön elhelyezett vagyonról és jogokról.
   portal_m840_iae:
-    label: 840-es nyomtatvány – Gazdasági tevékenységek adója
+    label: Modelo 840 - Gazdasági tevékenységek adója
     purpose: Bevallás a gazdasági tevékenységek adójára (IAE).
   portal_mi_area_personal:
     label: Személyes területem
@@ -601,8 +600,8 @@ entries:
     label: Határozatok és adótartozások befizetése
     purpose: Az AEAT által kibocsátott határozatok és adótartozások befizetése.
   portal_pre303_ayuda:
-    label: Pre303 – 303-as nyomtatvány segédszolgáltatás
-    purpose: Pre303 segédszolgáltatás a 303-as nyomtatvány tervezetének előkészítéséhez.
+    label: Pre303 - Modelo 303 segédszolgáltatás
+    purpose: Pre303 segédszolgáltatás a Modelo 303 tervezetének előkészítéséhez.
   portal_presentar_consultar_index:
     label: Adóbevallások benyújtása és megtekintése
     purpose: Az adóbevallások benyújtásához vagy megtekintéséhez szükséges nyomtatványok
@@ -668,17 +667,17 @@ live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
       expedientét.
-    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak a 303-es
-      nyomtatvány megfigyeléseket fogadja el.
+    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak a Modelo
+      303 megfigyeléseket fogadja el.
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
   filed:
     pull:
-      submitted_file_extraction_failed: 'A(z) {modelo} modell {period} {ejercicio}
-        bevallása (ügyiratszám: {expediente_id}) nem volt olvasható a benyújtott fájl
-        elrendezésén keresztül. A bevallás PDF-je, ha az AEAT biztosította, továbbra
-        is az egyetlen kinyerési út. Az elemző oka: {reason}'
+      submitted_file_extraction_failed: 'A Modelo {modelo} {period} {ejercicio} bevallása
+        (ügyiratszám: {expediente_id}) nem volt olvasható a benyújtott fájl elrendezésén
+        keresztül. A bevallás PDF-je, ha az AEAT biztosította, továbbra is az egyetlen
+        kinyerési út. Az elemző oka: {reason}'
     pull_all:
       denominator_note_profile: A mérés alapja {expected} pár, amelyet az adózó saját
         bevallott adatai várnak. További {offered_only} pár kizárólag az AEAT felkínált
@@ -690,9 +689,9 @@ live:
       expected_but_not_found: 'A bevallott profil {count} nyomtatvány/év párra vár
         benyújtást, amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}.
         Ellenőrizze, benyújtották-e ezeket.'
-      recapture_divergence: 'A(z) {modelo} nyomtatvány {period} {ejercicio} ismételt
-        lekérése {count} korábban megfigyelt rovat-értéket változtatott meg: {casillas}.
-        Az AEAT helyesbített bevallást tarthat nyilván.'
+      recapture_divergence: 'A Modelo {modelo} {period} {ejercicio} ismételt lekérése
+        {count} korábban megfigyelt rovat-értéket változtatott meg: {casillas}. Az
+        AEAT helyesbített bevallást tarthat nyilván.'
 llm:
   evidence:
     consent:
@@ -797,8 +796,8 @@ operation:
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
-    Az automatikus lekérés nem tudja lekérni a társasági adó (200/202 nyomtatvány)
-    benyújtási előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
+    Az automatikus lekérés nem tudja lekérni a társasági adó (Modelo 200/202) benyújtási
+    előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
 provisioning:
   condition:
     role_model_fit_for_role: A(z) %{model} válaszolt a tesztdokumentumra, de a válasza
@@ -1057,8 +1056,8 @@ topic:
     title: Adónyomtatványok (modelók)
   pago-fraccionado:
     body: Önálló vállalkozók negyedéves IRPF-előleg-fizetése. Közvetlen becslésnél
-      a 130-as nyomtatvány, objektív becslésnél a 131-es alkalmazandó. A számítás
-      a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.
+      a Modelo 130, objektív becslésnél a Modelo 131 alkalmazandó. A számítás a negyedév
+      adatait és bizonyos esetekben az előző évet veszi alapul.
     title: IRPF-előlegfizetés
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítót (NIF/CIF/DNI/NIE), a fő tevékenységet,
@@ -1350,14 +1349,12 @@ tui:
       aeat_confirmation: AEAT-megerősítés
       aeat_evidence: AEAT-állapot
       availability: Állapot
-      calculation: Aktuális számítás
       current: Aktuális
       declaration: Bevallás
       destination: Terület
       filed: Benyújtottként rögzítve
       local_filing: Helyi benyújtási állapot
       local_state: Helyi állapot
-      result: Eredmény
       updated: Frissítve
       when: Dátum
     confirmation:
@@ -1406,13 +1403,94 @@ tui:
       superseded: Rögzített benyújtás felváltva
       verification_refused: Ellenőrzés elutasítva
       verified: Ellenőrzés elkészült
+    list:
+      advice:
+        applicability_undetermined: A profilja alapján nem állapítható meg, hogy be
+          kell-e nyújtania ezt a bevallást. Ellenőrizze az adókötelezettségeit.
+        applicable_window_missing: Ez az adókötelezettség érintheti Önt, de a Cadrumo
+          nem ismeri a benyújtási határidőt. Ellenőrizze a hivatalos naptárat.
+        registry_unmodeled: A Cadrumo még nem támogatja ezt az adókötelezettséget.
+          Ellenőrizze, és szükség esetén nyújtsa be más módon.
+      aeat_needs_check:
+        help: Ellenőrizze az AEAT adatait, hogy kiderüljön, benyújtották-e a bevallást.
+      aeat_unlinked:
+        help:
+          confirmed: Az AEAT hivatalos megerősítése szerint az időszak bevallását
+            benyújtották.
+          no_refile: Az összekapcsoláshoz nem kell újra benyújtania a bevallást.
+          unavailable: Ezt a benyújtást egyelőre nem lehet összekapcsolni, és az igazolását
+            sem lehet megnyitni ebből a listából. Ugyanazt a bevallást nem kell ismét
+            benyújtania.
+      column:
+        deadline: Határidő
+        declaration: Bevallás
+        period: Időszak
+        state: Állapot
+      empty: Még nincs bevallása. Új kezdéséhez nyomja meg a + billentyűt.
+      filter:
+        all: Mind
+        attention: Figyelmet igényel
+        not_started: Nincs elkezdve
+        recorded: Benyújtottként rögzítve
+        this_year: Idei év
+      group:
+        attention: Figyelmet igényel
+        in_progress: Folyamatban
+        maybe: Ellenőrizze, vonatkoznak-e Önre
+        not_started: Esedékes, még nincs elkezdve
+        ready: Ellenőrizve, rögzíthető
+        recorded: Benyújtottként rögzítve
+      key:
+        new: Új bevallás
+      keys: + Új bevallás · / Keresés · f Szűrés · s Rendezés · t Technikai részletek
+      maybe:
+        help: A Cadrumo a profilja alapján nem tudta eldönteni, kell-e ezt benyújtania.
+          A határidő előtt ellenőrizze.
+      new:
+        choose_modelo: Melyik nyomtatvány?
+        choose_period: Melyik időszak?
+        create: Létrehozás és megnyitás
+        exists: Ez a bevallás már létezik. Megnyitja?
+        show_all: Minden nyomtatvány mutatása, nem csak az Önéi
+        start_confirm: 'Elkezdi a(z) {modelo} bevallást erre az időszakra: {period}?'
+      next:
+        check_aeat: Ellenőrizze az AEAT-benyújtást
+        continue: Kitöltés folytatása
+        create_file: A fájl létrehozása
+        fix: 'Akadályok megoldása: {count}'
+        link_aeat: Kapcsolja össze az AEAT-benyújtást
+        none: Nincs teendő
+        open_local_draft: Helyi piszkozat megnyitása
+        start: Elkezdés
+      not_openable:
+        help: Ez a sor itt még nem nyitható meg.
+      search:
+        hint: Keresés Modelo-szám, név vagy időszak szerint
+      sort:
+        deadline: Határidő
+        modelo: Modelo
+        result: Eredmény
+        state: Állapot
+      state:
+        aeat_needs_check: Az AEAT-benyújtás ellenőrzést igényel
+        aeat_unlinked: Benyújtva az AEAT-nál, itt még nincs összekapcsolva
+        aeat_unlinked_on: 'Benyújtva az AEAT-nál: {date}. Itt még nincs összekapcsolva'
+        blocked: Valami akadályozza a benyújtást
+        calculated: Kiszámítva, nincs ellenőrizve
+        checked: Ellenőrizve
+        correction: Helyesbítés
+        draft: Kitöltés alatt
+        local_draft: Helyi piszkozat
+        not_started: Nincs elkezdve
+        superseded: Egy későbbi benyújtás felváltotta
+        unreadable: Nem olvasható
+      title: Az Ön bevallásai
+      unreadable:
+        help: A Cadrumo nem tudta beolvasni ezt a bevallást. A lista többi részét
+          ez nem érinti.
     origin:
       aeat: AEAT
       local: Helyi
-    overview:
-      areas: Mit tehet
-      declarations: Bevallások
-      title: Bevallások áttekintése
     refusal:
       handoff: Ez ebből a munkamenetből nem nyitható meg.
       reason:
@@ -1440,28 +1518,20 @@ tui:
     unavailable:
       title: A bevallási terület nem érhető el
     value:
-      available: Elérhető
       'no': Nem
-      none: Nincs
       not_applicable: Nem alkalmazandó
       result_unknown: Nem érhető el
       'yes': Igen
     work_create:
       created: '{address} létrehozva. A munkához nyissa meg újra a Bevallások részt.'
-      modelo: Modelo
-      period: Időszak
       progress: A kiválasztott bevallás létrehozása vagy folytatása…
       refusal:
-        modelo: Adja meg a nyomtatvány számát.
-        not_applicable: 'A(z) %{modelo} nyomtatvány nem vonatkozik erre a profilra:
-          %{reason} Ha vonatkoznia kellene, javítsa a profilt a Profil (F4) nézetben,
-          és próbálja újra.'
+        not_applicable: 'A Modelo %{modelo} nem vonatkozik erre a profilra: %{reason}
+          Ha vonatkoznia kellene, javítsa a profilt a Profil (F4) nézetben, és próbálja
+          újra.'
         period: Adjon meg az évhez tartozó érvényes időszakot.
         year: Adjon meg egy támogatott, négyjegyű adóévet.
       reused: '{address} folytatva. A munkához nyissa meg újra a Bevallások részt.'
-      submit: Létrehozás vagy folytatás
-      title: Bevallás létrehozása vagy folytatása
-      year: Adóév
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
@@ -1758,7 +1828,7 @@ tui:
         kind: Számla típusa
         notes: Megjegyzések
         operation_date: Teljesítés dátuma, ha eltér a számla dátumától (év-hó-nap)
-        operation_type: 349-es nyomtatvány szerinti ügyletkód
+        operation_type: Modelo 349 szerinti ügyletkód
         recargo_amount: Kiegyenlítő pótlék összege
         rectifies_invoice_number: A helyesbített számla száma
         retention_amount: IRPF-levonás összege
@@ -2057,13 +2127,13 @@ tui:
       cancel: Mégse
       cancelled: A számítás megszakítva; nem került rögzítésre bevallási adat.
       existing_attestation_hint: Válaszoljon a kérdésre. Ezután adjon meg egy meglévő
-        nyilatkozatot arról, hogy a 390-es nyomtatvány alóli mentesség szakasza nem
-        alkalmazandó (azonosítóját és SHA-256 értékét), vagy hagyja ezeket üresen,
-        és adja meg, mikor erősítette meg, hogy új nyilatkozat jöjjön létre.
+        nyilatkozatot arról, hogy a Modelo 390 alóli mentesség szakasza nem alkalmazandó
+        (azonosítóját és SHA-256 értékét), vagy hagyja ezeket üresen, és adja meg,
+        mikor erősítette meg, hogy új nyilatkozat jöjjön létre.
       joint_return_elected: Közös önbevallás (autoliquidación conjunta)?
       no_modelo_390_question_hint: Válaszoljon a kérdésre. Ennek az időszaknak a bevallása
-        nem kérdez rá a 390-es nyomtatvány alóli mentességre; ezt csak az év utolsó
-        időszakáé teszi (december vagy a negyedik negyedév).
+        nem kérdez rá a Modelo 390 alóli mentességre; ezt csak az év utolsó időszakáé
+        teszi (december vagy a negyedik negyedév).
       observed_at: Megerősítés időpontja új nyilatkozathoz (dátum és idő UTC-eltolással,
         például 2025-04-01T12:00:00Z)
       required: Válaszoljon a közös önbevallásra vonatkozó kérdésre. Az év utolsó
@@ -2071,7 +2141,7 @@ tui:
         egy megerősítési időpontot UTC-eltolással, de ne mindkettőt.
       stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
         volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
-      title: A 303-es nyomtatvány bevallási adatai
+      title: A Modelo 303 bevallási adatai
     workbench:
       applicability:
         month: Ebben a hónapban nem alkalmazandó
@@ -2240,6 +2310,7 @@ tui:
         file_created: 'A fájl létrehozva: {date}'
         file_out_of_date: A(z) {date} napi fájl elavult. Hozza létre újra [{key}]
         no_deadline: Ehhez az időszakhoz nincs nyilvántartott határidő
+        no_deadline_short: Nincs nyilvántartott határidő
         own_calculation: A Cadrumo számítása; az AEAT még nem látta.
         result:
           choice_pending: 'Beszámítás vagy visszatérítés: a fájl létrehozásakor választ'
@@ -2490,7 +2561,7 @@ tui:
           earlier_filings: Egy korábbi bevallásból
           earlier_filings_none: Idén nincs korábbi bevallás
           fixed_by_design: A nyomtatvány rögzíti
-          named_filing: A(z) {modelo} nyomtatványból ({period})
+          named_filing: A Modelo {modelo} bevallásból ({period})
           profile: Az Ön profiljából
           records: Az Ön nyilvántartásaiból
           registers: Az Ön által vezetett nyilvántartásból
@@ -2499,7 +2570,7 @@ tui:
           aeat_draft: Még nincs az AEAT-adatokban
           earlier_filings: Még nincs korábbi bevallás
           fixed_by_design: A nyomtatvány még nem rögzíti
-          named_filing: Még nincs a(z) {modelo} nyomtatványban ({period})
+          named_filing: Még nincs a Modelo {modelo} bevallásban ({period})
           profile: Még nincs az Ön profiljában
           records: Még nincs az Ön nyilvántartásaiban
           registers: Még nincs az Ön által vezetett nyilvántartásban
@@ -2508,7 +2579,7 @@ tui:
           aeat_draft: Az Öné, felülírja az AEAT-adatokat
           earlier_filings: Az Öné, felülírja a korábbi bevallást
           fixed_by_design: Az Öné, felülírja a nyomtatvány értékét
-          named_filing: Az Öné, felülírja a(z) {modelo} nyomtatványt ({period})
+          named_filing: Az Öné, felülírja a Modelo {modelo} bevallást ({period})
           profile: Az Öné, felülírja a profilját
           records: Az Öné, felülírja a nyilvántartásait
           registers: Az Öné, felülírja a vezetett nyilvántartást
@@ -2595,7 +2666,7 @@ tui:
           replaces_aeat_draft: felülírja az AEAT-adatokból származó értéket
           replaces_earlier_filings: felülírja egy korábbi bevallásból származó értéket
           replaces_fixed_by_design: felülírja a nyomtatvány által rögzített értéket
-          replaces_named_filing: felülírja a(z) {modelo} nyomtatványból ({period})
+          replaces_named_filing: felülírja a Modelo {modelo} bevallásból ({period})
             származó értéket
           replaces_profile: felülírja az Ön profiljából származó értéket
           replaces_records: felülírja az Ön nyilvántartásaiból származó értéket

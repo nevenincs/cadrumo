@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:217f20840b6cd948928b021e63972edab601565d7b62ba4d3435b486b0726585'
+body_hash: 'sha256:b181ea79b5b472dbd059c56958ca256c38a2ea4631f6b940fda961295f68cfb6'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1368,6 +1368,41 @@ related:
 - `S54` `A` `src/cadrumo/entrypoints/tests/test_calendar_evidence_composition.py`
 - `S54` `verify:` `pytest encrypted AEAT reader six real encrypted-store cases and official calendar/list source classification in current 92-pass foundation scope` -> `pass`
 - `S54` `by:` `vaultspec-high-executor`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/external_details.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/tests/portfolio_fixtures.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_installed_create.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/tests/test_external_filing_details.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/tests/test_new_declaration_picker.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/declarations/tests/test_row_words.py`
+- `S55` `A` `src/cadrumo/application/modelo/declaration_targets.py`
+- `S55` `A` `src/cadrumo/application/modelo/declarations_list.py`
+- `S55` `A` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/calendar.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/models.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/routes.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_workspace.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
+- `S55` `M` `src/cadrumo/locales/en/common.yml`
+- `S55` `M` `src/cadrumo/locales/es/common.yml`
+- `S55` `M` `src/cadrumo/locales/ca/common.yml`
+- `S55` `M` `src/cadrumo/locales/hu/common.yml`
+- `S55` `verify:` `pytest grouped declarations workspace 24, picker initial/period geometry matrix 17, external details matrix 16, real installed creation/no duplicate writes 1 after token and cancel corrections` -> `pass`
+- `S55` `verify:` `pytest UNKNOWN negative amounts four languages/two directions eight cases` -> `pass`
+- `S55` `verify:` `pytest installed generation per-declaration admission eleven cases` -> `pass`
+- `S55` `verify:` `pytest existing shared heading geometry twenty-four cases` -> `pass`
+- `S55` `verify:` `dev.locales audit current es/en/ca/hu catalogues` -> `pass`
+- `S55` `by:` `vaultspec-high-executor`
+- `S54` `A` `src/cadrumo/entrypoints/tui/declarations/external_details.py`
+- `S54` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S54` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S54` `verify:` `pytest external filing details 16 geometry/theme/locale cases; installed source/calendar proofs and draft/correction urgency classification` -> `pass`
 
 ## Notes
 
@@ -1453,3 +1488,5 @@ related:
 - `S28` The broad frozen render exposed a one-field golden mismatch (confirm to check); the owning refresh and sequence/page checks resolved it, and the current-source capture has no divergences. The dev.tui before/after diff exits 1 to report changed frames; its report and both immutable review snapshots are preserved. S50/S30 remain open for the unfinished planned scope.
 - `S53` The first current foundation run detected an over-broad duplicate-address assertion. Canonical WorkUnit identity revalidation now refuses only the malformed row; healthy neighbours survive. Corrected owning identity/discard suite passes. S54 application prerequisites land in this coherent foundation checkpoint; UI and final preview review remain open.
 - `S54` Application source/evidence foundation checkpoint only. Installed route and truthful external details are owned by S55; final integrated captures still required.
+- `S55` The first expanded picker geometry detector found off-screen Cancel at 80 columns; initial-stage Create is now hidden and shared responsive modal tokens used. Broad TUI initially found five missing heading contracts; the meaningful filter/sort context now carries the common heading class and all twenty-four heading cases pass. Fresh integrated renders remain S56.
+- `S54` S54 wording reconciled through `plan_edit` to authorized truthful linkage/receipt availability. External filing details expose safe metadata and explain the unavailable handoff; no re-filing or fabricated linkage action is offered.

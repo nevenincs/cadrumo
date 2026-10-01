@@ -1366,14 +1366,12 @@ tui:
       aeat_confirmation: Confirmación AEAT
       aeat_evidence: Estado en la AEAT
       availability: Estado
-      calculation: Cálculo actual
       current: Actual
       declaration: Declaración
       destination: Área
       filed: Registrada como presentada
       local_filing: Estado local de presentación
       local_state: Estado local
-      result: Resultado
       updated: Actualizada
       when: Fecha
     confirmation:
@@ -1422,13 +1420,94 @@ tui:
       superseded: Presentación registrada sustituida
       verification_refused: Comprobación rechazada
       verified: Comprobación completada
+    list:
+      advice:
+        applicability_undetermined: Tu perfil no permite determinar si debes presentar
+          este modelo. Comprueba tus obligaciones.
+        applicable_window_missing: Puede afectarte, pero Cadrumo no dispone de un
+          plazo de presentación. Consulta el calendario oficial.
+        registry_unmodeled: Cadrumo todavía no admite esta obligación. Compruébala
+          y, si corresponde, preséntala por otra vía.
+      aeat_needs_check:
+        help: Comprueba la evidencia de la AEAT para saber si este periodo está presentado.
+      aeat_unlinked:
+        help:
+          confirmed: La confirmación oficial de la AEAT indica que este periodo está
+            presentado.
+          no_refile: Vincularla no requiere volver a presentarla.
+          unavailable: Todavía no se puede vincular esta presentación ni abrir su
+            justificante desde esta lista. No necesitas volver a presentar la misma
+            declaración.
+      column:
+        deadline: Plazo
+        declaration: Declaración
+        period: Periodo
+        state: Estado
+      empty: Aún no tienes declaraciones. Pulsa + para empezar una.
+      filter:
+        all: Todas
+        attention: Requiere atención
+        not_started: Sin empezar
+        recorded: Registradas como presentadas
+        this_year: Este año
+      group:
+        attention: Requiere atención
+        in_progress: En curso
+        maybe: Comprueba si te afectan
+        not_started: Por presentar, sin empezar
+        ready: Comprobadas, listas para registrar
+        recorded: Registradas como presentadas
+      key:
+        new: Nueva declaración
+      keys: + Nueva declaración · / Buscar · f Filtrar · s Ordenar · t Detalles técnicos
+      maybe:
+        help: Cadrumo no ha podido saber por tu perfil si debes presentarla. Compruébalo
+          antes del plazo.
+      new:
+        choose_modelo: ¿Qué modelo?
+        choose_period: ¿Qué periodo?
+        create: Crear y abrir
+        exists: Esta declaración ya existe. ¿Abrirla?
+        show_all: Mostrar todos los modelos, no solo los tuyos
+        start_confirm: ¿Empezar el {modelo} de {period}?
+      next:
+        check_aeat: Comprobar la presentación en la AEAT
+        continue: Seguir rellenando
+        create_file: Generar el fichero
+        fix: 'Resolver lo que impide presentar: {count}'
+        link_aeat: Vincular la presentación de la AEAT
+        none: Nada pendiente
+        open_local_draft: Abrir el borrador local
+        start: Empezarla
+      not_openable:
+        help: Esta fila aún no se puede abrir desde aquí.
+      search:
+        hint: Busca por número de modelo, nombre o periodo
+      sort:
+        deadline: Plazo
+        modelo: Modelo
+        result: Resultado
+        state: Estado
+      state:
+        aeat_needs_check: Presentación en la AEAT pendiente de comprobar
+        aeat_unlinked: Presentada en la AEAT, sin vincular aquí
+        aeat_unlinked_on: Presentada en la AEAT el {date}, sin vincular aquí
+        blocked: Algo impide presentarla
+        calculated: Calculada, sin comprobar
+        checked: Comprobada
+        correction: Corrección
+        draft: En preparación
+        local_draft: Borrador local
+        not_started: Sin empezar
+        superseded: Sustituida por una presentación posterior
+        unreadable: No se ha podido leer
+      title: Tus declaraciones
+      unreadable:
+        help: Cadrumo no ha podido leer esta declaración. El resto de la lista no
+          se ve afectado.
     origin:
       aeat: AEAT
       local: Local
-    overview:
-      areas: Qué puedes hacer
-      declarations: Declaraciones
-      title: Resumen de declaraciones
     refusal:
       handoff: Esto no se puede abrir desde esta sesión.
       reason:
@@ -1458,27 +1537,19 @@ tui:
     unavailable:
       title: Área de declaraciones no disponible
     value:
-      available: Disponible
       'no': 'No'
-      none: Ninguno
       not_applicable: No aplica
       result_unknown: No disponible
       'yes': Sí
     work_create:
       created: Se ha creado {address}. Vuelve a Declaraciones para trabajar en ella.
-      modelo: Modelo
-      period: Periodo
       progress: Creando o retomando la declaración seleccionada…
       refusal:
-        modelo: Indica un número de modelo.
         not_applicable: 'El modelo %{modelo} no se aplica a este perfil: %{reason}
           Si debería aplicarse, corrige el perfil en Perfil (F4) y vuelve a intentarlo.'
         period: Indica un periodo válido para el ejercicio seleccionado.
         year: Indica un ejercicio admitido de cuatro cifras.
       reused: Se ha retomado {address}. Vuelve a Declaraciones para trabajar en ella.
-      submit: Crear o retomar
-      title: Crear o retomar una declaración
-      year: Ejercicio
     work_state:
       borrador: Borrador
       descartado: Descartado
@@ -2257,6 +2328,7 @@ tui:
         file_out_of_date: El fichero del {date} está desactualizado. Vuelve a generarlo
           [{key}]
         no_deadline: No consta ningún plazo para este periodo
+        no_deadline_short: No consta el plazo
         own_calculation: Cálculo de Cadrumo. La AEAT no lo ha visto.
         result:
           choice_pending: 'A compensar o a devolver: lo eliges al generar el fichero'

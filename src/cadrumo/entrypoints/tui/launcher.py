@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
-    WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
@@ -129,10 +128,12 @@ def compose_secure_profile_workbench_generation_provider(
         SecureProfileWorkbenchGenerationReadDoorV1,
     )
     from ...core.time.clock import now
+    from ..calendar_evidence_composition import compose_calendar_aeat_reader
     from ..ledger_action_composition import compose_ledger_action_ports
 
     account_session = live_account_session_reader(profile_id=profile_id, profile_label=profile_label)
     account_session()
+    calendar_aeat_reader = compose_calendar_aeat_reader(operation)
 
     def capture() -> WorkbenchGenerationV1:
         # The ledger ports are composed per capture, not once per session:
@@ -167,6 +168,7 @@ def compose_secure_profile_workbench_generation_provider(
             result_casilla_reader=_declaration_result_casilla_reader(operation),
             operation_contracts=operation_contracts,
             modelo_projection_reader=_modelo_projection_reader(operation),
+            calendar_aeat_reader=calendar_aeat_reader,
         )
 
     return capture
@@ -363,9 +365,13 @@ def _declaration_result_casilla_reader(
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ...application.modelo.settlement_casilla import declaration_result_casilla_id
+        from ...core.errors.hierarchy import CadrumoError
 
-        snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
-        return declaration_result_casilla_id(snapshot.revision)
+        try:
+            snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
+            return declaration_result_casilla_id(snapshot.revision)
+        except (CadrumoError, ValueError, LookupError):
+            return None
 
     return read
 
@@ -969,17 +975,18 @@ def _declarations_generation_factory(
     from .declarations.routes import declarations_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from ...application.modelo.declaration_targets import declaration_targets
         from .modelo.workbench.installed import compose_installed_modelo_workbench_factory
 
         declarations = _required_projection(current[0].declarations, "Declarations")
         bucket_id = declarations.bucket_id
-        # A generation whose Modelo source could not be read offers no
-        # declaration a workbench: the workbench would read the same registry
-        # state and fail the same way, only later and behind a selection.
-        modelo_workspace_factory = (
-            compose_installed_modelo_workbench_factory(
+
+        # Admit each selected declaration against the current generation.
+        def modelo_workspace_factory(declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
+            latest = _required_projection(current[0].declarations, "Declarations")
+            factory = compose_installed_modelo_workbench_factory(
                 bucket_id=bucket_id,
-                declarations=declarations.declarations,
+                declarations=latest.declarations,
                 operation=operation_runtime.authority_operation,
                 repositories=partial(_modelo_workbench_repositories, bucket_id, operation_runtime.authority_operation),
                 door=partial(
@@ -989,9 +996,24 @@ def _declarations_generation_factory(
                     refresh_after_success=refresh_generation,
                 ),
             )
-            if current[0].modelo.availability is WorkbenchGenerationAvailability.AVAILABLE
-            else None
-        )
+            return factory(declaration)
+
+        def calendar_declaration(entry: DeclarationsCalendarEntryRefV1) -> DeclarationsWorkspaceDeclarationRefV1 | None:
+            from ...application.modelo.declaration_summary import DeclarationSummaryState
+
+            latest = _required_projection(current[0].declarations, "Declarations")
+            matches = tuple(
+                ref
+                for ref in latest.declarations
+                if (str(ref.modelo), ref.filing_year, ref.period.registry_token) == entry.semantic_key()
+                and (ref.summary is None or ref.summary.state is not DeclarationSummaryState.UNREADABLE)
+            )
+            return matches[0] if len(matches) == 1 else None
+
+        def calendar_open(entry: DeclarationsCalendarEntryRefV1, /) -> Screen[None] | None:
+            declaration = calendar_declaration(entry)
+            return None if declaration is None else modelo_workspace_factory(declaration)
+
         calendar = current[0].declarations_calendar.projection
         return declarations_screen_factory(
             _required_projection(current[0].declarations, "Declarations"),
@@ -1000,6 +1022,8 @@ def _declarations_generation_factory(
             filing_action=dependencies.declarations_filing_action,
             modelo_workspace_factory=modelo_workspace_factory,
             calendar_projection=calendar,
+            calendar_entry_handoff=calendar_open,
+            calendar_entry_can_open=lambda entry: calendar_declaration(entry) is not None,
             calendar_recovery_handoff=_calendar_work_create_handoff(
                 bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                 actor=dependencies.account.profile_overview.label,
@@ -1010,6 +1034,11 @@ def _declarations_generation_factory(
                 actor=dependencies.account.profile_overview.label,
                 operation=operation_runtime.authority_operation,
                 refresh_after_success=refresh_generation,
+            ),
+            creation_targets=declaration_targets(operation_runtime.authority_operation),
+            refresh_data=lambda: (
+                _required_projection(current[0].declarations, "Declarations"),
+                current[0].declarations_calendar.projection,
             ),
         )(context)
 
@@ -1245,8 +1274,18 @@ def _declarations_work_create_handoff(
             operation=operation,
             profile=profile,
         )
-        refresh_after_success()
-        return ModeloWorkCreateResultV1(reused=result.reused)
+        refreshed = refresh_after_success()
+        declaration = None
+        if isinstance(refreshed, WorkbenchGenerationV1) and refreshed.declarations.projection is not None:
+            declaration = next(
+                (
+                    ref
+                    for ref in refreshed.declarations.projection.declarations
+                    if ref.work_unit_id == result.work_unit.work_unit_id
+                ),
+                None,
+            )
+        return ModeloWorkCreateResultV1(reused=result.reused, declaration=declaration)
 
     return create
 

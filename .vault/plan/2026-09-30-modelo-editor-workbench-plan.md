@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:a74f7019abb7939acc67b49881f6ed5ce862d9e903e65dabddf5cabf30410699'
+body_hash: 'sha256:d1bc1cc313260056868407eba799c8d9113f437f00a76001c39b6411e8e8330c'
 ---
 
 # `modelo-editor-workbench` plan
@@ -141,8 +141,8 @@ Close what the combined render and the design verification found: nothing unconf
 Replace the declarations screens with one list grouped by what the filer must do, built on a declaration summary that never builds a form per row, and stop a declaration filed with AEAT outside Cadrumo from reading as overdue.
 
 - [x] `P08.S53` - Project one declaration summary per row with state, result, blocking count, verification and deadline, isolating each row's failure; `src/cadrumo/application/overview`.
-- [ ] `P08.S54` - Show a period filed with AEAT but not linked to a declaration here as filed rather than overdue, expose its safe filing details, and explain linkage and receipt availability truthfully; `src/cadrumo/application/overview/calendar.py`.
-- [ ] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
+- [x] `P08.S54` - Show a period filed with AEAT but not linked to a declaration here as filed rather than overdue, expose its safe filing details, and explain linkage and receipt availability truthfully; `src/cadrumo/application/overview/calendar.py`.
+- [x] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
 - [ ] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
 - [ ] `P08.S61` - Give each deduction document Cadrumo cannot record its own blocking finding that sends the filer to file another way, once the intra-community refusal reaches this branch from main; `src/cadrumo/application/modelo/verification_actions.py`.
 - [x] `P08.S64` - Name the binding inputs no casilla owns from their official descriptions in each modelo's schema catalogue, and read those names in the form; `src/cadrumo/application/modelo/work_form.py`.
