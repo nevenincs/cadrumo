@@ -53,7 +53,7 @@ default:
 [doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
 init:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
     just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
@@ -67,17 +67,17 @@ init:
 [doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
 
 [doc('Synchronize the pinned Python environment from uv.lock.')]
 [group('setup')]
 setup-python:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init python
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init python
 
 [doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
 [group('setup')]
 setup-repository-tools:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init tools
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init tools
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
@@ -87,7 +87,7 @@ setup-locale-spelling:
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
 setup-check:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init check
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init check
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
@@ -1414,7 +1414,7 @@ docs-site-preview:
 [doc('Probe both public documentation mounts over HTTPS; read-only, network required.')]
 [group('docs')]
 docs-availability-check:
-    uv run --no-project --python 3.13.11 dev/deploy/docs_health.py
+    uv run --no-project --python 3.13 dev/deploy/docs_health.py
 
 # Run blocking, read-only docstring structure and Sphinx checks with live
 # per-test verdicts.

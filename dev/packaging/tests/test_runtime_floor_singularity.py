@@ -4,10 +4,9 @@
 CPython minor this project supports. The floor is then RE-DECLARED, as a bare
 literal, in every site below, none of which any other gate reads:
 
-* ``.python-version`` -- the exact toolchain patch. Its exact value is derived
-  properly (``dev.packaging.release_cohort`` reads the file and the workflow
-  pin gate forbids a workflow naming a rival interpreter), but nothing has ever
-  compared its MINOR to the supported floor.
+* ``.python-version`` -- the toolchain minor every development and CI
+  environment uses. The workflow pin gate forbids a workflow naming a rival
+  interpreter, but nothing else compares this minor to the supported floor.
 * ``uv.lock`` -- carries its own ``requires-python``. Every consumer digests
   the lock; none parses this field, so its value is sealed but never read.
 * the repository-root ``Dockerfile``'s ``ARG PYTHON_BASE_IMAGE`` tag, whose
@@ -71,7 +70,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _REPO_ROOT: Final[Path] = REPO_ROOT
 
 #: An exact toolchain patch, whose leading two components are the minor.
-_TOOLCHAIN_PIN: Final = re.compile(r"^(?P<minor>3\.\d+)\.\d+$")
+_TOOLCHAIN_PIN: Final = re.compile(r"^(?P<minor>3\.\d+)$")
 
 #: ``requires-python`` as the lock header spells it, either quoting style.
 _LOCK_REQUIRES_PYTHON: Final = re.compile(r"""^requires-python\s*=\s*["'](?P<specifier>[^"']+)["']\s*$""", re.MULTILINE)
@@ -119,7 +118,7 @@ def _file_floor_minors(root: Path) -> dict[str, str]:
     pin_path = root / ".python-version"
     pin = pin_path.read_text(encoding=UTF_8).strip()
     pin_match = _TOOLCHAIN_PIN.fullmatch(pin)
-    assert pin_match is not None, f"{pin_path}: expected one exact `3.N.P` patch, got {pin!r}"
+    assert pin_match is not None, f"{pin_path}: expected one `3.N` minor, got {pin!r}"
     declared[".python-version"] = pin_match.group("minor")
 
     lock_path = root / "uv.lock"
@@ -290,7 +289,7 @@ def _write_tree(root: Path, *, pin: str, lock: str, venv: str) -> None:
 
 def test_the_collector_reads_each_file_borne_declaration(tmp_path: Path) -> None:
     """Teeth on the parsers themselves, in an isolated tree rather than the worktree."""
-    _write_tree(tmp_path, pin="3.14.2", lock=">=3.14", venv="3.14")
+    _write_tree(tmp_path, pin="3.14", lock=">=3.14", venv="3.14")
 
     declared = _file_floor_minors(tmp_path)
 
@@ -307,7 +306,7 @@ def test_a_vanished_file_borne_declaration_is_refused(tmp_path: Path) -> None:
     tree it cannot read the declaration out of, so a deleted `uv.lock` can never
     reach the agreement check as a smaller unanimous population.
     """
-    _write_tree(tmp_path, pin="3.14.2", lock=">=3.14", venv="3.14")
+    _write_tree(tmp_path, pin="3.14", lock=">=3.14", venv="3.14")
     (tmp_path / "uv.lock").unlink()
 
     with pytest.raises(OSError):
@@ -323,7 +322,7 @@ def test_a_drifted_venv_selection_is_read_from_the_isolated_tree(tmp_path: Path)
     and uv answers the stale minor by downloading it rather than by failing, so
     the container builds and every command inside it works.
     """
-    _write_tree(tmp_path, pin="3.14.2", lock=">=3.14", venv="3.13")
+    _write_tree(tmp_path, pin="3.14", lock=">=3.14", venv="3.13")
 
     declared = _toolchain_floor_minors(tmp_path, base_image="python:3.14-slim-trixie")
 
@@ -333,7 +332,7 @@ def test_a_drifted_venv_selection_is_read_from_the_isolated_tree(tmp_path: Path)
 
 def test_an_upper_bounded_lock_specifier_is_refused(tmp_path: Path) -> None:
     """A bounded ``requires-python`` cannot pass by happening to start at the floor."""
-    _write_tree(tmp_path, pin="3.13.11", lock=">=3.13,<3.14", venv="3.13")
+    _write_tree(tmp_path, pin="3.13", lock=">=3.13,<3.14", venv="3.13")
 
     with pytest.raises(AssertionError, match=r"must be a bare '>=3.N' floor"):
         _file_floor_minors(tmp_path)
@@ -341,14 +340,14 @@ def test_an_upper_bounded_lock_specifier_is_refused(tmp_path: Path) -> None:
 
 def test_a_respelled_lock_floor_is_accepted(tmp_path: Path) -> None:
     """Whitespace is not drift: the specifier is parsed, never string-compared."""
-    _write_tree(tmp_path, pin="3.13.11", lock=">= 3.13", venv="3.13")
+    _write_tree(tmp_path, pin="3.13", lock=">= 3.13", venv="3.13")
 
     assert _file_floor_minors(tmp_path)["uv.lock"] == "3.13"
 
 
-def test_an_inexact_toolchain_pin_is_refused(tmp_path: Path) -> None:
-    """``.python-version`` must select one exact patch, so its minor is unambiguous."""
-    _write_tree(tmp_path, pin="3.13", lock=">=3.13", venv="3.13")
+def test_a_patch_toolchain_pin_is_refused(tmp_path: Path) -> None:
+    """``.python-version`` names a minor; an exact patch belongs to the release builder only."""
+    _write_tree(tmp_path, pin="3.13.11", lock=">=3.13", venv="3.13")
 
-    with pytest.raises(AssertionError, match=r"expected one exact"):
+    with pytest.raises(AssertionError, match=r"expected one `3\.N` minor"):
         _file_floor_minors(tmp_path)
