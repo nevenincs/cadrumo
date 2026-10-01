@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import override
 
 import pytest
 from textual.pilot import Pilot
@@ -27,6 +28,8 @@ from ......application.modelo.work_form_models import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
+    ModeloFormFieldBlock,
+    ModeloFormGridBlock,
     ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
@@ -103,7 +106,7 @@ def _unattributed_form() -> ModeloWorkForm:
                                         )
                                     }
                                 )
-                                if hasattr(block, "rows")
+                                if isinstance(block, ModeloFormGridBlock)
                                 else block
                                 for block in section.blocks
                             )
@@ -264,6 +267,7 @@ class _MovingReader(FakeReader):
 
     later: ModeloWorkForm = field(default_factory=synthetic_form)
 
+    @override
     def load(self, language: OutputLanguage) -> ModeloWorkFormLoadV1:
         self.loads += 1
         form = self.form if self.loads == 1 else self.later
@@ -277,6 +281,7 @@ class _StaleOnceActions(FakeActions):
     def __post_init__(self) -> None:
         self._answers = [WorkbenchPreflight(stale=True)]
 
+    @override
     async def preflight(self, changes: tuple[WorkbenchChange, ...]) -> WorkbenchPreflight:
         self.checked.append(changes)
         return self._answers.pop(0) if self._answers else WorkbenchPreflight()
@@ -293,7 +298,7 @@ def _with_withholding(form: ModeloWorkForm, value: Decimal, origin: ModeloFormOr
                                 block.model_copy(
                                     update={"field": block.field.model_copy(update={"value": value, "origin": origin})}
                                 )
-                                if getattr(block, "field", None) is not None and block.field.box == "06"
+                                if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06"
                                 else block
                                 for block in section.blocks
                             )
@@ -354,7 +359,7 @@ def test_a_change_that_no_longer_applies_is_dropped_on_rebase() -> None:
                                         )
                                     }
                                 )
-                                if getattr(block, "field", None) is not None and block.field.box == "06"
+                                if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06"
                                 else block
                                 for block in section.blocks
                             )
@@ -475,7 +480,7 @@ def test_what_a_recalculation_changed_is_grouped_by_why_it_changed() -> None:
                                         block.model_copy(
                                             update={"field": net.model_copy(update={"value": Decimal("14000.00")})}
                                         )
-                                        if getattr(block, "field", None) is not None and block.field.box == "03"
+                                        if isinstance(block, ModeloFormFieldBlock) and block.field.box == "03"
                                         else block
                                         for block in section.blocks
                                     )

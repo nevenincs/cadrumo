@@ -232,6 +232,14 @@ class SeededOperatorWork:
         return self._run_edit(request, operation_id=content_hash_hex({"request": repr(request)})).refusal
 
     def _run_edit(self, request: OperationRequest[BaseModel], *, operation_id: str) -> AppliedEdit:
+        if not isinstance(request.payload, ModeloEditApplyOperationRequestV1):
+            raise TypeError("edit executor requires a modelo edit apply request")
+        typed_request = OperationRequest[ModeloEditApplyOperationRequestV1](
+            definition_id=request.definition_id,
+            subject_ref=request.subject_ref,
+            payload=request.payload,
+            idempotency_key=request.idempotency_key,
+        )
         executor = ModeloEditApplyExecutor(
             calculation_action_ports_factory=lambda **_: self.ports,
             receipt_repository_factory=self.receipt_repository_factory,
@@ -247,7 +255,12 @@ class SeededOperatorWork:
             events=events,
         )
         try:
-            asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+            asyncio.run(
+                executor.execute(
+                    typed_request,
+                    cast(OperationExecutorContext, context),
+                )
+            )
         except CadrumoError as refused:
             return AppliedEdit(calculation_revision_id=None, refusal=refused, effects=tuple(events.effects))
         head = self.require_head()

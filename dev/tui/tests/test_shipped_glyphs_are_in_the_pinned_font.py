@@ -23,7 +23,7 @@ from PIL import ImageFont
 
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
-from dev.tui._raster import FONT_PATH
+from dev.tui._raster import FONT_PATH, _mask_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,12 +40,12 @@ def _font() -> ImageFont.FreeTypeFont:
 
 @cache
 def _notdef() -> bytes:
-    return bytes(_font().getmask(_NOTDEF_PROBE))
+    return _mask_bytes(_font().getmask(_NOTDEF_PROBE))
 
 
 def _is_missing(character: str) -> bool:
     """Whether the pinned font draws its ``.notdef`` box for ``character``."""
-    return bytes(_font().getmask(character)) == _notdef()
+    return _mask_bytes(_font().getmask(character)) == _notdef()
 
 
 def _string_literals(path: Path) -> list[str]:
