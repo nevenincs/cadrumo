@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc306d7f3b583c85438140476625c26caa62fa866ce676b1d10e612d9c451558'
+body_hash: 'sha256:86f7d81d485b53071ae089104465cb698769db304925283a18359d00eae56773'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1356,6 +1356,34 @@ related:
 - `S44` `M` `dev/registry/tests/test_modelo_296_2022_and_2026_editions.py`
 - `S44` `A` `dev/registry/tests/test_supported_filing_years_inception.py`
 - `S44` `verify:` `supported filing-year audit skips years before a declared inception, an undeclared copy lists them again; 216 and 296 duplicate inception tests dropped; 25 passed; gated commit 370c674e48` -> `pass`
+- `S43` `A` `dev/registry/tests/test_modelo_100_eo_agraria_engine_ordenes_2022_2024.py`
+- `S43` `M` `dev/registry/tests/test_modelo_100_escala_rows_stay_open_across_editions.py`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html.extracted.json`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-348-2024.html.extracted.md`
+- `S43` `A` `src/cadrumo/_data/corpus/normatives/xml/orden-hfp-405-2023-art-2.xml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S43` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_predicates/0001-declarations.toml`
+- `S43` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S43` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S43` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S43` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S43` `verify:` `agraria engine stated at 2022 with per-year ordenes, minorado and jovenes bases per each orden, reduccion 25/15/5 percent grounded in Ordenes HFP/405/2023, HAC/348/2024 and HFP/1359/2023; inspection 0 findings; converter no-op; dev 568 and runtime 362 passed then the two scenario items fixed; gated commit 3293259c99` -> `pass`
+- `S44` `D` `dev/registry/tests/test_modelo_210_inception_statement.py`
+- `S44` `verify:` `registry-wide declared-inception agreement test passes without the 210 copy` -> `pass`
 
 ## Notes
 
@@ -1432,3 +1460,6 @@ related:
 - `S45` the four new editions stay `pending_review;` 189/2022 can reach filing grade once reviewed
 - `S45` selecting Modelo 036 for 2023 now needs a date, refused as ambiguous otherwise, grounded in the orden's 25 April entry into force
 - `S45` 22 Modelo 036 rows never linked in any edition are recorded as named `not_examined` lineage debt
+- `S43` the six Modelo 100 lineage-ledger rows of this step were swept into commit 62dc742fab by a concurrent stage; between that commit and 3293259c99 the ledger named rows the tree did not yet hold
+- `S43` Madrid birth deduction years not authored: the facts entry carries only 2025 and no 2022 or 2023 autonomic manual is held
+- `S43` for 2023 the engine applies 15 percent per Orden HAC/348/2024 art. 2 and the manual's chapter text while the manual's worked example uses 10 percent; returned to the operator

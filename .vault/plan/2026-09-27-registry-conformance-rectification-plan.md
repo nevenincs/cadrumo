@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:0d68f757cf37d52944fa6adc1f6912a790b6720093e2cdf7de2074ec42e31520'
+body_hash: 'sha256:89ec54b2faa3b885761ef45bd0d4015ef55c7fb2c0e74a71774c4897127389cf'
 ---
 
 # `registry-conformance-rectification` plan
@@ -122,7 +122,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [x] `P05.S40` - Author Modelo 184's reduccion binding at 2022 now that art. 23 and art. 32 carry their 2022 redactions; `src/cadrumo/_data/registry/aeat/modelos/184/`.
 - [x] `P05.S41` - Author the missing ejercicio 2022 deadline windows of Modelos 151, 165 and 180 from their calendar sources, and remove Modelo 151's duplicate filing schedule and export link; `src/cadrumo/_data/registry/aeat/modelos/151/`.
 - [x] `P05.S42` - Catalogue the 2022 wording of LIRPF art. 93.2.e).2.o, author Modelo 151's ahorro escala, formula and predicate at 2015-2022 once the coverage validator is clamped, map boxes 18 and 20 of the 2015 export to the computed cuota, and correct the 2015-2020 general scale to BOE's 45 percent; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml`.
-- [ ] `P05.S43` - Author Modelo 100's modulos engine for 2022 to 2024 from each year's orden, and the Madrid birth deduction years once its facts catalogue entry carries them; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P05.S43` - Author Modelo 100's modulos engine for 2022 to 2024 from each year's orden, and the Madrid birth deduction years once its facts catalogue entry carries them; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P05.S44` - Enforce a modelo's declared inception year in the canonical temporal resolver so no year before it resolves, keep the unauthored-debt declaration informational, correct the inception module's contract text, and first make every declared earliest year agree with the authored editions; `src/cadrumo/domain/calculations/registry/temporal.py`.
 - [ ] `P05.S45` - Capture the missing official texts and author the support-range cells they unblock: Modelos 200 and 220 for 2022 and 2023 with their approving ordenes, 182 and 189 for 2022 and 2023, 036 before its 2023 design, 038 before June 2024 and 210 for January to May 2022; `src/cadrumo/_data/corpus/`.
 - [x] `P05.S46` - Show a draft's stored label-reading degradation in the ledger evidence review command, as batch results and the TUI already do; `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`.
