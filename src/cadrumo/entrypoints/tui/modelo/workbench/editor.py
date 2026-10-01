@@ -138,6 +138,8 @@ _CAN_CHANGE_LOCALE_KEYS: Final[Mapping[ModeloFormEditability, str]] = MappingPro
 _RECORDED_LOCALE_KEY: Final[str] = "tui.modelo.workbench.editor.can_change.recorded"
 
 _CHAIN_JOIN: Final[str] = " → "
+_OTHERS_NAMED: Final[int] = 3
+"""Up to this many other boxes a change reaches are named; past it, they are counted."""
 """Joins the boxes a change travels through, in the order it reaches them."""
 
 
@@ -326,7 +328,9 @@ def affects_text(
     steps[-1] = _result_step(form, reach.path[-1], result)
     lines = [_CHAIN_JOIN.join(steps)]
     if reach.others:
-        lines.append(tr("tui.modelo.workbench.editor.affects.others", count=reach.others))
+        # A few boxes are named, so the filer can look at them; past that, how many.
+        named = ", ".join(box.box for box in reach.others) if len(reach.others) <= _OTHERS_NAMED else len(reach.others)
+        lines.append(tr("tui.modelo.workbench.editor.affects.others", count=named))
     return "\n".join(lines)
 
 

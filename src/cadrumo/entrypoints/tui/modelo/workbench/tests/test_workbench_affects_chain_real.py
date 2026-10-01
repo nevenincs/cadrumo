@@ -100,7 +100,7 @@ async def test_a_130_box_names_its_chain_to_the_result(
             form = await _opened(pilot, screen)
             said = await _affects(pilot, "05")
             in_dialog = isinstance(app.screen, CasillaEditorScreen)
-            others = tr("tui.modelo.workbench.editor.affects.others", count=1)
+            others = tr("tui.modelo.workbench.editor.affects.others", count="[15]")
             app.exit(None)
 
     assert in_dialog is (size == _DIALOG)

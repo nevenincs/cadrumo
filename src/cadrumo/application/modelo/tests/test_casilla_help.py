@@ -119,7 +119,7 @@ def test_a_change_travels_to_the_result_along_the_official_form(operation: Pinne
     assert _path(instalments) == ["[07]", "[12]", "[14]", "[17]", "[19]"]
     assert _path(income) == ["[03]", "[04]", "[07]", "[12]", "[14]", "[17]", "[19]"]
     assert instalments.reach is not None
-    assert instalments.reach.others == 1
+    assert [box.box for box in instalments.reach.others] == ["[15]"]
     assert not instalments.is_result
 
 
@@ -129,7 +129,7 @@ def test_a_box_feeding_the_result_directly_is_one_step_from_it(operation: Pinned
 
     assert _path(card) == ["[19]"]
     assert card.reach is not None
-    assert card.reach.others == 0
+    assert card.reach.others == ()
 
 
 def test_the_result_box_is_marked_and_has_no_chain(operation: PinnedAuthorityOperation) -> None:
@@ -166,7 +166,7 @@ def test_working_figures_on_the_way_are_left_out_of_the_chain(operation: PinnedA
     assert path[-1] == "[71]"
     assert all(re.fullmatch(r"\[\d+\]", box) for box in path)
     assert card.reach is not None
-    assert card.reach.others > 0, "[46] also reaches [64] and [66], which the shortest chain passes by"
+    assert card.reach.others, "[46] also reaches [64] and [66], which the shortest chain passes by"
 
 
 def test_a_modelo_that_names_no_result_gives_no_chain(operation: PinnedAuthorityOperation) -> None:

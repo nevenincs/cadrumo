@@ -48,26 +48,41 @@ def test_an_unread_card_says_nothing_rather_than_that_nothing_is_affected() -> N
 
 
 @pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
-def test_a_box_on_the_way_names_the_chain_and_counts_the_rest(language: OutputLanguage) -> None:
-    card = _card(feeds=("[07]",), reach=ModeloHelpReachV1(path=(_box("07"), _box("12"), _box("19")), others=2))
+def test_a_box_on_the_way_names_the_chain_and_the_few_other_boxes_it_changes(language: OutputLanguage) -> None:
+    card = _card(
+        feeds=("[07]",),
+        reach=ModeloHelpReachV1(path=(_box("07"), _box("12"), _box("19")), others=(_box("13"), _box("15"))),
+    )
 
     with override_settings(cadrumo_output_language=language.value):
         text = affects_text(card)
-        others = tr("tui.modelo.workbench.editor.affects.others", count=2)
+        others = tr("tui.modelo.workbench.editor.affects.others", count="[13], [15]")
 
     assert text == f"[07] → [12] → [19]\n{others}"
 
 
+@pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
+def test_past_three_other_boxes_the_chain_counts_them(language: OutputLanguage) -> None:
+    reached = tuple(_box(number) for number in ("13", "15", "16", "18"))
+    card = _card(feeds=("[07]",), reach=ModeloHelpReachV1(path=(_box("07"), _box("19")), others=reached))
+
+    with override_settings(cadrumo_output_language=language.value):
+        text = affects_text(card)
+        others = tr("tui.modelo.workbench.editor.affects.others", count=4)
+
+    assert text == f"[07] → [19]\n{others}"
+
+
 def test_no_count_follows_a_chain_that_reaches_nothing_else() -> None:
-    card = _card(feeds=("[19]",), reach=ModeloHelpReachV1(path=(_box("19"),), others=0))
+    card = _card(feeds=("[19]",), reach=ModeloHelpReachV1(path=(_box("19"),), others=()))
 
     assert affects_text(card) == "[19]"
 
 
 @pytest.mark.parametrize("language", _LANGUAGES, ids=lambda language: language.value)
 def test_a_box_that_does_not_reach_the_result_says_so_with_where_it_is_used(language: OutputLanguage) -> None:
-    alone = _card(reach=ModeloHelpReachV1(path=(), others=0))
-    used = _card(feeds=("[45]",), reach=ModeloHelpReachV1(path=(), others=1))
+    alone = _card(reach=ModeloHelpReachV1(path=(), others=()))
+    used = _card(feeds=("[45]",), reach=ModeloHelpReachV1(path=(), others=(_box("45"),)))
 
     with override_settings(cadrumo_output_language=language.value):
         said_alone = affects_text(alone)

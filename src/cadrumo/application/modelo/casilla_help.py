@@ -157,14 +157,14 @@ class ModeloHelpReachV1(BaseModel):
     ``path`` runs from the first printed box the change reaches to the result
     box, along the fewest formulas; working figures the form does not print
     are left out of it. It is empty when no formula chain leads from the
-    casilla to the result. ``others`` counts the printed boxes the change also
-    reaches that are not on ``path``.
+    casilla to the result. ``others`` are the printed boxes the change also
+    reaches that are not on ``path``, in casilla order.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     path: tuple[ModeloHelpBoxV1, ...]
-    others: int
+    others: tuple[ModeloHelpBoxV1, ...]
 
 
 class ModeloCasillaHelpCardV1(BaseModel):
@@ -416,7 +416,11 @@ def _reach(
         if key in results or boxes.prints(key)
     )
     on_path = set(route)
-    others = sum(1 for key in reached if key != start and key not in on_path and boxes.prints(key))
+    others = tuple(
+        ModeloHelpBoxV1(casilla_id=casillas[key].id, box=box_text(key))
+        for key in sorted(reached)
+        if key != start and key not in on_path and boxes.prints(key)
+    )
     return ModeloHelpReachV1(path=path, others=others)
 
 
