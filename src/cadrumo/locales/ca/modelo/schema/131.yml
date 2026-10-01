@@ -1,6 +1,152 @@
 modelo:
   schema:
     '131':
+      binding:
+        x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
+          label: 'Domiciliació: IBAN'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
+          label: 'Activitat 1: epígraf IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbgdtp66pbeehgmkp8:
+          label: 'Activitat 1: percentatge aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activitat 1: rendiment net'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbiclpnar3kc5i6u:
+          label: 'Activitat 1: resultat d''aplicar el percentatge'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bb5e1kmesj1cpig:
+          label: 'Activitat 2: epígraf IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbgdtp66pbeehgmkp8:
+          label: 'Activitat 2: percentatge aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activitat 2: rendiment net'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbiclpnar3kc5i6u:
+          label: 'Activitat 2: resultat d''aplicar el percentatge'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bb5e1kmesj1cpig:
+          label: 'Activitat 3: epígraf IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbgdtp66pbeehgmkp8:
+          label: 'Activitat 3: percentatge aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activitat 3: rendiment net'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbiclpnar3kc5i6u:
+          label: 'Activitat 3: resultat d''aplicar el percentatge'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bb5e1kmesj1cpig:
+          label: 'Activitat 4: epígraf IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbgdtp66pbeehgmkp8:
+          label: 'Activitat 4: percentatge aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activitat 4: rendiment net'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbiclpnar3kc5i6u:
+          label: 'Activitat 4: resultat d''aplicar el percentatge'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabb5e1kmesj1cpig:
+          label: 'Activitat 5: epígraf IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbgdtp66pbeehgmkp8:
+          label: 'Activitat 5: percentatge aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activitat 5: rendiment net'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbiclpnar3kc5i6u:
+          label: 'Activitat 5: resultat d''aplicar el percentatge'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bb7cln6asj1dhin6bbgdtp66pbeehgmkp8:
+          help: Si per calcular el pagament fraccionat vols aplicar un percentatge
+            superior al que fixa la normativa, indica aquí el percentatge que vols
+            aplicar.
+          label: 'Ingressos agraris del trimestre: percentatge superior a aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62:
+          help: Rendes que donen dret a la deducció de l'article 68.4 de la Llei de
+            l'IRPF.
+          label: 'Rendes de Ceuta o Melilla: explotacions ordinàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62bbcc4mn0obcdlgg:
+          help: Rendes que donen dret a la deducció de l'article 68.4 de la Llei de
+            l'IRPF.
+          label: 'Rendes de Ceuta, Melilla o La Palma: explotacions ordinàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdctimspbic5m6aso:
+          label: 'Ingressos agraris del trimestre: explotacions ordinàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor31:
+          help: Explotacions prioritàries amb la reducció del 25 % per a agricultors
+            joves (disposició addicional sisena de la Llei de l'IRPF).
+          label: 'Rendes de Ceuta o Melilla: explotacions prioritàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          help: Explotacions prioritàries amb la reducció del 25 % per a agricultors
+            joves (disposició addicional sisena de la Llei de l'IRPF).
+          label: 'Rendes de Ceuta, Melilla o La Palma: explotacions prioritàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmmepbeclp62r35ec:
+          help: Explotacions prioritàries amb la reducció del 25 % per a agricultors
+            joves (disposició addicional sisena de la Llei de l'IRPF).
+          label: 'Ingressos agraris del trimestre: explotacions prioritàries'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbkclp74qbkdtp6iobcclpiqs3fe9hmarjkc5l6a:
+          help: Si per calcular el pagament fraccionat vols aplicar un percentatge
+            superior al que fixa la normativa, indica aquí el percentatge que vols
+            aplicar. Es refereix a les rendes amb deducció de l'article 68.4 de la
+            Llei de l'IRPF (Ceuta, Melilla i, el 2024 i el 2025, La Palma).
+          label: 'Rendes amb deducció territorial: percentatge superior a aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bb2c5pma:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual. Si l'activitat va començar durant
+            l'exercici, es pren el trimestre en què es va iniciar.
+          label: 'Deducció per habitatge (agrària): ingressos del primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbcd5mmit35:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual.
+          label: 'Deducció per habitatge (agrària): dies previstos d''activitat a
+            l''any'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbgdtp66pbeehgmkp8:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual. Si l'activitat va començar durant
+            l'exercici, es pren el trimestre en què es va iniciar.
+          label: 'Deducció per habitatge (agrària): dies d''activitat al primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
+          label: Declaració complementària
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
+          help: 'Només en el cas excepcional que al trimestre hagis de presentar també
+            el Model 130 de pagament fraccionat: indica la quantitat que aquest model
+            recull per aquesta deducció.'
+          label: 'Deducció article 110.3.c: quantitat reflectida al Model 130'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dehp62rbf:
+          help: 'Si els rendiments nets d''activitats econòmiques de l''exercici anterior
+            no van superar els 12.000 euros, tria el tram: fins a 9.000, de 9.000,01
+            a 10.000, de 10.000,01 a 11.000 o d''11.000,01 a 12.000 euros.'
+          label: 'Deducció de l''article 110.3.c: tram de rendiments de l''exercici
+            anterior'
+        x-dlnm8pbcdsmj2cph5po62pr564n68qbjcdgn0ob3d5i62p1d6cpg:
+          label: Contribuent amb discapacitat del 33 % o més
+        x-dlnm8pbcdsmj2cph5po62pr564n6ktbjehkmcqb3c5n78p9dc5n78pbid5nn4:
+          label: 'Complementària: número de justificant de la declaració anterior'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor31:
+          label: 'Sense dades base: deducció per rendes de Ceuta o Melilla'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          label: 'Sense dades base: deducció per rendes de Ceuta, Melilla o La Palma'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmn0rricdimst31d9ig:
+          help: Si per calcular el pagament fraccionat vols aplicar un percentatge
+            superior al que fixa la normativa, indica aquí el percentatge que vols
+            aplicar.
+          label: 'Sense dades base: percentatge superior que vol aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual. Si l'activitat va començar durant
+            l'exercici, es pren el trimestre en què es va iniciar.
+          label: 'Sense dades base: deducció per habitatge, ingressos del primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lm6irb9ehig:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual.
+          label: 'Sense dades base: deducció per habitatge, dies previstos d''activitat
+            a l''any'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lo6usj3cln78oback:
+          help: Deducció per destinar quantitats al pagament de préstecs per adquirir
+            o rehabilitar l'habitatge habitual. Si l'activitat va començar durant
+            l'exercici, es pren el trimestre en què es va iniciar.
+          label: 'Sense dades base: deducció per habitatge, dies d''activitat al primer
+            trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncrrcelmmarg:
+          label: 'Sense dades base: volum de vendes o ingressos del trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6ap3lcdhmirre5lgn0r39cdgm8o8:
+          help: Suma dels imports de la deducció aplicada (casella 12 del Model 131)
+            en els trimestres anteriors de l'exercici.
+          label: 'Deducció per habitatge: total aplicat en trimestres anteriors'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6asj5cdk6ubb4cli7aor3d5nms:
+          help: Marca X si tens dret a aplicar la deducció per destinar quantitats
+            a adquirir o rehabilitar el teu habitatge habitual amb finançament aliè.
+            No hi ha dret si l'adquisició o la rehabilitació es va fer a partir de
+            l'1 de gener de 2013 i no es van fer pagaments per a això abans d'aquesta
+            data.
+          label: 'Deducció per habitatge: dret a aplicar-la'
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:

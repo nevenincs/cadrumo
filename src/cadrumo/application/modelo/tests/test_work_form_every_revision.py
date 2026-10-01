@@ -20,10 +20,12 @@ from collections import Counter
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period, accepted_filing_period_codes
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
+from ....domain.calculations.registry.modelo_localization import binding_locale_key
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
@@ -164,10 +166,10 @@ def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
                 assert field.label.text == "Casilla sin nombre", identifier
 
     assert not labelled_by_id, "\n".join(labelled_by_id[:20])
-    assert unnamed["390"], "Modelo 390's first-page inputs have no name in the registry; pick another witness"
+    assert unnamed["369"], "unproven envelope inputs must still disclose the missing name"
 
 
-def test_modelo_390s_unnamed_first_page_inputs_keep_their_identifier_and_their_kind(
+def test_modelo_390s_named_first_page_inputs_keep_their_identifier_and_their_kind(
     operation: PinnedAuthorityOperation,
 ) -> None:
     form, _declared = _form(operation, "390", 2025, "0A")
@@ -178,6 +180,9 @@ def test_modelo_390s_unnamed_first_page_inputs_keep_their_identifier_and_their_k
         == ModeloFormBindingAddressV1(binding_id="modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual")
     )
 
-    assert flag.label.disclosure is ModeloFormTextDisclosure.UNNAMED
-    assert flag.label.text == "Casilla sin nombre"
+    assert flag.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
+    assert isinstance(flag.address, ModeloFormBindingAddressV1)
+    assert flag.label.text == lookup_translation(
+        binding_locale_key("390", str(flag.address.binding_id), "label"), locale="es"
+    )
     assert flag.data_type == "text", "the registry declares this input free text, and the form says the same"

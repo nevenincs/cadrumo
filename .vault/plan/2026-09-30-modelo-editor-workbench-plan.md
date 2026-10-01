@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:5af9bc3e71d7440914ff3f78328e65104b165849942cfa0a687268592e484b64'
+body_hash: 'sha256:50b549619d14592c2b2492a75adb1945802bd450335cb145fdac88f99c64fd7d'
 ---
 
 # `modelo-editor-workbench` plan
@@ -145,7 +145,7 @@ Replace the declarations screens with one list grouped by what the filer must do
 - [ ] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
 - [ ] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
 - [ ] `P08.S61` - Give each deduction document Cadrumo cannot record its own blocking finding that sends the filer to file another way, once the intra-community refusal reaches this branch from main; `src/cadrumo/application/modelo/verification_actions.py`.
-- [ ] `P08.S64` - Name the binding inputs no casilla owns from their official descriptions in each modelo's schema catalogue, and read those names in the form; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P08.S64` - Name the binding inputs no casilla owns from their official descriptions in each modelo's schema catalogue, and read those names in the form; `src/cadrumo/application/modelo/work_form.py`.
 
 ### Phase `P09` - documentation and naming
 

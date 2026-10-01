@@ -1,20 +1,18 @@
-"""An input no box owns is named after the one box it feeds, and says it is unnamed otherwise.
-
-Built by the real read model over the published authority. Modelo 100's
-direct-estimation choice feeds exactly one numbered box, so it reads as
-additional data for that box in every language; Modelo 390's header inputs
-feed no box at all, so they keep the plain words for a box without a name and
-never their identifiers.
-"""
+"""Binding names follow declared relationships and the shared schema catalogues."""
 
 from __future__ import annotations
+
+from collections.abc import Callable
 
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import ModeloFormBindingAddressV1, ModeloFormField, ModeloFormTextDisclosure, ModeloWorkForm
@@ -27,7 +25,13 @@ _DIRECT_ESTIMATION = "renta-modelo-100-estimacion-directa-es-normal"
 
 
 def _form(
-    operation: PinnedAuthorityOperation, modelo: str, year: int, code: str, language: OutputLanguage
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    year: int,
+    code: str,
+    language: OutputLanguage,
+    *,
+    adjust: Callable[[RegistrySnapshot], RegistrySnapshot] | None = None,
 ) -> ModeloWorkForm:
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
@@ -47,6 +51,8 @@ def _form(
         findings=(),
         blockers=(),
     )
+    if adjust is not None:
+        snapshot = adjust(snapshot)
     return build_modelo_work_form(
         review=review,
         snapshot=snapshot,
@@ -72,7 +78,7 @@ def _binding_fields(form: ModeloWorkForm) -> list[ModeloFormField]:
         (OutputLanguage.HU, "Kiegészítő adat a(z) 0224. rovathoz"),
     ],
 )
-def test_an_input_that_feeds_one_box_is_named_after_that_box(
+def test_a_provider_casilla_name_precedes_the_fed_box_fallback(
     operation: PinnedAuthorityOperation, language: OutputLanguage, expected: str
 ) -> None:
     form = _form(operation, "100", 2024, "0A", language)
@@ -82,20 +88,106 @@ def test_an_input_that_feeds_one_box_is_named_after_that_box(
         if isinstance(field.address, ModeloFormBindingAddressV1) and str(field.address.binding_id) == _DIRECT_ESTIMATION
     )
 
-    assert field.label.text == expected
+    provider = next(casilla for casilla in operation.revision("100", "2024").casillas if str(casilla.id) == "0168")
+    assert field.label.text == resolve_modelo_localization(provider.localization_keys, locale=language.value)
+    assert field.label.text != expected
+    assert field.box == "0168"
     assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
 
 
-def test_an_input_that_feeds_no_box_says_it_has_no_name_and_never_shows_its_identifier(
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+def test_catalogue_names_reach_inputs_that_feed_no_box(
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> None:
+    form = _form(operation, "390", 2025, "0A", language)
+    fields = _binding_fields(form)
+
+    assert fields
+    for field in fields:
+        assert isinstance(field.address, ModeloFormBindingAddressV1)
+        key = binding_locale_key("390", str(field.address.binding_id), "label")
+        assert field.label.text == lookup_translation(key, locale=language.value)
+        assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
+        assert str(field.address.binding_id) not in field.label.text
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+def test_an_input_at_a_casillas_declared_record_and_offset_uses_its_existing_name(
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage,
+) -> None:
+    fields = _binding_fields(_form(operation, "360", 2025, "AD-HOC", language))
+    field = next(
+        field
+        for field in fields
+        if isinstance(field.address, ModeloFormBindingAddressV1)
+        and str(field.address.binding_id) == "modelo-360.page_01.actividad-nace-1-codigo"
+    )
+    casilla = next(
+        casilla
+        for casilla in operation.revision("360", "2010-y-siguientes").casillas
+        if str(casilla.id) == "decl.solicitante.nace-1"
+    )
+    assert field.label.text == resolve_modelo_localization(casilla.localization_keys, locale=language.value)
+    assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
+    assert all(field.label.disclosure is not ModeloFormTextDisclosure.UNNAMED for field in fields)
+
+
+def test_a_binding_inputs_printed_code_is_in_the_box_slot(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _form(operation, "390", 2025, "0A", OutputLanguage.EN)
-    unnamed = [field for field in _binding_fields(form) if field.label.disclosure is ModeloFormTextDisclosure.UNNAMED]
+    fields = _binding_fields(_form(operation, "390", 2025, "0A", OutputLanguage.EN))
+    field = next(field for field in fields if field.box == "K1")
+    assert "K1" not in field.label.text
+    assert "activity" in field.label.text.lower()
 
-    assert unnamed, "Modelo 390 declares header inputs that feed no box"
-    assert {field.label.text for field in unnamed} == {"Unnamed box"}
-    assert not any(
-        str(field.address.binding_id) in field.label.text
-        for field in unnamed
+
+def test_unproven_envelope_inputs_remain_visible_and_honestly_unnamed(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    fields = _binding_fields(_form(operation, "369", 2025, "1T", OutputLanguage.EN))
+    field = next(
+        field
+        for field in fields
         if isinstance(field.address, ModeloFormBindingAddressV1)
+        and str(field.address.binding_id) == "modelo-369-union-fichero.tipo-y-cierre"
     )
+    assert field.label.disclosure is ModeloFormTextDisclosure.UNNAMED
+    assert field.box is None
+
+
+def _direct_estimation_field(form: ModeloWorkForm) -> ModeloFormField:
+    return next(
+        field
+        for field in _binding_fields(form)
+        if isinstance(field.address, ModeloFormBindingAddressV1) and str(field.address.binding_id) == _DIRECT_ESTIMATION
+    )
+
+
+def test_declared_owner_precedes_the_provider_casilla(operation: PinnedAuthorityOperation) -> None:
+    def add_owner(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+        casillas = tuple(
+            casilla.model_copy(update={"binding": _DIRECT_ESTIMATION}) if str(casilla.id) == "0001" else casilla
+            for casilla in snapshot.revision.casillas
+        )
+        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
+
+    field = _direct_estimation_field(_form(operation, "100", 2024, "0A", OutputLanguage.EN, adjust=add_owner))
+    owner = next(casilla for casilla in operation.revision("100", "2024").casillas if str(casilla.id) == "0001")
+    assert field.label.text == resolve_modelo_localization(owner.localization_keys, locale="en")
+    assert field.box == "0001"
+
+
+def test_missing_relationship_names_leave_the_fed_box_fallback_available(operation: PinnedAuthorityOperation) -> None:
+    def remove_provider_name(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+        casillas = tuple(
+            casilla.model_copy(update={"localization_keys": ()}) if str(casilla.id) == "0168" else casilla
+            for casilla in snapshot.revision.casillas
+        )
+        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
+
+    field = _direct_estimation_field(
+        _form(operation, "100", 2024, "0A", OutputLanguage.EN, adjust=remove_provider_name)
+    )
+    assert field.label.text == "Additional data for box 0224"

@@ -63,6 +63,7 @@ def _form(
     code: str,
     *,
     literals: Mapping[str, str] | None = None,
+    layout_override: FormLayoutDefinition | None = None,
 ) -> ModeloWorkForm:
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
@@ -82,7 +83,7 @@ def _form(
         findings=(),
         blockers=(),
     )
-    layout = _layout(operation, modelo, str(snapshot.revision.id))
+    layout = layout_override or _layout(operation, modelo, str(snapshot.revision.id))
     return build_modelo_work_form(
         review=review,
         snapshot=snapshot,
@@ -209,8 +210,40 @@ def test_every_390_grid_cell_shows_an_official_box_number_or_none(operation: Pin
 def test_a_repeating_column_the_design_leaves_unnamed_reads_as_the_label_of_its_box(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _form(operation, "349", 2026, "1T")
-    layout = _layout(operation, "349", str(form.registry_revision_id))
+    revision = operation.revision_for_context("349", filing_year=2026, period="1T")
+    published = _layout(operation, "349", str(revision.id))
+    layout = published.model_copy(
+        update={
+            "pages": tuple(
+                page.model_copy(
+                    update={
+                        "sections": tuple(
+                            section.model_copy(
+                                update={
+                                    "blocks": tuple(
+                                        block.model_copy(
+                                            update={
+                                                "columns": tuple(
+                                                    column.model_copy(update={"official_heading": None})
+                                                    for column in block.columns
+                                                )
+                                            }
+                                        )
+                                        if isinstance(block, FormRepeatingGroupBlock)
+                                        else block
+                                        for block in section.blocks
+                                    )
+                                }
+                            )
+                            for section in page.sections
+                        )
+                    }
+                )
+                for page in published.pages
+            )
+        }
+    )
+    form = _form(operation, "349", 2026, "1T", layout_override=layout)
     declared = {
         block.id: block
         for page in layout.pages

@@ -1,6 +1,148 @@
 modelo:
   schema:
     '131':
+      binding:
+        x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
+          label: 'Direct debit: IBAN'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
+          label: 'Activity 1: IAE heading'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbgdtp66pbeehgmkp8:
+          label: 'Activity 1: applicable percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activity 1: net income'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbiclpnar3kc5i6u:
+          label: 'Activity 1: result of applying the percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bb5e1kmesj1cpig:
+          label: 'Activity 2: IAE heading'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbgdtp66pbeehgmkp8:
+          label: 'Activity 2: applicable percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activity 2: net income'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbiclpnar3kc5i6u:
+          label: 'Activity 2: result of applying the percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bb5e1kmesj1cpig:
+          label: 'Activity 3: IAE heading'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbgdtp66pbeehgmkp8:
+          label: 'Activity 3: applicable percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activity 3: net income'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbiclpnar3kc5i6u:
+          label: 'Activity 3: result of applying the percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bb5e1kmesj1cpig:
+          label: 'Activity 4: IAE heading'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbgdtp66pbeehgmkp8:
+          label: 'Activity 4: applicable percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activity 4: net income'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbiclpnar3kc5i6u:
+          label: 'Activity 4: result of applying the percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabb5e1kmesj1cpig:
+          label: 'Activity 5: IAE heading'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbgdtp66pbeehgmkp8:
+          label: 'Activity 5: applicable percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbicln68qbdd5imst3f5ln6at3f:
+          label: 'Activity 5: net income'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbiclpnar3kc5i6u:
+          label: 'Activity 5: result of applying the percentage'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bb7cln6asj1dhin6bbgdtp66pbeehgmkp8:
+          help: If you want to apply a higher percentage than the rules set when calculating
+            the instalment payment (pago fraccionado), enter the percentage you want
+            to apply.
+          label: 'Farming income for the quarter: higher percentage to apply'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62:
+          help: Income entitling you to the deduction under article 68.4 of the IRPF
+            Law.
+          label: 'Farming income from Ceuta or Melilla: ordinary holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62bbcc4mn0obcdlgg:
+          help: Income entitling you to the deduction under article 68.4 of the IRPF
+            Law.
+          label: 'Farming income from Ceuta, Melilla or La Palma: ordinary holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdctimspbic5m6aso:
+          label: 'Farming income for the quarter: ordinary holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor31:
+          help: Priority holdings with the 25% reduction for young farmers (sixth
+            additional provision of the IRPF Law).
+          label: 'Farming income from Ceuta or Melilla: priority holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          help: Priority holdings with the 25% reduction for young farmers (sixth
+            additional provision of the IRPF Law).
+          label: 'Farming income from Ceuta, Melilla or La Palma: priority holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmmepbeclp62r35ec:
+          help: Priority holdings with the 25% reduction for young farmers (sixth
+            additional provision of the IRPF Law).
+          label: 'Farming income for the quarter: priority holdings'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbkclp74qbkdtp6iobcclpiqs3fe9hmarjkc5l6a:
+          help: If you want to apply a higher percentage than the rules set when calculating
+            the instalment payment (pago fraccionado), enter the percentage you want
+            to apply. It applies to income with the deduction under article 68.4 of
+            the IRPF Law (Ceuta, Melilla and, in 2024 and 2025, La Palma).
+          label: 'Farming income with territorial deduction: higher percentage to
+            apply'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bb2c5pma:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home. If the activity started during the year, use the quarter in
+            which it started.
+          label: 'Home deduction (farming): income of the first quarter'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbcd5mmit35:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home.
+          label: 'Home deduction (farming): expected days active in the year'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbgdtp66pbeehgmkp8:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home. If the activity started during the year, use the quarter in
+            which it started.
+          label: 'Home deduction (farming): days active in the first quarter'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
+          label: Complementaria declaration
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
+          help: 'Only in the exceptional case where you must also file Modelo 130
+            (instalment payment) in the quarter: enter the amount that form shows
+            for this deduction.'
+          label: 'Deduction under article 110.3.c: amount shown on Modelo 130'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dehp62rbf:
+          help: 'If net income from economic activities in the prior year did not
+            exceed 12,000 euros, choose the bracket: up to 9,000, 9,000.01 to 10,000,
+            10,000.01 to 11,000 or 11,000.01 to 12,000 euros.'
+          label: 'Deduction under article 110.3.c: bracket of prior-year income'
+        x-dlnm8pbcdsmj2cph5po62pr564n68qbjcdgn0ob3d5i62p1d6cpg:
+          label: Taxpayer with a disability of 33% or more
+        x-dlnm8pbcdsmj2cph5po62pr564n6ktbjehkmcqb3c5n78p9dc5n78pbid5nn4:
+          label: 'Complementaria: receipt number of the earlier declaration'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor31:
+          label: 'No base data: deduction for income from Ceuta or Melilla'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          label: 'No base data: deduction for income from Ceuta, Melilla or La Palma'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmn0rricdimst31d9ig:
+          help: If you want to apply a higher percentage than the rules set when calculating
+            the instalment payment (pago fraccionado), enter the percentage you want
+            to apply.
+          label: 'No base data: higher percentage to apply'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home. If the activity started during the year, use the quarter in
+            which it started.
+          label: 'No base data: home deduction, income of the first quarter'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lm6irb9ehig:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home.
+          label: 'No base data: home deduction, expected days active in the year'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lo6usj3cln78oback:
+          help: Deduction for amounts used to repay loans to buy or renovate your
+            main home. If the activity started during the year, use the quarter in
+            which it started.
+          label: 'No base data: home deduction, days active in the first quarter'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncrrcelmmarg:
+          label: 'No base data: sales or income volume for the quarter'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6ap3lcdhmirre5lgn0r39cdgm8o8:
+          help: Sum of the deduction amounts applied (box 12 of Modelo 131) in the
+            earlier quarters of the year.
+          label: 'Home deduction: total applied in earlier quarters'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6asj5cdk6ubb4cli7aor3d5nms:
+          help: Mark X if you are entitled to the deduction for amounts used to buy
+            or renovate your main home with borrowed money. There is no entitlement
+            if the purchase or renovation took place on or after 1 January 2013 and
+            no payments for it were made before that date.
+          label: 'Home deduction: entitlement to apply it'
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:

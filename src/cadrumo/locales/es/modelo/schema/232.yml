@@ -1,6 +1,341 @@
 modelo:
   schema:
     '232':
+      binding:
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5ln6ipg:
+          label: 'Entidad matriz: número de identificación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5lp62ujfdomn6rr3d5gmo:
+          label: 'Entidad matriz: razón social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqpjads:
+          label: 'Operación vinculada 1: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqqbde1nn4t35:
+          label: 'Operación vinculada 1: importe de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqrj9co:
+          label: 'Operación vinculada 1: NIF de la persona o entidad vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Operación vinculada 1: código de provincia o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqsj1f9nmsbbjdthmiobc:
+          label: 'Operación vinculada 1: apellidos y nombre o razón social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 1: indica la clave de la tabla oficial de tipos de vinculación
+            (de A a H), por ejemplo D para dos entidades de un mismo grupo.'
+          label: 'Operación vinculada 1: tipo de vinculación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qpjads:
+          label: 'Operación vinculada 2: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qqbde1nn4t35:
+          label: 'Operación vinculada 2: importe de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qrj9co:
+          label: 'Operación vinculada 2: NIF de la persona o entidad vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qs3idtr6irj3d5giqs31d5pg:
+          label: 'Operación vinculada 2: código de provincia o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qsj1f9nmsbbjdthmiobc:
+          label: 'Operación vinculada 2: apellidos y nombre o razón social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 2: indica la clave de la tabla oficial de tipos de vinculación
+            (de A a H), por ejemplo D para dos entidades de un mismo grupo.'
+          label: 'Operación vinculada 2: tipo de vinculación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqpjads:
+          label: 'Operación vinculada 3: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqqbde1nn4t35:
+          label: 'Operación vinculada 3: importe de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqrj9co:
+          label: 'Operación vinculada 3: NIF de la persona o entidad vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Operación vinculada 3: código de provincia o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqsj1f9nmsbbjdthmiobc:
+          label: 'Operación vinculada 3: apellidos y nombre o razón social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 3: indica la clave de la tabla oficial de tipos de vinculación
+            (de A a H), por ejemplo D para dos entidades de un mismo grupo.'
+          label: 'Operación vinculada 3: tipo de vinculación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 1: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 1: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb6d9ng:
+          label: 'Operación con paraíso fiscal 1: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 1: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 1: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcdm62tj55lo62qbj:
+          label: 'Operación con paraíso fiscal 10: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dchin6orid5o66qbfdo:
+          label: 'Operación con paraíso fiscal 10: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcpl6u:
+          label: 'Operación con paraíso fiscal 10: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dd5mn0rriehig:
+          label: 'Operación con paraíso fiscal 10: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1de1in4srfdpgg:
+          label: 'Operación con paraíso fiscal 10: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcdm62tj55lo62qbj:
+          label: 'Operación con paraíso fiscal 11: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dchin6orid5o66qbfdo:
+          label: 'Operación con paraíso fiscal 11: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcpl6u:
+          label: 'Operación con paraíso fiscal 11: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dd5mn0rriehig:
+          label: 'Operación con paraíso fiscal 11: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9de1in4srfdpgg:
+          label: 'Operación con paraíso fiscal 11: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcdm62tj55lo62qbj:
+          label: 'Operación con paraíso fiscal 12: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdchin6orid5o66qbfdo:
+          label: 'Operación con paraíso fiscal 12: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcpl6u:
+          label: 'Operación con paraíso fiscal 12: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdd5mn0rriehig:
+          label: 'Operación con paraíso fiscal 12: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chde1in4srfdpgg:
+          label: 'Operación con paraíso fiscal 12: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 2: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 2: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb6d9ng:
+          label: 'Operación con paraíso fiscal 2: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 2: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 2: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 3: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 3: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb6d9ng:
+          label: 'Operación con paraíso fiscal 3: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 3: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 3: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 4: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 4: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb6d9ng:
+          label: 'Operación con paraíso fiscal 4: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 4: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 4: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 5: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 5: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb6d9ng:
+          label: 'Operación con paraíso fiscal 5: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 5: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 5: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 6: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 6: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb6d9ng:
+          label: 'Operación con paraíso fiscal 6: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 6: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 6: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 7: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 7: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb6d9ng:
+          label: 'Operación con paraíso fiscal 7: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 7: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 7: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 8: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 8: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb6d9ng:
+          label: 'Operación con paraíso fiscal 8: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 8: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 8: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb3dhgncp9de1gmiso:
+          label: 'Operación con paraíso fiscal 9: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb4clpm6sj9e1hmirre:
+          label: 'Operación con paraíso fiscal 9: descripción de la operación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb6d9ng:
+          label: 'Operación con paraíso fiscal 9: tipo de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb9dlo6usjkck:
+          label: 'Operación con paraíso fiscal 9: importe'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibbgclp76rrec4:
+          label: 'Operación con paraíso fiscal 9: persona o entidad residente'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 1: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 1: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 1: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dehkn0ro:
+          help: 'Fila 1: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 1: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 1: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lhmoobmckmn0ob9ec:
+          label: 'Valores en paraíso fiscal 10: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5limst39chgm8:
+          label: 'Valores en paraíso fiscal 10: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valores en paraíso fiscal 10: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lq6is3f:
+          help: 'Fila 10: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 10: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valores en paraíso fiscal 10: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lhmoobmckmn0ob9ec:
+          label: 'Valores en paraíso fiscal 11: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5limst39chgm8:
+          label: 'Valores en paraíso fiscal 11: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valores en paraíso fiscal 11: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lq6is3f:
+          help: 'Fila 11: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 11: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valores en paraíso fiscal 11: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lhmoobmckmn0ob9ec:
+          label: 'Valores en paraíso fiscal 12: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5limst39chgm8:
+          label: 'Valores en paraíso fiscal 12: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valores en paraíso fiscal 12: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lq6is3f:
+          help: 'Fila 12: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 12: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valores en paraíso fiscal 12: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 2: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 2: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 2: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdehkn0ro:
+          help: 'Fila 2: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 2: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 2: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 3: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 3: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 3: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdehkn0ro:
+          help: 'Fila 3: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 3: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 3: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 4: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 4: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 4: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dehkn0ro:
+          help: 'Fila 4: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 4: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 4: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 5: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 5: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 5: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dehkn0ro:
+          help: 'Fila 5: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 5: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 5: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 6: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 6: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 6: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdehkn0ro:
+          help: 'Fila 6: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 6: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 6: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 7: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 7: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 7: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdehkn0ro:
+          help: 'Fila 7: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 7: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 7: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 8: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 8: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 8: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dehkn0ro:
+          help: 'Fila 8: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 8: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 8: valor de adquisición'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcdm62tj55lo62qbj:
+          label: 'Valores en paraíso fiscal 9: clave de país o territorio'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcln78qb4c5i0:
+          label: 'Valores en paraíso fiscal 9: entidad participada o emisora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valores en paraíso fiscal 9: porcentaje de participación'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dehkn0ro:
+          help: 'Fila 9: indica la clave de la tabla oficial: A valores de fondos
+            propios de entidades residentes en esos territorios, B valores de instituciones
+            de inversión colectiva constituidas allí, C valores de renta fija admitidos
+            a cotización en sus mercados secundarios.'
+          label: 'Valores en paraíso fiscal 9: tipo'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valores en paraíso fiscal 9: valor de adquisición'
       casilla:
         continuidad:
           actividad-cnae:

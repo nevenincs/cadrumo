@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:b331be8c2520814267c2d888a8dfdfdd0e8883fe8b53916b643d118e4afee5ee'
+body_hash: 'sha256:905b499a8ae2672749a85ca8f76c0b10ed77a5d921e9cbec71b61f0baef3d741'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -957,6 +957,48 @@ related:
 - `S51` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
 - `S51` `verify:` `uv run --no-sync python -m dev.docs.sequences check --sequence verification-reports-incomplete` -> `pass`
 - `S51` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/verification-reports` -> `pass`
+- `S64` `M` `dev/locales/_casilla_keys.py`
+- `S64` `M` `dev/locales/tests/test_modelo_schema_key_projection.py`
+- `S64` `A` `dev/locales/tests/test_binding_presentation_catalogue.py`
+- `S64` `M` `dev/registry/compiler/loader.py`
+- `S64` `M` `src/cadrumo/application/modelo/tests/test_work_form_binding_labels.py`
+- `S64` `M` `src/cadrumo/application/modelo/tests/test_work_form_every_revision.py`
+- `S64` `M` `src/cadrumo/application/modelo/tests/test_work_form_grids.py`
+- `S64` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S64` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/232.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/353.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/369.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/390.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/714.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/720.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/232.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/353.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/369.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/390.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/714.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/720.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/232.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/353.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/369.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/390.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/714.yml`
+- `S64` `M` `src/cadrumo/locales/es/modelo/schema/720.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/232.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/353.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/369.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/714.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/720.yml`
+- `S64` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' test_work_form*.py test_casilla_help.py (application/modelo/tests; enumerated paths)` -> `pass`
+- `S64` `verify:` `uv run --no-sync pytest -q -n0 dev/locales/tests/test_modelo_schema_key_projection.py dev/locales/tests/test_binding_presentation_catalogue.py dev/locales/tests/test_parity.py::test_codebase_to_locale_parity` -> `pass`
+- `S64` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S64` `verify:` `uv run --no-sync ruff check (nine owning Python paths)` -> `pass`
+- `S64` `verify:` `uv run --no-sync ruff format --check (nine owning Python paths)` -> `pass`
 
 ## Notes
 
@@ -1038,3 +1080,4 @@ related:
 - `S49` Modelo 349 is fully headed from its record design; Modelo 100 heads only eight data-entry sections, because Renta's printed form is not in the corpus, and every other page and section is listed with its reason
 - `S49` Headings reach the layout through a reviewer-quote file the generator checks against each cited source line
 - `S51` The earlier confirm-chip correction changed the advisory level from confirm to check; the owning refresh changes only `notices[0].context.level.` Oversized JSON output advisories remain documentation work.
+- `S64` Three Modelo 369 envelope-role inputs remain visible and unnamed because typed data does not prove their role; binding-input-registry-notes remain open. Frozen naming captures follow the code checkpoint.

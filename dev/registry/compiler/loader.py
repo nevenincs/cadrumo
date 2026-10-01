@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
+    binding_locale_key,
     casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
@@ -353,6 +354,15 @@ def _project_revision_locale_keys(
     under the edition that stated it (``label_origins``) or its lineage key,
     so emitting one would invite a restatement of inherited text.
     """
+    bindings = _raw_array(revision, "bindings", f"{source_path}: revision {revision_id!r}")
+    for index, raw_binding in enumerate(bindings):
+        subject = f"{source_path}: revision {revision_id!r} binding[{index}]"
+        binding = _raw_table(raw_binding)
+        if binding is None:
+            raise RegistryLoadError(f"{subject} must be a table")
+        binding_id = _required_identity(binding.get("id"), f"{subject}.id")
+        keys.update(binding_locale_key(modelo_id, binding_id, field) for field in ("label", "help", "box_number"))
+
     constructs = _raw_array(revision, "constructs", f"{source_path}: revision {revision_id!r}")
     seen_construct_ids: set[str] = set()
     for index, raw_construct in enumerate(constructs):

@@ -1,6 +1,447 @@
 modelo:
   schema:
     '390':
+      binding:
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj2o8:
+          label: 'Statisztikai adatok: további tevékenység 1'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj4o8:
+          label: 'Statisztikai adatok: további tevékenység 2'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj6o8:
+          label: 'Statisztikai adatok: további tevékenység 3'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj8o8:
+          label: 'Statisztikai adatok: további tevékenység 4'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmjao8:
+          label: 'Statisztikai adatok: további tevékenység 5'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lo74qbecdkn0obc:
+          label: 'Statisztikai adatok: fő tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd65gg:
+          label: 'Statisztikai adatok, további tevékenység 1: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd69gg:
+          label: 'Statisztikai adatok, további tevékenység 2: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6dgg:
+          label: 'Statisztikai adatok, további tevékenység 3: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6hgg:
+          label: 'Statisztikai adatok, további tevékenység 4: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6lgg:
+          label: 'Statisztikai adatok, további tevékenység 5: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbge9kmsor9e1gmo:
+          label: 'Statisztikai adatok, fő tevékenység: tevékenységkód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd65ng:
+          label: 'Statisztikai adatok, további tevékenység 1: IAE-tétel'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd69ng:
+          label: 'Statisztikai adatok, további tevékenység 2: IAE-tétel'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6dng:
+          label: 'Statisztikai adatok, további tevékenység 3: IAE-tétel'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6hng:
+          label: 'Statisztikai adatok, további tevékenység 4: IAE-tétel'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6lng:
+          label: 'Statisztikai adatok, további tevékenység 5: IAE-tétel'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbge9kmsor9e1gmo:
+          label: 'Statisztikai adatok, fő tevékenység: IAE-tétel'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8bb4clhmoobic5hmirre5lgmstb1dgmmus35e9gm6bb3dtn2qt35e9hmasj1ecmn0pbiednmsobj
+        : label: Harmadik felekkel kötött ügyletek éves bevallása
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqrj9co:
+          label: 'Közös bevallás: NIF'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqsj1f9nmsbbjdthmiobc:
+          label: 'Közös bevallás: cégnév'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgg:
+          label: Helyettesítő bevallás
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgiqs3fe8mn4pb3ehkmcqb3c5hmirre5li6abb3elnn8obj:
+          label: Helyettesítő bevallás az adóösszegek helyesbítése miatt
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb1e1imor39chnn6bbp5ln6urb2e9iiqsj1f9nmsbbjdthmiobc
+        : label: 'Képviselő: családnév és utónév vagy cégnév'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3c5m6op9de1t62bb1epi62
+        : label: 'Képviselő: utca, tér vagy sugárút'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3dti6iprf5lo6usrkc5m0
+        : label: 'Képviselő: irányítószám'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb5edhg
+        : label: 'Képviselő: lépcsőház'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbdeln6ior9e1kmu
+        : label: 'Képviselő: település'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbed5j0
+        : label: 'Képviselő: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2
+        : label: 'Képviselő: közterület neve'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbeelmmasjf
+        : label: 'Képviselő: házszám'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbgd5pmu
+        : label: 'Képviselő: emelet'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9nncqbecdkm2
+        : label: 'Képviselő: tartomány'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9q62
+        : label: 'Képviselő: ajtó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbkclm6apjfdpng
+        : label: 'Képviselő: telefonszám'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+          label: 'Képviselő (jogi személy) 1: a meghatalmazás dátuma'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrj9co:
+          label: 'Képviselő (jogi személy) 1: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Képviselő (jogi személy) 1: családnév és utónév'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfehgn4qb1:
+          label: 'Képviselő (jogi személy) 1: közjegyzőség'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+          label: 'Képviselő (jogi személy) 2: a meghatalmazás dátuma'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrj9co:
+          label: 'Képviselő (jogi személy) 2: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Képviselő (jogi személy) 2: családnév és utónév'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfehgn4qb1:
+          label: 'Képviselő (jogi személy) 2: közjegyzőség'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Adja meg a dátumot nap, hónap és év sorrendben, DDMMAAAA formátumban.
+          label: 'Képviselő (jogi személy) 3: a meghatalmazás dátuma'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrj9co:
+          label: 'Képviselő (jogi személy) 3: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Képviselő (jogi személy) 3: családnév és utónév'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfehgn4qb1:
+          label: 'Képviselő (jogi személy) 3: közjegyzőség'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8pbgcln68qb5dpq6a:
+          label: 'Adóalany: függő entitás?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8rrdd5n62rjkck:
+          label: 'Adóalany: domináns entitás?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmsqb65limst39chgm8bb4dtmmirj1dpq6a:
+          label: 'Adóalany: a domináns entitás NIF-je'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmstbdclp6ubb4ckmmesjle1ng:
+          label: 'Adóalany: csoportszám'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5mmarhdclpn0pb3d5gmobb4clm2qprielo6ubb4ckmmarjkd5i62p35ec:
+          label: 'Adóalany: az entitáscsoport különleges szabályozása'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5pn8sjf5li6abb4clr6ur3lcdkmurhddlimssrlc5m0:
+          label: 'Adóalany: havi visszatérítési nyilvántartás'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn8qbgdsmn4pb7d5mmarhdclpn0pb3d5gmobb1e1m6ior1c9m6abb1e9q2qc9m6cmn6pbod5in6bb3d5n66rpdedkiqrpddpng
+        : label: 'Adóalany: a különleges szabályozás típusa, 163 sexies.cinco cikk'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, adja meg a C jelet.
+          label: Kiegészítő oldal jelölése
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdnm8qb7ds
+        : label: 'Agrártevékenység 1: kód'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K1
+          label: 'Agrártevékenység 1: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6atj5dpjm2p31
+        : label: 'Agrártevékenység 1: felszámított adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315lpmus3fe9q62p31
+        : label: 'Agrártevékenység 1: előzetes adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dd5n68qb3ckmm6tbfehgg
+        : label: 'Agrártevékenység 1: adóösszeg-mutató'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: A DANA által érintett településeken végzett tevékenységre alkalmazható
+            csökkentés.
+          label: 'Agrártevékenység 1: csökkentés a DANA miatt'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9depnmotbdcln2qqbectp6asrfec
+        : label: 'Agrártevékenység 1: bevétel volumene'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdnm8qb7ds
+        : label: 'Agrártevékenység 2: kód'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K2
+          label: 'Agrártevékenység 2: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6atj5dpjm2p31
+        : label: 'Agrártevékenység 2: felszámított adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315lpmus3fe9q62p31
+        : label: 'Agrártevékenység 2: előzetes adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdd5n68qb3ckmm6tbfehgg
+        : label: 'Agrártevékenység 2: adóösszeg-mutató'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: A DANA által érintett településeken végzett tevékenységre alkalmazható
+            csökkentés.
+          label: 'Agrártevékenység 2: csökkentés a DANA miatt'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdepnmotbdcln2qqbectp6asrfec
+        : label: 'Agrártevékenység 2: bevétel volumene'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdnm8qb7ds
+        : label: 'Agrártevékenység 3: kód'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K3
+          label: 'Agrártevékenység 3: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6atj5dpjm2p31
+        : label: 'Agrártevékenység 3: felszámított adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315lpmus3fe9q62p31
+        : label: 'Agrártevékenység 3: előzetes adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdd5n68qb3ckmm6tbfehgg
+        : label: 'Agrártevékenység 3: adóösszeg-mutató'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: A DANA által érintett településeken végzett tevékenységre alkalmazható
+            csökkentés.
+          label: 'Agrártevékenység 3: csökkentés a DANA miatt'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdepnmotbdcln2qqbectp6asrfec
+        : label: 'Agrártevékenység 3: bevétel volumene'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdnm8qb7ds
+        : label: 'Agrártevékenység 4: kód'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K4
+          label: 'Agrártevékenység 4: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6atj5dpjm2p31
+        : label: 'Agrártevékenység 4: felszámított adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315lpmus3fe9q62p31
+        : label: 'Agrártevékenység 4: előzetes adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dd5n68qb3ckmm6tbfehgg
+        : label: 'Agrártevékenység 4: adóösszeg-mutató'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: A DANA által érintett településeken végzett tevékenységre alkalmazható
+            csökkentés.
+          label: 'Agrártevékenység 4: csökkentés a DANA miatt'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1depnmotbdcln2qqbectp6asrfec
+        : label: 'Agrártevékenység 4: bevétel volumene'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdnm8qb7ds
+        : label: 'Agrártevékenység 5: kód'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6o
+        : box_number: K5
+          label: 'Agrártevékenység 5: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6atj5dpjm2p31
+        : label: 'Agrártevékenység 5: felszámított adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315lpmus3fe9q62p31
+        : label: 'Agrártevékenység 5: előzetes adó'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dd5n68qb3ckmm6tbfehgg
+        : label: 'Agrártevékenység 5: adóösszeg-mutató'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: A DANA által érintett településeken végzett tevékenységre alkalmazható
+            csökkentés.
+          label: 'Agrártevékenység 5: csökkentés a DANA miatt'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9depnmotbdcln2qqbectp6asrfec
+        : label: 'Agrártevékenység 5: bevétel volumene'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: '1. tevékenység, 1. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: '1. tevékenység, 2. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: '1. tevékenység, 3. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: '1. tevékenység, 4. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: '1. tevékenység, 5. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: '1. tevékenység, 6. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: '1. tevékenység, 7. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: '1. tevékenység, 1. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: '1. tevékenység, 2. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: '1. tevékenység, 3. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: '1. tevékenység, 4. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: '1. tevékenység, 5. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: '1. tevékenység, 6. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: '1. tevékenység, 7. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Tevékenység 1: felszámított adó a folyó ügyletekből'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8og
+        : box_number: J1
+          label: '1. tevékenység: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Tevékenység 1: előzetes adó a folyó ügyletekben'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Tevékenység 1: korrekciós mutató'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Tevékenység 1: IAE-tétel'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően adja meg
+            az 1 vagy 2 értéket. Egyébként hagyja üresen.'
+          label: 'Tevékenység 1: az IAE-tétel kiegészítő jelzője'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb65lp6asrldhq62p3f:
+          label: 'Tevékenység 1: eredmény'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Tevékenység 1: minimális adóösszeg százaléka'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Tevékenység 1: más országokbeli előzetes adó visszatérítése'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Tevékenység 1: minimális adóösszeg'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbcdtp66o8:
+          label: 'Tevékenység 1: lorcai csökkentés'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Tevékenység 1: csökkentés Lorca község területén'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Tevékenység 1: csökkentés a DANA által érintett településeken'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Tevékenység 1: csökkentések (összesen)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: '2. tevékenység, 1. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: '2. tevékenység, 2. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: '2. tevékenység, 3. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: '2. tevékenység, 4. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: '2. tevékenység, 5. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: '2. tevékenység, 6. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: '2. tevékenység, 7. modul: egységek száma'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: '2. tevékenység, 1. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: '2. tevékenység, 2. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: '2. tevékenység, 3. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: '2. tevékenység, 4. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: '2. tevékenység, 5. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: '2. tevékenység, 6. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: '2. tevékenység, 7. modul: összeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Tevékenység 2: felszámított adó a folyó ügyletekből'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8p0
+        : box_number: J2
+          label: '2. tevékenység: az egyszerűsített rendszerből származó adóösszeg'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Tevékenység 2: előzetes adó a folyó ügyletekben'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Tevékenység 2: korrekciós mutató'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Tevékenység 2: IAE-tétel'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Csak a 691.9 és 722 tételekhez: a tevékenységtől függően adja meg
+            az 1 vagy 2 értéket. Egyébként hagyja üresen.'
+          label: 'Tevékenység 2: az IAE-tétel kiegészítő jelzője'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb65lp6asrldhq62p3f:
+          label: 'Tevékenység 2: eredmény'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Tevékenység 2: minimális adóösszeg százaléka'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Tevékenység 2: más országokbeli előzetes adó visszatérítése'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Tevékenység 2: minimális adóösszeg'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbcdtp66o8:
+          label: 'Tevékenység 2: lorcai csökkentés'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Tevékenység 2: csökkentés Lorca község területén'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Tevékenység 2: csökkentés a DANA által érintett településeken'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Tevékenység 2: csökkentések (összesen)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bb9epgiqsrfe1nn4t31chniqpbe5lgm8sbld5pmior9dtn2qp355lgm6t39epnn6bb6d5l6uso
+        : box_number: '80'
+          label: 'Egyszerűsített rendszer: tárgyi eszközök beszerzésének előzetes
+            IVA-ja'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbicljnar31e9knkob3d5nmsbb4ckmm4qb5dpin6bb4ckmmirjmclp76qbfdo
+        : box_number: '81'
+          label: 'Egyszerűsített rendszer: beruházási javak korrekciója'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbjelmm2bb4ckmm8pb4elhm6qbfdpin6
+        : box_number: '82'
+          label: 'Egyszerűsített rendszer: levonások összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5limsbb1chonaqbjd5hmirreclpiqqbeehp62orfdlqmsqbkc5p6iobj
+        : box_number: '76'
+          label: 'Egyszerűsített rendszer: felszámított IVA, közösségen belüli beszerzés'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpdcln2qpbeehp6apr1ecmm8p9dc5hn8qbmdtpiqpj9d9nn6
+        : box_number: '78'
+          label: 'Egyszerűsített rendszer: felszámított IVA, tárgyi eszköz értékesítése'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpde1nn4bb9dpr6asjjd5nmsbb4clm2qsrld9in8rpde1gn6qbmds
+        : box_number: '77'
+          label: 'Egyszerűsített rendszer: fordított adózás miatt felszámított IVA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspdc5jn4qb35ljm2rj1cgmnibb6dtp6asrk
+        : box_number: '75'
+          label: Agrár- és erdészeti tevékenységek adóösszegei összesen
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspddpniqob7e9km6bb7c5n62p1df4mmcrriclpn8
+        : box_number: '74'
+          label: Nem agrár- és erdészeti tevékenységek adóösszegei összesen
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmn4pbjelm78ob4dsmn4pb7d5mmarhdedkmqs3cd5j6ior1chng
+        : box_number: '83'
+          label: Az egyszerűsített rendszer eredménye
+        x-dlnm8pbcdsmj6e9g5po62pr5bsrisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Hagyja üresen, ha az oldal nem kiegészítő; ha az, adja meg a C jelet.
+          label: Kiegészítő oldal jelölése
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 1: végzett tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 1: CNAE-kód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 1: ügyletek összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 1: levonási jogot biztosító ügyletek összege'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 1: prorrata százaléka'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          label: 'Prorrata 1: prorrata típusa'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 2: végzett tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 2: CNAE-kód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 2: ügyletek összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 2: levonási jogot biztosító ügyletek összege'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 2: prorrata százaléka'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          label: 'Prorrata 2: prorrata típusa'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 3: végzett tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 3: CNAE-kód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 3: ügyletek összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 3: levonási jogot biztosító ügyletek összege'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 3: prorrata százaléka'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          label: 'Prorrata 3: prorrata típusa'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 4: végzett tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 4: CNAE-kód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 4: ügyletek összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 4: levonási jogot biztosító ügyletek összege'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 4: prorrata százaléka'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          label: 'Prorrata 4: prorrata típusa'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 5: végzett tevékenység'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 5: CNAE-kód'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 5: ügyletek összege'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 5: levonási jogot biztosító ügyletek összege'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 5: prorrata százaléka'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Adja meg a G vagy E értéket, vagy hagyja üresen.
+          label: 'Prorrata 5: prorrata típusa'
       casilla:
         continuidad:
           filing-year:

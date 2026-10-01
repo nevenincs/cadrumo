@@ -1,6 +1,152 @@
 modelo:
   schema:
     '131':
+      binding:
+        x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
+          label: 'Domiciliación: IBAN'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
+          label: 'Actividad 1: epígrafe IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbgdtp66pbeehgmkp8:
+          label: 'Actividad 1: porcentaje aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Actividad 1: rendimiento neto'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbiclpnar3kc5i6u:
+          label: 'Actividad 1: resultado de aplicar el porcentaje'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bb5e1kmesj1cpig:
+          label: 'Actividad 2: epígrafe IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbgdtp66pbeehgmkp8:
+          label: 'Actividad 2: porcentaje aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Actividad 2: rendimiento neto'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbiclpnar3kc5i6u:
+          label: 'Actividad 2: resultado de aplicar el porcentaje'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bb5e1kmesj1cpig:
+          label: 'Actividad 3: epígrafe IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbgdtp66pbeehgmkp8:
+          label: 'Actividad 3: porcentaje aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Actividad 3: rendimiento neto'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbiclpnar3kc5i6u:
+          label: 'Actividad 3: resultado de aplicar el porcentaje'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bb5e1kmesj1cpig:
+          label: 'Actividad 4: epígrafe IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbgdtp66pbeehgmkp8:
+          label: 'Actividad 4: porcentaje aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Actividad 4: rendimiento neto'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbiclpnar3kc5i6u:
+          label: 'Actividad 4: resultado de aplicar el porcentaje'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabb5e1kmesj1cpig:
+          label: 'Actividad 5: epígrafe IAE'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbgdtp66pbeehgmkp8:
+          label: 'Actividad 5: porcentaje aplicable'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbicln68qbdd5imst3f5ln6at3f:
+          label: 'Actividad 5: rendimiento neto'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbiclpnar3kc5i6u:
+          label: 'Actividad 5: resultado de aplicar el porcentaje'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bb7cln6asj1dhin6bbgdtp66pbeehgmkp8:
+          help: Si para calcular el pago fraccionado quieres aplicar un porcentaje
+            superior al que fija la normativa, indica aquí el porcentaje que deseas
+            aplicar.
+          label: 'Ingresos agrarios del trimestre: porcentaje superior a aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62:
+          help: Rentas que dan derecho a la deducción del artículo 68.4 de la Ley
+            del IRPF.
+          label: 'Rentas de Ceuta o Melilla: explotaciones ordinarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62bbcc4mn0obcdlgg:
+          help: Rentas que dan derecho a la deducción del artículo 68.4 de la Ley
+            del IRPF.
+          label: 'Rentas de Ceuta, Melilla o La Palma: explotaciones ordinarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdctimspbic5m6aso:
+          label: 'Ingresos agrarios del trimestre: explotaciones ordinarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor31:
+          help: Explotaciones prioritarias con la reducción del 25 % para agricultores
+            jóvenes (disposición adicional sexta de la Ley del IRPF).
+          label: 'Rentas de Ceuta o Melilla: explotaciones prioritarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          help: Explotaciones prioritarias con la reducción del 25 % para agricultores
+            jóvenes (disposición adicional sexta de la Ley del IRPF).
+          label: 'Rentas de Ceuta, Melilla o La Palma: explotaciones prioritarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmmepbeclp62r35ec:
+          help: Explotaciones prioritarias con la reducción del 25 % para agricultores
+            jóvenes (disposición adicional sexta de la Ley del IRPF).
+          label: 'Ingresos agrarios del trimestre: explotaciones prioritarias'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbkclp74qbkdtp6iobcclpiqs3fe9hmarjkc5l6a:
+          help: Si para calcular el pago fraccionado quieres aplicar un porcentaje
+            superior al que fija la normativa, indica aquí el porcentaje que deseas
+            aplicar. Se refiere a las rentas con deducción del artículo 68.4 de la
+            Ley del IRPF (Ceuta, Melilla y, en 2024 y 2025, La Palma).
+          label: 'Rentas con deducción territorial: porcentaje superior a aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bb2c5pma:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual. Si la actividad empezó en el ejercicio,
+            se toma el trimestre en que se inició.
+          label: 'Deducción por vivienda (agraria): ingresos del primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbcd5mmit35:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual.
+          label: 'Deducción por vivienda (agraria): días previstos de actividad en
+            el año'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbgdtp66pbeehgmkp8:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual. Si la actividad empezó en el ejercicio,
+            se toma el trimestre en que se inició.
+          label: 'Deducción por vivienda (agraria): días de actividad en el primer
+            trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
+          label: Declaración complementaria
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
+          help: 'Solo en el caso excepcional de que en el trimestre tengas que presentar
+            también el Modelo 130 de pago fraccionado: indica la cantidad que ese
+            modelo recoge por esta deducción.'
+          label: 'Deducción artículo 110.3.c: cantidad reflejada en el Modelo 130'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dehp62rbf:
+          help: 'Si los rendimientos netos de actividades económicas del ejercicio
+            anterior no superaron 12.000 euros, elige el tramo: hasta 9.000, de 9.000,01
+            a 10.000, de 10.000,01 a 11.000 o de 11.000,01 a 12.000 euros.'
+          label: 'Deducción del artículo 110.3.c: tramo de rendimientos del ejercicio
+            anterior'
+        x-dlnm8pbcdsmj2cph5po62pr564n68qbjcdgn0ob3d5i62p1d6cpg:
+          label: Contribuyente con discapacidad del 33 % o más
+        x-dlnm8pbcdsmj2cph5po62pr564n6ktbjehkmcqb3c5n78p9dc5n78pbid5nn4:
+          label: 'Complementaria: número de justificante de la declaración anterior'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor31:
+          label: 'Sin datos base: deducción por rentas de Ceuta o Melilla'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          label: 'Sin datos base: deducción por rentas de Ceuta, Melilla o La Palma'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmn0rricdimst31d9ig:
+          help: Si para calcular el pago fraccionado quieres aplicar un porcentaje
+            superior al que fija la normativa, indica aquí el porcentaje que deseas
+            aplicar.
+          label: 'Sin datos base: porcentaje superior que desea aplicar'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual. Si la actividad empezó en el ejercicio,
+            se toma el trimestre en que se inició.
+          label: 'Sin datos base: deducción por vivienda, ingresos del primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lm6irb9ehig:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual.
+          label: 'Sin datos base: deducción por vivienda, días previstos de actividad
+            en el año'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lo6usj3cln78oback:
+          help: Deducción por destinar cantidades al pago de préstamos para adquirir
+            o rehabilitar la vivienda habitual. Si la actividad empezó en el ejercicio,
+            se toma el trimestre en que se inició.
+          label: 'Sin datos base: deducción por vivienda, días de actividad en el
+            primer trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncrrcelmmarg:
+          label: 'Sin datos base: volumen de ventas o ingresos del trimestre'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6ap3lcdhmirre5lgn0r39cdgm8o8:
+          help: Suma de los importes de la deducción aplicada (casilla 12 del Modelo
+            131) en los trimestres anteriores del ejercicio.
+          label: 'Deducción por vivienda: total aplicado en trimestres anteriores'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6asj5cdk6ubb4cli7aor3d5nms:
+          help: Marca X si tienes derecho a aplicar la deducción por destinar cantidades
+            a adquirir o rehabilitar tu vivienda habitual con financiación ajena.
+            No hay derecho si la adquisición o rehabilitación fue a partir del 1 de
+            enero de 2013 y no se hicieron pagos para ella antes de esa fecha.
+          label: 'Deducción por vivienda: derecho a aplicarla'
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:

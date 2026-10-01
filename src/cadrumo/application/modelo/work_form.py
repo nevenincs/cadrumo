@@ -65,7 +65,12 @@ from ...domain.calculations.registry.export_field_casilla import (
 )
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
-from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
+from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
+from ...domain.calculations.registry.modelo_localization import (
+    binding_locale_key,
+    modelo_localization_source,
+    resolve_modelo_localization,
+)
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import (
@@ -303,6 +308,13 @@ class _FormContext:
             for ref in refs:
                 self.fed_casillas.setdefault(ref, set()).add(str(row.casilla_id))
         self.placed_boxes: dict[str, str] = {}
+        self.casillas_by_export_position: dict[tuple[str, int], set[str]] = {}
+        for export_layout in snapshot.revision.export_layouts:
+            for record, field in layout_fields_in_emission_order(export_layout):
+                target = export_field_casilla_id(record, field, bindings=self.bindings)
+                if target is not None and field.offset is not None:
+                    for coordinate in (str(record.id), record.record_type):
+                        self.casillas_by_export_position.setdefault((coordinate, field.offset), set()).add(str(target))
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
@@ -584,17 +596,47 @@ def _role(row: ModeloWorkReviewCasilla) -> CalculationReportRowRole | None:
         return None
 
 
+def _binding_casillas(binding: BindingDefinition, context: _FormContext) -> tuple[CasillaDefinition, ...]:
+    """Follow declared ownership, provider and unambiguous export coordinates, in that order."""
+    ids = [context.casilla_by_binding.get(str(binding.id))]
+    provider = binding.provider
+    if isinstance(provider, ManualInputProvider):
+        ids.append(None if provider.casilla_id is None else str(provider.casilla_id))
+        if provider.record is not None and provider.offset is not None:
+            positioned = context.casillas_by_export_position.get((provider.record, provider.offset), set())
+            if len(positioned) == 1:
+                ids.extend(positioned)
+    return tuple(context.casillas[item] for item in dict.fromkeys(ids) if item is not None and item in context.casillas)
+
+
 def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
     """Build one field for a binding input no casilla owns."""
     binding = context.bindings.get(binding_id)
     if binding is None:
         raise ModeloWorkFormLayoutError(f"the layout places binding {binding_id!r}, which the revision does not define")
-    owner = context.casilla_by_binding.get(binding_id)
-    owner_casilla = None if owner is None else context.casillas.get(owner)
+    modelo = str(context.snapshot.modelo.id)
+    casillas = _binding_casillas(binding, context)
+    labels = (_localized(casilla.localization_keys, context.language) for casilla in casillas)
     label = (
-        (None if owner_casilla is None else _localized(owner_casilla.localization_keys, context.language))
+        _localized((binding_locale_key(modelo, binding_id, "label"),), context.language)
+        or next((text for text in labels if text is not None), None)
         or _fed_box_label(binding_id, context)
         or _unnamed(context.language)
+    )
+    help_text = resolve_modelo_localization(
+        (binding_locale_key(modelo, binding_id, "help"),), locale=context.language.value
+    ) or next((text for casilla in casillas if (text := _help(casilla, label.text, context))), None)
+    if help_text and _normalized(help_text) == _normalized(label.text):
+        help_text = None
+    box = resolve_modelo_localization(
+        (binding_locale_key(modelo, binding_id, "box_number"),), locale=context.language.value
+    ) or next(
+        (
+            number
+            for casilla in casillas
+            if (number := context.placed_boxes.get(str(casilla.id)) or printed_box_number(casilla, None))
+        ),
+        None,
     )
     raw = None if context.revision is None else context.revision.binding_overrides.get(binding.id)
     data_type = _BINDING_DATA_TYPE.get(binding.value.data_type.value, "text")
@@ -613,9 +655,9 @@ def _binding_field(binding_id: str, context: _FormContext) -> ModeloFormField:
         origin = _held_origin(value, required=False)
     return ModeloFormField(
         address=ModeloFormBindingAddressV1(binding_id=binding.id),
-        box=None,
+        box=box,
         label=label,
-        help=None,
+        help=help_text,
         data_type=data_type,
         value=value,
         origin=origin,

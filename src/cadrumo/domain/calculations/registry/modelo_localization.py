@@ -55,6 +55,14 @@ def modelo_locale_key(modelo_id: str, field: Literal["title", "official_name"]) 
     return f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.field.{field}"
 
 
+def binding_locale_key(modelo_id: str, binding_id: str, field: Literal["label", "help", "box_number"]) -> str:
+    """Address one binding's optional presentation text shared by revisions retaining its identity."""
+    return (
+        f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.binding."
+        f"{encode_modelo_locale_segment(binding_id)}.{field}"
+    )
+
+
 def revision_locale_key(
     modelo_id: str,
     revision_id: RevisionId,
