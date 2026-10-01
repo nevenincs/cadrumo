@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:7bc13b3cf4c7b8c8377f038564af6a6cd64632458b6ab428faf9606ff96670c0'
+body_hash: 'sha256:0b564c77f25ed69840727063fd84d64c64e98a150fc8cd8528f57d987c8023ea'
 ---
 
 # `modelo-editor-workbench` plan
@@ -154,7 +154,7 @@ Bring the user documentation, the workbench guide and Hungarian modelo names in 
 - [x] `P09.S57` - Land the workbench guide and its translations against the shipped behaviour; `docs/how-to/fill-in-and-file-in-the-workbench.md`.
 - [x] `P09.S58` - Apply the reconciled documentation rewrite and its translations, and correct CLI output strings that still print internal words; `docs`.
 - [x] `P09.S59` - Name every modelo by its proper name in Hungarian without guessing suffixes; `src/cadrumo/locales/hu`.
-- [ ] `P09.S60` - Keep hashes and identifiers behind technical details in exports, summaries and pickers, and pass period words instead of tokens; `src/cadrumo/entrypoints/tui`.
+- [x] `P09.S60` - Keep hashes and identifiers behind technical details in exports, summaries and pickers, and pass period words instead of tokens; `src/cadrumo/entrypoints/tui`.
 
 ## Parallelization
 
