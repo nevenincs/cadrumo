@@ -54,7 +54,7 @@ from cadrumo.entrypoints.tui.launcher import (
 )
 from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
-from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel
+from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel, CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
@@ -445,11 +445,14 @@ def page_interfaces(page: str) -> tuple[str, ...]:
     """The interface class a scenario page paints.
 
     The Declarations page claims nothing: its screen is already covered by the
-    fixture surfaces.
+    fixture surfaces. A box panel is a widget, so its page claims the screens that
+    host it: the workbench it docks in and the dialog it opens as on short terminals.
     """
     factory = _PAGE_SCREENS.get(page)
     if not isinstance(factory, type):
         return ()
+    if factory is CasillaEditorPanel:
+        return tuple(f"{host.__module__}.{host.__qualname__}" for host in (ModeloWorkbenchScreen, CasillaEditorScreen))
     return (f"{factory.__module__}.{factory.__qualname__}",)
 
 

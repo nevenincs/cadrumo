@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from dev._paths import UTF_8
 
-from .. import _coverage, _diff, _inventory, _raster
+from .. import _coverage, _diff, _harness, _inventory, _raster
 from .._artifacts import (
     MANIFEST_SCHEMA_VERSION,
     FailedFrame,
@@ -152,6 +152,14 @@ def test_coverage_check_bites_on_unknown_surfaces_and_interfaces() -> None:
             ("fixture",),
             rendered_table={"fixture": ("cadrumo.entrypoints.tui.removed.StaleScreen",)},
         )
+
+
+def test_the_live_registry_names_only_live_surfaces_and_interfaces() -> None:
+    """The render command's own join over the real fixture and sequence registry, so a page that
+    claims a widget or a removed screen fails here rather than when a review run starts."""
+    surfaces = _harness.reviewable_surface_names(_harness.surfaces(), _harness.scenarios())
+
+    _coverage.check(_inventory.scan(), surfaces, rendered_table=_harness.coverage())
 
 
 def test_unrendered_reports_only_concrete_leaf_interfaces() -> None:
