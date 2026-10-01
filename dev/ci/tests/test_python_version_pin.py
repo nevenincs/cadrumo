@@ -1,4 +1,4 @@
-"""Repository-wide contract for the exact CI Python toolchain pin.
+"""Repository-wide contract for the CI Python toolchain pin.
 
 The pin lives in ``.python-version`` and uv reads it -- unless something names
 an interpreter first. ``with: python-version:`` is one way to name one and
@@ -27,13 +27,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 _COMPATIBILITY_WORKFLOW: Final = _WORKFLOWS_DIR / "release.yml"
 _PYTHON_VERSION_FILE: Final = REPO_ROOT / ".python-version"
+_MINOR: Final = re.compile(r"\d+\.\d+")
 _EXACT_PATCH: Final = re.compile(r"\d+\.\d+\.\d+")
 _MATRIX_EXPRESSION: Final = re.compile(r"\$\{\{\s*matrix\.([A-Za-z][\w-]*)\s*\}\}")
 
 
 def _python_pin() -> str:
     pin = _PYTHON_VERSION_FILE.read_text(encoding="utf-8").strip()
-    assert _EXACT_PATCH.fullmatch(pin), ".python-version must select one exact Python patch"
+    assert _MINOR.fullmatch(pin), ".python-version must select one Python minor, never a patch"
     return pin
 
 
@@ -75,7 +76,7 @@ def _assert_setup_uv_consumers_follow_pin(
                 selection = declared_python_selection(document, job_name, step_index)
                 if selection is None:
                     # Neither channel names an interpreter, so uv resolves the
-                    # checked-in exact .python-version pin. The checkout must already
+                    # checked-in .python-version minor. The checkout must already
                     # exist when setup-uv establishes the job's toolchain context.
                     checked_out = any(
                         isinstance(previous, dict) and str(previous.get("uses", "")).startswith("actions/checkout@")
@@ -94,7 +95,7 @@ def _assert_setup_uv_consumers_follow_pin(
     assert consumer_found, "no setup-uv consumer was found; the CI Python pin contract has no live surface"
     assert violations == [], (
         "setup-uv Python overrides bypass .python-version unless they are a "
-        f"compatibility matrix containing the exact pin and an alternative: {violations}"
+        f"compatibility matrix containing the pin and an alternative: {violations}"
     )
 
 
@@ -214,11 +215,12 @@ def test_compatibility_matrix_override_classifier(
     assert _is_compatibility_matrix_override(selection=selection, matrix=resolved_matrix, pin=pin) is expected
 
 
-def test_release_cohort_enforces_the_repository_python_pin() -> None:
-    """The reproducible cohort builder consumes the same pin as CI."""
+def test_release_cohort_builds_on_an_exact_patch_of_the_repository_minor() -> None:
+    """The reproducible cohort builder is one exact patch of the minor CI runs."""
     from dev.packaging.release_cohort import REQUIRED_PYTHON_VERSION
 
-    assert _python_pin() == REQUIRED_PYTHON_VERSION
+    assert _EXACT_PATCH.fullmatch(REQUIRED_PYTHON_VERSION), "the release builder must name one exact Python patch"
+    assert REQUIRED_PYTHON_VERSION.startswith(f"{_python_pin()}.")
 
 
 def test_matrix_override_is_rejected_outside_the_compatibility_workflow() -> None:

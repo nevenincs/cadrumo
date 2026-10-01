@@ -37,7 +37,7 @@ value already present in your shell always wins.
 | `CADRUMO_AUTHORITY_ROOT` | Path | unset | Directory holding the published registry authority descriptor ``authority.current.json`` and the content-addressed SQLite generation it selects. The ``None`` default is the installed posture: the authority ships inside the distribution and resolves through the bundled-data boundary, so an unset ``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the packaged product performs it. A development checkout sets it to the generated authority tree it keeps outside the packaged location; the descriptor must exist under the named directory. |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
 | `CADRUMO_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
-| `CADRUMO_BROWSER_CHANNEL` | str | `chrome` | Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge') |
+| `CADRUMO_BROWSER_CHANNEL` | str | `chromium` | Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge') |
 | `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS` | int | `5000` | Best-effort timeout (ms) for Playwright browser context/session cleanup during AEAT live auth and read flows. Cleanup must not leave a command hanging after the primary operation has already failed or timed out. |
 | `CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS` | int | `10000` | Timeout for individual form interactions (fill/click/wait) in milliseconds |
 | `CADRUMO_BROWSER_HEADLESS` | bool | `true` | Run browser in headless mode |

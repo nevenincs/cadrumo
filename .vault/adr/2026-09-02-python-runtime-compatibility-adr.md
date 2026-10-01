@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:69878e76bd10a4a53a0ad43cbdce466c33b1526ee85c4845c69a206f86627a78'
+body_hash: 'sha256:4fdf5551c3e4789e64443d47a614e3bebc3fd45a01d5a66f4c34193a85a84fe0'
 related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -27,7 +27,8 @@ The decision is grounded in `2026-09-02-python-runtime-compatibility-research` a
 - The package must stop rejecting future interpreters through a project-level ceiling, while support claims remain bounded by executed evidence (`2026-09-02-python-runtime-compatibility-research`).
 - Released artifacts require installed-runtime proof, not only source-tree tests; the Python row must remain bound to the tested artifact cohort (`2026-07-15-distribution-installation-readiness-adr`).
 - Existing protected CI and release-cohort lanes have stable names, timing, and single-builder contracts; compatibility coverage needs an independently verdictable surface (`2026-08-05-ci-lane-deconflation-adr`).
-- The exact interpreter recorded in `.python-version` defines reproducible cohort construction and must not be confused with the supported runtime range (`2026-09-02-python-runtime-compatibility-research`).
+- The exact interpreter recorded for the release builder defines reproducible cohort construction and must not be confused with the supported runtime range (`2026-09-02-python-runtime-compatibility-research`).
+- `.python-version` is also read by uv, pyenv shims and CI setup for every development environment. An exact patch there forces each workstation, CI job and hosted development image to provide that one patch, and a host whose pyenv lacks it fails before any project code runs.
 - `from __future__ import annotations` provides one annotation representation across the supported transition and remains supported; removing it would be a semantic migration, not compatibility cleanup (`2026-09-02-python-runtime-compatibility-research`).
 - Native dependency wheel gaps and resolver failures are compatibility evidence and must remain visible rather than becoming successful skips (`2026-09-02-python-runtime-compatibility-research`).
 
@@ -47,7 +48,7 @@ The decision is grounded in `2026-09-02-python-runtime-compatibility-research` a
 - Each blocking row exercises the real package boundary: isolated dependency resolution, source or sdist installation as applicable, built-wheel installation, import/startup and CLI smoke, relevant focused tests, and attributable deprecations promoted to errors. Artifact proof inherits the cohort and acquisition requirements of `2026-07-15-distribution-installation-readiness-adr`.
 - The next CPython prerelease begins as an advisory canary. At the release-candidate or final-release promotion point, it becomes blocking only with explicit source-install and binary-wheel evidence. Those modes remain separately recorded: source-build success does not imply binary-wheel support, and missing native wheels are an explicit blocker or unsupported mode, never a passing skip.
 - Stable classifiers are metadata claims, not forecasts. A classifier is added only for a final stable interpreter whose applicable blocking evidence passes. A prerelease canary receives no stable classifier.
-- `.python-version` remains the sole release-cohort builder identity. Compatibility jobs select their target interpreter independently and test the already-built cohort where artifact proof is required. No per-runtime rebuild, restamping, or replacement of the canonical cohort is permitted.
+- `dev/packaging/release-python-version` is the sole release-cohort builder identity: one exact CPython patch. `.python-version` names only the minor that development environments and ordinary CI jobs use, and the builder patch must belong to that minor. Compatibility jobs select their target interpreter independently and test the already-built cohort where artifact proof is required. No per-runtime rebuild, restamping, or replacement of the canonical cohort is permitted.
 - `from __future__ import annotations` remains in the established source model. Runtime consumers use supported APIs such as `typing.get_type_hints`, `typing.get_origin`, and `typing.get_args`, rather than depending on the internal representation of `__annotations__`.
 - Syntax and static-analysis targets remain at Python 3.13. Version-specific behavior is isolated behind capability checks or a small compatibility boundary and covered on both sides.
 - Dependency upper bounds, missing wheels, build failures, and deprecation warnings remain attributable to the affected runtime and installation mode. They may be resolved or explicitly scoped, but cannot be hidden by `continue-on-error`, unconditional skips, or broad exemptions.
@@ -55,7 +56,7 @@ The decision is grounded in `2026-09-02-python-runtime-compatibility-research` a
 
 ## Implementation
 
-Change the root metadata to the open floor `>=3.13` and regenerate the lock through the repository package-management authority. Remove stale comments and checks describing the former ceiling, while preserving exact release-cohort validation around `.python-version`.
+Change the root metadata to the open floor `>=3.13` and regenerate the lock through the repository package-management authority. Remove stale comments and checks describing the former ceiling, while preserving exact release-cohort validation around the release builder pin.
 
 Add a dedicated compatibility workflow with an explicit matrix sourced from one canonical runtime inventory. It contains blocking rows for each released CPython minor and a separately identified `next` prerelease row. It does not rename or expand protected quick, full, or release-cohort lanes. The matrix records interpreter, stability phase, operating system, architecture, installation mode, dependency result, and test verdict.
 
@@ -89,7 +90,8 @@ This is the smallest policy that supports one evolving codebase while keeping in
 - Source and binary support can temporarily differ, but the difference is explicit. A dependency without a native wheel may delay binary support or release promotion instead of being silently skipped.
 - CI consumes more runner time and may require source builds, platform-specific workers, or dependency-owner intervention.
 - Stable classifiers may lag the open installation floor until final-release evidence is complete.
-- The release-cohort builder remains reproducible, while compatibility jobs provision interpreters independently of `.python-version`.
+- The release-cohort builder remains reproducible, while compatibility jobs provision interpreters independently of the builder pin.
+- Development environments, ordinary CI jobs and hosted images accept any patch of the declared minor; only the release build requires the exact builder patch, and moving it is a one-line change to its own file.
 - Future annotations remain a deliberate compatibility contract. A later Python semantic change may require a focused migration and ADR amendment.
 - Alternative Python implementations and unexecuted platform rows remain outside the claim.
 - When CPython publishes a final release, the current `next` row must be promoted, its evidence reviewed, and a new prerelease canary enrolled.

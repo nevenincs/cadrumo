@@ -27,7 +27,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 from .contract import CONTRACT_VERSION
 
@@ -166,11 +166,13 @@ def read(repo_root: Path) -> dict[str, str]:
         return {}
     if not isinstance(payload, dict):
         return {}
+    payload = cast("dict[str, object]", payload)
     if payload.get("contract_version") != CONTRACT_VERSION:
         return {}
     phases = payload.get("phases")
     if not isinstance(phases, dict):
         return {}
+    phases = cast("dict[str, object]", phases)
     return {str(key): str(value) for key, value in phases.items()}
 
 
@@ -217,7 +219,13 @@ def is_current(repo_root: Path, phase: Phase, recorded: dict[str, str]) -> bool:
     """
     if recorded.get(phase.name) != phase_digest(repo_root, phase):
         return False
-    return not missing_artifacts(repo_root, phase)
+    if missing_artifacts(repo_root, phase):
+        return False
+    if phase.name == "python":
+        from dev.env.environment_state import environment_is_current
+
+        return environment_is_current(repo_root)
+    return True
 
 
 def staleness(repo_root: Path, phases: Iterable[Phase]) -> list[tuple[str, str]]:
@@ -243,4 +251,9 @@ def staleness(repo_root: Path, phases: Iterable[Phase]) -> list[tuple[str, str]]
             unstamped = phase.name not in recorded
             why = "no stamp" if unstamped else "inputs changed since the last run"
             reasons.append((phase.name, why))
+        elif phase.name == "python":
+            from dev.env.environment_state import environment_is_current
+
+            if not environment_is_current(repo_root):
+                reasons.append((phase.name, "Python environment does not match the locked dependencies"))
     return reasons

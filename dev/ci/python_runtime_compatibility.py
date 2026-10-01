@@ -58,7 +58,8 @@ _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)
 _OBSERVED_RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(
     r"^3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?(?:[._-]?(?:a|b|rc|dev)[0-9]+)?$"
 )
-_DEFAULT_BUILDER_PIN: Final[Path] = REPO_ROOT / ".python-version"
+_BUILDER_PIN_PATH: Final[Path] = Path("dev") / "packaging" / "release-python-version"
+_DEFAULT_BUILDER_PIN: Final[Path] = REPO_ROOT / _BUILDER_PIN_PATH
 _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bno solution found\b"),
     re.compile(r"\bno matching distribution\b"),
@@ -277,16 +278,18 @@ def _builder_pin(repo_root: Path) -> str:
     """Return the exact release-builder interpreter identity, if declared."""
     try:
         value = (
-            (_DEFAULT_BUILDER_PIN if repo_root == REPO_ROOT else repo_root / ".python-version")
+            (_DEFAULT_BUILDER_PIN if repo_root == REPO_ROOT else repo_root / _BUILDER_PIN_PATH)
             .read_text(
                 encoding=_UTF_8,
             )
             .strip()
         )
     except OSError as exc:
-        raise CompatibilityProbeError(".python-version is unavailable", category="builder-identity-missing") from exc
+        raise CompatibilityProbeError(
+            f"{_BUILDER_PIN_PATH.as_posix()} is unavailable", category="builder-identity-missing"
+        ) from exc
     if not value:
-        raise CompatibilityProbeError(".python-version is empty", category="builder-identity-missing")
+        raise CompatibilityProbeError(f"{_BUILDER_PIN_PATH.as_posix()} is empty", category="builder-identity-missing")
     return value
 
 
