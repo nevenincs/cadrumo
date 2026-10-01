@@ -118,6 +118,8 @@ _LEAD: Final[int] = 3
 #: The widest value a column makes room for: the widest money figure, ``−99.999.999,99 €``, is 16 cells.
 _VALUE_CAP: Final[int] = 17
 _DETAIL_WIDTH: Final[int] = 32
+FOLLOWING_MIN_VIEW: Final[int] = 6
+"""The fewest lines the list must show before it gives any of them to the rows after the cursor's field."""
 _WIDEST: Final[int] = 150
 #: The label keeps at least this much room before a value gives up any of its own.
 _LABEL_FLOOR: Final[int] = 8
@@ -716,9 +718,6 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     class SourceRequested(_AddressMessage):
         """The filer asked where the value under the cursor comes from."""
 
-    class ScrolledDownToCursor(Message):
-        """The list has scrolled down to bring the cursor's field into view, leaving it on the last line."""
-
     def __init__(
         self,
         items: tuple[CasillaListItem, ...] = (),
@@ -733,6 +732,8 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         self._language = language
         self._density: Density = density
         self._cursor: AddressKey | None = None
+        #: Rows after the cursor's field kept in view when the list scrolls down to it.
+        self._following = 0
         #: The grid column the cursor keeps while it moves up and down through a table.
         self._column: int | None = None
         self._starts: list[int] = []
@@ -1301,18 +1302,22 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         bottom = top + self._heights[owner]
         view_top = int(self.scroll_offset.y)
         view_height = max(self.scrollable_content_region.height, 1)
+        following = self._following if view_height >= FOLLOWING_MIN_VIEW else 0
         if top < view_top:
             self.scroll_to(y=max(top - 1, 0), animate=False)
-        elif bottom > view_top + view_height:
-            # Said once the scroll has landed, so whoever follows it reads where the list now stands.
-            self.scroll_to(
-                y=bottom - view_height,
-                animate=False,
-                on_complete=self._say_scrolled_down,
-            )
+        elif bottom + following > view_top + view_height:
+            self.scroll_to(y=bottom + following - view_height, animate=False)
 
-    def _say_scrolled_down(self) -> None:
-        self.post_message(self.ScrolledDownToCursor())
+    def keep_following(self, lines: int) -> None:
+        """Keep ``lines`` rows after the cursor's field in view whenever the list scrolls down to it, or ``0`` for none.
+
+        The list keeps them itself, every time it brings the field into view,
+        so no resize or refill can leave the field on the last line again; it
+        gives them only while it shows at least :data:`FOLLOWING_MIN_VIEW` lines,
+        so the field itself always stays in view.
+        """
+        self._following = max(lines, 0)
+        self._scroll_to_cursor()
 
     def _step(self, start: int, delta: int) -> int | None:
         index = start + delta
@@ -1471,6 +1476,7 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
 
 
 __all__ = [
+    "FOLLOWING_MIN_VIEW",
     "AddressKey",
     "CasillaList",
     "CasillaListEntry",

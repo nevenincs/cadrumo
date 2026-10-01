@@ -25,6 +25,7 @@ from ......application.modelo.source_policy import SourceSurface
 from ......application.modelo.work_form_models import (
     ModeloFormGridBlock,
     ModeloFormGridCell,
+    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
 )
@@ -33,6 +34,11 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind
+from ......domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1
 from ..casilla_list import CasillaList
@@ -42,7 +48,7 @@ from ..progress import fit_next_line
 from ..screen import ModeloWorkbenchScreen
 from ..sources import OpenSourceSurface, surface_target
 from ..wording import wrap_words
-from .declaration_states import recorded_as_filed
+from .declaration_states import recorded_as_filed, with_findings
 from .editor_panel import open_panel
 from .sectioned_form import sectioned_form
 from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
@@ -356,3 +362,37 @@ async def test_the_findings_list_marks_its_selection_with_a_quiet_surface_not_th
     assert style.bgcolor is not None
     assert style.bgcolor.triplet is not None
     assert style.bgcolor.triplet.hex.lower() == theme["panel"].lower()
+
+
+def _out_of_date_and_blocked() -> ModeloWorkForm:
+    """A calculated declaration whose records changed since, with something that blocks filing."""
+    stale = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.ledger_snapshot_drift",
+        legal_refs=("ley-58-2003:art-119",),
+    )
+    form = with_findings(synthetic_form(calculated=True, needs_input=False), blocking=(None,))
+    return form.model_copy(update={"issues": (*form.issues, ModeloFormIssue(finding=stale))})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 120])
+async def test_the_footer_always_keeps_the_key_the_next_step_names_and_issues_while_something_blocks(
+    width: int,
+) -> None:
+    with override_settings(cadrumo_output_language="en"):
+        screen = ModeloWorkbenchScreen(FakeReader(form=_out_of_date_and_blocked()), actions=FakeActions())
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(width, 30)) as pilot:
+            await _settle(pilot)
+            next_line = str(screen.query_one("#wb-next", Static).render())
+            keys, palette = _footer(screen)
+            app.exit(None)
+
+    words = [text for text, _, _ in keys]
+    assert next_line.endswith("[c]")
+    assert "c Calculate" in words, f"the key the next step names is in the footer at {width} columns: {words}"
+    assert "i Issues" in words, f"the issues key shows while something blocks, at {width} columns: {words}"
+    edge = width if palette is None else palette[0]
+    assert all(right <= edge for _, _, right in keys)

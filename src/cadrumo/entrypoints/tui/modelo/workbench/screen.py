@@ -106,6 +106,7 @@ from .editor import (
 )
 from .export import WorkbenchExportScreen
 from .header import (
+    ChipLevel,
     DeadlineTone,
     ResultLine,
     StatusLine,
@@ -184,9 +185,7 @@ _SHORT: Final[int] = 30
 _DOCKED_FROM: Final[int] = _SHORT
 """From this many rows the box panel docks in place of the help band; below it, it opens as the centred dialog."""
 _FOLLOWING_LINES: Final[int] = 2
-"""Lines of the list kept in view after the box being edited, when the list scrolls to bring that box in."""
-_FOLLOWING_MIN_VIEW: Final[int] = 6
-"""The fewest lines the list must show before it gives any of them to the rows after the box being edited."""
+"""Lines of the list kept in view after the box being edited, so its neighbours show beside the docked panel."""
 _GUTTERS: Final[int] = 2 * int(CADRUMO_CSS_TOKENS["cadrumo-gutter"])
 _NEXT_GAP: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
 _FOOTER_KEY_GAP: Final[int] = 1
@@ -702,16 +701,42 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             )
         )
         hidden = _CHANGE_KEYS if self.recorded else frozenset()
+        pinned = self._pinned_keys()
         shown: set[str] = set()
-        for key in _FOOTER_PRIORITY:
+        for key in (*pinned, *(key for key in _FOOTER_PRIORITY if key not in pinned)):
             if key in hidden:
                 continue
             cost = cell_len(self._key_label(key, descriptions[key])) + _FOOTER_KEY_GAP
             if cost > budget:
+                if key in pinned:
+                    continue
                 break
             shown.add(key)
             budget -= cost
         return frozenset(shown)
+
+    def _pinned_keys(self) -> tuple[str, ...]:
+        """The footer keys kept before any other: the next-action line's key and F8, and ``i`` while ▲ or ! shows.
+
+        The filer is told to press a key, or that something blocks or is
+        missing, so the key that does it, and F8 that runs the next step from
+        anywhere, are never the ones the footer drops.
+        """
+        load = self._load
+        if load is None or self.recorded:
+            return ()
+        progress = self._progress(load)
+        named = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
+        pinned = [named.lower() if named.startswith("F") and named[1:].isdigit() else named] if named else []
+        pinned.append("f8")
+        urgent = {ChipLevel.BLOCKS, ChipLevel.MISSING}
+        if any(chip.level in urgent for chip in attention_chips(load.form, recorded=False)):
+            pinned.append(_FINDINGS_KEY)
+        kept: list[str] = []
+        for key in pinned:
+            if key in _FOOTER_PRIORITY and key not in kept:
+                kept.append(key)
+        return tuple(kept)
 
     def _list_locale_keys(self) -> Mapping[str, str]:
         """What the list's keys say: Enter opens a box to read once the declaration is recorded as filed."""
@@ -943,6 +968,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         next_widget.update(line)
         next_widget.set_class(progress.next_action is NextAction.CONFIRM, "-confirm")
         next_widget.set_class(progress.next_action is NextAction.RESOLVE, "-resolve")
+        # The footer keeps the key the line now names.
+        self._describe_keys()
 
     def _render_navigator(self) -> None:
         form = self.form
@@ -1553,6 +1580,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         previous = self._docked
         self._docked = (entry, panel)
         self.add_class("-editing")
+        # The list keeps the rows after the box in view itself, whenever it brings the box in.
+        self.query_one(CasillaList).keep_following(_FOLLOWING_LINES)
         removed = None if previous is None else previous[1].remove()
         self.run_worker(self._mount_docked(panel, removed), group="workbench-dock")
 
@@ -1565,22 +1594,6 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         # The list gives the panel its lines on the next layout, scrolling to keep the box in view.
         await self.mount(panel, before=self.query_one("#wb-help"))
-
-    def on_casilla_list_scrolled_down_to_cursor(self, message: CasillaList.ScrolledDownToCursor) -> None:
-        """Show the rows after the box being edited once the list has scrolled down to bring it in.
-
-        Scrolling down to a box leaves it on the list's last line; the rows
-        after it are the neighbours the filer reads next, so a few lines more
-        are shown while the list is tall enough to keep the box itself in view.
-        The list says so only after its own scroll has landed, so this always
-        follows it, however the panel's mounting and the list's scroll interleave.
-        """
-        message.stop()
-        casilla_list = self.query_one(CasillaList)
-        if self._docked is None:
-            return
-        if casilla_list.scrollable_content_region.height >= _FOLLOWING_MIN_VIEW:
-            casilla_list.scroll_relative(y=_FOLLOWING_LINES, animate=False)
 
     def _working_in_dock(self) -> bool:
         """Whether the filer's cursor is in the docked box panel."""
@@ -1597,6 +1610,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         docked[1].remove()
         self.remove_class("-editing")
         casilla_list = self.query_one(CasillaList)
+        casilla_list.keep_following(0)
         if self._pages and not self._legend_level:
             self._render_help(casilla_list.highlighted)
         if refocus:
