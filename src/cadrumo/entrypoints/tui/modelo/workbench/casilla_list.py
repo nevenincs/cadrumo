@@ -1294,8 +1294,11 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
             self.scroll_to(
                 y=bottom - view_height,
                 animate=False,
-                on_complete=lambda: self.post_message(self.ScrolledDownToCursor()),
+                on_complete=self._say_scrolled_down,
             )
+
+    def _say_scrolled_down(self) -> None:
+        self.post_message(self.ScrolledDownToCursor())
 
     def _step(self, start: int, delta: int) -> int | None:
         index = start + delta
