@@ -658,7 +658,9 @@ def test_a_calculated_rate_box_reads_its_rows_grounded_rate_and_one_with_no_grou
 
     assert grounded.field.grounded_rate is not None, "the 2 % row's base is grounded on one rate"
     assert grounded.field.origin is ModeloFormOrigin.CALCULATED
-    assert grounded_text == "2 %", "the form prints the row's rate, never a 0 % worked out of an empty base"
+    assert grounded_text == "2\N{NO-BREAK SPACE}%", (
+        "the form prints the row's rate, never a 0 % worked out of an empty base"
+    )
     assert ungrounded.field.grounded_rate is None and ungrounded.row_base_empty is True
     assert ungrounded_text == "·"
     assert ungrounded_note == tr("tui.modelo.workbench.rate.not_grounded", locale="en")
