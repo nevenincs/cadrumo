@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1881ffe822a4ed73df49ddc1ae22ea0ccde5796c88944751b67a7fde0fcac94'
+body_hash: 'sha256:8cdd00d52adc1ada17a3157a9b0639420ae7cd4f6f291743749118a04f838e1b'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -388,6 +388,17 @@ other [27] summand at zero, against the record design's [27] sum
 Open for the registry's owner, on main as well: route the autoconsumo base and cuota through the
 printed rate boxes the instructions assign, grounded in AEAT text the corpus does not yet hold,
 and add a check that [27] equals its printed summands.
+
+### filed-elsewhere-overdue | high | a declaration filed with AEAT outside Cadrumo can still read as overdue
+
+A Sede observation clears a period only when its justificante reconciles into the filing chain
+(`src/cadrumo/application/live/filed_observation_persistence.py:268`). Otherwise the calendar
+status is date-only (`src/cadrumo/application/overview/calendar.py:925`) and the evidence adds only
+a badge (`src/cadrumo/application/overview/_calendar_evidence_sources.py:257`), so a period AEAT
+has accepted reads Overdue when no justificante matched, the chain identity differs, the
+reconciliation is unverifiable, or the row is not an active registration. The blocking findings
+send filers to file another way, which lands in exactly this case. Planned as a step of the
+declarations phase.
 
 ## Recommendations
 

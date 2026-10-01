@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:f0c141847f50855bfeb4dfd9f1949136ceceb1e5313faf80cebf836832430e21'
+body_hash: 'sha256:963c9195ad6fa5438d3a0cad7bd444deef4ddbe6b19c22390ae6e5b82716a5f9'
 ---
 
 # `modelo-editor-workbench` plan
@@ -133,6 +133,24 @@ Close what the combined render and the design verification found: nothing unconf
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
 - [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
+
+### Phase `P08` - declarations list
+
+Replace the declarations screens with one list grouped by what the filer must do, built on a declaration summary that never builds a form per row, and stop a declaration filed with AEAT outside Cadrumo from reading as overdue.
+
+- [ ] `P08.S53` - Project one declaration summary per row with state, result, blocking count, verification and deadline, isolating each row's failure; `src/cadrumo/application/overview`.
+- [ ] `P08.S54` - Show a period filed with AEAT but not linked to a declaration here as filed, not overdue, with a way to link it; `src/cadrumo/application/overview/calendar.py`.
+- [ ] `P08.S55` - Draw the grouped declarations list with the two-step new-declaration picker, surfacing advised and undetermined modelos; `src/cadrumo/entrypoints/tui/declarations`.
+- [ ] `P08.S56` - Render the declarations list in the review previews and close the phase with a review; `dev/tui`.
+
+### Phase `P09` - documentation and naming
+
+Bring the user documentation, the workbench guide and Hungarian modelo names in line with the glossary, and keep technical identifiers out of filer-facing exports and summaries.
+
+- [ ] `P09.S57` - Land the workbench guide and its translations against the shipped behaviour; `docs/how-to/fill-in-and-file-in-the-workbench.md`.
+- [ ] `P09.S58` - Apply the reconciled documentation rewrite and its translations, and correct CLI output strings that still print internal words; `docs`.
+- [ ] `P09.S59` - Name every modelo by its proper name in Hungarian without guessing suffixes; `src/cadrumo/locales/hu`.
+- [ ] `P09.S60` - Keep hashes and identifiers behind technical details in exports, summaries and pickers, and pass period words instead of tokens; `src/cadrumo/entrypoints/tui`.
 
 ## Parallelization
 
