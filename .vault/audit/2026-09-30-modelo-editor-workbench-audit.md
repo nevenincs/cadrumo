@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:d479df3c9a93842007ffc5769076615282aff80cb9eff2732f8427ae69dc848b'
+body_hash: 'sha256:73aee57c12dd7ccb0d41b13f9085189fa8df899ddd002185939874d6417ec756'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -353,6 +353,18 @@ Checkpoints 421f48dd30, 4a9190c8fc, 19eecd8355 and eaac53fd5b and the merges of 
 lanes' uncommitted work into history, one of them while a file was mid-edit. Nothing was lost;
 lanes verify their files against HEAD before each commit and report which commit holds their
 work.
+
+### m303-result-route | high | Modelo 303's result does not run through its printed amount boxes
+
+The chain shown in the editor (2588ffa2ac) follows the registry's formula graph, and on 303 the
+printed VAT amounts [03], [06], [09] and the total [27] reach no result: [46] is computed from
+separate unprinted figures, while the official design sums [27] from the amounts and [46] from
+[27] less [45]. The editor states that these boxes do not change the result, which is true of
+the engine and not of the form. If a printed amount box can be overridden, the exported file
+could carry lines that do not add up to its total and result; whether the export's own sum checks
+refuse that is being verified. Until settled, the editor must not tell a filer such a box has no
+effect. Open for the registry's owner: route 303's result through its printed boxes, or ground
+why it does not.
 
 ## Recommendations
 
