@@ -1,9 +1,11 @@
 # Worktree initialization
 
 `just init` completely provisions a new worktree. It runs the minimal checkout
-setup, installs the default Vaultspec resources, provisions Vaultspec RAG and
-its managed external dependencies, then compiles and publishes the runtime
-authority under `.authority/`.
+setup, installs the default Vaultspec resources, provisions and verifies
+Playwright's bundled Chromium (and the configured browser channel when an
+operator selects another one), provisions Vaultspec RAG and its managed external
+dependencies, compiles and publishes the runtime authority under `.authority/`,
+then reports the resulting configuration.
 
 `just setup` remains the minimal convergence command for callers that need only
 the locked Python environment, repository tooling, and local configuration.
@@ -13,13 +15,13 @@ The recipes:
 
 | Recipe                        | What it does                                                  |
 | ----------------------------- | ------------------------------------------------------------- |
-| `just init`                   | Complete new-worktree provisioning, including RAG and authority. |
-| `just setup`                  | Everything, in dependency order.                              |
+| `just init`                   | Complete provisioning, including browsers, RAG and authority. |
+| `just setup`                  | Locked Python, repository tooling and local configuration.     |
 | `just setup-python`           | The Python environment and its locked dependencies.           |
 | `just setup-repository-tools` | Framework enrollment and pinned repository tooling; no Git hooks. |
 | `just setup-check`            | Reports whether the worktree is initialized. Mutates nothing. |
 | `just setup-workstation-tools` | Optional workstation CLI provisioning.                       |
-| `just setup-browser`          | Optional browser-channel provisioning.                        |
+| `just setup-browser`          | Check browsers and install missing binaries or Linux libraries. |
 
 ## The contract
 
@@ -28,7 +30,12 @@ a digest over its declared inputs — lockfiles, version pins, manifests, and
 this package's own source — matches the one recorded in `.venv/.init-stamp.json`
 *and* every artifact the phase promised is still present. Both halves matter:
 the digest catches a changed lockfile, the artifact check catches a `.venv`
-somebody deleted. A no-op run does not invoke `uv`, `npm`, or anything else.
+somebody deleted. The Python phase also asks `uv sync --check` whether installed
+packages still match the lockfile; missing or extra packages trigger a sync.
+Browser provisioning uses real headless launches, reuses working installations,
+and repairs missing binaries or Linux libraries. System installations require
+root or passwordless sudo on Linux. Authority publication reuses a generation
+that still matches the source data and supported artifact format.
 
 **Fail-fast, and complete in what it reports.** Unlike the fleet's `-all`
 aggregates, which run every step because they chain independent inspectors,
@@ -74,9 +81,9 @@ is retained only for explicit `just check-hooks` replay over all files. Fast
 mechanical repair is an explicit, caller-owned-path action (`just fix-code
 path/to/file.py`) outside commit time.
 
-**Network-heavy optional provisioning is out of scope.** Playwright browser
-downloads, RAG model and Qdrant provisioning, and `cargo install` of dev gates
-stay behind their own named recipes. `setup` restores what the lockfiles pin.
+**Minimal setup keeps external provisioning separate.** `setup` restores what
+the lockfiles pin. Full `init` additionally provisions browsers and the default
+RAG resources. `setup-browser` can repair browser resources independently.
 
 ## Layout
 

@@ -44,20 +44,26 @@ default:
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
 # Complete new-worktree provisioning. The first command owns the locked Python
-# sync and default Vaultspec enrollment. RAG then provisions its managed models,
-# Qdrant binary, and MCP integration. Authority publication runs last so the
+# sync and default Vaultspec enrollment. Browser provisioning reuses installed
+# channels or installs missing resources. RAG then provisions its managed models,
+# Qdrant binary, and MCP integration. Authority publication runs so the
 # installed application consumes a generation compiled from the final tree.
-[doc('Fully initialize a new worktree: Python, Vaultspec, RAG, and runtime authority.')]
+# The configuration report comes last so it describes what was provisioned; it
+# is advisory, never a reason to call provisioning failed.
+[doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
 init:
     uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
+    just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
-    uv run --no-sync python -m dev.registry.pipeline publish-authority
+    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
+    -uv run --no-sync aeat config check
 
 # Canonical checkout setup. This is the minimal convergence facade: it creates
 # the pinned Python environment, installs repository tooling, and materializes
 # local environment configuration. Workstation tools and browser binaries are
-# optional capabilities and therefore have separate commands below.
+# optional to the minimal setup; full init provisions browsers as well.
+# `just doctor-product` reports the resulting configuration.
 [doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
@@ -118,35 +124,29 @@ doctor-python:
 doctor-python:
     uv pip check --python .venv/bin/python
 
-# Provision both browser channels the codebase needs (the post-install step
-# `uv sync` does not perform). Bundled Chromium: some tests launch it directly
-# regardless of the configured channel. The `chrome` channel: AEAT browser
-# automation is pinned to `channel: "chrome"` by ADR 2026-04-12-playwright-anti-
-# bot-adr (anti-bot fingerprint reasons; bundled Chromium is the explicit
-# fallback only if system Chrome breaks). Playwright does NOT download a private
-# copy of Chrome for the `chrome` channel — it installs/detects the SYSTEM
-# Google Chrome. On Linux this shells out to the OS package manager and
-# typically needs root/apt access; a non-root Linux box may need
-# `google-chrome-stable` pre-installed by an administrator, or rerun this
-# recipe with elevation. Verify the result with `just doctor-browser`.
+# Provision Playwright's bundled Chromium (the post-install step `uv sync` does
+# not perform): it is the default AEAT channel and the browser tests launch it
+# directly. When the missing piece is a Linux shared library rather than the
+# binary, `playwright install-deps chromium` adds it, which needs root or
+# passwordless sudo. An operator who sets `CADRUMO_BROWSER_CHANNEL` to a system
+# channel such as `chrome` gets that channel provisioned too; Playwright then
+# installs the SYSTEM browser through the OS package manager. Verify the result
+# with `just doctor-browser`.
 #
-# The `chrome` install runs with `CI` removed from its environment. Under `CI`
-# Playwright reinstalls the channel even when Chrome is already present, which
-# needs root; a CI runner whose host provisions `google-chrome-stable` cannot
-# escalate, so the step failed there on every run. Without `CI` an installed
-# Chrome is left alone and a missing one is installed exactly as before.
+# Installs run with `CI` removed from their environment. Under `CI` Playwright
+# reinstalls a system channel even when it is already present, which needs root
+# that a CI runner cannot escalate to.
 
-[doc('Provision optional Playwright Chromium and system Chrome browser channels.')]
+[doc('Check Playwright browser channels and install missing binaries or Linux libraries.')]
 [group('setup')]
 setup-browser:
-    uv run --no-sync playwright install chromium
-    uv run --no-sync python -c "import os, subprocess, sys; env = {k: v for k, v in os.environ.items() if k != 'CI'}; sys.exit(subprocess.call([sys.executable, '-m', 'playwright', 'install', 'chrome'], env=env))"
+    uv run --no-sync python -m dev.env.playwright_setup
 
 # Verify the local environment is correctly provisioned with the CONFIGURED
-# Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
-# and its dependencies, per ADR 2026-04-12-playwright-anti-bot-adr. Performs a
-# real headless launch-and-close of that channel (never hardcodes "chrome" —
-# reads the live setting) and prints the exact remediation command on failure.
+# Playwright browser channel (per `cadrumo_browser_channel`, default bundled
+# `chromium`) and its dependencies. Performs a real headless launch-and-close
+# of that channel (reads the live setting rather than hardcoding a channel) and
+# prints the exact remediation command on failure.
 [doc('Probe the configured browser channel with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
