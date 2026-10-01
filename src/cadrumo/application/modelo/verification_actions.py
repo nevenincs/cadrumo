@@ -2111,6 +2111,12 @@ def _iva_wallet_error_verification_finding(
     )
 
 
+_BLOCKED_VERDICT_KINDS: Final[frozenset[ModeloVerificationFindingKind]] = frozenset(
+    {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.STALE_CALCULATION}
+)
+"""Finding kinds that make a check blocked rather than incomplete, whatever else it found missing."""
+
+
 def _classify_verification_outcome(
     *,
     findings: list[ModeloVerificationFinding],
@@ -2120,15 +2126,17 @@ def _classify_verification_outcome(
 
     With no BLOCKING-severity finding, the report is COMPLETE and the
     verified-complete transition is granted, even if WARNING ADVISORY findings
-    are present. With at least one BLOCKING_RULE finding, the report is BLOCKED.
-    With BLOCKING findings that are exclusively MISSING_REQUIRED_CASILLA, the
-    report is INCOMPLETE so the operator sees that completing the inputs unblocks
-    the transition.
+    are present. With at least one BLOCKING_RULE finding, or a calculation the
+    records changed under (STALE_CALCULATION), the report is BLOCKED: completing
+    inputs cannot release a calculation that must be run again. With BLOCKING
+    findings that are exclusively MISSING_REQUIRED_CASILLA, the report is
+    INCOMPLETE so the operator sees that completing the inputs unblocks the
+    transition.
     """
     has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
     if not has_blocking:
         return VerificationCompletenessStatus.COMPLETE, True
-    has_blocking_rule = any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
+    has_blocking_rule = any(f.kind in _BLOCKED_VERDICT_KINDS for f in findings)
     if missing_required and not has_blocking_rule:
         return VerificationCompletenessStatus.INCOMPLETE, False
     return VerificationCompletenessStatus.BLOCKED, False
