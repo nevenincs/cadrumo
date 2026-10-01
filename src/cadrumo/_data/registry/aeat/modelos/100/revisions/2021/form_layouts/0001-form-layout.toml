@@ -10,6 +10,7 @@ generator_version = 1
 source_state_digest = "e9550869011e3c381b5d3989884e6f26657dd80d62f5550261f507b8bdbe7ebc"
 design_sources = [
     { source_ref = "aeat-dr-100-2021-dictionary", sha256 = "2aaf5c7fe7df35458dc50c0b9fe1925853b2778a26f493baee524a926ae6d817" },
+    { source_ref = "aeat-dr-100-2021-input-dictionary", sha256 = "aa0370162f5db5088e6cc8b3be839aea6efac82467af80c2c29c2c142dbd98a2" },
 ]
 placements = [
     { casilla_id = "0001", kind = "on_form", box_number = "0001" },
@@ -1757,7 +1758,8 @@ heading_key = "modelo.schema.100.form.page.datoseconomicos-tomadatosampliada.hea
 
 [[revisions.2021.form_layouts.pages.sections]]
 id = "rdtotrabajo"
-heading_key = "modelo.schema.100.form.section.rdtotrabajo.heading"
+heading_key = "modelo.schema.100.form.section.rendimientos-de-trabajo.heading"
+official_heading = "Rendimientos de trabajo"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0002" },
     { kind = "field", id = "field-2", casilla_id = "0003" },
@@ -2190,7 +2192,8 @@ blocks = [
 
 [[revisions.2021.form_layouts.pages.sections]]
 id = "gpfondos"
-heading_key = "modelo.schema.100.form.section.gpfondos.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-por-la-transmision-d-3735fe.heading"
+official_heading = "Ganancias y pérdidas por la transmisión de sociedades y fondos de inversión y de SOCIMIS"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0311" },
     { kind = "field", id = "field-2", casilla_id = "0312" },
@@ -2208,7 +2211,8 @@ blocks = [
 
 [[revisions.2021.form_layouts.pages.sections]]
 id = "gpacciones"
-heading_key = "modelo.schema.100.form.section.gpacciones.heading"
+heading_key = "modelo.schema.100.form.section.transmision-de-acciones-negociadas.heading"
+official_heading = "Transmisión de acciones negociadas"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0327" },
     { kind = "field", id = "field-2", casilla_id = "0328" },
@@ -2226,7 +2230,8 @@ blocks = [
 
 [[revisions.2021.form_layouts.pages.sections]]
 id = "gpderechos"
-heading_key = "modelo.schema.100.form.section.gpderechos.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-patrimoniales-deriva-73c62b.heading"
+official_heading = "Ganancias y pérdidas patrimoniales derivadas de la transmisión de derechos de suscripción"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0342" },
     { kind = "field", id = "field-2", casilla_id = "0343" },
@@ -2304,7 +2309,8 @@ blocks = [
 
 [[revisions.2021.form_layouts.pages.sections]]
 id = "gcambioresidenciaext"
-heading_key = "modelo.schema.100.form.section.gcambioresidenciaext.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-patrimoniales-por-cambio-de-res-0c81c7.heading"
+official_heading = "Ganancias patrimoniales por cambio de residencia fuera del territorio español (artículo 95 bis de la Ley del Impuesto)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0401" },
     { kind = "field", id = "field-2", casilla_id = "0403" },

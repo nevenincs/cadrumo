@@ -10,6 +10,7 @@ generator_version = 1
 source_state_digest = "4dce2915707f72878f0f3b4fc6410c003e52c91ddb418bc0cac231c434f00964"
 design_sources = [
     { source_ref = "aeat-dr-100-2022-dictionary", sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc" },
+    { source_ref = "aeat-dr-100-2022-input-dictionary", sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36" },
 ]
 placements = [
     { casilla_id = "0001", kind = "on_form", box_number = "0001" },
@@ -1948,7 +1949,8 @@ heading_key = "modelo.schema.100.form.page.datoseconomicos-tomadatosampliada.hea
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "rdtotrabajo"
-heading_key = "modelo.schema.100.form.section.rdtotrabajo.heading"
+heading_key = "modelo.schema.100.form.section.rendimientos-de-trabajo.heading"
+official_heading = "Rendimientos de trabajo"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0002" },
     { kind = "field", id = "field-2", casilla_id = "0003" },
@@ -2386,7 +2388,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gpfondos"
-heading_key = "modelo.schema.100.form.section.gpfondos.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-por-la-transmision-d-3735fe.heading"
+official_heading = "Ganancias y pérdidas por la transmisión de sociedades y fondos de inversión y de SOCIMIS"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0311" },
     { kind = "field", id = "field-2", casilla_id = "0312" },
@@ -2404,7 +2407,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gpacciones"
-heading_key = "modelo.schema.100.form.section.gpacciones.heading"
+heading_key = "modelo.schema.100.form.section.transmision-de-acciones-negociadas.heading"
+official_heading = "Transmisión de acciones negociadas"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0327" },
     { kind = "field", id = "field-2", casilla_id = "0328" },
@@ -2422,7 +2426,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gpderechos"
-heading_key = "modelo.schema.100.form.section.gpderechos.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-patrimoniales-deriva-73c62b.heading"
+official_heading = "Ganancias y pérdidas patrimoniales derivadas de la transmisión de derechos de suscripción"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0342" },
     { kind = "field", id = "field-2", casilla_id = "0343" },
@@ -2440,7 +2445,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gpotroscriptomonedas"
-heading_key = "modelo.schema.100.form.section.gpotroscriptomonedas.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-patrimoniales-deriva-0655e2.heading"
+official_heading = "Ganancias y pérdidas patrimoniales derivadas de la transmisión o permuta de monedas virtuales"
 blocks = [
     { kind = "field", id = "field", casilla_id = "1801" },
     { kind = "field", id = "field-2", casilla_id = "1802" },
@@ -2546,7 +2552,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gcambioresidenciaext"
-heading_key = "modelo.schema.100.form.section.gcambioresidenciaext.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-patrimoniales-por-cambio-de-res-0c81c7.heading"
+official_heading = "Ganancias patrimoniales por cambio de residencia fuera del territorio español (artículo 95 bis de la Ley del Impuesto)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "0401" },
     { kind = "field", id = "field-2", casilla_id = "0403" },
@@ -2658,7 +2665,8 @@ blocks = [
 
 [[revisions.2022.form_layouts.pages.sections]]
 id = "gpotroscriptomonedas-2"
-heading_key = "modelo.schema.100.form.section.gpotroscriptomonedas-2.heading"
+heading_key = "modelo.schema.100.form.section.ganancias-y-perdidas-patrimoniales-deriva-0655e2.heading"
+official_heading = "Ganancias y pérdidas patrimoniales derivadas de la transmisión o permuta de monedas virtuales"
 blocks = [
     { kind = "field", id = "field", casilla_id = "1858" },
     { kind = "field", id = "field-2", casilla_id = "1859" },

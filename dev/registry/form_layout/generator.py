@@ -22,6 +22,10 @@ are the contiguous runs of rows sharing a heading path; grids are rows whose
 columns match the shared column vocabulary or repeat on the page. Manual-input
 bindings no casilla owns become binding inputs; row-set sources and repeating
 export records become repeating groups, never flattened rows.
+
+Where a design names a part in no form the ladder can read, a reviewer's quote
+of the official words (``official_headings.toml``) heads it, after the quote is
+verified on the cited line of a source the revision cites.
 """
 
 from __future__ import annotations
@@ -81,6 +85,7 @@ from ..record_design_labels import (
     record_design_sidecars,
 )
 from .column_vocabulary import SHARED_COLUMN_HEADING_KEY_PREFIX, SHARED_COLUMN_KEYS, shared_column_key
+from .official_headings import OfficialHeadingRefusedError, QuotedHeading, read_official_headings, verify_quote
 from .official_text import clean_official_text, description_box, description_path, node_slug
 
 __all__ = [
@@ -927,6 +932,96 @@ def _placements(
     return tuple(placements)
 
 
+def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, column: C, quote: QuotedHeading) -> C:
+    if column.official_heading is not None:
+        raise OfficialHeadingRefusedError(f"{quote.describe()}: the design already names this column")
+    key = shared_column_key(quote.text) or column.key
+    return column.model_copy(
+        update={"official_heading": quote.text, "heading_key": _column_heading_key(build.modelo_id, key)}
+    )
+
+
+def _quoted_block(build: _Build, block: FormBlockDefinition, quotes: dict[str, QuotedHeading]) -> FormBlockDefinition:
+    if isinstance(block, FormGridBlock):
+        grid = tuple(
+            _quoted_column(build, column, quotes.pop(column.key)) if column.key in quotes else column
+            for column in block.columns
+        )
+        return block.model_copy(update={"columns": grid})
+    if isinstance(block, FormRepeatingGroupBlock):
+        repeating = tuple(
+            _quoted_column(build, column, quotes.pop(column.key)) if column.key in quotes else column
+            for column in block.columns
+        )
+        return block.model_copy(update={"columns": repeating})
+    return block
+
+
+def _quoted_section(
+    build: _Build, section: FormSectionDefinition, quote: QuotedHeading | None, columns: dict[str, QuotedHeading]
+) -> FormSectionDefinition:
+    update: dict[str, object] = {"blocks": tuple(_quoted_block(build, block, columns) for block in section.blocks)}
+    if quote is not None:
+        if section.official_heading is not None:
+            raise OfficialHeadingRefusedError(f"{quote.describe()}: the design already names this section")
+        update["official_heading"] = quote.text
+        update["heading_key"] = _heading_key(build.modelo_id, "section", node_slug(quote.text))
+    return section.model_copy(update=update)
+
+
+def _quoted_pages(
+    build: _Build,
+    pages: Sequence[FormPageDefinition],
+    quotes: Sequence[QuotedHeading],
+    *,
+    sources: Mapping[str, SourceReference],
+    data_root: Path,
+) -> list[FormPageDefinition]:
+    """Head each quoted part with the reviewer's verified quote, and pin the sources quoted from.
+
+    A quote is refused when it is not grounded, when it names a part the layout
+    does not have, or when the design already names that part: the design's
+    own words always win, so a quote can only fill a gap.
+    """
+    if not quotes:
+        return list(pages)
+    cited = tuple(str(ref) for ref in build.revision.source_refs)
+    for quote in quotes:
+        pinned = verify_quote(quote, cited=cited, sources=sources, data_root=data_root)
+        if all(item.source_ref != pinned.source_ref for item in build.design_sources):
+            build.design_sources.append(pinned)
+    pending = {(quote.page, quote.section, quote.column): quote for quote in quotes}
+    if len(pending) != len(quotes):
+        raise OfficialHeadingRefusedError(f"{build.modelo_id} {build.revision.id}: a part is quoted twice")
+    out: list[FormPageDefinition] = []
+    for page in pages:
+        sections = []
+        for section in page.sections:
+            columns = {
+                column: quote
+                for (page_id, section_id, column), quote in pending.items()
+                if page_id == page.id and section_id == section.id and column is not None
+            }
+            for column in columns:
+                del pending[(page.id, section.id, column)]
+            heading = pending.pop((page.id, section.id, None), None)
+            sections.append(_quoted_section(build, section, heading, columns))
+            if columns:
+                unknown = ", ".join(sorted(columns))
+                raise OfficialHeadingRefusedError(f"{build.modelo_id} {build.revision.id}: no column {unknown}")
+        update: dict[str, object] = {"sections": tuple(sections)}
+        page_quote = pending.pop((page.id, None, None), None)
+        if page_quote is not None:
+            if page.official_heading is not None:
+                raise OfficialHeadingRefusedError(f"{page_quote.describe()}: the design already names this page")
+            update["official_heading"] = page_quote.text
+        out.append(page.model_copy(update=update))
+    if pending:
+        missing = ", ".join(quote.describe() for quote in pending.values())
+        raise OfficialHeadingRefusedError(f"quoted parts the layout does not have: {missing}")
+    return out
+
+
 def _seed_source(build: _Build) -> FormLayoutSeedSource:
     if build.used_dictionary:
         return FormLayoutSeedSource.XML_DICTIONARY
@@ -943,11 +1038,18 @@ def generate_revision_layout(
     *,
     sources: Mapping[str, SourceReference],
     data_root: Path,
+    headings: Sequence[QuotedHeading] | None = None,
 ) -> LayoutGeneration:
     """Generate one revision's layout through the seed ladder.
 
     A revision declaring no casillas has no form to lay out and returns no
-    layout with its reason, which coverage reports as undeclared.
+    layout with its reason, which coverage reports as undeclared. ``headings``
+    replaces the reviewer's recorded quotes for this revision; by default they
+    are read from ``official_headings.toml``.
+
+    Raises:
+        OfficialHeadingRefusedError: When a quoted heading is not grounded on
+            its cited line, or names a part the layout does not have.
     """
     if not revision.casillas:
         return LayoutGeneration(modelo_id, revision.id, None, failure="revision declares no casillas")
@@ -966,6 +1068,8 @@ def generate_revision_layout(
     build.binding_primary = _binding_primary(build)
     repeating = {record.id: record for record in records if record.repeat is not None}
     pages, section_of, shown, _placed_bindings = _build_pages(build, manual_bindings, repeating)
+    quotes = read_official_headings().for_revision(modelo_id, str(revision.id)) if headings is None else headings
+    pages = _quoted_pages(build, pages, quotes, sources=sources, data_root=data_root)
     layout = FormLayoutDefinition(
         id=GENERATED_LAYOUT_ID,
         revision_id=revision.id,

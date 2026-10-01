@@ -3700,6 +3700,30 @@ modelo:
       field:
         official_name: Modelo 100. A magánszemélyek jövedelemadójának (IRPF) bevallása.
         title: IRPF éves bevallás
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Vagyoni nyereségek a spanyol területen kívülre történő lakóhely-változás
+              miatt (a törvény 95 bis. cikke)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Virtuális pénznemek átruházásából vagy cseréjéből eredő vagyoni
+              nyereségek és veszteségek
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Jegyzési jogok átruházásából származó vagyoni nyereségek és veszteségek
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Befektetési társaságok és alapok, valamint SOCIMI-k átruházásából
+              eredő nyereségek és veszteségek
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Tőzsdén jegyzett alapok (ETF) befektetési jegyeinek és tőzsdén
+              jegyzett index SICAV-ok részvényeinek átruházásából eredő nyereségek
+              és veszteségek
+          rendimientos-de-trabajo:
+            heading: Munkaviszonyból származó jövedelem
+          transmision-de-acciones-negociadas:
+            heading: Tőzsdén jegyzett részvények átruházása
       revision:
         '2020':
           casilla:

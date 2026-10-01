@@ -3659,6 +3659,30 @@ modelo:
       field:
         official_name: Modelo 100. Personal Income Tax return.
         title: IRPF annual return
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: Real estate available to its owners, let or assigned to third
+              parties, or used in economic activities
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Capital gains on a change of residence outside Spanish territory
+              (article 95 bis of the Tax Law)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Capital gains and losses arising from the transfer or exchange
+              of virtual currencies
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Capital gains and losses arising from the transfer of subscription
+              rights
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Gains and losses on the transfer of investment companies and
+              funds and of SOCIMIs
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Gains and losses on the transfer of units in listed funds (ETFs)
+              and of shares in listed index SICAVs
+          rendimientos-de-trabajo:
+            heading: Employment income
+          transmision-de-acciones-negociadas:
+            heading: Transfer of traded shares
       revision:
         '2020':
           casilla:

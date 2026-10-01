@@ -3739,6 +3739,30 @@ modelo:
         official_name: Modelo 100. Declaración del Impuesto sobre la Renta de las
           Personas Físicas.
         title: IRPF declaración anual
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: Bienes inmuebles a disposición de sus titulares, arrendados o
+              cedidos a terceros, o afectos a actividades económicas
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Ganancias patrimoniales por cambio de residencia fuera del territorio
+              español (artículo 95 bis de la Ley del Impuesto)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Ganancias y pérdidas patrimoniales derivadas de la transmisión
+              o permuta de monedas virtuales
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Ganancias y pérdidas patrimoniales derivadas de la transmisión
+              de derechos de suscripción
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Ganancias y pérdidas por la transmisión de sociedades y fondos
+              de inversión y de SOCIMIS
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Ganancias y pérdidas por la transmisión de participaciones de
+              fondos cotizados (ETF) y de acciones de SICAV índice cotizadas
+          rendimientos-de-trabajo:
+            heading: Rendimientos de trabajo
+          transmision-de-acciones-negociadas:
+            heading: Transmisión de acciones negociadas
       revision:
         '2020':
           casilla:
