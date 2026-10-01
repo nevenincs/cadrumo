@@ -269,7 +269,7 @@ wizard:
       title: Unitat familiar
     filing-export:
       charge-iban:
-        help: IBAN que l'AEAT pot carregar quan una declaració del Model 303 escull
+        help: IBAN que l AEAT pot carregar quan una declaració del Model 303 escull
           la domiciliació. Es diferent del compte de devolució.
         prompt: IBAN per a la domiciliació de l'AEAT
       title: Compte de càrrec del Model 303
@@ -287,7 +287,7 @@ wizard:
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
       charge-iban:
-        help: IBAN que l'AEAT pot carregar per a una domiciliació elegida del Model
+        help: IBAN que l AEAT pot carregar per a una domiciliació elegida del Model
           303.
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
@@ -367,10 +367,10 @@ wizard:
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
       ley-49-2002-option-date:
-        help: Registra la data de la casella 653 del model 036 per a l'opció del títol
+        help: Registra la data de la casella 653 del model 036 per a l opció del títol
           II de la Llei 49/2002.
       ley-49-2002-option-declared:
-        help: Registra si la casella 651 del model 036 declara l'opció pel títol II
+        help: Registra si la casella 651 del model 036 declara l opció pel títol II
           de la Llei 49/2002.
       ley-49-2002-renunciation-date:
         help: Registra la data de la casella 654 del model 036 per a la renúncia al
@@ -967,16 +967,16 @@ wizard:
         help: Usa la data ISO corresponent a la casella 653 del model 036.
         prompt: Data declarada de l'opció pel règim especial de la Llei 49/2002
       ley-49-2002-option-declared:
-        help: Usa el fet declarat a la casella 651 del model 036; l'aplicació legal
+        help: Usa el fet declarat a la casella 651 del model 036; l aplicació legal
           continua condicionada als requisits legals i al fet que no hi hagi renúncia.
-        prompt: L'entitat ha presentat al model 036 l'opció pel règim fiscal especial
+        prompt: L entitat ha presentat al model 036 l opció pel règim fiscal especial
           del títol II de la Llei 49/2002?
       ley-49-2002-renunciation-date:
         help: Usa la data ISO corresponent a la casella 654 del model 036.
         prompt: Data declarada de la renúncia al règim especial de la Llei 49/2002
       ley-49-2002-renunciation-declared:
         help: Usa el fet declarat a la casella 652 del model 036.
-        prompt: L'entitat ha presentat al model 036 la renúncia al règim fiscal especial
+        prompt: L entitat ha presentat al model 036 la renúncia al règim fiscal especial
           del títol II de la Llei 49/2002?
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa

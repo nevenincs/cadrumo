@@ -203,7 +203,7 @@ modelo:
       construct:
         modelo-353-iva-grupo-agregado:
           field:
-            title: '353-as nyomtatvány: az áfacsoport havi összesített önadózása'
+            title: 'Modelo 353 nyomtatvány: az áfacsoport havi összesített önadózása'
       field:
         official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
           Havi önbevallás.

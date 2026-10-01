@@ -10,7 +10,8 @@ modelo:
       construct:
         modelo-763-autoliquidacion:
           field:
-            title: '763-as nyomtatvány: a szerencsejáték-tevékenységek adójának önadózása'
+            title: 'Modelo 763 nyomtatvány: a szerencsejáték-tevékenységek adójának
+              önadózása'
       field:
         official_name: Modelo 763. Szerencsejáték-tevékenységek adója éves vagy többéves
           tevékenységek esetén. Önbevallás.

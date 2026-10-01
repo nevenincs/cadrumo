@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8aff00a94e9e1f74766578288c0ac22ef0c6b69052b70878d8bb92021222c7e'
+body_hash: 'sha256:2bcdbf636cf6d8a298a9701928a620e6225f52a37a87c3a4be5e00d2419a546c'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1450,6 +1450,62 @@ related:
 - `S64` `verify:` `pytest real encrypted Modelo360 alias edit/reload/recalculation/codec wire proof` -> `pass`
 - `S64` `verify:` `pytest binding names/negative alias guards and actual published revision form totality` -> `pass`
 - `S64` `by:` `vaultspec-high-executor`
+- `S59` `M` `src/cadrumo/core/i18n/tests/test_hu_error_diacritics.py`
+- `S59` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S59` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S59` `M` `src/cadrumo/locales/hu/application.yml`
+- `S59` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S59` `M` `src/cadrumo/locales/hu/docs.yml`
+- `S59` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S59` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/038.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/111.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/117.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/122.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/123.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/128.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/130.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/151.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/180.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/181.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/182.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/184.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/187.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/188.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/189.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/190.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/193.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/194.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/202.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/210.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/222.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/232.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/270.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/308.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/309.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/322.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/341.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/349.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/353.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/360.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/369.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/390.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/490.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/604.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/714.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/720.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/721.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/763.yml`
+- `S59` `M` `src/cadrumo/locales/hu/modelo/schema/840.yml`
+- `S59` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S59` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S59` `verify:` `pytest locale parity/contract/binding catalogue/casilla catalogue/Hungarian diacritics focused suite -n0 -m unit 105 cases` -> `pass`
+- `S59` `verify:` `dev.locales audit all four live product catalogues` -> `pass`
+- `S59` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -1539,3 +1595,4 @@ related:
 - `S54` S54 wording reconciled through `plan_edit` to authorized truthful linkage/receipt availability. External filing details expose safe metadata and explain the unavailable handoff; no re-filing or fabricated linkage action is offered.
 - `S62` Prepared compiler and candidate companion checkpoint. Live export/layout installation, complete authority publication and runtime rate adoption remain outstanding, so S62 stays open. Existing export-only journal/recovery is unchanged; each installed export must be repaired with the canonical form generator before the next export invocation. Corrected HU names and Modelo100 binding questions share catalogue files with S59/S64.
 - `S64` A scalar input aliases a casilla only when exact record/offset/length, numeric type and independent consumer checks prove one write address. Ambiguous or independent consumers remain distinct. The Modelo100 boolean direct-binding question follows the established lookup priority; provider casilla names remain unchanged.
+- `S59` Used the prepared proper-name pack and a bounded residual manifest. The proper name remains Modelo plus its code; surrounding Hungarian nouns carry case. Current human-wording changes were preserved. Generic schema, LLM, taxpayer and vehicle-model concepts retain modell where that is their actual meaning. Catalogue occurrences across revisions are not counted as distinct binding inputs.

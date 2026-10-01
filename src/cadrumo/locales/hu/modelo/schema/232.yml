@@ -346,103 +346,103 @@ modelo:
           filing-year:
             label: Az adóztatandó esemény adóéve
           related-party-fjo-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-fjo-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-fjo-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-fjo-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-fjo-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-importe-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-importe-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-importe-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-importe-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-importe-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-ingreso-pago-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-ingreso-pago-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-ingreso-pago-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-ingreso-pago-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-ingreso-pago-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-location-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-location-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-location-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-location-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-location-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-metodo-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-metodo-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-metodo-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-metodo-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-metodo-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-name-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-name-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-name-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-name-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-name-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-nif-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-nif-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-nif-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-nif-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-nif-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-tipo-operacion-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-tipo-operacion-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-tipo-operacion-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-tipo-operacion-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-tipo-operacion-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-1:
-            help: A 232-es nyomtatványon bevallott 1. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 1. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-2:
-            help: A 232-es nyomtatványon bevallott 2. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 2. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-3:
-            help: A 232-es nyomtatványon bevallott 3. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 3. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-4:
-            help: A 232-es nyomtatványon bevallott 4. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 4. kapcsolt ügylet adata.
           related-party-tipo-vinculacion-5:
-            help: A 232-es nyomtatványon bevallott 5. kapcsolt ügylet adata.
+            help: A Modelo 232 nyomtatványon bevallott 5. kapcsolt ügylet adata.
           tipo-ejercicio-232:
             label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
               rövidebb)
       construct:
         modelo-232-informative:
           field:
-            title: '232-es nyomtatvány: a kapcsolt vállalkozási ügyletekről és adóparadicsomi
-              kapcsolatokról szóló adatszolgáltatás'
+            title: 'Modelo 232 nyomtatvány: a kapcsolt vállalkozási ügyletekről és
+              adóparadicsomi kapcsolatokról szóló adatszolgáltatás'
       field:
         official_name: Modelo 232. A kapcsolt felek közötti ügyletek, valamint az
           adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek

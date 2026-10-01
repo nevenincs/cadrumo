@@ -23,8 +23,8 @@ docs:
         nyilvántartásaiból
       ledger_renta_income_aggregation: a bevételi nyilvántartásaiból
       ledger_transaction: a nyilvántartásaiból
-      m303_regimen_simplificado_annual_summary: a 303-es nyomtatvány egyszerűsített
-        rendszerének éves összesítéséből
+      m303_regimen_simplificado_annual_summary: a Modelo 303 egyszerűsített rendszerének
+        éves összesítéséből
       m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből
       manual_input: az Ön által megadott értékből
       payable_invoice: a beérkezett számláiból
@@ -37,7 +37,7 @@ docs:
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból
-      withholding296: a 296-os nyomtatvány kedvezményezettenkénti levonásaiból
+      withholding296: a Modelo 296 kedvezményezettenkénti levonásaiból
     cadence:
       ad_hoc: Az esemény bekövetkezésekor benyújtandó
       annual: Évente benyújtandó
@@ -63,7 +63,7 @@ docs:
       legal_basis: Jogalap
       list_and: és
       not_on_official_form: Nem szerepel a hivatalos nyomtatványon
-      page_heading: '{modelo}. nyomtatvány: {title}'
+      page_heading: 'Modelo {modelo}: {title}'
       record_design_number: Rekordterv szerinti szám
       registry_identifiers: Nyilvántartási azonosítók
       registry_section: Nyilvántartási szakasz
@@ -164,8 +164,8 @@ docs:
         hozzá tartozó végponti parancs következik.
       title: '{command}: parancsreferencia'
     index:
-      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási
-        határidőnaptárak, registry-ellenőrzések, élő lekérések és felülvizsgálati
+      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, bevallások, bevallási
+        határidőnaptárak, nyomtatványdefiníciók ellenőrzése, élő lekérések és felülvizsgálati
         sorok.'
       choose_family_heading: Válasszon parancscsaládot
       config_card: 'Helyi beállítási és karbantartási parancsok: profilok, hitelesítés,

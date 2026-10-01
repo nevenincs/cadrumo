@@ -2281,7 +2281,7 @@ modelo:
       construct:
         m714-patrimonio-calculation:
           field:
-            title: 714-es nyomtatvány vagyonadó-kötelezettség
+            title: Modelo 714 nyomtatvány vagyonadó-kötelezettség
       field:
         official_name: Vagyonadó. Bevallás
         title: Modelo 714

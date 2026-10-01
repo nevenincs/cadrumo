@@ -99,9 +99,9 @@ adapters:
         modelo_conflict: A --modelo {modelo!r} ütközik az észlelt {detected!r} értékkel.
         period_unresolved: A bevallási időszak nem volt meghatározható a PDF szövegéből.
         profile_count_invalid: 'Pontosan egy bevallás-PDF-kinyerési profil szükséges
-          a modelo={modelo} nyomtatványhoz; elérhető: {available}.'
-        profile_unavailable: A(z) {profile!r} kinyerési profil nem érhető el a modelo={modelo}
-          nyomtatványhoz.
+          a Modelo {modelo} bevalláshoz; elérhető: {available}.'
+        profile_unavailable: A(z) {profile!r} kinyerési profil nem érhető el a Modelo
+          {modelo} bevalláshoz.
         registry_snapshot_required: 'A bevallás-kinyeréshez érvényesített nyomtatványdefiníciók
           szükségesek: modelo={modelo} year={year} period={period}: {error}'
         snapshot_modelo_conflict: A nyomtatványdefiníciók {snapshot_modelo!r} nyomtatványa
@@ -250,8 +250,8 @@ adapters:
         oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
       censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
         oldalt működő kiszolgálón; jelentkezzen be újra, és próbálja meg ismét.
-      ejercicio_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért adóévet
-        ehhez a modellhez.
+      ejercicio_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért adóévet
+        ehhez a nyomtatványhoz.
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
         az élő benyújtási megfigyelést.
       form_render_timeout: Az AEAT nyilatkozatnyilvántartó űrlapja nem renderelődött
@@ -273,7 +273,7 @@ adapters:
         az oldal struktúrája megváltozhatott.
       listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze
         a hálózati kapcsolatot és próbálja újra.
-      modelo_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.
+      modelo_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért nyomtatványt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
         futtassa először a `aeat config auth status` parancsot.
       notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés

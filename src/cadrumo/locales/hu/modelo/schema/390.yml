@@ -1593,7 +1593,7 @@ modelo:
       construct:
         modelo-390-iva-resumen-anual:
           field:
-            title: '390-es nyomtatvány: éves áfa-összesítő bevallás'
+            title: 'Modelo 390 nyomtatvány: éves áfa-összesítő bevallás'
       field:
         official_name: Modelo 390. A hozzáadottérték-adó éves összesítő bevallása.
         title: IVA. Éves összesítő bevallás
@@ -1853,26 +1853,26 @@ modelo:
         '2021':
           casilla:
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: A 390-es nyomtatvány 26. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 26. rovata, 2021. adóév.
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
-              help: A 390-es nyomtatvány 97. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 97. rovata, 2021. adóév.
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:
-              help: A 390-es nyomtatvány 64. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 64. rovata, 2021. adóév.
             x-d5r62bj1dpqm2r1ecdqmut315li6atj5dpjm2p315lq6ut31dg:
-              help: A 390-es nyomtatvány 47. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 47. rovata, 2021. adóév.
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
-              help: A 390-es nyomtatvány 06. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 06. rovata, 2021. adóév.
               label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
-              help: A 390-es nyomtatvány 04. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 04. rovata, 2021. adóév.
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
-              help: A 390-es nyomtatvány 02. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 02. rovata, 2021. adóév.
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
-              help: A 390-es nyomtatvány 65. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 65. rovata, 2021. adóév.
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
-              help: A 390-es nyomtatvány 49. rovata, 2021. adóév.
+              help: A Modelo 390 nyomtatvány 49. rovata, 2021. adóév.
           field:
             label: 390-es modelo, 2021. adóév (Orden EHA/3111/2009)
         '2022':
@@ -2357,22 +2357,28 @@ modelo:
               help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
                 beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A 390-es nyomtatvány 75. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 75. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A 390-es nyomtatvány 74. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 74. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A 390-es nyomtatvány 78. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 78. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A 390-es nyomtatvány 80. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 80. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A 390-es nyomtatvány 81. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 81. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 82. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
@@ -3241,22 +3247,28 @@ modelo:
               help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
                 beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A 390-es nyomtatvány 75. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 75. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A 390-es nyomtatvány 74. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 74. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A 390-es nyomtatvány 78. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 78. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A 390-es nyomtatvány 80. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 80. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A 390-es nyomtatvány 81. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 81. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 82. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
@@ -4145,22 +4157,28 @@ modelo:
               help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
                 beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A 390-es nyomtatvány 75. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 75. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A 390-es nyomtatvány 74. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 74. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A 390-es nyomtatvány 78. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 78. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A 390-es nyomtatvány 80. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 80. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A 390-es nyomtatvány 81. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 81. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 nyomtatvány 82. rovatának adóügyi adatai: adóügyi
+                információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
