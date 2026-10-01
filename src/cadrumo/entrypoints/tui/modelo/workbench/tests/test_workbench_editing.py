@@ -21,10 +21,10 @@ from ......core.config import override_settings
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..editor import CasillaEditorScreen
 from ..ports import WorkbenchChangeKind
 from ..review import EditReviewScreen
 from ..screen import ModeloWorkbenchScreen
+from .editor_panel import open_panel
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -50,8 +50,8 @@ async def test_a_typed_value_is_read_back_then_staged_on_its_line() -> None:
             await _settle(pilot)
             await pilot.press("enter")
             await _settle(pilot)
-            editor = app.screen
-            assert isinstance(editor, CasillaEditorScreen)
+            editor = open_panel(app.screen)
+            assert editor is not None
             await pilot.press(*"300,50")
             await _settle(pilot)
             readback = str(editor.query_one("#editor-readback", Static).render())
@@ -76,8 +76,8 @@ async def test_an_unreadable_value_cannot_be_staged() -> None:
             await _settle(pilot)
             await pilot.press("enter")
             await _settle(pilot)
-            editor = app.screen
-            assert isinstance(editor, CasillaEditorScreen)
+            editor = open_panel(app.screen)
+            assert editor is not None
             await pilot.press(*"abc")
             await _settle(pilot)
             readback = str(editor.query_one("#editor-readback", Static).render())
@@ -98,14 +98,14 @@ async def test_a_box_that_follows_the_records_says_why_it_cannot_be_typed_into()
             await _settle(pilot)
             await pilot.press("enter")
             await _settle(pilot)
-            panel = app.screen
-            assert isinstance(panel, CasillaEditorScreen)
+            panel = open_panel(app.screen)
+            assert panel is not None
             read_only = panel.read_only
             inputs = len(panel.query(Input))
             reason = str(panel.query_one("#editor-can-change-text", Static).render())
             await pilot.press("escape")
             await _settle(pilot)
-            back = app.screen is screen
+            back = app.screen is screen and open_panel(screen) is None and app.focused is screen.query_one(CasillaList)
 
     assert read_only
     assert inputs == 0

@@ -26,8 +26,13 @@ filed the answer says how to change it: by starting a correction.
 The panel is as tall as what it says. When that is more than the terminal
 holds, only the answers scroll, between the title and the input and actions,
 so those stay in view on a small terminal however long the answers grow.
-Because the panel covers the header, it can repeat the header's result line
-as its first line, so the filer sees the result while changing a value.
+
+One panel serves two hosts. The workbench docks it at its foot, under the
+list, so the box being changed and its neighbours stay in view; the panel
+then says only which box it edits, and closes with a message the workbench
+answers. On a terminal too short for both, the panel opens in a centred
+dialog instead, which covers the header, so the panel repeats the header's
+result line as its first line there.
 """
 
 from __future__ import annotations
@@ -43,6 +48,7 @@ from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
@@ -268,97 +274,99 @@ type EditorOutcome = EditorDecision | OpenSourceSurface
 """What the panel closes with: the filer's decision about the value, or a request to open the source's area."""
 
 
-class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
-    """The box panel for one casilla, reading every keystroke through the application parser."""
+class CasillaEditorPanel(Vertical):
+    """The box panel for one casilla, reading every keystroke through the application parser.
+
+    The panel keeps nothing and closes nothing itself: it posts
+    :class:`CasillaEditorPanel.Closed` with the filer's decision, and its host,
+    the workbench's dock or the centred dialog, answers it.
+    """
+
+    class Closed(Message):
+        """The filer decided about the box: a value to keep, a request to open the source's area, or nothing."""
+
+        def __init__(self, panel: CasillaEditorPanel, outcome: EditorOutcome | None) -> None:
+            """Carry the panel that closed and what it closed with."""
+            super().__init__()
+            self.panel = panel
+            self.outcome = outcome
 
     SCOPED_CSS: ClassVar[bool] = False
     DEFAULT_CSS: ClassVar[str] = tokenised(
         """
-        CasillaEditorScreen #editor-backdrop {
-            width: 1fr;
-            height: 1fr;
-            align: center middle;
-        }
-        CasillaEditorScreen #editor-panel {
-            width: $cadrumo-modal-width;
+        CasillaEditorPanel {
             height: auto;
-            max-height: $cadrumo-modal-height;
-            border: $cadrumo-radius-overlay $primary;
             background: $surface;
             padding: $cadrumo-gutter-y $cadrumo-gutter;
         }
-        CasillaEditorScreen.-narrow #editor-panel {
-            width: 100%;
-            max-height: 100%;
-        }
-        CasillaEditorScreen #editor-head {
+        CasillaEditorPanel #editor-head {
             dock: top;
             height: auto;
         }
-        CasillaEditorScreen #editor-status {
+        CasillaEditorPanel #editor-status {
             height: auto;
         }
-        CasillaEditorScreen #editor-title {
+        CasillaEditorPanel #editor-title {
             height: auto;
             text-style: bold;
             color: $foreground;
         }
-        CasillaEditorScreen #editor-foot {
+        CasillaEditorPanel #editor-foot {
             dock: bottom;
             height: auto;
         }
-        CasillaEditorScreen #editor-body {
+        CasillaEditorPanel #editor-body {
             height: auto;
             max-height: 100%;
         }
-        CasillaEditorScreen #editor-body:focus {
+        CasillaEditorPanel #editor-body:focus {
             background-tint: $foreground 4%;
         }
-        CasillaEditorScreen .editor-block, CasillaEditorScreen #editor-entry {
+        CasillaEditorPanel .editor-block, CasillaEditorPanel #editor-entry {
             height: auto;
         }
-        CasillaEditorScreen .editor-block-label {
+        CasillaEditorPanel .editor-block-label {
             width: $cadrumo-term-width;
             color: $secondary;
         }
-        CasillaEditorScreen .editor-block-text {
+        CasillaEditorPanel .editor-block-text {
             width: 1fr;
             height: auto;
         }
-        CasillaEditorScreen #editor-entry .editor-block-label {
+        CasillaEditorPanel #editor-entry .editor-block-label {
             padding-top: $cadrumo-gutter-y;
         }
-        CasillaEditorScreen #editor-field {
+        CasillaEditorPanel #editor-field {
             width: 1fr;
             height: auto;
         }
-        CasillaEditorScreen #editor-readback {
+        CasillaEditorPanel #editor-readback {
             height: auto;
         }
-        CasillaEditorScreen #editor-readback.-refused {
+        CasillaEditorPanel #editor-readback.-refused {
             color: $error;
             text-style: bold;
         }
-        CasillaEditorScreen #editor-readback.-parsed {
+        CasillaEditorPanel #editor-readback.-parsed {
             color: $success;
         }
-        CasillaEditorScreen #editor-readback.-confirm {
+        CasillaEditorPanel #editor-readback.-confirm {
             color: $warning;
         }
-        CasillaEditorScreen #editor-hint, CasillaEditorScreen #editor-keys {
+        CasillaEditorPanel #editor-hint, CasillaEditorPanel #editor-keys {
             color: $secondary;
             height: auto;
         }
-        CasillaEditorScreen #editor-alternatives, CasillaEditorScreen #editor-actions {
+        CasillaEditorPanel #editor-alternatives, CasillaEditorPanel #editor-actions {
             height: auto;
             margin-top: $cadrumo-stack;
             align-horizontal: right;
         }
-        CasillaEditorScreen #editor-alternatives Button, CasillaEditorScreen #editor-actions Button {
+        CasillaEditorPanel #editor-alternatives Button, CasillaEditorPanel #editor-actions Button {
             margin-left: $cadrumo-control-gap;
         }
-        CasillaEditorScreen #editor-alternatives Button:first-of-type,
-        CasillaEditorScreen #editor-actions Button:first-of-type {
+        CasillaEditorPanel #editor-alternatives Button:first-of-type,
+        CasillaEditorPanel #editor-actions Button:first-of-type {
             margin-left: $cadrumo-space-0;
         }
         """
@@ -391,13 +399,13 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         changed here: it shows the reason, and the way to change it, in place
         of an input, and offers to open the area that owns the value's source.
         ``feeds`` names the boxes this box's value is used in. ``status_line``
-        is the header's result line, shown first because the panel covers it.
+        is the header's result line, shown first when the host covers it.
         ``recorded`` is the declaration being recorded as filed, whose "Now"
         line says what a box holds rather than asking the filer for a value.
         ``aeat_imported`` is the day the AEAT tax data the calculation took
         values from was imported, which a value taken from it names.
         """
-        super().__init__()
+        super().__init__(id="editor-panel")
         self._field = field
         self._recorded = recorded
         self._aeat_imported = aeat_imported
@@ -411,11 +419,17 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         self._status_line = status_line
         self._open_area = open_area_target(field) if read_only_reason is not None else None
         self._parsed: WorkbenchParsed | None = None
+        self._decided = False
         self._prefill = (
             confirm_lexeme(field.value, language)
             if read_only_reason is None and field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
             else None
         )
+
+    @property
+    def field(self) -> ModeloFormField:
+        """The box this panel edits."""
+        return self._field
 
     @property
     def read_only(self) -> bool:
@@ -519,31 +533,25 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
     def compose(self) -> ComposeResult:
         field = self._field
         box = f"[{field.box}] " if field.box else ""
-        with Container(id="editor-backdrop"), Vertical(id="editor-panel"):
-            with Vertical(id="editor-head"):
-                if self._status_line is not None:
-                    yield Static(self._status_line, id="editor-status", markup=False)
-                yield Static(f"{box}{field.label.text}", id="editor-title", markup=False)
-            with Vertical(id="editor-foot"):
-                affects = affects_text(self._feeds)
-                if affects is not None:
-                    yield self._block("editor-affects", "tui.modelo.workbench.editor.block.affects", affects)
-                if not self.read_only:
-                    yield from self._entry()
-                keys = self._keys_text()
-                if keys is not None:
-                    yield Static(keys, id="editor-keys", markup=False)
-                yield from self._actions()
-            with VerticalScroll(id="editor-body", can_focus=True):
-                yield from self._answers()
-
-    def on_resize(self, event: events.Resize) -> None:
-        """Take the whole width on a narrow terminal."""
-        fit_dialog_width(self, event.size.width)
+        with Vertical(id="editor-head"):
+            if self._status_line is not None:
+                yield Static(self._status_line, id="editor-status", markup=False)
+            yield Static(f"{box}{field.label.text}", id="editor-title", markup=False)
+        with Vertical(id="editor-foot"):
+            affects = affects_text(self._feeds)
+            if affects is not None:
+                yield self._block("editor-affects", "tui.modelo.workbench.editor.block.affects", affects)
+            if not self.read_only:
+                yield from self._entry()
+            keys = self._keys_text()
+            if keys is not None:
+                yield Static(keys, id="editor-keys", markup=False)
+            yield from self._actions()
+        with VerticalScroll(id="editor-body", can_focus=True):
+            yield from self._answers()
 
     def on_mount(self) -> None:
         """Put the cursor in the value field, with an assumed value selected so typing replaces it."""
-        fit_dialog_width(self, self.app.size.width)
         if self.read_only:
             self.query_one("#editor-cancel", Button).focus()
             return
@@ -603,29 +611,38 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Keep the value on Enter when it reads cleanly, and ask to move on to the next box."""
+        event.stop()
         self._keep(advance=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Close with the filer's decision."""
+        event.stop()
         button = event.button.id
         if button == "editor-save-next":
             self._keep(advance=True)
         elif button == "editor-save":
             self._keep(advance=False)
         elif button == "editor-clear":
-            self.dismiss(EditorDecision(kind=WorkbenchChangeKind.CLEAR))
+            self._close(EditorDecision(kind=WorkbenchChangeKind.CLEAR))
         elif button == "editor-restore":
-            self.dismiss(EditorDecision(kind=WorkbenchChangeKind.RESTORE))
+            self._close(EditorDecision(kind=WorkbenchChangeKind.RESTORE))
         elif button == "editor-open":
             self.action_open_area()
         else:
-            self.dismiss(None)
+            self._close(None)
+
+    def _close(self, outcome: EditorOutcome | None) -> None:
+        """Hand the filer's decision to the host, once; the panel ignores what follows until it is gone."""
+        if self._decided:
+            return
+        self._decided = True
+        self.post_message(self.Closed(self, outcome))
 
     def _keep(self, *, advance: bool) -> None:
         if self.read_only:
             return
         if self._confirming(self.query_one("#editor-input", Input).value.strip()):
-            self.dismiss(
+            self._close(
                 EditorDecision(
                     kind=WorkbenchChangeKind.SET, value=self._field.value, display=self._current(), advance=advance
                 )
@@ -634,7 +651,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         parsed = self._parsed
         if parsed is None:
             return
-        self.dismiss(
+        self._close(
             EditorDecision(kind=WorkbenchChangeKind.SET, value=parsed.value, display=parsed.display, advance=advance)
         )
 
@@ -645,15 +662,108 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
     def action_open_area(self) -> None:
         """Close asking the workbench to open the area that owns the value's source, when the panel offers one."""
         if self._open_area is not None:
-            self.dismiss(OpenSourceSurface(self._open_area))
+            self._close(OpenSourceSurface(self._open_area))
 
     def action_cancel(self) -> None:
         """Close without a decision."""
-        self.dismiss(None)
+        self._close(None)
+
+
+class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
+    """The box panel in a centred dialog, for a terminal too short to dock it under the list.
+
+    The dialog is only a container: it holds one :class:`CasillaEditorPanel`,
+    built from the same arguments, and closes with whatever the panel decides.
+    """
+
+    SCOPED_CSS: ClassVar[bool] = False
+    DEFAULT_CSS: ClassVar[str] = tokenised(
+        """
+        CasillaEditorScreen #editor-backdrop {
+            width: 1fr;
+            height: 1fr;
+            align: center middle;
+        }
+        CasillaEditorScreen CasillaEditorPanel {
+            width: $cadrumo-modal-width;
+            max-height: $cadrumo-modal-height;
+            border: $cadrumo-radius-overlay $primary;
+        }
+        CasillaEditorScreen.-narrow CasillaEditorPanel {
+            width: 100%;
+            max-height: 100%;
+        }
+        """
+    )
+
+    def __init__(
+        self,
+        field: ModeloFormField,
+        *,
+        parse: Parser,
+        language: OutputLanguage,
+        limits: tuple[str, ...] = (),
+        can_clear: bool = False,
+        can_restore: bool = False,
+        read_only_reason: str | None = None,
+        feeds: tuple[str, ...] = (),
+        status_line: str | None = None,
+        recorded: bool = False,
+        aeat_imported: date | None = None,
+    ) -> None:
+        """Build the panel the dialog holds; the arguments are the panel's own."""
+        super().__init__()
+        self._panel = CasillaEditorPanel(
+            field,
+            parse=parse,
+            language=language,
+            limits=limits,
+            can_clear=can_clear,
+            can_restore=can_restore,
+            read_only_reason=read_only_reason,
+            feeds=feeds,
+            status_line=status_line,
+            recorded=recorded,
+            aeat_imported=aeat_imported,
+        )
+
+    @property
+    def panel(self) -> CasillaEditorPanel:
+        """The panel this dialog holds."""
+        return self._panel
+
+    @property
+    def read_only(self) -> bool:
+        """Whether the panel explains the box instead of taking a value for it."""
+        return self._panel.read_only
+
+    @property
+    def open_area(self) -> SourceSurface | None:
+        """The area the panel offers to open for the value's source; ``None`` when it offers none."""
+        return self._panel.open_area
+
+    @override
+    def compose(self) -> ComposeResult:
+        with Container(id="editor-backdrop"):
+            yield self._panel
+
+    def on_resize(self, event: events.Resize) -> None:
+        """Take the whole width on a narrow terminal."""
+        fit_dialog_width(self, event.size.width)
+
+    def on_mount(self) -> None:
+        """Take the whole width when the terminal is already narrow."""
+        fit_dialog_width(self, self.app.size.width)
+
+    def on_casilla_editor_panel_closed(self, message: CasillaEditorPanel.Closed) -> None:
+        """Close with the panel's decision."""
+        message.stop()
+        self.dismiss(message.outcome)
 
 
 __all__ = [
     "EDITOR_HINT_KINDS",
+    "CasillaEditorPanel",
     "CasillaEditorScreen",
     "EditorDecision",
     "EditorOutcome",

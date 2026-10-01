@@ -4,7 +4,8 @@ The first page prints "Resultado" in two separate parts, as some official
 layouts do, with a corrective part between them. The second page is only for
 the last quarter; the read model states whether it applies, and it holds a
 missing value and an assumed one. The third page holds one more assumed value.
-Values are synthetic.
+A second form holds one long section of assumed values, for a list that
+scrolls. Values are synthetic.
 """
 
 from __future__ import annotations
@@ -159,4 +160,11 @@ def sectioned_form(*, last_quarter_applies: bool | None = False) -> ModeloWorkFo
     )
 
 
-__all__ = ["LAST_QUARTER_PAGE", "sectioned_form"]
+def long_section_form(boxes: int) -> ModeloWorkForm:
+    """One page holding one section of ``boxes`` assumed values, box 30 onwards, longer than a short list shows."""
+    assumed = [_assumed(f"{30 + index:02d}", "1.00") for index in range(boxes)]
+    page = _page("p1", "Liquidación", (_section("p1.manual", "Casillas manuales", assumed),), assumed)
+    return sectioned_form().model_copy(update={"pages": (page,), "counts": _counts(assumed)})
+
+
+__all__ = ["LAST_QUARTER_PAGE", "long_section_form", "sectioned_form"]

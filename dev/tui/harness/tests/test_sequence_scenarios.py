@@ -15,7 +15,6 @@ import pytest
 
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
-from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorScreen
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
@@ -170,7 +169,11 @@ def _surface_text(frame_text: str) -> str:
 @pytest.mark.integration
 @pytest.mark.hex_core
 def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_path: Path) -> None:
-    """Every capture shares one sandbox, so a walk that saved anything would show on the workbench read after it."""
+    """Every capture shares one sandbox, so a walk that saved anything would show on the workbench read after it.
+
+    At 120x40 the box panel docks in the workbench, so its pages paint the
+    workbench; a walk that opened no panel is refused, which ``refusals`` checks.
+    """
     shots = [
         Shot(page, 120, 40, "dark", tmp_path / f"{index}-{page}.svg")
         for index, page in enumerate((*_EVERY_PAGE, "workbench"))
@@ -186,8 +189,8 @@ def test_every_walk_lands_on_its_screen_and_none_changes_the_declaration(tmp_pat
         "sources": _qualname(WorkbenchSourcesScreen),
         "legend": _qualname(ModeloWorkbenchScreen),
         "search": _qualname(ModeloWorkbenchScreen),
-        "not-editable": _qualname(CasillaEditorScreen),
-        EDITOR_PAGE: _qualname(CasillaEditorScreen),
+        "not-editable": _qualname(ModeloWorkbenchScreen),
+        EDITOR_PAGE: _qualname(ModeloWorkbenchScreen),
         BULK_CONFIRM_PAGE: _qualname(BulkConfirmScreen),
         REVIEW_PAGE: _qualname(EditReviewScreen),
         RECALCULATE_PAGE: _qualname(ConfirmScreen),

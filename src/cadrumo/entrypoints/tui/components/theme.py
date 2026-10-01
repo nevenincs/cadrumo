@@ -221,6 +221,11 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # official wording and legal basis do not fit the docked height: most
         # of a 24-row terminal, still leaving the stepper and one list row.
         "cadrumo-help-expanded-max-height": "18",
+        # The box panel docked in place of that band, which grows upward over
+        # the list: a little over half the terminal, so on the shortest
+        # terminal it docks in (30 rows) the box being changed and its
+        # neighbours still show above it. Longer answers scroll within it.
+        "cadrumo-editor-dock-max-height": "55%",
     },
 )
 """The canonical presentation tokens every Cadrumo surface is built from.

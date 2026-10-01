@@ -6,8 +6,8 @@ production reader and actions, in every shipped language:
 * no transport token reaches what the filer reads -- no digest, no work-unit
   or calculation identity, no casilla slug and no binding identifier, on the
   workbench, its sources view or its expanded help;
-* every dialog gives the focus back to the casilla list on the box it was
-  opened from;
+* every dialog, and the box panel docked under the list, gives the focus
+  back to the casilla list on the box it was opened from;
 * a value the filer typed and abandoned is kept nowhere: not in the staged
   changes after a cancel or a discard, and not in any log record.
 """
@@ -34,7 +34,7 @@ from ....core.external_constants import OutputLanguage
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..modelo.workbench.casilla_list import CasillaList
-from ..modelo.workbench.editor import CasillaEditorScreen
+from ..modelo.workbench.editor import CasillaEditorPanel
 from ..modelo.workbench.installed import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
@@ -53,6 +53,15 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
     root: Path = tmp_path_factory.mktemp(f"acceptance-{request.param}")
     with real_workbench(root, modelo=request.param) as installed:
         yield installed
+
+
+async def _panel_opened(pilot: Pilot[None]) -> bool:
+    """Wait for the box panel Enter opens, docked or in the dialog, once the box's full help has been read."""
+    for _ in range(200):
+        if pilot.app.screen.query(CasillaEditorPanel):
+            return True
+        await pilot.pause()
+    return False
 
 
 async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> ModeloWorkForm:
@@ -140,13 +149,14 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(tmp_
             ):
                 await pilot.press(*opening)
                 await pilot.pause()
-                assert app.screen is not screen, f"{name} did not open"
+                assert app.screen is not screen or await _panel_opened(pilot), f"{name} did not open"
                 await pilot.press(*closing)
                 await pilot.pause()
                 await pilot.pause()
                 highlighted = casilla_list.highlighted
                 returns[name] = (
                     app.screen is screen
+                    and not screen.query(CasillaEditorPanel)
                     and screen.focused is casilla_list
                     and highlighted is not None
                     and highlighted.key == origin.key
@@ -167,14 +177,14 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(tmp_path: Path, capl
             casilla_list = screen.query_one(CasillaList)
             casilla_list.focus_address(address_key(_editable(form).address))
             await pilot.press("enter")
-            await pilot.pause()
-            assert isinstance(app.screen, CasillaEditorScreen)
+            assert await _panel_opened(pilot)
             await pilot.press(*_TYPED, "escape")
             await pilot.pause()
             after_cancel = [change.text for change in screen.staged_changes]
             await pilot.press("enter")
-            await pilot.pause()
-            await pilot.press(*_TYPED, "enter")
+            assert await _panel_opened(pilot)
+            # Keep and stay, so the panel closes on this box rather than refilling for the next.
+            await pilot.press(*_TYPED, "ctrl+enter")
             await pilot.pause()
             staged = len(screen.staged_changes)
             await pilot.press("R")

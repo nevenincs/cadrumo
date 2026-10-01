@@ -31,11 +31,11 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from ..search import WorkbenchSearchPanel
 from ..vocabulary import aeat_imported_on
 from ..wording import date_text
+from .editor_panel import open_panel
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
@@ -74,12 +74,8 @@ async def test_the_help_band_the_panel_and_search_say_the_day_the_aeat_data_was_
             band = str(screen.query_one("#wb-help", Static).render())
             await pilot.press("enter")
             await _settle(pilot, 6)
-            panel = app.screen
-            panel_text = (
-                "\n".join(str(widget.render()) for widget in panel.query(Static))
-                if isinstance(panel, CasillaEditorScreen)
-                else ""
-            )
+            panel = open_panel(app.screen)
+            panel_text = "" if panel is None else "\n".join(str(widget.render()) for widget in panel.query(Static))
             await pilot.press("escape")
             await _settle(pilot)
             await pilot.press("slash", *_INCOME)
@@ -88,7 +84,7 @@ async def test_the_help_band_the_panel_and_search_say_the_day_the_aeat_data_was_
             app.exit(None)
 
     assert dated in band
-    assert isinstance(panel, CasillaEditorScreen)
+    assert panel is not None
     assert dated in panel_text
     income = [hit for hit in hits if hit.box == _INCOME]
     assert income and all(hit.origin.endswith(dated) for hit in income)

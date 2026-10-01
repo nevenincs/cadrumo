@@ -43,6 +43,7 @@ from ..screen import ModeloWorkbenchScreen
 from ..sources import OpenSourceSurface, surface_target
 from ..wording import wrap_words
 from .declaration_states import recorded_as_filed
+from .editor_panel import open_panel
 from .sectioned_form import sectioned_form
 from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
 
@@ -262,7 +263,8 @@ async def test_the_editor_repeats_the_result_line_and_can_send_the_filer_to_the_
     with override_settings(cadrumo_output_language="en"):
         screen = ModeloWorkbenchScreen(FakeReader(), actions=FakeActions(), navigate=navigated.append)
         app = ScreenHostApp(screen)
-        async with app.run_test(size=(140, 40)) as pilot:
+        # The dialog, which opens below thirty rows of height, covers the header and so repeats its result line.
+        async with app.run_test(size=(100, 29)) as pilot:
             await _settle(pilot)
             await pilot.press("g", *"01", "enter")
             await _settle(pilot)
@@ -325,8 +327,8 @@ async def test_the_editor_names_the_boxes_a_box_affects_even_before_its_help_was
             await _settle(pilot)
             reader.ready.set()
             await _settle(pilot, 8)
-            editor = app.screen
-            assert isinstance(editor, CasillaEditorScreen)
+            editor = open_panel(app.screen)
+            assert editor is not None
             shown = " ".join(str(widget.render()) for widget in editor.query(Static))
             app.exit(None)
 

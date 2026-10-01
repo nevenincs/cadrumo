@@ -18,9 +18,9 @@ from ......core.config import override_settings
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList, CasillaListEntry
-from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from .declaration_states import recorded_as_filed, with_deadline, with_findings
+from .editor_panel import open_panel
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
@@ -57,8 +57,8 @@ async def test_a_recorded_declaration_is_read_only_and_asks_for_nothing() -> Non
             ]
             await pilot.press("enter")
             await _settle(pilot)
-            panel = app.screen
-            assert isinstance(panel, CasillaEditorScreen)
+            panel = open_panel(app.screen)
+            assert panel is not None
             panel_state = (panel.read_only, len(panel.query(Input)))
             reason = str(panel.query_one("#editor-can-change-text", Static).render())
             await pilot.press("escape")

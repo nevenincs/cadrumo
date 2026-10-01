@@ -8,9 +8,12 @@ official pages and their sections with what each still needs, folding finished
 pages away; the casilla list shows the current page, or the whole declaration
 sorted another way; and a help band explains the casilla under the cursor --
 its words, where its value comes from, what may be done about it, and, once
-loaded, its formula, official text and legal basis. ``/`` searches every page,
-``g`` goes to a box by number, and ``?`` names the symbols on screen, then
-opens every symbol and key. ``b`` confirms the assumed values of the section
+loaded, its formula, official text and legal basis. Enter opens the box's
+panel in the help band's place, with the list still in view above it, and
+keeping a value there moves the list on and refills the panel for the next
+box; on a terminal too short for both, the panel opens as a centred dialog
+instead. ``/`` searches every page, ``g`` goes to a box by number, and ``?``
+names the symbols on screen, then opens every symbol and key. ``b`` confirms the assumed values of the section
 under the cursor, or of the page, together; never the whole declaration at once.
 
 A page that does not apply this period is dimmed, says so and asks nothing of
@@ -38,6 +41,7 @@ from rich.cells import cell_len
 from textual import events
 from textual.actions import SkipAction
 from textual.app import ComposeResult
+from textual.await_remove import AwaitRemove
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import OptionList, Static
@@ -92,7 +96,7 @@ from .casilla_list import (
     grid_cell_title,
     rate_note,
 )
-from .editor import CasillaEditorScreen, EditorOutcome, read_only_reason
+from .editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, EditorOutcome, read_only_reason
 from .export import WorkbenchExportScreen
 from .header import (
     DeadlineTone,
@@ -169,6 +173,12 @@ if TYPE_CHECKING:
 _NARROW: Final[int] = 110
 _SHORT: Final[int] = 30
 """Below this many rows the list shows one line per box and the help band one line, so ten or more boxes fit."""
+_DOCKED_FROM: Final[int] = _SHORT
+"""From this many rows the box panel docks in place of the help band; below it, it opens as the centred dialog."""
+_FOLLOWING_LINES: Final[int] = 2
+"""Lines of the list kept in view after the box being edited, when the list scrolls to bring that box in."""
+_FOLLOWING_MIN_VIEW: Final[int] = 6
+"""The fewest lines the list must show before it gives any of them to the rows after the box being edited."""
 _GUTTERS: Final[int] = 2 * int(CADRUMO_CSS_TOKENS["cadrumo-gutter"])
 _NEXT_GAP: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-section"])
 _FOOTER_KEY_GAP: Final[int] = 1
@@ -494,6 +504,19 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         ModeloWorkbenchScreen #wb-help.-expanded {
             max-height: $cadrumo-help-expanded-max-height;
         }
+        ModeloWorkbenchScreen CasillaEditorPanel {
+            /* Docked in place of the help band, growing upward over the list. */
+            width: 1fr;
+            max-height: $cadrumo-editor-dock-max-height;
+            padding: $cadrumo-space-0 $cadrumo-gutter;
+            border-top: $cadrumo-rule $primary;
+        }
+        ModeloWorkbenchScreen.-editing #wb-help {
+            display: none;
+        }
+        ModeloWorkbenchScreen.-legend CasillaEditorPanel {
+            display: none;
+        }
         """
     )
 
@@ -522,6 +545,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         Binding("n", "next_attention(1)", "", show=False, priority=True),
         Binding("N", "next_attention(-1)", "", show=False, priority=True),
     ]
+    _OWN_ACTIONS: ClassVar[frozenset[str]] = frozenset(binding.action.partition("(")[0] for binding in BINDINGS)
+    """The workbench's own key actions, which stay quiet while the filer works in the docked box panel."""
 
     def __init__(
         self,
@@ -556,6 +581,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._cards: dict[tuple[str, OutputLanguage], ModeloCasillaHelpCardV1] = {}
         self._language = OutputLanguage(output_language())
         self._session = WorkbenchEditSession(self._language)
+        self._docked: tuple[CasillaListEntry, CasillaEditorPanel] | None = None
 
     # ── composition ─────────────────────────────────────────────────────
 
@@ -603,6 +629,19 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._describe_keys()
         self.call_after_refresh(self._render_navigator)
         self.call_after_refresh(self._rewrap_help)
+
+    @override
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Keep the workbench's own keys from acting while the filer works in the docked box panel.
+
+        The panel takes its own keys first; a key it leaves, such as ``q`` on
+        one of its buttons, must not leave the workbench or open another view
+        under the filer's hands. With the cursor back in the list, every key
+        acts again.
+        """
+        if action in self._OWN_ACTIONS and self._working_in_dock():
+            return False
+        return super().check_action(action, parameters)
 
     def on_key(self, event: events.Key) -> None:
         """Take the first-open notice away at the filer's first keypress."""
@@ -767,6 +806,8 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         loading = self.query("#wb-loading")
         for widget in loading:
             widget.remove()
+        # A docked panel describes the box as it was read; a fresh read closes it.
+        self._close_dock(refocus=False)
         self._render_all()
         self._describe_keys()
         if previous_page is None:
@@ -1371,6 +1412,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if self.has_class("-searching"):
             self._close_search()
             return
+        if self._docked is not None:
+            self._close_dock()
+            return
         self._leave_then(lambda: self.dismiss(None))
 
     def _leave_then(self, leave: Callable[[], object]) -> None:
@@ -1442,28 +1486,122 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         if actions is not None:
             self._push_editor(entry, actions, card)
 
+    def _height(self) -> int:
+        return self.size.height or self.app.size.height
+
     def _push_editor(
         self, entry: CasillaListEntry, actions: ModeloWorkbenchActionsV1, card: ModeloCasillaHelpCardV1 | None
     ) -> None:
+        """Open the box panel docked under the list, or as the centred dialog on a terminal too short for both.
+
+        The host is chosen each time a panel opens. One already open stays
+        where it is, whatever the terminal does, until the filer closes it, so
+        nothing typed into it is lost to a resize.
+        """
         field = entry.field
         recorded = self.recorded
         probe = WorkbenchEditSession(self._language)
-        self.app.push_screen(
-            CasillaEditorScreen(
-                field,
-                parse=actions.parse,
-                language=self._language,
-                limits=() if card is None else card.constraints,
-                can_clear=probe.stage_clear(field) is None,
-                can_restore=probe.stage_restore(field) is None,
-                read_only_reason=read_only_reason(field, self._language, recorded=recorded),
-                feeds=() if card is None else card.feeds,
-                status_line=self._status_line(),
-                recorded=recorded,
-                aeat_imported=aeat_imported_on(self.form),
-            ),
-            partial(self._editor_closed, entry),
+        docked = self._height() >= _DOCKED_FROM
+        host = CasillaEditorPanel if docked else CasillaEditorScreen
+        editor = host(
+            field,
+            parse=actions.parse,
+            language=self._language,
+            limits=() if card is None else card.constraints,
+            can_clear=probe.stage_clear(field) is None,
+            can_restore=probe.stage_restore(field) is None,
+            read_only_reason=read_only_reason(field, self._language, recorded=recorded),
+            feeds=() if card is None else card.feeds,
+            # Docked, the header stays in view and the panel need not repeat its result line.
+            status_line=None if docked else self._status_line(),
+            recorded=recorded,
+            aeat_imported=aeat_imported_on(self.form),
         )
+        if isinstance(editor, CasillaEditorPanel):
+            self._dock(entry, editor)
+            return
+        self._close_dock(refocus=False)
+        self.app.push_screen(editor, partial(self._editor_closed, entry))
+
+    def _dock(self, entry: CasillaListEntry, panel: CasillaEditorPanel) -> None:
+        """Put ``panel`` in place of the help band, refilling it when a panel is already there."""
+        previous = self._docked
+        self._docked = (entry, panel)
+        self.add_class("-editing")
+        removed = None if previous is None else previous[1].remove()
+        scrolled_from = self.query_one(CasillaList).scroll_offset.y
+        self.run_worker(self._mount_docked(panel, removed, scrolled_from), group="workbench-dock")
+
+    async def _mount_docked(self, panel: CasillaEditorPanel, removed: AwaitRemove | None, scrolled_from: float) -> None:
+        """Mount ``panel`` once the one it replaces is gone, unless the filer closed it or another replaced it since."""
+        if removed is not None:
+            await removed
+        docked = self._docked
+        if docked is None or docked[1] is not panel:
+            return
+        await self.mount(panel, before=self.query_one("#wb-help"))
+        # The list gives the panel its lines on the next layout, scrolling to keep the box in view.
+        self.call_after_refresh(self._show_following, scrolled_from)
+
+    def _show_following(self, scrolled_from: float) -> None:
+        """Show the rows after the box being edited when the list had to scroll down to bring it in.
+
+        Scrolling down to a box leaves it on the list's last line; the rows
+        after it are the neighbours the filer reads next, so a few lines more
+        are shown while the list is tall enough to keep the box itself in view.
+        """
+        casilla_list = self.query_one(CasillaList)
+        if self._docked is None or casilla_list.scroll_offset.y <= scrolled_from:
+            return
+        if casilla_list.scrollable_content_region.height >= _FOLLOWING_MIN_VIEW:
+            casilla_list.scroll_relative(y=_FOLLOWING_LINES, animate=False)
+
+    def _working_in_dock(self) -> bool:
+        """Whether the filer's cursor is in the docked box panel."""
+        docked = self._docked
+        focused = self.focused
+        return docked is not None and focused is not None and docked[1] in focused.ancestors_with_self
+
+    def _close_dock(self, *, refocus: bool = True) -> None:
+        """Take the docked panel away and give the help band back, with the cursor on the list when ``refocus``."""
+        docked = self._docked
+        if docked is None:
+            return
+        self._docked = None
+        docked[1].remove()
+        self.remove_class("-editing")
+        casilla_list = self.query_one(CasillaList)
+        if self._pages and not self._legend_level:
+            self._render_help(casilla_list.highlighted)
+        if refocus:
+            casilla_list.focus()
+
+    def on_casilla_editor_panel_closed(self, message: CasillaEditorPanel.Closed) -> None:
+        """Answer the docked panel: stage the filer's decision, then refill it for the next box, or close it."""
+        message.stop()
+        docked = self._docked
+        if docked is None or message.panel is not docked[1]:
+            return
+        entry = docked[0]
+        decision = message.outcome
+        if isinstance(decision, OpenSourceSurface):
+            self._close_dock()
+            self._open_surface(decision)
+            return
+        if decision is None:
+            self._close_dock()
+            return
+        casilla_list = self.query_one(CasillaList)
+        refusal = self._stage(entry, decision)
+        if refusal is None and decision.advance:
+            scrolled_from = casilla_list.scroll_offset.y
+            self._advance_attention(1)
+            following = casilla_list.highlighted
+            if following is not None and following.key != entry.key:
+                self._show_following(scrolled_from)
+                self._open_editor(following)
+                return
+        self._close_dock()
 
     def _editor_closed(self, entry: CasillaListEntry, decision: EditorOutcome | None) -> None:
         if isinstance(decision, OpenSourceSurface):
@@ -1471,6 +1609,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
             return
         if decision is None:
             return
+        refusal = self._stage(entry, decision)
+        if refusal is None and decision.advance:
+            self._advance_attention(1)
+
+    def _stage(self, entry: CasillaListEntry, decision: EditorDecision) -> StageRefusal | None:
+        """Stage what the filer decided in a box's panel, then show the workbench with it or say why it was refused."""
         field = entry.field
         if decision.kind is WorkbenchChangeKind.SET:
             refusal = self._session.stage_value(field, decision.value, decision.display)
@@ -1479,8 +1623,7 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         else:
             refusal = self._session.stage_restore(field)
         self._after_stage(refusal)
-        if refusal is None and decision.advance:
-            self._advance_attention(1)
+        return refusal
 
     def _after_stage(self, refusal: StageRefusal | None) -> None:
         if refusal is not None:

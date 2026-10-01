@@ -54,7 +54,7 @@ from cadrumo.entrypoints.tui.launcher import (
 )
 from cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm import BulkConfirmScreen
 from cadrumo.entrypoints.tui.modelo.workbench.casilla_list import CasillaList, CasillaListEntry
-from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorScreen
+from cadrumo.entrypoints.tui.modelo.workbench.editor import CasillaEditorPanel
 from cadrumo.entrypoints.tui.modelo.workbench.issues import WorkbenchIssuesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, workbench_progress
 from cadrumo.entrypoints.tui.modelo.workbench.review import EditReviewScreen
@@ -200,18 +200,25 @@ async def _open_review(scenario: SequenceScenario, pilot: Pilot[object]) -> None
     await _settle(pilot)
 
 
-async def _open_panel(pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry) -> object:
-    """Press Enter on one box, as a filer opens its panel, and return what is on top afterwards."""
+def _box_panel(app: App[object]) -> CasillaEditorPanel | None:
+    """The box panel on top, docked in the workbench or held in the centred dialog; ``None`` when none is open."""
+    return next(iter(app.screen.query(CasillaEditorPanel)), None)
+
+
+async def _open_panel(
+    pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
+) -> CasillaEditorPanel | None:
+    """Press Enter on one box, as a filer opens its panel, and return the panel it opened, if it opened one."""
     if casilla_list.focus_address(entry.key):
         casilla_list.focus()
         await pilot.press("enter")
         await _settle(pilot)
-    return pilot.app.screen
+    return _box_panel(pilot.app)
 
 
-async def _close_panel(pilot: Pilot[object], screen: object) -> None:
-    """Close a panel Enter opened; Escape on the workbench itself would leave it, so it is never pressed there."""
-    if not isinstance(screen, ModeloWorkbenchScreen):
+async def _close_panel(pilot: Pilot[object]) -> None:
+    """Close what Enter opened; Escape on the bare workbench would leave it, so it is never pressed there."""
+    if not isinstance(pilot.app.screen, ModeloWorkbenchScreen) or _box_panel(pilot.app) is not None:
         await pilot.press("escape")
         await _settle(pilot)
 
@@ -222,10 +229,10 @@ async def _open_read_only_panel(scenario: SequenceScenario, pilot: Pilot[object]
     async def read_only(
         _scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
     ) -> bool:
-        screen = await _open_panel(pilot, casilla_list, entry)
-        if isinstance(screen, CasillaEditorScreen) and screen.read_only:
+        panel = await _open_panel(pilot, casilla_list, entry)
+        if panel is not None and panel.read_only:
             return True
-        await _close_panel(pilot, screen)
+        await _close_panel(pilot)
         return False
 
     await _first_box(scenario, pilot, read_only, "opened a panel without an input")
@@ -239,10 +246,10 @@ async def _open_assumed_panel(scenario: SequenceScenario, pilot: Pilot[object]) 
     ) -> bool:
         if entry.field.origin is not ModeloFormOrigin.DEFAULT_TO_CONFIRM:
             return False
-        screen = await _open_panel(pilot, casilla_list, entry)
-        if isinstance(screen, CasillaEditorScreen) and not screen.read_only:
+        panel = await _open_panel(pilot, casilla_list, entry)
+        if panel is not None and not panel.read_only:
             return True
-        await _close_panel(pilot, screen)
+        await _close_panel(pilot)
         return False
 
     await _first_box(scenario, pilot, assumed, "holds an assumed value the filer can confirm")
@@ -326,16 +333,19 @@ async def _stage(
     if sample is None or field.editability not in TYPED_EDITABILITIES:
         return False
     editor = await _open_panel(pilot, casilla_list, entry)
-    if not isinstance(editor, CasillaEditorScreen) or editor.read_only:
-        await _close_panel(pilot, editor)
+    if editor is None or editor.read_only:
+        await _close_panel(pilot)
         return False
     editor.query_one("#editor-input", Input).value = sample
     await _settle(pilot)
     if editor.query_one("#editor-save", Button).disabled:
-        await _close_panel(pilot, editor)
+        await _close_panel(pilot)
         return False
     await pilot.press("enter")
     await _settle(pilot)
+    # A docked panel refills for the next box that needs the filer; the review opens from the workbench.
+    if _box_panel(pilot.app) is not None:
+        await _close_panel(pilot)
     return bool(_workbench(scenario, pilot.app).staged_changes)
 
 
@@ -370,15 +380,18 @@ _PAGE_SCREENS: Final[dict[str, type[object]]] = {
     "sources": WorkbenchSourcesScreen,
     "legend": ModeloWorkbenchScreen,
     "search": ModeloWorkbenchScreen,
-    "not-editable": CasillaEditorScreen,
-    EDITOR_PAGE: CasillaEditorScreen,
+    "not-editable": CasillaEditorPanel,
+    EDITOR_PAGE: CasillaEditorPanel,
     BULK_CONFIRM_PAGE: BulkConfirmScreen,
-    F8_CONFIRM_PAGE: CasillaEditorScreen,
+    F8_CONFIRM_PAGE: CasillaEditorPanel,
     REVIEW_PAGE: EditReviewScreen,
     RECALCULATE_PAGE: ConfirmScreen,
     ISSUES_PAGE: WorkbenchIssuesScreen,
 }
-"""Each page past Declarations, by the short name a scenario uses, to the screen the filer lands on."""
+"""Each page past Declarations, by the short name a scenario uses, to the screen the filer lands on.
+
+The box panel is named by the panel itself: it docks in the workbench on a
+tall terminal and opens in its own dialog on a short one."""
 _PAGE_WALKS: Final[dict[str, _Walk]] = {
     "workbench": _stay,
     "sources": _open_sources,
@@ -622,7 +635,9 @@ def _declaration_key(scenario: SequenceScenario, app: App[object]) -> str:
 
 def _require_page(scenario: SequenceScenario, app: App[object], page: str) -> None:
     """Refuse a capture whose walk did not land on the page it is named for."""
-    if type(app.screen) is not _PAGE_SCREENS.get(page):
+    expected = _PAGE_SCREENS.get(page)
+    landed = _box_panel(app) is not None if expected is CasillaEditorPanel else type(app.screen) is expected
+    if not landed:
         raise PageUnavailableError(
             f"{scenario.sequence_id}: the walk to {page!r} ended on {type(app.screen).__qualname__}; "
             "the declaration did not open that page"

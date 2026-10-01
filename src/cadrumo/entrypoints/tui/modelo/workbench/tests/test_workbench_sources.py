@@ -39,7 +39,6 @@ from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
 from ..casilla_list import CasillaList, CasillaListEntry
-from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
 from ..sources import (
     SourceGroup,
@@ -54,6 +53,7 @@ from ..sources import (
     surface_target,
 )
 from .declaration_states import recorded_as_filed
+from .editor_panel import open_panel
 from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
@@ -421,12 +421,15 @@ async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workb
             chosen = sources.query_one(CasillaList).highlighted
             await pilot.press("enter")
             await _settle(pilot)
-            editor = app.screen
+            on_top = app.screen
+            editor = open_panel(on_top)
             landed_on = screen.query_one(CasillaList).highlighted
 
     assert chosen is not None
     assert chosen.field.box == "06"
-    assert isinstance(editor, CasillaEditorScreen)
+    assert on_top is screen, "the sources view closed onto the workbench"
+    assert editor is not None
+    assert editor.field.box == "06"
     assert landed_on is not None
     assert landed_on.field.box == "06"
 

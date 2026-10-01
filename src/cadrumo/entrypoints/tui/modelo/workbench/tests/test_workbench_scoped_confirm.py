@@ -24,8 +24,8 @@ from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ..bulk_confirm import BulkConfirmScreen
 from ..casilla_list import CasillaList
-from ..editor import CasillaEditorScreen
 from ..screen import ModeloWorkbenchScreen
+from .editor_panel import open_panel
 from .sectioned_form import sectioned_form
 from .workbench_fixture import FakeActions, FakeReader
 
@@ -161,14 +161,11 @@ async def test_with_nothing_here_confirmable_from_a_list_the_first_assumed_box_o
             landed = screen.query_one(CasillaList).highlighted
             await pilot.press(key)
             await _settle(pilot, 8)
-            opened = app.screen
-            title = (
-                str(opened.query_one("#editor-title", Static).render())
-                if isinstance(opened, CasillaEditorScreen)
-                else ""
-            )
+            on_top = app.screen
+            opened = open_panel(on_top)
+            title = "" if opened is None else str(opened.query_one("#editor-title", Static).render())
             app.exit(None)
 
     assert landed is not None and landed.field.box == "05"
-    assert isinstance(opened, CasillaEditorScreen), f"{key} opened {type(opened).__name__}, not the box's panel"
+    assert opened is not None, f"{key} opened {type(on_top).__name__}, not the box's panel"
     assert "[05]" in title
