@@ -33,6 +33,8 @@ from __future__ import annotations
 import sys
 from typing import Final
 
+from dev._paths import REPO_ROOT
+
 from .contract import Phase, Step
 from .probe import Requirement
 
@@ -100,21 +102,24 @@ PYTHON = Phase(
 
 TOOLS = Phase(
     name="tools",
-    summary="Install repository tooling and diagnose the result.",
+    summary="Install repository tooling.",
     steps=(
         Step(
             name="vaultspec-install",
-            argv=("uv", "run", "--no-sync", "vaultspec-core", "install", "--upgrade"),
+            argv=(
+                "uv",
+                "run",
+                "--no-sync",
+                "vaultspec-core",
+                "install",
+                *(("--upgrade",) if (REPO_ROOT / ".vaultspec").is_dir() else ()),
+                # The install manifest is machine-local and ignored, so a fresh
+                # clone has committed provider directories and MCP entries but no
+                # record of owning them. Adopting them is the only correct
+                # reading there; once the manifest exists, never force.
+                *(("--force",) if not (REPO_ROOT / ".vaultspec" / "providers.json").is_file() else ()),
+            ),
             summary="Install the repository tooling and refresh its builtin snapshots.",
-        ),
-        Step(
-            name="doctor",
-            # Advisory for the same reason the old recipe prefixed it with `-`:
-            # a configuration report is the last word a person wants after a
-            # successful provisioning, and never a reason to call it failed.
-            argv=("uv", "run", "--no-sync", "aeat", "config", "check"),
-            summary="Report the resulting configuration.",
-            advisory=True,
         ),
         Step(
             name="actionlint-install",
@@ -123,14 +128,13 @@ TOOLS = Phase(
         ),
     ),
     inputs=("uv.lock",),
-    artifacts=(),
+    artifacts=(".vaultspec",),
 )
 
 #: The phases, keyed by name. The runner reads this and nothing else.
 #:
-#: `just setup-browser` is deliberately absent. Downloading two browser
-#: channels is minutes of network for a capability most worktrees never
-#: exercise, and CI already invokes it as its own step.
+#: Minimal setup owns Python and tooling. Full `just init` additionally calls
+#: browser provisioning, which observes live resources rather than a stamp.
 PHASE_PLAN: Final[dict[str, Phase]] = {
     "python": PYTHON,
     "tools": TOOLS,
