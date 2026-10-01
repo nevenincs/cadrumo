@@ -1204,6 +1204,10 @@ application:
       iva_compensation_annual_source_evidence_failure: Required Modelo 303 annual
         source evidence for Modelo 390 is unresolved (%{source_issue_count} issue(s));
         completion is blocked.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo cannot yet record the supporting
+        document that a purchase from another EU country needs, so this declaration
+        cannot pass the check (%{transaction_count} ledger entries affected). File
+        it another way.
       iva_selected_scope_evidence_failure: 'Selected-scope IVA evidence is incomplete
         (%{source_ref_count} source references; %{unidentified_source_count} unidentified),
         so verification is blocked. Source-reference identifiers, not financial values:
@@ -1236,6 +1240,9 @@ application:
         no persisted OSS evidence.
       oss_source_unrouted: 'No aggregation binding consumes these one-stop-shop sources
         (references: %{source_ref_ids}).'
+      printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
+        that make it up (%{printed_sum}), so the file would not add up and AEAT may
+        reject it.
       pulled_filing_casilla_mismatch: Casilla %{casilla_number} for %{period_code}
         %{filing_year} computed %{computed_value} against the filed %{filed_value}
         (%{mismatch_kind}).

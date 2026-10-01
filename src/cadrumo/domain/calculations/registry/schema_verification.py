@@ -829,6 +829,15 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # equals branches in _evaluate_predicate_expression and
         # _evaluate_advisory_predicate_fires.
         "equals",
+        # equals_sum(["total_id", "addend_id", "addend_id", ...]) — printed-total
+        # invariant: the first casilla must equal the sum of every casilla after
+        # it, exactly. Authored for a total box the official record design
+        # defines as the sum of other printed boxes (Modelo 303 [27]), so the
+        # fichero refuses a total carrying an amount no printed box shows. Its
+        # BLOCKING finding names the total box and the printed sum. As an
+        # ADVISORY it fires when the two differ. See the equals_sum branches in
+        # _evaluate_predicate_expression and _evaluate_advisory_predicate_fires.
+        "equals_sum",
         "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
@@ -869,6 +878,7 @@ class VerificationPredicateOperator(StrEnum):
     DEDUCCION_REQUIRES_ADQUISICION_BEFORE = "deduccion_requires_adquisicion_before"
     ADVISORY_WHEN_COMPUTED_DIVERGES = "advisory_when_computed_diverges"
     EQUALS = "equals"
+    EQUALS_SUM = "equals_sum"
     IMPLIES_ANY_NONZERO = "implies_any_nonzero"
     IMPLIES_NONZERO = "implies_nonzero"
     PROFILE_FIELD_REQUIRED = "profile_field_required"
@@ -1005,6 +1015,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             VerificationPredicateSyntax.CASILLA_LIST,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
+        ),
+        # A total and at least two addends: one addend is the binary equals.
+        VerificationPredicateOperator.EQUALS_SUM: _predicate_specification(
+            VerificationPredicateOperator.EQUALS_SUM,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=3,
         ),
         VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _predicate_specification(
             VerificationPredicateOperator.IMPLIES_ANY_NONZERO,
@@ -1283,6 +1299,14 @@ class VerificationPredicateDefinition(RegistryModel):
       non-blocking alert rather than a refusal). The first consequent
       slot onward is the constituent set; a single consequent reduces to
       ``implies_nonzero``.
+    - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — the
+      printed-total invariant: predicate holds iff the first casilla equals
+      the exact sum of every casilla after it, missing values reading as
+      zero. Authored for a box the official record design defines as the sum
+      of other printed boxes, such as Modelo 303 [27]: a total that also
+      carries an amount no printed box shows produces a fichero that does not
+      add up, whatever the source of that amount. Its BLOCKING finding names
+      the total box and the sum of the printed boxes.
     - ``profile_field_required("profile_field_name", "applicability_filter")``
       — profile-state-aware conditional non-zero requirement. Returns
       ``True`` (predicate holds) when the named ``applicability_filter``

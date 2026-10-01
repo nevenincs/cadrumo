@@ -74,3 +74,16 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 # 84.Uno.2), which the diseno reserves no box for, so the box equals no single
 # semantic casilla and the two-casilla equals operator cannot state its identity.
 
+# ── Printed-total consistency for [27] ─────────────────────────────────────
+# Restates the 2022 printed-total predicate with this design's addends. The
+# 2023 design (aeat-dr-303-2023, campo 60, posicion 617) defines "Total cuota
+# devengada ( [152] + [03] + [155] + [06] + [09] + [11] + [13] + [15] + [158] +
+# [18] + [21] + [24] + [26] ) [27]", adding [152], [155] and [158] to the 2022
+# list. The 2024 design for periods up to 08 and 2T (aeat-dr-303-2024-early,
+# campo 60, posicion 617) prints the same list, so 2024-hasta-08-y-2t inherits
+# this declaration unchanged.
+[[revisions.2023.verification_predicates]]
+id = "equals-sum:dr303-27-equals-printed-summands"
+predicate_id = "modelo-303-dr303-27-equals-printed-summands"
+expression = 'equals_sum(["27", "152", "03", "155", "06", "09", "11", "13", "15", "158", "18", "21", "24", "26"])'
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

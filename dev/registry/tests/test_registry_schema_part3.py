@@ -138,6 +138,31 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
         committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_equals_sum_with_a_single_addend() -> None:
+    """An equals_sum predicate must name a total and at least two addends.
+
+    With one addend the runtime evaluator's bad-arity branch holds as BLOCKING
+    and never fires as ADVISORY, so the check would silently do nothing; one
+    addend is the binary ``equals`` operator's job.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    single_addend = VerificationPredicateDefinition(
+        id="equals-sum:single-addend",
+        predicate_id="modelo-130-single-addend",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='equals_sum(["01", "02"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, single_addend)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="equals_sum expression must name at least 3 casilla ids"):
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None:
     """Every casilla-list predicate operator must resolve ids against the revision."""
 
@@ -149,6 +174,7 @@ def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None
         ("any_nonzero", 'any_nonzero(["01", "missing-casilla"])'),
         ("cap_le_when_positive", 'cap_le_when_positive(["15", "missing-casilla"])'),
         ("equals", 'equals(["01", "missing-casilla"])'),
+        ("equals_sum", 'equals_sum(["01", "02", "missing-casilla"])'),
         ("implies_nonzero", 'implies_nonzero(["01", "missing-casilla"])'),
         ("implies_any_nonzero", 'implies_any_nonzero(["01", "02", "missing-casilla"])'),
         ("roll_forward_balances", 'roll_forward_balances(["01", "02", "03", "missing-casilla"])'),

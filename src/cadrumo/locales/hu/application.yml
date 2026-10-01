@@ -1278,6 +1278,10 @@ application:
       iva_compensation_annual_source_evidence_failure: A 390-es modellhez szükséges
         303-as modell éves forrásbizonyítéka rendezetlen (%{source_issue_count} probléma);
         a befejezés blokkolva van.
+      iva_intra_eu_self_assessment_unrecordable: 'A Cadrumo egyelőre nem tudja rögzíteni
+        a Közösségen belüli beszerzéshez szükséges igazoló dokumentumot, ezért ez
+        a nyilatkozat nem mehet át az ellenőrzésen (érintett tételek száma: %{transaction_count}).
+        Nyújtsa be más módon.'
       iva_selected_scope_evidence_failure: 'A kiválasztott hatókör áfabizonyítéka
         hiányos (%{source_ref_count} forráshivatkozás; %{unidentified_source_count}
         azonosítatlan), ezért az ellenőrzés blokkolva van. Forráshivatkozás-azonosítók,
@@ -1311,6 +1315,9 @@ application:
         őriz meg OSS bizonyítékot.
       oss_source_unrouted: 'Egyetlen aggregációs kötés sem használja fel ezeket az
         egyablakos forrásokat (hivatkozások: %{source_ref_ids}).'
+      printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
+        sorok összegével (%{printed_sum}), ezért a fájl összegei nem stimmelnének,
+        és az AEAT elutasíthatja.
       pulled_filing_casilla_mismatch: A(z) %{period_code} %{filing_year} %{casilla_number}
         rovat számított értéke %{computed_value} a bevallott %{filed_value} ellenében
         (%{mismatch_kind}).

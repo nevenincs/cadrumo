@@ -1321,6 +1321,10 @@ application:
       iva_compensation_annual_source_evidence_failure: L'evidència d'origen anual
         obligatòria del Model 303 per al Model 390 no està resolta (%{source_issue_count}
         incidència(es)); la finalització queda bloquejada.
+      iva_intra_eu_self_assessment_unrecordable: Cadrumo encara no pot registrar el
+        justificant que necessita una adquisició intracomunitària, de manera que aquesta
+        declaració no pot superar la comprovació (%{transaction_count} apunts afectats).
+        Presenteu aquesta declaració per una altra via.
       iva_selected_scope_evidence_failure: 'L''evidència d''IVA de l''àmbit seleccionat
         és incompleta (%{source_ref_count} referències d''origen; %{unidentified_source_count}
         sense identificar), per tant la verificació queda bloquejada. Identificadors
@@ -1353,6 +1357,9 @@ application:
         però no conserva evidència de l'OSS.
       oss_source_unrouted: 'Cap vinculació d''agregació no consumeix aquestes fonts
         de finestreta única (referències: %{source_ref_ids}).'
+      printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
+        línies impreses que la componen (%{printed_sum}), així que el fitxer no quadraria
+        i l'AEAT podria rebutjar-lo.
       pulled_filing_casilla_mismatch: La casella %{casilla_number} de %{period_code}
         %{filing_year} va calcular %{computed_value} davant el declarat %{filed_value}
         (%{mismatch_kind}).
