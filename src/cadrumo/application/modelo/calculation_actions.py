@@ -154,7 +154,7 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .calculation_notes import CALCULATION_NOTES, durable_binding_source, is_printed_box
+from .calculation_notes import CALCULATION_NOTES, PRINTED_BOX_REASONS, durable_binding_source, is_printed_box
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -1750,7 +1750,7 @@ def _unrouted_source_issues(
         if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
             continue
         casilla_id = None if diagnostic.casilla_id is None else str(diagnostic.casilla_id)
-        if reason == "unresolved_binding" and not is_printed_box(
+        if reason in PRINTED_BOX_REASONS and not is_printed_box(
             None if casilla_id is None else casillas.get(casilla_id)
         ):
             continue

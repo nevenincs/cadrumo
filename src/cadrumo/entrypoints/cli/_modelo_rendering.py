@@ -281,7 +281,7 @@ def source_diagnostic_notice(
 
     casilla = None if diagnostic.casilla_id is None or casillas is None else casillas.get(str(diagnostic.casilla_id))
     box = printed_box_number(casilla)
-    attention = note_attention(diagnostic.reason)
+    attention = note_attention(diagnostic.reason, casilla=casilla)
     context.update({key: value for key, value in optional.items() if value})
     context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
     return Notice(

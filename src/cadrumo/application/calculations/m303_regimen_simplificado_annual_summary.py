@@ -105,8 +105,15 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             # simplificado only to sujetos pasivos meeting its three stated
             # requirements; a regimen general filer meets none, and the 303/4T
             # boxes 51--58 this family reads carry nothing for them. Demanding
-            # the source anyway would refuse an ordinary annual resumen.
-            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+            # the source anyway would refuse an ordinary annual resumen. The
+            # boxes stay without a value, and the resolution says they do not
+            # apply, so no diagnostic reports them as a missing source.
+            inapplicable = tuple(binding.id for binding in context.revision.bindings if binding.source is _SOURCE_KIND)
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                inapplicable_binding_ids=inapplicable,
+            )
         target = self._target_work_unit(context)
         self._require_target_matches_snapshot(target, context)
         source = self._source_work_unit(target)

@@ -126,6 +126,7 @@ class _SourceResolutionMergeState:
     relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
     unresolved_relation_ids: set[RelationId] = field(default_factory=set)
     unresolved_binding_ids: set[BindingId] = field(default_factory=set)
+    inapplicable_binding_ids: set[BindingId] = field(default_factory=set)
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = field(default_factory=dict)
     detail_rows: list[ModeloDetailRow] = field(default_factory=list)
     source_transaction_ids: set[str] = field(default_factory=set)
@@ -166,6 +167,7 @@ class _SourceResolutionMergeState:
         self.source_transaction_ids.update(resolution.source_transaction_ids)
         self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
         self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
+        self.inapplicable_binding_ids.update(resolution.inapplicable_binding_ids)
         if resolution.borrador_provenance is not None:
             self.borrador_provenance = resolution.borrador_provenance
         handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -283,6 +285,7 @@ class _SourceResolutionMergeState:
             relation_values=self.relation_values,
             unresolved_relation_ids=tuple(sorted(self.unresolved_relation_ids.difference(self.relation_values))),
             unresolved_binding_ids=self._unresolved_binding_ids(),
+            inapplicable_binding_ids=tuple(self.inapplicable_binding_ids),
             bound_inputs_by_casilla_id=self.bound_inputs_by_casilla_id,
             detail_rows=tuple(self.detail_rows),
             source_transaction_ids=tuple(sorted(self.source_transaction_ids)),
@@ -321,9 +324,14 @@ def collect_unhandled_source_diagnostics(
     revision: ModeloRevision,
     *,
     handled_sources: frozenset[str],
-    manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return diagnostics for revision bindings with no enrolled resolver.
+
+    A kind whose provider registration is ``non_runtime`` -- an operator's
+    typed value, a constant the record design fixes -- is enrolled on the route
+    with nothing to run, so it never needs a resolver and is never reported. A
+    ``deferred`` kind is reported as deferred; every other kind outside
+    ``handled_sources`` is reported as unhandled.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -331,9 +339,12 @@ def collect_unhandled_source_diagnostics(
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)
-        if source in handled_sources or source in manual_sources:
+        if source in handled_sources:
             continue
-        if registration_for(binding.source).disposition == "deferred":
+        disposition = registration_for(binding.source).disposition
+        if disposition == "non_runtime":
+            continue
+        if disposition == "deferred":
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="deferred_binding_source",

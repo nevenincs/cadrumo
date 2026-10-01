@@ -104,6 +104,30 @@ def test_a_reason_the_check_adjudicates_itself_is_left_to_the_check(issue: Calcu
     require_no_blocking_calculation_notes(_revision(issue), action="file")
 
 
+@pytest.mark.parametrize(
+    ("reason", "fields"),
+    [
+        ("unresolved_binding", {"casilla_id": "01"}),
+        ("unhandled_binding_source", {}),
+        ("source_domain_not_ready", {}),
+    ],
+)
+def test_a_box_or_source_the_calculation_could_not_work_out_refuses(reason: str, fields: dict[str, object]) -> None:
+    """Their producers report only sources that apply to the filer, so each one stands for a real gap."""
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        require_no_blocking_calculation_notes(_revision(_issue(reason, **fields)), action="export")
+
+    assert (refused.value.context or {})["reasons"] == reason
+
+
+def test_a_value_by_an_undeclared_route_is_shown_but_not_refused() -> None:
+    """It still fires on a route kept without a terminal origin by design, so it withholds nothing yet."""
+    revision = _revision(_issue("terminal_origin_mismatch", binding_source=BindingSourceKind.FOREIGN_ASSET))
+
+    assert blocking_calculation_issues(revision) == ()
+    assert CALCULATION_NOTE_ATTENTION["terminal_origin_mismatch"] is ModeloFormAttention.CHECK
+
+
 def test_a_revision_with_no_blocking_note_passes() -> None:
     """Teeth for the refusal above: the same call on a clean revision does not refuse."""
     require_no_blocking_calculation_notes(_revision(), action="verify")

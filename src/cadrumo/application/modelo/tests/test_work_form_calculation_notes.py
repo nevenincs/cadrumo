@@ -142,22 +142,21 @@ def _working_figure(operation: PinnedAuthorityOperation) -> str:
     return next(key[1] for key in (address_key(field.address) for field in form.working_figures) if key[0] == "casilla")
 
 
-def test_a_printed_box_that_could_not_be_worked_out_is_worth_checking_and_never_reads_as_zero(
+def test_a_printed_box_that_could_not_be_worked_out_blocks_filing_and_never_reads_as_zero(
     operation: PinnedAuthorityOperation,
 ) -> None:
     form = _form(operation, diagnostics=(_unresolved(_PRINTED),), zero_at=_PRINTED)
     field = _field(form, _PRINTED)
 
-    assert form.calculation_notes == (
-        ModeloFormCalculationNote(
-            reason="unresolved_binding",
-            attention=ModeloFormAttention.CHECK,
-            casilla_id=_PRINTED,
-            box=_PRINTED,
-            durable=False,
-        ),
+    note = ModeloFormCalculationNote(
+        reason="unresolved_binding",
+        attention=ModeloFormAttention.BLOCKS,
+        casilla_id=_PRINTED,
+        box=_PRINTED,
+        durable=True,
     )
-    assert form.blocking_calculation_notes == ()
+    assert form.calculation_notes == (note,)
+    assert form.blocking_calculation_notes == (note,)
     assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
     assert field.value is None
     assert form.calculation_notes_held
@@ -174,10 +173,13 @@ def test_the_same_box_without_a_note_keeps_its_value(operation: PinnedAuthorityO
 def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking(
     operation: PinnedAuthorityOperation,
 ) -> None:
+    """Teeth for the rule above: the same reason on a box the form does not print withholds nothing."""
     working = _working_figure(operation)
-    (note,) = _form(operation, diagnostics=(_unresolved(working),)).calculation_notes
+    form = _form(operation, diagnostics=(_unresolved(working),))
+    (note,) = form.calculation_notes
 
     assert note.attention is ModeloFormAttention.CHECK
+    assert form.blocking_calculation_notes == ()
     assert note.box is None
     assert not note.durable
 
@@ -269,7 +271,7 @@ def test_a_declaration_opened_afresh_knows_only_the_notes_that_persist_with_its_
 
     assert not form.calculation_notes_held
     assert [(note.reason, note.box, note.durable) for note in form.calculation_notes] == [
-        ("unresolved_binding", _PRINTED, False)
+        ("unresolved_binding", _PRINTED, True)
     ]
     assert _field(form, _PRINTED).value is None
 

@@ -12,7 +12,7 @@ in the live merge_source_resolutions tuple so they fire on their modelos.
 
 Deferred source kinds: the remaining deferred source kinds (related_party_operation,
 refund_operation) produce an 'unhandled_binding_source' advisory on source_diagnostics
-rather than a silent blank, and are NOT on the manual_sources allowlist.
+rather than a silent blank; only a ``non_runtime`` kind is exempt.
 
 Boundary gate: assert_no_novel_source_kinds raises on a synthetic novel-source binding
 so a TOML source that would resolve to blank fails fast instead of compiling silently.
@@ -507,7 +507,6 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     unhandled = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=handled,
-        manual_sources=frozenset({"manual_input"}),
     )
     unrouted_income = [d for d in unhandled if d.source_kind == "ledger_renta_income_aggregation"]
     assert not unrouted_income, (
@@ -703,7 +702,6 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     unhandled = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=handled,
-        manual_sources=frozenset({BindingSourceKind.MANUAL_INPUT}),
     )
     withholding_advisories = [
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"

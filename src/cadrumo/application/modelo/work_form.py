@@ -1199,16 +1199,18 @@ def _calculation_notes(
         for field in fields
         if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
+    casillas = {str(casilla.id): casilla for casilla in context.snapshot.revision.casillas}
     notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
     for reason, casilla_id in sources:
         if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
+        attention = note_attention(reason, casilla=None if casilla_id is None else casillas.get(casilla_id))
         notes[(reason, casilla_id)] = ModeloFormCalculationNote(
             reason=reason,
-            attention=note_attention(reason),
+            attention=attention,
             casilla_id=casilla_id,
             box=None if casilla_id is None else boxes.get(casilla_id),
-            durable=reason in BLOCKING_REASONS,
+            durable=reason in BLOCKING_REASONS and attention is ModeloFormAttention.BLOCKS,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

@@ -1063,6 +1063,29 @@ def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> N
     assert all("ledger_iva_aggregation" in diagnostic.message for diagnostic in ledger_diagnostics)
 
 
+def test_a_kind_enrolled_with_nothing_to_run_is_never_unhandled() -> None:
+    """Modelo 720's record-design constants need no resolver; its foreign-asset rows still do.
+
+    The fixed ``modelo`` and ``tipo de registro`` fields of each record are
+    ``design_constant`` bindings, enrolled on the route with nothing to run, as
+    an operator's typed value is. Neither is a missing route. The foreign-asset
+    rows are a filing-grade source, so leaving them outside the handled set is
+    still reported: that is the gap the screen exists for.
+    """
+    revision = published_revision("720", "2013-y-siguientes")
+    declared = {binding.source for binding in revision.bindings}
+    assert {BindingSourceKind.DESIGN_CONSTANT, BindingSourceKind.FOREIGN_ASSET} <= declared
+
+    diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
+    reported = {(diagnostic.reason, diagnostic.source_kind) for diagnostic in diagnostics}
+
+    assert ("unhandled_binding_source", BindingSourceKind.FOREIGN_ASSET.value) in reported
+    assert not {source for _reason, source in reported} & {
+        BindingSourceKind.DESIGN_CONSTANT.value,
+        BindingSourceKind.MANUAL_INPUT.value,
+    }
+
+
 def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

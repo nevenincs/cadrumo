@@ -853,6 +853,17 @@ class CalculationSourceResolution(BaseModel):
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
+    inapplicable_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
+    """Bindings this resolver owns that the filer's typed profile places outside the filing.
+
+    Each also stays in ``unresolved_binding_ids`` when it has no value, so the
+    engine treats it as absent exactly as before. What this channel adds is the
+    resolver's statement of WHY it is absent: the source does not apply to this
+    filer (a salaried filer has no activity inventory; a regime-general filer
+    has no simplified-regime summary), so no diagnostic reports it as a gap. A
+    resolver that cannot establish inapplicability from typed profile facts
+    leaves this empty, and the absence is reported as before.
+    """
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     detail_rows: tuple[ModeloDetailRow, ...] = Field(default_factory=tuple)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
@@ -1114,6 +1125,12 @@ class CalculationSourceResolution(BaseModel):
         if len(normalized) != len(set(normalized)):
             raise SourceMeshError("aggregation.source_mesh.errors.unresolved_binding_ids_duplicate")
         return tuple(sorted(normalized))
+
+    @field_validator("inapplicable_binding_ids")
+    @classmethod
+    @pydantic_validation_boundary
+    def _freeze_inapplicable_binding_ids(cls, value: tuple[BindingId, ...]) -> tuple[BindingId, ...]:
+        return tuple(sorted(set(value)))
 
     @field_validator("bound_inputs_by_casilla_id")
     @classmethod

@@ -106,173 +106,13 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "359e6fec44f9001a1bad6e5200865d8478aad70e1bc903412bf4c4ffb71c48b0"
+          "value": "06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622"
         }
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
         "notices": [
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-74-cuota-resultante-no-agricola",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "74",
-              "casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
-              "detail": "binding 'modelo-390-m303-simplificado-74-cuota-resultante-no-agricola' (casilla 'iva.anual.regimen-simplificado.cuota-resultante-no-agricola') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-75-cuota-resultante-agricola",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "75",
-              "casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-agricola",
-              "detail": "binding 'modelo-390-m303-simplificado-75-cuota-resultante-agricola' (casilla 'iva.anual.regimen-simplificado.cuota-resultante-agricola') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-76-aic",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "76",
-              "casilla_id": "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada",
-              "detail": "binding 'modelo-390-m303-simplificado-76-aic' (casilla 'iva.anual.regimen-simplificado.aic-bienes-cuota-devengada') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-77-inversion-sujeto-pasivo",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "77",
-              "casilla_id": "iva.anual.regimen-simplificado.inversion-sujeto-pasivo",
-              "detail": "binding 'modelo-390-m303-simplificado-77-inversion-sujeto-pasivo' (casilla 'iva.anual.regimen-simplificado.inversion-sujeto-pasivo') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-78-entregas-activos",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "78",
-              "casilla_id": "iva.anual.regimen-simplificado.entrega-activos-fijos",
-              "detail": "binding 'modelo-390-m303-simplificado-78-entregas-activos' (casilla 'iva.anual.regimen-simplificado.entrega-activos-fijos') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-79-total-cuota-resultante",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "79",
-              "casilla_id": "iva.anual.reconciliacion.devengada-simplificado-303",
-              "detail": "binding 'modelo-390-m303-simplificado-79-total-cuota-resultante' (casilla 'iva.anual.reconciliacion.devengada-simplificado-303') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-80-activos-fijos",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "80",
-              "casilla_id": "iva.anual.regimen-simplificado.iva-soportado-activos-fijos",
-              "detail": "binding 'modelo-390-m303-simplificado-80-activos-fijos' (casilla 'iva.anual.regimen-simplificado.iva-soportado-activos-fijos') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-81-regularizacion-inversion",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "81",
-              "casilla_id": "iva.anual.regimen-simplificado.regularizacion-bienes-inversion",
-              "detail": "binding 'modelo-390-m303-simplificado-81-regularizacion-inversion' (casilla 'iva.anual.regimen-simplificado.regularizacion-bienes-inversion') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-82-suma-deducciones",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "82",
-              "casilla_id": "iva.anual.regimen-simplificado.suma-deducciones",
-              "detail": "binding 'modelo-390-m303-simplificado-82-suma-deducciones' (casilla 'iva.anual.regimen-simplificado.suma-deducciones') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "modelo-390-m303-simplificado-83-resultado",
-              "binding_source": "m303_regimen_simplificado_annual_summary",
-              "box": "83",
-              "casilla_id": "iva.anual.regimen-simplificado.resultado",
-              "detail": "binding 'modelo-390-m303-simplificado-83-resultado' (casilla 'iva.anual.regimen-simplificado.resultado') declares present source <BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY: 'm303_regimen_simplificado_annual_summary'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "m303_regimen_simplificado_annual_summary"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
           {
             "action": null,
             "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
@@ -436,7 +276,7 @@
             "modelo-390-volumen-entregas-intracomunitarias-base": "0",
             "modelo-390-volumen-exportaciones-exentas-base": "0"
           },
-          "calculation_revision_id": "359e6fec44f9001a1bad6e5200865d8478aad70e1bc903412bf4c4ffb71c48b0",
+          "calculation_revision_id": "06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "iva.anual.aic.bienes.general.base": "0",
@@ -1578,7 +1418,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 359e6fec44f9001a1bad6e5200865d8478aad70e1bc903412bf4c4ffb71c48b0 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:34e394179c5fc6b1baf01a7b23ffe80f2d681f95dff3ccb841ff0462fa620b0a"},
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:3b3cb00c8570e633605d04fcdde9c8a43314a4109ea8c8933cbb3fb9b6d0432c"},
@@ -1622,7 +1462,7 @@
         "modelo",
         "work",
         "verify",
-        "359e6fec44f9001a1bad6e5200865d8478aad70e1bc903412bf4c4ffb71c48b0"
+        "06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622"
       ],
       "captures": [],
       "envelope": {
@@ -1660,7 +1500,7 @@
           {"action":null,"code":"modelo.work.verify.finding.advisory","context":{"binding_id":"6a5063cd02ff0c94af2c67ad1040fd2f9ad674b4c3a8dfdeec652db84e5a4d98","diagnostic_reason_code":"missing_transaction_evidence","kind":"advisory","legal_refs":"ley-37-1992:art-97, rd-1619-2012:art-2","severity":"warning","source_kind_code":"output_iva_evidence","source_refs":"boe-modelo-390-2009-form, aeat-modelo-390-procedure, aeat-dr-390-2025, aeat-dr-390-2022"},"message":"An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.","severity":"warning"}
         ],
         "result": {
-          "calculation_revision_id": "359e6fec44f9001a1bad6e5200865d8478aad70e1bc903412bf4c4ffb71c48b0",
+          "calculation_revision_id": "06bb88cc4143da3baffba8034845b9c97655cb8f9e9a6ecd041f50129eeac622",
           "completeness_status": "complete",
           "findings": [
             {"action":null,"casilla_id":null,"expectation_id":null,"kind":"advisory","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"message":"A built-in check flagged this declaration for a closer look.","severity":"warning","source_refs":[]},
@@ -1704,7 +1544,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "3e250e562e52494c102581d1b2d69cab33267bd14c833278d8012641f6f7ba55",
+          "verification_report_id": "ae849a3a1e4945119deb4941911ac5bdd8bf7cd45e0a4ed729ae78b0f329d3f6",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

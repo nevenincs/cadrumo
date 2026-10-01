@@ -13,14 +13,16 @@ check step refuses on its own evidence (:data:`CHECK_REFUSED_REASONS`), or the
 export refuses the file (:data:`EXPORT_REFUSED_REASONS`). The editor withholds
 filing on the same set, so the two can never disagree.
 
-A box that could not be worked out, a source with no route, a source store not
-ready and a value arriving by an undeclared route are worth checking: they are
-persisted with the calculation and shown, but their producers still fire for
-sources that do not apply to the filer, so refusing on them would refuse valid
-declarations. Every diagnostic that does not persist is held in this process
-only until the next calculation of the declaration
-(:class:`CalculationNoteStore`), and a declaration opened afresh says to
-calculate again to see them.
+A printed box that could not be worked out, a source with no route and a source
+store not ready are refused by the gate: their producers report only sources
+that apply to the filer. A box that could not be worked out blocks only when the
+form prints it (:data:`PRINTED_BOX_REASONS`); a working figure is worth checking.
+A value arriving by an undeclared route is worth checking and persists with the
+calculation: it still fires for a route kept without a terminal origin by
+design, so refusing on it would refuse declarations calculated through that
+route. Every diagnostic that does not persist is held in this process only until
+the next calculation of the declaration (:class:`CalculationNoteStore`), and a
+declaration opened afresh says to calculate again to see them.
 """
 
 from __future__ import annotations
@@ -42,9 +44,16 @@ _C = ModeloFormAttention.CHECK
 _I = ModeloFormAttention.INFO
 
 GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
-    {"unrouted_observation", "unrouted_declarable_quantity", "invoice_reverse_charge_cuota_not_derivable"}
+    {
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+        "invoice_reverse_charge_cuota_not_derivable",
+        "unresolved_binding",
+        "unhandled_binding_source",
+        "source_domain_not_ready",
+    }
 )
-"""Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out."""
+"""Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out or unworked."""
 CHECK_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
     {
         "iva_selected_scope_evidence_failure",
@@ -61,12 +70,9 @@ BLOCKING_REASONS: Final[frozenset[str]] = GATE_REFUSED_REASONS | CHECK_REFUSED_R
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
         **dict.fromkeys(BLOCKING_REASONS, _B),
-        # Persisted and shown, not refused yet: their producers still fire for sources that do not apply.
-        "unresolved_binding": _C,
-        "unresolved_derived_binding": _C,
+        # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
-        "unhandled_binding_source": _C,
-        "source_domain_not_ready": _C,
+        "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,
         "prior_payment_not_deducted": _M,
@@ -112,6 +118,9 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
     }
 )
 """The one place on the filer's scale of every reason a calculation diagnostic can carry."""
+
+PRINTED_BOX_REASONS: Final[frozenset[str]] = frozenset({"unresolved_binding"})
+"""Blocking reasons that withhold filing only on a printed box: a working figure they name is worth checking."""
 
 UNWORKED_BOX_REASONS: Final[frozenset[str]] = frozenset({"unresolved_binding", "unresolved_derived_binding"})
 """Reasons that name a box that could not be worked out: it never reads as a zero."""
@@ -162,8 +171,10 @@ def printed_box_number(casilla: CasillaDefinition | None) -> str | None:
     return casilla.number if casilla.number.isdigit() else None
 
 
-def note_attention(reason: str) -> ModeloFormAttention:
-    """Place one diagnostic reason on the filer's scale."""
+def note_attention(reason: str, *, casilla: CasillaDefinition | None) -> ModeloFormAttention:
+    """Place one diagnostic reason, about ``casilla`` when it names one, on the filer's scale."""
+    if reason in PRINTED_BOX_REASONS and not is_printed_box(casilla):
+        return _C
     return CALCULATION_NOTE_ATTENTION[reason]
 
 
@@ -233,6 +244,8 @@ def _require_total_levels() -> None:
     blocking_level = frozenset(reason for reason, level in CALCULATION_NOTE_ATTENTION.items() if level is _B)
     if blocking_level.symmetric_difference(BLOCKING_REASONS):
         raise ValueError("the blocking level holds exactly the reasons the application refuses filing on")
+    if not PRINTED_BOX_REASONS <= GATE_REFUSED_REASONS:
+        raise ValueError("a reason that blocks only on a printed box must be one the gate refuses")
 
 
 _require_total_levels()
@@ -245,6 +258,7 @@ __all__ = [
     "CHECK_REFUSED_REASONS",
     "EXPORT_REFUSED_REASONS",
     "GATE_REFUSED_REASONS",
+    "PRINTED_BOX_REASONS",
     "RECORDS_REASONS",
     "REOPEN_HINT_LOCALE_KEY",
     "STALE_LOCALE_KEY",

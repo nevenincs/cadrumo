@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
+from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -56,6 +57,25 @@ class InventoryLedgerRepositoryProtocol(Protocol):
 
 def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefinition, ...]:
     return tuple(binding for binding in context.revision.bindings if binding.source is _SOURCE)
+
+
+def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
+    """Whether the filer's profile declares income categories that exclude an economic activity.
+
+    The Anexo D inventory rows belong to the rendimientos de actividades
+    economicas a filer carries on (LIRPF arts. 27 and 30): a filer who declares
+    only employment, capital or other non-activity income holds no activity
+    ledger because there is no activity to hold one for. Only that typed
+    declaration counts. A profile that declares no income category at all, or
+    a context with no profile, is unknown rather than inapplicable, and a
+    missing ledger is then still reported.
+    """
+    if context.profile is None:
+        return False
+    from ..user_profile.projections import projection_for_taxpayer
+
+    taxpayer = projection_for_taxpayer(context.profile.record, schema=context.profile.profile_decode_context.schema)
+    return derive_taxpayer_files_economic_activity(taxpayer) is False
 
 
 def _diagnostic(
@@ -363,6 +383,13 @@ class InventorySourceResolver:
         )
         if isinstance(template, CalculationSourceResolution):
             return template
+        if _profile_declares_no_activity_income(context):
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=binding_ids,
+                inapplicable_binding_ids=binding_ids,
+            )
         if self._inventory_repository is None:
             return self._storage_refusal(binding_ids)
         ledgers = _load_inventory_ledgers(

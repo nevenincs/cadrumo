@@ -439,7 +439,6 @@ def add_unhandled_source_diagnostics(
     diagnostics = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=frozenset(source_resolution.owned_sources) | CALCULATION_ROUTE_PRE_MESH_SOURCES,
-        manual_sources=frozenset({"manual_input"}),
     )
     if not diagnostics:
         return source_resolution
@@ -468,7 +467,11 @@ def add_expected_missing_binding_diagnostics(
     """Mark present-source, no-value binding gaps unresolved instead of silent.
 
     ``revision`` is the compiled :class:`ModeloRevision` whose bound casillas
-    are checked for present-source, no-value binding gaps.
+    are checked for present-source, no-value binding gaps. Every gap is marked
+    unresolved, so the engine never reads it as a scalar value. Two are not
+    reported, because nothing is missing: a binding the owning resolver
+    declared inapplicable to the filer, and a row binding whose values arrived
+    on the row channel (one per activity or asset row) rather than as a scalar.
     """
     missing = expected_but_missing_binding_ids(
         revision,
@@ -485,6 +488,10 @@ def add_expected_missing_binding_diagnostics(
             }
         )
     )
+    not_missing = {
+        *source_resolution.inapplicable_binding_ids,
+        *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
+    }
     diagnostics = tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
@@ -498,6 +505,7 @@ def add_expected_missing_binding_diagnostics(
             ),
         )
         for binding_id, casilla_id, source in missing
+        if binding_id not in not_missing
     )
     return source_resolution.model_copy(
         update={

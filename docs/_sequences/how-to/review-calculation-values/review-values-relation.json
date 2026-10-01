@@ -87,68 +87,6 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_source": "inventory",
-              "detail": "inventory source missing_activity_ledgers: no complete 2025 inventory activity ledger is available",
-              "level": "blocks",
-              "reason": "source_domain_not_ready",
-              "resolver_id": "inventory",
-              "source_kind": "inventory"
-            },
-            "message": "The records this figure depends on are not ready to be read yet.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-closing-increase-0177",
-              "binding_source": "inventory",
-              "box": "0177",
-              "casilla_id": "0177",
-              "detail": "binding 'renta-inventory-activity-closing-increase-0177' (casilla '0177') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-acquisition-cost-0181",
-              "binding_source": "inventory",
-              "box": "0181",
-              "casilla_id": "0181",
-              "detail": "binding 'renta-inventory-activity-acquisition-cost-0181' (casilla '0181') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-closing-decrease-0182",
-              "binding_source": "inventory",
-              "box": "0182",
-              "casilla_id": "0182",
-              "detail": "binding 'renta-inventory-activity-closing-decrease-0182' (casilla '0182') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-              "level": "blocks",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "Cadrumo could not work out a figure from your data, so it would have shown a silent zero.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
               "box": "0513",
               "casilla_id": "0513",
               "detail": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
@@ -201,7 +139,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "1e08714ac55f40ae410a66612d020a7057d4ba1047e3acfa9976474cde963c7f",
+          "calculation_revision_id": "4b79463a8314a43b0653911f9e2bf5402eb69b201032d29dabc575fbbf774aa1",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4132,7 +4070,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1651.19"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 1e08714ac55f40ae410a66612d020a7057d4ba1047e3acfa9976474cde963c7f (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 4b79463a8314a43b0653911f9e2bf5402eb69b201032d29dabc575fbbf774aa1 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
