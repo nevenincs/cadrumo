@@ -1216,7 +1216,7 @@ record_identity = "DP200042"
 [[entries]]
 export_field_id = "m200-2024.dp200042.f0094"
 kind = "casilla"
-casilla_id = "00573"
+casilla_id = "DP200042:00573"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]

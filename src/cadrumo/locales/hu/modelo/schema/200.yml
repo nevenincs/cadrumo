@@ -7767,6 +7767,8 @@ modelo:
           is-correccion-gastos-retribucion-fondos-propios-art15a-permanente-aumento:
             label: Saját tőke javadalmazásnak tekintett, nem levonható ráfordítások
               (LIS 15. a) cikk) - Növekedés - Évi korrekciók - Végleges [02761]
+          is-correccion-impuesto-complementario:
+            label: Elszámolás I - Eredménykimutatás eredménye - Kiegészítő adó [00004]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-aumento:
             label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
               kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -7936,6 +7938,14 @@ modelo:
             label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
               (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkenés - Évi korrekciók
               - Végleges [01885]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-aumentos:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
+              (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Növelések [00005]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-disminuciones:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
+              (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Csökkentések [00006]
           is-correccion-libertad-amortizacion-vehiculos-saldo-final:
             label: Bizonyos járművek és új töltőinfrastruktúrák szabad amortizációja
               (LIS 18. kiegészítő rendelkezés, RDL 4/2024) - Növekedés - Év végén
@@ -8896,6 +8906,10 @@ modelo:
             label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
               kimutatása (II) - Összes változás kimutatása - Záró egyenleg (tárgyidőszak)
               - Összesen [00568]
+          is-ecpn-bde-transferencias-ganancias-acumuladas:
+            label: Spanyol Nemzeti Bank szerinti számvitel - Saját tőke változásainak
+              kimutatása (II) - Összes változás kimutatása - Átvezetések a saját tőke
+              összetevői között - Felhalmozott nyereség [00501]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Saját tőke változásainak kimutatása (III) - Tagokkal vagy tulajdonosokkal
               folytatott ügyletek - Műveletek saját részvényekkel vagy üzletrészekkel
@@ -9113,6 +9127,10 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Saját tőke változásainak kimutatása (I) - Átvezetések az eredménykimutatásba
               - Egyéb bevételek/ráfordítások [00348]
+          is-ecpp-aseguradoras-aumentos-capital-ajustes-valor:
+            label: Biztosítók - Saját vagyon változásainak kimutatása (III) - Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Tőke vagy kölcsönös
+              biztosítási alap növelése - Értékelési különbözetek [00501]
           is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
             label: Biztosítók - Saját vagyon változásainak kimutatása (I) - Elszámolt
               bevételek és ráfordítások - Az eredménykimutatásba átvezetett összegek
@@ -9249,6 +9267,10 @@ modelo:
             label: Biztosítók - Saját vagyon változásainak kimutatása (III) - Saját
               tőke egyéb változásai - Átvezetések a saját tőke tételei között - Támogatások,
               adományok és hagyományok [00619]
+          is-ecpp-aseguradoras-otras-operaciones-acciones-propias:
+            label: Biztosítók - Saját vagyon változásainak kimutatása (II) -Tagokkal
+              vagy kölcsönös egyesületi tagokkal folytatott ügyletek - Egyéb tulajdonosi
+              vagy tagsági ügyletek (saját részvények) [00573]
           is-entidad-aseguradora:
             help: Jelölő biztosító szervezet esetén [00025].
             label: Biztosító szervezet [00025]

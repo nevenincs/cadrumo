@@ -166,6 +166,7 @@ def isolated_authorities(
         design_epoch=tree.epoch,
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    semantic_map = joined.compiled_semantic_map or semantic_map
     transport = ExportTreeTransportProfile(
         modelo=tree.modelo,
         design_epoch=tree.epoch,

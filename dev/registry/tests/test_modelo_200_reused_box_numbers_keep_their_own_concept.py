@@ -31,10 +31,12 @@ import pytest
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
+from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -42,10 +44,10 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ..compiler.loader import modelo_fact_scope
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
-from ..edition_export_scenarios import M200_SCENARIO_PERIODS, m200_export_scenario
+from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS as _ECHOES
+from ..edition_export_scenarios import m200_export_scenario
 from ..edition_round_trip import SYNTHETIC_TAX_ID
 from ..pipeline.semantic_map import SemanticMap, load_semantic_map
 from .authored_edition_support import authored_revisions
@@ -58,58 +60,6 @@ _PRINTED_BOX = re.compile(r"\[([0-9]{3,6})\]")
 
 type Cell = tuple[str, str]
 """A mapped cell as (record sheet, casilla id it is mapped to)."""
-
-# Cells that print another sheet's box number because they repeat that box's
-# amount. Each design line names the echo itself: a detail sheet's total
-# "aplicado en esta liquidación" (or "importe aplicado", "reducción B.I.
-# aplicada", "importe adicionado"), the nivelación detail's current-generation minoración, the DID summary's
-# "Liquidación - Base imponible / Cuota íntegra", and the AIE/UTE datos
-# económicos base imponible before and after nivelación.
-_ECHOES: frozenset[Cell] = frozenset(
-    {
-        ("DP200015", "DP200014:00547"),
-        ("DP200015B", "DP200014:00570"),
-        ("DP200015B", "DP200014:00572"),
-        ("DP200015B", "01280"),
-        ("DP200015B", "01344"),
-        ("DP200016", "DP200014:00571"),
-        ("DP200016", "00573"),
-        ("DP200016", "DP200014B:00584"),
-        ("DP200016", "DP200014B:00585"),
-        ("DP200016B", "DP200014B:00590"),
-        ("DP200018B", "01039"),
-        ("DP200018B", "02314"),
-        ("DP200018B", "02315"),
-        ("DP200018C", "DP200014B:00565"),
-        ("DP200019", "DP200014B:00082"),
-        ("DP200019", "01040"),
-        ("DP200019", "01041"),
-        ("DP200020B", "DP200013:00417"),
-        ("DP200020B", "DP200013:00418"),
-        ("DP200020B", "01032"),
-        ("DP200020B", "DP200014:01033"),
-        ("DP200020B", "DP200014:01034"),
-        ("DP200024", "DP200014:00552"),
-        ("DP200024", "DP200014:01330"),
-        ("DP200DID", "DP200014:00552"),
-        ("DP200DID", "DP200014:00562"),
-    }
-)
-
-# Cells that still carry another sheet's concept. Each needs its own casilla, but
-# the box it would share a number with is declared under the bare id ``00501``
-# (DP200012 resultado contable) or ``00573`` (DP200014 doble imposición
-# internacional), and the registry refuses a second casilla with that number
-# while the bare id stands. Declaring them waits on those ids becoming
-# segment-qualified. Listed so the gap stays visible and the list fails the
-# moment either id is qualified and the cells are declared.
-_AWAITING_SEGMENT_QUALIFIED_IDS: frozenset[Cell] = frozenset(
-    {
-        ("DP200032", "00501"),
-        ("DP200043", "00501"),
-        ("DP200042", "00573"),
-    }
-)
 
 
 def foreign_sheet_cells(
@@ -175,6 +125,33 @@ def _mapped_revisions() -> tuple[ModeloRevision, ...]:
     )
 
 
+def _supported_years() -> tuple[int, ...]:
+    return compiled_bundled_authority().supported_filing_years().years
+
+
+def _signed_note_fields(revision: ModeloRevision):
+    design = _design_source(revision)
+    return tuple(
+        field
+        for sheet in extract_record_design(bundled_path() / design.corpus_path).require_complete()
+        if sheet.name.strip() == "DP200014B"
+        for field in sheet.fields
+        if field.type_code == "N" and field.content is not None and field.content.startswith("Nota")
+    )
+
+
+def _filing_years() -> tuple[int, ...]:
+    authority = compiled_bundled_authority()
+    return tuple(
+        year
+        for year in _supported_years()
+        if authority.snapshot(
+            _MODELO, filing_year=year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+        ).revision.authority_grade
+        is RegistryAuthorityGrade.FILING
+    )
+
+
 def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
     mapped = {str(revision.id) for revision in _mapped_revisions()}
     exporting = {str(revision.id) for revision in authored_revisions(_MODELO) if revision.export_layouts}
@@ -185,7 +162,7 @@ def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
 @pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) -> None:
     semantic_map = _semantic_map(str(_design_source(revision).record_design_epoch))
-    expected = _ECHOES | _AWAITING_SEGMENT_QUALIFIED_IDS
+    expected = _ECHOES
     assert set(foreign_sheet_cells(_semantic_map_cells(semantic_map), _casillas(revision))) == expected
     if revision.export_layouts:
         assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == expected
@@ -222,7 +199,7 @@ def test_a_box_declared_for_its_own_sheet_is_where_that_sheet_maps(revision: Mod
 
 def test_a_cell_remapped_to_the_liquidacion_box_is_caught(tmp_path: Path) -> None:
     """Teeth: point one insurer equity cell back at the liquidación box in an isolated mapping copy."""
-    (revision,) = [revision for revision in authored_revisions(_MODELO) if revision.export_layouts]
+    revision = compiled_bundled_authority().snapshot(_MODELO, filing_year=max(_filing_years()), period="0A").revision
     epoch = str(_design_source(revision).record_design_epoch)
     copy = tmp_path / epoch
     shutil.copytree(_MAPPINGS / epoch, copy)
@@ -245,7 +222,7 @@ def test_a_cell_remapped_to_the_liquidacion_box_is_caught(tmp_path: Path) -> Non
 
     found = foreign_sheet_cells(_semantic_map_cells(load_semantic_map(copy)), casillas)
 
-    assert set(found) - _ECHOES - _AWAITING_SEGMENT_QUALIFIED_IDS == {("DP200042", "DP200014:00547")}
+    assert set(found) - _ECHOES == {("DP200042", "DP200014:00547")}
     assert found[("DP200042", "DP200014:00547")] == [str(entry.export_field_id)]
 
 
@@ -311,55 +288,52 @@ def _shared_number_slots(revision: ModeloRevision) -> dict[str, list[Slot]]:
     return groups
 
 
-@pytest.fixture(scope="module")
-def rendered_edition():
+@pytest.fixture(scope="module", params=_filing_years())
+def rendered_edition(request: pytest.FixtureRequest):
     """Render the filing-grade edition twice, each time supplying one half of every same-number group.
 
     Within a group the casillas alternate between the two renders, so in each
     render every absent cell shares its number with at least one supplied box,
     and every supplied cell sits beside a differently valued one.
     """
-    period = M200_SCENARIO_PERIODS["2025-y-siguientes"]
+    period = Period.from_year_and_code(request.param, "0A")
     scenario = m200_export_scenario(period)
-    registry_root = bundled_path("registry", "aeat")
-    with modelo_fact_scope(registry_root / "modelos" / _MODELO):
-        authority = compile_validated_authority(registry_root, bundled_path())
-        with validating_governed_facts(authority):
-            revision = authority.modelo(_MODELO).revisions["2025-y-siguientes"]
-            groups = _shared_number_slots(revision)
-            members = sorted({slot[3] for slots in groups.values() for slot in slots})
-            values = {casilla: Decimal(100 + index) + Decimal("0.37") for index, casilla in enumerate(members)}
-            halves: tuple[set[str], set[str]] = (set(), set())
-            for slots in groups.values():
-                for index, casilla in enumerate(sorted({slot[3] for slot in slots})):
-                    halves[index % 2].add(casilla)
-            provider = schema_provider_from_authority(
-                authority, modelos=(_MODELO,), filing_year=period.filing_year, period=period
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
+        groups = _shared_number_slots(revision)
+        members = sorted({slot[3] for slots in groups.values() for slot in slots})
+        values = {casilla: Decimal(100 + index) + Decimal("0.37") for index, casilla in enumerate(members)}
+        halves: tuple[set[str], set[str]] = (set(), set())
+        for slots in groups.values():
+            for index, casilla in enumerate(sorted({slot[3] for slot in slots})):
+                halves[index % 2].add(casilla)
+        provider = build_runtime_schema_provider(
+            operation=operation, modelos=(_MODELO,), filing_year=period.filing_year, period=period
+        )
+        identity = scenario.product_software_identity_factory
+        assert identity is not None
+
+        def render(supplied: set[str]) -> bytes:
+            inputs: ModeloInputs = {**scenario.inputs, **{casilla: values[casilla] for casilla in supplied}}
+            draft = build_draft(
+                modelo=_MODELO,
+                period=period,
+                profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 reused numbers"),
+                inputs=inputs,
+                schema_provider=provider,
+            ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+            sink = _PayloadSink()
+            export_draft(
+                draft,
+                payload_consumer=sink,
+                producer_snapshot=scenario.producer_snapshot(),
+                prior_domiciliation_election=scenario.prior_domiciliation_election,
+                product_software_identity=identity(),
+                schema_provider=provider,
             )
-            identity = scenario.product_software_identity_factory
-            assert identity is not None
+            return sink.payload
 
-            def render(supplied: set[str]) -> bytes:
-                inputs: ModeloInputs = {**scenario.inputs, **{casilla: values[casilla] for casilla in supplied}}
-                draft = build_draft(
-                    modelo=_MODELO,
-                    period=period,
-                    profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 reused numbers"),
-                    inputs=inputs,
-                    schema_provider=provider,
-                ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-                sink = _PayloadSink()
-                export_draft(
-                    draft,
-                    payload_consumer=sink,
-                    producer_snapshot=scenario.producer_snapshot(),
-                    prior_domiciliation_election=scenario.prior_domiciliation_election,
-                    product_software_identity=identity(),
-                    schema_provider=provider,
-                )
-                return sink.payload
-
-            renders = tuple((half, render(half)) for half in halves)
+        renders = tuple((half, render(half)) for half in halves)
     return groups, values, renders
 
 
@@ -385,8 +359,12 @@ def _record_tag(revision: ModeloRevision, sheet: str) -> str:
 
 
 def _slot(payload: bytes, tag: str, offset: int, length: int) -> bytes:
-    (record,) = [record for record in payload.split(b"\r\n") if record.startswith(tag.encode("ascii"))]
-    return record[offset - 1 : offset - 1 + length]
+    encoded = tag.encode("ascii")
+    (record,) = [record for record in payload.split(b"\r\n") if encoded in record]
+    assert record.count(encoded) == 1
+    # The first substantive record shares its line with the filing envelope.
+    start = record.index(encoded) + offset - 1
+    return record[start : start + length]
 
 
 def _wire(amount: Decimal, length: int) -> bytes:
@@ -396,8 +374,132 @@ def _wire(amount: Decimal, length: int) -> bytes:
 def test_the_render_covers_the_insurer_and_bank_of_spain_equity_cells(rendered_edition) -> None:
     groups, _values, renders = rendered_edition
     covered = {slot[3] for slots in groups.values() for slot in slots}
-    assert {"DP200042:00547", "DP200014:00547", "DP200010:00592", "DP200011:00599", "DP200033:00568"} <= covered
+    assert {
+        "DP200042:00547",
+        "DP200014:00547",
+        "DP200010:00592",
+        "DP200011:00599",
+        "DP200033:00568",
+        "DP200012:00501",
+        "DP200032:00501",
+        "DP200043:00501",
+        "DP200014:00573",
+        "DP200042:00573",
+    } <= covered
     assert all(half for half, _payload in renders)
+
+
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_the_new_concepts_follow_the_selected_design(filing_year: int) -> None:
+    """Baseline, deltas and projected years match the design selected by temporal authority."""
+    concepts = {
+        "DP200032:00501",
+        "DP200043:00501",
+        "DP200042:00573",
+        "DP200012:00004",
+        "DP200012:00005",
+        "DP200012:00006",
+    }
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(
+            _MODELO, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+        )
+        revision = snapshot.revision
+        design = _design_source(revision)
+        printed = {
+            (sheet.name.strip(), number)
+            for sheet in extract_record_design(bundled_path() / design.corpus_path).require_complete()
+            for field in sheet.fields
+            for number in _PRINTED_BOX.findall(field.description)
+        }
+        ids = {str(c.id) for c in revision.casillas}
+        for concept in concepts:
+            sheet, number = concept.split(":")
+            assert (concept in ids) == ((sheet, number) in printed)
+
+
+@pytest.mark.parametrize(
+    "revision",
+    [r for r in _mapped_revisions() if r.export_layouts and _signed_note_fields(r)],
+    ids=lambda r: str(r.id),
+)
+def test_rectificativa_notes_preserve_signed_cents(revision: ModeloRevision) -> None:
+    """The note conditions a monetary amount; it does not turn it into an unsigned integer."""
+    with bundled_indexed_authority().operation() as operation:
+        published = operation.revision_with_export_layouts(_MODELO, str(revision.id))
+        fields = {
+            field.offset: field
+            for layout in published.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if str(field.id).split(".")[1].upper() == "DP200014B"
+        }
+        for source_field in _signed_note_fields(revision):
+            field = fields[source_field.offset]
+            assert field.data_type == "money"
+            assert field.signed
+            assert field.length == source_field.length
+
+
+@pytest.mark.parametrize("filing_year", _filing_years())
+@pytest.mark.parametrize("supply_adjustments", [False, True])
+def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int, supply_adjustments: bool) -> None:
+    """A one-byte entity flag cannot populate an unrelated seventeen-byte adjustment."""
+    period = Period.from_year_and_code(filing_year, "0A")
+    scenario = m200_export_scenario(period)
+    numbers = ("00004", "00005", "00006")
+    adjustments = {f"DP200012:{number}": Decimal(123 + index) + Decimal("0.45") for index, number in enumerate(numbers)}
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
+        provider = build_runtime_schema_provider(
+            operation=operation, modelos=(_MODELO,), filing_year=period.filing_year, period=period
+        )
+        inputs: ModeloInputs = {
+            **scenario.inputs,
+            **(
+                {key: value for key, value in adjustments.items()}
+                if supply_adjustments
+                else {f"DP200001:{number}": Decimal("1") for number in numbers}
+            ),
+        }
+        draft = build_draft(
+            modelo=_MODELO,
+            period=period,
+            profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 flags and adjustments"),
+            inputs=inputs,
+            schema_provider=provider,
+        ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+        sink = _PayloadSink()
+        identity = scenario.product_software_identity_factory
+        assert identity is not None
+        export_draft(
+            draft,
+            payload_consumer=sink,
+            producer_snapshot=scenario.producer_snapshot(),
+            prior_domiciliation_election=scenario.prior_domiciliation_election,
+            product_software_identity=identity(),
+            schema_provider=provider,
+        )
+        fields = {
+            str(field.casilla_id): field
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None
+        }
+        for number in numbers:
+            for sheet in ("DP200001", "DP200012"):
+                cid = f"{sheet}:{number}"
+                field = fields[cid]
+                assert field.offset is not None and field.length is not None
+                expected = (
+                    _wire(adjustments[cid], field.length)
+                    if sheet == "DP200012" and supply_adjustments
+                    else b"1"
+                    if sheet == "DP200001" and not supply_adjustments
+                    else b"0" * field.length
+                )
+                assert _slot(sink.payload, _record_tag(revision, sheet), field.offset, field.length) == expected
 
 
 def test_an_absent_cell_does_not_borrow_the_box_sharing_its_number(rendered_edition) -> None:

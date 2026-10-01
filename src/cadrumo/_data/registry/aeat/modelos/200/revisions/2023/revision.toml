@@ -1166,3 +1166,21 @@ selector = {revision = "2022", id = "modelo-200-dr-xls"}
 fields = {fixture_id = "modelo-200-2023-record-design-layout", workbook_source = "aeat-dr-200-2023"}
 sequence_additions = {legal_refs = ["orden-hac-495-2024:modelo-200"], source_refs = ["aeat-dr-200-2023"]}
 sequence_removals = {legal_refs = [0], source_refs = [0]}
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200032:00501" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200032 field 82, row 87: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]. aeat-dr-200-2023 DP200032 field 82, row 87: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2023"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200043:00501" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200043 field 45, row 50: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Aumentos de capital o fondo mutual - Ajustes por cambios de valor [00501]. aeat-dr-200-2023 DP200043 field 45, row 50: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Aumentos de capital o fondo mutual - Ajustes por cambios de valor [00501]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2023"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200042:00573" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. aeat-dr-200-2023 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2023"] }
+removed_fields = []
+restate_provenance = true

@@ -11,7 +11,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
-generation_manifest_sha256 = "9a9530c726c2840d29fd43b41825c95634f5372485056d71b0177329b4f15ff4"
+generation_manifest_sha256 = "a6f8d7bb7a727306a87ab48369aac3f8fa9393bd47ca3872c41a73b3642052e6"
 filing_year = 2025
 period_code = "0A"
 
@@ -25,7 +25,7 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 # required manual input and the base-determination starting point. It carries
 # a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
 # exercised; a zero here would render a degenerate base and prove far less.
-"00501" = "100000"
+"DP200012:00501" = "100000"
 "modelo-200-profile-new-entity-flag" = "0"
 # INCN of the preceding 12 months. NOT a neutral zero: this value selects the
 # tipo de gravamen branch outright. Below one million euros LIS DT 44a gives

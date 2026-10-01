@@ -1011,7 +1011,7 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
             # DP200012 casilla 00501, "Resultado de la cuenta de pérdidas y
             # ganancias": the edition declares it required, and the base
             # determination starts from it, so no draft can omit it.
-            "00501": Decimal("0.00"),
+            "DP200012:00501": Decimal("0.00"),
         },
         producer_snapshot=_m200_producer_snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,

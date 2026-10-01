@@ -16,7 +16,11 @@ from pydantic import ValidationError
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import (
+    FilingYearOutsideSupportEnvelopeError,
+    NoRevisionForPeriodError,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filing_period_from_scope
@@ -342,11 +346,17 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
     assert {revision.id for revision in modelo.revisions.values() if historical_source.id in revision.source_refs} == {
         pre_june.id
     }
+    assert pre_june.valid_to is not None
     assert _record_design_sources_cover([historical_source], pre_june.valid_to)
     assert not _record_design_sources_cover([historical_source], june_2024.valid_from)
     assert not _record_design_sources_cover([current_source], pre_june.valid_to)
 
-    for filing_year in (2022, 2023):
+    support = catalogues.supported_filing_years
+    assert support is not None
+    assert historical_source.applies_to is not None
+    historical_years = tuple(year for year in support.years if date(year, 12, 31) <= historical_source.applies_to)
+    assert historical_years, "the historical design must govern supported full filing years"
+    for filing_year in historical_years:
         resolved = resolve_record_design_binary(
             bundled_path(),
             catalogues.sources,
@@ -365,14 +375,19 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
             design_epoch="2012",
         )
 
-    for filing_year, period in ((2022, "01"), (2023, "12"), (2024, "01"), (2024, "05")):
-        assert select_revision(modelo, filing_year=filing_year, period=period).id == pre_june.id
-    assert select_revision(modelo, filing_year=2024, period="06").id == june_2024.id
-    assert select_revision(modelo, filing_year=2024, period="12").id == june_2024.id
-    assert select_revision(modelo, filing_year=2025, period="01").id == "2025-y-siguientes"
-    assert select_revision(modelo, filing_year=2026, period="12").id == "2025-y-siguientes"
-    with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2021, period="12")
+    for revision in modelo.revisions.values():
+        coordinates = revision_selection_coordinates(
+            revision,
+            assessment_floor=coverage_assessment_floor(catalogues),
+            assessment_horizon=coverage_assessment_horizon(catalogues),
+        )
+        assert coordinates, revision.id
+        for filing_year, period in coordinates:
+            assert select_revision(modelo, filing_year=filing_year, period=period, support=support).id == revision.id
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as refused:
+        select_revision(modelo, filing_year=min(support.years) - 1, period="12", support=support)
+    assert refused.value.floor == support.floor
+    assert refused.value.filing_year == support.floor - 1
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:

@@ -97,7 +97,7 @@ segmento = "DP200014B"
 number = "01784"
 
 [[revisions."2024".completeness_manifest.casillas]]
-casilla_id = "00501"
+casilla_id = "DP200012:00501"
 segmento = "DP200012"
 number = "00501"
 
@@ -157,7 +157,7 @@ segmento = "DP200020D"
 number = "01499"
 
 [[revisions."2024".completeness_manifest.casillas]]
-casilla_id = "00573"
+casilla_id = "DP200014:00573"
 segmento = "DP200014"
 number = "00573"
 

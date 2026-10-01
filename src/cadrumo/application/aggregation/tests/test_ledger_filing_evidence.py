@@ -34,7 +34,7 @@ from ..ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
-_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
+_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("DP200012:00501")
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)

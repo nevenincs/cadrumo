@@ -227,9 +227,9 @@ def _oracle_declared_figures(payload: _ManualWorkedExample) -> dict[CasillaId, D
     }
 
 
-_CASILLA_RESULTADO_CTA_PYG: CasillaId = validated_casilla_id("00501", surface="_CASILLA_RESULTADO_CTA_PYG")
+_CASILLA_RESULTADO_CTA_PYG: CasillaId = validated_casilla_id("DP200012:00501", surface="_CASILLA_RESULTADO_CTA_PYG")
 _CASILLA_DEDUCCION_DI_INTERNACIONAL: CasillaId = validated_casilla_id(
-    "00573",
+    "DP200014:00573",
     surface="_CASILLA_DEDUCCION_DI_INTERNACIONAL",
 )
 _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES: CasillaId = validated_casilla_id(

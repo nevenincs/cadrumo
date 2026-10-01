@@ -54,7 +54,9 @@ def _projection_slot(reference: FilingProjectionRef) -> int:
     return slot
 
 
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
+)
 _M200_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00552",
     surface="_M200_BASE_IMPONIBLE_CASILLA",
@@ -539,10 +541,10 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
     predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
     expected = {
         "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": (
-            'implies_nonzero(["00500", "00501"])'
+            'implies_nonzero(["00500", "DP200012:00501"])'
         ),
         "modelo-200-base-imponible-determinada-cuando-resultado-positivo": (
-            'implies_nonzero(["00501", "DP200014:00552"])'
+            'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
         ),
     }
     for predicate_id, expression in expected.items():

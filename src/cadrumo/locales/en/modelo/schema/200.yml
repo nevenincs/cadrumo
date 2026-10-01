@@ -7770,6 +7770,9 @@ modelo:
           is-correccion-gastos-retribucion-fondos-propios-art15a-permanente-aumento:
             label: Non-deductible expenses treated as remuneration of equity (art.
               15 a) LIS) - Increase - Adjustments for the tax year - Permanent [02761]
+          is-correccion-impuesto-complementario:
+            label: Settlement I - Profit and loss account result - Complementary tax
+              [00004]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-aumento:
             label: Foreign tax borne by the taxpayer, non-deductible as it relates
               to income subject to a double-taxation deduction (art. 31.2 LIS) - Increase
@@ -7947,6 +7950,14 @@ modelo:
             label: Free depreciation of certain vehicles and new charging infrastructure
               (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments for
               the tax year - Permanent [01885]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-aumentos:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of certain vehicles and new charging infrastructure
+              (Additional Provision 18 LIS, RDL 4/2024) - Increases [00005]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-disminuciones:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Free depreciation of certain vehicles and new charging infrastructure
+              (Additional Provision 18 LIS, RDL 4/2024) - Decreases [00006]
           is-correccion-libertad-amortizacion-vehiculos-saldo-final:
             label: Free depreciation of certain vehicles and new charging infrastructure
               (Additional Provision 18 LIS, RDL 4/2024) - Increase - Balance carried
@@ -8929,6 +8940,10 @@ modelo:
             label: Bank of Spain accounting - Statement of changes in equity (II)
               - Total statement of changes - Closing balance (current period) - Total
               [00568]
+          is-ecpn-bde-transferencias-ganancias-acumuladas:
+            label: Bank of Spain accounting - Statement of changes in equity (II)
+              - Total statement of changes - Transfers between equity components -
+              Retained earnings [00501]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Statement of changes in equity (III) - Transactions with shareholders
               or owners - Transactions with own shares or equity interests - Interim
@@ -9139,6 +9154,10 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Statement of changes in equity (I) - Transfers to the profit and
               loss account - Other income/expenses [00348]
+          is-ecpp-aseguradoras-aumentos-capital-ajustes-valor:
+            label: Insurance undertakings - Statement of changes in own equity (III)
+              - Transactions with shareholders or mutual members - Capital or mutual
+              fund increases - Valuation adjustments [00501]
           is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
             label: Insurance undertakings - Statement of changes in own equity (I)
               - Recognised income and expense - Amounts transferred to the profit
@@ -9276,6 +9295,10 @@ modelo:
             label: Insurance undertakings - Statement of changes in own equity (III)
               - Other changes in equity - Transfers between equity items - Grants,
               donations and bequests [00619]
+          is-ecpp-aseguradoras-otras-operaciones-acciones-propias:
+            label: Insurance undertakings - Statement of changes in own equity (II)
+              -Transactions with shareholders or mutual members - Other transactions
+              with shareholders or mutual members (treasury shares) [00573]
           is-entidad-aseguradora:
             help: Flag indicating an insurance entity [00025].
             label: Insurance entity [00025]

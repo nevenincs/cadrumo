@@ -53,7 +53,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:59 DP200001 29|168|1|Num
 [[revisions."2022".casillas]]
-id = "00004"
+id = "DP200001:00004"
+segmento = "DP200001"
 continuidad_id = "is-sociedad-de-inversion-inmobiliaria-o-fondo-de-inversion-inmobiliaria"
 number = "00004"
 section = ["sociedad_de_inversion_inmobiliaria_o_fondo_de_inve"]
@@ -63,7 +64,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:60 DP200001 30|169|1|Num
 [[revisions."2022".casillas]]
-id = "00005"
+id = "DP200001:00005"
+segmento = "DP200001"
 continuidad_id = "is-comunidades-titulares-de-montes-vecinales-en-mano-comun"
 number = "00005"
 section = ["comunidades_titulares_de_montes_vecinales_en_mano"]
@@ -73,7 +75,8 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:81 DP200001 51|190|1|Num
 [[revisions."2022".casillas]]
-id = "00006"
+id = "DP200001:00006"
+segmento = "DP200001"
 continuidad_id = "is-incentivos-entidad-de-reducida-dimension-cap-xi-tit-vii-lis"
 number = "00006"
 section = ["incentivos_entidad_de_reducida_dimension_cap_xi_ti"]
@@ -4828,7 +4831,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1444 DP200014 43|629|17|Num
 [[revisions."2022".casillas]]
-id = "00573"
+id = "DP200014:00573"
 continuidad_id = "is-liquidacion-iii-importe"
 number = "00573"
 segmento = "DP200014"
@@ -22536,3 +22539,33 @@ segmento = "DP200043"
 section = ["aseguradoras_estado_cambios_patrimonio_propio_iii", "otras_variaciones_del_patrimonio_neto"]
 semantic_role = "is_ecpp_aseguradoras_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# aeat-dr-200-2022, DP200032, row 87, field 82, offset 1305, width 17: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]
+[[revisions."2022".casillas]]
+id = "DP200032:00501"
+continuidad_id = "is-ecpn-bde-transferencias-ganancias-acumuladas"
+number = "00501"
+segmento = "DP200032"
+section = ["banco_espana_estado_cambios_patrimonio_neto", "transferencias_ganancias_acumuladas"]
+semantic_role = "is_ecpn_banco_espana_importe"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022, DP200043, row 50, field 45, offset 676, width 17: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Aumentos de capital o fondo mutual - Ajustes por cambios de valor [00501]
+[[revisions."2022".casillas]]
+id = "DP200043:00501"
+continuidad_id = "is-ecpp-aseguradoras-aumentos-capital-ajustes-valor"
+number = "00501"
+segmento = "DP200043"
+section = ["aseguradoras_estado_cambios_patrimonio_propio", "aumentos_capital_ajustes_valor"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-124"]
+
+# aeat-dr-200-2022, DP200042, row 99, field 94, offset 1509, width 17: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]
+[[revisions."2022".casillas]]
+id = "DP200042:00573"
+continuidad_id = "is-ecpp-aseguradoras-otras-operaciones-acciones-propias"
+number = "00573"
+segmento = "DP200042"
+section = ["aseguradoras_estado_cambios_patrimonio_propio", "otras_operaciones_acciones_propias"]
+semantic_role = "is_ecpp_aseguradoras_importe"
+legal_refs = ["ley-27-2014:art-124"]

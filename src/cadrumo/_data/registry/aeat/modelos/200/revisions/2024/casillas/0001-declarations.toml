@@ -444,7 +444,7 @@ section = ["tributacion_conjunta_estado_y_adm_forales", "intereses_demora"]
 semantic_role = "is_tributacion_conjunta_intereses"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "00501"
+id = "DP200012:00501"
 continuidad_id = "is-liquidacion-i-importe"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1251 (DP200012 field 10): Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades e Impuesto Comp.... aeat-dr-200-2023 prints box [00501] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1199 (DP200012 field 9) as 'Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Resultado cuenta pérdidas y ganancias antes de Impuesto Sociedades [00501]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
@@ -6882,3 +6882,39 @@ legal_refs = [
     'ley-27-2014:art-100',
     'rd-634-2015:art-3',
 ]
+
+# aeat-dr-200-2024, DP200012, row 14, field 9, offset 64, width 17: Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones por Impuesto Complementario [00004]
+[[revisions."2024".casillas]]
+id = "DP200012:00004"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 DP200012 has no field numbered 00004; aeat-dr-200-2024 DP200012 first prints this independently described adjustment under [00004]. The field with that number on DP200001 is an entity flag, not a predecessor for this monetary adjustment."
+continuidad_id = "is-correccion-impuesto-complementario"
+number = "00004"
+segmento = "DP200012"
+section = ["liquidacion_correcciones", "impuesto_complementario"]
+semantic_role = "is_correccion_impuesto_complementario"
+legal_refs = ["ley-27-2014:art-15"]
+
+# aeat-dr-200-2024, DP200012, row 47, field 42, offset 625, width 17: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumentos [00005]
+[[revisions."2024".casillas]]
+id = "DP200012:00005"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 DP200012 has no field numbered 00005; aeat-dr-200-2024 DP200012 first prints this independently described adjustment under [00005]. The field with that number on DP200001 is an entity flag, not a predecessor for this monetary adjustment."
+continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-recarga-aumentos"
+number = "00005"
+segmento = "DP200012"
+section = ["liquidacion_correcciones", "libertad_amortizacion_vehiculos_recarga_aumentos"]
+semantic_role = "is_correccion_libertad_amortizacion_vehiculos_recarga_aumentos"
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4"]
+
+# aeat-dr-200-2024, DP200012, row 48, field 43, offset 642, width 17: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminuciones [00006]
+[[revisions."2024".casillas]]
+id = "DP200012:00006"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 DP200012 has no field numbered 00006; aeat-dr-200-2024 DP200012 first prints this independently described adjustment under [00006]. The field with that number on DP200001 is an entity flag, not a predecessor for this monetary adjustment."
+continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-recarga-disminuciones"
+number = "00006"
+segmento = "DP200012"
+section = ["liquidacion_correcciones", "libertad_amortizacion_vehiculos_recarga_disminuciones"]
+semantic_role = "is_correccion_libertad_amortizacion_vehiculos_recarga_disminuciones"
+legal_refs = ["ley-27-2014:da-18", "real-decreto-ley-4-2024:art-4"]

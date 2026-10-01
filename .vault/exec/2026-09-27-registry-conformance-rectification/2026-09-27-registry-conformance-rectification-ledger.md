@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec096e1a00a1d638c4899a418e59dc45cd0c3e2b3c3c5c38450d069bda99883e'
+body_hash: 'sha256:9e31337ee3a3870b78000d1912bd23ae84ffe07a7073d3da73c909e6272d1903'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1494,6 +1494,103 @@ related:
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
 - `S11` `verify:` `Modelo 100 2024/2025 identity fields and Modelo 200 2025 boxes 03599-03646 hydrate in their pre-regression order with content identical; converter proofs for 100 and 200 unchanged and minimal; inspection 0 findings; published 2e106bda; 226 passed; gated commit b7c49338dd 32 passed` -> `pass`
+- `S11` `verify:` `registry_collapse_verification all 58 modelos complete; stable inputs; no live mutation; zero redundant overrides and coverage gaps; equivalence facts indexed cache publication readiness pass (codex-registry-collapse-20261001-084031.log, source abdd49ca, generation 2e106bda)` -> `pass`
+- `S52` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S52` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-catalogue.json`
+- `S52` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-catalogue.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S52` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S52` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S52` `verify:` `just docs-generate-sequences` -> `pass`
+- `S52` `verify:` `just docs-sequences-check; final fbeff3c9 generation, codex-final-docs-replay-20261001-102842.log` -> `pass`
+- `S50` `M` `dev/agent_eval/tests/test_under_declaration_golden.py`
+- `S50` `M` `dev/packaging/installed_tax_oracle.py`
+- `S50` `M` `dev/registry/edition_export_scenarios.py`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0015-dp200012.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0017-dp200014.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2024/0021-dp200016.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0002-dp200001.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0015-dp200012.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0017-dp200014.toml`
+- `S50` `M` `dev/registry/mappings/modelo_200/2025/0021-dp200016.toml`
+- `S50` `M` `dev/registry/pipeline/source_defects.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_registry.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S50` `M` `dev/registry/tests/test_pinned_conformance_vector.py`
+- `S50` `M` `dev/registry/tests/test_semantic_role.py`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/revision.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/formulas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_predicates/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0001-record-m200-page-001.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0024-record-m200-page-012.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0028-record-m200-page-014.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0038-record-m200-page-016.toml`
+- `S50` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_ledger_filing_evidence.py`
+- `S50` `M` `src/cadrumo/application/aggregation/tests/test_ledger_filing_snapshot.py`
+- `S50` `M` `src/cadrumo/application/filing/tests/test_decimal_inputs_routing.py`
+- `S50` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_verification_substance_advisory.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/verification_substance_fixtures.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations_modelo_202_200.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_base_determination.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_temporal_coverage.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_calculate_boundary_fault_attribution.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_200_stored_calculation_drift_cli.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_accounting_input_guard.py`
+- `S50` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_ejemplo1_tributacion_minima_manual_worked_example.py`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0002-independent-concepts.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0002-independent-concepts.toml`
+- `S50` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/export/`
+- `S50` `A` `.vault/research/2026-10-01-registry-conformance-rectification-remaining-issues-research.md`
+- `S50` `A` `.vault/audit/2026-10-01-registry-conformance-rectification-audit.md`
+- `S50` `verify:` `Modelo 200 canonical semantic joins and generated target validation at retained grades; both targets transactional publication and currentness, codex-m200-final-publication-20261001-095907.log` -> `pass`
+- `S50` `verify:` `Modelo 200 delta proof complete already minimal; equivalent; zero redundant overrides, duplicate shapes or blocked revisions; codex-m200-delta-proof-20261001-095745.log` -> `pass`
+- `S50` `verify:` `Published-byte independence module 23 passed against fbeff3c9; codex-m200-runtime-regressions-20261001-101801.log` -> `pass`
+- `S50` `verify:` `Shipped casilla catalogue gate 14 passed; codex-m200-locale-gate-20261001-102414.log` -> `pass`
+- `S50` `M` `src/cadrumo/_data/corpus/manual_oracles/modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json`
+- `S50` `verify:` `Fresh Modelo 200 collapse complete; stable inputs; no live mutation; zero redundancy duplication and coverage gaps; equivalence temporal indexed facts cache publication readiness pass; generation fbeff3c9; codex-m200-collapse-20261001-103507.log` -> `pass`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0002-independent-concepts.toml`
+- `S50` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0002-independent-concepts.toml`
+- `S50` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S50` `M` `dev/registry/pipeline/tests/_generated_tree_test_support.py`
+- `S50` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S50` `M` `dev/registry/tests/test_casilla_bindings_name_their_own_sheet.py`
+- `S50` `A` `dev/registry/conformance/modelo_200_echoes.py`
+- `S50` `verify:` `Isolated and installed acceptance candidate preserves all typed content and order except three officially evidenced first-appearance stamps; codex-m200-acceptance-source-20261001-121540.log` -> `pass`
+- `S50` `verify:` `Full authority publication before pytest, logical generation a5b486f5643d41213afedaf47c2cabd72eff5c02f0939149537921b234fea530; both generated targets reproduce CURRENT; codex-m200-acceptance-final-20261001-122516.log` -> `pass`
+- `S50` `verify:` `Fresh generic Modelo 200 proof/apply/no-op at stable source b527f576; complete/equivalent/minimal; zero redundant overrides, unresolved duplication or blocked revisions; acceptance-proof, acceptance-apply and acceptance-noop report directories` -> `pass`
+- `S50` `verify:` `Full just test-registry on preceding d78a46a3 source; 9592 passed, 13 failed, zero errors; complete four lanes; run 20261001T094940.047212Z-test-registry-49916-b51e1f8d` -> `fail`
+- `S50` `verify:` `Installed package oracles; one passed and nine setup errors; locked pikepdf macos-arm64 wheel requires 15.0 above declared 14.0; run 20261001T094708.856487Z-pytest-75328-c363f9e0` -> `fail`
+- `S50` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S50` `M` `.agents/skills/aeat-authority-registry-authoring/references/authoring-commands.md`
+- `S50` `verify:` `Republication before replacement pytest after concurrent main compiler/dependency merge; logical generation a5b486f5643d41213afedaf47c2cabd72eff5c02f0939149537921b234fea530; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `Generated-tree reproduction/check/refusal gate for metadata-selected M200 and M222 cases; 12 passed, 72 deselected; pytest run 20261001T110219.324733Z-pytest-6608-4a35b546` -> `pass`
+- `S50` `verify:` `Real published store admission and static runtime boundary; 12 passed; pytest run 20261001T110417.180211Z-pytest-34600-05d1ba57` -> `pass`
+- `S50` `verify:` `Full style, format and three-checker three-platform type gates; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `check-registry, check-bindings and check-registry-gate; a5b486f5 current, both targets current; exact same 33 binding finding keys and severities, zero introduced or resolved keys; binding-baseline-comparison.json` -> `pass`
+- `S51` `M` `src/cadrumo/application/calculations/tests/test_dependency_treatment_survives_the_resolver_join.py`
+- `S51` `M` `dev/registry/tests/test_revision_selection_probe.py`
+- `S51` `M` `dev/registry/tests/test_modelo_036_pre_april_2023_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_038_pre_june_2024_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_182_2022_2023_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_189_2022_edition.py`
+- `S51` `M` `dev/registry/tests/test_modelo_210_january_to_may_2022_design.py`
+- `S51` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S51` `verify:` `Canonical legal-derived resolver-treatment and ambiguity detectors included in 304-pass focused acceptance; published a5b486f5 before pytest; run 20261001T103012.755956Z-pytest-37512-9b9dabed; sole failure belonged to generated-tree grade fixture` -> `pass`
+- `S51` `verify:` `Historical edition and catalogue coverage checks; 29 passed; run 20261001T110108.550069Z-pytest-66984-4f0a1e2b` -> `pass`
+- `S51` `verify:` `Final M038 exhaustive legal-window selection and exact outside-support-envelope refusal; one passed; run 20261001T111614.668870Z-pytest-7012-342b629e` -> `pass`
+- `S51` `verify:` `Final full three-checker, three-platform type gate and focused ruff style/format; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
+- `S52` `verify:` `Goldens regenerated through owning CLI; supported Modelo 130 relation retained; codex-final-docs-replay-20261001-102842.log` -> `pass`
+- `S52` `verify:` `Full docs sequence replay after corrected a5b486f5 publication and concurrent main merge; cli-sequence goldens clean; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
+- `S50` `verify:` `Final Modelo 200 collapse; stable inputs, no live mutation, four editions equivalent/minimal, zero redundancy/repeated values/gaps, governed facts/indexed/cache/invalidation/publication readiness passed; 159 indexed revisions and 3477 temporal/capability coordinates; acceptance-collapse/summary.json; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
+- `S50` `verify:` `Feature vault check all; structure, metadata, links, body, execution mapping and all other applicable lanes clean` -> `pass`
 
 ## Notes
 
@@ -1588,3 +1685,8 @@ related:
 - `S11` the converter's equivalence proof does not compare sequence order, so rows stated over a baseline land at the edition's end; 222 declares positions; an order-aware proof and a registry-wide reorder sweep run before the closing verifier round
 - `S11` history sweep found order regressions from db50af829c (200/2025) and 3293259c99 (100 identity fields); their previously committed order is restored next
 - `S11` positions are absolute indexes, so a baseline edit can still shift later editions invisibly; anchored positions are a schema decision for the operator
+- `S50` Six independently evidenced collisions repaired with sheet-qualified homes, floor-authored equity members and later adjustment additions. The initial focused run had six failures: envelope-relative byte helper and locale segment consistency; both repaired and affected gates passed. Larger mapping candidates remain unadjudicated; S50 stays open. Consumer sweep and final acceptance runs pending.
+- `S50` The complete registry run exposed introduced packing and first-appearance omissions, spent bootstrap metadata and stale test assumptions. Corrective source and test changes preserve grounded assertions and legal-derived year cases. Later acceptance results remain pending; the literal legal-anchor ratchet and installed package setup failure remain visible. S50 stays open for the larger semantic worklist.
+- `S50` The 304-pass focused run had one stale filing-grade expectation for the newly published calculation-grade target. The corrected gate derives capability refusals from canonical authority and continues to require full check-mode success for every filing-grade target. The whole-catalogue literal anchor ratchet and installed-package setup failure remain visible. Larger mapping adjudication remains open.
+- `S51` Historical tests had eleven real type diagnostics. Actual support, fixed-width fields, corpus text and revision bounds are now asserted before use. The new below-floor test initially expected the absent-revision error and then exposed a missing retained import; both corrections passed before the collapse started. No support range, capability or production relation was changed to satisfy the tests.
+- `S50` The complete scoped proof verifies this installed six-concept correction while the larger S50 mapping inventory remains open. Active authority is a5b486f5; the isolated indexed witness is not substituted for the active descriptor. Candidate, installed source, publication and development runtime pass; installed-package adoption remains unverified after the real wheelhouse setup failure. The concurrent main merge prevents an isolated commit; its staged files remain untouched.

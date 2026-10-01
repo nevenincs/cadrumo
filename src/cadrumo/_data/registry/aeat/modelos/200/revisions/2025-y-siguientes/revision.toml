@@ -107,19 +107,19 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00004" }
+selector = { revision = "2024", id = "DP200001:00004" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 32/32, filas 37/37: Sociedad de inversión inmobiliaria o fondo de inversión inmobiliaria [00004]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00005" }
+selector = { revision = "2024", id = "DP200001:00005" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 33/33, filas 38/38: Comunidades titulares de montes vecinales en mano común [00005]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00006" }
+selector = { revision = "2024", id = "DP200001:00006" }
 fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 54/54, filas 59/59: Incentivos entidad de reducida dimensión ( cap XI, tít. VII LIS ) [00006]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2).", continuidad_origin = "grounded" }
 removed_fields = []
 restate_provenance = true
@@ -3221,7 +3221,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00501" }
+selector = { revision = "2024", id = "DP200012:00501" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
@@ -3575,7 +3575,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00573" }
+selector = { revision = "2024", id = "DP200014:00573" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true
@@ -19660,6 +19660,41 @@ fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hoj
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200032:00501" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200032 field 82, row 87: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]. aeat-dr-200-2025 DP200032 field 82, row 87: Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Transferencias entre componentes del patrimonio neto - Ganancias acumuladas [00501]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200043:00501" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200043 field 45, row 50: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Aumentos de capital o fondo mutual - Ajustes por cambios de valor [00501]. aeat-dr-200-2025 DP200043 field 45, row 50: Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas - Aumentos de capital o fondo mutual - Ajustes por cambios de valor [00501]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200042:00573" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. aeat-dr-200-2025 DP200042 field 94, row 99: Entidades aseguradoras - Estado cambios patrimonio propio (II) -Operaciones con socios o mutualistas - Otras operaciones con socios o mutualistas. (Acciones en patrimonio propias) [00573]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200012:00004" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 DP200012 field 9, row 14: Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones por Impuesto Complementario [00004]. aeat-dr-200-2025 DP200012 field 9, row 14: Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones por Impuesto Complementario [00004]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200012:00005" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 DP200012 field 42, row 47: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumentos [00005]. aeat-dr-200-2025 DP200012 field 41, row 46: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024 y RDL 7/2026) - Aumentos [00005]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "DP200012:00006" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2024 DP200012 field 43, row 48: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminuciones [00006]. aeat-dr-200-2025 DP200012 field 42, row 47: Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024 y RDL 7/2026) - Disminuciones [00006]. Both identify the same concept; this sheet-scoped identity does not inherit the unrelated field with the same printed number.", source_refs = ["aeat-dr-200-2025"] }
+removed_fields = []
+restate_provenance = true
 [[revisions."2025-y-siguientes".casilla_removals]]
 selector = { revision = "2024", id = "00067" }
 
@@ -20417,647 +20452,647 @@ position = 1147
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1501"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1502"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1503"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1504"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1506"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1809"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1810"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1507"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "1508"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200001:00082"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00562"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00563"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00564"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00565"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00566"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00567"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00568"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00576"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00577"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00578"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00579"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00580"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00581"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00582"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200010:00590"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00591"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00593"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00594"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00595"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00596"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00569"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00570"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00571"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00572"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00583"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00584"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00585"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00586"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00588"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00589"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00611"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00612"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00613"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00614"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00615"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00616"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00617"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200011:00625"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00626"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00627"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00628"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00629"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00630"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "00631"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200013:00417"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200013:00418"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00547"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00550"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00552"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00558"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00562"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00567"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00568"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00563"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00566"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00576"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00569"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00570"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00572"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00571"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00575"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00577"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00581"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:00582"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00583"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00585"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00584"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00588"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00565"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00590"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00399"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00082"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00619"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:01033"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:01034"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:01330"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:SAL_RESERVA_DOTACION"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014:bin-aplicada-maxima"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00592"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00599"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00601"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00603"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00605"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:00611"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:01766"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200014B:01784"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01785"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01786"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01787"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01788"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01789"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01790"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01791"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01792"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01793"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01794"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01795"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01796"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01797"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01798"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "01799"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200026:00625"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "DP200018B:00588"
-position = 3462
+position = 3465
 
 [[revisions."2025-y-siguientes".casilla_positions]]
 id = "03599"
-position = 3347
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03600"
-position = 3348
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03601"
-position = 3349
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03602"
-position = 3350
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03603"
-position = 3351
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03604"
-position = 3352
-
-[[revisions."2025-y-siguientes".casilla_positions]]
-id = "03605"
 position = 3353
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03606"
+id = "03600"
 position = 3354
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03607"
+id = "03601"
 position = 3355
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03608"
+id = "03602"
 position = 3356
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03609"
+id = "03603"
 position = 3357
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03610"
+id = "03604"
 position = 3358
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03611"
+id = "03605"
 position = 3359
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03612"
+id = "03606"
 position = 3360
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03613"
+id = "03607"
 position = 3361
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03614"
+id = "03608"
 position = 3362
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03615"
+id = "03609"
 position = 3363
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03616"
+id = "03610"
 position = 3364
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03617"
+id = "03611"
 position = 3365
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03618"
+id = "03612"
 position = 3366
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03619"
+id = "03613"
 position = 3367
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03620"
+id = "03614"
 position = 3368
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03621"
+id = "03615"
 position = 3369
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03622"
+id = "03616"
 position = 3370
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03623"
+id = "03617"
 position = 3371
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03624"
+id = "03618"
 position = 3372
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03625"
+id = "03619"
 position = 3373
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03626"
+id = "03620"
 position = 3374
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03627"
+id = "03621"
 position = 3375
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03628"
+id = "03622"
 position = 3376
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03629"
+id = "03623"
 position = 3377
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03630"
+id = "03624"
 position = 3378
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03631"
+id = "03625"
 position = 3379
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03632"
+id = "03626"
 position = 3380
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03633"
+id = "03627"
 position = 3381
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03634"
+id = "03628"
 position = 3382
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03635"
+id = "03629"
 position = 3383
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03636"
+id = "03630"
 position = 3384
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03637"
+id = "03631"
 position = 3385
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03638"
+id = "03632"
 position = 3386
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03639"
+id = "03633"
 position = 3387
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03640"
+id = "03634"
 position = 3388
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03641"
+id = "03635"
 position = 3389
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03642"
+id = "03636"
 position = 3390
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03643"
+id = "03637"
 position = 3391
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03644"
+id = "03638"
 position = 3392
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03645"
+id = "03639"
 position = 3393
 
 [[revisions."2025-y-siguientes".casilla_positions]]
-id = "03646"
+id = "03640"
 position = 3394
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03641"
+position = 3395
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03642"
+position = 3396
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03643"
+position = 3397
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03644"
+position = 3398
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03645"
+position = 3399
+
+[[revisions."2025-y-siguientes".casilla_positions]]
+id = "03646"
+position = 3400
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"

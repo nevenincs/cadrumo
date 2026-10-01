@@ -64,6 +64,7 @@ def test_the_design_windows_meet_on_the_orden_hfp_381_2023_entry_into_force() ->
 def test_selection_by_date_splits_the_year_at_the_boundary() -> None:
     _, catalogues = _modelo()
     last_old, first_new = _boundary()
+    assert catalogues.supported_filing_years is not None
     floor = min(catalogues.supported_filing_years.years)
     for period in ("alta", "modificacion", "baja"):
         assert _selected(floor, None, period).id == "2022-hasta-2023-04-24"

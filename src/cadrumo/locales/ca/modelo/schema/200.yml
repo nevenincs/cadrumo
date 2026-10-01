@@ -7662,6 +7662,9 @@ modelo:
             label: Despeses no deduïbles per considerar-se retribució de fons propis
               (art. 15 a) LIS) - Augment - Correccions de l'exercici - Permanents
               [02761]
+          is-correccion-impuesto-complementario:
+            label: Liquidació I - Resultat del compte de pèrdues i guanys - Impost
+              complementari [00004]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-aumento:
             label: Impost estranger suportat pel contribuent, no deduïble per afectar
               rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment -
@@ -7834,6 +7837,14 @@ modelo:
             label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
               de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de l'exercici
               - Permanents [01885]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-aumentos:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Llibertat d'amortització de determinats vehicles i de noves infraestructures
+              de recàrrega (DA 18a LIS RDL 4/2024) - Augments [00005]
+          is-correccion-libertad-amortizacion-vehiculos-recarga-disminuciones:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Llibertat d'amortització de determinats vehicles i de noves infraestructures
+              de recàrrega (DA 18a LIS RDL 4/2024) - Disminucions [00006]
           is-correccion-libertad-amortizacion-vehiculos-saldo-final:
             label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
               de recàrrega (DA 18a LIS RDL 4/2024) - Augment - Saldo pendent a fi
@@ -8799,6 +8810,10 @@ modelo:
             label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
               net (II) - Estat total de canvis - Saldo de tancament (període corrent)
               - Total [00568]
+          is-ecpn-bde-transferencias-ganancias-acumuladas:
+            label: Comptabilitat Banc d'Espanya - Estat de canvis en el patrimoni
+              net (II) - Estat total de canvis - Transferències entre components del
+              patrimoni net - Guanys acumulats [00501]
           is-ecpn-iii-acciones-propias-dividendo-a-cuenta:
             label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
               o propietaris - Operacions amb accions o participacions pròpies - Dividend
@@ -9017,6 +9032,10 @@ modelo:
           is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos:
             label: Estat de canvis en el patrimoni net (I) - Transferències al compte
               de pèrdues i guanys - Altres ingressos/despeses [00348]
+          is-ecpp-aseguradoras-aumentos-capital-ajustes-valor:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (III) - Operacions amb socis o mutualistes - Augments de capital o fons
+              mutual - Ajustaments per canvis de valor [00501]
           is-ecpp-aseguradoras-i-ingresos-gastos-reconocidos-importes-transferidos-cuenta-perdidas-ganancias:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (I) - Ingressos i despeses reconeguts - Imports transferits al compte
@@ -9158,6 +9177,10 @@ modelo:
             label: Entitats asseguradores - Estat de canvis en el patrimoni propi
               (III) - Altres variacions del patrimoni net - Traspassos entre partides
               de patrimoni net - Subvencions, donacions i llegats [00619]
+          is-ecpp-aseguradoras-otras-operaciones-acciones-propias:
+            label: Entitats asseguradores - Estat de canvis en el patrimoni propi
+              (II) -Operacions amb socis o mutualistes - Altres operacions amb socis
+              o mutualistes. (Accions pròpies) [00573]
           is-entidad-aseguradora:
             help: Indicador d'entitat asseguradora [00025].
             label: Entitat asseguradora [00025]

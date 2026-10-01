@@ -618,7 +618,7 @@ class TestTypoTwinWarning:
             (
                 "200",
                 "2024",
-                "00501",
+                "DP200012:00501",
                 "is_liquidacion_i_importe",
             ),
             (

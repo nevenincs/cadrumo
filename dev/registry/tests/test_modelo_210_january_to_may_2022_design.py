@@ -89,6 +89,7 @@ def test_january_to_may_2022_projects_to_the_edition_rendering_the_later_design(
     early = catalogues.sources[_EARLY]
     assert early.applies_to is not None
     year = early.applies_to.year
+    assert catalogues.supported_filing_years is not None
     assert year in catalogues.supported_filing_years.years
     assert all(_EARLY not in edition.source_refs for edition in modelo.revisions.values())
     ((position, length, _, _),) = _differing()[1]

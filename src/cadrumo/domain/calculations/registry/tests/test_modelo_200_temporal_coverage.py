@@ -62,7 +62,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # rate with its tranche scale; its window is the historical back-fill under test.
 _PRE_TRANCHE_PYME_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year - 1
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
+)
 _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:01033",
     surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",

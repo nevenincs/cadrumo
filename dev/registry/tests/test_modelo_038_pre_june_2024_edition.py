@@ -39,6 +39,7 @@ def _months_before_amendment() -> list[tuple[int, str]]:
     _, catalogues = _modelo()
     applies_to = catalogues.sources[_OLD_DESIGN].applies_to
     assert applies_to is not None
+    assert catalogues.supported_filing_years is not None
     floor = min(catalogues.supported_filing_years.years)
     return [
         (year, f"{month:02d}")
@@ -59,7 +60,9 @@ def _corpus_text(source_id: str) -> str:
     assert corpus_path is not None
     sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
     sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    return json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    assert isinstance(text, str)
+    return text
 
 
 def test_every_month_before_the_amendment_is_authored_on_the_2012_design() -> None:

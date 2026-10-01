@@ -179,9 +179,9 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     # silent-zero shape before asserting the verify-layer advisory over it - if
     # this precondition ever stops holding (e.g. a future formula change derives
     # 00501 from 00500), the scenario itself would be vacuous.
-    assert values.get("00501") in (None, "0.00", "0"), (
+    assert values.get("DP200012:00501") in (None, "0.00", "0"), (
         "precondition broken: 00501 must stay at manual zero (no formula derives "
-        f"it from 00500 yet), got {values.get('00501')!r}"
+        f"it from 00500 yet), got {values.get('DP200012:00501')!r}"
     )
     assert values.get("DP200014:00552") in (None, "0.00", "0"), (
         f"precondition broken: base imponible DP200014:00552 must cascade to zero, got {values.get('DP200014:00552')!r}"

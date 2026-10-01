@@ -51,6 +51,7 @@ def _design_years() -> tuple[int, ...]:
     source = catalogues.sources[_DESIGN]
     assert source.applies_from is not None
     assert source.applies_to is not None
+    assert catalogues.supported_filing_years is not None
     return tuple(
         year
         for year in catalogues.supported_filing_years.years
@@ -69,7 +70,9 @@ def _corpus_text(source_id: str) -> str:
     assert corpus_path is not None
     sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
     sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    return json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    assert isinstance(text, str)
+    return text
 
 
 def test_each_design_year_is_authored_on_its_own_design() -> None:

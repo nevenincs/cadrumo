@@ -17,7 +17,7 @@ id = "modelo-200-base-imponible-previa"
 target_casilla_id = "DP200014:00550"
 expression = { op = "subtract", args = [
     { op = "add", args = [
-        { casilla_id = "00501" },
+        { casilla_id = "DP200012:00501" },
         { casilla_id = "DP200013:00417" },
     ] },
     { casilla_id = "DP200013:00418" },
@@ -332,7 +332,7 @@ expression = { op = "max", args = [
             { casilla_id = "01280" },
             { casilla_id = "DP200014:00572" },
             { casilla_id = "DP200014:00571" },
-            { casilla_id = "00573" },
+            { casilla_id = "DP200014:00573" },
             { casilla_id = "DP200014:00575" },
             { casilla_id = "DP200014:00577" },
             { casilla_id = "DP200014:00581" },

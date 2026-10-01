@@ -75,18 +75,25 @@ def _corpus_text(source_id: str) -> str:
     assert corpus_path is not None
     sidecar = bundled_path("manual_corpus_text", *corpus_path.removeprefix("corpus/").split("/"))
     sidecar = sidecar.with_name(sidecar.name + ".corpus_text.json")
-    return json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    assert isinstance(text, str)
+    return text
 
 
 def _declarado_fields(revision: ModeloRevision) -> dict[str, tuple[int, int, str]]:
     (layout,) = revision.export_layouts
     (record,) = [record for record in layout.records if record.record_type == "declarado"]
-    return {field.id: (field.offset, field.length, field.kind) for field in record.fields}
+    fields = {}
+    for field in record.fields:
+        assert field.offset is not None and field.length is not None, field.id
+        fields[field.id] = (field.offset, field.length, field.kind)
+    return fields
 
 
 def test_the_last_design_year_is_authored_on_its_own_design_below_the_unreviewed_filing_grade() -> None:
     _, catalogues = _modelo()
     year = _last_design_year()
+    assert catalogues.supported_filing_years is not None
     assert year in catalogues.supported_filing_years.years
     revision = _selected(year)
     resolution = revision_temporal_resolution(
