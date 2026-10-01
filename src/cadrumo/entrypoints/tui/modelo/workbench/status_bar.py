@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, ClassVar
 from textual import events
 from textual.widgets import Static
 
+from ...components.theme import tokenised
+
 if TYPE_CHECKING:
     from .header import StatusLine
 
@@ -18,11 +20,13 @@ if TYPE_CHECKING:
 class StatusBar(Static):
     """One line repeating the header's result and chips, fitted again whenever its width changes."""
 
-    DEFAULT_CSS: ClassVar[str] = """
-    StatusBar {
-        height: 1;
-    }
-    """
+    DEFAULT_CSS: ClassVar[str] = tokenised(
+        """
+        StatusBar {
+            height: $cadrumo-band-height;
+        }
+        """
+    )
 
     def __init__(self, status: StatusLine, *, id: str | None = None) -> None:
         """Hold the line to repeat, first fitted to the whole terminal."""
