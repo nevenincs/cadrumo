@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:78ef5e8ae53d90f9ff065071d227e54f7157c286c2909413ec643e42d729801b'
+body_hash: 'sha256:0fc8948fcba2a784cf6324597885765cb75c60d56e4be7e481e7ad806f7e4d2e'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1142,6 +1142,94 @@ related:
 - `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2024/revision.toml`
 - `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml`
 - `S28` `verify:` `gate reports restated-unchanged and re-keyed open rows with detector cases and no report for a genuine change; 210's six rate rows open from 2023 (fa301fc667); 100 escalas and 303 rows keep unchanged brackets open with hydrated values equal at 8033 points; 222 and 714 rows cleared by their lanes; gate green registry-wide, 1876 runtime passed; gated commit adf4e6a01e` -> `pass`
+- `S55` `M` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S55` `M` `dev/registry/edition_export_scenarios.py`
+- `S55` `M` `dev/registry/tests/test_casilla_legal_citation_period_gate.py`
+- `S55` `A` `dev/registry/tests/test_edition_export_scenario_row_total_inputs.py`
+- `S55` `M` `dev/registry/tests/test_modelo_190_registry.py`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/revision.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/application_links/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/0001-declarations.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/extraction_profiles/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S55` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export_layouts/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/SKILL.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-190/reference/casillas.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/SKILL.md`
+- `S55` `M` `src/cadrumo_harness/_data/agent/skills/cadrumo-preparar-modelo-193/reference/casillas.md`
+- `S55` `verify:` `export scenarios supply the row totals each selected edition declares, detector fails the old year bound; 190 layouts stated per edition, apply and no-op; 190 2024 cites Orden HAC/1432/2024 and the 2024 design, 2025 hydration identical; 1362 passed; published bb0c1ee4; gated commit 651ab33ea2` -> `pass`
+- `S40` `M` `dev/registry/tests/test_modelo_184_filing_surface_across_supported_years.py`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/bindings/0001-declarations.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/bindings/0001-declarations.toml`
+- `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S40` `verify:` `reduccion binding stated at 2022 (Orden HAP/2250/2015 socio positions 109-119), 2023-2024 keys only its refs; only 2022 hydration changes; inspection valid; converter no-op; dev 647 passed; gated commit 14ecb6cae1` -> `pass`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S35` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S35` `verify:` `184/2022, 182/2024, 220/2024, 220/2025, 165/2023-2025 and 216/2020-2023 re-reviewed and stamped agent_reviewed through the conformance stamp command, each text stating only what was checked; stamp output equal to its scratch preview; published bb0c1ee4 carries all six; gated commit 14ecb6cae1` -> `pass`
+- `S55` `M` `dev/registry/edition_delta_migration.py`
+- `S55` `A` `dev/registry/tests/test_edition_delta_explicit_empty_override.py`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/application_links/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/constructs/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/application_links/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/bindings/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/completeness_manifest/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/constructs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/filing_schedules/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/formulas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/live_cross_references/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/verification_expectations/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/verification_predicates/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/workbook_parity_refs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/application_links/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/bindings/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/constructs/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/formulas/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/live_cross_references/0001-declarations.toml`
+- `S55` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/revision.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S55` `D` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S55` `verify:` `assessor compares only the leaves a baseline states, detector teeth refuse a pruned explicit empty; registry-wide assessment differs only in 309's finding; 309 roots stored over predecessors (55/59/62 to 13/4/3 stated casillas), apply and no-op, inspection 0 findings; 133 passed; gated commit 8777087d6e` -> `pass`
+- `S28` `M` `dev/registry/tests/test_bracket_accumulated_cuota_continuity.py`
+- `S28` `verify:` `rows compare by typed value with representation-restatement and re-key detectors; each in-force bracket table read per change date and checked whole with a broken-seam detector; no registry finding; 18 passed; gated commit 9bcb7b1826` -> `pass`
+- `S50` `A` `dev/registry/tests/test_modelo_200_edition_provenance.py`
+- `S50` `M` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/ley-7-2024-art-6.html.extracted.md`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html.extracted.json`
+- `S50` `A` `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026-art-1.html.extracted.md`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/application_links/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/completeness_manifest/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/constructs/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/parameters/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S50` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S50` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S50` `verify:` `2024 members cite the 2024 design; 00081 and 00082 grounded label evolutions under Ley 7/2024 art. 6; 03312 and the misfiled 2024 cohort rows follow their design and cohort; Ley 7/2024 art. 6 and Orden HAC/529/2026 art. 1 catalogued; provenance tests with detector cases; inspection 0 findings; published 364b40b4; gated commit 902eb59eb7` -> `pass`
 
 ## Notes
 
@@ -1206,3 +1294,10 @@ related:
 - `S33` 604/2021-2023's construct still names no windows or deadline link; outside the step's named scope
 - `S55` the 604 root rows in the same commit are logged under P05.S33; 309 awaits the converter's explicit-empty lift fix; 190 awaits the export-scenario fix
 - `S28` the gate compares values by representation, so a numeric restatement such as 12450.00 for 12450 escapes it; the accumulated-cuota gate groups rows by window and no longer sees the seam between inherited and re-keyed rungs; both go to a follow-up
+- `S55` the 190 2024 provenance correction rides here under the ruling that provenance errors in an edition being restructured are corrected with it
+- `S40` 184/2023-2024 can cite only art. 23's 2024 redaction for ejercicio 2023, because the edition's devengo check reads its 2024-12-31 end; the citation predates this step
+- `S35` 216/2020-2023's stamp rode in 44a93ccbd6 with the P05.S55 216 root work
+- `S35` 216 rows 07, 10, 16 and 19 recorded not adjudicable: the pre-2024 form and instructions are not held; they stay without continuity
+- `S35` the replaced review texts' unrechecked findings survive only in git history and fragment comments
+- `S50` about 50 reused-number cells in the 2025 filing-grade export receive liquidacion values of other concepts (insurer and Banco de Espana equity statements, DP200010:00592, DP200011:00599); declaring them needs the 200 mappings and a target republish, assigned to a follow-up lane
+- `S50` about 124 retired 2024-only rows keep placeholder LIS references; the 2024 review comment still names the 2025 design
