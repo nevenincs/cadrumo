@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:7827e49b704c0d3e0445bc4c85bd65e83e2f0348bf37d955f9e2f7dccc339911'
+body_hash: 'sha256:e1881ffe822a4ed73df49ddc1ae22ea0ccde5796c88944751b67a7fde0fcac94'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -340,12 +340,22 @@ encodes the Modelo 100 withholding dependencies an accepted decision removed;
 `test_unrouted_iva_quantity_screen` predates the import base binding. Open for main, through a
 pull request.
 
-### intra-eu-deduction-hold-back | high | an intra-community acquisition may accrue without deducting
+### intra-eu-deduction-hold-back | high | an intra-community acquisition cannot be filed, and checking it crashes
 
 `docs/how-to/ledger-evidence.md:98` says an `intra_eu_current` deduction row cannot be
 substantiated from the ledger and is held back. If so, its self-assessed VAT reaches 303 box [11]
 while [37] stays at zero, overstating the VAT payable, unless the filer is told. Being checked in
 the producer step; on main as well.
+
+Measured 2026-10-01 through the real 303 2025 1T calculation with a synthetic intra-community
+acquisition: the payable is not overstated, because the whole row is held back and [10], [11],
+[36] and [37] all stay at zero. But no command can record the `intra_eu_self_assessment`
+evidence the row needs (`src/cadrumo/application/ledger/actions_manual.py:1465`), so the
+declaration can never pass; export refuses it (`src/cadrumo/application/modelo/export.py:491`),
+and verification crashes with an undeclared precondition identity
+(`src/cadrumo/application/modelo/verification_actions.py:1427`, refused at
+`preconditions.py:535`) instead of a worded refusal. Open: declare the identity, give the filer a
+way to record the evidence, and correct `docs/how-to/ledger-evidence.md:98`.
 
 ### concurrent-checkpoints | low | an integration session commits the shared tree while lanes work
 

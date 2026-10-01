@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:f251d6b4cb75e58d5d91c4cb153e75581e010c1d58bf638ff02239c7c6893dd8'
+body_hash: 'sha256:4f7d6a9f87b621edeb9f16b6bcdff8a39fb0fafe34d8734b8c65d97e962a0061'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -229,6 +229,15 @@ unhandled binding source, a source domain not ready and a terminal origin mismat
 worth checking and persist with the calculation, but withhold nothing until their producers stop
 reporting sources that do not apply to the filer: today they fire for a salaried Modelo 100, for
 Modelo 720's producer joins and for a valid Modelo 390 path.
+
+Amendment 2026-10-01, under the operator's decision above. The producers now skip sources that do
+not apply: a profile that declares no activity income has no activity ledger to wait for, a
+simplified-regime summary the regime excludes reports its bindings as inapplicable, and a source
+kind enrolled with nothing to run is never unhandled. With that, an unresolved printed box, an
+unhandled binding source and a source domain not ready withhold filing again in every
+entrypoint; an unresolved working figure stays worth checking. A terminal origin mismatch stays
+deferred: it fires only on Modelo 720's observation route, which no production caller uses and
+whose provenance is held back by an earlier grounding decision.
 
 ### D5 Editing interaction
 

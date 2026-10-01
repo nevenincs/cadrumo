@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:c7b5c824f48bc345b9c8c8407dc0b021579d41ed0d50bbc632ebd96bfc30d323'
+body_hash: 'sha256:f0c141847f50855bfeb4dfd9f1949136ceceb1e5313faf80cebf836832430e21'
 ---
 
 # `modelo-editor-workbench` plan
@@ -128,11 +128,11 @@ Close what the combined render and the design verification found: nothing unconf
 - [x] `P07.S45` - Word finding facts at the render boundary, name repeated-row findings in the filer's words at the missing level, carry calculation diagnostics to the workbench, and name an unnamed input by the box it feeds; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P07.S46` - Keep a held zero apart from an empty box, give rate values their unit, and word sources, panels and staged changes in the filer's terms; `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`.
 - [x] `P07.S47` - Dock the box panel at the foot of the workbench, with the dialog below thirty rows of height; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
-- [ ] `P07.S48` - Show the chain from an edited box to the result; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
+- [x] `P07.S48` - Show the chain from an edited box to the result; `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`.
 - [ ] `P07.S49` - Author official headings for Modelo 100, then 349; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P07.S50` - Render the phase in the review previews and close it with a review; `dev/tui`.
 - [x] `P07.S51` - Apply the design lane's terminology, area-name and conformance packs across every catalogue and regenerate the tests and references they move; `src/cadrumo/locales`.
-- [ ] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
+- [x] `P07.S52` - Keep calculation diagnostics from firing for sources that do not apply to the filer, then restore the deferred reasons to the filing block; `src/cadrumo/application/aggregation`.
 
 ## Parallelization
 

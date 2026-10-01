@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:33f252b6c8f5270488906119e37dbd434ea75179320f03ab1121da3000765d1a'
+body_hash: 'sha256:303b08e3a674084942aab4576cdeab55a056b10bad9445c0bb68268abcae2bf7'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -875,6 +875,54 @@ related:
 - `S47` `verify:` `pytest dev/tui/harness/tests, 52 passed` -> `pass`
 - `S47` `verify:` `dev.quality.types --count, 17` -> `pass`
 - `S47` `by:` `orchestrator`
+- `S48` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_casilla_help.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S48` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_affects_text.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_editor_panel.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
+- `S48` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_affects_chain_real.py`
+- `S48` `M` `src/cadrumo/locales/ca/common.yml`
+- `S48` `M` `src/cadrumo/locales/en/common.yml`
+- `S48` `M` `src/cadrumo/locales/es/common.yml`
+- `S48` `M` `src/cadrumo/locales/hu/common.yml`
+- `S48` `M` `src/cadrumo/application/modelo/settlement_casilla.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_settlement_casilla.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_result.py`
+- `S48` `M` `dev/locales/tests/test_audit.py`
+- `S48` `verify:` `pytest TUI, application/modelo and the locale audit, 2234 passed, one intermittent docked-editor failure that passes alone` -> `pass`
+- `S48` `verify:` `pytest TUI integration, 779 passed` -> `pass`
+- `S48` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S48` `by:` `orchestrator`
+- `S52` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S52` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S52` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S52` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S52` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S52` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S52` `A` `src/cadrumo/application/aggregation/tests/test_inventory_applies_to_the_filer.py`
+- `S52` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh.py`
+- `S52` `M` `src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`
+- `S52` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S52` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S52` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S52` `M` `src/cadrumo/application/modelo/tests/test_calculation_note_gate.py`
+- `S52` `M` `src/cadrumo/application/modelo/tests/test_work_form_calculation_notes.py`
+- `S52` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S52` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_m390_simplified_summary_applies_to_the_filer_live.py`
+- `S52` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S52` `verify:` `pytest named flows: 720 producer join, 390 e2e and simplified fold-in, salaried M100, gate, 50 passed` -> `pass`
+- `S52` `verify:` `pytest application and domain/modelos, 7490 passed, 5 failures also present on origin/main` -> `pass`
+- `S52` `verify:` `dev.docs.sequences check after a generator refresh of eight goldens` -> `pass`
+- `S52` `verify:` `dev.quality.types --count, 17` -> `pass`
+- `S52` `by:` `orchestrator`
 
 ## Notes
 
@@ -946,3 +994,9 @@ related:
 - `S45` Much of C1 reached history through checkpoint eaac53fd5b
 - `S47` Commits 6bc71c8944
 - `S47` The preview harness and the TUI acceptance test were adapted because the editor now docks at their sizes; the installed financial-child journey waits for an editor screen and was not run
+- `S48` Commits 2588ffa2ac, 1724b8d44d, 069ae8ec92
+- `S48` The result casilla rule has one definition in `settlement_casilla.py` shared by the help card and the settlement result
+- `S48` The not-linked wording replaced a claim that a box has no effect, since 303's printed amounts feed its result on the official form
+- `S52` Commits 8748180707
+- `S52` Three deferred reasons are restored to the filing block; `terminal_origin_mismatch` stays deferred because only a non-production observation route produces it
+- `S52` An intra-community acquisition is held back whole, so the payable is not overstated, but it can never be filed and verification crashes on an undeclared precondition identity
