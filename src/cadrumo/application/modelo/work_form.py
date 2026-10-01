@@ -90,7 +90,7 @@ from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .calculation_notes import BLOCKING_REASONS, UNWORKED_BOX_REASONS, note_attention
+from .calculation_notes import BLOCKING_REASONS, CHECK_REFUSED_REASONS, UNWORKED_BOX_REASONS, note_attention
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
 from .caller_context import caller_context_of
 from .edit_models import (
@@ -1216,7 +1216,14 @@ def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[M
 def _calculation_notes(
     context: _FormContext, sources: tuple[tuple[str, str | None], ...], fields: Iterable[ModeloFormField]
 ) -> tuple[ModeloFormCalculationNote, ...]:
-    """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says."""
+    """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says.
+
+    A reason the check decides on its own evidence waits for the check: once
+    the current calculation has been checked, the check's finding of the same
+    cause is what stands, blocking where the check refused and worth checking
+    where it accepted an attestation, so the note is left out.
+    """
+    checked = context.review.verification_outcome is not None
     boxes = {
         str(field.address.casilla_id): field.box
         for field in fields
@@ -1225,6 +1232,8 @@ def _calculation_notes(
     notes: dict[tuple[str, str | None], ModeloFormCalculationNote] = {}
     for reason, casilla_id in sources:
         if (reason, casilla_id) in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
+            continue
+        if checked and reason in CHECK_REFUSED_REASONS:
             continue
         box = None if casilla_id is None else boxes.get(casilla_id)
         attention = note_attention(reason, box=box)

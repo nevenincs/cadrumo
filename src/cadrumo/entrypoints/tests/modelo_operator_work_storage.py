@@ -320,8 +320,13 @@ def seeded_operator_work(
     modelo: str = "130",
     filing_year: int = 2026,
     period_code: str = "1T",
+    extra_facts: tuple[UserProfileFact, ...] = (),
 ) -> Generator[SeededOperatorWork]:
-    """Yield one seeded, not yet calculated work unit over isolated encrypted storage."""
+    """Yield one seeded, not yet calculated work unit over isolated encrypted storage.
+
+    ``extra_facts`` are profile facts the declaration needs beyond the
+    modelo-ready baseline, such as an attestation the check reads.
+    """
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
         bundled_indexed_authority().operation() as operation,
@@ -332,7 +337,7 @@ def seeded_operator_work(
                 context=create_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=(*MODELO_READY_PROFILE_FACTS, _ACTIVITY_START),
+                facts=(*MODELO_READY_PROFILE_FACTS, _ACTIVITY_START, *extra_facts),
                 created_at=SEEDED_AT,
                 updated_at=SEEDED_AT,
             )

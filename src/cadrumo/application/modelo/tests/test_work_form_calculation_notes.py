@@ -35,6 +35,7 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
 )
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ..work_form import build_modelo_work_form
@@ -70,6 +71,7 @@ def _review(
     zero_at: str | None,
     findings: tuple[ModeloVerificationFinding, ...] = (),
     calculation_revision_id: str | None = None,
+    verification_outcome: VerificationCompletenessStatus | None = None,
 ) -> ModeloWorkReview:
     rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
     return ModeloWorkReview(
@@ -81,7 +83,7 @@ def _review(
         work_unit_id=_WORK_UNIT,
         calculation_revision_id=calculation_revision_id,
         lifecycle_state=None,
-        verification_outcome=None,
+        verification_outcome=verification_outcome,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
         casillas=tuple(
             # The engine's silent zero, as a box whose source produced nothing would otherwise hold.
@@ -102,6 +104,7 @@ def _form(
     zero_at: str | None = None,
     findings: tuple[ModeloVerificationFinding, ...] = (),
     revision: CalculationRevision | None = None,
+    verification_outcome: VerificationCompletenessStatus | None = None,
 ) -> ModeloWorkForm:
     snapshot = _snapshot(operation)
     return build_modelo_work_form(
@@ -111,6 +114,7 @@ def _form(
             zero_at=zero_at,
             findings=findings,
             calculation_revision_id=None if revision is None else revision.calculation_revision_id,
+            verification_outcome=verification_outcome,
         ),
         snapshot=snapshot,
         layout=operation.form_layout(_MODELO, snapshot.revision.id),
@@ -285,3 +289,44 @@ def test_an_amount_that_reached_no_box_blocks_filing(operation: PinnedAuthorityO
     assert [(note.attention, note.durable) for note in form.blocking_calculation_notes] == [
         (ModeloFormAttention.BLOCKS, True)
     ]
+
+
+def _scope_evidence_failure() -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="iva_selected_scope_evidence_failure",
+        source_kind="ledger_iva_aggregation",
+        message="a ledger IVA row's selected filing scope cannot be completed from its evidence",
+    )
+
+
+def test_a_note_only_the_check_decides_blocks_until_the_calculation_is_checked(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    unchecked = _form(operation, diagnostics=(_scope_evidence_failure(),))
+
+    assert [(note.reason, note.attention) for note in unchecked.blocking_calculation_notes] == [
+        ("iva_selected_scope_evidence_failure", ModeloFormAttention.BLOCKS)
+    ]
+
+
+@pytest.mark.parametrize("verdict", list(VerificationCompletenessStatus))
+def test_once_checked_a_note_only_the_check_decides_gives_way_to_the_check_even_where_it_found_nothing(
+    operation: PinnedAuthorityOperation, verdict: VerificationCompletenessStatus
+) -> None:
+    """The check's report is what stands; a cause it accepted without a finding blocks nothing."""
+    checked = _form(operation, diagnostics=(_scope_evidence_failure(),), verification_outcome=verdict)
+
+    assert "iva_selected_scope_evidence_failure" not in {note.reason for note in checked.calculation_notes}
+    assert checked.blocking_calculation_notes == ()
+
+
+def test_once_checked_a_note_the_check_does_not_decide_still_blocks(operation: PinnedAuthorityOperation) -> None:
+    """Teeth for the rule above: only the check's own reasons give way to it."""
+    unrouted = CalculationSourceDiagnostic(
+        reason="unrouted_observation",
+        source_kind="ledger_iva_aggregation",
+        message="a row no binding consumes",
+    )
+    checked = _form(operation, diagnostics=(unrouted,), verification_outcome=VerificationCompletenessStatus.COMPLETE)
+
+    assert [note.reason for note in checked.blocking_calculation_notes] == ["unrouted_observation"]

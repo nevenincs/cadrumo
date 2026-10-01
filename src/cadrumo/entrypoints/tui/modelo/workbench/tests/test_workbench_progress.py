@@ -15,10 +15,17 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ......application.modelo.work_form_models import ModeloFormExport, ModeloFormFiling, ModeloWorkForm
+from ......application.modelo.work_form_models import (
+    ModeloFormAttention,
+    ModeloFormCalculationNote,
+    ModeloFormExport,
+    ModeloFormFiling,
+    ModeloWorkForm,
+)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ..progress import (
     NextAction,
     StepStatus,
@@ -136,3 +143,43 @@ def test_the_stepper_marks_where_the_filer_is_and_leaves_a_step_not_started_unma
     assert stepper_marks(progress) == (HERE_MARK, DONE_MARK)
     dimmed = [span for span in line.spans if "dim" in str(span.style)]
     assert [line.plain[span.start : span.end] for span in dimmed] == ["Check", "Record filing"]
+
+
+def _noted(form: ModeloWorkForm, *reasons: str) -> ModeloWorkForm:
+    """The form whose latest calculation left blocking notes of ``reasons``."""
+    notes = tuple(ModeloFormCalculationNote(reason=reason, attention=ModeloFormAttention.BLOCKS) for reason in reasons)
+    return form.model_copy(update={"calculation_notes": notes})
+
+
+def test_a_note_only_the_check_decides_sends_the_unchecked_declaration_to_the_check() -> None:
+    form = _noted(synthetic_form(calculated=True, needs_input=False), "withholding_detail_absent")
+
+    progress = workbench_progress(form, staged=0, verified=False, filed=False)
+    with override_settings(cadrumo_output_language="en"):
+        line = next_action_text(progress, OutputLanguage.EN)
+
+    assert progress.next_action is NextAction.VERIFY
+    assert line == "Check the declaration"
+    assert progress.filing_withheld, "it still withholds filing until the check has spoken"
+    assert _statuses(progress)[WorkbenchStep.REVIEW] is StepStatus.CURRENT
+
+
+def test_a_note_the_check_does_not_decide_still_sends_the_filer_to_resolve_it() -> None:
+    alone = _noted(synthetic_form(calculated=True, needs_input=False), "unrouted_observation")
+    beside = _noted(
+        synthetic_form(calculated=True, needs_input=False), "withholding_detail_absent", "unrouted_observation"
+    )
+
+    assert workbench_progress(alone, staged=0, verified=False, filed=False).next_action is NextAction.RESOLVE
+    mixed = workbench_progress(beside, staged=0, verified=False, filed=False)
+    assert mixed.next_action is NextAction.RESOLVE
+    assert mixed.count == 2, "the count is the chip's: everything that blocks filing"
+    assert _statuses(mixed)[WorkbenchStep.REVIEW] is StepStatus.BLOCKED
+
+
+def test_once_checked_a_note_the_check_decides_no_longer_sends_the_filer_back_to_it() -> None:
+    checked = _noted(synthetic_form(calculated=True, needs_input=False), "withholding_detail_absent").model_copy(
+        update={"verification": VerificationCompletenessStatus.BLOCKED}
+    )
+
+    assert workbench_progress(checked, staged=0, verified=False, filed=False).next_action is NextAction.RESOLVE

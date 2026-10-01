@@ -11,7 +11,10 @@ The reasons that block filing are exactly those the application refuses
 refuses checking, exporting and recording (:data:`GATE_REFUSED_REASONS`), a
 check step refuses on its own evidence (:data:`CHECK_REFUSED_REASONS`), or the
 export refuses the file (:data:`EXPORT_REFUSED_REASONS`). The editor withholds
-filing on the same set, so the two can never disagree.
+filing on the same set, so the two can never disagree. A reason a check step
+decides waits for that check: until the current calculation is checked the
+editor offers the check next, and once it is, the check's own finding of the
+same cause stands in the note's place.
 
 A printed box that could not be worked out, a source with no route and a source
 store not ready are refused by the gate: their producers report only sources

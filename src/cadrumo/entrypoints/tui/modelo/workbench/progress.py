@@ -15,7 +15,11 @@ recording the filing until the filer confirms it or types another: an
 unentered value in a box the declaration files is exactly the suspicious zero
 that must be surfaced before filing, and the file is what reaches the AEAT.
 Anything that blocks filing, whether the check or the calculation found it,
-withholds both in the same way. Recording a filing only records it in Cadrumo,
+withholds both in the same way. A calculation note the check decides on its own
+evidence (an empty withholdings detail the filer may attest, say) waits for the
+check: while it is all that blocks and the current calculation is unchecked,
+the next action is the check, never "resolve", since only the check can say
+whether it stands; the check also judges any value still missing. Recording a filing only records it in Cadrumo,
 so a verified declaration is offered the file to take to the AEAT first, and
 recording the filing once a file made from the current calculation exists: the
 next-action line carries one action at a time. A file made from an earlier
@@ -47,6 +51,7 @@ from typing import Final
 from rich.cells import cell_len
 from textual.content import Content
 
+from .....application.modelo.calculation_notes import CHECK_REFUSED_REASONS
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
@@ -164,6 +169,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
     assumed = counts.default_to_confirm
     blocked = counts.blocked
     blocking = blocking_count(form)
+    awaiting = _awaiting_the_check(form)
     clean = staged == 0
     filled = filed or ((verified or to_fill == 0) and assumed == 0)
     done = {
@@ -182,7 +188,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         elif not current_found:
             current_found = True
             is_blocked = step is WorkbenchStep.REVIEW and (
-                blocked > 0 or blocking > 0 or form.verification is VerificationCompletenessStatus.BLOCKED
+                blocked > 0 or blocking > awaiting or form.verification is VerificationCompletenessStatus.BLOCKED
             )
             steps.append(StepState(step, StepStatus.BLOCKED if is_blocked else StepStatus.CURRENT))
         else:
@@ -195,6 +201,7 @@ def workbench_progress(form: ModeloWorkForm, *, staged: int, verified: bool, fil
         assumed=assumed,
         blocked=blocked,
         blocking=blocking,
+        awaiting=awaiting,
         verified=verified,
         filed=filed,
     )
@@ -219,6 +226,7 @@ def _next(
     assumed: int,
     blocked: int,
     blocking: int,
+    awaiting: int,
     verified: bool,
     filed: bool,
 ) -> tuple[NextAction, int]:
@@ -240,12 +248,27 @@ def _next(
         return (NextAction.RECORD_AFTER_FILE if export.current else NextAction.EXPORT_AGAIN), 0
     if form.calculation_revision_id is None:
         return NextAction.CALCULATE, 0
+    if awaiting and awaiting == blocking and not blocked:
+        # Only the check can say whether what blocks stands, and it also judges
+        # whether the values still missing are ones the declaration needs.
+        return NextAction.VERIFY, 0
     if blocked or blocking or unboxed or form.verification in _UNRESOLVED_VERDICTS:
         # The header's chips count what blocks filing and the missing values
         # only a finding names; boxes the check marked stand in only when no
         # finding is left to count.
         return NextAction.RESOLVE, (blocking + unboxed) or blocked
     return NextAction.VERIFY, 0
+
+
+def _awaiting_the_check(form: ModeloWorkForm) -> int:
+    """How many of what blocks filing are calculation notes only the check can decide, the calculation unchecked.
+
+    Once the current calculation is checked the form leaves these notes out
+    and the check's own finding of the same cause stands in their place.
+    """
+    if form.verification is not None:
+        return 0
+    return sum(1 for note in form.blocking_calculation_notes if note.reason in CHECK_REFUSED_REASONS)
 
 
 def _step_name(step: WorkbenchStep) -> str:
