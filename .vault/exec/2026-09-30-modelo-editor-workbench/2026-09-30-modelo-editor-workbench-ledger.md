@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:60edeb34dc632c9503bba7e96e9273aaf427533b83f9b544f4cc0ac8b5febb88'
+body_hash: 'sha256:0e2f7c6195bffed1c483b489df6f78b19344c7f5067b86e4c98beb2dbe675947'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -1021,6 +1021,14 @@ related:
 - `S63` `verify:` `existing editor dock help integration (95 cases; 20261001T221146.229530Z)` -> `pass`
 - `S63` `verify:` `Ruff S63 six Python files` -> `pass`
 - `S63` `by:` `vaultspec-high-executor`
+- `S57` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S57` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S57` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S57` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S57` `verify:` `uv run --no-sync pytest dev/docs/tests (owning guide/catalogue subset; 20261001T224706.569821Z)` -> `pass`
+- `S57` `verify:` `strict isolated en/es/ca/hu user HTML builds and Chromium guide captures` -> `pass`
+- `S57` `verify:` `rendered authored-page links and fragments (6079 per language)` -> `pass`
+- `S57` `by:` `vaultspec-standard-executor`
 
 ## Notes
 

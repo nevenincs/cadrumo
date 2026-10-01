@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 10:59+0200\n"
+"POT-Creation-Date: 2026-10-02 00:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -20,168 +20,604 @@ msgstr ""
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:1
-msgid "Fill in and file a declaration in the workbench"
-msgstr "Rellenar y presentar una declaración en el banco de trabajo"
+msgid "Fill in and record a filing on the declaration screen"
+msgstr "Rellenar y registrar una presentación en la pantalla de la declaración"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:3
 msgid ""
-"The full-screen interface gives each declaration one workbench: its "
-"official pages, every box with its value and where that value comes from,"
-" the one thing to do next, and the help for the box under the cursor. "
-"This guide shows how to open a declaration, fill it in, calculate, "
-"review, file and export it."
+"The full-screen interface gives each declaration one screen: its official"
+" pages, every box with its value and where that value comes from, the one"
+" thing to do next, and the help for the box under the cursor. This guide "
+"shows how to see what you owe, fill in the boxes that need you, "
+"understand where a value comes from, check and fix issues, and record the"
+" filing."
 msgstr ""
-"La interfaz de pantalla completa da a cada declaración un banco de "
-"trabajo: sus páginas oficiales, cada casilla con su valor y de dónde sale"
-" ese valor, lo único que queda por hacer a continuación y la ayuda de la "
-"casilla bajo el cursor. Esta guía explica cómo abrir una declaración, "
-"rellenarla, calcularla, revisarla, presentarla y exportarla."
+"La interfaz de pantalla completa da a cada declaración una pantalla: sus "
+"páginas oficiales, cada casilla con su valor y de dónde sale ese valor, "
+"lo siguiente que hay que hacer y la ayuda de la casilla que tienes bajo "
+"el cursor. Esta guía te enseña a ver lo que debes, rellenar las casillas "
+"que te necesitan, entender de dónde sale un valor, comprobar y corregir "
+"las incidencias, y registrar la presentación."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:8
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:9
 msgid ""
-"Cadrumo records a filing in your own records. It never submits a return "
-"to the AEAT; [File at AEAT](file-at-aeat.md) explains that step."
+"Cadrumo never submits a return to the AEAT. \"Record filing\" tells "
+"Cadrumo that you filed; you file with the AEAT yourself. [File at AEAT"
+"](file-at-aeat.md) explains that step."
 msgstr ""
-"Cadrumo registra la presentación en tus propios registros. Nunca envía "
-"una declaración a la AEAT; [Presentar en la AEAT](file-at-aeat.md) "
-"explica ese paso."
+"Cadrumo nunca presenta una declaración en la AEAT. «Registrar "
+"presentación» le dice a Cadrumo que ya la has presentado; la presentación"
+" en la AEAT la haces tú. [Presentar en la AEAT](file-at-aeat.md) explica "
+"ese paso."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:11
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:13
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:13
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:15
 msgid ""
 "Your taxpayer profile is complete: see [Set up your taxpayer profile"
 "](profile-setup.md)."
 msgstr ""
-"Tu perfil de contribuyente está completo: consulta [Configurar tu perfil "
+"Tu perfil de contribuyente está completo: consulta [Configura tu perfil "
 "de contribuyente](profile-setup.md)."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:14
-msgid ""
-"The declaration exists. In **Declarations**, use *Create or reopen a "
-"declaration* with the modelo, the filing year and the period."
-msgstr ""
-"La declaración existe. En **Declaraciones**, usa *Crear o retomar una "
-"declaración* con el modelo, el ejercicio y el periodo."
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:16
+msgid "Know which modelo, filing year and period you want to work on."
+msgstr "Ten claro el modelo, el ejercicio y el periodo en el que quieres trabajar."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:17
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:18
 msgid "Open a declaration"
 msgstr "Abrir una declaración"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:19
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:20
 msgid "Start the full-screen interface with `aeat app tui` and sign in."
 msgstr ""
 "Inicia la interfaz de pantalla completa con `aeat app tui` e inicia "
 "sesión."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:20
-msgid "Open **Declarations**, select the declaration in the list and press Enter."
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:21
+msgid "Open **Declarations**. Press Enter on a group to open or close it."
 msgstr ""
-"Abre **Declaraciones**, selecciona la declaración en la lista y pulsa "
-"Intro."
+"Abre **Declaraciones**. Pulsa Enter sobre un grupo para abrirlo o "
+"cerrarlo."
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md:22
-msgid "The workbench opens on the first box that needs you."
-msgstr "El banco de trabajo se abre en la primera casilla que te necesita."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:24
-msgid "Read the workbench"
-msgstr "Leer el banco de trabajo"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:26
 msgid ""
-"**The header** names the modelo, the period in words and, when the modelo"
-" declares one, the calculated result."
+"Select a local declaration and press Enter to open it. For a period "
+"marked **Not started**, Enter asks you to confirm that you want to start "
+"it."
 msgstr ""
-"**La cabecera** indica el modelo, el periodo en palabras y, cuando el "
-"modelo lo declara, el resultado calculado."
+"Selecciona una declaración local y pulsa Enter para abrirla. Si el "
+"periodo indica **Sin empezar**, Enter te pide que confirmes que quieres "
+"empezarlo."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:28
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:25
 msgid ""
-"**The journey line** shows the four steps: Fill in, Calculate, Review and"
-" File. A step marked ✓ is done, ● is the current step, ▲ is blocked and ○"
-" is still to come."
+"To choose another declaration, press `+`. Choose the Modelo first, then "
+"one of its supported periods, and select **Create and open**. Esc on the "
+"period picker returns to the Modelo picker; Esc there cancels."
 msgstr ""
-"**La línea del recorrido** muestra los cuatro pasos: Rellenar, Calcular, "
-"Revisar y Presentar. Un paso marcado con ✓ está hecho, ● es el paso "
-"actual, ▲ está bloqueado y ○ todavía está por llegar."
+"Para elegir otra declaración, pulsa `+`. Elige primero el Modelo, luego "
+"uno de los periodos admitidos y selecciona **Crear y abrir**. Esc en el "
+"selector de periodo vuelve al selector de Modelo; allí, Esc cancela."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:31
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:29
 msgid ""
-"**The next line** says the one thing to do next and the key that does it."
-" It also counts the default values you have not confirmed."
+"The list shows the state, result direction, deadline and next action. Use"
+" `/` to search by modelo number, name or period in words; accents do not "
+"affect the search. Press `f` to cycle through **All**, **Needs "
+"attention**, **This year**, **Recorded** and **Not started**. Press `s` "
+"to sort by deadline, modelo, result or state. Press `t` when you need the"
+" technical details."
 msgstr ""
-"**La línea siguiente** dice lo único que queda por hacer a continuación y"
-" la tecla que lo hace. También cuenta los valores por defecto que no has "
-"confirmado."
+"La lista muestra el estado, el sentido del resultado, el plazo y el "
+"siguiente paso. Usa `/` para buscar por número de modelo, nombre o "
+"periodo escrito con palabras; los acentos no afectan a la búsqueda. Pulsa"
+" `f` para recorrer **Todas**, **Requiere atención**, **Este año**, "
+"**Registradas como presentadas** y **Sin empezar**. Pulsa `s` para "
+"ordenar por plazo, modelo, resultado o estado. Pulsa `t` cuando necesites"
+" los detalles técnicos."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:33
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:35
+msgid ""
+"Some modelos appear as possible obligations or have limited local "
+"support. Read their coverage and next action before starting. A completed"
+" filing found at the AEAT can appear separately from a local draft. "
+"Seeing it does not mean the draft is linked to that filing or that its "
+"receipt is saved; the draft is kept separately."
+msgstr ""
+"Algunos modelos aparecen como posibles obligaciones o tienen un soporte "
+"local limitado. Lee su cobertura y el siguiente paso antes de empezar. "
+"Una presentación completada en la AEAT puede aparecer por separado de un "
+"borrador local. Verla no significa que el borrador esté vinculado a esa "
+"presentación ni que su justificante esté guardado; el borrador se "
+"conserva por separado."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:41
+msgid "The declaration opens on the first box that needs you."
+msgstr "La declaración se abre en la primera casilla que te necesita."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:43
+msgid "See what you owe"
+msgstr "Ver lo que debes"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:45
+msgid ""
+"The header names your declaration, its deadline and its calculated "
+"result. It stays visible while you use the docked box panel. A dialog "
+"repeats the result and the counts of things that need you."
+msgstr ""
+"La cabecera indica tu declaración, su plazo y su resultado calculado. "
+"Permanece visible mientras usas el panel inferior de la casilla. Un "
+"cuadro de diálogo repite el resultado y los recuentos de cosas que te "
+"necesitan."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:49
+msgid ""
+"**Line 1** names the Modelo and the period in words. On the right it "
+"shows the deadline, the last day to file, and the days left. The deadline"
+" turns amber at 7 days or fewer and red at 3 or fewer. After the deadline"
+" it says so in red. When no deadline is on record, it says that instead "
+"of guessing a date."
+msgstr ""
+"**Línea 1** indica el Modelo y el periodo con palabras. A la derecha "
+"muestra el plazo, el último día para presentar, y los días que quedan. El"
+" plazo se pone ámbar cuando quedan 7 días o menos y rojo cuando quedan 3 "
+"o menos. Pasado el plazo, lo dice en rojo. Cuando no consta ningún plazo,"
+" lo dice en lugar de inventar una fecha."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:54
+msgid ""
+"**Line 2** shows the result with its direction: **TO PAY**, **TO BE "
+"REFUNDED**, **TO CARRY FORWARD** or **RESULT ZERO**, with the amount in "
+"euros and the box it comes from. Next to it are the counts of things that"
+" need you, one per level (see [Check and fix issues](#check-and-fix-"
+"issues))."
+msgstr ""
+"**Línea 2** muestra el resultado con su sentido: **A INGRESAR**, **A "
+"DEVOLVER**, **A COMPENSAR** o **RESULTADO CERO**, con el importe en euros"
+" y la casilla de la que sale. A su lado están los recuentos de lo que te "
+"necesita, uno por nivel (consulta [Comprobar y corregir incidencias"
+"](#check-and-fix-issues))."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:58
+msgid ""
+"**Line 3** shows the four steps: Fill in, Calculate, Check and Record "
+"filing, and the next thing to do with its key. A step marked ✓ is done, ▲"
+" is blocked, and the step you are on shows ▸. Steps still to come have no"
+" mark."
+msgstr ""
+"**Línea 3** muestra los cuatro pasos: Rellenar, Calcular, Comprobar y "
+"Registrar presentación, y lo siguiente que hay que hacer con su tecla. Un"
+" paso marcado con ✓ está hecho, ▲ está bloqueado, y el paso en el que "
+"estás muestra ▸. Los pasos que faltan no llevan marca."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:62
+msgid ""
+"Before the first calculation the result reads \"not calculated yet\" with"
+" the key to calculate. After a change, or when your records changed, the "
+"result carries ◷ and says \"out of date\". Do not rely on an amount "
+"marked ◷: apply your changes with `R` or calculate with `c` first."
+msgstr ""
+"Antes del primer cálculo, el resultado dice «aún sin calcular» con la "
+"tecla para calcular. Tras un cambio, o cuando tus registros han cambiado,"
+" el resultado lleva ◷ y dice «desactualizado». No te fíes de un importe "
+"marcado con ◷: aplica tus cambios con `R` o calcula con `c` primero."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:67
+#, python-brace-format
+msgid ""
+"On Modelo 130, a negative result reads \"Negative result: {amount} to "
+"deduct in later quarters\" in the first three quarters and \"Negative "
+"result: nothing to pay\" in the fourth."
+msgstr ""
+"En el Modelo 130, un resultado negativo dice «Resultado negativo: "
+"{amount} a deducir en los siguientes trimestres» en los tres primeros "
+"trimestres y «Resultado negativo: nada a ingresar» en el cuarto."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:71
+msgid "The figures are Cadrumo's calculation. The AEAT has not seen them."
+msgstr "Las cifras son el cálculo de Cadrumo. La AEAT no las ha visto."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:73
+msgid "Read the screen"
+msgstr "Leer la pantalla"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:75
 msgid ""
 "**The navigator** on the left lists the official pages and their "
-"sections. A section marked ! with a number still has boxes that need you;"
-" ✓ marks a finished one. On a narrow terminal the navigator folds away: "
-"use `[` and `]` to change page."
+"sections. Each shows the most serious thing inside it (▲, then !, then ◐)"
+" with a count. A finished section shows ✓. A section that does not apply "
+"this period is dimmed and says so. Press Space, or ← and →, to close or "
+"open a page. On a narrow terminal the navigator becomes one line above "
+"the list; use `[` and `]` to change page."
 msgstr ""
-"**El navegador** de la izquierda lista las páginas oficiales y sus "
-"apartados. Un apartado marcado con ! y un número aún tiene casillas que "
-"te necesitan; ✓ marca uno terminado. En un terminal estrecho el navegador"
-" se oculta: usa `[` y `]` para cambiar de página."
+"**El panel de navegación** de la izquierda enumera las páginas oficiales "
+"y sus secciones. Cada una muestra lo más grave que hay dentro (▲, luego "
+"!, luego ◐) con un recuento. Una sección terminada muestra ✓. Una sección"
+" que no aplica en este periodo aparece atenuada y lo dice. Pulsa Space, o"
+" ← y →, para cerrar o abrir una página. En un terminal estrecho, el panel"
+" de navegación pasa a ser una línea sobre la lista; usa `[` y `]` para "
+"cambiar de página."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:37
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:81
 msgid ""
-"**The list** shows each box: its number in brackets, its label, its "
-"value, a state mark and the state in words."
+"**The list** shows each box: its number in brackets, its label, its value"
+" with its unit, and where the value comes from, in a glyph and one or two"
+" words."
 msgstr ""
 "**La lista** muestra cada casilla: su número entre corchetes, su "
-"etiqueta, su valor, una marca de estado y el estado en palabras."
+"etiqueta, su valor con su unidad, y de dónde sale el valor, con un "
+"símbolo y una o dos palabras."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:39
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:84
 msgid ""
-"**The help band** explains the box under the cursor: what it asks for, "
-"where its value comes from, what you can do about it and, once loaded, "
-"its formula, the official text and its legal basis. Press `?` or F1 to "
-"enlarge it; the enlarged band also lists every key."
+"**The help band** at the bottom explains the box under the cursor: what "
+"it asks for, where its value comes from, what you can do about it, and "
+"its formula, the official text and its legal basis."
 msgstr ""
-"**La banda de ayuda** explica la casilla bajo el cursor: qué pide, de "
-"dónde sale su valor, qué puedes hacer con ella y, una vez cargados, su "
-"fórmula, el texto oficial y su base legal. Pulsa `?` o F1 para ampliarla;"
-" la banda ampliada también lista todas las teclas."
+"**La banda de ayuda** de la parte inferior explica la casilla que tienes "
+"bajo el cursor: qué pide, de dónde sale su valor, qué puedes hacer al "
+"respecto, y su fórmula, el texto oficial y su base legal."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:44
-msgid "A value that is missing is always said in words, never shown as a zero."
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:87
+msgid ""
+"**Tables.** A grid on the official form, such as the rates in Modelo 303,"
+" appears as a table. Press ← and → (or `h` and `l`) to move between cells"
+" and ↑ and ↓ to move between rows. On a narrow terminal the table is "
+"stacked instead."
+msgstr ""
+"**Tablas.** Una cuadrícula del modelo oficial, como los tipos del Modelo "
+"303, aparece como una tabla. Pulsa ← y → (o `h` y `l`) para moverte entre"
+" celdas y ↑ y ↓ para moverte entre filas. En un terminal estrecho la "
+"tabla se apila."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
+msgid ""
+"**Records that repeat**, such as the operators in Modelo 349, appear as a"
+" numbered table. You read them here and change them where they come from,"
+" for example in Records. Press Enter on a record to read all its boxes."
+msgstr ""
+"**Registros que se repiten**, como los operadores del Modelo 349, "
+"aparecen como una tabla numerada. Los lees aquí y los cambias donde se "
+"originan, por ejemplo en Registros. Pulsa Enter sobre un registro para "
+"leer todas sus casillas."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:95
+msgid ""
+"A missing value is always said in words, never shown as a zero. "
+"\"Optional, empty\", \"Needs your input\", \"Assumed, please confirm\" "
+"and \"Not applicable\" are different things and read differently."
 msgstr ""
 "Un valor que falta siempre se dice con palabras, nunca se muestra como un"
-" cero."
+" cero. «Opcional, vacía», «Falta tu dato», «Supuesta, confírmala» y «No "
+"aplica» son cosas distintas y se leen distinto."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:46
-msgid "State marks"
-msgstr "Marcas de estado"
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:99
+msgid "Find your way around"
+msgstr "Moverte por la pantalla"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Key"
+msgstr "Tecla"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "What it does"
+msgstr "Qué hace"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`/`"
+msgstr "`/`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Search by box number or by words, across all pages. Enter jumps to the box"
+msgstr ""
+"Busca por número de casilla o por palabras, en todas las páginas. Enter "
+"salta a la casilla"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`g`"
+msgstr "`g`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to a box by its number"
+msgstr "Ir a una casilla por su número"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`f`"
+msgstr "`f`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show every box, only those that need you, or only your own values"
+msgstr ""
+"Muestra todas las casillas, solo las que te necesitan o solo tus propios "
+"valores"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`o`"
+msgstr "`o`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Sort by form order, box number, amount or needs attention"
+msgstr ""
+"Ordena por orden del modelo, número de casilla, importe o necesidad de "
+"atención"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`n` and `N`"
+msgstr "`n` y `N`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the next or the previous thing to do, across pages"
+msgstr "Ir al siguiente o al anterior pendiente, entre páginas"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`[` and `]`"
+msgstr "`[` y `]`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Go to the previous or the next page"
+msgstr "Ir a la página anterior o a la siguiente"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Space"
+msgstr "Space"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Open or close the page under the cursor"
+msgstr "Abre o cierra la página que tienes bajo el cursor"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`d`"
+msgstr "`d`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Show each box on one line or on two"
+msgstr "Muestra cada casilla en una línea o en dos"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:112
+msgid "Fill in the boxes that need you"
+msgstr "Rellenar las casillas que te necesitan"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:114
+msgid "Press `n` to go to the next thing to do, or use `/` or `g` to reach a box."
+msgstr ""
+"Pulsa `n` para ir a lo siguiente por hacer, o usa `/` o `g` para llegar a"
+" una casilla."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:115
+msgid ""
+"Press Enter. The box opens in a panel with what it asks, its current "
+"value, where it comes from, what it affects and a field for your value. "
+"The header and the neighbouring rows stay visible. On a screen under 30 "
+"rows high, the panel opens as a dialog instead."
+msgstr ""
+"Pulsa Enter. La casilla se abre en un panel con lo que pide, su valor "
+"actual, de dónde sale, a qué afecta y un campo para tu valor. La cabecera"
+" y las filas vecinas siguen visibles. En una pantalla de menos de 30 "
+"filas de alto, el panel se abre como cuadro de diálogo."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:120
+msgid ""
+"Type the value the way you write numbers in your language, for example "
+"`1.234,56` in Spanish or `1,234.56` in English. The panel shows how it "
+"will read the value. If a number could be read two ways, it names both "
+"and asks you to retype it."
+msgstr ""
+"Escribe el valor como escribes los números en tu idioma, por ejemplo "
+"`1.234,56` en español o `1,234.56` en inglés. El panel muestra cómo leerá"
+" el valor. Si un número se puede leer de dos maneras, nombra ambas y te "
+"pide que lo vuelvas a escribir."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:125
+msgid ""
+"Press Enter to keep it and go to the next box that needs you, or "
+"Ctrl+Enter to keep it and stay."
+msgstr ""
+"Pulsa Enter para dejarlo y pasar a la siguiente casilla que te necesita, "
+"o Ctrl+Enter para dejarlo y quedarte."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:128
+msgid ""
+"Nothing is applied yet. The box shows Δ, and the header says \"changes "
+"not applied yet\". When a box cannot be typed into, the panel says why "
+"and what to do: a value that follows your records, for example, is "
+"corrected in Records and then recalculated."
+msgstr ""
+"Todavía no se ha aplicado nada. La casilla muestra Δ y la cabecera dice "
+"«cambios sin aplicar». Cuando no se puede escribir en una casilla, el "
+"panel dice por qué y qué hacer: un valor que sigue a tus registros, por "
+"ejemplo, se corrige en Registros y luego se recalcula."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:133
+msgid ""
+"Press `x` or Delete to clear a value you entered, and `u` to go back to "
+"the value before your change."
+msgstr ""
+"Pulsa `x` o Delete para vaciar un valor que hayas escrito, y `u` para "
+"volver al valor anterior a tu cambio."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:136
+msgid "Confirm an assumed value"
+msgstr "Confirmar un valor supuesto"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:138
+msgid ""
+"An assumed value ◐ is a value Cadrumo holds but nobody entered: a "
+"required box, or a box with a non-zero value. An optional box that is "
+"empty or zero is not assumed."
+msgstr ""
+"Un valor supuesto ◐ es un valor que Cadrumo tiene pero que nadie ha "
+"introducido: una casilla obligatoria, o una casilla con un valor distinto"
+" de cero. Una casilla opcional vacía o con cero no es supuesta."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:142
+msgid ""
+"Assumed values keep \"Fill in\" open, and Cadrumo refuses to export or "
+"record the filing until you confirm them."
+msgstr ""
+"Los valores supuestos mantienen abierto «Rellenar», y Cadrumo rechaza "
+"exportar o registrar la presentación hasta que los confirmes."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:145
+msgid "To confirm one:"
+msgstr "Para confirmar uno:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:147
+msgid "Open the box. Its value is already filled in and selected."
+msgstr "Abre la casilla. Su valor ya está rellenado y seleccionado."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:148
+msgid "Press Enter to accept it as it is, or type the right value."
+msgstr "Pulsa Enter para aceptarlo tal como está, o escribe el valor correcto."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:150
+msgid ""
+"The confirmation is a change waiting for review. Press `R`, review it and"
+" choose **Apply and recalculate**. The saved box then reads \"Entered by "
+"you\"."
+msgstr ""
+"La confirmación es un cambio pendiente de revisión. Pulsa `R`, revísalo y"
+" elige **Aplicar y recalcular**. La casilla guardada dice entonces "
+"«Introducida por ti»."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:153
+msgid ""
+"To confirm many at once, press `b` with the cursor in their section or "
+"page. Cadrumo lists the values it can confirm, each with its box number "
+"and label. Read the list, tick \"I have checked these values and they are"
+" right for me\", and confirm. Values that need a source change are listed"
+" separately by reason. Review and apply the changes with `R`. You cannot "
+"confirm the whole declaration in one go."
+msgstr ""
+"Para confirmar varios valores a la vez, pulsa `b` con el cursor en su "
+"sección o página. Cadrumo enumera los valores que puede confirmar, cada "
+"uno con su número de casilla y nombre. Lee la lista, marca «He revisado "
+"estos valores y son correctos para mí» y confirma. Los valores que "
+"necesitan un cambio en su fuente se enumeran por separado según el "
+"motivo. Revisa y aplica los cambios con `R`. No puedes confirmar toda la "
+"declaración de una vez."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:160
+msgid "Review and apply your changes"
+msgstr "Revisar y aplicar tus cambios"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:162
+msgid ""
+"Press `R`. Cadrumo first checks your changes against the declaration as "
+"it stands. The review lists each change with its box, how it read before,"
+" how it will read after, and what the change does. It warns you when your"
+" value replaces one from your records or from a calculation: your value "
+"keeps winning until you go back to the source."
+msgstr ""
+"Pulsa `R`. Cadrumo comprueba primero tus cambios contra la declaración "
+"tal como está. La revisión enumera cada cambio con su casilla, cómo se "
+"leía antes, cómo se leerá después y qué hace el cambio. Te avisa cuando "
+"tu valor sustituye a uno de tus registros o de un cálculo: tu valor sigue"
+" prevaleciendo hasta que vuelvas al origen."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:168
+msgid ""
+"Under the changes, the review lists what the check found. An item marked "
+"▲ would stop the changes from being applied, so **Apply and recalculate**"
+" stays unavailable until you resolve it."
+msgstr ""
+"Bajo los cambios, la revisión enumera lo que ha encontrado la "
+"comprobación. Un elemento marcado con ▲ impediría aplicar los cambios, "
+"así que **Aplicar y recalcular** sigue sin estar disponible hasta que lo "
+"resuelvas."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:172
+msgid ""
+"The review asks you to tick **I have checked what applying does** before "
+"you apply in two cases:"
+msgstr ""
+"La revisión te pide marcar **He comprobado lo que hace aplicar** antes de"
+" aplicar en dos casos:"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:175
+msgid ""
+"The declaration was last calculated without saved input history. Cadrumo "
+"cannot tell which of its values you typed, so the review names the boxes "
+"whose values go back to what their source says. To keep one, enter its "
+"value first."
+msgstr ""
+"La declaración se calculó por última vez fuera de la pantalla de la "
+"declaración. Cadrumo no puede saber cuáles de sus valores escribiste tú, "
+"así que la revisión nombra las casillas cuyos valores vuelven a lo que "
+"dice su origen. Para conservar uno, introduce antes su valor."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:179
+msgid ""
+"The declaration changed after you made your changes. Your changes are "
+"kept, a change that no longer applies is removed, and the lines whose box"
+" now reads differently are marked."
+msgstr ""
+"La declaración cambió después de que hicieras tus cambios. Tus cambios se"
+" conservan, un cambio que ya no se aplica se elimina, y se marcan las "
+"líneas cuya casilla ahora se lee distinto."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:183
+msgid ""
+"Choose **Apply and recalculate** to apply the changes and recalculate, or"
+" **Discard all** to drop them. After applying, the declaration screen "
+"lists every box that changed and why: your change, recalculated, from "
+"your records, or another change. Press Enter on a line to go to its box. "
+"If you leave with changes not applied yet, it asks you first."
+msgstr ""
+"Elige **Aplicar y recalcular** para aplicar los cambios y recalcular, o "
+"**Descartar todo** para descartarlos. Tras aplicar, la pantalla de la "
+"declaración enumera cada casilla que cambió y por qué: tu cambio, "
+"recalculada, de tus registros, u otro cambio. Pulsa Enter en una línea "
+"para ir a su casilla. Si sales con cambios sin aplicar, te lo pregunta "
+"antes."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:189
+msgid "Understand where a value comes from"
+msgstr "Entender de dónde sale un valor"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:191
+msgid "Every row shows where its value comes from:"
+msgstr "Cada fila muestra de dónde sale su valor:"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Mark"
 msgstr "Marca"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Words on the row"
+msgstr "Palabras en la fila"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Meaning"
 msgstr "Significado"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "-"
-msgstr "-"
+msgid "●"
+msgstr "●"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Not applicable"
-msgstr "No aplica"
+msgid "Entered by you"
+msgstr "Introducida por ti"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "You typed it, or you confirmed an assumed value"
+msgstr "Lo escribiste tú, o confirmaste un valor supuesto"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "≠"
 msgstr "≠"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Your value replaces the source"
-msgstr "Tu valor sustituye al origen"
+msgid "Yours, replaces your records"
+msgstr "Tuyo, sustituye a tus registros"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid ""
+"Your value replaces the value from another source, in this declaration "
+"only"
+msgstr "Tu valor sustituye al valor de otro origen, solo en esta declaración"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "="
@@ -192,28 +628,56 @@ msgid "Calculated"
 msgstr "Calculada"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "◌"
-msgstr "◌"
+msgid "Cadrumo worked it out from other boxes"
+msgstr "Cadrumo lo ha calculado a partir de otras casillas"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Not calculated yet"
-msgstr "Aún sin calcular"
+msgid "↓"
+msgstr "↓"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "×"
-msgstr "×"
+msgid "From your records, From your profile, From AEAT data"
+msgstr "De tus registros, De tu perfil, De datos de la AEAT"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Could not be calculated"
-msgstr "No se pudo calcular"
+msgid "Read from your data"
+msgstr "Leído de tus datos"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "«"
+msgstr "«"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "From an earlier declaration"
+msgstr "De una declaración anterior"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Carried from a declaration you recorded before"
+msgstr "Traído de una declaración que registraste antes"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "◇"
 msgstr "◇"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "For information"
-msgstr "Informativa"
+msgid "Reference value"
+msgstr "Valor de referencia"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "The official form fixes it"
+msgstr "Lo fija el modelo oficial"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◐"
+msgstr "◐"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Assumed, please confirm"
+msgstr "Supuesta, confírmala"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Nobody entered it"
+msgstr "Nadie la ha introducido"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "!"
@@ -224,20 +688,284 @@ msgid "Needs your input"
 msgstr "Falta tu dato"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "↓"
-msgstr "↓"
+msgid "Required, and nobody has given it"
+msgstr "Obligatorio, y nadie lo ha dado"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:204
+msgid ""
+"Press Enter on a box and read the panel: for a calculated box it shows "
+"the formula with the numbers in it, for a box from your records it says "
+"what was added up. Where a box can be replaced, the panel says so and "
+"explains that your records do not change."
+msgstr ""
+"Pulsa Enter sobre una casilla y lee el panel: para una casilla calculada "
+"muestra la fórmula con los números, para una casilla de tus registros "
+"dice qué se sumó. Donde una casilla se puede sustituir, el panel lo dice "
+"y explica que tus registros no cambian."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:209
+msgid ""
+"**Override a value.** Type your own value over one that comes from your "
+"records. The row then reads \"Yours, replaces your records\". The panel "
+"says your value replaces the amount from your records in this declaration"
+" only, and lets you go back to the source."
+msgstr ""
+"**Sustituir un valor.** Escribe tu propio valor sobre uno que procede de "
+"tus registros. La fila dice entonces «Tuyo, sustituye tus registros». El "
+"panel indica que tu valor sustituye el importe de tus registros solo en "
+"esta declaración y te permite volver a la fuente."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:214
+msgid ""
+"**Go back to the source.** Open the box and choose **Go back to the "
+"source's value** when its panel offers it. Review and apply this change "
+"with `R`. The `u` key only undoes a change you have not applied."
+msgstr ""
+"**Volver a la fuente.** Abre la casilla y elige **Volver al valor del "
+"origen** cuando el panel lo ofrezca. Revisa y aplica este cambio con `R`."
+" La tecla `u` solo deshace un cambio que aún no has aplicado."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:218
+msgid ""
+"**Open the source area.** If the panel offers an action such as **Open "
+"Records**, choose it to correct the source there, then return and "
+"recalculate."
+msgstr ""
+"**Abrir el área de la fuente.** Si el panel ofrece una acción como "
+"**Abrir Registros**, elígela para corregir allí la fuente y después "
+"vuelve y recalcula."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:221
+msgid ""
+"**See every source at once.** Press `s` for the sources map. It counts "
+"boxes, not sources: how many come from your records, earlier declarations"
+" and AEAT data, how many you entered, confirmed or replaced, what is "
+"assumed and what is calculated. \"None found\" means Cadrumo looked in "
+"that source and found nothing, which is different from zero. Press Enter "
+"on a line to see its boxes, and Enter on a box to go to it."
+msgstr ""
+"**Ver todos los orígenes a la vez.** Pulsa `s` para el mapa de orígenes. "
+"Cuenta casillas, no orígenes: cuántas vienen de tus registros, "
+"declaraciones anteriores y datos de la AEAT, cuántas introdujiste, "
+"confirmaste o sustituiste, qué es supuesto y qué es calculado. «No se "
+"encontró nada» significa que Cadrumo buscó en ese origen y no encontró "
+"nada, lo que es distinto de cero. Pulsa Enter en una línea para ver sus "
+"casillas, y Enter en una casilla para ir a ella."
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Imported"
-msgstr "Importada"
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:228
+msgid "Calculate"
+msgstr "Calcular"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:230
+msgid ""
+"Press F8 to run the step the header offers, or `c` to calculate at any "
+"time once your changes are applied. The values you entered are kept. "
+"Press `c` whenever the header says ◷ \"out of date: recalculate\", for "
+"example after your records changed."
+msgstr ""
+"Pulsa F8 para ejecutar el paso que ofrece la cabecera, o `c` para "
+"calcular en cualquier momento una vez aplicados tus cambios. Los valores "
+"que has introducido se conservan. Pulsa `c` siempre que la cabecera diga "
+"◷ «desactualizado: vuelve a calcular», por ejemplo después de que tus "
+"registros hayan cambiado."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:235
+msgid ""
+"If the declaration was last calculated without saved input history, "
+"calculating asks first and names the boxes whose values go back to their "
+"source."
+msgstr ""
+"Si la declaración se calculó por última vez fuera de la pantalla de la "
+"declaración, al calcular te pregunta primero y nombra las casillas cuyos "
+"valores vuelven a su origen."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:238
+msgid ""
+"The first Modelo 303 calculation asks the filing answers its period "
+"needs: whether you file a joint return and, in the last period of the "
+"year, whether you are exempt from Modelo 390."
+msgstr ""
+"El primer cálculo del Modelo 303 pide las respuestas de presentación que "
+"necesita su periodo: si presentas una declaración conjunta y, en el "
+"último periodo del año, si estás exonerado de presentar el Modelo 390."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:242
+msgid "Check and fix issues"
+msgstr "Comprobar y corregir incidencias"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:244
+msgid ""
+"Press `i` to open **Issues to look at**. The header shows the same "
+"counts, one per level:"
+msgstr ""
+"Pulsa `i` para abrir **Incidencias para revisar**. La cabecera muestra "
+"los mismos recuentos, uno por nivel:"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "⇣"
-msgstr "⇣"
+msgid "Level"
+msgstr "Nivel"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Not imported yet"
-msgstr "Aún sin importar"
+msgid "What it means"
+msgstr "Qué significa"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▲"
+msgstr "▲"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Blocks filing"
+msgstr "Impide presentar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Fix it before you can export or record the filing"
+msgstr "Corrígelo antes de poder exportar o registrar la presentación"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "A required value nobody has given"
+msgstr "Un valor obligatorio que nadie ha dado"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "A value nobody entered; confirm it or type the right one"
+msgstr "Un valor que nadie introdujo; confírmalo o escribe el correcto"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "◆"
+msgstr "◆"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Worth checking"
+msgstr "Conviene revisarlo"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Does not stop you"
+msgstr "No te impide presentar"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "i"
+msgstr "i"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "For your information"
+msgstr "Para tu información"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "An explanation"
+msgstr "Una explicación"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:255
+msgid ""
+"Each issue says what is wrong, what to do and where. Press Enter on an "
+"issue to go to its box, or to open its details or the area that owns the "
+"problem. Press `t` for technical details."
+msgstr ""
+"Cada incidencia dice qué está mal, qué hacer y dónde. Pulsa Enter en una "
+"incidencia para ir a su casilla, o para abrir sus detalles o el área a la"
+" que pertenece el problema. Pulsa `t` para ver los detalles técnicos."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:259
+msgid ""
+"Problems found while calculating appear in the same list. An amount from "
+"your records that lands in no box, or any other problem that could make "
+"you under-declare, is marked ▲ and blocks export and recording. A problem"
+" that would only make you pay more is marked ◆. After a change, problems "
+"from the last calculation are labelled as such until you calculate again."
+msgstr ""
+"Las incidencias encontradas al calcular aparecen en la misma lista. Un "
+"importe de tus registros que no cae en ninguna casilla, o cualquier otra "
+"incidencia que pudiera hacerte declarar de menos, se marca con ▲ y "
+"bloquea la exportación y el registro. Una incidencia que solo te haría "
+"pagar más se marca con ◆. Tras un cambio, las incidencias del último "
+"cálculo se etiquetan como tales hasta que vuelvas a calcular."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:265
+msgid ""
+"Press F8 at the Check step to check the declaration. A box that stops you"
+" from filing shows ▲, and the navigator counts it on its section."
+msgstr ""
+"Pulsa F8 en el paso Comprobar para comprobar la declaración. Una casilla "
+"que te impide presentar muestra ▲, y el panel de navegación la cuenta en "
+"su sección."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:268
+msgid "Create the file and record the filing"
+msgstr "Crear el fichero y registrar la presentación"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:270
+msgid "Resolve every ▲ and confirm every ◐."
+msgstr "Resuelve cada ▲ y confirma cada ◐."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:271
+msgid ""
+"Press `e`, choose where to save the file, which file to write and, for "
+"Modelo 303, the refund, payment and direct debit choices. The result says"
+" that the file has not been sent to the AEAT."
+msgstr ""
+"Pulsa `e`, elige dónde guardar el fichero, qué fichero escribir y, para "
+"el Modelo 303, las opciones de devolución, ingreso y domiciliación. El "
+"resultado dice que el fichero no se ha enviado a la AEAT."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:274
+msgid "File with the AEAT yourself: [File at AEAT](file-at-aeat.md)."
+msgstr "Preséntala tú en la AEAT: [Presentar en la AEAT](file-at-aeat.md)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:275
+msgid "Press F8 to record the filing. Cadrumo asks you to confirm."
+msgstr "Pulsa F8 para registrar la presentación. Cadrumo te pide que lo confirmes."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:277
+msgid "The header then reads \"Recorded as filed\" with the date."
+msgstr "La cabecera dice entonces «Registrada como presentada» con la fecha."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:279
+#, python-brace-format
+msgid ""
+"A recorded declaration opens read-only: attention marks are hidden and "
+"editing is refused. To change it, {ref}`start a correction <correct-an-"
+"already-filed-local-record>` (complementaria or rectificativa)."
+msgstr ""
+"Una declaración registrada como presentada se abre solo para lectura: se "
+"ocultan las marcas de atención y no se permite editarla. Para cambiarla, "
+"{ref}`inicia una corrección <correct-an-already-filed-local-record>` "
+"(complementaria o rectificativa)."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:283
+msgid "Look up a symbol"
+msgstr "Consultar un símbolo"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:285
+msgid ""
+"Press `?` once. The help band opens and its first line lists the symbols "
+"on this screen, with counts."
+msgstr ""
+"Pulsa `?` una vez. Se abre la banda de ayuda y su primera línea enumera "
+"los símbolos de esta pantalla, con recuentos."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:287
+msgid ""
+"Press `?` a second time to open **Symbols and keys**: every symbol with "
+"its meaning, grouped, and the keys. Press Esc or `?` to close it."
+msgstr ""
+"Pulsa `?` una segunda vez para abrir **Símbolos y teclas**: cada símbolo "
+"con su significado, agrupados, y las teclas. Pulsa Esc o `?` para "
+"cerrarlo."
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:289
+msgid ""
+"The first time you open a declaration, a notice says \"New here? Press ? "
+"to see what each symbol means.\""
+msgstr ""
+"La primera vez que abres una declaración, un aviso dice «¿Es tu primera "
+"vez? Pulsa ? para ver qué significa cada símbolo.»"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "-"
+msgstr "-"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not applicable"
+msgstr "No aplica"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "○"
@@ -256,20 +984,28 @@ msgid "Cleared by you"
 msgstr "Vaciada por ti"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "◐"
-msgstr "◐"
+msgid "◌"
+msgstr "◌"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Default, please confirm"
-msgstr "Por defecto, confírmala"
+msgid "Not calculated yet"
+msgstr "Aún sin calcular"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "●"
-msgstr "●"
+msgid "×"
+msgstr "×"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Entered by you"
-msgstr "Introducida por ti"
+msgid "Could not be calculated"
+msgstr "No se pudo calcular"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "…"
+msgstr "…"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Not imported yet"
+msgstr "Aún sin importar"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Δ"
@@ -280,123 +1016,136 @@ msgid "Changed, not applied"
 msgstr "Cambiada, sin aplicar"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "▲"
-msgstr "▲"
+msgid "◷"
+msgstr "◷"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Blocks filing"
-msgstr "Bloquea la presentación"
+msgid "Out of date"
+msgstr "Desactualizado"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:66
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "✓"
+msgstr "✓"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Done"
+msgstr "Hecho"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▸"
+msgstr "▸"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "You are here"
+msgstr "Estás aquí"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "▹ ▿"
+msgstr "▹ ▿"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Closed, open section"
+msgstr "Sección cerrada, abierta"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:306
 msgid "Keys"
 msgstr "Teclas"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Key"
-msgstr "Tecla"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "What it does"
-msgstr "Qué hace"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Enter"
-msgstr "Intro"
+msgstr "Enter"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Edit the box under the cursor"
-msgstr "Editar la casilla bajo el cursor"
+msgid "Open the box under the cursor"
+msgstr "Abre la casilla que tienes bajo el cursor"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`n` and `N`"
-msgstr "`n` y `N`"
+msgid "Next or previous thing to do"
+msgstr "Siguiente o anterior pendiente"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Go to the next or the previous box that needs you"
-msgstr "Ir a la casilla siguiente o anterior que te necesita"
+msgid "`/` and `g`"
+msgstr "`/` y `g`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`[` and `]`"
-msgstr "`[` y `]`"
+msgid "Search; go to a box"
+msgstr "Buscar; ir a una casilla"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Go to the previous or the next page"
-msgstr "Ir a la página anterior o siguiente"
+msgid "`f`, `o`, `d`"
+msgstr "`f`, `o`, `d`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`f`"
-msgstr "`f`"
+msgid "Filter, sort, density"
+msgstr "Filtro, ordenar, densidad"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Show every box, only those that need you, or only your own values"
-msgstr ""
-"Mostrar todas las casillas, solo las que te necesitan o solo tus propios "
-"valores"
+msgid "Previous or next page"
+msgstr "Página anterior o siguiente"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`d`"
-msgstr "`d`"
+msgid "← and → or `h` and `l`"
+msgstr "← y → o `h` y `l`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Show each box on one line or on two"
-msgstr "Mostrar cada casilla en una línea o en dos"
+msgid "Move between cells in a table"
+msgstr "Moverse entre celdas de una tabla"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`s`"
-msgstr "`s`"
+msgid "Open or close a page"
+msgstr "Abrir o cerrar una página"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:132
-msgid "See where the values come from"
-msgstr "Ver de dónde salen los valores"
+msgid "`b`"
+msgstr "`b`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Confirm assumed values of a section or page"
+msgstr "Confirmar los valores supuestos de una sección o página"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`x` or Delete"
-msgstr "`x` o Supr"
+msgstr "`x` o Delete"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Clear a value you entered"
-msgstr "Vaciar un valor que introdujiste"
+msgstr "Vaciar un valor que has escrito"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`u`"
 msgstr "`u`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Undo the change you made to the box"
-msgstr "Deshacer el cambio que hiciste en la casilla"
+msgid "Undo a change you have not applied"
+msgstr "Deshacer un cambio que aún no has aplicado"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`R`"
-msgstr "`R`"
+msgid "`s`"
+msgstr "`s`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Review your changes"
-msgstr "Revisar tus cambios"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "F8"
-msgstr "F8"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Run the next step"
-msgstr "Ejecutar el siguiente paso"
+msgid "The sources map"
+msgstr "El mapa de orígenes"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`i`"
 msgstr "`i`"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "List what verification found"
-msgstr "Listar lo que encontró la verificación"
+msgid "Issues"
+msgstr "Incidencias"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`R`"
+msgstr "`R`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Review changes"
+msgstr "Revisar cambios"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`c`"
 msgstr "`c`"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Calculate"
-msgstr "Calcular"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "`e`"
@@ -407,12 +1156,20 @@ msgid "Export"
 msgstr "Exportar"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "`?` or F1"
-msgstr "`?` o F1"
+msgid "F8"
+msgstr "F8"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
-msgid "Enlarge the help and list every key"
-msgstr "Ampliar la ayuda y listar todas las teclas"
+msgid "Run the next step"
+msgstr "Ejecutar el siguiente paso"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "`?`"
+msgstr "`?`"
+
+#: ../../how-to/fill-in-and-file-in-the-workbench.md
+msgid "Symbols on this screen; twice for Symbols and keys"
+msgstr "Símbolos de esta pantalla; dos veces para Símbolos y teclas"
 
 #: ../../how-to/fill-in-and-file-in-the-workbench.md
 msgid "Esc"
@@ -430,253 +1187,48 @@ msgstr "F3"
 msgid "Switch between the light and the dark appearance"
 msgstr "Cambiar entre la apariencia clara y la oscura"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:87
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:330
 msgid "The footer shows as many keys as fit the width of the terminal."
 msgstr "El pie muestra tantas teclas como caben en el ancho del terminal."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:89
-msgid "Fill in boxes"
-msgstr "Rellenar casillas"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:91
-msgid "Move to a box with the arrow keys or with `n`, then press Enter."
-msgstr "Ve a una casilla con las flechas o con `n` y pulsa Intro."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:92
-msgid ""
-"Type the value the way you write numbers in your language, for example "
-"`1.234,56` in Spanish or `1,234.56` in English. The editor shows how it "
-"will read the value, or says why it cannot read it."
-msgstr ""
-"Escribe el valor como escribes los números en tu idioma, por ejemplo "
-"`1.234,56` en español o `1,234.56` en inglés. El editor muestra cómo "
-"leerá el valor, o dice por qué no puede leerlo."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:95
-msgid "Choose **Add to changes**. The box shows Δ with the value it replaces."
-msgstr ""
-"Elige **Guardar en cambios**. La casilla muestra Δ con el valor que "
-"sustituye."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:97
-msgid ""
-"Nothing is saved yet. When a box cannot be typed into, the help band says"
-" why: a value that follows your records, for example, is corrected in the"
-" ledger and then recalculated."
-msgstr ""
-"Todavía no se guarda nada. Cuando en una casilla no se puede escribir, la"
-" banda de ayuda dice por qué: un valor que sigue tus registros, por "
-"ejemplo, se corrige en el libro registro y después se recalcula."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:101
-msgid "Review and apply your changes"
-msgstr "Revisar y aplicar tus cambios"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:103
-msgid ""
-"Press `R`. Cadrumo first checks your changes against the declaration as "
-"it stands. The review then lists each change with its box, how it read "
-"before, how it will read after, and what the change does. It warns you "
-"when your value replaces an imported or a calculated one: your value "
-"keeps winning until you restore the source."
-msgstr ""
-"Pulsa `R`. Cadrumo comprueba primero tus cambios con la declaración tal "
-"como está. Después, la revisión lista cada cambio con su casilla, cómo "
-"estaba antes, cómo quedará después y qué hace el cambio. Te avisa cuando "
-"tu valor sustituye a uno importado o calculado: tu valor manda hasta que "
-"restauras el origen."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:109
-msgid ""
-"Under the changes, the review lists what the check found. An item marked "
-"▲ would stop the changes from being applied, so **Apply and recalculate**"
-" stays unavailable until you resolve it."
-msgstr ""
-"Debajo de los cambios, la revisión lista lo que encontró la comprobación."
-" Un elemento marcado con ▲ impediría aplicar los cambios, así que "
-"**Aplicar y recalcular** no está disponible hasta que lo resuelvas."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:113
-msgid ""
-"The review asks you to tick **I have checked what applying does** before "
-"you apply in two cases:"
-msgstr ""
-"La revisión te pide marcar **He comprobado lo que hace aplicar** antes de"
-" aplicar en dos casos:"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:116
-msgid ""
-"The declaration was last calculated outside the workbench. Cadrumo cannot"
-" tell which of its values you typed, so the review names the boxes whose "
-"values go back to what their source says. To keep one, enter its value "
-"first."
-msgstr ""
-"La declaración se calculó por última vez fuera del banco de trabajo. "
-"Cadrumo no puede saber qué valores escribiste, así que la revisión nombra"
-" las casillas cuyos valores vuelven a lo que diga su origen. Para "
-"conservar uno, introdúcelo antes."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:120
-msgid ""
-"The declaration changed after you staged your changes. Your changes are "
-"kept, a change that no longer applies is removed, and the lines whose box"
-" now reads differently are marked."
-msgstr ""
-"La declaración cambió después de que prepararas tus cambios. Tus cambios "
-"se conservan, un cambio que ya no se aplica se quita y se marcan las "
-"líneas cuya casilla muestra ahora otro valor."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:124
-msgid ""
-"Choose **Apply and recalculate** to save the changes and recalculate the "
-"declaration, or **Discard all** to drop them. If you leave the workbench "
-"with changes you have not applied, it asks you first."
-msgstr ""
-"Elige **Aplicar y recalcular** para guardar los cambios y recalcular la "
-"declaración, o **Descartar todo** para desecharlos. Si sales del banco de"
-" trabajo con cambios sin aplicar, primero te pregunta."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:128
-msgid ""
-"After an apply or a recalculation, the workbench lists every box that "
-"changed and why: your change, recalculated, from your sources, or another"
-" change. Press Enter on a line to go to its box."
-msgstr ""
-"Tras aplicar o recalcular, el banco de trabajo lista cada casilla que ha "
-"cambiado y por qué: tu cambio, recalculada, de tus orígenes u otro "
-"cambio. Pulsa Intro en una línea para ir a su casilla."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:134
-msgid ""
-"Press `s` on any box. The sources view groups every source by family: "
-"your records, the registers you keep, your profile, earlier filings, the "
-"AEAT draft, the values you enter and the values the official design "
-"fixes. Each source says what you can do about its values and whether it "
-"has produced data, and lists the boxes it feeds."
-msgstr ""
-"Pulsa `s` en cualquier casilla. La vista de orígenes agrupa cada origen "
-"por familia: tu contabilidad, los registros que llevas, tu perfil, las "
-"declaraciones anteriores, el borrador de la AEAT, los valores que "
-"introduces tú y los valores que fija el diseño oficial. Cada origen dice "
-"qué puedes hacer con sus valores y si ha aportado datos, y lista las "
-"casillas que alimenta."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:140
-msgid ""
-"Press Enter to open a box: the workbench goes to it and, where you may "
-"enter, replace or restore its value, opens its editor. Press `o` to open "
-"the area that owns the source, such as the ledger or your profile."
-msgstr ""
-"Pulsa Intro para abrir una casilla: el banco de trabajo va a ella y, "
-"donde puedes introducir, sustituir o restaurar su valor, abre su editor. "
-"Pulsa `o` para abrir el apartado al que pertenece el origen, como el "
-"libro registro o tu perfil."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:144
-msgid "Calculate, verify, file and export"
-msgstr "Calcular, verificar, presentar y exportar"
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:146
-msgid ""
-"Press F8 to run the step the journey line offers, or `c` to recalculate "
-"at any time once your changes are applied. The values you entered are "
-"kept."
-msgstr ""
-"Pulsa F8 para ejecutar el paso que ofrece la línea del recorrido, o `c` "
-"para recalcular en cualquier momento cuando tus cambios estén aplicados. "
-"Los valores que introdujiste se conservan."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:148
-msgid ""
-"If the declaration was last calculated outside the workbench, "
-"recalculating asks first, and names the boxes whose values go back to "
-"their source."
-msgstr ""
-"Si la declaración se calculó por última vez fuera del banco de trabajo, "
-"recalcular pregunta antes y nombra las casillas cuyos valores vuelven a "
-"su origen."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:150
-msgid ""
-"The first Modelo 303 calculation asks the filing answers its period "
-"needs: whether you file a joint return and, in the last period of the "
-"year, whether you are exempt from Modelo 390."
-msgstr ""
-"El primer cálculo del Modelo 303 pide las respuestas que necesita su "
-"periodo: si presentas una declaración conjunta y, en el último periodo "
-"del año, si estás exento del Modelo 390."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:153
-msgid ""
-"Verification checks the declaration. A box that stops you from filing "
-"shows ▲, and the navigator counts it on its section. When verification "
-"finds something, the next line says so: press `i` or F8 to list the "
-"findings, those that block filing first, and Enter to go to the box a "
-"finding names."
-msgstr ""
-"La verificación comprueba la declaración. Una casilla que te impide "
-"presentar muestra ▲, y el navegador la cuenta en su apartado. Cuando la "
-"verificación encuentra algo, la línea siguiente lo dice: pulsa `i` o F8 "
-"para listar los hallazgos, primero los que impiden presentar, e Intro "
-"para ir a la casilla que nombra un hallazgo."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:157
-msgid "Filing asks you to confirm, then records the filing in Cadrumo."
-msgstr ""
-"La presentación te pide confirmación y después registra la presentación "
-"en Cadrumo."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:158
-msgid ""
-"Once the declaration is verified, `e` exports it: choose where to save "
-"it, which file to write and, for Modelo 303, the refund, payment and "
-"direct debit choices. The export result then states what the file is "
-"worth."
-msgstr ""
-"Cuando la declaración está verificada, `e` la exporta: elige dónde "
-"guardarla, qué fichero escribir y, para el Modelo 303, las opciones de "
-"devolución, pago y domiciliación. Después, el resultado de la exportación"
-" indica lo que vale el fichero."
-
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:162
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:332
 msgid "When something looks unexpected"
-msgstr "Cuando algo no es lo esperado"
+msgstr "Cuando algo parece inesperado"
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:164
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:334
 msgid ""
-"**Default, please confirm.** For a declaration calculated outside the "
-"workbench, Cadrumo cannot tell which values you typed. Enter the value to"
-" confirm it; otherwise the next apply or recalculation returns it to its "
-"source."
+"**Assumed, please confirm** on a declaration calculated without saved "
+"input history: Cadrumo cannot tell which values you typed. Open the box "
+"and press Enter to confirm it; otherwise the next apply or calculation "
+"returns it to its source."
 msgstr ""
-"**Por defecto, confírmala.** En una declaración calculada fuera del banco"
-" de trabajo, Cadrumo no puede saber qué valores escribiste. Introduce el "
-"valor para confirmarlo; si no, la próxima aplicación o recálculo lo "
-"devuelve a su origen."
+"**Supuesta, confírmala** en una declaración calculada sin historial de "
+"datos introducidos: Cadrumo no puede saber qué valores escribiste. Abre "
+"la casilla y pulsa Enter para confirmarla; de lo contrario, la próxima "
+"aplicación o cálculo la devuelve a su fuente."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:168
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:337
 msgid ""
-"**fixed.** The official design prints the value of the box; you cannot "
-"change it."
+"**Reference value.** The official form fixes the box; you cannot change "
+"it."
 msgstr ""
-"**fijado.** El diseño oficial imprime el valor de la casilla; no puedes "
-"cambiarlo."
+"**Valor de referencia.** El modelo oficial fija la casilla; no puedes "
+"cambiarla."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:170
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:338
 msgid ""
-"**pages arranged automatically.** The pages were arranged from the "
-"official design by Cadrumo and have not been reviewed by hand. Every box "
-"still appears exactly once."
+"**Pages arranged automatically.** Cadrumo arranged the pages from the "
+"official design and nobody has reviewed them by hand. Every box still "
+"appears exactly once."
 msgstr ""
-"**páginas ordenadas automáticamente.** Cadrumo ordenó las páginas a "
-"partir del diseño oficial y no se han revisado a mano. Cada casilla sigue"
-" apareciendo exactamente una vez."
+"**Páginas ordenadas automáticamente.** Cadrumo ordenó las páginas a "
+"partir del diseño oficial y nadie las ha revisado a mano. Cada casilla "
+"sigue apareciendo exactamente una vez."
 
-#: ../../how-to/fill-in-and-file-in-the-workbench.md:173
+#: ../../how-to/fill-in-and-file-in-the-workbench.md:341
 msgid ""
-"A declaration whose modelo has no arrangement opens with every box in box"
-" number order, for viewing only."
+"A modelo with no arrangement opens with every box in box number order, "
+"for viewing only."
 msgstr ""
-"Una declaración cuyo modelo no tiene distribución se abre con todas las "
-"casillas por orden de número, solo para consulta."
-
+"Un Modelo sin disposición se abre con todas las casillas en orden de "
+"número de casilla, solo para verlas."

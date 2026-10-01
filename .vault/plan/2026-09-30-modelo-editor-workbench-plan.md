@@ -9,7 +9,7 @@ related:
   - '[[2026-09-30-modelo-editor-workbench-operator-layer-adr]]'
 modified: '2026-10-01'
 body_schema: body-v2
-body_hash: 'sha256:4018a078c57be204818921bf9df158e0d6cd9dddccff68b126343f3309e09eb9'
+body_hash: 'sha256:0f13daf9e5f7e093ed4ea08c5d7e9a0376077ef14588aacae292d7b852b56e5c'
 ---
 
 # `modelo-editor-workbench` plan
@@ -151,7 +151,7 @@ Replace the declarations screens with one list grouped by what the filer must do
 
 Bring the user documentation, the workbench guide and Hungarian modelo names in line with the glossary, and keep technical identifiers out of filer-facing exports and summaries.
 
-- [ ] `P09.S57` - Land the workbench guide and its translations against the shipped behaviour; `docs/how-to/fill-in-and-file-in-the-workbench.md`.
+- [x] `P09.S57` - Land the workbench guide and its translations against the shipped behaviour; `docs/how-to/fill-in-and-file-in-the-workbench.md`.
 - [ ] `P09.S58` - Apply the reconciled documentation rewrite and its translations, and correct CLI output strings that still print internal words; `docs`.
 - [ ] `P09.S59` - Name every modelo by its proper name in Hungarian without guessing suffixes; `src/cadrumo/locales/hu`.
 - [ ] `P09.S60` - Keep hashes and identifiers behind technical details in exports, summaries and pickers, and pass period words instead of tokens; `src/cadrumo/entrypoints/tui`.
