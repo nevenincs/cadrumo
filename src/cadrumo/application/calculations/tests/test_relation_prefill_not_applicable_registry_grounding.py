@@ -14,11 +14,11 @@ Two properties matter, and they pull in opposite directions:
   never a modelo list written into the resolver. A hardcoded pair silently
   outlives a revision that changes which sources are conditional.
 * It must stay NARROWER than the clean-state gate's non-filer set, which also
-  carries the ``taxpayer_files_source = false`` arm - the suffered-retenciones
-  sources (111, 123, 184, 190, 193 on Modelo 100). Those are absent because the
-  PAYER files them, not because no obligation exists: the retención the taxpayer
-  suffered is a real credit. Folding those legs in as zero would strip the credit
-  from the declaration, so they must stay unresolved and operator-supplied.
+  carries the ``taxpayer_files_source = false`` arm - on Modelo 100, the Modelo
+  184 attribution. It is absent because the entidad en regimen de atribucion
+  files it, not because no obligation exists: the income it attributes is a real
+  figure the taxpayer must declare. Folding that leg in as zero would strip the
+  figure from the declaration, so it must stay unresolved and operator-supplied.
 
 Real registry authority is paired with a deterministic application-owned
 profile projection fake. The test keeps the derivation itself pure and does
@@ -121,10 +121,10 @@ class TestCandidateSetIsRegistryGrounded:
     def test_candidate_set_excludes_every_source_the_taxpayer_never_files(self, filing_year: int) -> None:
         """A ``taxpayer_files_source = false`` source is never eligible for the zero-resolution.
 
-        This is the load-bearing exclusion. Those sources are the suffered
-        retenciones the payer files; their value is a real credit the taxpayer
-        must declare, so the leg must stay unresolved rather than fold in as
-        zero.
+        This is the load-bearing exclusion. Such a source is filed by someone
+        else, on Modelo 100 the entidad filing the Modelo 184 attribution; its
+        value is a real figure the taxpayer must declare, so the leg must stay
+        unresolved rather than fold in as zero.
         """
         snapshot = _m100_snapshot(filing_year)
         payer_filed = frozenset(
@@ -135,23 +135,33 @@ class TestCandidateSetIsRegistryGrounded:
         candidates = _economic_activity_conditional_source_modelos(snapshot)
 
         assert not (candidates & payer_filed), (
-            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are filed by the "
-            "PAYER, so folding their relation in as zero would strip the taxpayer's retención "
-            "credit from the declaration"
+            f"Modelo 100 {filing_year}: sources {sorted(candidates & payer_filed)} are not filed by the "
+            "taxpayer, so folding their relation in as zero would strip a figure the taxpayer must "
+            "declare"
         )
 
     def test_the_exclusion_is_not_vacuous_for_modelo_100(self) -> None:
-        """Modelo 100 really does declare payer-filed sources, so the exclusion above bites."""
+        """Modelo 100 really does declare a source the taxpayer never files, so the exclusion above bites.
+
+        Withholding credits are sourced from the perceptor's side, so the payer-side
+        withholding returns are no longer Modelo 100 dependencies at all. The Modelo
+        184 attribution remains: the entidad files it, and both it and the
+        economic-activity candidates are declared on the same revision, so the
+        disjointness check compares two real sets.
+        """
         snapshot = _m100_snapshot(2025)
-        payer_filed = frozenset(
+        not_taxpayer_filed = frozenset(
             classification.source_modelo
             for classification in snapshot.revision.dependency_classifications
             if not classification.taxpayer_files_source
         )
 
-        assert len(payer_filed) >= 2, (
-            "Modelo 100 2025 must declare payer-filed retención sources for the "
-            f"never-suppressed guard to be a real constraint; found {sorted(payer_filed)}"
+        assert Modelo("184").value in not_taxpayer_filed, (
+            "Modelo 100 2025 must declare the Modelo 184 attribution as a source the taxpayer "
+            f"does not file for the never-suppressed guard to be a real constraint; found {sorted(not_taxpayer_filed)}"
+        )
+        assert _economic_activity_conditional_source_modelos(snapshot), (
+            "Modelo 100 2025 must declare economic-activity-conditional sources, or the exclusion compares nothing"
         )
 
 

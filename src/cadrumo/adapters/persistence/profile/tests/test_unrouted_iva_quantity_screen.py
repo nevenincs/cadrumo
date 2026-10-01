@@ -12,9 +12,11 @@ import pytest
 from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.casilla_id import validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
+from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.invoices.models import InvoiceCatalogue
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -32,6 +34,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
+_M303_IMPORT_BASE_BINDING = "modelo-303-iva-soportado-importaciones-base"
+_M303_IMPORT_CUOTA_BINDING = "modelo-303-iva-soportado-importaciones-cuota"
 
 
 class _EmptyInvoiceCatalogueReader:
@@ -79,6 +83,28 @@ def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevisio
         for binding in revision.bindings
         if not (binding.source.value == "ledger_iva_aggregation" and getattr(binding.provider, "fact", None) == fact)
     ]
+    return revision.model_copy(update={"bindings": tuple(kept)})
+
+
+def _revision_without_import_base(revision: ModeloRevision) -> ModeloRevision:
+    """Return ``revision`` without the ``base_amount_sum`` bindings that reach an import row.
+
+    The fact stays declared for the domestic, intra-community and export rows, so
+    this is the partitioned shape: the import base alone reaches no binding. The
+    committed Modelo 303 binds that base to box [32], so the gap is planted in a
+    copy rather than read off a live residue.
+    """
+    import_third_country = IvaCategory("import_third_country")
+    kept = [
+        binding
+        for binding in revision.bindings
+        if not (
+            binding.source.value == "ledger_iva_aggregation"
+            and getattr(binding.provider, "fact", None) == "base_amount_sum"
+            and import_third_country in getattr(binding.provider, "categories", ())
+        )
+    ]
+    assert len(kept) < len(revision.bindings), "the revision declares no import base binding to strip"
     return revision.model_copy(update={"bindings": tuple(kept)})
 
 
@@ -220,8 +246,13 @@ def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Pat
     ]
 
 
-def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
-    """A live residue advisory identifies the category carrying the amount."""
+def test_the_import_base_lands_in_box_32_on_the_committed_revision(tmp_path: Path) -> None:
+    """A third-country import's base reaches box [32] and raises no residue advisory.
+
+    Box [32] is the base of "cuotas soportadas en las importaciones de bienes
+    corrientes", whose cuota is box [33]; both read the same import rows.
+    """
+    revision = _revision("303")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((_third_country_import(),)))
@@ -231,17 +262,51 @@ def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) 
                 modelo="303",
                 filing_year=2025,
                 period=_Q1_2025,
-                revision=_revision("303"),
+                revision=revision,
+            ),
+        )
+
+    assert casillas_by_binding(revision)[_M303_IMPORT_BASE_BINDING] == (validated_casilla_id("32"),)
+    assert resolution.binding_values[_M303_IMPORT_BASE_BINDING] == Decimal("1000.00")
+    assert resolution.binding_values[_M303_IMPORT_CUOTA_BINDING] == Decimal("210.00")
+    assert not [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+
+
+def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
+    """A live residue advisory identifies the category carrying the amount, and only that one.
+
+    The ledger holds a routed domestic sale beside a third-country import whose
+    base the stripped revision leaves undrawn, so the advisory has to single out
+    the import category rather than every category present.
+    """
+    revision = _revision_without_import_base(_revision("303"))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(
+            TransactionCatalogue.from_transactions(
+                (_sale("s-1", base="500.00", iva="105.00"), _third_country_import()),
+            ),
+        )
+        resolution = _resolver(repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=revision,
             ),
         )
 
     advisories = [
         diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
-    assert len(advisories) == 1, "the live import base residue must surface exactly one advisory"
+    assert len(advisories) == 1, "the import base residue must surface exactly one advisory"
     message = advisories[0].message
     assert "base_amount_sum" in message
     assert "import_third_country" in message
+    assert "1000.00" in message, "the advisory must name the import base, not the routed sale base"
     for covered in (
         "domestic_general",
         "domestic_reduced",
