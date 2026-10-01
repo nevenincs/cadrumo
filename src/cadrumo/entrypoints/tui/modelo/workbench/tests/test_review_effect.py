@@ -29,6 +29,7 @@ from ......core.period import Period
 from ....components.host import ScreenHostApp
 from ..review import REVIEW_EFFECTS, EditReviewScreen, ReviewDecision, change_line
 from ..session import StagedChange, WorkbenchEditSession
+from .workbench_fixture import status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -120,7 +121,7 @@ async def test_the_review_opens_with_the_declarations_result_line_when_given() -
     with override_settings(cadrumo_output_language="en"):
         change = _staged(_field(ModeloFormOrigin.IMPORTED, ModeloFormValueSource(family=SourceFamily.RECORDS)))
         status = "Result to pay 120.00 € · to confirm: 2"
-        with_status = await _review_lines(EditReviewScreen((change,), status_line=status))
+        with_status = await _review_lines(EditReviewScreen((change,), status_line=status_line_of(status)))
         without = await _review_lines(EditReviewScreen((change,)))
 
     assert with_status[0] == status

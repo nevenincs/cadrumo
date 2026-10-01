@@ -34,8 +34,8 @@ from ..header import (
     deadline_help,
     deadline_view,
     fit_result_line,
-    result_line_text,
     result_view,
+    status_line,
 )
 from ..screen import ModeloWorkbenchScreen
 from .declaration_states import recorded_as_filed, with_deadline, with_findings, with_result
@@ -232,7 +232,9 @@ def test_a_narrow_line_drops_the_box_and_then_the_least_urgent_chips_but_never_t
         wide = fit_result_line(view, chips, 200)
         narrow = fit_result_line(view, chips, 76)
         tightest = fit_result_line(view, chips, 10)
-        whole = result_line_text(form, _EN, staged=3, recorded=False)
+        repeated = status_line(form, _EN, staged=3, recorded=False)
+        assert repeated is not None
+        whole = repeated.text()
         wide_text = wide.text()
 
     assert wide.result.endswith("[19]") and len(wide.chips) == len(chips)

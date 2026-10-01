@@ -2343,6 +2343,7 @@ tui:
         back: Tornar
         calculate: Calcula
         close: Tanca
+        confirm_section: Confirmar secció
         edit: Editar
         export: Exporta
         filter: Filtre

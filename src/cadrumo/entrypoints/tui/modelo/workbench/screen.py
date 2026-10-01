@@ -108,6 +108,7 @@ from .export import WorkbenchExportScreen
 from .header import (
     DeadlineTone,
     ResultLine,
+    StatusLine,
     attention_chips,
     deadline_help,
     deadline_view,
@@ -115,8 +116,8 @@ from .header import (
     fit_identity,
     fit_result_line,
     is_result_field,
-    result_line_text,
     result_view,
+    status_line,
 )
 from .issues import ConfirmAssumedValues, IssuesChoice, WorkbenchIssuesScreen, blocks_marked
 from .keys import describe_bindings
@@ -1448,12 +1449,12 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
 
     # ── editing ─────────────────────────────────────────────────────────
 
-    def _status_line(self) -> str | None:
+    def _status_line(self) -> StatusLine | None:
         """The header's result line, for a dialog that covers the header to repeat at its top."""
         form = self.form
         if form is None:
             return None
-        return result_line_text(form, self._language, staged=len(self._session.changes), recorded=self.recorded) or None
+        return status_line(form, self._language, staged=len(self._session.changes), recorded=self.recorded)
 
     def _notice(self, message: str) -> None:
         self.query_one("#wb-notice", Static).update(message)

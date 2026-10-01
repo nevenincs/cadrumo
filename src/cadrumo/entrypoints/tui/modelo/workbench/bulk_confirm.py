@@ -20,7 +20,7 @@ unticked box never looks ticked, in colour or without it.
 
 from __future__ import annotations
 
-from typing import ClassVar, Final, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
 from rich.table import Table
 from textual import events
@@ -42,6 +42,10 @@ from .....core.i18n.render import output_language, tr
 from ...components.theme import tokenised
 from .casilla_list import CasillaListEntry, value_text
 from .dialog_width import fit_dialog_width
+from .status_bar import StatusBar
+
+if TYPE_CHECKING:
+    from .header import StatusLine
 
 _LEFT_OUT_SOURCED_KEY = "tui.modelo.workbench.bulk_confirm.left_out.sourced"
 _LEFT_OUT_NOT_CHANGEABLE_KEY = "tui.modelo.workbench.bulk_confirm.left_out.not_changeable"
@@ -160,7 +164,7 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         fields: tuple[ModeloFormField, ...],
         *,
         language: OutputLanguage | None = None,
-        status_line: str | None = None,
+        status_line: StatusLine | None = None,
     ) -> None:
         """Hold the assumed boxes offered for confirmation.
 
@@ -186,7 +190,7 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
     def compose(self) -> ComposeResult:
         with Container(id="bulk-backdrop"), Vertical(id="bulk-panel"):
             if self._status_line is not None:
-                yield Static(self._status_line, id="bulk-status", markup=False)
+                yield StatusBar(self._status_line, id="bulk-status")
             yield Static(tr("tui.modelo.workbench.bulk_confirm.title"), id="bulk-title", markup=False)
             yield Static(tr("tui.modelo.workbench.bulk_confirm.intro"), id="bulk-intro", markup=False)
             yield Static(

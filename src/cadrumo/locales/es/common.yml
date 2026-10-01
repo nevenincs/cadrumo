@@ -2350,6 +2350,7 @@ tui:
         back: Volver
         calculate: Calcular
         close: Cerrar
+        confirm_section: Confirmar sección
         edit: Editar
         export: Exportar
         filter: Filtro

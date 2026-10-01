@@ -55,7 +55,7 @@ from ..sources import (
 from .declaration_states import recorded_as_filed
 from .editor_panel import open_panel
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, status_line_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -438,7 +438,9 @@ async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workb
 async def test_the_declarations_status_line_leads_the_map_and_the_title_is_strong() -> None:
     status = "To pay 1,300.00 € · file by 20 Apr 2026"
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchSourcesScreen(synthetic_form(), language=OutputLanguage.EN, staged={}, status_line=status)
+        screen = WorkbenchSourcesScreen(
+            synthetic_form(), language=OutputLanguage.EN, staged={}, status_line=status_line_of(status)
+        )
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
             await _settle(pilot)

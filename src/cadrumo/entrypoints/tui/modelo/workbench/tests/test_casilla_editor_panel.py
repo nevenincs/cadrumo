@@ -51,7 +51,7 @@ from ..editor import (
 from ..ports import WorkbenchChangeKind
 from ..sources import OpenSourceSurface
 from ..wording import period_words
-from .workbench_fixture import FakeActions, fed_by, form_field
+from .workbench_fixture import FakeActions, fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -115,7 +115,7 @@ def _editor(
         can_restore=can_restore,
         read_only_reason=reason,
         affects=affects,
-        status_line=status_line,
+        status_line=None if status_line is None else status_line_of(status_line),
     )
 
 

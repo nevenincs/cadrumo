@@ -18,6 +18,7 @@ import re
 from decimal import Decimal
 
 import pytest
+from rich.cells import cell_len
 from rich.console import Console
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
@@ -38,6 +39,7 @@ from ......application.modelo.work_form_models import (
     section_fields,
 )
 from ......core.config import override_settings
+from ......core.external_constants import OutputLanguage
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -47,7 +49,7 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
-from ..header import ChipLevel, attention_chips
+from ..header import ChipLevel, attention_chips, status_line
 from ..issues import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
     IssueLevel,
@@ -61,9 +63,10 @@ from ..issues import (
 )
 from ..screen import ModeloWorkbenchScreen
 from ..sources import BoxNumbers
+from ..vocabulary import BLOCKS_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, status_line_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -358,7 +361,9 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
             await _settle(pilot)
             issues = app.screen
             assert isinstance(issues, WorkbenchIssuesScreen)
-            listed = [line for line in _list_text(issues).splitlines() if "[" in line or " more" in line]
+            listed = [
+                line for line in _list_text(issues).splitlines() if re.search(r"\[\d+\]", line) or " more" in line
+            ]
             app.exit(None)
 
     assert len(listed) == 2
@@ -440,7 +445,7 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
 async def test_the_declarations_status_line_leads_the_dialog_and_the_title_is_strong() -> None:
     status = "To pay 1,300.00 € · file by 20 Apr 2026"
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(_checked(), status_line=status)
+        screen = WorkbenchIssuesScreen(_checked(), status_line=status_line_of(status))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             await _settle(pilot)
@@ -551,3 +556,39 @@ def test_boxes_on_a_page_that_does_not_apply_are_neither_listed_nor_counted() ->
     assert chips_applying == {ChipLevel.MISSING: 1, ChipLevel.CONFIRM: 1}
     assert not_applying == ()
     assert chips_not_applying == {}
+
+
+@pytest.mark.asyncio
+async def test_on_the_smallest_terminal_the_status_keeps_one_line_the_list_opens_on_a_heading_and_the_footer_fits() -> (
+    None
+):
+    form = _checked()
+    with override_settings(cadrumo_output_language="en"):
+        status = status_line(form, OutputLanguage.EN, staged=0, recorded=False)
+        assert status is not None and len(status.chips) >= 2
+        screen = WorkbenchIssuesScreen(form, status_line=status)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _settle(pilot)
+            bar = screen.query_one("#issues-status", Static)
+            bar_height, bar_text = bar.region.height, str(bar.render())
+            listed = screen.query_one("#issues-list", OptionList)
+            scrolled = listed.scroll_offset.y
+            first_option = listed.get_option_at_index(0)
+            visible_rows = listed.scrollable_content_region.height
+            footer_keys = [key for key in screen.query("FooterKey") if key.display]
+            footer_edges = [key.region.right for key in footer_keys]
+            clipped = [
+                str(getattr(key, "description", ""))
+                for key in footer_keys
+                if key.region.width < cell_len(str(getattr(key, "description", "")))
+            ]
+            app.exit(None)
+
+    assert bar_height == 1, "the repeated result line never wraps"
+    assert cell_len(bar_text) <= 80
+    assert BLOCKS_MARK.glyph in bar_text, "the most urgent chip stays"
+    assert scrolled == 0 and first_option.disabled and (first_option.id or "").startswith("level-")
+    assert visible_rows >= 6, "the list keeps room to show its entries"
+    assert footer_edges and max(footer_edges) <= 80, "no footer key runs past the edge"
+    assert clipped == [], "no footer key is cut short"

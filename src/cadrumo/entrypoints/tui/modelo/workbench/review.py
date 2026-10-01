@@ -28,7 +28,7 @@ from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import ClassVar, Final, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
 from rich.cells import cell_len
 from rich.console import Console
@@ -50,8 +50,12 @@ from .issues import blocks_marked
 from .ports import WorkbenchChangeKind
 from .session import Displacement, StagedChange
 from .sources import BOX_LIST_LINES
+from .status_bar import StatusBar
 from .vocabulary import BLOCKS_MARK, CHECK_MARK, WorkbenchMark
 from .wording import period_words
+
+if TYPE_CHECKING:
+    from .header import StatusLine
 
 
 class ReviewDecision(StrEnum):
@@ -290,7 +294,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         *,
         notes: tuple[ReviewNote, ...] = (),
         at_risk: UnattributedBoxes | None = None,
-        status_line: str | None = None,
+        status_line: StatusLine | None = None,
     ) -> None:
         """Hold the changes under review, what the check found, and the boxes applying could return to source.
 
@@ -325,7 +329,7 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         )
         with Container(id="review-backdrop"), Vertical(id="review-panel"):
             if self._status_line is not None:
-                yield Static(self._status_line, id="review-status", markup=False)
+                yield StatusBar(self._status_line, id="review-status")
             yield Static(
                 tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
             )

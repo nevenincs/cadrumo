@@ -532,13 +532,56 @@ def fit_identity(form: ModeloWorkForm, language: OutputLanguage, deadline: Deadl
     return identity_text(form, language, short=True)
 
 
-def result_line_text(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> str:
-    """The header's result line as one string, for a dialog that covers the header to repeat."""
+@dataclass(frozen=True, slots=True)
+class StatusLine:
+    """The header's result line, for a dialog that covers the header to repeat at its top.
+
+    A dialog has one line for it, so it never wraps: at any width the result
+    keeps its fewest words and the least urgent chips go first, and each chip
+    keeps its level's colour.
+    """
+
+    view: ResultView | None
+    chips: tuple[AttentionChip, ...]
+    file: str | None = None
+
+    def _line(self, result: str, chips: tuple[AttentionChip, ...]) -> ResultLine:
+        return ResultLine(result, None if self.view is None else self.view.stale, chips, file=self.file)
+
+    def text(self) -> str:
+        """The whole line as one string, at any width."""
+        return self._line("" if self.view is None else self.view.text, self.chips).text()
+
+    def fitted(self, width: int) -> ResultLine:
+        """The line within ``width`` cells on one line: the fullest result that fits, then as many chips as fit."""
+        view = self.view
+        results = ("",) if view is None else (view.text, view.short_text, view.briefest)
+        for result in results:
+            kept = list(self.chips)
+            line = self._line(result, tuple(kept))
+            while kept and cell_len(line.text()) > width:
+                kept.pop()
+                line = self._line(result, tuple(kept))
+            if cell_len(line.text()) <= width:
+                return line
+        return self._line(_cut(results[-1], width), ())
+
+    def content(self, width: int) -> Content:
+        """The line as drawn within ``width`` cells: each chip in its level's colour."""
+        line = self.fitted(width)
+        lead = _PART_GAP.join(part for part in (line.result, line.stale, line.file) if part)
+        if not line.chips:
+            return Content(_cut(lead, width))
+        return Content(_PART_GAP).join([Content(lead), line.chips_content()] if lead else [line.chips_content()])
+
+
+def status_line(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> StatusLine | None:
+    """The header's result line for a dialog to repeat, or ``None`` when it would say nothing."""
     view = result_view(form, language, staged=staged, recorded=recorded)
     chips = attention_chips(form, recorded=recorded)
     file = file_view(form, language, recorded=recorded)
-    line = ResultLine("" if view is None else view.text, None if view is None else view.stale, chips)
-    return (line if file is None else ResultLine(line.result, line.stale, chips, file=file.text)).text()
+    line = StatusLine(view, chips, None if file is None else file.text)
+    return line if line.text() else None
 
 
 __all__ = [
@@ -549,6 +592,7 @@ __all__ = [
     "FileView",
     "ResultLine",
     "ResultView",
+    "StatusLine",
     "attention_chips",
     "blocking_count",
     "confirm_count",
@@ -561,6 +605,6 @@ __all__ = [
     "is_result_field",
     "missing_count",
     "missing_findings",
-    "result_line_text",
     "result_view",
+    "status_line",
 ]

@@ -2291,6 +2291,7 @@ tui:
         back: Back
         calculate: Calculate
         close: Close
+        confirm_section: Confirm section
         edit: Edit
         export: Export
         filter: Filter

@@ -74,6 +74,7 @@ from .casilla_list import CasillaListEntry, description_text, stated_value_text,
 from .dialog_width import fit_dialog_width
 from .ports import WorkbenchChangeKind, WorkbenchParsed, WorkbenchParseOutcome, WorkbenchRefused
 from .sources import OpenSourceSurface, surface_target
+from .status_bar import StatusBar
 from .vocabulary import (
     SOURCE_WORDED_ORIGINS,
     TYPED_EDITABILITIES,
@@ -89,7 +90,7 @@ from .vocabulary import (
 from .wording import period_words
 
 if TYPE_CHECKING:
-    from .header import ResultView
+    from .header import ResultView, StatusLine
 
 type Parser = Callable[[ModeloFormField, str, OutputLanguage], WorkbenchParseOutcome]
 
@@ -459,7 +460,7 @@ class CasillaEditorPanel(Vertical):
         can_restore: bool = False,
         read_only_reason: str | None = None,
         affects: str | None = None,
-        status_line: str | None = None,
+        status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
     ) -> None:
@@ -606,7 +607,7 @@ class CasillaEditorPanel(Vertical):
         box = f"[{field.box}] " if field.box else ""
         with Vertical(id="editor-head"):
             if self._status_line is not None:
-                yield Static(self._status_line, id="editor-status", markup=False)
+                yield StatusBar(self._status_line, id="editor-status")
             yield Static(f"{box}{field.label.text}", id="editor-title", markup=False)
         with Vertical(id="editor-foot"):
             if self._affects is not None:
@@ -777,7 +778,7 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
         can_restore: bool = False,
         read_only_reason: str | None = None,
         affects: str | None = None,
-        status_line: str | None = None,
+        status_line: StatusLine | None = None,
         recorded: bool = False,
         aeat_imported: date | None = None,
     ) -> None:

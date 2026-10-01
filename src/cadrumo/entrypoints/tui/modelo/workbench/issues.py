@@ -60,8 +60,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from types import MappingProxyType
-from typing import ClassVar, Final, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
+from rich.cells import cell_len
 from rich.console import Group, RenderableType
 from rich.padding import Padding
 from rich.text import Text
@@ -105,12 +106,13 @@ from .....domain.modelos.verification_report import (
 )
 from ...components.theme import tokenised
 from .casilla_list import AddressKey
-from .dialog_width import fit_dialog_width
+from .dialog_width import fit_dialog_height, fit_dialog_width
 from .editor import area_words, open_area_target
 from .keys import describe_bindings
 from .navigator import applicable_fields, presented_form
 from .page_items import workbench_pages
 from .sources import BoxNumbers, OpenSourceSurface
+from .status_bar import StatusBar
 from .vocabulary import (
     ATTENTION_ROLES,
     BLOCKS_MARK,
@@ -121,6 +123,9 @@ from .vocabulary import (
     Attention,
     WorkbenchMark,
 )
+
+if TYPE_CHECKING:
+    from .header import StatusLine
 
 
 class IssueLevel(StrEnum):
@@ -192,9 +197,15 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "escape": "tui.modelo.workbench.key.back",
         "t": "tui.modelo.workbench.issues.technical",
-        "b": "tui.modelo.workbench.issues.confirm_all",
+        "b": "tui.modelo.workbench.key.confirm_section",
     }
 )
+_CONFIRM_SCOPE_KEY: Final[str] = "b"
+_CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.confirm_all"
+"""What ``b`` does, in full, where the list has room to say it; the footer says it in two words."""
+_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", _CONFIRM_SCOPE_KEY, "t")
+"""The list's footer keys, most needed first; those that do not fit the width are left to the help."""
+_FOOTER_KEY_GAP: Final[int] = 1
 _OPEN_AREA_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.open_area"
 _BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
 #: Past this many missing or assumed boxes the list names the sections that hold them instead of their numbers.
@@ -629,12 +640,20 @@ def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
         _paragraph(unnumbered, "bold"),
         _paragraph(tr(what)),
         _what_to_do(action),
+        _confirm_key_line(boxes),
     )
 
 
 def _unentered_intro(boxes: UnenteredBoxes) -> RenderableType:
     what, _, by_section = _UNENTERED_LOCALE_KEYS[boxes.level]
-    return _entry(_paragraph(tr(what)), _what_to_do(by_section))
+    return _entry(_paragraph(tr(what)), _what_to_do(by_section), _confirm_key_line(boxes))
+
+
+def _confirm_key_line(boxes: UnenteredBoxes) -> Text | None:
+    """Under the assumed values, the key that confirms those of a part of the form, in full words."""
+    if boxes.level is not IssueLevel.CONFIRM:
+        return None
+    return _paragraph(f"[{_CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
 
 
 def _section_prompt(section: UnenteredSection) -> RenderableType:
@@ -647,6 +666,19 @@ class _IssueList(OptionList):
     def describe_enter(self, locale_key: str) -> None:
         describe_bindings(self._bindings.key_to_bindings, {"enter": locale_key})
         self.refresh_bindings()
+
+    def enter_binding(self) -> Binding | None:
+        """Its Enter key's binding, with what it now says."""
+        entries = self._bindings.key_to_bindings.get("enter")
+        return entries[0] if entries else None
+
+    def show_enter(self, shown: bool) -> None:
+        """Show or leave out its Enter key in the footer, keeping what it says."""
+        table = self._bindings.key_to_bindings
+        entries = table.get("enter")
+        if entries:
+            table["enter"] = [replace(binding, show=shown) for binding in entries]
+            self.refresh_bindings()
 
 
 class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | ConfirmAssumedValues | None]):
@@ -669,6 +701,9 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         }
         WorkbenchIssuesScreen.-narrow #issues-panel {
             width: 100%;
+        }
+        WorkbenchIssuesScreen.-short #issues-panel {
+            height: 100%;
         }
         WorkbenchIssuesScreen #issues-status {
             color: $foreground;
@@ -706,7 +741,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         Binding("b", "confirm_scope", "", show=False),
     ]
 
-    def __init__(self, form: ModeloWorkForm, *, status_line: str | None = None) -> None:
+    def __init__(self, form: ModeloWorkForm, *, status_line: StatusLine | None = None) -> None:
         """Hold the form whose findings and missing and assumed values are listed.
 
         ``status_line`` is shown above everything else when given, so the
@@ -726,7 +761,7 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
     def compose(self) -> ComposeResult:
         with Container(id="issues-backdrop"), Vertical(id="issues-panel"):
             if self._status_line is not None:
-                yield Static(self._status_line, id="issues-status", markup=False)
+                yield StatusBar(self._status_line, id="issues-status")
             title = title_text(level_counts(self._lines, tuple(self._unentered.values())), recorded=self._recorded)
             yield Static(blocks_marked(title), id="issues-title", markup=False)
             yield Static(verdict_text(self._form), id="issues-verdict", markup=False)
@@ -780,17 +815,23 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
         return not form.calculation_notes_held and form.calculation_revision_id is not None and not self._recorded
 
     def on_resize(self, event: events.Resize) -> None:
-        """Take the whole width on a narrow terminal."""
+        """Take the whole width on a narrow terminal, and the whole height on a short one."""
         fit_dialog_width(self, event.size.width)
+        fit_dialog_height(self, event.size.height)
+        if self.is_mounted:
+            self._fit_footer()
 
     def on_mount(self) -> None:
-        """Describe the keys and give the list the focus, on its first entry."""
+        """Describe the keys and give the list the focus, on its first entry, with its group heading in view."""
         fit_dialog_width(self, self.app.size.width)
+        fit_dialog_height(self, self.app.size.height)
         describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
         self.refresh_bindings()
         issues = self.query_one(_IssueList)
         issues.focus()
         self._describe_enter()
+        # The first entry sits under its group heading: start at the top so the heading says what it is.
+        self.call_after_refresh(issues.scroll_home, animate=False, immediate=True)
 
     def _issue_index(self, option_id: str | None) -> int | None:
         if option_id is None or not option_id.startswith(_ISSUE_ID_PREFIX):
@@ -836,6 +877,37 @@ class WorkbenchIssuesScreen(ModalScreen[AddressKey | OpenSourceSurface | Confirm
             choice = "more"
         self.query_one(_IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
         self._describe_open_area(None if index is None else self._lines[index].area)
+        self._fit_footer()
+
+    def _fit_footer(self) -> None:
+        """Show the keys that fit the footer side by side, most needed first, so none is cut at the edge."""
+        issues = self.query_one(_IssueList)
+        budget = self.app.size.width
+        shown: set[str] = set()
+        for key in _FOOTER_PRIORITY:
+            if key == "enter":
+                binding = issues.enter_binding()
+            else:
+                entries = self._bindings.key_to_bindings.get(key)
+                binding = entries[0] if entries else None
+            if binding is None or not binding.description:
+                continue
+            if key == "a" and self._highlighted_area() is None:
+                continue
+            if key == "b" and self._confirm_target() is None:
+                continue
+            cost = cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + _FOOTER_KEY_GAP
+            if cost > budget:
+                break
+            shown.add(key)
+            budget -= cost
+        issues.show_enter("enter" in shown)
+        table = self._bindings.key_to_bindings
+        for key in ("escape", "a", "b", "t"):
+            entries = table.get(key)
+            if entries:
+                table[key] = [replace(binding, show=key in shown) for binding in entries]
+        self.refresh_bindings()
 
     def _describe_open_area(self, area: SourceSurface | None) -> None:
         """Name the area ``a`` opens for the finding under the cursor, and show the key only when there is one."""

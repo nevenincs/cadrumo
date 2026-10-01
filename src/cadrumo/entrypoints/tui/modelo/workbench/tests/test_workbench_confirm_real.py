@@ -41,7 +41,7 @@ from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWor
 from ....components.host import ScreenHostApp
 from ...lifecycle import ModeloWorkspaceLifecycleDoor
 from ..editor import CasillaEditorScreen, EditorDecision, EditorOutcome
-from ..header import result_line_text
+from ..header import StatusLine, status_line
 from ..installed import InstalledModeloWorkbench, WorkbenchRepositories
 from ..session import WorkbenchEditSession
 from ..vocabulary import origin_words
@@ -61,10 +61,10 @@ class _Bench:
         form = self.installed.load(OutputLanguage.EN).form
         return next(item for item in form.fields() if item.address == ModeloFormCasillaAddressV1(casilla_id=_BOX))
 
-    def result_line(self) -> str:
-        return result_line_text(
-            self.installed.load(OutputLanguage.EN).form, OutputLanguage.EN, staged=0, recorded=False
-        )
+    def result_line(self) -> StatusLine:
+        line = status_line(self.installed.load(OutputLanguage.EN).form, OutputLanguage.EN, staged=0, recorded=False)
+        assert line is not None
+        return line
 
 
 @contextmanager
@@ -120,13 +120,13 @@ def _bench(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Bench]
 
 
 async def _keep_in_panel(
-    field: ModeloFormField, installed: InstalledModeloWorkbench, status_line: str
+    field: ModeloFormField, installed: InstalledModeloWorkbench, status: StatusLine
 ) -> tuple[EditorOutcome | None, str]:
     """Open the box panel over ``field`` and press Enter, as a filer confirming it would.
 
     Returns the panel's decision and the result line it showed first.
     """
-    editor = CasillaEditorScreen(field, parse=installed.parse, language=OutputLanguage.EN, status_line=status_line)
+    editor = CasillaEditorScreen(field, parse=installed.parse, language=OutputLanguage.EN, status_line=status)
     app = ScreenHostApp(editor)
     async with app.run_test(size=(80, 24)) as pilot:
         for _ in range(3):

@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import ClassVar, Final, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
 from rich.cells import cell_len
 from rich.console import Console, ConsoleOptions, Group, RenderableType, RenderResult
@@ -79,6 +79,7 @@ from .casilla_list import (
 from .dialog_width import fit_dialog_width
 from .keys import describe_bindings
 from .page_items import StagedDisplay
+from .status_bar import StatusBar
 from .vocabulary import (
     COLLAPSED_MARK,
     CONFIRM_MARK,
@@ -92,6 +93,9 @@ from .vocabulary import (
     no_earlier_filing,
 )
 from .wording import date_text, modelo_number, period_words
+
+if TYPE_CHECKING:
+    from .header import StatusLine
 
 
 class SourceGroupKind(StrEnum):
@@ -623,7 +627,7 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
         language: OutputLanguage,
         staged: Mapping[AddressKey, StagedDisplay],
         focus: AddressKey | None = None,
-        status_line: str | None = None,
+        status_line: StatusLine | None = None,
     ) -> None:
         """Hold the form to map, the filer's staged changes and the box to start on.
 
@@ -646,7 +650,7 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
     def compose(self) -> ComposeResult:
         with Container(id="sources-backdrop"), Vertical(id="sources-panel"):
             if self._status_line is not None:
-                yield Static(self._status_line, id="sources-status", markup=False)
+                yield StatusBar(self._status_line, id="sources-status")
             title = tr("tui.modelo.workbench.sources.title")
             count = tr("tui.modelo.workbench.sources.count", count=self._boxes)
             yield Static(f"{title} · {count}", id="sources-title", markup=False)

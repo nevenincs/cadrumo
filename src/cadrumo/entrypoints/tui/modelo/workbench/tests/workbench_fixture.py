@@ -47,6 +47,7 @@ from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
 from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
+from ..header import ResultView, StatusLine
 from ..ports import (
     WorkbenchCalculationEvidence,
     WorkbenchChange,
@@ -275,6 +276,11 @@ class FakeReader:
     def edit_refusal(self) -> str | None:
         """Why editing is unavailable, as the test set it."""
         return self.refusal
+
+
+def status_line_of(text: str) -> StatusLine:
+    """The header's result line saying ``text``, with no chip, as a dialog repeats it."""
+    return StatusLine(ResultView(text=text, short_text=text, stale=None, failed=False, help=()), chips=())
 
 
 @dataclass

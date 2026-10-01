@@ -35,7 +35,7 @@ from ....components.host import ScreenHostApp
 from ..bulk_confirm import BulkConfirmScreen
 from ..ports import WorkbenchChangeKind
 from ..session import Displacement, StageRefusal, WorkbenchEditSession
-from .workbench_fixture import fed_by, form_field
+from .workbench_fixture import fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -227,7 +227,7 @@ async def test_bulk_confirm_repeats_the_header_result_line_first_and_titles_in_t
 ) -> None:
     status_line = "Resultado: 1.300,00 € a ingresar"
     with override_settings(cadrumo_output_language=language):
-        dialog = BulkConfirmScreen((_assumed(),), status_line=status_line)
+        dialog = BulkConfirmScreen((_assumed(),), status_line=status_line_of(status_line))
         app = ScreenHostApp(dialog)
         async with app.run_test(size=size) as pilot:
             await _settle(pilot)

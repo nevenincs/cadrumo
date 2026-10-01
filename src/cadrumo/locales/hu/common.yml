@@ -2337,6 +2337,7 @@ tui:
         back: Vissza
         calculate: Számítás
         close: Bezárás
+        confirm_section: Szakasz megerősítése
         edit: Szerkesztés
         export: Exportálás
         filter: Szűrő
