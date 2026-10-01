@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:905b499a8ae2672749a85ca8f76c0b10ed77a5d921e9cbec71b61f0baef3d741'
+body_hash: 'sha256:d0b8b95b07cdd38a848c1dabfbb799770f9580993faccffbfe1620ad63eb7127'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -999,6 +999,9 @@ related:
 - `S64` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
 - `S64` `verify:` `uv run --no-sync ruff check (nine owning Python paths)` -> `pass`
 - `S64` `verify:` `uv run --no-sync ruff format --check (nine owning Python paths)` -> `pass`
+- `S28` `M` `.vault/audit/2026-09-30-modelo-editor-workbench-audit.md`
+- `S28` `verify:` `python -m dev.tui render --sequence all (frozen 82b7844265; 712 frames)` -> `pass`
+- `S28` `verify:` `python -m dev.tui render --sequence modelo-390-annual-2025 --sequence modelo-100-renta-2025 --sequence verification-reports-incomplete --viewport small --viewport medium (frozen 3a24afb920; 124 frames)` -> `pass`
 
 ## Notes
 
@@ -1081,3 +1084,4 @@ related:
 - `S49` Headings reach the layout through a reviewer-quote file the generator checks against each cited source line
 - `S51` The earlier confirm-chip correction changed the advisory level from confirm to check; the owning refresh changes only `notices[0].context.level.` Oversized JSON output advisories remain documentation work.
 - `S64` Three Modelo 369 envelope-role inputs remain visible and unnamed because typed data does not prove their role; binding-input-registry-notes remain open. Frozen naming captures follow the code checkpoint.
+- `S28` The broad frozen render exposed a one-field golden mismatch (confirm to check); the owning refresh and sequence/page checks resolved it, and the current-source capture has no divergences. The dev.tui before/after diff exits 1 to report changed frames; its report and both immutable review snapshots are preserved. S50/S30 remain open for the unfinished planned scope.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:6957080d13cc3fa488319a3d3c40dc52495f001d213ad17f9bc2c7c512f0c7f4'
+body_hash: 'sha256:f5db1b40090e2a9aa48fe1e840efe772a5e027dd739d0b9098052053b7681422'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -452,6 +452,12 @@ Frozen source `82b7844265` and copied authority generation `80682128474579ef10bd
 ### binding-name-resolution | low | optional binding text follows typed relationships and preserves unproven fields
 
 S64 implements the approved order: binding catalogue key, owner casilla, provider casilla, unambiguous casilla at the declared record/offset, fed-box label, then unnamed. Both record ID and record type are typed coordinates; this reaches Modelo 360's page_01 relationship without guessing from names. The prepared packs contribute 2,847 distinct labels and 517 help leaves per language, with 44 grounded printed-code leaves in the box-number slot. Counts describe keys, not occurrences across revisions. Every authored leaf belongs to a declared binding and resolves in all four languages; the dedicated gate detects an orphan or missing translation. The form sweep covers every reachable published revision, and 127 owning form/help tests pass (`20261001T125705.936561Z-pytest-87392-7d81d6e0/run.log`). The locale projection, catalogue and parity checks pass (11 tests, `20261001T130303.958215Z-pytest-59452-f5425d6b/run.log`), Ruff passes and the type gate passes. No BindingDefinition field or authority publication is needed. The three Modelo 369 fichero.tipo-y-cierre fields remain visible and unnamed: typed authority data does not prove they are export-envelope constants. Earlier binding-input-registry-notes remain open for registry ownership. Visual review of the newly named tree is pending; this entry does not close the whole plan.
+
+### naming-preview-review | low | current named forms pass their frozen visual review
+
+Reviewed S64 at commit `3a24afb920` on 2026-10-01. A second frozen snapshot, retaining the same published authority, rendered Modelo 390, Modelo 100 and verification-reports-incomplete at 80x24 and 120x40 in both appearances: 124 frames, exit 0, all three goldens matching, no failed or skipped frames and no missing glyphs. Start and end source fingerprints both equal `aec10b6abc55519325dc2eb626980b5cafe2e970fb4f7b65beab60bc45395c77`. The 22 geometry advisories name independent scroll panes, with no edge or non-scrollable overflow. Reviewed the readable 390 first-page names and their small detail dialog, the 100 confirmation panel with separate confirm/check counts, and the incomplete 303's figures, official grid, source help and next check action. Verdict for the naming batch and its interactions: PASS. This resolves the remaining workbench lookup part of unnamed-boxes through existing schema catalogues and typed casilla relationships; the three unproven 369 envelope inputs and the registry modelling notes stay open. All 460 workbench unit tests pass on this named tree (`uv run --no-sync pytest -q -n4 -m unit src/cadrumo/entrypoints/tui/modelo/workbench/tests`, log `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T131821.223203Z-pytest-75608-125b2192/run.log`). The independent four-language parity check also passes (`20261001T131223.978888Z-pytest-7668-679350e3/run.log`).
+
+The review server on port 8740 remains running and its existing page is untouched. `runs/current` holds these 124 current-source frames; `runs/corrective-82b7844265` preserves the 712-frame broad corrective capture, and `runs/handover-before-p07-resume` preserves the earlier 640-frame review. The owning `dev.tui diff` reports 548 of 712 frames changed between the handover and corrective captures, with exit 1 as its documented changed-frame result; the report is `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/corrective-preview.diff.log`. The before/after evidence closes S28, not S50 or S30. Rate-scale and formula-values work remains queued as S62/S63; declarations and documentation convergence remain open. Artifacts for the named tree and its render log remain under `C:/Users/hello/AppData/Local/Temp/modelo-workbench-resume-20261001/naming-snapshot` and `naming-render.log`.
 
 ## Recommendations
 
