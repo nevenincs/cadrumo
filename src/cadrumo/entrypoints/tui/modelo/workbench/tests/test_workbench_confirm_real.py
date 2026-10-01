@@ -149,6 +149,8 @@ def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer
         assumed = bench.box()
         result_line = bench.result_line()
         decision, shown = asyncio.run(_keep_in_panel(assumed, bench.installed, result_line))
+        assert result_line.text()
+        assert shown == result_line.text()
         assert isinstance(decision, EditorDecision)
 
         session = WorkbenchEditSession(OutputLanguage.EN)
@@ -159,8 +161,6 @@ def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer
         confirmed = bench.box()
         words = origin_words(confirmed)
 
-    assert result_line
-    assert shown == result_line
     assert assumed.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
     assert assumed.value == Decimal("100")
     assert decision.value == assumed.value

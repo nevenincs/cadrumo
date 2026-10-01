@@ -5,7 +5,7 @@ tags:
 date: '2026-09-30'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c59054589c4b51552e04a862a724d0a93f7d096f5b6195e9565333e18a45060'
+body_hash: 'sha256:1f13f2a163f210550804e5300663a54991db7568538dc09f0be2577e71b2b25b'
 related:
   - "[[2026-09-30-modelo-editor-workbench-plan]]"
 ---
@@ -949,6 +949,11 @@ related:
 - `S49` `verify:` `dev.docs.sequences check` -> `pass`
 - `S49` `verify:` `dev.quality.types --count, 17` -> `pass`
 - `S49` `by:` `orchestrator`
+- `S36` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S36` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py` -> `pass`
+- `S36` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py` -> `pass`
+- `S36` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py` -> `pass`
+- `S36` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
 
 ## Notes
 
