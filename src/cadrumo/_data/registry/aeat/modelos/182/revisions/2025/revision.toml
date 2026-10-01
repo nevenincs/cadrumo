@@ -146,13 +146,6 @@ selector = { revision = "2024", id = "tipo2.recurrencia" }
 fields = { legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93", "orden-hac-1430-2025:art-2"] }
 removed_fields = []
 
-[[revisions."2025".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024", id = "modelo-182-2024-0a"}
-
-# The informative construct is stated on 2024. This edition keys only what it
-# alone claims: its own deadline window, its own design, and the verification
-# expectation and workbook pin that are asserted per edition.
 [[revisions."2025".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "modelo-182-informative"}

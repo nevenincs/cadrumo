@@ -6,8 +6,8 @@ application_link_source_refs = ["enrolled-modelo-038-procedure"]
 reviewed_against = "2024-desde-06"
 authority_grade = "applicability"
 # The 2024 amendment remains in force and AEAT continues to require its
-# vigente design. The pre-June 2024 design remains unselected: the acquired
-# 2012 historical PDF declares no complete applicability window.
+# vigente design. The 2012 design governs only up to May 2024
+# (2022-hasta-2024-05 edition).
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
 orden_aplicabilidad = ["orden-hac-66-2002:art-1"]
@@ -51,31 +51,3 @@ family = "constructs"
 selector = {revision = "2024-desde-06", id = "modelo-038-informative"}
 sequence_additions = {deadline_windows = ["modelo-038-2025-01", "modelo-038-2025-02", "modelo-038-2025-03", "modelo-038-2025-04", "modelo-038-2025-05", "modelo-038-2025-06", "modelo-038-2025-07", "modelo-038-2025-08", "modelo-038-2025-09", "modelo-038-2025-10", "modelo-038-2025-11", "modelo-038-2025-12"]}
 sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6]}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-06"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-07"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-08"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-09"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-10"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-11"}
-
-[[revisions."2025-y-siguientes".family_removals]]
-family = "deadline_windows"
-selector = {revision = "2024-desde-06", id = "modelo-038-2024-12"}

@@ -289,15 +289,16 @@ def test_modelo_220_scope_refuses_an_unevidenced_successor_exercise() -> None:
     assert not _record_design_sources_cover(sources, date(_M220_UNEVIDENCED_SUCCESSOR, 12, 31))
 
 
-def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
-    """M038's legal cutover and inspection receipt cannot select pre-June history."""
-    # The authored catalogue, because the receipt is cited by no revision and a
-    # published generation's closure carries only cited sources.
+def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
+    """M038 is filed on AEAT's 2012 design until Orden HAC/646/2024 adds IRUS in June 2024."""
+    # The authored catalogue, because a published generation's closure carries
+    # only the sources its revisions cite.
     modelos, catalogues = committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "038")
+    pre_june = modelo.revisions["2022-hasta-2024-05"]
     june_2024 = modelo.revisions["2024-desde-06"]
     current_source = catalogues.sources["aeat-dr-038-2024"]
-    historical_source = catalogues.sources["aeat-dr-038-2012-inspection"]
+    historical_source = catalogues.sources["aeat-dr-038-2012"]
 
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_038", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -331,54 +332,47 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
         assert len(revision.constructs) == 1
         assert set(revision.constructs[0].legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
 
-    assert historical_source.applies_from is None
-    assert historical_source.applies_to is None
+    # The 2012 design closes the day before the amendment's first declaration,
+    # and only the edition it governs cites it.
     assert historical_source.record_design_epoch == "2012"
-    verify_source_file(REPO_ROOT, historical_source)
-    assert historical_source.id not in modelo.source_refs
-    assert all(historical_source.id not in revision.source_refs for revision in modelo.revisions.values())
+    assert historical_source.applies_to == date(2024, 5, 31)
     assert current_source.applies_from == date(2024, 6, 1)
     assert current_source.applies_to is None
+    verify_source_file(REPO_ROOT, historical_source)
+    assert {revision.id for revision in modelo.revisions.values() if historical_source.id in revision.source_refs} == {
+        pre_june.id
+    }
+    assert _record_design_sources_cover([historical_source], pre_june.valid_to)
+    assert not _record_design_sources_cover([historical_source], june_2024.valid_from)
+    assert not _record_design_sources_cover([current_source], pre_june.valid_to)
 
-    # The documented 2012 era identifies the binary, but does not invent an
-    # unsupported filing window. Selection therefore still fails closed before
-    # a parser can consume the hash-verified historical PDF.
-    with pytest.raises(RegistryValidationError, match="does not declare applies_from"):
+    for filing_year in (2022, 2023):
+        resolved = resolve_record_design_binary(
+            bundled_path(),
+            catalogues.sources,
+            source_ref=historical_source.id,
+            filing_year=filing_year,
+            design_epoch="2012",
+        )
+        assert resolved.source.id == historical_source.id
+    first_year_after = june_2024.valid_from.year + 1
+    with pytest.raises(RegistryValidationError, match=f"does not apply to filing year {first_year_after}"):
         resolve_record_design_binary(
             bundled_path(),
             catalogues.sources,
-            source_ref="aeat-dr-038-2012-inspection",
-            filing_year=2012,
+            source_ref=historical_source.id,
+            filing_year=first_year_after,
             design_epoch="2012",
         )
 
-    for filing_year, period in ((2012, "12"), (2023, "12"), (2024, "01"), (2024, "05")):
-        with pytest.raises(NoRevisionForPeriodError):
-            select_revision(modelo, filing_year=filing_year, period=period)
-    assert select_revision(modelo, filing_year=2024, period="06").id == "2024-desde-06"
-    assert select_revision(modelo, filing_year=2024, period="12").id == "2024-desde-06"
+    for filing_year, period in ((2022, "01"), (2023, "12"), (2024, "01"), (2024, "05")):
+        assert select_revision(modelo, filing_year=filing_year, period=period).id == pre_june.id
+    assert select_revision(modelo, filing_year=2024, period="06").id == june_2024.id
+    assert select_revision(modelo, filing_year=2024, period="12").id == june_2024.id
     assert select_revision(modelo, filing_year=2025, period="01").id == "2025-y-siguientes"
     assert select_revision(modelo, filing_year=2026, period="12").id == "2025-y-siguientes"
-
-    # A future author could accidentally widen both coordinates. Selection then
-    # succeeds, but the selected source still exposes the unsupported month.
-    widened_selector = june_2024.period_selector.model_copy(
-        update={"periods": ("05", *june_2024.period_selector.periods)}
-    )
-    widened_revision = june_2024.model_copy(
-        update={"valid_from": date(2024, 1, 1), "period_selector": widened_selector}
-    )
-    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024-desde-06": widened_revision}})
-    selected = select_revision(widened_modelo, filing_year=2024, period="05")
-    sources = [
-        catalogues.sources[source_ref]
-        for source_ref in selected.source_refs
-        if catalogues.sources[source_ref].kind == "record_design"
-    ]
-
-    assert selected.id == "2024-desde-06"
-    assert tuple(source.id for source in sources) == ("aeat-dr-038-2024",)
-    assert not _record_design_sources_cover(sources, date(2024, 5, 31))
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2021, period="12")
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:

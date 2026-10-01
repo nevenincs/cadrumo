@@ -4,7 +4,7 @@ The five donor-row bindings and the informative construct that gathers them are
 authored once, on the earliest edition, and inherited forward. Their grounding
 does not change between editions: the bindings cite the approving orden, and
 every record field they carry is printed at the same position by the
-ejercicio 2024 and ejercicio 2025 designs, which this module reads directly.
+ejercicio 2021-2023, 2024 and 2025 designs, which this module reads directly.
 What the later edition alone claims -- its verification expectation, workbook
 pin, design and deadline window -- stays keyed on it.
 """
@@ -136,16 +136,18 @@ def test_donor_bindings_and_construct_hydrate_in_every_authored_year(
 def test_only_the_later_edition_claims_verification_and_a_workbook_pin(
     modelo_182: ModeloDefinition, edition: Callable[[int], RegistrySnapshot]
 ) -> None:
+    latest = max(modelo_182.revisions.values(), key=lambda revision: revision.valid_from)
     years = _authored_years(modelo_182)
-    earliest = edition(years[0]).revision
-    construct = next(item for item in earliest.constructs if item.id == _CONSTRUCT)
-    assert not earliest.verification_expectations
-    assert not construct.verification_expectations
-    assert not construct.workbook_parity_refs
-
-    for filing_year in years[1:]:
+    assert any(edition(year).revision.id != latest.id for year in years)
+    assert any(edition(year).revision.id == latest.id for year in years)
+    for filing_year in years:
         revision = edition(filing_year).revision
         construct = next(item for item in revision.constructs if item.id == _CONSTRUCT)
+        if revision.id != latest.id:
+            assert not revision.verification_expectations, filing_year
+            assert not construct.verification_expectations, filing_year
+            assert not construct.workbook_parity_refs, filing_year
+            continue
         assert tuple(map(str, construct.verification_expectations)) == (
             "modelo-182-informative-summary-verification",
         ), filing_year

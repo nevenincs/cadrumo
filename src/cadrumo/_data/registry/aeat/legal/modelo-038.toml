@@ -107,16 +107,23 @@ retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf"
 review_status = "pending_review"
 
-# The historical AEAT artefact is a hash-pinned inspection receipt. Its index
-# title establishes its 2012 design era, but neither that title nor the PDF
-# states a complete filing-period window. Deliberately omit applicability
-# fields and cite it from no revision: it cannot become selected design
-# authority for the unevidenced 2002-to-May-2024 interval.
-[sources."aeat-dr-038-2012-inspection"]
+# AEAT's design "038 - Orden HAC/66/2002, de 15 de enero (actualizado a
+# 18/01/2012)", still listed as the modelo 038 design on the Sede page
+# modelos-01-99_.html on 2026-10-01. It governs until Orden HAC/646/2024
+# replaced it: that order's article 1 adds the IRUS field at positions 153-165
+# of the tipo 2 record and moves Blancos to 166-250, and its disposicion final
+# unica applies the change first to the June 2024 declaration. The PDF prints
+# every field of the 2024 design except IRUS (its corpus text sidecar, and
+# dev/registry/tests/test_modelo_038_pre_june_2024_edition.py, compare the two).
+# applies_from is the update date the index title states; applies_to is the
+# last month before the amendment's first declaration.
+[sources."aeat-dr-038-2012"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
 record_design_epoch = "2012"
+applies_from = 2012-01-18
+applies_to = 2024-05-31
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf"
 sha256 = "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d"
 bytes = 79486

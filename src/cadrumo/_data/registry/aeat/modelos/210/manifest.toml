@@ -23,6 +23,6 @@ source_refs = [
 
 [modelo.inception.unauthored]
 earliest_authored = 2023
-reason = "Governed by Orden EHA/3316/2010, whose repeal clause shows Modelo 210 already approved by Orden HAC/3626/2003; filing years before 2023 existed in law and are not authored. 2022 is split. Its devengos from 2022-06-01 fall inside the registered design aeat-dr-210-2022 (devengos 2022-06-01 to 2025-12-31), the same design the 2023 edition renders, so they are answered by projection from that edition. Its devengos from 2022-01-01 to 2022-05-31 belong to the AEAT edition 'Devengos entre 01-01-2022 y 01-06-2022', which this registry does not hold, so that part is acquisition debt first."
+reason = "Governed by Orden EHA/3316/2010, whose repeal clause shows Modelo 210 already approved by Orden HAC/3626/2003; filing years before 2023 existed in law and are not authored. 2022 is answered by projection from the 2023 edition: its devengos from 2022-06-01 fall inside aeat-dr-210-2022, the design that edition renders, and its devengos from 2022-01-01 to 2022-05-31 fall under aeat-dr-210-2022-hasta-05, which writes the same bytes, the two designs differing only in how record T21002 divides its reserved positions 1285-1391."
 legal_refs = ["orden-eha-3316-2010:art-1"]
-source_refs = ["aeat-dr-210-2022"]
+source_refs = ["aeat-dr-210-2022", "aeat-dr-210-2022-hasta-05"]

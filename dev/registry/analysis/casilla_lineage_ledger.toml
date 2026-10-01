@@ -55,6 +55,7 @@ reason = "the editions are parallel schemes sharing one validity window, not a t
 "grounded" = 508
 "new_on_form" = 95
 "predecessor_edition_silent" = 103
+"refused:not_examined" = 22
 contradictions = 0
 
 [summary."038"]
@@ -62,7 +63,7 @@ contradictions = 0
 contradictions = 0
 
 [summary."100"]
-"refused:not_examined" = 2388
+"refused:not_examined" = 2394
 contradictions = 0
 
 [summary."123"]
@@ -278,6 +279,160 @@ contradictions = 0
 [summary."763"]
 "seeded" = 8
 contradictions = 0
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "pf.identificacion-dominio-internet-secundario"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "pf.identificacion-fecha-efectos-residencia"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "pf.identificacion-residencia-indicador"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "pj.ident-fecha-efectos-residencia"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-a.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-a.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-a.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-b.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-b.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-b.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-c.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-c.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-c.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-d.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-d.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-d.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-e.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-e.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-e.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-f.cuota-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-f.nombre-razon-social"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
+
+[[refusal]]
+modelo = "036"
+revision = "2023-hasta-2025-02-02"
+casilla = "suc-f.porcentaje-liquidacion"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no continuidad_id on any edition, so nothing is seeded; the predecessor edition 2022-hasta-2023-04-24 declares the same row id, and aeat-dr-036-v35 and aeat-dr-036-2023 print the field at the same page, position and caption, but no continuity identity has been adjudicated for it and the 2025-02-03-y-siguientes edition records it as predecessor_edition_silent"
 
 [[refusal]]
 modelo = "100"
@@ -7387,6 +7542,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2022"
+casilla = "AJ"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
 casilla = "ANOASDLG"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -7591,6 +7753,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2022"
 casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "eo-agraria-reduccion-irregularidad-base"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -9872,6 +10041,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2023"
+casilla = "AJ"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
 casilla = "ANOASDLG"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -10505,6 +10681,13 @@ revision = "2023"
 casilla = "1995"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'irpf-anexo-b-adoption-pending-claim' starts its chain in this edition"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "eo-agraria-reduccion-irregularidad-base"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
 [[refusal]]
 modelo = "100"
@@ -13519,6 +13702,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2024"
+casilla = "AJ"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
 casilla = "ANOASDLG"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -13772,6 +13962,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2024"
 casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "eo-agraria-reduccion-irregularidad-base"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 

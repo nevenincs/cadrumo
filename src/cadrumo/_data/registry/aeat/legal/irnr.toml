@@ -800,6 +800,29 @@ period_selector = { year_from = 2022, year_to = 2025, periods = ["EVENT-N", "0A"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
 review_status = "pending_review"
 
+# Modelo 210 diseño de registro AEAT indexes as "Devengos entre 01-01-2022 y
+# 01-06-2022" (vers. 1.5), the predecessor of aeat-dr-210-2022 above. By the
+# same boundary convention its title's upper bound is the successor's start, so
+# it closes the day before. Its records, positions, widths and field contents
+# equal those of aeat-dr-210-2022 except that record T21002 prints positions
+# 1285-1391 as two "Reservado para la Administración" blank fields (35 and 72
+# bytes) where the successor prints one of 107 bytes; both are written blank.
+# No edition cites it: January to May 2022 is answered by projection from the
+# 2023 edition, which renders the successor design.
+[sources."aeat-dr-210-2022-hasta-05"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022-early"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/files/03-210-orden-eha-3316-2010-devengos-entre-01-01-2022-y-01-06-2022.xls"
+sha256 = "a21124e3d9e8d72315032ce7471965a2324eebfa2d155a14e9860e6ce47394b3"
+bytes = 308736
+retrieved_at = 2026-10-01
+applies_from = 2022-01-01
+applies_to = 2022-05-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/dr210e22.xls"
+review_status = "pending_review"
+
 # Modelo 210 diseño de registro for accruals (devengos) from 01/01/2026
 # onward, backing the orden-hac-623-2026 layout amendment. Same acquisition
 # and re-verification history as aeat-dr-210-2022 above.

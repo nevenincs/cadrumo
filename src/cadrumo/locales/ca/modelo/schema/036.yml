@@ -1270,6 +1270,73 @@ modelo:
           el Cens d'empresaris, professionals i retenidors.
         title: Cens d'empresaris, professionals i retenidors
       revision:
+        2022-hasta-2023-04-24:
+          casilla:
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identificació. Domini o adreça d'internet (segon)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identificació. Data d'efectes de la residència fiscal
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identificació. Persona física resident o no resident a Espanya
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Persona jurídica o entitat. Identificació. Data d'efectes de
+                la residència fiscal
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13f)
+          field:
+            label: Model 036, des de 2022 fins al 24 d'abril de 2023
         2023-hasta-2025-02-02:
           casilla:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
@@ -1336,7 +1403,7 @@ modelo:
               label: Percentatge de liquidació, participació o herència del successor
                 o beneficiari (successor 13f)
           field:
-            label: Model 036, des de 2023 fins al 2 de febrer de 2025
+            label: Model 036, des del 25 d'abril de 2023 fins al 2 de febrer de 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:

@@ -192,11 +192,13 @@ def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
         f"declaring {len(revision.period_selector.periods)} period(s); below one "
         "complete year the horizon claim below holds over almost nothing"
     )
-    assert {(row.filing_year, row.period) for row in report.rows} == set(
-        revision_selection_coordinates(
-            revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
-        ),
-    )
+    assert {(row.filing_year, row.period) for row in report.rows} == {
+        coordinate
+        for edition in modelo.revisions.values()
+        for coordinate in revision_selection_coordinates(
+            edition, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+        )
+    }
     assert all(row.filing_year <= assessment_horizon for row in report.rows)
 
 
