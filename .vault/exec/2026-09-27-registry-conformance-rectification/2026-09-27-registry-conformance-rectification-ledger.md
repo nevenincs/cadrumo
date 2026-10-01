@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:5819f0553cd08d788f56d243cadd9e55c22f1a1216935d4566db30b9e02e28ba'
+body_hash: 'sha256:617a542cbffeaaad695e0854d80457450d5f82a8233c7502ee3bbea9e4c84cbd'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1412,6 +1412,75 @@ related:
 - `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/0125-record-m200-page-043.toml`
 - `S50` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/export/_generation.provenance.json`
 - `S50` `verify:` `45 equity-statement cells per edition carry their own sheet-scoped casillas from their design lines, absent input exports the zero fill, a remapped cell is caught; 27 echo cells kept; 2025 target republished and current; inspection 0 findings; dev 388 and runtime 104 passed; gated commit db50af829c` -> `pass`
+- `S45` `M` `dev/registry/tests/test_modelo_220_222_registry.py`
+- `S45` `A` `dev/registry/tests/test_modelo_220_editions_follow_their_own_designs.py`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/constructs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2023/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2023/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/application_links/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/constructs/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/deadline_windows/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/220.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/220.yml`
+- `S45` `verify:` `220 2022 (Orden HFP/523/2023) and 2023 (Orden HAC/495/2024) authored at applicability grade, 2022 root with 2023 and 2024 as deltas; boxes declared only where each design prints them; 292 and 299 grounded continuity links; 2024 and 2025 hydration unchanged but for lineage fields; converter apply and no-op; inspection 0 findings; published 7c64f26a; 331 passed; gated commit 547c7cc6cd` -> `pass`
+- `S45` `verify:` `88 duplicate 036 label keys removed, 648 resolved labels unchanged; stores-once catalogue test and 036 tests pass; gated commit da57748dfd` -> `pass`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/applicability/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/application_links/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/casillas/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/deadline_windows/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2022/workbook_parity_refs/0001-declarations.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/revision.toml`
+- `S45` `A` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2023/casillas/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/application_links/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/applicability/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/deadline_windows/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/filing_schedules/0001-declarations.toml`
+- `S45` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/workbook_parity_refs/0001-declarations.toml`
+- `S45` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S45` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S45` `M` `dev/registry/tests/test_modelo_200_editions_declare_their_own_design_boxes.py`
+- `S45` `A` `dev/registry/tests/test_modelo_200_editions_follow_their_own_designs.py`
+- `S45` `M` `dev/registry/tests/test_modelo_200_registry.py`
+- `S45` `verify:` `inspect_authoring_candidate publication_valid` -> `pass`
+- `S45` `verify:` `edition_delta_migration 200 proof/apply/no-op/drop-restatement` -> `pass`
+- `S45` `verify:` `pytest modelo-200 design, catalogue, lineage and coverage gates (189)` -> `pass`
+- `S45` `by:` `lane-p05-p`
+- `S45` `M` `dev/registry/tests/test_modelo_200_reused_box_numbers_keep_their_own_concept.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_ejemplo1_tributacion_minima_manual_worked_example.py`
+- `S45` `verify:` `pytest named modelo-200 set plus gates (151 files)` -> `fail`
+- `S50` `M` `dev/registry/tests/test_casilla_keying_convention.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_local_observation_error_registry.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_result_disposition_resolution.py`
+- `S50` `M` `src/cadrumo/domain/calculations/registry/tests/test_casilla_keying_convention.py`
+- `S50` `verify:` `ambiguity refusals for 00562 and 00599 expect the registry's full candidate set; 6 passed; gated commit 7fe0975ea6` -> `pass`
+- `S45` `M` `dev/registry/tests/test_modelo_202_registry.py`
+- `S45` `M` `dev/registry/tests/test_referential_integrity_part2.py`
+- `S45` `M` `dev/registry/tests/test_semantic_role.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_calculations_modelo_202_200.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/tests/_cross_dependency_calculation_support.py`
+- `S45` `verify:` `pytest named modelo-200 set plus gates (151 files): 1955 passed, 1 failed (pinned conformance vector, db50af829c), 9 installed-oracle environment errors` -> `fail`
+- `S45` `verify:` `200 2022 (Orden HFP/523/2023) and 2023 (Orden HAC/495/2024) authored at applicability grade, 2022 root with 2023 and 2024 as deltas, boxes declared only where each design prints them with the same caption, type and sheet, every later row stating its absence origin; 2024 and 2025 hydration unchanged but for lineage claims; converter apply, no-op and drop-restatement; inspection 0 findings; published b50f34f6; 1955 passed; gated commit bed4a8ff44 212 passed` -> `pass`
+- `S50` `M` `dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml`
+- `S50` `verify:` `conformance pin refreshed to the reviewed manifest digest of db50af829c (sha256 of the committed provenance manifest); pin tests 4 passed; commit 6ffafe355e` -> `pass`
 
 ## Notes
 
@@ -1494,3 +1563,12 @@ related:
 - `S50` three cells printing 00501 and 00573 still export those boxes until the two ids are sheet-scoped, which touches about 40 files; returned to the operator
 - `S50` about 1900 cells per edition of the 2025 filing export are filled from an unprefixed casilla whose design text differs (text comparison, some false positives), 130 of them on liquidacion sheets; list in the lane scratch `masked_debt.tsv;` returned to the operator
 - `S50` the 2024 export target has never published: its f0089 sign defect and 180 undeclared mapping ids block it
+- `S45` legal/is.toml in this commit also carries the lane writing Modelo 200's 2022 and 2023 catalogue entries for the same two ordenes
+- `S45` undeclared 220 debt (328 rows in 2022, 258 in 2023, old T22007000 layout, pages 15A, 15B and 16) is recorded as 3185 named `not_examined` ledger rows
+- `S45` the 2022 design sidecar renders sheet T22001000 empty although the IR reads its 88 fields
+- `S45` regression of 62dc742fab found by the 220 lane: its gate had not included the shipped catalogue test
+- `S45` Modelo 200 2022 and 2023 editions declare 2477 and 2745 of the 2024 edition's 3407 rows where their own designs print the same caption; the remaining 930 and 662 rows are recorded debt, each 2024/2023 row new to its edition carrying an absence origin with design-line evidence.
+- `S45` 12 failures and 9 errors remain outside lane-p05-p's files: 7 from the db50af829c equity-statement rows and unrefreshed export pin, 9 installed-oracle errors from a missing pikepdf macos-arm64 wheel, and 5 shared tests (202 registry, referential integrity part 2, semantic role inventory, two cross-dependency calculation tests) that assume every Modelo 200 edition calculates; reported to the orchestrator.
+- `S50` regressions of db50af829c, whose gate had not included the shared ambiguity tests
+- `S45` 200 2022 and 2023 now refuse calculation, as ruled; Modelo 202's prior-year read of those years refuses too, where it silently used the 2024 engine before; returned to the operator
+- `S45` undeclared 200 debt: 930 rows for 2022 and 665 for 2023, listed in the lane scratch debt2022.tsv and debt2023.tsv
