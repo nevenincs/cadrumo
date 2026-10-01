@@ -703,6 +703,9 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
     class SourceRequested(_AddressMessage):
         """The filer asked where the value under the cursor comes from."""
 
+    class ScrolledDownToCursor(Message):
+        """The list has scrolled down to bring the cursor's field into view, leaving it on the last line."""
+
     def __init__(
         self,
         items: tuple[CasillaListItem, ...] = (),
@@ -1287,7 +1290,12 @@ class CasillaList(TypedAppAccess, ScrollView, can_focus=True):
         if top < view_top:
             self.scroll_to(y=max(top - 1, 0), animate=False)
         elif bottom > view_top + view_height:
-            self.scroll_to(y=bottom - view_height, animate=False)
+            # Said once the scroll has landed, so whoever follows it reads where the list now stands.
+            self.scroll_to(
+                y=bottom - view_height,
+                animate=False,
+                on_complete=lambda: self.post_message(self.ScrolledDownToCursor()),
+            )
 
     def _step(self, start: int, delta: int) -> int | None:
         index = start + delta

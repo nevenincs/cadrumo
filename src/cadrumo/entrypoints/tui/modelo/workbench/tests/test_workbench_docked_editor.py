@@ -38,6 +38,10 @@ _DOCKED = (120, 36)
 _SHORT = (80, 24)
 
 
+_SHOWING_WAIT = 200
+"""The most pauses a test waits for the screen to show what it expects before it reads what is there."""
+
+
 async def _settle(pilot: Pilot[None], times: int = 4) -> None:
     for _ in range(times):
         await pilot.pause()
@@ -145,10 +149,15 @@ async def test_on_the_shortest_docking_terminal_the_box_being_edited_shows_with_
             for _ in range(10):
                 await pilot.press("enter")
                 await _settle(pilot)
-            panel = open_panel(screen)
-            title = "" if panel is None else _title(panel)
+            # Wait on what the filer would see, within a bound, rather than on a fixed number of pauses.
+            for _ in range(_SHOWING_WAIT):
+                panel = open_panel(screen)
+                title = "" if panel is None else _title(panel)
+                lines = _list_lines(screen)
+                if title.startswith("[40]") and any("[41]" in line for line in lines):
+                    break
+                await pilot.pause()
             scrolled = screen.query_one(CasillaList).scroll_offset.y
-            lines = _list_lines(screen)
 
     assert title.startswith("[40]")
     assert scrolled > 0, "the list scrolled to follow the box being edited"

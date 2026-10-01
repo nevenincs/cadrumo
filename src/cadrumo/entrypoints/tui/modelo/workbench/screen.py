@@ -1543,29 +1543,30 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         self._docked = (entry, panel)
         self.add_class("-editing")
         removed = None if previous is None else previous[1].remove()
-        scrolled_from = self.query_one(CasillaList).scroll_offset.y
-        self.run_worker(self._mount_docked(panel, removed, scrolled_from), group="workbench-dock")
+        self.run_worker(self._mount_docked(panel, removed), group="workbench-dock")
 
-    async def _mount_docked(self, panel: CasillaEditorPanel, removed: AwaitRemove | None, scrolled_from: float) -> None:
+    async def _mount_docked(self, panel: CasillaEditorPanel, removed: AwaitRemove | None) -> None:
         """Mount ``panel`` once the one it replaces is gone, unless the filer closed it or another replaced it since."""
         if removed is not None:
             await removed
         docked = self._docked
         if docked is None or docked[1] is not panel:
             return
-        await self.mount(panel, before=self.query_one("#wb-help"))
         # The list gives the panel its lines on the next layout, scrolling to keep the box in view.
-        self.call_after_refresh(self._show_following, scrolled_from)
+        await self.mount(panel, before=self.query_one("#wb-help"))
 
-    def _show_following(self, scrolled_from: float) -> None:
-        """Show the rows after the box being edited when the list had to scroll down to bring it in.
+    def on_casilla_list_scrolled_down_to_cursor(self, message: CasillaList.ScrolledDownToCursor) -> None:
+        """Show the rows after the box being edited once the list has scrolled down to bring it in.
 
         Scrolling down to a box leaves it on the list's last line; the rows
         after it are the neighbours the filer reads next, so a few lines more
         are shown while the list is tall enough to keep the box itself in view.
+        The list says so only after its own scroll has landed, so this always
+        follows it, however the panel's mounting and the list's scroll interleave.
         """
+        message.stop()
         casilla_list = self.query_one(CasillaList)
-        if self._docked is None or casilla_list.scroll_offset.y <= scrolled_from:
+        if self._docked is None:
             return
         if casilla_list.scrollable_content_region.height >= _FOLLOWING_MIN_VIEW:
             casilla_list.scroll_relative(y=_FOLLOWING_LINES, animate=False)
@@ -1608,11 +1609,9 @@ class ModeloWorkbenchScreen(AccountChromeScreen):
         casilla_list = self.query_one(CasillaList)
         refusal = self._stage(entry, decision)
         if refusal is None and decision.advance:
-            scrolled_from = casilla_list.scroll_offset.y
             self._advance_attention(1)
             following = casilla_list.highlighted
             if following is not None and following.key != entry.key:
-                self._show_following(scrolled_from)
                 self._open_editor(following)
                 return
         self._close_dock()
