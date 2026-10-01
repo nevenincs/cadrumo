@@ -1936,6 +1936,276 @@ applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
 review_status = "pending_review"
 
+# The approving ordenes of the IS declaration models for periodos impositivos
+# iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024). Each
+# approves Modelo 220 in its art. 1, fixes its domiciliacion window in art. 3.2
+# and its plazo in art. 6.3. The bundled corpus files are the as-published BOE
+# texts; neither orden has a consolidated text.
+[legal."orden-hfp-523-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 220's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hfp-523-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a3"
+document_id = "BOE-A-2023-12416"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 3.2; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2022 may be ordered from 1 to 20 July 2023, both inclusive. It grounds the Modelo 220 ejercicio 2022 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 20 de julio de 2023, ambos inclusive.",
+]
+
+[legal."orden-hfp-523-2023:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.3; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 220's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hac-495-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a3"
+document_id = "BOE-A-2024-10574"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 3.2; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2023 may be ordered from 1 to 22 July 2024, both inclusive. It grounds the Modelo 220 ejercicio 2023 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2024, ambos inclusive.",
+]
+
+[legal."orden-hac-495-2024:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.3; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+review_status = "pending_review"
+
+# Modelo 200 approval and plazo clauses of the same two ordenes, for the periodos
+# impositivos iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024):
+# art. 1.1.a).1.o approves Modelo 200 (anexo I) and art. 1.2 applies it to every IS
+# contribuyente and IRNR establecimiento permanente; art. 6.1 sets its plazo under LIS
+# art. 124.1. Art. 3.2 (domiciliacion, Modelos 200 y 220) is catalogued above.
+[legal."orden-hfp-523-2023:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 200's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hfp-523-2023:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the 25 dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 200's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hac-495-2024:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the veinticinco dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los veinticinco días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+review_status = "pending_review"
+
 [legal."ley-44-2015:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

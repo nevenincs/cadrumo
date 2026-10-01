@@ -1,0 +1,2153 @@
+[revisions."2023"]
+casilla_storage_baseline = "2022"
+casilla_source_refs = ["aeat-dr-220-2023"]
+application_link_source_refs = ["aeat-modelo-200-manual-2023", "boe-modelo-220-2023-form"]
+authority_grade = "applicability"
+# Modelo 220, declaracion del Impuesto sobre Sociedades de los grupos fiscales en
+# regimen de consolidacion fiscal, for periodos impositivos iniciados en 2023.
+#
+# APPROVAL. Orden HAC/495/2024 (BOE-A-2024-10574, BOE de 27 de mayo de 2024) art. 1.1.a).2.o approves
+# "Modelo 220: Declaracion del Impuesto sobre Sociedades-Regimen de consolidacion
+# fiscal correspondiente a los grupos fiscales, que figura en el anexo II" for the
+# periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023;
+# art. 1.3 applies it to the grupos fiscales of capitulo VI del titulo VII LIS. Art.
+# 6.3 sets its plazo, the representante's individual plazo under LIS art. 75.2, and
+# art. 3.2 the domiciliacion window.
+#
+# DESIGN. aeat-dr-220-2023 is AEAT's own diseno de registro for ejercicio 2023. It
+# differs from the 2024 design, so this edition is authored from it rather than
+# projected from the later one: 1761 casillas are declared where this design
+# prints them and 258 rows of the 2024 edition are left undeclared as debt
+# (see casillas/0001-declarations.toml).
+#
+# Grade: applicability, the 2024 edition's. No formula, construct relation or
+# binding computes or checks these casillas and there is no export layout, so
+# the modelo is not filed for this year.
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-495-2024:art-1"]
+legal_refs = [
+    "orden-hac-495-2024:art-1",
+    "orden-hac-495-2024:art-6-3",
+    "ley-27-2014:art-124",
+    "ley-27-2014:art-75-2",
+]
+source_refs = [
+    "boe-modelo-220-2023-form",
+    "aeat-dr-220-2023",
+    "aeat-modelo-200-manual-2023",
+]
+review_status = "pending_review"
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs"]
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00043" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2309 prints box [00043] at position 16; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2338 prints box [00043] at position 16, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00047" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2310 prints box [00047] at position 33; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2339 prints box [00047] at position 33, with differing captions; same concept: the 2022 summary line omits the '(Pag. 7A)' pointer the 2024 line adds; the same sheet prints the box again in its Pag. 7A detail.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00048" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2311 prints box [00048] at position 50; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2340 prints box [00048] at position 50, with differing captions; same concept: the 2022 summary line omits the '(Pag. 7A)' pointer the 2024 line adds; the same sheet prints the box again in its Pag. 7A detail.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00049" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2312 prints box [00049] at position 67; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2341 prints box [00049] at position 67, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:03241" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2313 prints box [03241] at position 84; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2343 prints box [03241] at position 101, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:03242" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2314 prints box [03242] at position 101; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2344 prints box [03242] at position 118, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00079" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2315 prints box [00079] at position 118; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2345 prints box [00079] at position 135, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00080" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2316 prints box [00080] at position 135; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2346 prints box [00080] at position 152, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00082" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2317 prints box [00082] at position 152; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2347 prints box [00082] at position 169, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00083" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2318 prints box [00083] at position 169; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2348 prints box [00083] at position 186, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00086" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2320 prints box [00086] at position 203; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2350 prints box [00086] at position 220, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00225" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2321 prints box [00225] at position 220; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2351 prints box [00225] at position 237, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02542" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2322 prints box [02542] at position 237; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2352 prints box [02542] at position 254, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02543" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2323 prints box [02543] at position 254; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2353 prints box [02543] at position 271, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02544" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2324 prints box [02544] at position 271; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2354 prints box [02544] at position 288, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00291" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2325 prints box [00291] at position 288; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2355 prints box [00291] at position 305, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00398" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2326 prints box [00398] at position 305; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2356 prints box [00398] at position 322, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02963" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2328 prints box [02963] at position 339; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2359 prints box [02963] at position 356, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:03140" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2329 prints box [03140] at position 356; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2360 prints box [03140] at position 373, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00362" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2330 prints box [00362] at position 373; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2361 prints box [00362] at position 390, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00547" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2331 prints box [00547] at position 390; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2362 prints box [00547] at position 407, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00552" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2332 prints box [00552] at position 407; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2363 prints box [00552] at position 424, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02545" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2333 prints box [02545] at position 424; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2364 prints box [02545] at position 441, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02546" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2334 prints box [02546] at position 441; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2365 prints box [02546] at position 458, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02547" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2335 prints box [02547] at position 458; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2366 prints box [02547] at position 475, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00553" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2336 prints box [00553] at position 475; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2367 prints box [00553] at position 492, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00554" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2337 prints box [00554] at position 492; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2368 prints box [00554] at position 509, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00558" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2338 prints box [00558] at position 509; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2369 prints box [00558] at position 526, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00560" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2339 prints box [00560] at position 514; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2370 prints box [00560] at position 531, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02548" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2340 prints box [02548] at position 531; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2371 prints box [02548] at position 548, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02549" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2341 prints box [02549] at position 548; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2372 prints box [02549] at position 565, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02890" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2342 prints box [02890] at position 565; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2373 prints box [02890] at position 582, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00540" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2343 prints box [00540] at position 582; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2374 prints box [00540] at position 599, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00541" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2344 prints box [00541] at position 599; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2375 prints box [00541] at position 616, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02891" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2347 prints box [02891] at position 650; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2378 prints box [02891] at position 667, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02892" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2348 prints box [02892] at position 667; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2379 prints box [02892] at position 684, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:02893" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2349 prints box [02893] at position 684; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2380 prints box [02893] at position 701, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:00562" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2350 prints box [00562] at position 701; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2381 prints box [00562] at position 718, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:t22007000.3287-3303" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2505 prints the field at position 3287; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2538 prints the field at position 3338, with the same caption.", continuidad_origin = "grounded", id = "T22007000:t22007000.3338-3354", number = "t22007000.3338-3354" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:t22007000.3304-3308" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2506 prints the field at position 3304; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2539 prints the field at position 3355, with the same caption.", continuidad_origin = "grounded", id = "T22007000:t22007000.3355-3359", number = "t22007000.3355-3359" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:t22007000.3309-3325" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2507 prints the field at position 3309; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2540 prints the field at position 3360, with the same caption.", continuidad_origin = "grounded", id = "T22007000:t22007000.3360-3376", number = "t22007000.3360-3376" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22007000:t22007000.3326-3330" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22007000 line 2508 prints the field at position 3326; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22007000 line 2541 prints the field at position 3377, with the same caption.", continuidad_origin = "grounded", id = "T22007000:t22007000.3377-3381", number = "t22007000.3377-3381" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00562" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7573 prints box [00562] at position 16; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7909 prints box [00562] at position 16, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03358" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7574 prints box [03358] at position 33; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7910 prints box [03358] at position 33, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00567" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7575 prints box [00567] at position 50; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7911 prints box [00567] at position 50, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00568" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7576 prints box [00568] at position 67; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7912 prints box [00568] at position 67, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00563" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7577 prints box [00563] at position 84; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7913 prints box [00563] at position 84, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00566" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7578 prints box [00566] at position 101; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7915 prints box [00566] at position 118, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00576" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7579 prints box [00576] at position 118; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7916 prints box [00576] at position 135, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00569" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7580 prints box [00569] at position 135; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7917 prints box [00569] at position 152, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00570" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7581 prints box [00570] at position 152; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7918 prints box [00570] at position 169, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:01965" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7582 prints box [01965] at position 169; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7919 prints box [01965] at position 186, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00571" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7583 prints box [00571] at position 186; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7920 prints box [00571] at position 203, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00572" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7584 prints box [00572] at position 203; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7921 prints box [00572] at position 220, with differing captions; same concept: the same DI internacional de periodos anteriores applied in the current period; the 2022 caption says 'ejercicio' where 2024 says 'periodo'.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03251" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7585 prints box [03251] at position 220; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7922 prints box [03251] at position 237, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03261" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7586 prints box [03261] at position 237; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7923 prints box [03261] at position 254, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00575" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7587 prints box [00575] at position 254; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7924 prints box [00575] at position 271, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00577" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7588 prints box [00577] at position 271; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7925 prints box [00577] at position 288, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00581" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7589 prints box [00581] at position 288; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7926 prints box [00581] at position 305, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00582" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7590 prints box [00582] at position 305; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7927 prints box [00582] at position 322, with differing captions; same concept: the 2022 caption repeats 'ajustada positiva'; the box is the same cuota integra ajustada positiva.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00583" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7591 prints box [00583] at position 322; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7928 prints box [00583] at position 339, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00585" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7592 prints box [00585] at position 339; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7929 prints box [00585] at position 356, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00584" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7593 prints box [00584] at position 356; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7930 prints box [00584] at position 373, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00588" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7594 prints box [00588] at position 373; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7931 prints box [00588] at position 390, with differing captions; same concept: the same Cap. IV Tit. VI deductions line; the design adds page 14 ter to the pages it totals.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03359" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7595 prints box [03359] at position 390; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7932 prints box [03359] at position 407, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:02353" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7596 prints box [02353] at position 407; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7933 prints box [02353] at position 424, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00186" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7598 prints box [00186] at position 441; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7935 prints box [00186] at position 458, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00565" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7599 prints box [00565] at position 458; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7936 prints box [00565] at position 475, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00590" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7600 prints box [00590] at position 475; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7937 prints box [00590] at position 492, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00399" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7601 prints box [00399] at position 492; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7938 prints box [00399] at position 509, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03344" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7602 prints box [03344] at position 509; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7939 prints box [03344] at position 526, with differing captions; same concept: the deduction is the same DT 37a.1 reversal; the design numbers its page 14 quinquies instead of 14 sexies.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03356" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7603 prints box [03356] at position 526; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7940 prints box [03356] at position 543, with differing captions; same concept: the deduction is the same DT 37a.2 reversal; the design numbers its page 14 quinquies instead of 14 sexies.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:01629" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7604 prints box [01629] at position 543; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7941 prints box [01629] at position 560, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00592" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7605 prints box [00592] at position 560; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7942 prints box [00592] at position 577, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00595" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7606 prints box [00595] at position 577; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7943 prints box [00595] at position 594, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00596" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7607 prints box [00596] at position 594; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7944 prints box [00596] at position 611, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00597" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7608 prints box [00597] at position 611; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7945 prints box [00597] at position 628, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:02188" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7609 prints box [02188] at position 628; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7946 prints box [02188] at position 645, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00599" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7610 prints box [00599] at position 645; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7947 prints box [00599] at position 662, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00600" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7611 prints box [00600] at position 662; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7948 prints box [00600] at position 679, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00601" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7612 prints box [00601] at position 679; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7949 prints box [00601] at position 696, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00602" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7613 prints box [00602] at position 696; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7950 prints box [00602] at position 713, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00603" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7614 prints box [00603] at position 713; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7951 prints box [00603] at position 730, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00604" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7615 prints box [00604] at position 730; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7952 prints box [00604] at position 747, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00605" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7616 prints box [00605] at position 747; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7953 prints box [00605] at position 764, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00606" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7617 prints box [00606] at position 764; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7954 prints box [00606] at position 781, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00611" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7618 prints box [00611] at position 781; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7955 prints box [00611] at position 798, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00612" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7619 prints box [00612] at position 798; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7956 prints box [00612] at position 815, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00615" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7620 prints box [00615] at position 815; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7957 prints box [00615] at position 832, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00616" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7621 prints box [00616] at position 832; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7958 prints box [00616] at position 849, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00617" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7622 prints box [00617] at position 849; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7959 prints box [00617] at position 866, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00618" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7623 prints box [00618] at position 866; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7960 prints box [00618] at position 883, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:00436" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7624 prints box [00436] at position 883; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7961 prints box [00436] at position 900, with differing captions; same concept: the same art. 39.2 abono total; the 2022 design numbers its page 14 quater instead of 14 quinquies.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03399" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7625 prints box [03399] at position 900; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7962 prints box [03399] at position 917, with differing captions; same concept: the same art. 39.2 abono, Estado column; page 14 quater instead of 14 quinquies.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03393" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7626 prints box [03393] at position 917; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7963 prints box [03393] at position 934, with differing captions; same concept: the same art. 39.2 abono, foral column; page 14 quater instead of 14 quinquies.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03360" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7627 prints box [03360] at position 934; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7964 prints box [03360] at position 951, with differing captions; same concept: the same art. 39.3 abono total; the 2023 caption names no page.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03400" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7628 prints box [03400] at position 951; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7965 prints box [03400] at position 968, with differing captions; same concept: the same art. 39.3 abono, Estado column; the 2023 caption names no page.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:03398" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7629 prints box [03398] at position 968; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7966 prints box [03398] at position 985, with differing captions; same concept: the same art. 39.3 abono, foral column; the 2023 caption names no page.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:01737" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7630 prints box [01737] at position 985; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7967 prints box [01737] at position 1002, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:01631" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7632 prints box [01631] at position 1002; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7969 prints box [01631] at position 1019, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009000:01632" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009000 line 7634 prints box [01632] at position 1019; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009000 line 7971 prints box [01632] at position 1036, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02540" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7672 prints box [02540] at position 16; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8009 prints box [02540] at position 16, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02541" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7673 prints box [02541] at position 33; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8010 prints box [02541] at position 33, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02788" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7674 prints box [02788] at position 50; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8011 prints box [02788] at position 50, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02789" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7675 prints box [02789] at position 67; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8012 prints box [02789] at position 67, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:00621" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7676 prints box [00621] at position 84; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8013 prints box [00621] at position 84, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:00622" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7677 prints box [00622] at position 101; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8014 prints box [00622] at position 101, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02790" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7678 prints box [02790] at position 118; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8015 prints box [02790] at position 118, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02791" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7679 prints box [02791] at position 135; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8016 prints box [02791] at position 135, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02792" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7680 prints box [02792] at position 152; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8017 prints box [02792] at position 152, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02793" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7681 prints box [02793] at position 169; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8018 prints box [02793] at position 169, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02794" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7682 prints box [02794] at position 186; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8019 prints box [02794] at position 186, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02795" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7683 prints box [02795] at position 203; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8020 prints box [02795] at position 203, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02798" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7686 prints box [02798] at position 254; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8023 prints box [02798] at position 254, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02799" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7687 prints box [02799] at position 271; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8024 prints box [02799] at position 271, with the same caption, each naming its own periodo impositivo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02800" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7688 prints box [02800] at position 288; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8025 prints box [02800] at position 288, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02801" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7689 prints box [02801] at position 305; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8026 prints box [02801] at position 305, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:01953" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7690 prints box [01953] at position 322; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8027 prints box [01953] at position 322, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:03361" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7691 prints box [03361] at position 339; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8028 prints box [03361] at position 339, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:03362" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7692 prints box [03362] at position 356; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8029 prints box [03362] at position 356, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:01954" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7693 prints box [01954] at position 373; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8030 prints box [01954] at position 373, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:03363" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7694 prints box [03363] at position 390; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8031 prints box [03363] at position 390, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:03364" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7695 prints box [03364] at position 407; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8032 prints box [03364] at position 407, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02802" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7696 prints box [02802] at position 424; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8033 prints box [02802] at position 424, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02803" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7697 prints box [02803] at position 441; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8034 prints box [02803] at position 441, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02804" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7698 prints box [02804] at position 458; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8035 prints box [02804] at position 458, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02805" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7699 prints box [02805] at position 475; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8036 prints box [02805] at position 475, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02806" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7700 prints box [02806] at position 492; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8037 prints box [02806] at position 492, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02807" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7701 prints box [02807] at position 509; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8038 prints box [02807] at position 509, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02808" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7702 prints box [02808] at position 526; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8039 prints box [02808] at position 526, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02809" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7703 prints box [02809] at position 543; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8040 prints box [02809] at position 543, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02810" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7704 prints box [02810] at position 560; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8041 prints box [02810] at position 560, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02811" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7705 prints box [02811] at position 577; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8042 prints box [02811] at position 577, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02812" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7706 prints box [02812] at position 594; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8043 prints box [02812] at position 594, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22009001:02813" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22009001 line 7707 prints box [02813] at position 611; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22009001 line 8044 prints box [02813] at position 611, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00420" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15909 prints box [00420] at position 956; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16795 prints box [00420] at position 956, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00421" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15910 prints box [00421] at position 973; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16796 prints box [00421] at position 973, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00426" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15911 prints box [00426] at position 990; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16797 prints box [00426] at position 990, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00427" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15912 prints box [00427] at position 1007; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16798 prints box [00427] at position 1007, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00600" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15913 prints box [00600] at position 1024; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16799 prints box [00600] at position 1024, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00402" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15914 prints box [00402] at position 1041; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16800 prints box [00402] at position 1041, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00442" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15915 prints box [00442] at position 1058; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16801 prints box [00442] at position 1058, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00443" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15916 prints box [00443] at position 1075; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16802 prints box [00443] at position 1075, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00444" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15917 prints box [00444] at position 1092; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16803 prints box [00444] at position 1092, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00602" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15918 prints box [00602] at position 1109; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16804 prints box [00602] at position 1109, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00445" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15919 prints box [00445] at position 1126; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16805 prints box [00445] at position 1126, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00446" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15920 prints box [00446] at position 1143; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16806 prints box [00446] at position 1143, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00447" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15921 prints box [00447] at position 1160; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16807 prints box [00447] at position 1160, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00448" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15922 prints box [00448] at position 1177; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16808 prints box [00448] at position 1177, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00604" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15923 prints box [00604] at position 1194; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16809 prints box [00604] at position 1194, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00449" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15924 prints box [00449] at position 1211; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16810 prints box [00449] at position 1211, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00450" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15925 prints box [00450] at position 1228; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16811 prints box [00450] at position 1228, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00451" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15926 prints box [00451] at position 1245; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16812 prints box [00451] at position 1245, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00465" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15927 prints box [00465] at position 1262; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16813 prints box [00465] at position 1262, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00606" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15928 prints box [00606] at position 1279; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16814 prints box [00606] at position 1279, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00474" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15929 prints box [00474] at position 1296; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16815 prints box [00474] at position 1296, with differing captions; same concept: 'Cuota diferencia' is the design's misspelling of 'Cuota diferencial' under the same foral reparto heading.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00475" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15930 prints box [00475] at position 1313; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16816 prints box [00475] at position 1313, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00476" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15931 prints box [00476] at position 1330; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16817 prints box [00476] at position 1330, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00477" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15932 prints box [00477] at position 1347; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16818 prints box [00477] at position 1347, with differing captions; same concept: 'Cuota diferencia' is the design's misspelling of 'Cuota diferencial' under the same foral reparto heading.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00612" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15933 prints box [00612] at position 1364; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16819 prints box [00612] at position 1364, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00482" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15934 prints box [00482] at position 1381; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16820 prints box [00482] at position 1381, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00483" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15935 prints box [00483] at position 1398; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16821 prints box [00483] at position 1398, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00484" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15936 prints box [00484] at position 1415; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16822 prints box [00484] at position 1415, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00485" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15937 prints box [00485] at position 1432; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16823 prints box [00485] at position 1432, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00616" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15938 prints box [00616] at position 1449; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16824 prints box [00616] at position 1449, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00486" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15939 prints box [00486] at position 1466; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16825 prints box [00486] at position 1466, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00487" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15940 prints box [00487] at position 1483; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16826 prints box [00487] at position 1483, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00488" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15941 prints box [00488] at position 1500; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16827 prints box [00488] at position 1500, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00489" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15942 prints box [00489] at position 1517; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16828 prints box [00489] at position 1517, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00618" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15943 prints box [00618] at position 1534; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16829 prints box [00618] at position 1534, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03389" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15944 prints box [03389] at position 1551; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16830 prints box [03389] at position 1551, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03390" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15945 prints box [03390] at position 1568; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16831 prints box [03390] at position 1568, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03391" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15946 prints box [03391] at position 1585; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16832 prints box [03391] at position 1585, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03392" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15947 prints box [03392] at position 1602; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16833 prints box [03392] at position 1602, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03393" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15948 prints box [03393] at position 1619; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16834 prints box [03393] at position 1619, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03394" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15949 prints box [03394] at position 1636; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16835 prints box [03394] at position 1636, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03395" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15950 prints box [03395] at position 1653; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16836 prints box [03395] at position 1653, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03396" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15951 prints box [03396] at position 1670; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16837 prints box [03396] at position 1670, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03397" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15952 prints box [03397] at position 1687; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16838 prints box [03397] at position 1687, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03398" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15953 prints box [03398] at position 1704; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16839 prints box [03398] at position 1704, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02066" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15954 prints box [02066] at position 1721; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16840 prints box [02066] at position 1721, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02067" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15955 prints box [02067] at position 1738; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16841 prints box [02067] at position 1738, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02068" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15956 prints box [02068] at position 1755; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16842 prints box [02068] at position 1755, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02069" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15957 prints box [02069] at position 1772; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16843 prints box [02069] at position 1772, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:01632" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15958 prints box [01632] at position 1789; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16844 prints box [01632] at position 1789, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03192" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15959 prints box [03192] at position 1806; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16845 prints box [03192] at position 1806, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03193" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15960 prints box [03193] at position 1823; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16846 prints box [03193] at position 1823, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03194" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15961 prints box [03194] at position 1840; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16847 prints box [03194] at position 1840, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03195" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15962 prints box [03195] at position 1857; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16848 prints box [03195] at position 1857, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02539" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15963 prints box [02539] at position 1874; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16849 prints box [02539] at position 1874, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03293" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15964 prints box [03293] at position 1891; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16850 prints box [03293] at position 1891, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03294" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15965 prints box [03294] at position 1908; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16851 prints box [03294] at position 1908, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03295" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15966 prints box [03295] at position 1925; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16852 prints box [03295] at position 1925, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02541" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15968 prints box [02541] at position 1959; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16854 prints box [02541] at position 1959, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03297" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15969 prints box [03297] at position 1976; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16855 prints box [03297] at position 1976, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03298" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15970 prints box [03298] at position 1993; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16856 prints box [03298] at position 1993, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03299" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15971 prints box [03299] at position 2010; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16857 prints box [03299] at position 2010, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03300" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15972 prints box [03300] at position 2027; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16858 prints box [03300] at position 2027, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02789" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15973 prints box [02789] at position 2044; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16859 prints box [02789] at position 2044, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00494" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15974 prints box [00494] at position 2061; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16860 prints box [00494] at position 2061, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00495" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15975 prints box [00495] at position 2078; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16861 prints box [00495] at position 2078, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00496" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15976 prints box [00496] at position 2095; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16862 prints box [00496] at position 2095, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00497" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15977 prints box [00497] at position 2112; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16863 prints box [00497] at position 2112, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:00622" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15978 prints box [00622] at position 2129; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16864 prints box [00622] at position 2129, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03301" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15979 prints box [03301] at position 2146; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16865 prints box [03301] at position 2146, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03302" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15980 prints box [03302] at position 2163; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16866 prints box [03302] at position 2163, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03303" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15981 prints box [03303] at position 2180; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16867 prints box [03303] at position 2180, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03304" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15982 prints box [03304] at position 2197; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16868 prints box [03304] at position 2197, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02791" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15983 prints box [02791] at position 2214; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16869 prints box [02791] at position 2214, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03305" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15984 prints box [03305] at position 2231; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16870 prints box [03305] at position 2231, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03306" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15985 prints box [03306] at position 2248; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16871 prints box [03306] at position 2248, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03307" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15986 prints box [03307] at position 2265; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16872 prints box [03307] at position 2265, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03308" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15987 prints box [03308] at position 2282; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16873 prints box [03308] at position 2282, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02793" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15988 prints box [02793] at position 2299; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16874 prints box [02793] at position 2299, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03309" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15989 prints box [03309] at position 2316; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16875 prints box [03309] at position 2316, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03310" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15990 prints box [03310] at position 2333; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16876 prints box [03310] at position 2333, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03311" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15991 prints box [03311] at position 2350; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16877 prints box [03311] at position 2350, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03312" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15992 prints box [03312] at position 2367; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16878 prints box [03312] at position 2367, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02795" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15993 prints box [02795] at position 2384; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16879 prints box [02795] at position 2384, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03313" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15994 prints box [03313] at position 2401; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16880 prints box [03313] at position 2401, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03314" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15995 prints box [03314] at position 2418; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16881 prints box [03314] at position 2418, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03315" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15996 prints box [03315] at position 2435; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16882 prints box [03315] at position 2435, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03316" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15997 prints box [03316] at position 2452; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16883 prints box [03316] at position 2452, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02797" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15998 prints box [02797] at position 2469; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16884 prints box [02797] at position 2469, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03317" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 15999 prints box [03317] at position 2486; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16885 prints box [03317] at position 2486, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03318" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16000 prints box [03318] at position 2503; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16886 prints box [03318] at position 2503, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03319" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16001 prints box [03319] at position 2520; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16887 prints box [03319] at position 2520, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03320" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16002 prints box [03320] at position 2537; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16888 prints box [03320] at position 2537, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02799" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16003 prints box [02799] at position 2554; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16889 prints box [02799] at position 2554, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03321" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16004 prints box [03321] at position 2571; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16890 prints box [03321] at position 2571, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03322" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16005 prints box [03322] at position 2588; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16891 prints box [03322] at position 2588, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:03324" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16007 prints box [03324] at position 2622; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16893 prints box [03324] at position 2622, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016000:02801" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016000 line 16008 prints box [02801] at position 2639; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016000 line 16894 prints box [02801] at position 2639, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03373" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16028 prints box [03373] at position 16; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16915 prints box [03373] at position 16, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03374" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16029 prints box [03374] at position 33; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16916 prints box [03374] at position 33, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03375" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16030 prints box [03375] at position 50; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16917 prints box [03375] at position 50, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03376" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16031 prints box [03376] at position 67; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16918 prints box [03376] at position 67, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03362" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16032 prints box [03362] at position 84; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16919 prints box [03362] at position 84, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03377" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16033 prints box [03377] at position 101; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16920 prints box [03377] at position 101, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03378" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16034 prints box [03378] at position 118; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16921 prints box [03378] at position 118, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03379" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16035 prints box [03379] at position 135; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16922 prints box [03379] at position 135, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03380" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16036 prints box [03380] at position 152; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16923 prints box [03380] at position 152, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03364" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16037 prints box [03364] at position 169; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16924 prints box [03364] at position 169, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:03325" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16038 prints box [03325] at position 186; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16925 prints box [03325] at position 186, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02173" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16039 prints box [02173] at position 203; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16926 prints box [02173] at position 203, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02174" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16040 prints box [02174] at position 220; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16927 prints box [02174] at position 220, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02175" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16041 prints box [02175] at position 237; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16928 prints box [02175] at position 237, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02804" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16042 prints box [02804] at position 254; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16929 prints box [02804] at position 254, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02176" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16043 prints box [02176] at position 271; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16930 prints box [02176] at position 271, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02177" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16044 prints box [02177] at position 288; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16931 prints box [02177] at position 288, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02178" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16045 prints box [02178] at position 305; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16932 prints box [02178] at position 305, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02179" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16046 prints box [02179] at position 322; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16933 prints box [02179] at position 322, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02807" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16047 prints box [02807] at position 339; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16934 prints box [02807] at position 339, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02180" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16048 prints box [02180] at position 356; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16935 prints box [02180] at position 356, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02181" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16049 prints box [02181] at position 373; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16936 prints box [02181] at position 373, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02182" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16050 prints box [02182] at position 390; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16937 prints box [02182] at position 390, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02183" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16051 prints box [02183] at position 407; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16938 prints box [02183] at position 407, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02810" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16052 prints box [02810] at position 424; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16939 prints box [02810] at position 424, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02184" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16053 prints box [02184] at position 441; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16940 prints box [02184] at position 441, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02185" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16054 prints box [02185] at position 458; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16941 prints box [02185] at position 458, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02186" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16055 prints box [02186] at position 475; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16942 prints box [02186] at position 475, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02187" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16056 prints box [02187] at position 492; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16943 prints box [02187] at position 492, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T22016001:02813" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T22016001 line 16057 prints box [02813] at position 509; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T22016001 line 16944 prints box [02813] at position 509, with the same caption but for heading wording.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.16" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16075 prints the field at position 16; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16963 prints the field at position 16, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.17-20" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16076 prints the field at position 17; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16964 prints the field at position 17, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.21" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16077 prints the field at position 21; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16965 prints the field at position 21, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.22-23" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16078 prints the field at position 22; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16966 prints the field at position 22, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.24-31" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16079 prints the field at position 24; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16967 prints the field at position 24, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.32-39" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16080 prints the field at position 32; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16968 prints the field at position 32, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.40-48" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16081 prints the field at position 40; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16969 prints the field at position 40, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.49-108" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16082 prints the field at position 49; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16970 prints the field at position 49, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.109-128" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16083 prints the field at position 109; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16971 prints the field at position 109, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:00562" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16084 prints box [00562] at position 129; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16972 prints box [00562] at position 129, with differing captions; same concept: the DID liquidacion line names the declaration's cuota integra; 2024 adds 'del grupo', which the 220 declaration already is.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:02800" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16086 prints box [02800] at position 163; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16974 prints box [02800] at position 163, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.180" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16087 prints the field at position 180; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16975 prints the field at position 180, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:D" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16088 prints the field at position 181; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16976 prints the field at position 181, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.198" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16089 prints the field at position 198; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16977 prints the field at position 198, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.199-232" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16090 prints the field at position 199; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16978 prints the field at position 199, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.244-313" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16092 prints the field at position 244; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16980 prints the field at position 244, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.314-348" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16093 prints the field at position 314; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16981 prints the field at position 314, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.349-378" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16094 prints the field at position 349; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16982 prints the field at position 349, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.379-418" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16095 prints the field at position 379; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16983 prints the field at position 379, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.419-420" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16096 prints the field at position 419; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16984 prints the field at position 419, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.421" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16097 prints the field at position 421; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16985 prints the field at position 421, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:I" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16098 prints the field at position 422; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16986 prints the field at position 422, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.439-472" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16099 prints the field at position 439; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16987 prints the field at position 439, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:A" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16100 prints the field at position 473; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16988 prints the field at position 473, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:C" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16101 prints the field at position 490; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16989 prints the field at position 490, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:02806" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16102 prints box [02806] at position 507; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16990 prints box [02806] at position 507, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:02809" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16103 prints box [02809] at position 524; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16991 prints box [02809] at position 524, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:02812" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16104 prints box [02812] at position 541; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16992 prints box [02812] at position 541, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "T220DID00:t220did00.558" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm.extracted.md (sha256 251fffc3cf06) record T220DID00 line 16105 prints the field at position 558; corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm.extracted.md (sha256 ad3ed2e04178) record T220DID00 line 16993 prints the field at position 558, with the same caption.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "decl.ejercicio" }
+fields = { source_refs = ["boe-modelo-220-2023-form", "aeat-dr-220-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "decl.tipo-declaracion" }
+fields = { source_refs = ["boe-modelo-220-2023-form", "aeat-dr-220-2023"] }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "entidades-grupo-dominante.nif" }
+fields = { number = "t22002000.16-24" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "entidades-grupo-dominante.denominacion-social" }
+fields = { number = "t22002000.25-64" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "entidades-grupo-dependiente.nif" }
+fields = { number = "t22002000.131-139" }
+removed_fields = []
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "entidades-grupo-dependiente.denominacion-social" }
+fields = { number = "t22002000.140-179" }
+removed_fields = []
+
+[[revisions."2023".casilla_positions]]
+id = "T22003B02:00152"
+position = 252
+
+[[revisions."2023".casilla_positions]]
+id = "T22004B00:00321"
+position = 411
+
+[[revisions."2023".casilla_positions]]
+id = "T22004B00:00322"
+position = 412
+
+[[revisions."2023".casilla_positions]]
+id = "T22004B00:00323"
+position = 413
+
+[[revisions."2023".casilla_positions]]
+id = "T22007000:00550"
+position = 581
+
+[[revisions."2023".casilla_positions]]
+id = "T22007M00:03203"
+position = 636
+
+[[revisions."2023".casilla_positions]]
+id = "T22008B00:00522"
+position = 670
+
+[[revisions."2023".casilla_positions]]
+id = "T22008B00:00523"
+position = 671
+
+[[revisions."2023".casilla_positions]]
+id = "T22009000:01375"
+position = 724
+
+[[revisions."2023".casilla_positions]]
+id = "T22009000:02354"
+position = 744
+
+[[revisions."2023".casilla_positions]]
+id = "T22009000:02538"
+position = 780
+
+[[revisions."2023".casilla_positions]]
+id = "T22009000:02539"
+position = 781
+
+[[revisions."2023".casilla_positions]]
+id = "T22011000:t22011000.76-92"
+position = 825
+
+[[revisions."2023".casilla_positions]]
+id = "T22011000:t22011000.144-160"
+position = 829
+
+[[revisions."2023".casilla_positions]]
+id = "T22011000:01375"
+position = 833
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:00112"
+position = 854
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01376"
+position = 902
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01377"
+position = 903
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01378"
+position = 904
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01379"
+position = 905
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01964"
+position = 907
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01967"
+position = 910
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01970"
+position = 913
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:03246"
+position = 961
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01975"
+position = 965
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:00928"
+position = 969
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:02643"
+position = 973
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01199"
+position = 977
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:02360"
+position = 981
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:02819"
+position = 985
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01638"
+position = 989
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01380"
+position = 992
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01381"
+position = 993
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01382"
+position = 994
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:01408"
+position = 995
+
+[[revisions."2023".casilla_positions]]
+id = "T22012000:03250"
+position = 997
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02155"
+position = 1084
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02156"
+position = 1085
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02157"
+position = 1086
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02158"
+position = 1087
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02151"
+position = 1152
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02152"
+position = 1153
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02153"
+position = 1154
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B00:02154"
+position = 1155
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:06140"
+position = 1232
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02159"
+position = 1235
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02160"
+position = 1236
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02161"
+position = 1237
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02196"
+position = 1238
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:01400"
+position = 1252
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:06144"
+position = 1315
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02198"
+position = 1318
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02199"
+position = 1319
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02200"
+position = 1320
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B10:02201"
+position = 1321
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:06319"
+position = 1402
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02202"
+position = 1405
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02203"
+position = 1406
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02204"
+position = 1407
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02205"
+position = 1408
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02206"
+position = 1409
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:05626"
+position = 1440
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:04541"
+position = 1487
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02207"
+position = 1493
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02208"
+position = 1494
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02209"
+position = 1495
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:02210"
+position = 1496
+
+[[revisions."2023".casilla_positions]]
+id = "T22012B20:05652"
+position = 1498
+
+[[revisions."2023".casilla_positions]]
+id = "T22016000:03296"
+position = 1572
+
+[[revisions."2023".casilla_positions]]
+id = "T220DID00:t220did00.233-243"
+position = 1658
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-220-declaration-construct"}
+sequence_additions = {deadline_windows = ["modelo-220-2023-0a"], legal_refs = ["orden-hac-495-2024:art-1", "orden-hac-495-2024:art-6-3", "orden-hac-495-2024:art-3"], source_refs = ["aeat-modelo-200-manual-2023", "boe-modelo-220-2023-form", "aeat-dr-220-2023"]}
+sequence_removals = {deadline_windows = [0], legal_refs = [0, 1, 2], source_refs = [0, 1, 2]}
+sequence_order = {legal_refs = [1, 2, 3, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-220-deadline"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-6-3"], source_refs = ["boe-modelo-220-2023-form", "aeat-modelo-200-manual-2023"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-220-export"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-1"], source_refs = ["aeat-dr-220-2023"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-220-filing"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-1"], source_refs = ["aeat-modelo-200-manual-2023", "boe-modelo-220-2023-form"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-220-workflow"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-1"], source_refs = ["aeat-modelo-200-manual-2023", "boe-modelo-220-2023-form"]}
+sequence_removals = {legal_refs = [0], source_refs = [0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-220-2022-0a"}
+replacement_id = "modelo-220-2023-0a"
+fields = {closes_on = 2024-07-25, filing_year = 2023, opens_on = 2024-07-01, payment_cutoff_on = 2024-07-22, period = "2023 0A"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-6-3", "orden-hac-495-2024:art-3"], source_refs = ["boe-modelo-220-2023-form", "aeat-modelo-200-manual-2023"]}
+sequence_removals = {legal_refs = [0, 1], source_refs = [0, 1]}
+sequence_order = {legal_refs = [1, 2, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-220-record-design"}
+fields = {workbook_source = "aeat-dr-220-2023"}
+sequence_additions = {legal_refs = ["orden-hac-495-2024:art-1"], source_refs = ["aeat-dr-220-2023"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
