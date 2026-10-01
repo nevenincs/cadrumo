@@ -2139,8 +2139,7 @@ tui:
       editor:
         affects:
           is_result: Ez a rovat a bevallás eredménye.
-          not_result: 'Nem változtatja meg az eredményt: egyetlen számítás sem vezet
-            ebből a rovatból az eredményhez.'
+          not_result: A Cadrumo számítása nem kapcsolja ezt a rovatot az eredményhez.
           now: (jelenleg {amount})
           others: 'További rovatok, amelyeket szintén módosít: {count}'
         area:

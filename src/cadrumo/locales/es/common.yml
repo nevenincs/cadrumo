@@ -2158,8 +2158,7 @@ tui:
       editor:
         affects:
           is_result: Esta casilla es el resultado de la declaración.
-          not_result: 'No cambia el resultado: ningún cálculo lleva de esta casilla
-            hasta él.'
+          not_result: El cálculo de Cadrumo no enlaza esta casilla con el resultado.
           now: (ahora {amount})
           others: 'Otras casillas que también cambia: {count}'
         area:

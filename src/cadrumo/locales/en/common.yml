@@ -2100,8 +2100,7 @@ tui:
       editor:
         affects:
           is_result: This box is the result of the declaration.
-          not_result: 'It does not change the result: no calculation leads from this
-            box to it.'
+          not_result: Cadrumo's calculation does not link this box to the result.
           now: (now {amount})
           others: 'Other boxes it also changes: {count}'
         area:
