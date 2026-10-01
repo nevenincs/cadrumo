@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-10-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e31337ee3a3870b78000d1912bd23ae84ffe07a7073d3da73c909e6272d1903'
+body_hash: 'sha256:c5f032763a37f94d24824d99dd4a11b57f02f3401b7434942d0cde974279d47f'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -1591,6 +1591,14 @@ related:
 - `S52` `verify:` `Full docs sequence replay after corrected a5b486f5 publication and concurrent main merge; cli-sequence goldens clean; codex-m200-acceptance-retry-20261001-125726.log` -> `pass`
 - `S50` `verify:` `Final Modelo 200 collapse; stable inputs, no live mutation, four editions equivalent/minimal, zero redundancy/repeated values/gaps, governed facts/indexed/cache/invalidation/publication readiness passed; 159 indexed revisions and 3477 temporal/capability coordinates; acceptance-collapse/summary.json; codex-m200-acceptance-collapse-ready-20261001-131613.log` -> `pass`
 - `S50` `verify:` `Feature vault check all; structure, metadata, links, body, execution mapping and all other applicable lanes clean` -> `pass`
+- `S50` `verify:` `Fresh requested Y:\code\cadrumo-worktrees\registry\.venv\Scripts\python.exe C:\Users\hello\AppData\Local\Temp\modelo200-repair-01-10-2026-6ad7ab369bcf4d3d883bd8e7f21ae2a0\publish_final.py; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested uv run --no-sync python -m dev.registry.analysis.screens; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-registry; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-bindings; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just check-registry-gate; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `pass`
+- `S50` `verify:` `Fresh requested just test-registry; HEAD 93b6999f44; fresh-registry-checks-20261001T122421Z.json` -> `fail`
+- `S50` `verify:` `Fresh shipped-casilla catalogue; fresh-registry-supplement.json` -> `pass`
+- `S50` `verify:` `Fresh binding finding keys and severities match all 33 merged-baseline warnings; zero differences, zero errors or limitations; fresh-binding-baseline-comparison.json` -> `pass`
 
 ## Notes
 
@@ -1690,3 +1698,4 @@ related:
 - `S50` The 304-pass focused run had one stale filing-grade expectation for the newly published calculation-grade target. The corrected gate derives capability refusals from canonical authority and continues to require full check-mode success for every filing-grade target. The whole-catalogue literal anchor ratchet and installed-package setup failure remain visible. Larger mapping adjudication remains open.
 - `S51` Historical tests had eleven real type diagnostics. Actual support, fixed-width fields, corpus text and revision bounds are now asserted before use. The new below-floor test initially expected the absent-revision error and then exposed a missing retained import; both corrections passed before the collapse started. No support range, capability or production relation was changed to satisfy the tests.
 - `S50` The complete scoped proof verifies this installed six-concept correction while the larger S50 mapping inventory remains open. Active authority is a5b486f5; the isolated indexed witness is not substituted for the active descriptor. Candidate, installed source, publication and development runtime pass; installed-package adoption remains unverified after the real wheelhouse setup failure. The concurrent main merge prevents an isolated commit; its staged files remain untouched.
+- `S50` Fresh user-requested verification completed after authority republication, under the shared serial lock. Full test-registry result and all lane identities are retained in fresh-registry-verification-receipt.json and its linked run logs. Lifecycle health retains three partial lanes, 119 owner-excluded targets and 120 export gaps. Advisory declaration/corpus screen rows retain their own denominators and are not a gate verdict. The main merge is now committed at 93b6999f44; prior merge-in-progress notes describe an earlier state. S50 remains open for the larger mapping inventory; installed-package adoption was not re-run by this registry suite.
