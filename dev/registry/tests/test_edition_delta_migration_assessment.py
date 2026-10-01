@@ -46,6 +46,14 @@ def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -
     assert migration._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
 
 
+def test_typed_comparison_reads_a_tables_keys_as_fields_not_as_a_sequence() -> None:
+    """Key order is how a table was written, not what it means; member order in an array still is."""
+    assert migration._typed_equal({"enabled": False, "present": []}, {"present": [], "enabled": False})
+    assert migration._typed_equal([{"id": "a", "rate": 1}], [{"rate": 1, "id": "a"}])
+    assert not migration._typed_equal([{"id": "a"}, {"id": "b"}], [{"id": "b"}, {"id": "a"}])
+    assert not migration._typed_equal({"id": "a", "rate": 1}, {"id": "a", "rate": True})
+
+
 def test_typed_comparison_matches_an_authored_token_to_its_typed_enum() -> None:
     """Authored TOML states the token; the typed model holds the enum. Both are one fact."""
     assert migration._typed_equal("computed", InputKind.COMPUTED)

@@ -8538,6 +8538,8 @@ selector = { revision = "2024", id = "1905" }
 [[revisions."2025".casilla_removals]]
 selector = { revision = "2024", id = "1945" }
 
+# Positions count against the merge over 2024, so they are the fewest moves that
+# keep the numbered boxes in the ascending order the declaration prints them.
 [[revisions."2025".casilla_positions]]
 id = "0058"
 position = 57
@@ -8660,507 +8662,275 @@ position = 1086
 
 [[revisions."2025".casilla_positions]]
 id = "2002"
-position = 1960
-
-[[revisions."2025".casilla_positions]]
-id = "2003"
-position = 1961
-
-[[revisions."2025".casilla_positions]]
-id = "2004"
 position = 1962
 
 [[revisions."2025".casilla_positions]]
-id = "2005"
+id = "2003"
 position = 1963
 
 [[revisions."2025".casilla_positions]]
-id = "2006"
+id = "2004"
 position = 1964
 
 [[revisions."2025".casilla_positions]]
-id = "2007"
+id = "2005"
 position = 1965
 
 [[revisions."2025".casilla_positions]]
-id = "2008"
+id = "2006"
 position = 1966
 
 [[revisions."2025".casilla_positions]]
-id = "2009"
+id = "2007"
 position = 1967
 
 [[revisions."2025".casilla_positions]]
-id = "2010"
+id = "2008"
 position = 1968
 
 [[revisions."2025".casilla_positions]]
-id = "2011"
+id = "2009"
 position = 1969
 
 [[revisions."2025".casilla_positions]]
-id = "2012"
+id = "2010"
 position = 1970
 
 [[revisions."2025".casilla_positions]]
-id = "2013"
+id = "2011"
 position = 1971
 
 [[revisions."2025".casilla_positions]]
-id = "2014"
+id = "2012"
 position = 1972
 
 [[revisions."2025".casilla_positions]]
-id = "2015"
+id = "2013"
 position = 1973
 
 [[revisions."2025".casilla_positions]]
+id = "2014"
+position = 1974
+
+[[revisions."2025".casilla_positions]]
+id = "2015"
+position = 1975
+
+[[revisions."2025".casilla_positions]]
 id = "2022"
-position = 1980
-
-[[revisions."2025".casilla_positions]]
-id = "2023"
-position = 1981
-
-[[revisions."2025".casilla_positions]]
-id = "2024"
 position = 1982
 
 [[revisions."2025".casilla_positions]]
-id = "2025"
+id = "2023"
 position = 1983
 
 [[revisions."2025".casilla_positions]]
+id = "2024"
+position = 1984
+
+[[revisions."2025".casilla_positions]]
+id = "2025"
+position = 1985
+
+[[revisions."2025".casilla_positions]]
 id = "2048"
-position = 2006
+position = 2008
 
 [[revisions."2025".casilla_positions]]
 id = "2056"
-position = 2014
-
-[[revisions."2025".casilla_positions]]
-id = "2057"
-position = 2015
-
-[[revisions."2025".casilla_positions]]
-id = "2058"
 position = 2016
 
 [[revisions."2025".casilla_positions]]
-id = "2059"
+id = "2057"
 position = 2017
 
 [[revisions."2025".casilla_positions]]
-id = "2060"
+id = "2058"
 position = 2018
 
 [[revisions."2025".casilla_positions]]
-id = "2061"
+id = "2059"
 position = 2019
 
 [[revisions."2025".casilla_positions]]
-id = "2149"
-position = 2107
+id = "2060"
+position = 2020
 
 [[revisions."2025".casilla_positions]]
-id = "2150"
-position = 2108
+id = "2061"
+position = 2021
 
 [[revisions."2025".casilla_positions]]
-id = "2151"
-position = 2109
-
-[[revisions."2025".casilla_positions]]
-id = "2152"
-position = 2110
-
-[[revisions."2025".casilla_positions]]
-id = "2153"
-position = 2111
-
-[[revisions."2025".casilla_positions]]
-id = "2154"
-position = 2112
-
-[[revisions."2025".casilla_positions]]
-id = "2155"
-position = 2113
-
-[[revisions."2025".casilla_positions]]
-id = "2156"
-position = 2114
-
-[[revisions."2025".casilla_positions]]
-id = "2157"
-position = 2115
-
-[[revisions."2025".casilla_positions]]
-id = "2158"
-position = 2116
-
-[[revisions."2025".casilla_positions]]
-id = "2159"
-position = 2117
-
-[[revisions."2025".casilla_positions]]
-id = "2162"
-position = 2118
-
-[[revisions."2025".casilla_positions]]
-id = "2163"
-position = 2119
-
-[[revisions."2025".casilla_positions]]
-id = "2164"
-position = 2120
-
-[[revisions."2025".casilla_positions]]
-id = "2165"
-position = 2121
-
-[[revisions."2025".casilla_positions]]
-id = "2166"
-position = 2122
-
-[[revisions."2025".casilla_positions]]
-id = "2167"
-position = 2123
-
-[[revisions."2025".casilla_positions]]
-id = "2168"
-position = 2124
-
-[[revisions."2025".casilla_positions]]
-id = "2169"
-position = 2125
-
-[[revisions."2025".casilla_positions]]
-id = "2170"
-position = 2126
-
-[[revisions."2025".casilla_positions]]
-id = "2171"
-position = 2127
-
-[[revisions."2025".casilla_positions]]
-id = "2172"
-position = 2128
-
-[[revisions."2025".casilla_positions]]
-id = "2173"
-position = 2129
-
-[[revisions."2025".casilla_positions]]
-id = "2174"
-position = 2130
-
-[[revisions."2025".casilla_positions]]
-id = "2175"
-position = 2131
-
-[[revisions."2025".casilla_positions]]
-id = "2176"
-position = 2132
-
-[[revisions."2025".casilla_positions]]
-id = "2177"
-position = 2133
-
-[[revisions."2025".casilla_positions]]
-id = "2178"
-position = 2134
-
-[[revisions."2025".casilla_positions]]
-id = "2179"
-position = 2135
-
-[[revisions."2025".casilla_positions]]
-id = "2180"
-position = 2136
-
-[[revisions."2025".casilla_positions]]
-id = "2181"
-position = 2137
-
-[[revisions."2025".casilla_positions]]
-id = "2182"
-position = 2138
-
-[[revisions."2025".casilla_positions]]
-id = "2183"
-position = 2139
-
-[[revisions."2025".casilla_positions]]
-id = "2184"
-position = 2140
-
-[[revisions."2025".casilla_positions]]
-id = "2185"
-position = 2141
-
-[[revisions."2025".casilla_positions]]
-id = "2186"
-position = 2142
-
-[[revisions."2025".casilla_positions]]
-id = "2187"
-position = 2143
-
-[[revisions."2025".casilla_positions]]
-id = "2188"
-position = 2144
-
-[[revisions."2025".casilla_positions]]
-id = "2189"
-position = 2145
-
-[[revisions."2025".casilla_positions]]
-id = "2190"
-position = 2146
-
-[[revisions."2025".casilla_positions]]
-id = "2191"
-position = 2147
-
-[[revisions."2025".casilla_positions]]
-id = "2192"
-position = 2148
-
-[[revisions."2025".casilla_positions]]
-id = "2193"
-position = 2149
-
-[[revisions."2025".casilla_positions]]
-id = "2194"
-position = 2150
-
-[[revisions."2025".casilla_positions]]
-id = "2195"
-position = 2151
-
-[[revisions."2025".casilla_positions]]
-id = "2196"
-position = 2152
-
-[[revisions."2025".casilla_positions]]
-id = "2197"
-position = 2153
-
-[[revisions."2025".casilla_positions]]
-id = "2198"
-position = 2154
-
-[[revisions."2025".casilla_positions]]
-id = "2199"
-position = 2155
-
-[[revisions."2025".casilla_positions]]
-id = "2200"
-position = 2156
-
-[[revisions."2025".casilla_positions]]
-id = "2201"
-position = 2157
-
-[[revisions."2025".casilla_positions]]
-id = "2202"
-position = 2158
-
-[[revisions."2025".casilla_positions]]
-id = "2203"
-position = 2159
-
-[[revisions."2025".casilla_positions]]
-id = "2204"
-position = 2160
-
-[[revisions."2025".casilla_positions]]
-id = "2205"
-position = 2161
-
-[[revisions."2025".casilla_positions]]
-id = "2206"
-position = 2162
-
-[[revisions."2025".casilla_positions]]
-id = "2207"
-position = 2163
-
-[[revisions."2025".casilla_positions]]
-id = "2208"
-position = 2164
-
-[[revisions."2025".casilla_positions]]
-id = "2209"
-position = 2165
-
-[[revisions."2025".casilla_positions]]
-id = "2210"
-position = 2166
-
-[[revisions."2025".casilla_positions]]
-id = "2211"
-position = 2167
-
-[[revisions."2025".casilla_positions]]
-id = "2212"
-position = 2168
-
-[[revisions."2025".casilla_positions]]
-id = "2213"
-position = 2169
-
-[[revisions."2025".casilla_positions]]
-id = "2214"
-position = 2170
-
-[[revisions."2025".casilla_positions]]
-id = "2215"
-position = 2171
-
-[[revisions."2025".casilla_positions]]
-id = "2216"
-position = 2172
-
-[[revisions."2025".casilla_positions]]
-id = "2217"
-position = 2173
-
-[[revisions."2025".casilla_positions]]
-id = "2218"
-position = 2174
-
-[[revisions."2025".casilla_positions]]
-id = "2219"
-position = 2175
-
-[[revisions."2025".casilla_positions]]
-id = "2220"
-position = 2176
-
-[[revisions."2025".casilla_positions]]
-id = "2221"
-position = 2177
-
-[[revisions."2025".casilla_positions]]
-id = "2222"
-position = 2178
-
-[[revisions."2025".casilla_positions]]
-id = "2223"
-position = 2179
-
-[[revisions."2025".casilla_positions]]
-id = "2224"
-position = 2180
-
-[[revisions."2025".casilla_positions]]
-id = "2225"
-position = 2181
-
-[[revisions."2025".casilla_positions]]
-id = "2226"
-position = 2182
-
-[[revisions."2025".casilla_positions]]
-id = "2227"
-position = 2183
-
-[[revisions."2025".casilla_positions]]
-id = "2228"
-position = 2184
-
-[[revisions."2025".casilla_positions]]
-id = "2229"
-position = 2185
-
-[[revisions."2025".casilla_positions]]
-id = "2230"
-position = 2186
-
-[[revisions."2025".casilla_positions]]
-id = "2231"
-position = 2187
-
-[[revisions."2025".casilla_positions]]
-id = "2232"
-position = 2188
-
-[[revisions."2025".casilla_positions]]
-id = "2233"
-position = 2189
-
-[[revisions."2025".casilla_positions]]
-id = "2234"
-position = 2190
-
-[[revisions."2025".casilla_positions]]
-id = "2235"
-position = 2191
-
-[[revisions."2025".casilla_positions]]
-id = "2236"
-position = 2192
-
-[[revisions."2025".casilla_positions]]
-id = "2237"
-position = 2193
-
-[[revisions."2025".casilla_positions]]
-id = "2238"
-position = 2194
-
-[[revisions."2025".casilla_positions]]
-id = "2239"
-position = 2195
-
-[[revisions."2025".casilla_positions]]
-id = "2240"
-position = 2196
-
-[[revisions."2025".casilla_positions]]
-id = "2241"
-position = 2197
-
-[[revisions."2025".casilla_positions]]
-id = "2242"
-position = 2198
-
-[[revisions."2025".casilla_positions]]
-id = "2243"
-position = 2199
-
-[[revisions."2025".casilla_positions]]
-id = "2244"
-position = 2200
-
-[[revisions."2025".casilla_positions]]
-id = "2245"
-position = 2201
-
-[[revisions."2025".casilla_positions]]
-id = "2246"
-position = 2202
-
-[[revisions."2025".casilla_positions]]
-id = "2247"
-position = 2203
-
-[[revisions."2025".casilla_positions]]
-id = "2248"
-position = 2204
+id = "ANOASDLG"
+position = 2247
 
 [[revisions."2025".casilla_positions]]
 id = "AJ"
-position = 2206
+position = 2247
 
 [[revisions."2025".casilla_positions]]
-id = "base-liq-neg-general-2024-aplicada-maxima"
-position = 2246
+id = "APENOMDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "APENOMDLG_ASC"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "CONVASDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "A"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DECFAL"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DNIASDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPFNAC_C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPFNAC_D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPGMIN_C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPGMIN_D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPNIF_C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DPNIF_D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DP_APENOM_C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "DP_APENOM_D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "ECIVIL"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "FALLASDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "FALLDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "FNACDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "E"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "F"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "HIJOSUE"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "G"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "H"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "I"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "MINUSDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "NIFDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "NORESIDENTE"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "PCTMINASDLG"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "PH18"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "RESIDENTEUE"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "SEXO_C"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "SEXO_D"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "TIPOTRIBUTACION"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "ZCCAD"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "ZRUE2"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "J"
+position = 2247
+
+[[revisions."2025".casilla_positions]]
+id = "M"
+position = 2248
 
 [[revisions."2025".casilla_positions]]
 id = "eo-agraria-reduccion-irregularidad-base"
-position = 2247
+position = 2248
+
+[[revisions."2025".casilla_positions]]
+id = "prestacion-inss-maternidad-paternidad-exenta"
+position = 2248
 
 [[revisions."2025".family_overrides]]
 family = "formulas"

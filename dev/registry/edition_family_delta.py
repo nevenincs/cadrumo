@@ -49,7 +49,12 @@ from dev.registry.compiler.edition_materialisation import materialise_edition
 from dev.registry.compiler.loader import inherit_keyed_family, load_modelo_declarations, load_modelo_directory
 from dev.registry.compiler.loader_materialisation import selector_covers
 
-__all__ = ["STATED_WHOLE_SEQUENCES", "collapse_keyed_families", "restates_stated_whole_sequence"]
+__all__ = [
+    "STATED_WHOLE_SEQUENCES",
+    "collapse_keyed_families",
+    "minimal_positions",
+    "restates_stated_whole_sequence",
+]
 
 _REPRESENTATION_FIELDS = {
     "inherited_from",
@@ -223,7 +228,7 @@ def _longest_ordered_run(sequence: Sequence[int]) -> set[int]:
     return kept
 
 
-def _minimal_positions(natural: Sequence[str], target: Sequence[str], *, subject: str) -> tuple[tuple[str, int], ...]:
+def minimal_positions(natural: Sequence[str], target: Sequence[str], *, subject: str) -> tuple[tuple[str, int], ...]:
     """The fewest ``(identity, position)`` moves that turn ``natural`` into ``target``.
 
     The loader applies positions one after another, each removing its member
@@ -695,7 +700,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
                     if str(item[spec.identity]) in additions and str(item[spec.identity]) not in stated_additions
                 ),
             ]
-            moves = _minimal_positions(
+            moves = minimal_positions(
                 natural,
                 [str(item[spec.identity]) for item in new_members],
                 subject=f"modelo {before.id} revision {revision_id} family {spec.section}",

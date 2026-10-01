@@ -73,6 +73,20 @@ predecessors and must be **byte-identical** to what the edition materialises to
 now, with the manifest defaults it declares inlined into the rows they fill, and
 must pass the same round-trip gate. Anything short of identity refuses.
 
+Order is part of that identity, and the order compared is the one the
+declarations give. Member order in every inherited family is meaning -- casilla
+rows follow the record design, and keyed families keep theirs through the merge
+and declared positions -- while the order of a table's keys is serialisation and
+is never compared. A partial statement's order is the merge's. An edition that
+states every member of a family it also inherits is a full copy of that family
+and means the order it states, but a storage baseline added beneath it makes
+the merge move each member new to the baseline to the end. So before planning,
+the positions that keep each such stated order are written into a copy of the
+live tree and proven to move members only; that copy is what the migration
+plans from and what the staged tree must equal, and each restored family is
+reported. A complete statement that also declares positions for the family is
+refused, because the two disagree about its order.
+
 Because that proof compares the tree with itself, the default operation on the
 chain path is **lifting in place**. On that path the tool may stop a row
 restating what it can inherit from a manifest default, and may declare a default
@@ -149,6 +163,7 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     CASILLAS_FAMILY,
     DROPPABLE_FAMILY_SPECS,
     HELD_BACK_FAMILY_REASONS,
+    INHERITED_FAMILY_SPECS,
     FamilyInheritanceMode,
     family_identity_value,
     family_source_default_fields,
@@ -168,7 +183,12 @@ from dev.test_runs.paths import allocate_run_directory
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
-from .edition_family_delta import STATED_WHOLE_SEQUENCES, collapse_keyed_families, restates_stated_whole_sequence
+from .edition_family_delta import (
+    STATED_WHOLE_SEQUENCES,
+    collapse_keyed_families,
+    minimal_positions,
+    restates_stated_whole_sequence,
+)
 from .edition_round_trip import (
     EditionExportScenario,
     RoundTripFinding,
@@ -195,8 +215,10 @@ __all__ = [
     "MigrationPlan",
     "MigrationRefusedError",
     "MigrationStatus",
+    "OrderRestoration",
     "PredecessorBasis",
     "assess_migration_state",
+    "declared_order_restorations",
     "drop_restatement",
     "main",
     "migrate_modelo",
@@ -505,16 +527,20 @@ def _typed_equal(left: object, right: object) -> bool:
 
     An enum compares by its value: authored TOML states ``"computed"`` where the
     typed model holds ``InputKind.COMPUTED``, and the two are the same fact.
+    Sequences compare in order; tables compare by field, whatever order their
+    keys were written in.
     """
     if isinstance(left, Enum):
         left = left.value
     if isinstance(right, Enum):
         right = right.value
     if isinstance(left, Mapping) or isinstance(right, Mapping):
+        # A table's keys name its fields; the order they were written in is
+        # serialisation, not meaning, so only the key sets are compared.
         return (
             isinstance(left, Mapping)
             and isinstance(right, Mapping)
-            and tuple(left) == tuple(right)
+            and set(left) == set(right)
             and all(_typed_equal(left[key], right[key]) for key in left)
         )
     if isinstance(left, list | tuple) or isinstance(right, list | tuple):
@@ -1350,6 +1376,10 @@ class MigrationOutcome:
     changed: bool
     before_assessment: MigrationAssessment | None = None
     after_assessment: MigrationAssessment | None = None
+    #: Positions written so complete statements keep the order they state.
+    order_restorations: tuple[OrderRestoration, ...] = ()
+    #: Every ``(revision, family)`` whose member order those positions change.
+    reordered_families: tuple[tuple[str, str], ...] = ()
 
     @property
     def source_findings(self) -> tuple[RoundTripFinding, ...]:
@@ -3238,6 +3268,222 @@ def _first_difference(before: Sequence[str], after: Sequence[str]) -> str:
     return f"position {shared}: {trailing!r} on the {'reference' if len(before) > len(after) else 'staged'} side only"
 
 
+# ── declared order ──────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class OrderRestoration:
+    """The positions that give one edition's complete statement of a family the order it states.
+
+    ``moves`` are ``(identity, position)`` pairs in the order the loader applies
+    them, after every position the edition already declares.
+    """
+
+    revision_id: str
+    family: str
+    moves: tuple[tuple[str, int], ...]
+
+
+def _declared_positions(raw: Mapping[str, object], section: str) -> tuple[str, ...]:
+    """The identities an edition already places by an explicit position in ``section``."""
+    if section == CASILLAS_FAMILY:
+        return tuple(str(operation.get("id")) for operation in _members(raw, "casilla_positions") or ())
+    return tuple(
+        str(operation.get("id"))
+        for operation in _members(raw, "family_positions") or ()
+        if operation.get("family") == section
+    )
+
+
+def declared_order_restorations(modelo_dir: Path) -> tuple[OrderRestoration, ...]:
+    """Find every complete statement over a baseline that materialises out of the order it states.
+
+    A family's member order is part of what an edition means: casilla rows
+    follow the record design, and every inherited family keeps its order
+    through the merge and its declared positions. The merge itself defines the
+    order of a partial statement -- inherited members in their baseline's
+    order, a superseding member in the place of the one it supersedes, new
+    members after them in stated order, then positions. An edition that states
+    every member of a family it also inherits is a full copy of that family,
+    and a full copy's order is the order it states. A storage baseline added
+    beneath such a statement is a representation change, yet the merge would
+    move every member new to the baseline to the end; this names the positions
+    that keep the stated order instead, fewest moves first.
+
+    Raises:
+        MigrationRefusedError: When such a statement also declares positions
+            for the family. The positions were written against the merge order,
+            the statement disagrees with what they produce, and taking either
+            one would be a guess about which the author meant.
+    """
+    raw_revisions = load_modelo_declarations(modelo_dir).get("revisions", {})
+    if not isinstance(raw_revisions, Mapping):
+        raise MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
+    definition = load_modelo_directory(modelo_dir)
+    restorations: list[OrderRestoration] = []
+    for revision in ordered_revisions(definition):
+        revision_id = str(revision.id)
+        raw = raw_revisions.get(revision_id)
+        if not isinstance(raw, Mapping):
+            continue
+        for spec in INHERITED_FAMILY_SPECS:
+            if spec.singleton or _family_storage_baseline(raw, spec.section) is None:
+                continue
+            identity = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
+            stated_members = _members(raw, spec.section)
+            materialised_members = getattr(revision, spec.section, None)
+            if identity is None or not stated_members or not isinstance(materialised_members, list | tuple):
+                continue
+            stated = [str(family_identity_value(member, identity)) for member in stated_members]
+            materialised = [str(family_identity_value(member, identity)) for member in materialised_members]
+            complete = len(stated) > 1 and len(set(stated)) == len(stated) and Counter(stated) == Counter(materialised)
+            if not complete or materialised == stated:
+                continue
+            positioned = _declared_positions(raw, spec.section)
+            if positioned:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r} states every {spec.section} member it inherits, in an order its "
+                    f"materialisation does not keep, and also places {sorted(positioned)!r} by position; the "
+                    "statement and the positions disagree about the order, so neither is taken",
+                )
+            restorations.append(
+                OrderRestoration(
+                    revision_id=revision_id,
+                    family=spec.section,
+                    moves=minimal_positions(
+                        materialised, stated, subject=f"modelo {definition.id} edition {revision_id} {spec.section}"
+                    ),
+                )
+            )
+    return tuple(restorations)
+
+
+def _write_order_restorations(modelo_dir: Path, restorations: Sequence[OrderRestoration]) -> None:
+    """Append each restoration's positions to its edition's manifest, after the positions it declares."""
+    by_revision: dict[str, list[OrderRestoration]] = {}
+    for restoration in restorations:
+        by_revision.setdefault(restoration.revision_id, []).append(restoration)
+    for revision_id, items in by_revision.items():
+        manifest_path = modelo_dir / "revisions" / revision_id / _MANIFEST
+        document = tomlkit.parse(manifest_path.read_text(encoding="utf-8"))
+        revision = document["revisions"][revision_id]
+        for item in items:
+            key = "casilla_positions" if item.family == CASILLAS_FAMILY else "family_positions"
+            operations = revision.get(key) or tomlkit.aot()
+            for identity, position in item.moves:
+                entry = tomlkit.table()
+                if item.family != CASILLAS_FAMILY:
+                    entry["family"] = item.family
+                entry["id"] = identity
+                entry["position"] = position
+                operations.append(entry)
+            revision[key] = operations
+        manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
+
+
+def _order_blind(payload: object) -> object:
+    """A rendered edition with every keyed sequence of members compared as a multiset."""
+    if not isinstance(payload, dict):
+        return payload
+    table = payload.get("table")
+    if not isinstance(table, dict):
+        return payload
+    family_sections = {spec.section for spec in INHERITED_FAMILY_SPECS}
+    return {
+        **payload,
+        "table": {
+            key: sorted(value, key=lambda member: json.dumps(member, sort_keys=True))
+            if key in family_sections and isinstance(value, list)
+            else value
+            for key, value in table.items()
+        },
+    }
+
+
+def _member_orders(source: _EditionSource) -> dict[str, tuple[str, ...]]:
+    orders: dict[str, tuple[str, ...]] = {}
+    for spec in INHERITED_FAMILY_SPECS:
+        identity = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
+        members = source.table.get(spec.section)
+        if identity is None or spec.singleton or not isinstance(members, list | tuple):
+            continue
+        orders[spec.section] = tuple(str(family_identity_value(member, identity)) for member in members)
+    return orders
+
+
+def _prove_order_restoration(
+    *, reference_modelo_dir: Path, declared_modelo_dir: Path, restorations: Sequence[OrderRestoration]
+) -> tuple[tuple[str, str], ...]:
+    """Require restoring declared order to change member order only, and return every family it reorders.
+
+    The declared tree must hold every edition's members unchanged as a
+    multiset, every restored family must now materialise in its stated order,
+    and no complete statement may be left out of order. An edition inheriting
+    a restored family takes its baseline's order through the merge, so the
+    families reordered can include ones no restoration names; each is
+    returned, never hidden.
+
+    Raises:
+        MigrationRefusedError: When any member's content differs, a restored
+            family is still out of its stated order, or another complete
+            statement is left out of order.
+    """
+    remaining = declared_order_restorations(declared_modelo_dir)
+    if remaining:
+        raise MigrationRefusedError(
+            f"restoring declared order left {[(item.revision_id, item.family) for item in remaining]!r} out of the "
+            "order their statements give",
+        )
+    reordered: list[tuple[str, str]] = []
+    revision_ids = sorted(path.name for path in (reference_modelo_dir / "revisions").iterdir() if path.is_dir())
+    for revision_id in revision_ids:
+        before = _read_staged_edition(reference_modelo_dir, revision_id, side="reference")
+        after = _read_staged_edition(declared_modelo_dir, revision_id, side="declared-order")
+        if _order_blind(json.loads(_chain_materialisation(before))) != _order_blind(
+            json.loads(_chain_materialisation(after))
+        ):
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: restoring declared order changed more than the order of its members",
+            )
+        before_orders, after_orders = _member_orders(before), _member_orders(after)
+        reordered.extend(
+            (revision_id, section)
+            for section in sorted(before_orders.keys() | after_orders.keys())
+            if before_orders.get(section) != after_orders.get(section)
+        )
+    missing = sorted({(item.revision_id, item.family) for item in restorations} - set(reordered))
+    if missing:
+        raise MigrationRefusedError(f"restoring declared order did not reorder {missing!r}")
+    return tuple(reordered)
+
+
+def _stage_declared_order(
+    *, registry_root: Path, modelo_id: str, work_dir: Path, reference: Path, restorations: Sequence[OrderRestoration]
+) -> tuple[Path, tuple[tuple[str, str], ...]]:
+    """Stage the registry the proof compares against: the live tree in the order its declarations give.
+
+    Without a restoration this is the reference itself. With one, the live
+    tree is copied, the restoring positions are written and proven to change
+    member order only, and that copy becomes both what the migration plans
+    from and what its staged result must equal, so an apply keeps the declared
+    order rather than the order the merge would impose.
+    """
+    if not restorations:
+        return reference, ()
+    declared = copy_registry_tree(
+        registry_root,
+        _scratch_path(work_dir, "declared", "registry", "aeat"),
+        modelo_id=modelo_id,
+    )
+    _write_order_restorations(declared / _MODELOS / modelo_id, restorations)
+    reordered = _prove_order_restoration(
+        reference_modelo_dir=reference / _MODELOS / modelo_id,
+        declared_modelo_dir=declared / _MODELOS / modelo_id,
+        restorations=restorations,
+    )
+    return declared, reordered
+
+
 # ── dropping restatement ────────────────────────────────────────────────────
 
 
@@ -3709,6 +3955,10 @@ class DropOutcome:
     report: RoundTripReport | None
     applied: bool
     changed: bool
+    #: Positions written so complete statements keep the order they state.
+    order_restorations: tuple[OrderRestoration, ...] = ()
+    #: Every ``(revision, family)`` whose member order those positions change.
+    reordered_families: tuple[tuple[str, str], ...] = ()
 
     @property
     def source_findings(self) -> tuple[RoundTripFinding, ...]:
@@ -3770,16 +4020,27 @@ def drop_restatement(
         raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
     families = _selected_families(sections)
     definition = _load(registry_root, modelo_id)
+    restorations = declared_order_restorations(modelo_dir)
     plan = plan_drop(modelo_dir, definition, families=families)
-    if not plan.dropped:
+    if not plan.dropped and not restorations:
         return DropOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
     reference = copy_registry_tree(
         registry_root,
         _scratch_path(work_dir, "reference", "registry", "aeat"),
         modelo_id=modelo_id,
     )
+    declared, reordered = _stage_declared_order(
+        registry_root=registry_root,
+        modelo_id=modelo_id,
+        work_dir=work_dir,
+        reference=reference,
+        restorations=restorations,
+    )
+    if restorations:
+        declared_modelo = declared / _MODELOS / modelo_id
+        plan = plan_drop(declared_modelo, _load(declared, modelo_id), families=families)
     staged = copy_registry_tree(
-        registry_root,
+        declared,
         _scratch_path(work_dir, "dropped", "registry", "aeat"),
         modelo_id=modelo_id,
     )
@@ -3788,12 +4049,12 @@ def drop_restatement(
         _write_drop(_scratch_path(work_dir, "dropped", "registry", "aeat", _MODELOS, modelo_id), edition, by_section)
     report = edition_round_trip_report(
         live_registry_root=staged,
-        reference_registry_root=reference,
+        reference_registry_root=declared,
         modelo_id=modelo_id,
         export_scenarios=export_scenarios or {},
     )
     report = _prove_chain(
-        reference_modelo_dir=reference / _MODELOS / modelo_id,
+        reference_modelo_dir=declared / _MODELOS / modelo_id,
         staged_modelo_dir=staged / _MODELOS / modelo_id,
         revision_ids=tuple(edition.revision_id for edition in plan.editions),
         report=report,
@@ -3808,7 +4069,15 @@ def drop_restatement(
             original=reference / _MODELOS / modelo_id,
         )
         applied = True
-    return DropOutcome(plan=plan, staged_registry=staged, report=report, applied=applied, changed=True)
+    return DropOutcome(
+        plan=plan,
+        staged_registry=staged,
+        report=report,
+        applied=applied,
+        changed=True,
+        order_restorations=restorations,
+        reordered_families=reordered,
+    )
 
 
 def _selected_families(sections: Sequence[str] | None) -> tuple[_DroppableFamily, ...]:
@@ -3849,6 +4118,7 @@ def render_drop_outcome(outcome: DropOutcome) -> str:
                 f"kept_differs={len(family.kept_differs)} kept_pinned={len(family.kept_pinned)} "
                 f"kept_no_identity={family.kept_no_identity}"
             )
+    lines.extend(_order_lines(outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families))
     for finding in outcome.report.findings if outcome.report is not None else ():
         lines.append(f"finding kind={finding.kind} {finding}")
     lines.append(
@@ -3934,6 +4204,10 @@ def migrate_modelo(
     A modelo that already names predecessors is lifted in place and proven
     against its chain: the staged tree must materialise to the same bytes, and
     hold the same members in the same order, as the tree it was planned from.
+    That tree is the live one in the order its declarations give: where an
+    edition states every member of a family it also inherits, the positions
+    keeping that stated order are written first and proven to move members
+    only (:func:`declared_order_restorations`).
 
     Raises:
         MigrationRefusedError: When the migration cannot be planned or written,
@@ -3945,14 +4219,12 @@ def migrate_modelo(
         raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
     definition = _load(registry_root, modelo_id)
     before_assessment = assess_migration_state(modelo_dir)
+    restorations = declared_order_restorations(modelo_dir)
     plan, works = _plan(modelo_dir, definition)
-    casilla_changes = any(edition.lifted.total() for edition in plan.editions) or any(
-        finding.get("family") == CASILLAS_FAMILY for finding in before_assessment.unresolved_duplication
-    )
     family_changes = any(
         finding.get("family") != CASILLAS_FAMILY for finding in before_assessment.unresolved_duplication
     )
-    if not casilla_changes and not family_changes:
+    if not _casilla_changes(plan, before_assessment) and not family_changes and not restorations:
         return MigrationOutcome(
             plan=plan,
             staged_registry=None,
@@ -3967,8 +4239,18 @@ def migrate_modelo(
         _scratch_path(work_dir, "reference", "registry", "aeat"),
         modelo_id=modelo_id,
     )
+    declared, reordered = _stage_declared_order(
+        registry_root=registry_root,
+        modelo_id=modelo_id,
+        work_dir=work_dir,
+        reference=reference,
+        restorations=restorations,
+    )
+    if restorations:
+        plan, works = _plan(declared / _MODELOS / modelo_id, _load(declared, modelo_id))
+    casilla_changes = _casilla_changes(plan, before_assessment)
     staged = copy_registry_tree(
-        registry_root,
+        declared,
         _scratch_path(work_dir, "migrated", "registry", "aeat"),
         modelo_id=modelo_id,
     )
@@ -3989,17 +4271,17 @@ def migrate_modelo(
             work,
         )
     staged_modelo = staged / _MODELOS / modelo_id
-    collapse_keyed_families(reference / _MODELOS / modelo_id, staged_modelo)
+    collapse_keyed_families(declared / _MODELOS / modelo_id, staged_modelo)
     _prune_redundant_override_leaves(staged_modelo)
     report = edition_round_trip_report(
         live_registry_root=staged,
-        reference_registry_root=reference,
+        reference_registry_root=declared,
         modelo_id=modelo_id,
         export_scenarios=export_scenarios or {},
     )
     if plan.already_delta_authored:
         report = _prove_chain(
-            reference_modelo_dir=reference / _MODELOS / modelo_id,
+            reference_modelo_dir=declared / _MODELOS / modelo_id,
             staged_modelo_dir=staged_modelo,
             revision_ids=tuple(edition.revision_id for edition in plan.editions),
             report=report,
@@ -4023,6 +4305,15 @@ def migrate_modelo(
         changed=changed,
         before_assessment=before_assessment,
         after_assessment=assess_migration_state(assessed_dir),
+        order_restorations=restorations,
+        reordered_families=reordered,
+    )
+
+
+def _casilla_changes(plan: MigrationPlan, assessment: MigrationAssessment) -> bool:
+    """Whether the casilla pass has anything to write: a lift, or restated casilla payload."""
+    return any(edition.lifted.total() for edition in plan.editions) or any(
+        finding.get("family") == CASILLAS_FAMILY for finding in assessment.unresolved_duplication
     )
 
 
@@ -4058,6 +4349,7 @@ def render_outcome(outcome: MigrationOutcome) -> str:
             f"reviewed_against={edition.reviewed_against} comments_dropped={edition.comments_dropped} {kept}".rstrip()
         )
         lines.extend(f"not_exact revision={edition.revision_id} {detail}" for detail in edition.not_exact)
+    lines.extend(_order_lines(outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families))
     if outcome.report is not None:
         lines.extend(
             f"gate kind={finding.kind} revision={finding.revision_id} detail={finding.detail!r}"
@@ -4087,6 +4379,24 @@ def render_outcome(outcome: MigrationOutcome) -> str:
             f"blocked={','.join(outcome.blocked) or '-'}"
         )
     return "\n".join(lines) + "\n"
+
+
+def _order_lines(
+    modelo_id: str, restorations: Sequence[OrderRestoration], reordered: Sequence[tuple[str, str]]
+) -> list[str]:
+    """One line per restored family and per family whose order follows a restored baseline."""
+    restored = {(item.revision_id, item.family) for item in restorations}
+    lines = [
+        f"order modelo={modelo_id} revision={item.revision_id} family={item.family} restored=stated_order "
+        f"positions={json.dumps([{'id': identity, 'position': position} for identity, position in item.moves])}"
+        for item in restorations
+    ]
+    lines.extend(
+        f"order modelo={modelo_id} revision={revision_id} family={family} restored=follows_baseline"
+        for revision_id, family in reordered
+        if (revision_id, family) not in restored
+    )
+    return lines
 
 
 def _render(outcome: MigrationOutcome | DropOutcome) -> str:
@@ -4123,6 +4433,8 @@ def persist_migration_report(
         "source_migration": outcome.source_status,
         "publication_readiness": outcome.publication_readiness_status,
         "publication_execution": outcome.publication_execution_status,
+        "order_restorations": [asdict(item) for item in outcome.order_restorations],
+        "reordered_families": [list(item) for item in outcome.reordered_families],
     }
     if isinstance(outcome, MigrationOutcome):
         machine["outcomes"] = {

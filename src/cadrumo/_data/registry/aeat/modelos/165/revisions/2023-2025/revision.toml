@@ -69,3 +69,10 @@ sequence_removals = {source_refs = [2]}
 [[revisions."2023-2025".family_removals]]
 family = "deadline_windows"
 selector = {revision = "2016-2022", id = "modelo-165-2022-0a"}
+
+# EMPRESA EMERGENTE is tipo 1 position 184, so it follows IMPORTE FONDOS PROPIOS
+# (tipo 1, 168-183) and precedes the tipo 2 campos, which the storage merge
+# would otherwise place it after.
+[[revisions."2023-2025".casilla_positions]]
+id = "empresa-emergente"
+position = 11
