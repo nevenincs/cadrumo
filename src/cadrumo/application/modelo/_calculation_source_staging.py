@@ -544,14 +544,19 @@ def expected_but_missing_binding_ids(
     ``revision`` is the compiled :class:`ModeloRevision` whose bindings and
     casillas are scanned for present-source, no-value gaps.
 
-    This is the generic, all-modelos, non-blocking silent-zero advisory. It is
-    deliberately narrower than the M202-only hard-blocking gate in
+    This is the generic, all-modelos silent-zero report. It does not refuse the
+    calculation: what it reports blocks filing only where the form prints the
+    box (a printed box's gap persists with the calculation and the
+    calculation-note gate refuses checking, exporting and recording on it), and
+    is worth checking on a working figure. It is deliberately narrower than the
+    M202-only hard-blocking gate in
     :func:`~cadrumo.application.modelo._required_binding_gate.require_modelo_required_bindings_resolved`,
-    which refuses outright on ANY declared non-constant binding with no
-    resolved value at all and carries no exclusion for the three source kinds
-    below. The two gates are not duplicates: this one flags a narrower
-    "present source produced no value" shape without blocking, appropriate for
-    modelos where a missing binding does not by itself invalidate the filing;
+    which refuses the calculation outright on ANY declared non-constant binding
+    with no resolved value at all and carries no exclusion for the three source
+    kinds below. The two gates are not duplicates: this one reports a narrower
+    "present source produced no value" shape without refusing the calculation,
+    appropriate for modelos where a missing binding does not by itself make the
+    figures uncomputable;
     M202's stricter gate reflects that a pago fraccionado cannot be computed
     with any declared input absent (Ley 27/2014 art. 40.2/40.3). Do not widen
     this advisory to M202-level strictness, and do not narrow M202's gate to

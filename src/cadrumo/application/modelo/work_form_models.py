@@ -774,15 +774,15 @@ class ModeloFormCalculationNote(_FormModel):
 
     ``reason`` is the calculation's own reason code, which the frontend words
     from the catalogue; ``box`` is the printed box number when the note names a
-    box the form prints. ``durable`` says the note withholds filing, in the
-    editor and in every entrypoint, until a recalculation clears it.
+    box the form prints. A note at the blocking level withholds filing in the
+    editor (:attr:`ModeloWorkForm.blocking_calculation_notes`); which entrypoint
+    refuses it, and how, is the application's calculation-note gate's to say.
     """
 
     reason: str = Field(min_length=1, max_length=64)
     attention: ModeloFormAttention
     casilla_id: CasillaId | None = None
     box: str | None = None
-    durable: bool = False
 
 
 class ModeloFormAeatData(_FormModel):

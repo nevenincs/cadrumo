@@ -88,7 +88,7 @@ def _checked_with_a_blocker(form: ModeloWorkForm) -> ModeloWorkForm:
 
 def _with_a_blocking_note(form: ModeloWorkForm) -> ModeloWorkForm:
     """The form whose latest calculation noted an amount from the records that reached no box, which blocks filing."""
-    note = ModeloFormCalculationNote(reason="unrouted_observation", attention=ModeloFormAttention.BLOCKS, durable=True)
+    note = ModeloFormCalculationNote(reason="unrouted_observation", attention=ModeloFormAttention.BLOCKS)
     return form.model_copy(update={"calculation_notes": (note,)})
 
 

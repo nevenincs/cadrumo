@@ -90,7 +90,7 @@ from ...domain.filing.schema import ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .calculation_notes import BLOCKING_REASONS, CHECK_REFUSED_REASONS, UNWORKED_BOX_REASONS, note_attention
+from .calculation_notes import CHECK_REFUSED_REASONS, UNWORKED_BOX_REASONS, note_attention
 from .calculation_report import CalculationReportRowRole, calculation_report_row_role
 from .caller_context import caller_context_of
 from .edit_models import (
@@ -1242,7 +1242,6 @@ def _calculation_notes(
             attention=attention,
             casilla_id=casilla_id,
             box=box,
-            durable=reason in BLOCKING_REASONS and attention is ModeloFormAttention.BLOCKS,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

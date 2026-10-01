@@ -455,14 +455,16 @@ class CalculationSourceIssue(BaseModel):
     source is refused during calculation before a revision can be persisted.
 
     The remaining reasons each mean a filed figure is missing or cannot be
-    trusted, so they too block filing until a recalculation clears them.
-    ``unresolved_binding`` is a box printed on the form whose declared source
-    produced no value, named by ``casilla_id``, which must never read as a zero.
-    ``terminal_origin_mismatch`` is a value that reached the declaration by an
-    undeclared route. ``unhandled_binding_source`` is a declared source with no
+    trusted. ``unresolved_binding`` is a box printed on the form whose declared
+    source produced no value, named by ``casilla_id``, which must never read as
+    a zero. ``unhandled_binding_source`` is a declared source with no
     executable route. ``source_domain_not_ready`` is a source store that could
     not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
-    reverse-charge invoice whose VAT owed could not be derived.
+    reverse-charge invoice whose VAT owed could not be derived. These four block
+    filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
+    value that reached the declaration by an undeclared route; it persists so
+    a reopened declaration still shows it, but withholds nothing, because the
+    route it reports may lack a terminal origin by design.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind.
     """

@@ -1,8 +1,10 @@
 """Refuse to check, export or record a declaration while its calculation left a figure out of every box.
 
 A calculation persists the notes that mean an amount from the filer's records
-reached no box, or that the VAT owed on a reverse-charge invoice could not be
-derived (:data:`~.calculation_notes.GATE_REFUSED_REASONS`). While the current
+reached no box, that the VAT owed on a reverse-charge invoice could not be
+derived, that a box the form prints could not be worked out, or that a source
+has no route or could not be read yet
+(:data:`~.calculation_notes.GATE_REFUSED_REASONS`). While the current
 calculation carries one, no entrypoint may produce a complete check, an export
 file or a recorded filing from it: a recalculation that clears the note
 releases them. The refusal is worded by the same catalogue sentence the

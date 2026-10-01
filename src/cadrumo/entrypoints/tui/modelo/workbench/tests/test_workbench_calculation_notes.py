@@ -147,9 +147,7 @@ def test_notes_join_the_findings_on_one_scale() -> None:
         update={
             "issues": (ModeloFormIssue(finding=finding),),
             "calculation_notes": (
-                ModeloFormCalculationNote(
-                    reason="unrouted_observation", attention=ModeloFormAttention.BLOCKS, durable=True
-                ),
+                ModeloFormCalculationNote(reason="unrouted_observation", attention=ModeloFormAttention.BLOCKS),
                 ModeloFormCalculationNote(
                     reason="operator_override_diverges_from_computed",
                     attention=ModeloFormAttention.CHECK,

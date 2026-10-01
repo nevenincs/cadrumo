@@ -157,7 +157,6 @@ def test_a_printed_box_that_could_not_be_worked_out_blocks_filing_and_never_read
         attention=ModeloFormAttention.BLOCKS,
         casilla_id=_PRINTED,
         box=_PRINTED,
-        durable=True,
     )
     assert form.calculation_notes == (note,)
     assert form.blocking_calculation_notes == (note,)
@@ -185,7 +184,6 @@ def test_a_working_figure_that_could_not_be_worked_out_is_worth_checking(
     assert note.attention is ModeloFormAttention.CHECK
     assert form.blocking_calculation_notes == ()
     assert note.box is None
-    assert not note.durable
 
 
 def test_a_note_the_check_already_makes_about_the_same_box_is_shown_once_as_the_finding(
@@ -274,8 +272,8 @@ def test_a_declaration_opened_afresh_knows_only_the_notes_that_persist_with_its_
     form = _form(operation, diagnostics=None, zero_at=_PRINTED, revision=revision)
 
     assert not form.calculation_notes_held
-    assert [(note.reason, note.box, note.durable) for note in form.calculation_notes] == [
-        ("unresolved_binding", _PRINTED, True)
+    assert [(note.reason, note.box, note.attention) for note in form.calculation_notes] == [
+        ("unresolved_binding", _PRINTED, ModeloFormAttention.BLOCKS)
     ]
     assert _field(form, _PRINTED).value is None
 
@@ -286,8 +284,8 @@ def test_an_amount_that_reached_no_box_blocks_filing(operation: PinnedAuthorityO
     )
     form = _form(operation, diagnostics=(unrouted,))
 
-    assert [(note.attention, note.durable) for note in form.blocking_calculation_notes] == [
-        (ModeloFormAttention.BLOCKS, True)
+    assert [(note.reason, note.attention) for note in form.blocking_calculation_notes] == [
+        ("unrouted_declarable_quantity", ModeloFormAttention.BLOCKS)
     ]
 
 
