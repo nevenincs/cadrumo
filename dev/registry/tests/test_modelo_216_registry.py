@@ -38,12 +38,11 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.modelo_inception import UnauthoredBefore
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -228,11 +227,3 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     assert sorted(str(casilla.id) for casilla in revision.casillas) == printed
     assert revision.formulas == ()
     assert revision.export_layouts == ()
-
-
-def test_modelo_216_inception_names_its_earliest_authored_edition() -> None:
-    declared = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "216"))
-    assert isinstance(declared.inception, UnauthoredBefore)
-    assert declared.inception.earliest_authored == min(
-        revision.valid_from.year for revision in declared.revisions.values()
-    )

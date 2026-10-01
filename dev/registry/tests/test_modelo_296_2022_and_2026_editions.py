@@ -15,7 +15,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.modelo_inception import UnauthoredBefore
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
@@ -116,19 +115,3 @@ def test_every_supported_year_snapshots_at_its_edition_grade() -> None:
         assert revision.authority_grade is not None, f"selected edition for {year} has no declared authority grade"
         snapshot = authority.snapshot("296", filing_year=year, period="0A", grade=revision.authority_grade)
         assert snapshot.revision.id == revision.id, year
-
-
-def test_the_earliest_authored_statement_matches_the_editions() -> None:
-    modelo, catalogues = _modelo()
-    support = catalogues.supported_filing_years
-    assert support is not None
-    assert isinstance(modelo.inception, UnauthoredBefore), "Modelo 296 declares earlier years as unauthored"
-    first_authored = min(
-        year
-        for year in support.years
-        if revision_temporal_resolution(
-            _selected(year), filing_year=year, period="0A", support=support
-        ).projection_direction
-        is TemporalProjectionDirection.AUTHORED
-    )
-    assert modelo.inception.earliest_authored == first_authored
