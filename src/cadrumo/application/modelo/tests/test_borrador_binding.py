@@ -17,7 +17,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -188,18 +188,26 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
     }
 
 
+def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId, ...]:
+    """Return, in id order, every casilla of the revision that carries the printed number."""
+    return tuple(sorted(casilla.id for casilla in revision.casillas if casilla.number == number))
+
+
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
     snapshot = published_snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
 
+    candidates = _casillas_printing(snapshot.revision, _M200_AMBIGUOUS_PRINTED_NUMBER)
+    assert {_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA, _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA} <= set(
+        candidates
+    )
     assert raised.value.context == {
         "casilla_ids": _M200_AMBIGUOUS_PRINTED_NUMBER,
         "revision_id": snapshot.revision.id,
         "noncanonical_reference_targets": (
-            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-            f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: {', '.join(candidates)}"
         ),
     }
 
