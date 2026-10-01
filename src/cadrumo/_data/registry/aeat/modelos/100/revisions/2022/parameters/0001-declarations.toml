@@ -2243,3 +2243,56 @@ required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]
 value = "1540"
 date_axis = "filing_period"
 valid_from = 2022-10-28
+
+# Estimacion objetiva agraria rates; see the engine note in formulas.
+[[revisions."2022".parameters]]
+id = "renta-estimacion-objetiva-reduccion-general-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-405-2023:art-2"]
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción de carácter general: 25 por 100"]
+[[revisions."2022".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "renta-eo-agraria-reduccion-jovenes-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:da-6", "orden-hfp-1335-2021:anexo-i-instruccion-3"]
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción agricultores jóvenes", "25 por 100"]
+[[revisions."2022".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "renta-eo-agraria-reduccion-irregularidad-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-32-2015"]
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]
+[[revisions."2022".parameters.values]]
+value = "30"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters]]
+id = "renta-eo-agraria-reduccion-irregularidad-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-32-2015"]
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["citada reducción no podrá superar el importe de 300.000 euros anuales"]
+[[revisions."2022".parameters.values]]
+value = "300000"
+date_axis = "filing_period"
+valid_from = 2022-01-01

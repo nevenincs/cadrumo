@@ -8257,6 +8257,9 @@ modelo:
             '1916':
               label: Incremento por gastos en guarderías o centros de educación infantil
                 autorizados (cantidades no aplicadas en el ejercicio 2021)
+            AJ:
+              label: Reducción agricultores jóvenes (disposición adicional sexta de
+                la Ley del Impuesto) (Sí/No)
             ANOASDLG:
               label: Ascendiente fecha de nacimiento
             APENOMDLG:
@@ -8318,6 +8321,13 @@ modelo:
               label: Comunidad Autónoma de residencia
             ZRUE2:
               label: País UE o EEE del cónyuge
+            eo-agraria-reduccion-irregularidad-base:
+              label: Rendimientos netos de la actividad agrícola, ganadera o forestal
+                con período de generación superior a dos años, o calificados reglamentariamente
+                como obtenidos de forma notoriamente irregular en el tiempo, imputados
+                en este único período impositivo (base sobre la que se aplica la reducción
+                del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
+                por el operador - véase la casilla [1554])
           construct:
             renta-dependent-modelos:
               field:
@@ -18150,9 +18160,6 @@ modelo:
               label: 'Nº de colegiado / Código Numérico Personal del médico:'
             '2248':
               label: Por enfermedad celíaca diagnosticada
-            AJ:
-              label: Reducción agricultores jóvenes (disposición adicional sexta de
-                la Ley del Impuesto) (Sí/No)
             CONVASDLG:
               label: Ascendiente descendientes convivientes
             DECFAL:
@@ -18192,13 +18199,6 @@ modelo:
             base-liq-neg-general-2024-aplicada-maxima:
               label: 'Base liquidable general negativa ej. 2024: compensación máxima
                 aplicable (límite art. 50.3 LIRPF) [interno]'
-            eo-agraria-reduccion-irregularidad-base:
-              label: Rendimientos netos de la actividad agrícola, ganadera o forestal
-                con período de generación superior a dos años, o calificados reglamentariamente
-                como obtenidos de forma notoriamente irregular en el tiempo, imputados
-                en este único período impositivo (base sobre la que se aplica la reducción
-                del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
-                por el operador - véase la casilla [1554])
             trabajo-mar-renta-exenta:
               label: Rendimientos del trabajo exentos de los trabajadores del mar
                 (art. 7.p) LIRPF o Ley 19/1994) [interno]

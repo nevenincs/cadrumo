@@ -8211,6 +8211,9 @@ modelo:
             '1916':
               label: Az engedélyezett bölcsődék vagy óvodák költségei utáni növekmény
                 (a 2021. adóévben nem alkalmazott összegek)
+            AJ:
+              label: Fiatal gazdálkodók csökkentése (a törvény hatodik kiegészítő
+                rendelkezése) (Igen/Nem)
             ANOASDLG:
               label: Felmenő születési dátuma
             APENOMDLG:
@@ -8272,6 +8275,13 @@ modelo:
               label: Lakóhelyi autonóm közösség
             ZRUE2:
               label: a házastárs EU- vagy EGT-országa
+            eo-agraria-reduccion-irregularidad-base:
+              label: A mezőgazdasági, állattenyésztési vagy erdészeti tevékenységből
+                származó, két évnél hosszabb keletkezési idejű, vagy jogszabályilag
+                nyilvánvalóan rendhagyó módon szerzettnek minősített nettó jövedelmek,
+                ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
+                32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
+                által bevallott összeg - lásd az [1554] rovatot)
           construct:
             renta-dependent-modelos:
               field:
@@ -18020,9 +18030,6 @@ modelo:
               label: 'Az orvos kamarai száma / személyes numerikus kódja:'
             '2248':
               label: Diagnosztizált lisztérzékenység után
-            AJ:
-              label: Fiatal gazdálkodók csökkentése (a törvény hatodik kiegészítő
-                rendelkezése) (Igen/Nem)
             CONVASDLG:
               label: Felmenővel együtt élő leszármazottak
             DECFAL:
@@ -18062,13 +18069,6 @@ modelo:
             base-liq-neg-general-2024-aplicada-maxima:
               label: '2024-es negatív általános nettó adóalap: alkalmazható maximális
                 kompenzáció (az LIRPF 50.3. cikke szerinti korlát) [belső]'
-            eo-agraria-reduccion-irregularidad-base:
-              label: A mezőgazdasági, állattenyésztési vagy erdészeti tevékenységből
-                származó, két évnél hosszabb keletkezési idejű, vagy jogszabályilag
-                nyilvánvalóan rendhagyó módon szerzettnek minősített nettó jövedelmek,
-                ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
-                32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
-                által bevallott összeg - lásd az [1554] rovatot)
             trabajo-mar-renta-exenta:
               label: Tengeri munkavállalók adómentes munkajövedelme (LIRPF 7.p) cikk
                 vagy 19/1994. törvény) [belső]

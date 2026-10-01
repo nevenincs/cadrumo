@@ -1653,3 +1653,35 @@ semantic_role = "spouse_resident_ue_eee_country"
 input_kind = "bound"
 binding = "renta-profile-spouse-eu-eea-country"
 additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+
+# Toma-de-datos-only eligibility flag for the reduccion agricultores jovenes
+# (LIRPF DA 6a; instruccion 3 of each year's Anexo I). Every input dictionary
+# from 2022 declares it (campo AJ, .../ActividadAgr/InformacionAdicionalAgr/AJ,
+# tipo S_N) without a printed casilla numero, so the asterisk numero
+# convention applies. The eligibility itself is an operator-declared fact;
+# blank or No never applies the reduction.
+[[revisions."2022".casillas]]
+id = "AJ"
+number = "*98"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+data_type = "boolean"
+semantic_role = "irpf_eo_agr_reduccion_jovenes_flag"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "EO-agraria agricultores-jovenes eligibility flag (AEAT DR field AJ); no other casilla carries this Fase 4a gate."
+legal_refs = ["ley-35-2006:da-6", "orden-hfp-1335-2021:anexo-i-instruccion-3"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+# Fase 5a support casilla (art. 32.1 LIRPF): the record design declares
+# casilla 1554 as a single amount with no sub-field for the irregular base the
+# 30 por 100 applies to, and which part of the rendimiento is irregular is a
+# preparer fact no other casilla carries. The base is declared here so 1554 is
+# computed; a blank base yields no reduction.
+[[revisions."2022".casillas]]
+id = "eo-agraria-reduccion-irregularidad-base"
+number = "eo-agraria-reduccion-irregularidad-base"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_reduccion_irregulares_base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "EO-agraria art. 32.1 irregularidad reducción base support casilla (no AEAT DR sub-field exists for this component); no other casilla carries this Fase 5a base input."
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32-2015"], source_refs = ["aeat-renta-2022-manual-parte1"] }
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-renta-2022-manual-parte1"]

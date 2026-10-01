@@ -573,3 +573,282 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "boe-model
 [[revisions."2022".formulas.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
+
+# Estimacion objetiva agraria (Anexo I of each year's modulos orden: Orden
+# HFP/1335/2021 for 2022, HFP/1172/2022 for 2023, HFP/1359/2023 for 2024 and
+# HAC/1347/2024 for 2025). The engine is stated here once; later editions key
+# only their own orden and manual citations and the genuine yearly changes.
+#
+# Fase 1a (instruccion 2.1): each producto slot's rendimiento base is its
+# ingresos integros times its indice de rendimiento neto, and the rendimiento
+# neto previo (1537) sums every slot. A blank slot contributes zero.
+# Fase 2a (instruccion 2.2): the rendimiento neto minorado (1539) deducts the
+# declared amortizacion (1538) and, for 2022 to 2024, the gasoleo agricola
+# (0158, 35 por 100) and fertilizantes (0159, 15 por 100) reductions those
+# years' ordenes allow on the rendimiento neto previo (Orden HFP/1172/2022 DA
+# 7a for 2022 and DA 3a for 2023, Orden HFP/1359/2023 DA 3a for 2024). The
+# boxes carry the declared reduction amounts; 2025 has neither box.
+# Fase 3a (instruccion 2.3): indices correctores 1540 to 1547 applied in the
+# Anexo's letter order (m100_resolve_eo_agraria_indices_correctores).
+# Fase 4a: the reduccion general (1549) at the year's rate for Anexo I
+# activities -- 25 por 100 in 2022 (Orden HFP/405/2023 art. 2), 15 in 2023
+# (Orden HAC/348/2024 art. 2), 5 in 2024 and 2025 -- only when 1548 is
+# positive. The jovenes reduction (1551, instruccion 3) applies 25 por 100 to
+# the modulos net of the general reduction, as each orden's DA 1a.2 fixes;
+# the La Palma and DANA reductions the form subtracts in 1550 are declared
+# amounts outside that base.
+# Fase 5a (LIRPF art. 32.1): 30 por 100 of the operator-declared irregular
+# base, capped at 300.000 euros; 1555 is 1550 less 1551, 1552 and 1554.
+# Cross-checked against each year's manual worked example (Don L.H.I.).
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-porcino-carne"
+target_casilla_id = "1490"
+expression = { op = "multiply", args = [{ casilla_id = "1488" }, { casilla_id = "1489" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-remolacha"
+target_casilla_id = "1493"
+expression = { op = "multiply", args = [{ casilla_id = "1491" }, { casilla_id = "1492" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-bovino-carne-avicultura"
+target_casilla_id = "1496"
+expression = { op = "multiply", args = [{ casilla_id = "1494" }, { casilla_id = "1495" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-forestal-corta-larga"
+target_casilla_id = "1499"
+expression = { op = "multiply", args = [{ casilla_id = "1497" }, { casilla_id = "1498" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-bovino-leche"
+target_casilla_id = "1502"
+expression = { op = "multiply", args = [{ casilla_id = "1500" }, { casilla_id = "1501" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-cereales-citricos-horticultura"
+target_casilla_id = "1505"
+expression = { op = "multiply", args = [{ casilla_id = "1503" }, { casilla_id = "1504" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura"
+target_casilla_id = "1508"
+expression = { op = "multiply", args = [{ casilla_id = "1506" }, { casilla_id = "1507" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-forestal-corta-corta"
+target_casilla_id = "1511"
+expression = { op = "multiply", args = [{ casilla_id = "1509" }, { casilla_id = "1510" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-arroz-oleaginosas-flores"
+target_casilla_id = "1514"
+expression = { op = "multiply", args = [{ casilla_id = "1512" }, { casilla_id = "1513" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-otras-especies-ganaderas"
+target_casilla_id = "1517"
+expression = { op = "multiply", args = [{ casilla_id = "1515" }, { casilla_id = "1516" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-forestal-resina"
+target_casilla_id = "1520"
+expression = { op = "multiply", args = [{ casilla_id = "1518" }, { casilla_id = "1519" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-raices-tuberculos-forrajes"
+target_casilla_id = "1523"
+expression = { op = "multiply", args = [{ casilla_id = "1521" }, { casilla_id = "1522" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-plantas-textiles"
+target_casilla_id = "1526"
+expression = { op = "multiply", args = [{ casilla_id = "1524" }, { casilla_id = "1525" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-actividades-accesorias"
+target_casilla_id = "1529"
+expression = { op = "multiply", args = [{ casilla_id = "1527" }, { casilla_id = "1528" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-otros-trabajos-accesorios"
+target_casilla_id = "1532"
+expression = { op = "multiply", args = [{ casilla_id = "1530" }, { casilla_id = "1531" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado"
+target_casilla_id = "1535"
+expression = { op = "multiply", args = [{ casilla_id = "1533" }, { casilla_id = "1534" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-neto-previo"
+target_casilla_id = "1537"
+expression = { op = "sum", args = [{ casilla_id = "1490" }, { casilla_id = "1493" }, { casilla_id = "1496" }, { casilla_id = "1499" }, { casilla_id = "1502" }, { casilla_id = "1505" }, { casilla_id = "1508" }, { casilla_id = "1511" }, { casilla_id = "1514" }, { casilla_id = "1517" }, { casilla_id = "1520" }, { casilla_id = "1523" }, { casilla_id = "1526" }, { casilla_id = "1529" }, { casilla_id = "1532" }, { casilla_id = "1535" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El rendimiento neto es el resultante de la suma de los rendimientos netos que correspondan"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-neto-minorado"
+target_casilla_id = "1539"
+expression = { op = "subtract", args = [{ casilla_id = "1537" }, { op = "sum", args = [{ casilla_id = "0158" }, { casilla_id = "0159" }, { casilla_id = "1538" }] }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-2", "orden-hfp-1172-2022:da-7"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado", "Reducción por adquisición de gasóleo agrícola: 35 por 100", "Reducción por adquisición de fertilizantes: 15 por 100"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-neto-modulos"
+target_casilla_id = "1548"
+expression = { op = "m100_resolve_eo_agraria_indices_correctores", args = [{ casilla_id = "1539" }, { casilla_id = "1540" }, { casilla_id = "1541" }, { casilla_id = "1542" }, { casilla_id = "1543" }, { casilla_id = "1544" }, { casilla_id = "1545" }, { casilla_id = "1546" }, { casilla_id = "1547" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:anexo-i-instruccion-2-3"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["3ª Fase: Índices correctores y determinación del rendimiento neto de módulos"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-reduccion-general"
+target_casilla_id = "1549"
+expression = { op = "if_then_else", args = [{ op = "greater_than", args = [{ casilla_id = "1548" }, { literal = "0" }] }, { op = "percent", args = [{ casilla_id = "1548" }, { parameter = "renta-estimacion-objetiva-reduccion-general-rate" }] }, { literal = "0" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-405-2023:art-2"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción de carácter general: 25 por 100"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-reduccion-jovenes"
+target_casilla_id = "1551"
+expression = { op = "if_then_else", args = [{ op = "greater_than", args = [{ casilla_id = "AJ" }, { literal = "0" }] }, { op = "percent", args = [{ op = "subtract", args = [{ casilla_id = "1548" }, { casilla_id = "1549" }] }, { parameter = "renta-eo-agraria-reduccion-jovenes-rate" }] }, { literal = "0" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:da-6", "orden-hfp-1335-2021:anexo-i-instruccion-3", "orden-hfp-1335-2021:da-1"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Reducción agricultores jóvenes: 25 por 100"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-reduccion-irregularidad"
+target_casilla_id = "1554"
+expression = { op = "percent", args = [{ op = "min", args = [{ casilla_id = "eo-agraria-reduccion-irregularidad-base" }, { parameter = "renta-eo-agraria-reduccion-irregularidad-cap" }] }, { parameter = "renta-eo-agraria-reduccion-irregularidad-rate" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]
+
+[[revisions."2022".formulas]]
+id = "renta-eo-agraria-rendimiento-neto-reducido-por-actividad"
+target_casilla_id = "1555"
+expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ casilla_id = "1550" }, { casilla_id = "1551" }] }, { casilla_id = "1552" }] }, { casilla_id = "1554" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32-2015", "orden-hfp-1335-2021:da-1", "orden-hfp-1172-2022:da-8", "orden-hfp-405-2023:art-2", "ley-35-2006:da-6", "orden-hfp-1335-2021:anexo-i-instruccion-3"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["4ª Fase: Determinación del rendimiento neto de la actividad"]

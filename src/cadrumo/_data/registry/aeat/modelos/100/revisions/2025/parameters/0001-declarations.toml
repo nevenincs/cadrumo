@@ -59,21 +59,6 @@ date_axis = "filing_period"
 valid_from = 2025-01-01
 
 [[revisions."2025".parameters]]
-id = "renta-estimacion-objetiva-reduccion-general-rate"
-data_type = "ratio"
-unit = "percent"
-legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-31"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["estimación objetiva", "reducción general"]
-
-[[revisions."2025".parameters.values]]
-value = "5"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-
-[[revisions."2025".parameters]]
 id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
 data_type = "ratio"
 unit = "percent"
@@ -180,50 +165,6 @@ value = "61860"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 
-[[revisions."2025".parameters]]
-id = "renta-eo-agraria-reduccion-jovenes-rate"
-data_type = "ratio"
-unit = "percent"
-legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Reducción agricultores jóvenes", "25 por 100"]
-
-[[revisions."2025".parameters.values]]
-value = "25"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-
-[[revisions."2025".parameters]]
-id = "renta-eo-agraria-reduccion-irregularidad-rate"
-data_type = "ratio"
-unit = "percent"
-legal_refs = ["ley-35-2006:art-32"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]
-
-[[revisions."2025".parameters.values]]
-value = "30"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-
-[[revisions."2025".parameters]]
-id = "renta-eo-agraria-reduccion-irregularidad-cap"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-32"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["citada reducción no podrá superar el importe de 300.000 euros anuales"]
-
-[[revisions."2025".parameters.values]]
-value = "300000"
-date_axis = "filing_period"
-valid_from = 2025-01-01
 # Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
 # descendientes. A descendant holding rentas anuales (excluidas las exentas)
 # above this figure generates no mínimo, so the ceiling is an eligibility
@@ -241,7 +182,6 @@ valid_from = 2025-01-01
 # catalogued-but-wrong article to make it pass would be worse than leaving the
 # figure in Python, so it stays a Python constant until its provision is
 # catalogued.
-
 
 [[revisions."2025".parameters]]
 id = "rebeca-maritime-exemption-fraction"
